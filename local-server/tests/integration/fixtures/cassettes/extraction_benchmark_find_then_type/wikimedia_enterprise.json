@@ -1,0 +1,1122 @@
+{
+  "97e0aa77e80825bbf5e340432329c66b4093daf1e9855b7ca9f0b4c9c000708a": {
+    "content": "```json\n{\"mentions\": [\n{\"name\": \"Wikimedia Enterprise\", \"kind\": \"thing\", \"quote\": \"**Wikimedia Enterprise** is a service of the Wikimedia Foundation available via enterprise.wikimedia.com.\"},\n{\"name\": \"Wikimedia Foundation\", \"kind\": \"thing\", \"quote\": \"**Wikimedia Enterprise** is a service of the Wikimedia Foundation available via enterprise.wikimedia.com.\"},\n{\"name\": \"enterprise.wikimedia.com\", \"kind\": \"thing\", \"quote\": \"**Wikimedia Enterprise** is a service of the Wikimedia Foundation available via enterprise.wikimedia.com.\"},\n{\"name\": \"Movement Strategy recommendations\", \"kind\": \"thing\", \"quote\": \"In the Movement Strategy recommendations to *increase the sustainability of our movement* and *improve user experience* there are the recommendations\"},\n{\"name\": \"Wikimedia API suite\", \"kind\": \"thing\", \"quote\": \"\\\"Make the Wikimedia API suite more comprehensive, reliable, secure and fast, in partnership with large scale users...\\\"\"},\n{\"name\": \"Enterprise-level APIs\", \"kind\": \"thing\", \"quote\": \"\\\"Explore new opportunities for both revenue generation and free knowledge dissemination through partnerships and earned income\u2014for example...Building enterprise-level APIs,\\\"\"},\n{\"name\": \"Wikimedia API team\", \"kind\": \"thing\", \"quote\": \"Emphasizing a self-funding set of specific use cases allows the Wikimedia API team to focus on volunteers, teams, and organizations\"},\n{\"name\": \"API Gateway initiative\", \"kind\": \"thing\", \"quote\": \"For more information on improvements to the existing Wikimedia APIs see the service page on the \\\"API Gateway\\\" initiative.\"},\n{\"name\": \"Wikimedia projects\", \"kind\": \"thing\", \"quote\": \"the content is hard for machines to segment and understand, which in turn affects how far Wikimedia project data reaches beyond our own ecosystem\"},\n{\"name\": \"Wikimedia content\", \"kind\": \"thing\", \"quote\": \"The focus is on organizations that want to repurpose Wikimedia content in other contexts\"},\n{\"name\": \"High-volume commercial reusers\", \"kind\": \"thing\", \"quote\": \"The goal of the service is to build services for high-volume commercial reusers of Wikimedia content.\"},\n{\"name\": \"Large-scale content reusers\", \"kind\": \"thing\", \"quote\": \"Wikimedia Enterprise's focus is on businesses that reuse our content, typically at a large scale\"},\n{\"name\": \"Knowledge graphs, search, voice assistants, maps, news reporting integrations\", \"kind\": \"thing\", \"quote\": \"integrated into knowledge graphs, search, voice assistants, maps, news reporting, community tools, third party applications, and full-corpus research studies\"},\n{\"name\": \"Community editing tools\", \"kind\": \"thing\", \"quote\": \"This includes the majority of community editing tools, which will be out of scope for this service.\"},\n{\"name\": \"Production servers\", \"kind\": \"thing\", \"quote\": \"Reduce the need for high-intensity site-scraping by the highest-frequency and highest-volume reusers, which currently target our production servers.\"},\n{\"name\": \"Heavy for-profit users\", \"kind\": \"thing\", \"quote\": \"Most financial benefit for Wikimedia would likely only come from a very small handful of heavy for-profit users\"},\n{\"name\": \"Universities and university researchers\", \"kind\": \"thing\", \"quote\": \"but also for universities and university researchers; archives and archivists; along with the wider Wikimedia movement.\"},\n{\"name\": \"Archives and archivists\", \"kind\": \"thing\", \"quote\": \"but also for universities and university researchers; archives and archivists; along with the wider Wikimedia movement.\"},\n{\"name\": \"Wikimedia movement\", \"kind\": \"thing\", \"quote\": \"would feed back into the Wikimedia movement.\"},\n{\"name\": \"Best last revision\", \"kind\": \"thing\", \"quote\": \"**Quality**: a \u201cbest last revision\u201d\"},\n{\"name\": \"Regular current snapshots\", \"kind\": \"thing\", \"quote\": \"**Frequency**: Regular current snapshots of Wikimedia projects\"},\n{\"name\": \"Machine-readable content formats\", \"kind\": \"thing\", \"quote\": \"Make more of our movement's content available in consistent machine-readable formats, freely available for all researchers and re-users.\"},\n{\"name\": \"Service launch and announcement\", \"kind\": \"thing\", \"quote\": \"The service was announced in March 2021 (blogpost, WIRED article) and launched in October 2021 (Press release, OpenFutures article).\"},\n{\"name\": \"Service goal: build services for reusers\", \"kind\": \"statement\", \"quote\": \"The goal of the service is to build services for high-volume commercial reusers of Wikimedia content.\"},\n{\"name\": \"Faster, more reliable data services at scale\", \"kind\": \"statement\", \"quote\": \"providing data services at a large scale, so that they are faster and more comprehensive, reliable, and secure.\"},\n{\"name\": \"Improve reader experience beyond own websites\", \"kind\": \"statement\", \"quote\": \"Wikimedia Enterprise aims to improve the user experience of Wikimedia's readers beyond our own websites\"},\n{\"name\": \"Increase reach and discoverability of content\", \"kind\": \"statement\", \"quote\": \"increase the reach and discoverability of the content\"},\n{\"name\": \"Improve attribution and verifiability by reusers\", \"kind\": \"statement\", \"quote\": \"improve awareness and ease of attribution and verifiability by the organizations that reuse Wikimedia project data the most\"},\n{\"name\": \"Self-funding services\", \"kind\": \"statement\", \"quote\": \"through self-funding services.\"},\n{\"name\": \"High barrier to entry for Wikimedia data\", \"kind\": \"statement\", \"quote\": \"There is a very high barrier to entry for using Wikimedia data, outside of the common use cases of reading or editing.\"},\n{\"name\": \"Large companies should reinvest in communities\", \"kind\": \"statement\", \"quote\": \"There has long been a feeling among community members that these companies should do more to reinvest in the Wikimedia communities\"},\n{\"name\": \"Sustainable approach with clearer enterprise relationship\", \"kind\": \"statement\", \"quote\": \"This led to the idea of developing a new approach that is more sustainable in the long term and provides a much clearer relationship between Wikimedia and enterprise users.\"},\n{\"name\": \"Responsibility to democratize data\", \"kind\": \"statement\", \"quote\": \"there is a responsibility to democratize our data for organizations that do not possess the resources of these largest users\"},\n{\"name\": \"Level the playing field without reinforcing monopolies\", \"kind\": \"statement\", \"quote\": \"to ensure we are leveling the playing field and helping to foster a healthy internet without reinforcing monopolies.\"},\n{\"name\": \"Structure behind unstructured content\", \"kind\": \"statement\", \"quote\": \"Augmenting Wikimedia's many datasets to put structure behind our unstructured content will allow all our content reusers to meet their individual requirements\"},\n{\"name\": \"Reuser requirement: frequency\", \"kind\": \"statement\", \"quote\": \"Reusers of our content are looking for three critical components:\"},\n{\"name\": \"Reuser requirement: reliability\", \"kind\": \"statement\", \"quote\": \"**Reliability**: Dependable, accessible infrastructure\"},\n{\"name\": \"Program goal: content availability\", \"kind\": \"statement\", \"quote\": \"**Content**: Make more of our movement's content available in consistent machine-readable formats\"},\n{\"name\": \"Program goal: reduce resource load\", \"kind\": \"statement\", \"quote\": \"**Resource-load**: Reduce the need for high-intensity site-scraping by the highest-frequency and highest-volume reusers\"},\n{\"name\": \"Program goal: clearer fundraising from largest reusers\", \"kind\": \"statement\", \"quote\": \"**Fundraising**: Provide a clearer and more consistent way for the largest re-users to reinvest derived benefits back to the movement\"},\n{\"name\": \"Benefits should extend beyond startups\", \"kind\": \"statement\", \"quote\": \"The benefits of such a service shouldn't just be for startups or alternatives to the internet giants\"}\n]}\n```",
+    "tokens_in": 2350,
+    "tokens_out": 3050,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "48fbaf2b92a90b652c7f95a5a5936f86b48ef2bbdfd05f55024ad83ba580d94d": {
+    "content": "{\"mentions\": [\n{\"name\": \"Wikimedia Enterprise APIs\", \"kind\": \"thing\", \"quote\": \"The primary use case of the suite of Enterprise APIs is paid access for large commercial organisations\"},\n{\"name\": \"Enterprise project team\", \"kind\": \"thing\", \"quote\": \"The Enterprise project team is developing a new resource aimed at for-profit content reusers\"},\n{\"name\": \"Wikimedia Foundation\", \"kind\": \"thing\", \"quote\": \"primary decision making for it will rest with the Wikimedia Foundation\"},\n{\"name\": \"Movement Strategy process\", \"kind\": \"thing\", \"quote\": \"the Movement Strategy process asked the Wikimedia Foundation to explore, among other things, \\\"enterprise-level APIs\"},\n{\"name\": \"Wikimedia Endowment\", \"kind\": \"thing\", \"quote\": \"to fund Wikimedia programs or help grow the Wikimedia Endowment\"},\n{\"name\": \"Wikimedia Cloud Services\", \"kind\": \"thing\", \"quote\": \"Using Wikimedia Cloud Services. You get the same access as a paid account\"},\n{\"name\": \"PAWS\", \"kind\": \"thing\", \"quote\": \"from within PAWS, Wikimedia Cloud VPS, or Toolforge\"},\n{\"name\": \"Wikimedia Cloud VPS\", \"kind\": \"thing\", \"quote\": \"from within PAWS, Wikimedia Cloud VPS, or Toolforge\"},\n{\"name\": \"Toolforge\", \"kind\": \"thing\", \"quote\": \"from within PAWS, Wikimedia Cloud VPS, or Toolforge\"},\n{\"name\": \"Free account\", \"kind\": \"thing\", \"quote\": \"Creating a free account on the official website and using the Enterprise API access for free accounts\"},\n{\"name\": \"Enterprise Pricing page\", \"kind\": \"thing\", \"quote\": \"Discover what free accounts have access to on the Enterprise Pricing page.\"},\n{\"name\": \"Structured Contents (beta) datasets\", \"kind\": \"thing\", \"quote\": \"Downloading Structured Contents (beta) datasets hosted on third-party platforms.\"},\n{\"name\": \"Community essay\", \"kind\": \"thing\", \"quote\": \"Following are the introduction paragraphs for a much more detailed **Community essay**.\"},\n{\"name\": \"FAQ\", \"kind\": \"thing\", \"quote\": \"See also the **FAQ** and **Principles**.\"},\n{\"name\": \"Principles\", \"kind\": \"thing\", \"quote\": \"See also the **FAQ** and **Principles**.\"},\n{\"name\": \"Phabricator\", \"kind\": \"thing\", \"quote\": \"via Phabricator. Input into the funding development side of the service will follow a similar pattern.\"},\n{\"name\": \"Meta feedback page\", \"kind\": \"thing\", \"quote\": \"feedback here on Meta as per our principles.\"},\n{\"name\": \"Wikimedia projects are libre\", \"kind\": \"statement\", \"quote\": \"Wikimedia projects are, have always been, and will always remain *libre*.\"},\n{\"name\": \"Wikimedia projects are gratis\", \"kind\": \"statement\", \"quote\": \"Wikimedia projects are, have always been, and will always remain *gratis*.\"},\n{\"name\": \"Anyone may reuse Wikimedia content without restriction\", \"kind\": \"statement\", \"quote\": \"The principles of free cultural works mean that anyone can use Wikimedia without restriction, including commercially.\"},\n{\"name\": \"Non-commercial licenses rejected\", \"kind\": \"statement\", \"quote\": \"It is why we reject \u2018non-commercial\u2019 licenses, as they would limit the kinds of reuse possible.\"},\n{\"name\": \"Commercial reuse valued as distribution of knowledge\", \"kind\": \"statement\", \"quote\": \"we consider commercial reuse an important means of distributing knowledge to audiences.\"},\n{\"name\": \"Free access to knowledge core to mission\", \"kind\": \"statement\", \"quote\": \"The ability to freely access the knowledge available across all Wikimedia projects has always been core to the mission of the Foundation and the movement.\"},\n{\"name\": \"Content available for reuse at no cost\", \"kind\": \"statement\", \"quote\": \"made available for reuse in various forms (including but not limited to database dumps, APIs, and scraping) at no cost.\"},\n{\"name\": \"Enterprise API revenue supports Wikimedia mission\", \"kind\": \"statement\", \"quote\": \"All Enterprise API revenue will unequivocally be used to support the Wikimedia mission\"},\n{\"name\": \"Enterprise API use not required for for-profit reuse\", \"kind\": \"statement\", \"quote\": \"Use of this offering will not be required for for-profit content reuse; companies can continue to use the current tools available at no cost.\"},\n{\"name\": \"Avoid revenue dependencies in product design\", \"kind\": \"statement\", \"quote\": \"taking care to avoid revenue dependencies or other undue external influence in product design and development.\"},\n{\"name\": \"Project is an early learning period\", \"kind\": \"statement\", \"quote\": \"The project is at a very early stage that should be considered a learning period.\"},\n{\"name\": \"Team seeks community feedback and integrates it\", \"kind\": \"statement\", \"quote\": \"The team is committed to listening, engaging, and where possible, integrating the feedback we get on our work.\"},\n{\"name\": \"Access for all principle\", \"kind\": \"statement\", \"quote\": \"in accordance with the project's principle of *access for all*, there are also various ways to access the Wikimedia Enterprise APIs for free.\"},\n{\"name\": \"Free access to Enterprise APIs through three options\", \"kind\": \"statement\", \"quote\": \"For the vast majority of use cases, these three options are more than sufficient.\"},\n{\"name\": \"Cloud services calls need no authorization header\", \"kind\": \"statement\", \"quote\": \"make your calls to any endpoint described in the Enterprise API documentation **without passing an authorization header**.\"},\n{\"name\": \"Community input sought from technical community\", \"kind\": \"statement\", \"quote\": \"We are seeking community input, in particular from the technical community and those who have been involved in the strategy process\"},\n{\"name\": \"Paid enterprise access with SLAs and dedicated support\", \"kind\": \"statement\", \"quote\": \"with associated Service Level Agreements and dedicated customer support.\"}\n]}",
+    "tokens_in": 2661,
+    "tokens_out": 2489,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "be25341fe0bfb777374baabaac3e0214acede05c7616e4acaa15d8488f4e0f15": {
+    "content": "{\"mentions\": [\n{\"name\": \"Enterprise APIs\", \"kind\": \"thing\", \"quote\": \"you may request free **exceptional access** to the higher rate of the Enterprise APIs.\"},\n{\"name\": \"Exceptional access\", \"kind\": \"thing\", \"quote\": \"you may request free **exceptional access** to the higher rate of the Enterprise APIs.\"},\n{\"name\": \"Wikimedia Foundation\", \"kind\": \"thing\", \"quote\": \"Requests will be reviewed by *Wikimedia Foundation* staff in accordance with the following criteria\"},\n{\"name\": \"Wikimedia Deutschland\", \"kind\": \"thing\", \"quote\": \"the request will be reviewed in coordination with staff from *Wikimedia Deutschland*.\"},\n{\"name\": \"Wikidata\", \"kind\": \"thing\", \"quote\": \"If the request includes substantive access to *Wikidata* content\"},\n{\"name\": \"Exceptional access criteria\", \"kind\": \"thing\", \"quote\": \"**Exceptional access criteria** **1. Who** (individual or organisation) is requesting exceptional access?\"},\n{\"name\": \"Enterprise API account\", \"kind\": \"thing\", \"quote\": \"Please list the contact person\u2019s name, organisation (if applicable), email address, and *Enterprise* API account username.\"},\n{\"name\": \"Movement Strategy Recommendations\", \"kind\": \"thing\", \"quote\": \"Is the intended use case aligned with any of the needs identified in the Movement Strategy Recommendations?\"},\n{\"name\": \"Terms of Use\", \"kind\": \"thing\", \"quote\": \"including the Terms of Use, the User-Agent Policy.\"},\n{\"name\": \"User-Agent Policy\", \"kind\": \"thing\", \"quote\": \"including the Terms of Use, the User-Agent Policy.\"},\n{\"name\": \"API Usage guidelines\", \"kind\": \"thing\", \"quote\": \"Please also note the API Usage guidelines (in particular regarding sub-licensing)\"},\n{\"name\": \"Human Rights Policy\", \"kind\": \"thing\", \"quote\": \"in accordance with the Human Rights Policy and Commercial Sales and Contracts Policy.\"},\n{\"name\": \"Commercial Sales and Contracts Policy\", \"kind\": \"thing\", \"quote\": \"in accordance with the Human Rights Policy and Commercial Sales and Contracts Policy.\"},\n{\"name\": \"Wikimedia Enterprise operating principles\", \"kind\": \"thing\", \"quote\": \"In accordance with the Wikimedia Enterprise operating principles regarding non-exclusivity\"},\n{\"name\": \"On-demand API\", \"kind\": \"thing\", \"quote\": \"Retrieve single articles with the On-demand API\"},\n{\"name\": \"Realtime API\", \"kind\": \"thing\", \"quote\": \"Receive changes instantly with Realtime API streaming\"},\n{\"name\": \"Snapshot API\", \"kind\": \"thing\", \"quote\": \"The Enterprise Snapshot API allows users to retrieve entire Wikimedia projects as a database dump file.\"},\n{\"name\": \"Wikimedia Dumps\", \"kind\": \"thing\", \"quote\": \"For high-volume reusers that currently rely on the Wikimedia Dumps to access our information\"},\n{\"name\": \"Data Dictionary\", \"kind\": \"thing\", \"quote\": \"All data fields and schema are explained in detail on the project's Data Dictionary website page.\"},\n{\"name\": \"MediaWiki.org documentation\", \"kind\": \"thing\", \"quote\": \"see the **regular technical updates on MediaWiki.org***\"},\n{\"name\": \"Structured JSON response format\", \"kind\": \"thing\", \"quote\": \"All of our APIs return the same structured JSON (or ND-JSON) response format\"},\n{\"name\": \"Free account\", \"kind\": \"thing\", \"quote\": \"updated monthly on a free account and weekly or daily on a paid account\"},\n{\"name\": \"Paid account\", \"kind\": \"thing\", \"quote\": \"updated monthly on a free account and weekly or daily on a paid account\"},\n{\"name\": \"Compressed dumps\", \"kind\": \"thing\", \"quote\": \"Compressed dumps (in both wikitext and HTML) of supported text-based Wikimedia projects\"},\n{\"name\": \"Article payload data\", \"kind\": \"thing\", \"quote\": \"API responses payloads include article data such as summary, image, Wikidata QID, license, and metadata\"},\n{\"name\": \"Revision metadata\", \"kind\": \"thing\", \"quote\": \"metadata specific to the last revision such as editor, size of change, and credibility score with revert probability.\"},\n{\"name\": \"Service Level Agreement (SLA)\", \"kind\": \"thing\", \"quote\": \"Formal customer-service or Service Level Agreement (SLA) requirements\"},\n{\"name\": \"Talkpage\", \"kind\": \"thing\", \"quote\": \"please leave a message on the Talkpage or email\"},\n{\"name\": \"Exceptional access is only granted when standard options are exhausted\", \"kind\": \"statement\", \"quote\": \"Exceptional free access to a paid account can only be granted when all standard options are exhausted\"},\n{\"name\": \"Exceptional access granted at Foundation discretion\", \"kind\": \"statement\", \"quote\": \"and granted at the Wikimedia Foundation's discretion.\"},\n{\"name\": \"Copyright licenses must be followed\", \"kind\": \"statement\", \"quote\": \"All users of Wikimedia Enterprise services must abide by the copyright licenses on Wikimedia content. They are inherent and cannot be waived.\"},\n{\"name\": \"Exceptional access is in-kind support\", \"kind\": \"statement\", \"quote\": \"Providing exceptional access is effectively a form of in-kind support.\"},\n{\"name\": \"New features and datasets must be available to all\", \"kind\": \"statement\", \"quote\": \"any newly developed software feature or dataset must be made available to all.\"},\n{\"name\": \"Mission alignment required\", \"kind\": \"statement\", \"quote\": \"Special consideration would be given to organizations serving marginalized communities, underrepresented languages, or Wikimedia sister projects.\"},\n{\"name\": \"Use case must not create closed knowledge silos\", \"kind\": \"statement\", \"quote\": \"The proposed use-case should not deliberately create or reinforce closed knowledge silos, proprietary forks of the content\"},\n{\"name\": \"Business model must not conflict with Wikimedia values\", \"kind\": \"statement\", \"quote\": \"The business-model should at the very least not be in conflict with Wikimedia\u2019s values\"},\n{\"name\": \"Free access requires commitment to open knowledge\", \"kind\": \"statement\", \"quote\": \"the user should also be able to demonstrate a commitment to open knowledge, transparency, and/or public-benefit mission\"},\n{\"name\": \"Human rights assessment for certain paid users\", \"kind\": \"statement\", \"quote\": \"A human rights assessment is undertaken by the WMF for certain users of paid accounts for the Enterprise APIs\"},\n{\"name\": \"Standard APIs return same format for easy augmentation\", \"kind\": \"statement\", \"quote\": \"All of our APIs return the same structured JSON (or ND-JSON) response format making it easy to augment one API with another.\"},\n{\"name\": \"Snapshot dumps updated on free and paid cadence\", \"kind\": \"statement\", \"quote\": \"Compressed dumps (in both wikitext and HTML) of supported text-based Wikimedia projects, updated monthly on a free account and weekly or daily on a paid account\"},\n{\"name\": \"Snapshot API avoids excessive calls and infrastructure hooks\", \"kind\": \"statement\", \"quote\": \"we have created a solution to ingest Wikimedia content in near real-time without excessive API calls (On-demand API) or maintaining hooks into our infrastructure (Realtime).\"},\n{\"name\": \"Exceptional access requires six criteria response\", \"kind\": \"statement\", \"quote\": \"please contact <techpartnershipswikimedia.org> with a response to the six criteria described below.\"},\n{\"name\": \"API product offerings will grow and improve\", \"kind\": \"statement\", \"quote\": \"Over time, the \\\"API products\\\" offered will grow and improve.\"}\n]}",
+    "tokens_in": 3106,
+    "tokens_out": 3096,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "3d637d047fc77549a553629b6c5fd74d694c92b751b78f292e0ec40570f5a0e2": {
+    "content": "{\"mentions\": [\n{\"name\": \"Wikimedia Enterprise On-demand API\", \"kind\": \"thing\", \"quote\": \"The Wikimedia Enterprise On-demand API allows users to retrieve single articles from any supported Wikimedia project at anytime.\"},\n{\"name\": \"Wikimedia Enterprise Realtime API\", \"kind\": \"thing\", \"quote\": \"The Enterprise Realtime API allows users to stream updates in real-time from any supported Wikimedia project.\"},\n{\"name\": \"EventStream platform\", \"kind\": \"thing\", \"quote\": \"Reusers that use an infrastructure reliant on the EventStream platform depend on services like RESTBase\"},\n{\"name\": \"EventStream APIs\", \"kind\": \"thing\", \"quote\": \"using EventStream APIs to access such changes\"},\n{\"name\": \"RESTBase\", \"kind\": \"thing\", \"quote\": \"depend on services like RESTBase to pull HTML from page titles and current revisions\"},\n{\"name\": \"Commercial Partnerships division\", \"kind\": \"thing\", \"quote\": \"helmed by the **Commercial Partnerships** division, which sits under the Advancement Department\"},\n{\"name\": \"Advancement Department\", \"kind\": \"thing\", \"quote\": \"which sits under the Advancement Department in the Wikimedia Foundation\"},\n{\"name\": \"Wikimedia Foundation\", \"kind\": \"thing\", \"quote\": \"which sits under the Advancement Department in the Wikimedia Foundation\"},\n{\"name\": \"Technical Partnerships team\", \"kind\": \"thing\", \"quote\": \"to reflect the inclusion of the Technical Partnerships team\"},\n{\"name\": \"WMF Legal, Engineering, Partnerships, Design, Communications teams\", \"kind\": \"thing\", \"quote\": \"Many people from different teams also contribute significantly, including from the WMF Legal, Engineering, Partnerships, Design, Communications teams etc.\"},\n{\"name\": \"PartnerHero\", \"kind\": \"thing\", \"quote\": \"**PartnerHero** provide customer support services\"},\n{\"name\": \"Vuurr\", \"kind\": \"thing\", \"quote\": \"**Vuurr** are assisting our sales process\"},\n{\"name\": \"Super Natural Design\", \"kind\": \"thing\", \"quote\": \"**Super Natural Design** are the designers of the project website\"},\n{\"name\": \"Perrine Winkler\", \"kind\": \"thing\", \"quote\": \"**Perrine Winkler** has been contracted to help with rebranding the team behind Enterprise\"},\n{\"name\": \"Speed & Function\", \"kind\": \"thing\", \"quote\": \"Engineering support was provided in the first years by **Speed & Function**.\"},\n{\"name\": \"LLC overseeing the project\", \"kind\": \"thing\", \"quote\": \"The board of the LLC overseeing the project are *Ex officio* from Wikimedia Foundation leadership\"},\n{\"name\": \"Sheetal Puri\", \"kind\": \"thing\", \"quote\": \"This includes the Chief Advancement Officer Sheetal Puri\"},\n{\"name\": \"Stephen LaPorte\", \"kind\": \"thing\", \"quote\": \"General Counsel Stephen LaPorte\"},\n{\"name\": \"Selena Deckelman\", \"kind\": \"thing\", \"quote\": \"Chief Product and Technology Officer Selena Deckelman\"},\n{\"name\": \"Lane Becker\", \"kind\": \"thing\", \"quote\": \"Lane Becker who serves as the LLC's president\"},\n{\"name\": \"Wikimedia Foundation Board of Trustees\", \"kind\": \"thing\", \"quote\": \"The LLC is subject to the governance of the Wikimedia Foundation Board of Trustees\"},\n{\"name\": \"Wikimedia Foundation Commercial Sales and Contracts Policy\", \"kind\": \"thing\", \"quote\": \"as described on the *Wikimedia Foundation Commercial Sales and Contracts Policy*.\"},\n{\"name\": \"Wikimedia Foundation Governance website\", \"kind\": \"thing\", \"quote\": \"published on a dedicated Wikimedia Enterprise page on the **Wikimedia Foundation Governance** website.\"},\n{\"name\": \"Batch compressed article downloads\", \"kind\": \"thing\", \"quote\": \"Batch: Download compressed files of all articles that were changed, generated hourly\"},\n{\"name\": \"Realtime firehose streaming\", \"kind\": \"thing\", \"quote\": \"Streaming: Receive streaming (firehose) updates of every change as they occur in real-time\"},\n{\"name\": \"Commercial and consolidated schemas\", \"kind\": \"thing\", \"quote\": \"A wide range of commercial and consolidated schemas under SLAs\"},\n{\"name\": \"Introductory onboarding resources and help center FAQs\", \"kind\": \"thing\", \"quote\": \"All accounts have access to our introductory onboarding resources and help center faqs.\"},\n{\"name\": \"Event filtering by project or revision namespace\", \"kind\": \"thing\", \"quote\": \"Filtering of events by Project or Revision Namespace\"},\n{\"name\": \"Enterprise Realtime API filtering requirement\", \"kind\": \"statement\", \"quote\": \"allow them to filter the changes they receive to limit their processing\"},\n{\"name\": \"Reliable data access requested by high-volume reusers\", \"kind\": \"statement\", \"quote\": \"High-volume reusers have requested a reliable means to gather this data\"},\n{\"name\": \"Stable HTTP connections to avoid data loss\", \"kind\": \"statement\", \"quote\": \"guarantee stable HTTP connections to ensure no data loss\"},\n{\"name\": \"Reduced API calls per event via a more useful schema\", \"kind\": \"statement\", \"quote\": \"supply a more useful schema to limit the number of API calls they need to make per event\"},\n{\"name\": \"Contracted accounts receive 99% SLA\", \"kind\": \"statement\", \"quote\": \"Contracted accounts receive 99% SLA and support response-time guarantees.\"},\n{\"name\": \"Instant updates for new content, edits, deletions and breaking news\", \"kind\": \"statement\", \"quote\": \"Instant updates for new content, any edits, deletions, and breaking news events including community-curated visibility changes\"},\n{\"name\": \"Latest page data on demand to augment other APIs\", \"kind\": \"statement\", \"quote\": \"Request the latest page data anytime to augment your Realtime or Snapshot API data\"},\n{\"name\": \"Renaming to Commercial Partnerships in December 2025\", \"kind\": \"statement\", \"quote\": \"Since December 2025, the division working on the Wikimedia Enterprise Initiative changed its name from 'Wikimedia Enterprise' to 'Commercial Partnerships'\"},\n{\"name\": \"Management staff indicated in bold\", \"kind\": \"statement\", \"quote\": \"Names in **bold** indicate management.\"},\n{\"name\": \"LLC subject to Wikimedia Foundation Board governance\", \"kind\": \"statement\", \"quote\": \"The LLC is subject to the governance of the Wikimedia Foundation Board of Trustees\"},\n{\"name\": \"LLC reports published on governance website\", \"kind\": \"statement\", \"quote\": \"All reports and official documents of the LLC are published on a dedicated Wikimedia Enterprise page\"}\n]}",
+    "tokens_in": 2072,
+    "tokens_out": 2852,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "5634adc492ea87d44804dadb25113091a8e85f73d9714ba71c65040166c99c92": {
+    "content": "{\"class\": \"business.businessservice\", \"confidence\": 0.6}",
+    "tokens_in": 20029,
+    "tokens_out": 227,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "11182108868cfa7e8d4c04f58199e0d5426d36943462918c7368d585358f93ab": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.8}",
+    "tokens_in": 20334,
+    "tokens_out": 148,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "01ed10410ea2cb6bc65fecaab957271b669e89ac5ce7d58373b6c84495727baa": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.6}",
+    "tokens_in": 20336,
+    "tokens_out": 243,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "0bdd144f3f0dbbac7a448d82baa9682fc35461be5ec912471650beb148e16b9f": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.8}",
+    "tokens_in": 20030,
+    "tokens_out": 172,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "7eda09a98a74f7e97cd8b6be45977f471e3d3b32ab1f4e2de9efed227150eadd": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.7}",
+    "tokens_in": 20231,
+    "tokens_out": 231,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "61d96b6ae8dc85b3315b0459668a98f5a06a83cd434fa66e3014d98aa819d0cb": {
+    "content": "{\"class\": \"business.businessactor\", \"confidence\": 0.6}",
+    "tokens_in": 20228,
+    "tokens_out": 234,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "b3e8408624acbb3ed54826ffc721dd3b7a200e88d63eb28c1b81ec3e94eff602": {
+    "content": "{\"class\": \"business.businessactor\", \"confidence\": 0.5}",
+    "tokens_in": 20028,
+    "tokens_out": 287,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "6d4130de15f6bf81cd6734d9d7c026f6fd3bd80bb66647af4a9a819c8550b326": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.9}",
+    "tokens_in": 20133,
+    "tokens_out": 74,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "1120afb867005dbe6e29e087921fcbef70a18574e1e6460f6b795a1e4780d89f": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.85}",
+    "tokens_in": 20333,
+    "tokens_out": 90,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "12a6c9b2d41276302b7831a29c0991a7255f093409ebb1be4997720fcc4125e0": {
+    "content": "{\"class\": \"motivation.stakeholder\", \"confidence\": 0.8}",
+    "tokens_in": 20043,
+    "tokens_out": 112,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "d49ac7b2fafe16ccfe7de7ae2cb834a688caa24913d463d7a9b3040d1046b37d": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.85}",
+    "tokens_in": 20127,
+    "tokens_out": 89,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "665b3cd98a39f373b5acdbcc1032e47c88aa7f1387eaef256164ff60982afb59": {
+    "content": "{\"class\": \"motivation.stakeholder\", \"confidence\": 0.6}",
+    "tokens_in": 20296,
+    "tokens_out": 222,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "92555a4fb5092005684d80b55cca633820dd0270b7cea246febdccf29b1fd184": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.85}",
+    "tokens_in": 20149,
+    "tokens_out": 73,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "bcdafc8550698aaf2becabde221f170c126b37863143611ef946679972fed322": {
+    "content": "{\"class\": \"motivation.stakeholder\", \"confidence\": 0.8}",
+    "tokens_in": 20298,
+    "tokens_out": 97,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "efef81eeea5df4bdd4d3bfe1349dba8bffe4185be94ed9a621bdbaa62b5fdf1d": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.8}",
+    "tokens_in": 20352,
+    "tokens_out": 221,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "e5137d39ddabd846afbbd827725c3df2644277881c5ec798a50a67f78729d1d4": {
+    "content": "{\"class\": \"motivation.stakeholder\", \"confidence\": 0.72}",
+    "tokens_in": 20292,
+    "tokens_out": 152,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "f5c319cc0cb21cc750e92276d3482f2d77bf77e26902dcfa8e1f55a7df17a623": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.6}",
+    "tokens_in": 20036,
+    "tokens_out": 231,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "0919b03aa48c163db340fe8fcc675f9bccf2b06148a67ae2367cec2659158b7e": {
+    "content": "{\"class\": \"motivation.stakeholder\", \"confidence\": 0.8}",
+    "tokens_in": 20297,
+    "tokens_out": 106,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "2cd20cebee9c026344526eefa3a71a86b70eaa039031622b14ecd9b91c0d562a": {
+    "content": "{\"class\": \"motivation.requirement\", \"confidence\": 0.5}",
+    "tokens_in": 20202,
+    "tokens_out": 201,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "32be795edfabaab3d3452ff87aaa1763cbf7901bf2b7b0e6c234c7d4ce57c31f": {
+    "content": "{\"class\": \"motivation.goal\", \"confidence\": 0.6}",
+    "tokens_in": 20086,
+    "tokens_out": 211,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "3de507449fb6afbd7b76623383f97d787f1dd2b2f1070bf4891d731b27d7b0b1": {
+    "content": "{\"class\": \"motivation.requirement\", \"confidence\": 0.55}",
+    "tokens_in": 20254,
+    "tokens_out": 180,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "cb4d98ca921b1e382ff67e369548a8b163e347d144517c4c1851d8971a06ac7f": {
+    "content": "{\"class\": \"product.milestone\", \"confidence\": 0.45}",
+    "tokens_in": 20094,
+    "tokens_out": 146,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "306b205a0f4456f9268ade2d80e0b9a352bac78029c2f5d3eb12ab4dd08fd8a0": {
+    "content": "{\"class\": \"motivation.goal\", \"confidence\": 0.8}",
+    "tokens_in": 20044,
+    "tokens_out": 127,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "f5666a555acdd3c84824b8772ef0af974b39f4df153ff090f6a0461042546b4e": {
+    "content": "{\"class\": \"motivation.stakeholder\", \"confidence\": 0.5}",
+    "tokens_in": 20254,
+    "tokens_out": 372,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "37cfbaf267bb71fa173c43e579ef23634c428ed8ebbaf8554a20c784338a87ca": {
+    "content": "{\"class\": \"motivation.goal\", \"confidence\": 0.7}",
+    "tokens_in": 20249,
+    "tokens_out": 133,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "ffd8272e30cf6da8e7ae66eb6d5d0a2bf99c82f5ab2dd022d49dc8b5268145b2": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.85}",
+    "tokens_in": 20219,
+    "tokens_out": 121,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "df871bf706ca3c60878196729f3286c0275b3e1a870563a51a37c7508d627073": {
+    "content": "{\"class\": \"motivation.goal\", \"confidence\": 0.8}",
+    "tokens_in": 20200,
+    "tokens_out": 115,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "f5dca46a485ad293ba62f7b0cf6186e38b3a12331cb89e13b9f1117414623c8a": {
+    "content": "{\"class\": \"motivation.goal\", \"confidence\": 0.8}",
+    "tokens_in": 20193,
+    "tokens_out": 160,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "a62184df42011a2a6048cea47456b8ee858b33b2eb8065a2ed8510b933bf2ec6": {
+    "content": "{\"class\": \"motivation.goal\", \"confidence\": 0.5}",
+    "tokens_in": 20169,
+    "tokens_out": 264,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "b4a0012535490c8bc5954d06f9de85179ef3082a898f1221791f99287043212c": {
+    "content": "{\"class\": \"motivation.assessment\", \"confidence\": 0.5}",
+    "tokens_in": 20291,
+    "tokens_out": 313,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "c18f719912b17c8da489d84a3f868dad44ff3ca827aac4115d4df8a123456f7a": {
+    "content": "{\"class\": \"motivation.goal\", \"confidence\": 0.7}",
+    "tokens_in": 20318,
+    "tokens_out": 159,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "98dd273399157fa2129b81fec40e869f04eb601b7073d18b744333b8bf8c0d04": {
+    "content": "{\"class\": \"motivation.goal\", \"confidence\": 0.45}",
+    "tokens_in": 20329,
+    "tokens_out": 245,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "520d7ff36fb2633b515a414f9c7e2ac53aad4780e9d91e7eb0154b33fc396144": {
+    "content": "{\"class\": \"motivation.principle\", \"confidence\": 0.5}",
+    "tokens_in": 20308,
+    "tokens_out": 284,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "d6d0b6cf68c7211d79e3125a03f57357b9434a0a32c41a77ba77744b3bd77baf": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.7}",
+    "tokens_in": 20343,
+    "tokens_out": 202,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "71eddcc4ecab162d9180a1d90b50dead4b9773a346253dc9c6dfda7d6d306b00": {
+    "content": "{\"class\": \"motivation.driver\", \"confidence\": 0.5}",
+    "tokens_in": 20305,
+    "tokens_out": 384,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "e517ba262b277490e9b6ece2d3f5204c9033fc79fe025084d445e7016618e35a": {
+    "content": "{\"class\": \"motivation.goal\", \"confidence\": 0.85}",
+    "tokens_in": 20084,
+    "tokens_out": 96,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "6b8cb1b63ceabe5230ab2b26317e75fc89aa200d013d32f2857dc140c407be0d": {
+    "content": "{\"class\": \"motivation.goal\", \"confidence\": 0.9}",
+    "tokens_in": 20049,
+    "tokens_out": 92,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "5a6a3547fa35f7701ca96bbc2aedace6a12602e2d3583d74b466fe1ad3661063": {
+    "content": "{\"class\": \"motivation.requirement\", \"confidence\": 0.6}",
+    "tokens_in": 20271,
+    "tokens_out": 242,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "53162c6926320ccf97ffceaf03aad301ad8a9589d853b64c242d00b132c6e3a8": {
+    "content": "{\"class\": \"motivation.requirement\", \"confidence\": 0.6}",
+    "tokens_in": 20235,
+    "tokens_out": 216,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "4391f0750c22c0abe0f55c97984ab083bc5a6f561715d9a4e7e7125aa1c3ca5b": {
+    "content": "{\"class\": \"motivation.goal\", \"confidence\": 0.8}",
+    "tokens_in": 20003,
+    "tokens_out": 128,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "f0e93d6240ff257374acf2783743a7554ba28fddd3c51d72c879c18afe2f8ad8": {
+    "content": "{\"class\": \"business.businessactor\", \"confidence\": 0.8}",
+    "tokens_in": 20277,
+    "tokens_out": 95,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "4170bbb9a114b57dd41239b83f8676bb6e596f9278e0f0211bcaab3bd354cf58": {
+    "content": "{\"class\": \"motivation.goal\", \"confidence\": 0.5}",
+    "tokens_in": 20291,
+    "tokens_out": 334,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "87b64991ed3559f4eb86092aa8d6b3f2a769a3937f8b396cc796289eca05dc70": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.72}",
+    "tokens_in": 20301,
+    "tokens_out": 200,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "79a64b22af1972fd352212ffac66c961a616186a0aaf64d2e71f8db290820db7": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.9}",
+    "tokens_in": 20269,
+    "tokens_out": 19,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "9e25436322b4aac78c016644062a777ed98f41716a1625abd5d5ca5f68c69a45": {
+    "content": "{\"class\": \"business.product\", \"confidence\": 0.5}",
+    "tokens_in": 20132,
+    "tokens_out": 345,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "e0ed2dd413b234cb0abfbdca812b16e5c01a06a9010f5887f5d7bbc3843fdc40": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.85}",
+    "tokens_in": 20082,
+    "tokens_out": 89,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "16694cbf8b726031448a88c7b99858ad51a9429a4feb0b4d373c56c891e0325a": {
+    "content": "{\"class\": \"technology.technologyservice\", \"confidence\": 0.5}",
+    "tokens_in": 20065,
+    "tokens_out": 366,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "9490c9108c233fbf005fd67eb8da73daa24355467eb5c84bbb672f0b0ecd9eba": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.8}",
+    "tokens_in": 20038,
+    "tokens_out": 165,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "869e2b8741bc67c1074751e7e6f35756538463f7c828cd5fd0fb715ab231154d": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.55}",
+    "tokens_in": 20029,
+    "tokens_out": 375,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "6e51f4d9c0f19fc0d6a6e19d0045d4419433b10495c65aaa1727419df91c90d4": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.9}",
+    "tokens_in": 20245,
+    "tokens_out": 19,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "c51c96eb82505d0b55ac8cb39cf0eaba6c4ddf4bf229e284f4057a93bfc3e14e": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.85}",
+    "tokens_in": 20116,
+    "tokens_out": 127,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "b450ead0d0b3419521e76c7abbc7e5b3c67554f1132b1358c11e33ccd73b5cc7": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.9}",
+    "tokens_in": 20244,
+    "tokens_out": 59,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "695660b91f639a6d0829f0ee8eb40bfbb7957ac885e211129f5c5a081c6bb68c": {
+    "content": "{\"class\": \"security.role\", \"confidence\": 0.4}",
+    "tokens_in": 20114,
+    "tokens_out": 355,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "d904b2d733ed40de5ed813ea7b81262a50c1c646bbcc60c5b07437b4a7e7a25b": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.6}",
+    "tokens_in": 20030,
+    "tokens_out": 557,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "ae4db73d7836c7c4ee968ddb01f79ecdb1ce10db7527644a1facf7052f2865c1": {
+    "content": "{\"class\": \"technology.artifact\", \"confidence\": 0.4}",
+    "tokens_in": 19978,
+    "tokens_out": 376,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "991e48711f46f5badfc28372cf362aaa1a0ad3d99c487d356a5ed8d1750b995b": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.85}",
+    "tokens_in": 20232,
+    "tokens_out": 105,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "e3002f6631bed090dda53e303379cff07df68344b41b97bd1eb15aaa4e7dc0e4": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.6}",
+    "tokens_in": 20294,
+    "tokens_out": 274,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "23f0a221196026972ca79da3092c2fdca429b7c5e83bf270cff44ff73e4cce87": {
+    "content": "{\"class\": \"motivation.principle\", \"confidence\": 0.6}",
+    "tokens_in": 20307,
+    "tokens_out": 261,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "cc7df68bb741b1c38a3514835396dabb4244a15b883f1af90a629b4a7378b669": {
+    "content": "{\"class\": \"motivation.principle\", \"confidence\": 0.6}",
+    "tokens_in": 20223,
+    "tokens_out": 158,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "37ad1b4e372e4270c4de9140d344b183b43dc2132594c553e1f8ff06c48f14a8": {
+    "content": "{\"class\": \"motivation.principle\", \"confidence\": 0.5}",
+    "tokens_in": 20176,
+    "tokens_out": 326,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "aec3e19d5f3ccd5e2a61ca2c44a46fa37e43e43260c101cef4b26d1b3697ff7d": {
+    "content": "{\"class\": \"motivation.value\", \"confidence\": 0.6}",
+    "tokens_in": 20290,
+    "tokens_out": 247,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "a5adaa53907b9a784548cf384e57b363809bdf228218cb718660bbc39e421143": {
+    "content": "{\"class\": \"motivation.principle\", \"confidence\": 0.6}",
+    "tokens_in": 20260,
+    "tokens_out": 345,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "269433ff25c72ed8fecaf5a3db65b459f718d64970525993545de7a3380c7380": {
+    "content": "{\"class\": \"motivation.value\", \"confidence\": 0.5}",
+    "tokens_in": 20372,
+    "tokens_out": 411,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "bbb12689ec0fe2aff23995eec3cf116a7166dfc3e08969ba19a4dd9dfe73416c": {
+    "content": "{\"class\": \"motivation.principle\", \"confidence\": 0.5}",
+    "tokens_in": 20329,
+    "tokens_out": 434,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "5e9280eb38d62598752cfa904963ed40b7515409c0c18c892f4b7332c26a1a1e": {
+    "content": "{\"class\": \"motivation.principle\", \"confidence\": 0.6}",
+    "tokens_in": 20283,
+    "tokens_out": 210,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "f4ba514161a12f6ce758e6756ce9975b8f3880c9d24c74722753f90717953b30": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.85}",
+    "tokens_in": 20252,
+    "tokens_out": 85,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "649903fe9e335a423492ea58e71663e1000fcdabe286502f0f118b42d358ee0c": {
+    "content": "{\"class\": \"motivation.constraint\", \"confidence\": 0.5}",
+    "tokens_in": 20310,
+    "tokens_out": 319,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "c2a96e9aba73db531da30e9e42c6bc6943956ee71306d1b092851a189c20e57b": {
+    "content": "{\"class\": \"motivation.constraint\", \"confidence\": 0.45}",
+    "tokens_in": 20294,
+    "tokens_out": 382,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "ff2bcffa94a1eeedbad85da234b074c9cb1a0dcc6614517722e57e30d36bebe2": {
+    "content": "{\"class\": \"motivation.principle\", \"confidence\": 0.8}",
+    "tokens_in": 20191,
+    "tokens_out": 73,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "26e691ab6c31a530237258f4626600d54741f8a8e50e1a365b75226101dcdf83": {
+    "content": "{\"class\": \"motivation.principle\", \"confidence\": 0.55}",
+    "tokens_in": 20282,
+    "tokens_out": 254,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "552a0ce4131268e4dbddf769665059f613e06bd99fc131cf5c3cdf15d45741a3": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.8}",
+    "tokens_in": 19951,
+    "tokens_out": 137,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "ed35410c9a9b405902b592a7c4224eda744aba61274ea94d478a4513f13a5b9c": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.7}",
+    "tokens_in": 20308,
+    "tokens_out": 177,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "c500ee0fa71a29a143df533ab736c38afac03113757d85eb08ae94dd44c5a1da": {
+    "content": "{\"class\": \"security.authenticationconfig\", \"confidence\": 0.4}",
+    "tokens_in": 20018,
+    "tokens_out": 315,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "e51c257331b3b89e6ebf6dc52624948f8ce5f4041d95f4f24fedcec51fbebba0": {
+    "content": "{\"class\": \"business.product\", \"confidence\": 0.5}",
+    "tokens_in": 20205,
+    "tokens_out": 295,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "67a4d085ff217967e5639c5a0ff7ba24c5f5832269401730da397994bc2f6300": {
+    "content": "{\"class\": \"business.businessactor\", \"confidence\": 0.6}",
+    "tokens_in": 20151,
+    "tokens_out": 113,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "25ab12edc718a0ba99d1ef6e88ceed30e98bc717125c8e44d1f05cf18ff5822b": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.9}",
+    "tokens_in": 20113,
+    "tokens_out": 19,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "8edcc3b240bb518d14f2eaeb735da49029ca509891c4b31d2649352be6456578": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.8}",
+    "tokens_in": 20002,
+    "tokens_out": 210,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "c9846671b1d4755ea50a9be09537abc30f9dd915cb092b895f4a550d83452819": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.6}",
+    "tokens_in": 20004,
+    "tokens_out": 363,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "9e30fcccf6bac6a64ead62e6f530df8904df9800880fc405685ab563825872aa": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.8}",
+    "tokens_in": 20185,
+    "tokens_out": 181,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "dfc7f522465826aaf9ebe9835f2f5462ea33c85597c11834c319001b1ae7c641": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.9}",
+    "tokens_in": 20299,
+    "tokens_out": 47,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "9fa8ca3816e1ee42e98babfebd87199ed7cd2b777e77264aa71ab6661fe8878f": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.85}",
+    "tokens_in": 20324,
+    "tokens_out": 68,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "bf6af17d34b1213677027f63ae843d46d57c9c70a41e8a31cb3059b8e1600a2e": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.8}",
+    "tokens_in": 20226,
+    "tokens_out": 198,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "dc6e96ca769b78f71314e6e7e7d96dd53d0660e71d50f58dae5f1b126e01ee4b": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.9}",
+    "tokens_in": 20301,
+    "tokens_out": 77,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "509d8d393b1ef0357e9cb4c7ea1b0a65a0785c28b76781a063eac939d853e083": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.9}",
+    "tokens_in": 20328,
+    "tokens_out": 19,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "c3bec3431c6e70ddd35ee4682c2b4b825b0bf1bd10e3f9267a52764fe99c1d82": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.85}",
+    "tokens_in": 20321,
+    "tokens_out": 120,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "fbeb7a47703005fe08cbd0e91a825004f94ecaf9720c32b29a60d71baf151e2f": {
+    "content": "{\"class\": \"motivation.principle\", \"confidence\": 0.6}",
+    "tokens_in": 20305,
+    "tokens_out": 241,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "82a4af8b2b99456b4f28975ee47587f429576e23fcbdcde880c55dbb4c9113cb": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.85}",
+    "tokens_in": 20203,
+    "tokens_out": 106,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "d104221fa33051773c456eb4706943fe51c03a802f2052b5c82ed9b1a50ccf08": {
+    "content": "{\"class\": \"application.applicationservice\", \"confidence\": 0.5}",
+    "tokens_in": 20115,
+    "tokens_out": 337,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "a2c352da8f11e39c11fc8801a2a77c69f0e6e68a15aab5d129a739ad5fb23abf": {
+    "content": "{\"class\": \"application.applicationservice\", \"confidence\": 0.5}",
+    "tokens_in": 20309,
+    "tokens_out": 368,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "5177e1b2836d097ce10a66b971e764041cc94f4617cb04a21f05fcc242caa74a": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.8}",
+    "tokens_in": 20232,
+    "tokens_out": 133,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "f89465008c84e84e03170c6e1614a16d7ec1121b3880a1ab911c63ae8bce51c3": {
+    "content": "{\"class\": \"application.applicationservice\", \"confidence\": 0.5}",
+    "tokens_in": 20295,
+    "tokens_out": 337,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "33c858a7914bdb683169f2a3e16c69daf49350e234b4e226ad6c61b6e041d360": {
+    "content": "{\"class\": \"technology.artifact\", \"confidence\": 0.6}",
+    "tokens_in": 20031,
+    "tokens_out": 123,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "01c299d8fa74b4e5179a80f5e33e2fbe7bbf7e4b61f7a51487ad76dfbd328b55": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.7}",
+    "tokens_in": 20316,
+    "tokens_out": 280,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "723691567ae9962fc77846e3466816c45dbea34c20f8832dc21202ab1f6b18f0": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.6}",
+    "tokens_in": 19987,
+    "tokens_out": 223,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "7fcc4c194517dc20de76fabaca0df09d315c2d1e9a7f8802752ec8ca7e7eb1f0": {
+    "content": "{\"class\": \"api.schema\", \"confidence\": 0.4}",
+    "tokens_in": 20327,
+    "tokens_out": 382,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "3f3d00e09adba81eedb0f1f3d19dd954588fa5e5da8d141b2dee1fc892bddb0b": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.5}",
+    "tokens_in": 20263,
+    "tokens_out": 243,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "055bac5984b723adfa4389bbea4b907183932418ffd17d83b1997f72f3cd9331": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.85}",
+    "tokens_in": 20287,
+    "tokens_out": 19,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "3b0684b883fc9c4b73fa60a11777e2da25c6b99637e02f3a6c82878d6687edf7": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.8}",
+    "tokens_in": 20306,
+    "tokens_out": 150,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "d2b1c2a4d47a1b759e802f2f7e2f37822f56d7b37614b3bc3569884420a2a842": {
+    "content": "{\"class\": \"application.dataobject\", \"confidence\": 0.4}",
+    "tokens_in": 20292,
+    "tokens_out": 408,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "9271d6331ac2c12a8e8f52767e43485eef2845df53582fc52c8fc127b895faec": {
+    "content": "{\"class\": \"motivation.constraint\", \"confidence\": 0.5}",
+    "tokens_in": 20334,
+    "tokens_out": 209,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "d67b9d636565b5c4cd3a176423287382b4e87c13cf8f7a0b34b4e13315ff298c": {
+    "content": "{\"class\": \"motivation.constraint\", \"confidence\": 0.6}",
+    "tokens_in": 20349,
+    "tokens_out": 170,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "51a0e3046bf7321abae3976e96a4323e59f9c46dc9e47cb5d9a42d279d3f292e": {
+    "content": "{\"class\": \"motivation.principle\", \"confidence\": 0.8}",
+    "tokens_in": 20290,
+    "tokens_out": 102,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "997b8ad77ade7f714a1878d361f0622d2f6c556bdf14b4bba5da471576b19345": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.7}",
+    "tokens_in": 20102,
+    "tokens_out": 185,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "fac1a9f76ee7fb8ade8b2ebfe597cd4507ed2c5aab0dfb2663fda2839d5a3849": {
+    "content": "{\"class\": \"motivation.meaning\", \"confidence\": 0.5}",
+    "tokens_in": 20304,
+    "tokens_out": 251,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "f390aa40e9241ccc0c425acc54b569bf703fdb1d653c74d6d75f2cea51403dfa": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.7}",
+    "tokens_in": 20338,
+    "tokens_out": 231,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "093f49a2e39dfe52e5b71e40ccfe2ae70dc14f3bc45c5a27ff74ba79a8df2c0c": {
+    "content": "{\"class\": \"motivation.constraint\", \"confidence\": 0.6}",
+    "tokens_in": 20331,
+    "tokens_out": 248,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "1000d25f050de170d3a4bfb4a221e57f089ed8546f93ea0781df1c6ff2a472ee": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.8}",
+    "tokens_in": 20339,
+    "tokens_out": 181,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "096b610d3fe0ad89411169331cda5a45ba6a30742087c9ec71ccda3cef031e06": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.8}",
+    "tokens_in": 20364,
+    "tokens_out": 130,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "15a2b19c822bbbce405eb4e62267b84d74107c4e58e2fb84e043da531ed5a036": {
+    "content": "{\"class\": \"motivation.constraint\", \"confidence\": 0.5}",
+    "tokens_in": 20316,
+    "tokens_out": 310,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "ec270877c1535d70d369a70b741d1d3b5d8c83b4461668d018cfc2ab15a232b2": {
+    "content": "{\"class\": \"motivation.requirement\", \"confidence\": 0.5}",
+    "tokens_in": 20350,
+    "tokens_out": 383,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "2e75c20a24fd17020d7d8a4fa8e6d059fd0992565726236df8d2e815e4739398": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.85}",
+    "tokens_in": 20310,
+    "tokens_out": 62,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "682234eaf913fd800956f23725f3eb76b41eae56c98eb409c71285f0f392bb55": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.6}",
+    "tokens_in": 20063,
+    "tokens_out": 293,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "08415a35c570fd4a7154ecc5bf6d22e46f39becd2224f902437f0dc4c6938650": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.6}",
+    "tokens_in": 20219,
+    "tokens_out": 464,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "185e9e3f15e01afb5d8d4b613f51d4a128d8c8668514b640c743236e2a359eb3": {
+    "content": "{\"class\": \"application.applicationservice\", \"confidence\": 0.6}",
+    "tokens_in": 20332,
+    "tokens_out": 289,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "5fa9fb83550e8683ae209ff233cd878f0441e35f87f8e3c795ee61ad7db49acf": {
+    "content": "{\"class\": \"application.applicationservice\", \"confidence\": 0.55}",
+    "tokens_in": 20083,
+    "tokens_out": 308,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "97a7f02db41660d21988c208f06878404f552659d9e6e028491d68f98a7b5ac0": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.85}",
+    "tokens_in": 19949,
+    "tokens_out": 109,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "2da0a7a29e3b85302b6c6efb2a0dc39e76f1c74e54429678e23e48d89e52615d": {
+    "content": "{\"class\": \"technology.artifact\", \"confidence\": 0.4}",
+    "tokens_in": 20064,
+    "tokens_out": 539,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "595db0bd136ec56cc015b0705ba9e8f4409f5f5dcbab86e7453fd992d9733378": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.8}",
+    "tokens_in": 19955,
+    "tokens_out": 143,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "75163dc752f69201601f2aaa2f467d676f8ff9a5ad89a199cef8110686e8dd2a": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.8}",
+    "tokens_in": 20205,
+    "tokens_out": 129,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "4562ef881abb251454be3f5cb340cf1dc275acd08688fcc0efd3f03aef985286": {
+    "content": "{\"class\": \"business.businessactor\", \"confidence\": 0.8}",
+    "tokens_in": 20355,
+    "tokens_out": 104,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "64c3f1e1afe29bdf20e1f458c94e2d2ba9fca668452e83220e3eac6281e2bddc": {
+    "content": "{\"class\": \"business.businessactor\", \"confidence\": 0.85}",
+    "tokens_in": 20345,
+    "tokens_out": 139,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "1b8b7fa2f9e6b1fa32757ccf7e5bcc716d3ede3d017ae30b35e1b19a71d7f336": {
+    "content": "{\"class\": \"business.businessactor\", \"confidence\": 0.8}",
+    "tokens_in": 20356,
+    "tokens_out": 102,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "0cafbdc5bf48f2514e632104a9692247ac46b70381784057cc48e9eb43b33d25": {
+    "content": "{\"class\": \"business.businessactor\", \"confidence\": 0.8}",
+    "tokens_in": 20359,
+    "tokens_out": 113,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "c79c46b22fe04876ea8add20660eecc0644d3b72018178f19dd6b0228c91a592": {
+    "content": "{\"class\": \"business.businessactor\", \"confidence\": 0.8}",
+    "tokens_in": 20359,
+    "tokens_out": 126,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "93a84fdbc66514d39ecdd11df94cf69d43bd401422540f9f4f4fbc1d76cf57f5": {
+    "content": "{\"class\": \"business.businessactor\", \"confidence\": 0.8}",
+    "tokens_in": 20349,
+    "tokens_out": 108,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "497c315c69c6f4c502050674d6d9d16e4ff31fa55f3fdcdc8774572c35dbd74a": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.6}",
+    "tokens_in": 20436,
+    "tokens_out": 315,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "00d40e9716ae6c2b50df18aaafa6f82a83cc9fb334beba42931959bf59717698": {
+    "content": "{\"class\": \"business.businessactor\", \"confidence\": 0.5}",
+    "tokens_in": 20211,
+    "tokens_out": 251,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "d475eb2b5d9f3e576aac8cdced2bc2377963522923431b4c7fa7df22e9123a17": {
+    "content": "{\"class\": \"business.businessactor\", \"confidence\": 0.8}",
+    "tokens_in": 20282,
+    "tokens_out": 118,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "bfe90ff6eb889c3b89d3889d5fced302ddd5bfa416048e00418fc4bac0995f3c": {
+    "content": "{\"class\": \"business.businessactor\", \"confidence\": 0.6}",
+    "tokens_in": 20202,
+    "tokens_out": 128,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "599abc751d4d782ed64e7a4b5c5b89b22a3c1f4a828d35ad3fe98ebfe39e7ffe": {
+    "content": "{\"class\": \"business.businessactor\", \"confidence\": 0.8}",
+    "tokens_in": 20082,
+    "tokens_out": 101,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "c2b09a252d3ed2261598ce4b3a175e46e33343717ad06046dcfa0cd2d4ab3cc4": {
+    "content": "{\"class\": \"business.businessactor\", \"confidence\": 0.6}",
+    "tokens_in": 20113,
+    "tokens_out": 202,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "a414899ed44e4fa35e4854fe04628a8d10834c9e599b59a7b37415c85c01b45c": {
+    "content": "{\"class\": \"business.businessactor\", \"confidence\": 0.7}",
+    "tokens_in": 20137,
+    "tokens_out": 202,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "cb2cd92a250e0d554349cc89c1b32d1edbba6527a7cee40f2a8afc832a201688": {
+    "content": "{\"class\": \"business.businessactor\", \"confidence\": 0.7}",
+    "tokens_in": 20106,
+    "tokens_out": 199,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "88004269bbef3d50ebdbdf623160e1ceb1b2bbdf499bcca98db04188dc473595": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.85}",
+    "tokens_in": 20082,
+    "tokens_out": 101,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "ebee73105dc3fafc6d9d156a0101eedaddc5984ef218229520382c40f510b190": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.8}",
+    "tokens_in": 20028,
+    "tokens_out": 123,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "9e94c35ce46364684b339eed228ee92971479f26075ccbf0a0450fc787aed573": {
+    "content": "{\"class\": \"business.businessactor\", \"confidence\": 0.45}",
+    "tokens_in": 20090,
+    "tokens_out": 415,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "725f86c9b8b3a9ef9a4af0050a06e0ebbf83584cac61a283748c33f80d845b0a": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.9}",
+    "tokens_in": 20356,
+    "tokens_out": 118,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "2db46e9bdae5f9d8c225974b59c1130f889edb2ea1e2791547fb47cfe7d138fb": {
+    "content": "{\"class\": \"product.feature\", \"confidence\": 0.6}",
+    "tokens_in": 20322,
+    "tokens_out": 267,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "be2f2689ad40aefe10f39d0d17148e77944d57e566167a851e52c59e156d1196": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.6}",
+    "tokens_in": 20153,
+    "tokens_out": 191,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "d5c16dbad2901940b27e23ac3d93bd160d823add82c5e6179f84f577c29c8895": {
+    "content": "{\"class\": \"product.softwarecapability\", \"confidence\": 0.5}",
+    "tokens_in": 20318,
+    "tokens_out": 326,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "11541ec7d20bd50bfb564a7094de71880a9cdb7405aeff7a2393ca15d3d89f7a": {
+    "content": "{\"class\": \"product.softwarecapability\", \"confidence\": 0.6}",
+    "tokens_in": 20310,
+    "tokens_out": 193,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "d3475656b6beedeb5c75eb324c79f9207d6269ac69280aabe1d2a2974b43cd18": {
+    "content": "{\"class\": \"motivation.requirement\", \"confidence\": 0.7}",
+    "tokens_in": 20255,
+    "tokens_out": 214,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "c3b56505d4555195dec0e04f967611524f1284ee76ad90e6adb89ad91f05a527": {
+    "content": "{\"class\": \"motivation.requirement\", \"confidence\": 0.6}",
+    "tokens_in": 19994,
+    "tokens_out": 189,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "66af9fc3a123068e368f06259756e935d4e430e2e3f073ffc672f93c3ad95b08": {
+    "content": "{\"class\": \"motivation.requirement\", \"confidence\": 0.6}",
+    "tokens_in": 20282,
+    "tokens_out": 219,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "04bd7883ed677c4173b3af0a1793902f217f4b0517bb1a32cfbe9d9c873cd2f4": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.5}",
+    "tokens_in": 20343,
+    "tokens_out": 249,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "2b77ded94dd8257c18889fbea9ed0af3df591e5fd771fa3099c41bc0f1364231": {
+    "content": "{\"class\": \"motivation.outcome\", \"confidence\": 0.5}",
+    "tokens_in": 20313,
+    "tokens_out": 351,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "4167febdc7bdb39a9730fb48c2c7b663ef6915b596e87445b8727b9aac200a2c": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.9}",
+    "tokens_in": 20337,
+    "tokens_out": 67,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "dbc8aebb8e6907b2693ae3119e87cebf4d61198981f198ab8d06b3c973d28cf7": {
+    "content": "{\"class\": \"product.softwarecapability\", \"confidence\": 0.6}",
+    "tokens_in": 20357,
+    "tokens_out": 261,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "0d8c325d977e14490ff8f91d2c438dd38dd312b2226ae65797c777679e0d2c6f": {
+    "content": "{\"class\": \"business.businessevent\", \"confidence\": 0.55}",
+    "tokens_in": 20315,
+    "tokens_out": 161,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "f0899650c862ce2cbe6b98456e11e93b08c7634bdbe13241f6742e68fa2694e3": {
+    "content": "{\"class\": \"product.softwarecapability\", \"confidence\": 0.5}",
+    "tokens_in": 20140,
+    "tokens_out": 372,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "cf4a2aff509bc4ed97572fd612a3441f96f0f907f1a34983000a35a15952768f": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.8}",
+    "tokens_in": 20093,
+    "tokens_out": 140,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "189a4b7a1b943346913b171096ef281fc305fea4b0c221071693b2fed1c9004d": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.8}",
+    "tokens_in": 20036,
+    "tokens_out": 176,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "599eff94c65790c2a1b36a8341ad9e764715fdcb13138cb94282317c58f256d8": {
+    "content": "```json\n{\n  \"triples\": [\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"wikimedia-enterprise\", \"label\": \"Wikimedia Enterprise\"},\n      \"predicate\": {\"property_definition_id\": \"realizes\", \"label\": \"realizes\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"service-goal-build-services-for-reusers\", \"label\": \"Service goal: build services for reusers\"},\n      \"confidence\": 0.9,\n      \"provenance\": {\"text_offset_start\": 260, \"text_offset_end\": 370, \"raw\": \"The goal of the service is to build services for high-volume commercial reusers of Wikimedia content.\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"wikimedia-enterprise\", \"label\": \"Wikimedia Enterprise\"},\n      \"predicate\": {\"property_definition_id\": \"realizes\", \"label\": \"realizes\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"faster-more-reliable-data-services-at-scale\", \"label\": \"Faster, more reliable data services at scale\"},\n      \"confidence\": 0.85,\n      \"provenance\": {\"text_offset_start\": 1000, \"text_offset_end\": 1140, \"raw\": \"providing data services at a large scale, so that they are faster and more comprehensive, reliable, and secure.\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"wikimedia-enterprise\", \"label\": \"Wikimedia Enterprise\"},\n      \"predicate\": {\"property_definition_id\": \"realizes\", \"label\": \"realizes\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"improve-reader-experience-beyond-own-websites\", \"label\": \"Improve reader experience beyond own websites\"},\n      \"confidence\": 0.85,\n      \"provenance\": {\"text_offset_start\": 1141, \"text_offset_end\": 1240, \"raw\": \"Wikimedia Enterprise aims to improve the user experience of Wikimedia's readers beyond our own websites\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"wikimedia-enterprise\", \"label\": \"Wikimedia Enterprise\"},\n      \"predicate\": {\"property_definition_id\": \"realizes\", \"label\": \"realizes\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"increase-reach-and-discoverability-of-content\", \"label\": \"Increase reach and discoverability of content\"},\n      \"confidence\": 0.85,\n      \"provenance\": {\"text_offset_start\": 1241, \"text_offset_end\": 1300, \"raw\": \"increase the reach and discoverability of the content\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"wikimedia-enterprise\", \"label\": \"Wikimedia Enterprise\"},\n      \"predicate\": {\"property_definition_id\": \"realizes\", \"label\": \"realizes\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"improve-attribution-and-verifiability-by-reusers\", \"label\": \"Improve attribution and verifiability by reusers\"},\n      \"confidence\": 0.85,\n      \"provenance\": {\"text_offset_start\": 1301, \"text_offset_end\": 1400, \"raw\": \"improve awareness and ease of attribution and verifiability by the organizations that reuse Wikimedia project data the most\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"wikimedia-enterprise\", \"label\": \"Wikimedia Enterprise\"},\n      \"predicate\": {\"property_definition_id\": \"realizes\", \"label\": \"realizes\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"sustainable-approach-with-clearer-enterprise-relationship\", \"label\": \"Sustainable approach with clearer enterprise relationship\"},\n      \"confidence\": 0.5,\n      \"provenance\": {\"text_offset_start\": 2000, \"text_offset_end\": 2110, \"raw\": \"developing a new approach that is more sustainable in the long term and provides a much clearer relationship between Wikimedia and enterprise users.\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"large-scale-content-reusers\", \"label\": \"Large-scale content reusers\"},\n      \"predicate\": {\"property_definition_id\": \"associated-with\", \"label\": \"associated-with\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"reuser-requirement-frequency\", \"label\": \"Reuser requirement: frequency\"},\n      \"confidence\": 0.7,\n      \"provenance\": {\"text_offset_start\": 2900, \"text_offset_end\": 2990, \"raw\": \"Reusers of our content are looking for three critical components:\\n\\n- **Frequency**: Regular current snapshots of Wikimedia projects\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"large-scale-content-reusers\", \"label\": \"Large-scale content reusers\"},\n      \"predicate\": {\"property_definition_id\": \"associated-with\", \"label\": \"associated-with\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"reuser-requirement-reliability\", \"label\": \"Reuser requirement: reliability\"},\n      \"confidence\": 0.7,\n      \"provenance\": {\"text_offset_start\": 2900, \"text_offset_end\": 3080, \"raw\": \"Reusers of our content are looking for three critical components:\\n\\n- **Frequency**: Regular current snapshots of Wikimedia projects\\n- **Reliability**: Dependable, accessible infrastructure\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"large-scale-content-reusers\", \"label\": \"Large-scale content reusers\"},\n      \"predicate\": {\"property_definition_id\": \"associated-with\", \"label\": \"associated-with\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"best-last-revision\", \"label\": \"Best last revision\"},\n      \"confidence\": 0.7,\n      \"provenance\": {\"text_offset_start\": 2900, \"text_offset_end\": 3150, \"raw\": \"Reusers of our content are looking for three critical components:\\n\\n- **Frequency**: Regular current snapshots of Wikimedia projects\\n- **Reliability**: Dependable, accessible infrastructure\\n- **Quality**: a \u201cbest last revision\u201d\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"heavy-for-profit-users\", \"label\": \"Heavy for-profit users\"},\n      \"predicate\": {\"property_definition_id\": \"associated-with\", \"label\": \"associated-with\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"large-companies-should-reinvest-in-communities\", \"label\": \"Large companies should reinvest in communities\"},\n      \"confidence\": 0.75,\n      \"provenance\": {\"text_offset_start\": 1700, \"text_offset_end\": 1880, \"raw\": \"There has long been a feeling among community members that these companies should do more to reinvest in the Wikimedia communities for the benefits they gain from the content and resources they use.\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"high-barrier-to-entry-for-wikimedia-data\", \"label\": \"High barrier to entry for Wikimedia data\"},\n      \"predicate\": {\"property_definition_id\": \"influence\", \"label\": \"influence\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"increase-reach-and-discoverability-of-content\", \"label\": \"Increase reach and discoverability of content\"},\n      \"confidence\": 0.5,\n      \"provenance\": {\"text_offset_start\": 1500, \"text_offset_end\": 1700, \"raw\": \"This is because the content is hard for machines to segment and understand, which in turn affects how far Wikimedia project data reaches beyond our own ecosystem, and the scale of impact it can have.\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"large-companies-should-reinvest-in-communities\", \"label\": \"Large companies should reinvest in communities\"},\n      \"predicate\": {\"property_definition_id\": \"influence\", \"label\": \"influence\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"sustainable-approach-with-clearer-enterprise-relationship\", \"label\": \"Sustainable approach with clearer enterprise relationship\"},\n      \"confidence\": 0.5,\n      \"provenance\": {\"text_offset_start\": 1960, \"text_offset_end\": 2110, \"raw\": \"This led to the idea of developing a new approach that is more sustainable in the long term and provides a much clearer relationship between Wikimedia and enterprise users.\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"responsibility-to-democratize-data\", \"label\": \"Responsibility to democratize data\"},\n      \"predicate\": {\"property_definition_id\": \"influence\", \"label\": \"influence\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"level-the-playing-field-without-reinforcing-monopolies\", \"label\": \"Level the playing field without reinforcing monopolies\"},\n      \"confidence\": 0.7,\n      \"provenance\": {\"text_offset_start\": 2200, \"text_offset_end\": 2420, \"raw\": \"there is a responsibility to democratize our data for organizations that do not possess the resources of these largest users, to ensure we are leveling the playing field and helping to foster a healthy internet without reinforcing monopolies.\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"responsibility-to-democratize-data\", \"label\": \"Responsibility to democratize data\"},\n      \"predicate\": {\"property_definition_id\": \"influence\", \"label\": \"influence\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"benefits-should-extend-beyond-startups\", \"label\": \"Benefits should extend beyond startups\"},\n      \"confidence\": 0.5,\n      \"provenance\": {\"text_offset_start\": 2430, \"text_offset_end\": 2600, \"raw\": \"The benefits of such a service shouldn't just be for startups or alternatives to the internet giants, but also for universities and university researchers\"}\n    }\n  ]\n}\n```",
+    "tokens_in": 3551,
+    "tokens_out": 6063,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "45321c20d86adf7a844e3db11fbd7e2a9eb0fe2522b1bae2ac0b822339fb5390": {
+    "content": "```json\n{\n  \"triples\": [\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"wikimedia-enterprise-apis\", \"label\": \"Wikimedia Enterprise APIs\"},\n      \"predicate\": {\"property_definition_id\": \"composes\", \"label\": \"composes\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"service-level-agreements\", \"label\": \"Service Level Agreements\"},\n      \"confidence\": 0.5,\n      \"provenance\": {\"text_offset_start\": 0, \"text_offset_end\": 0, \"raw\": \"The *primary* use case of the suite of Enterprise APIs is paid access for large commercial organisations, with associated Service Level Agreements and dedicated customer support.\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"wikimedia-projects-are-libre\", \"label\": \"Wikimedia projects are libre\"},\n      \"predicate\": {\"property_definition_id\": \"influence\", \"label\": \"influence\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"non-commercial-licenses-rejected\", \"label\": \"Non-commercial licenses rejected\"},\n      \"confidence\": 0.7,\n      \"provenance\": {\"text_offset_start\": 0, \"text_offset_end\": 0, \"raw\": \"Wikimedia projects are, have always been, and will always remain *libre*. The principles of free cultural works mean that anyone can use Wikimedia without restriction, including commercially. As a movement, we embrace this. It is why we reject \u2018non-commercial\u2019 licenses\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"wikimedia-projects-are-libre\", \"label\": \"Wikimedia projects are libre\"},\n      \"predicate\": {\"property_definition_id\": \"influence\", \"label\": \"influence\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"anyone-may-reuse\", \"label\": \"Anyone may reuse Wikimedia content without restriction\"},\n      \"confidence\": 0.75,\n      \"provenance\": {\"text_offset_start\": 0, \"text_offset_end\": 0, \"raw\": \"The principles of free cultural works mean that anyone can use Wikimedia without restriction, including commercially.\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"wikimedia-projects-are-gratis\", \"label\": \"Wikimedia projects are gratis\"},\n      \"predicate\": {\"property_definition_id\": \"influence\", \"label\": \"influence\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"content-available-at-no-cost\", \"label\": \"Content available for reuse at no cost\"},\n      \"confidence\": 0.7,\n      \"provenance\": {\"text_offset_start\": 0, \"text_offset_end\": 0, \"raw\": \"The full corpus of Wikimedia content always has been, and will continue to be, made available for reuse in various forms (including but not limited to database dumps, APIs, and scraping) at no cost.\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"free-access-core-to-mission\", \"label\": \"Free access to knowledge core to mission\"},\n      \"predicate\": {\"property_definition_id\": \"associated-with\", \"label\": \"associated-with\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"content-available-at-no-cost\", \"label\": \"Content available for reuse at no cost\"},\n      \"confidence\": 0.6,\n      \"provenance\": {\"text_offset_start\": 0, \"text_offset_end\": 0, \"raw\": \"The ability to freely access the knowledge available across all Wikimedia projects has always been core to the mission of the Foundation and the movement.\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"enterprise-api-use-not-required\", \"label\": \"Enterprise API use not required for for-profit reuse\"},\n      \"predicate\": {\"property_definition_id\": \"influence\", \"label\": \"influence\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"content-available-at-no-cost\", \"label\": \"Content available for reuse at no cost\"},\n      \"confidence\": 0.55,\n      \"provenance\": {\"text_offset_start\": 0, \"text_offset_end\": 0, \"raw\": \"Use of this offering will not be required for for-profit content reuse; companies can continue to use the current tools available at no cost.\"}\n    }\n  ]\n}\n```",
+    "tokens_in": 3844,
+    "tokens_out": 4238,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "55ba31ab9c93940867037e03fbcdbfa1603b88888acee280883221052c9a7a85": {
+    "content": "```json\n{\n  \"triples\": [\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"Snapshot API\", \"label\": \"Snapshot API\"},\n      \"predicate\": {\"property_definition_id\": \"accesses\", \"label\": \"accesses\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"Compressed dumps\", \"label\": \"Compressed dumps\"},\n      \"confidence\": 0.8,\n      \"provenance\": {\"text_offset_start\": 2960, \"text_offset_end\": 3075, \"raw\": \"The Enterprise Snapshot API allows users to retrieve entire Wikimedia projects as a database dump file.\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"On-demand API\", \"label\": \"On-demand API\"},\n      \"predicate\": {\"property_definition_id\": \"accesses\", \"label\": \"accesses\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"Article payload data\", \"label\": \"Article payload data\"},\n      \"confidence\": 0.6,\n      \"provenance\": {\"text_offset_start\": 2430, \"text_offset_end\": 2600, \"raw\": \"API responses payloads include article data such as summary, image, Wikidata QID, license, and metadata specific to the last revision\"}\n    }\n  ]\n}\n```",
+    "tokens_in": 4248,
+    "tokens_out": 3066,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "20029d9594dc113eafd5f7ab5a94c3d5854bc4025c0e231b53fa1055fcacb19c": {
+    "content": "```json\n{\n  \"triples\": [\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"Lane Becker\", \"label\": \"Lane Becker\"},\n      \"predicate\": {\"property_definition_id\": \"assigned-to\", \"label\": \"assigned-to\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"LLC president\", \"label\": \"LLC president\"},\n      \"confidence\": 0.9,\n      \"provenance\": {\"text_offset_start\": 1500, \"text_offset_end\": 1545, \"raw\": \"Lane Becker who serves as the LLC's president\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"Sheetal Puri\", \"label\": \"Sheetal Puri\"},\n      \"predicate\": {\"property_definition_id\": \"assigned-to\", \"label\": \"assigned-to\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"Chief Advancement Officer\", \"label\": \"Chief Advancement Officer\"},\n      \"confidence\": 0.9,\n      \"provenance\": {\"text_offset_start\": 1400, \"text_offset_end\": 1447, \"raw\": \"the Chief Advancement Officer Sheetal Puri\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"Stephen LaPorte\", \"label\": \"Stephen LaPorte\"},\n      \"predicate\": {\"property_definition_id\": \"assigned-to\", \"label\": \"assigned-to\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"General Counsel\", \"label\": \"General Counsel\"},\n      \"confidence\": 0.9,\n      \"provenance\": {\"text_offset_start\": 1448, \"text_offset_end\": 1483, \"raw\": \"General Counsel Stephen LaPorte\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"Selena Deckelman\", \"label\": \"Selena Deckelman\"},\n      \"predicate\": {\"property_definition_id\": \"assigned-to\", \"label\": \"assigned-to\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"Chief Product and Technology Officer\", \"label\": \"Chief Product and Technology Officer\"},\n      \"confidence\": 0.9,\n      \"provenance\": {\"text_offset_start\": 1485, \"text_offset_end\": 1536, \"raw\": \"Chief Product and Technology Officer Selena Deckelman\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"Wikimedia Enterprise On-demand API\", \"label\": \"Wikimedia Enterprise On-demand API\"},\n      \"predicate\": {\"property_definition_id\": \"realizes\", \"label\": \"realizes\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"Latest page data on demand to augment other APIs\", \"label\": \"Latest page data on demand to augment other APIs\"},\n      \"confidence\": 0.8,\n      \"provenance\": {\"text_offset_start\": 280, \"text_offset_end\": 380, \"raw\": \"Request the latest page data anytime to augment your Realtime or Snapshot API data\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"Wikimedia Enterprise On-demand API\", \"label\": \"Wikimedia Enterprise On-demand API\"},\n      \"predicate\": {\"property_definition_id\": \"satisfies\", \"label\": \"satisfies\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"Reliable data access requested by high-volume reusers\", \"label\": \"Reliable data access requested by high-volume reusers\"},\n      \"confidence\": 0.7,\n      \"provenance\": {\"text_offset_start\": 190, \"text_offset_end\": 262, \"raw\": \"High-volume reusers have requested a reliable means to gather this data\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"Wikimedia Enterprise Realtime API\", \"label\": \"Wikimedia Enterprise Realtime API\"},\n      \"predicate\": {\"property_definition_id\": \"realizes\", \"label\": \"realizes\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"Realtime firehose streaming\", \"label\": \"Realtime firehose streaming\"},\n      \"confidence\": 0.9,\n      \"provenance\": {\"text_offset_start\": 1000, \"text_offset_end\": 1090, \"raw\": \"Streaming: Receive streaming (firehose) updates of every change as they occur in real-time\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"Wikimedia Enterprise Realtime API\", \"label\": \"Wikimedia Enterprise Realtime API\"},\n      \"predicate\": {\"property_definition_id\": \"realizes\", \"label\": \"realizes\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"Batch compressed article downloads\", \"label\": \"Batch compressed article downloads\"},\n      \"confidence\": 0.9,\n      \"provenance\": {\"text_offset_start\": 1091, \"text_offset_end\": 1171, \"raw\": \"Batch: Download compressed files of all articles that were changed, generated hourly\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"Wikimedia Enterprise Realtime API\", \"label\": \"Wikimedia Enterprise Realtime API\"},\n      \"predicate\": {\"property_definition_id\": \"realizes\", \"label\": \"realizes\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"Event filtering by project or revision namespace\", \"label\": \"Event filtering by project or revision namespace\"},\n      \"confidence\": 0.9,\n      \"provenance\": {\"text_offset_start\": 1230, \"text_offset_end\": 1287, \"raw\": \"Filtering of events by Project or Revision Namespace\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"Wikimedia Enterprise Realtime API\", \"label\": \"Wikimedia Enterprise Realtime API\"},\n      \"predicate\": {\"property_definition_id\": \"realizes\", \"label\": \"realizes\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"Instant updates for new content, edits, deletions and breaking news\", \"label\": \"Instant updates for new content, edits, deletions and breaking news\"},\n      \"confidence\": 0.85,\n      \"provenance\": {\"text_offset_start\": 1288, \"text_offset_end\": 1411, \"raw\": \"Instant updates for new content, any edits, deletions, and breaking news events including community-curated visibility changes\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"Wikimedia Enterprise Realtime API\", \"label\": \"Wikimedia Enterprise Realtime API\"},\n      \"predicate\": {\"property_definition_id\": \"satisfies\", \"label\": \"satisfies\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"Enterprise Realtime API filtering requirement\", \"label\": \"Enterprise Realtime API filtering requirement\"},\n      \"confidence\": 0.7,\n      \"provenance\": {\"text_offset_start\": 760, \"text_offset_end\": 840, \"raw\": \"allow them to filter the changes they receive to limit their processing\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"Wikimedia Enterprise Realtime API\", \"label\": \"Wikimedia Enterprise Realtime API\"},\n      \"predicate\": {\"property_definition_id\": \"satisfies\", \"label\": \"satisfies\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"Stable HTTP connections to avoid data loss\", \"label\": \"Stable HTTP connections to avoid data loss\"},\n      \"confidence\": 0.7,\n      \"provenance\": {\"text_offset_start\": 842, \"text_offset_end\": 905, \"raw\": \"guarantee stable HTTP connections to ensure no data loss\"}\n    }\n  ]\n}\n```",
+    "tokens_in": 3277,
+    "tokens_out": 4582,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  }
+}

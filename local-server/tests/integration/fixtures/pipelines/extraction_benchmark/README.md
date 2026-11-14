@@ -137,4 +137,5 @@ behind them (missed, mistyped, spurious, duplicates, known distractors). The rul
   relationship stated under an alias counts. A title the run gave to two found statements names
   neither.
 Offline, the variant tournament scores each variant on these documents from recorded LLM
-responses; see `experiments/README.md`.
+responses, and `scripts/benchmark_replay.py --implementation find_then_type` scores the
+find-then-type implementation from its own recordings; see `experiments/README.md`.

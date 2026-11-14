@@ -1,0 +1,1605 @@
+{
+  "9c6118ac943183a68e8779a15eae6e2decbcdc3c9f1359c48f433ff737f4ea8e": {
+    "content": "{\"mentions\": [\n{\"name\": \"GitLab Community Edition (CE)\", \"kind\": \"thing\", \"quote\": \"The open source Community Edition (CE).\"},\n{\"name\": \"GitLab Enterprise Edition (EE)\", \"kind\": \"thing\", \"quote\": \"The open core Enterprise Edition (EE).\"},\n{\"name\": \"EE repository\", \"kind\": \"thing\", \"quote\": \"The EE repository has been archived.\"},\n{\"name\": \"Single codebase\", \"kind\": \"thing\", \"quote\": \"GitLab now operates under a single codebase.\"},\n{\"name\": \"GitLab subscriptions\", \"kind\": \"thing\", \"quote\": \"GitLab is available under different subscriptions.\"},\n{\"name\": \"Stable branches\", \"kind\": \"thing\", \"quote\": \"New versions of GitLab are released from stable branches\"},\n{\"name\": \"main branch\", \"kind\": \"thing\", \"quote\": \"the `main` branch is used for bleeding-edge development.\"},\n{\"name\": \"GitLab release process\", \"kind\": \"thing\", \"quote\": \"For more information, see the GitLab release process.\"},\n{\"name\": \"Component details section\", \"kind\": \"thing\", \"quote\": \"These components are described in the Component details section\"},\n{\"name\": \"Dependent components\", \"kind\": \"thing\", \"quote\": \"Both distributions require additional components.\"},\n{\"name\": \"GNU/Linux\", \"kind\": \"thing\", \"quote\": \"A typical install of GitLab is on GNU/Linux\"},\n{\"name\": \"Kubernetes platform\", \"kind\": \"thing\", \"quote\": \"growing number of deployments also use the Kubernetes platform.\"},\n{\"name\": \"GitLab.com\", \"kind\": \"thing\", \"quote\": \"The largest known GitLab instance is on GitLab.com\"},\n{\"name\": \"GitLab Helm chart\", \"kind\": \"thing\", \"quote\": \"deployed using our official GitLab Helm chart\"},\n{\"name\": \"Official Linux package\", \"kind\": \"thing\", \"quote\": \"and the official Linux package.\"},\n{\"name\": \"NGINX\", \"kind\": \"thing\", \"quote\": \"A typical installation uses NGINX or Apache as a web server\"},\n{\"name\": \"Apache\", \"kind\": \"thing\", \"quote\": \"A typical installation uses NGINX or Apache as a web server\"},\n{\"name\": \"GitLab Workhorse\", \"kind\": \"thing\", \"quote\": \"to proxy through GitLab Workhorse and into the Puma application server.\"},\n{\"name\": \"Puma application server\", \"kind\": \"thing\", \"quote\": \"GitLab serves web pages and the GitLab API using the Puma application server.\"},\n{\"name\": \"Sidekiq\", \"kind\": \"thing\", \"quote\": \"It uses Sidekiq as a job queue\"},\n{\"name\": \"Redis\", \"kind\": \"thing\", \"quote\": \"uses Redis as a non-persistent database backend for job information\"},\n{\"name\": \"PostgreSQL\", \"kind\": \"thing\", \"quote\": \"The GitLab application uses PostgreSQL for persistent database information\"},\n{\"name\": \"GitLab API\", \"kind\": \"thing\", \"quote\": \"GitLab serves web pages and the GitLab API using the Puma application server.\"},\n{\"name\": \"Unix domain socket\", \"kind\": \"thing\", \"quote\": \"communication between Puma and Workhorse is via a Unix domain socket\"},\n{\"name\": \"TCP forwarding\", \"kind\": \"thing\", \"quote\": \"but forwarding requests via TCP is also supported.\"},\n{\"name\": \"gitlab/public directory\", \"kind\": \"thing\", \"quote\": \"Workhorse accesses the `gitlab/public` directory\"},\n{\"name\": \"Uploads\", \"kind\": \"thing\", \"quote\": \"serve static pages, uploads (for example, avatar images or attachments)\"},\n{\"name\": \"Pre-compiled assets\", \"kind\": \"thing\", \"quote\": \"and pre-compiled assets.\"},\n{\"name\": \"Bare Git repositories\", \"kind\": \"thing\", \"quote\": \"GitLab stores the bare Git repositories in the location defined in the configuration file\"},\n{\"name\": \"Configuration file repositories section\", \"kind\": \"thing\", \"quote\": \"defined in the configuration file, `repositories:` section.\"},\n{\"name\": \"GitLab Shell\", \"kind\": \"thing\", \"quote\": \"The add-on component GitLab Shell serves repositories over SSH.\"},\n{\"name\": \"GitLab Shell configuration section\", \"kind\": \"thing\", \"quote\": \"It manages the SSH keys within the location defined in the configuration file, `GitLab Shell` section.\"},\n{\"name\": \"SSH keys\", \"kind\": \"thing\", \"quote\": \"It manages the SSH keys within the location defined in the configuration file\"},\n{\"name\": \"Gitaly\", \"kind\": \"thing\", \"quote\": \"Gitaly executes Git operations from GitLab Shell and the GitLab web app\"},\n{\"name\": \"GitLab Pages\", \"kind\": \"thing\", \"quote\": \"NGINX -- TCP 8090 --> GitLabPages\"},\n{\"name\": \"HTTP/HTTPS\", \"kind\": \"thing\", \"quote\": \"When serving repositories over HTTP/HTTPS GitLab uses the GitLab API\"},\n{\"name\": \"SSH\", \"kind\": \"thing\", \"quote\": \"The add-on component GitLab Shell serves repositories over SSH.\"},\n{\"name\": \"Production architecture of GitLab.com\", \"kind\": \"thing\", \"quote\": \"You may also be interested in the production architecture of GitLab.com.\"},\n{\"name\": \"Distribution team\", \"kind\": \"thing\", \"quote\": \"or reach out to the Distribution team.\"},\n{\"name\": \"Process for adding new service components\", \"kind\": \"thing\", \"quote\": \"Refer to the process for adding new service components for more details.\"},\n{\"name\": \"Simplified component overview diagram\", \"kind\": \"thing\", \"quote\": \"This is a simplified architecture diagram that can be used to understand the GitLab architecture.\"},\n{\"name\": \"Complete component diagram\", \"kind\": \"thing\", \"quote\": \"A complete architecture diagram is available in our component diagram below.\"},\n{\"name\": \"Stable dependent component versions\", \"kind\": \"statement\", \"quote\": \"staying on the `main` branch of the GitLab codebase gives you the latest stable version of those components.\"},\n{\"name\": \"Dependent components released with GitLab\", \"kind\": \"statement\", \"quote\": \"New versions are generally released around the same time as GitLab releases\"},\n{\"name\": \"Critical informal security updates\", \"kind\": \"statement\", \"quote\": \"with the exception of informal security updates deemed critical.\"},\n{\"name\": \"Shared state between services needs care\", \"kind\": \"statement\", \"quote\": \"the shared state between services needs to be carefully considered when architecting new features\"},\n{\"name\": \"Services exchange information through APIs\", \"kind\": \"statement\", \"quote\": \"Services that need to have access to the same files, need to be able to exchange information through the appropriate APIs.\"},\n{\"name\": \"Avoid files for service exchange\", \"kind\": \"statement\", \"quote\": \"Whenever possible, this should not be done with files.\"},\n{\"name\": \"Kubernetes compatibility first\", \"kind\": \"statement\", \"quote\": \"all new features and services must be written to consider Kubernetes compatibility first.\"},\n{\"name\": \"API-first philosophy\", \"kind\": \"statement\", \"quote\": \"components written with the API-first philosophy in mind are compatible with both methods\"},\n{\"name\": \"Shared files not an option on Kubernetes\", \"kind\": \"statement\", \"quote\": \"Shared files are not an option for the application running on the Kubernetes platform.\"},\n{\"name\": \"Services isolated in Kubernetes\", \"kind\": \"statement\", \"quote\": \"where services might be running in complete isolation, or only accessible through specific ports.\"},\n{\"name\": \"All connections use Unix sockets\", \"kind\": \"statement\", \"quote\": \"All connections use Unix sockets unless noted otherwise.\"}\n]}",
+    "tokens_in": 2824,
+    "tokens_out": 3011,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "b954b88925c04b863a981ae462be10718ff258616f242cb2908762075aa18ff0": {
+    "content": "```json\n{\"mentions\": [\n{\"name\": \"Browser\", \"kind\": \"thing\", \"quote\": \"Browser((Browser))\"},\n{\"name\": \"Git\", \"kind\": \"thing\", \"quote\": \"Git((Git))\"},\n{\"name\": \"GitLab Geo\", \"kind\": \"thing\", \"quote\": \"Geo{{GitLab Geo}} -- TCP 80, 443 --> HTTP\"},\n{\"name\": \"GitLab Runner\", \"kind\": \"thing\", \"quote\": \"Runner{{GitLab Runner}} -- TCP 443 --> HTTP\"},\n{\"name\": \"GitLab agent\", \"kind\": \"thing\", \"quote\": \"K8sAgent{{GitLab agent}} -- TCP 443 --> HTTP\"},\n{\"name\": \"HTTP/HTTPS\", \"kind\": \"thing\", \"quote\": \"HTTP[[HTTP/HTTPS]]\"},\n{\"name\": \"SSH\", \"kind\": \"thing\", \"quote\": \"SSH[[SSH]]\"},\n{\"name\": \"NGINX\", \"kind\": \"thing\", \"quote\": \"NGINX[NGINX]\"},\n{\"name\": \"GitLab Shell\", \"kind\": \"thing\", \"quote\": \"GitLabShell[GitLab Shell]\"},\n{\"name\": \"GitLab Workhorse\", \"kind\": \"thing\", \"quote\": \"GitLabWorkhorse[GitLab Workhorse] <--> Puma\"},\n{\"name\": \"GitLab agent server\", \"kind\": \"thing\", \"quote\": \"GitLabKas[GitLab agent server] --> GitLabWorkhorse\"},\n{\"name\": \"GitLab Pages\", \"kind\": \"thing\", \"quote\": \"GitLabPages[GitLab Pages] --> GitLabWorkhorse\"},\n{\"name\": \"Registry\", \"kind\": \"thing\", \"quote\": \"NGINX --> Registry\"},\n{\"name\": \"Puma (GitLab Rails)\", \"kind\": \"thing\", \"quote\": \"Puma[\\\"Puma (GitLab Rails)\\\"]\"},\n{\"name\": \"Mailroom\", \"kind\": \"thing\", \"quote\": \"Mailroom\\n        Sidekiq\"},\n{\"name\": \"Sidekiq\", \"kind\": \"thing\", \"quote\": \"Sidekiq\\n    end\"},\n{\"name\": \"Grafana\", \"kind\": \"thing\", \"quote\": \"Grafana\\n        NGINX --> Grafana\"},\n{\"name\": \"PostgreSQL\", \"kind\": \"thing\", \"quote\": \"PostgreSQL\\n        PostgreSQL --> Consul\"},\n{\"name\": \"Consul\", \"kind\": \"thing\", \"quote\": \"Consul\\n        Puma ---> Consul\"},\n{\"name\": \"Database Migrations\", \"kind\": \"thing\", \"quote\": \"Migrations --> PostgreSQL\"},\n{\"name\": \"PgBouncer\", \"kind\": \"thing\", \"quote\": \"PgBouncer\\n        PgBouncer --> Consul\"},\n{\"name\": \"Redis\", \"kind\": \"thing\", \"quote\": \"Redis\\n        Puma --> Redis\"},\n{\"name\": \"Sentinel\", \"kind\": \"thing\", \"quote\": \"Sentinel <--> Redis\"},\n{\"name\": \"Praefect\", \"kind\": \"thing\", \"quote\": \"Praefect --> Gitaly\"},\n{\"name\": \"Gitaly\", \"kind\": \"thing\", \"quote\": \"Praefect --> Gitaly\"},\n{\"name\": \"PostgreSQL (Praefect)\", \"kind\": \"thing\", \"quote\": \"Praefect <--> PraefectPGSQL[PostgreSQL]\"},\n{\"name\": \"Object storage\", \"kind\": \"thing\", \"quote\": \"ObjectStorage[\\\"Object storage\\\"]\"},\n{\"name\": \"Prometheus\", \"kind\": \"thing\", \"quote\": \"Grafana -- TCP 9090 --> Prometheus[Prometheus]\"},\n{\"name\": \"Redis Exporter\", \"kind\": \"thing\", \"quote\": \"RedisExporter[Redis Exporter] --> Redis\"},\n{\"name\": \"PostgreSQL Exporter\", \"kind\": \"thing\", \"quote\": \"PostgreSQLExporter[PostgreSQL Exporter] --> PostgreSQL\"},\n{\"name\": \"PgBouncer Exporter\", \"kind\": \"thing\", \"quote\": \"PgBouncerExporter[PgBouncer Exporter] --> PgBouncer\"},\n{\"name\": \"Node Exporter\", \"kind\": \"thing\", \"quote\": \"Prometheus -- TCP 9100 --> NodeExporter[Node Exporter]\"},\n{\"name\": \"GitLab Exporter\", \"kind\": \"thing\", \"quote\": \"Prometheus -- TCP 9168 --> GitLabExporter[GitLab Exporter]\"},\n{\"name\": \"Alertmanager\", \"kind\": \"thing\", \"quote\": \"Prometheus --> Alertmanager\"},\n{\"name\": \"SMTP Gateway\", \"kind\": \"thing\", \"quote\": \"SMTP[SMTP Gateway]\"},\n{\"name\": \"LDAP\", \"kind\": \"thing\", \"quote\": \"Puma -- TCP 369 --> LDAP\"},\n{\"name\": \"Elasticsearch\", \"kind\": \"thing\", \"quote\": \"Puma -- TCP 9200 --> Elasticsearch\"},\n{\"name\": \"Zoekt\", \"kind\": \"thing\", \"quote\": \"Zoekt --> Praefect\"},\n{\"name\": \"Sentry\", \"kind\": \"thing\", \"quote\": \"Sidekiq -- TCP 80, 443 --> Sentry\"},\n{\"name\": \"Jaeger\", \"kind\": \"thing\", \"quote\": \"Sidekiq -- UDP 6831 --> Jaeger\"},\n{\"name\": \"Installed by default\", \"kind\": \"thing\", \"quote\": \"\u2705 - Installed by default\"},\n{\"name\": \"Requires additional configuration\", \"kind\": \"thing\", \"quote\": \"\u2699 - Requires additional configuration\"},\n{\"name\": \"Manual installation required\", \"kind\": \"thing\", \"quote\": \"\u2913 - Manual installation required\"},\n{\"name\": \"Not supported or no instructions available\", \"kind\": \"thing\", \"quote\": \"\u274c - Not supported or no instructions available\"},\n{\"name\": \"Not applicable\", \"kind\": \"thing\", \"quote\": \"N/A - Not applicable\"},\n{\"name\": \"Gitaly makes API calls\", \"kind\": \"statement\", \"quote\": \"%% Gitaly makes API calls\"},\n{\"name\": \"Gitaly performs repository backups to object storage\", \"kind\": \"statement\", \"quote\": \"%% Gitaly can perform repository backups to object storage.\"},\n{\"name\": \"Component statuses linked to configuration documentation\", \"kind\": \"statement\", \"quote\": \"Component statuses are linked to configuration documentation for each component.\"}\n]}\n```",
+    "tokens_in": 3900,
+    "tokens_out": 2750,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "625dde36e61c72781c6bf8a28aac74c4abeb416babffdfa5c6afd0d640a44e09": {
+    "content": "```json\n{\"mentions\": [\n{\"name\": \"AI Gateway\", \"kind\": \"thing\", \"quote\": \"AI Gateway\"},\n{\"name\": \"GitLab Duo Workflow Service\", \"kind\": \"thing\", \"quote\": \"GitLab Duo Workflow Service\"},\n{\"name\": \"Certificate Management\", \"kind\": \"thing\", \"quote\": \"Certificate Management\"},\n{\"name\": \"Consul\", \"kind\": \"thing\", \"quote\": \"Consul\"},\n{\"name\": \"Database Migrations\", \"kind\": \"thing\", \"quote\": \"Database Migrations\"},\n{\"name\": \"Elasticsearch\", \"kind\": \"thing\", \"quote\": \"Elasticsearch\"},\n{\"name\": \"Gitaly\", \"kind\": \"thing\", \"quote\": \"Gitaly\"},\n{\"name\": \"GitLab Exporter\", \"kind\": \"thing\", \"quote\": \"GitLab Exporter\"},\n{\"name\": \"GitLab Geo\", \"kind\": \"thing\", \"quote\": \"GitLab Geo\"},\n{\"name\": \"GitLab Pages\", \"kind\": \"thing\", \"quote\": \"GitLab Pages\"},\n{\"name\": \"GitLab agent for Kubernetes\", \"kind\": \"thing\", \"quote\": \"GitLab agent for Kubernetes\"},\n{\"name\": \"GitLab self-monitoring: Alertmanager\", \"kind\": \"thing\", \"quote\": \"GitLab self-monitoring: Alertmanager\"},\n{\"name\": \"GitLab self-monitoring: Grafana\", \"kind\": \"thing\", \"quote\": \"GitLab self-monitoring: Grafana\"},\n{\"name\": \"GitLab self-monitoring: Jaeger\", \"kind\": \"thing\", \"quote\": \"GitLab self-monitoring: Jaeger\"},\n{\"name\": \"GitLab self-monitoring: Prometheus\", \"kind\": \"thing\", \"quote\": \"GitLab self-monitoring: Prometheus\"},\n{\"name\": \"GitLab self-monitoring: Sentry\", \"kind\": \"thing\", \"quote\": \"GitLab self-monitoring: Sentry\"},\n{\"name\": \"GitLab Shell\", \"kind\": \"thing\", \"quote\": \"GitLab Shell\"},\n{\"name\": \"GitLab Workhorse\", \"kind\": \"thing\", \"quote\": \"GitLab Workhorse\"},\n{\"name\": \"Inbound email (SMTP)\", \"kind\": \"thing\", \"quote\": \"Inbound email (SMTP)\"},\n{\"name\": \"Jaeger integration\", \"kind\": \"thing\", \"quote\": \"Jaeger integration\"},\n{\"name\": \"LDAP Authentication\", \"kind\": \"thing\", \"quote\": \"LDAP Authentication\"},\n{\"name\": \"Object storage\", \"kind\": \"thing\", \"quote\": \"Object storage\"},\n{\"name\": \"NGINX\", \"kind\": \"thing\", \"quote\": \"NGINX\"},\n{\"name\": \"Node Exporter\", \"kind\": \"thing\", \"quote\": \"Node Exporter\"},\n{\"name\": \"Outbound email (SMTP)\", \"kind\": \"thing\", \"quote\": \"Outbound email (SMTP)\"},\n{\"name\": \"Patroni\", \"kind\": \"thing\", \"quote\": \"Patroni\"},\n{\"name\": \"PgBouncer Exporter\", \"kind\": \"thing\", \"quote\": \"PgBouncer Exporter\"},\n{\"name\": \"PgBouncer\", \"kind\": \"thing\", \"quote\": \"PgBouncer\"},\n{\"name\": \"PostgreSQL Exporter\", \"kind\": \"thing\", \"quote\": \"PostgreSQL Exporter\"},\n{\"name\": \"PostgreSQL\", \"kind\": \"thing\", \"quote\": \"PostgreSQL\"},\n{\"name\": \"Praefect\", \"kind\": \"thing\", \"quote\": \"Praefect\"},\n{\"name\": \"Omnibus GitLab\", \"kind\": \"thing\", \"quote\": \"Omnibus GitLab\"},\n{\"name\": \"GitLab Environment Toolkit (GET)\", \"kind\": \"thing\", \"quote\": \"GitLab Environment Toolkit (GET)\"},\n{\"name\": \"GitLab chart\", \"kind\": \"thing\", \"quote\": \"GitLab chart\"},\n{\"name\": \"minikube Minimal\", \"kind\": \"thing\", \"quote\": \"minikube Minimal\"},\n{\"name\": \"GitLab.com\", \"kind\": \"thing\", \"quote\": \"GitLab.com\"},\n{\"name\": \"GDK\", \"kind\": \"thing\", \"quote\": \"GDK\"},\n{\"name\": \"Component availability per deployment method recorded\", \"kind\": \"statement\", \"quote\": \"| Component | Description | Omnibus GitLab | GitLab Environment Toolkit (GET) | GitLab chart | minikube Minimal | GitLab.com | Source | GDK |  CE/EE  |\"},\n{\"name\": \"Each component marked as CE & EE or EE Only\", \"kind\": \"statement\", \"quote\": \"| EE Only |\"}\n]}\n```",
+    "tokens_in": 3453,
+    "tokens_out": 2500,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "03778e0cc590cc416b658605d92706ef106e7a90c24023bea6e1f17c27ee3329": {
+    "content": "```json\n{\"mentions\": [\n{\"name\": \"Puma (GitLab Rails)\", \"kind\": \"thing\", \"quote\": \"| Puma (GitLab Rails)                          | Handles requests for the web interface and API\"},\n{\"name\": \"Redis Exporter\", \"kind\": \"thing\", \"quote\": \"| Redis Exporter                     | Prometheus endpoint with Redis metrics\"},\n{\"name\": \"Redis\", \"kind\": \"thing\", \"quote\": \"| Redis                                       | Caching service\"},\n{\"name\": \"Registry\", \"kind\": \"thing\", \"quote\": \"| Registry                                 | Container registry, allows pushing and pulling of images\"},\n{\"name\": \"Runner\", \"kind\": \"thing\", \"quote\": \"| Runner                              | Executes GitLab CI/CD jobs\"},\n{\"name\": \"Sentry integration\", \"kind\": \"thing\", \"quote\": \"| Sentry integration                         | Error tracking for deployed apps\"},\n{\"name\": \"Sidekiq\", \"kind\": \"thing\", \"quote\": \"| Sidekiq                                   | Background jobs processor\"},\n{\"name\": \"Token Revocation API\", \"kind\": \"thing\", \"quote\": \"| Token Revocation API   | Receives and revokes leaked secrets\"},\n{\"name\": \"Alertmanager\", \"kind\": \"thing\", \"quote\": \"Alert manager is a tool provided by Prometheus that _\\\"handles alerts sent by client applications such as the Prometheus server.\\\"\"},\n{\"name\": \"AI Gateway\", \"kind\": \"thing\", \"quote\": \"GitLab AI Gateway is a standalone-service that will give access to AI features to all users of GitLab\"},\n{\"name\": \"GitLab Duo Workflow Service\", \"kind\": \"thing\", \"quote\": \"GitLab Duo Workflow Service is our agentic AI Features that is deployed via our Runway service\"},\n{\"name\": \"Certificate management\", \"kind\": \"thing\", \"quote\": \"#### Certificate management\"},\n{\"name\": \"Consul\", \"kind\": \"thing\", \"quote\": \"Consul is a tool for service discovery and configuration. Consul is distributed, highly available, and extremely scalable.\"},\n{\"name\": \"Database migrations\", \"kind\": \"thing\", \"quote\": \"#### Database migrations\"},\n{\"name\": \"Elasticsearch\", \"kind\": \"thing\", \"quote\": \"Elasticsearch is a distributed RESTful search engine built for the cloud.\"},\n{\"name\": \"Gitaly\", \"kind\": \"thing\", \"quote\": \"Gitaly is a service designed by GitLab to remove our need for NFS for Git storage in distributed deployments of GitLab\"},\n{\"name\": \"Praefect\", \"kind\": \"thing\", \"quote\": \"Praefect is a transparent proxy between each Git client and the Gitaly coordinating the replication of repository updates to secondary nodes.\"},\n{\"name\": \"GitLab Geo\", \"kind\": \"thing\", \"quote\": \"Geo is a premium feature built to help speed up the development of distributed teams by providing one or more read-only mirrors of a primary GitLab instance.\"},\n{\"name\": \"GitLab Exporter\", \"kind\": \"thing\", \"quote\": \"GitLab Exporter is a process designed in house that allows us to export metrics about GitLab application internals to Prometheus.\"},\n{\"name\": \"GitLab agent for Kubernetes\", \"kind\": \"thing\", \"quote\": \"The GitLab agent for Kubernetes is an active in-cluster component for solving GitLab and Kubernetes integration tasks in a secure and cloud-native way.\"},\n{\"name\": \"GitLab Pages\", \"kind\": \"thing\", \"quote\": \"GitLab Pages is a feature that allows you to publish static websites directly from a repository in GitLab.\"},\n{\"name\": \"GitLab Runner\", \"kind\": \"thing\", \"quote\": \"GitLab Runner runs jobs and sends the results to GitLab.\"},\n{\"name\": \"GitLab Shell\", \"kind\": \"thing\", \"quote\": \"GitLab Shell is a program designed at GitLab to handle SSH-based `git` sessions, and modifies the list of authorized keys.\"},\n{\"name\": \"Monitoring layer\", \"kind\": \"thing\", \"quote\": \"- **Monitoring**: Anything from this layer is not required to deliver GitLab the application\"},\n{\"name\": \"Core layer\", \"kind\": \"thing\", \"quote\": \"- **Core**: Any process that is vital for the delivery of GitLab as a platform.\"},\n{\"name\": \"Processors\", \"kind\": \"thing\", \"quote\": \"- **Processors**: These processes are responsible for actually performing operations and presenting the service.\"},\n{\"name\": \"Data services\", \"kind\": \"thing\", \"quote\": \"- **Data**: These services store/expose structured data for the GitLab service.\"},\n{\"name\": \"Component processes compose GitLab\", \"kind\": \"statement\", \"quote\": \"When deployed, GitLab should be considered the amalgamation of the below processes.\"},\n{\"name\": \"Be specific about referenced component when troubleshooting\", \"kind\": \"statement\", \"quote\": \"When troubleshooting or debugging, be as specific as possible as to which component you are referencing.\"},\n{\"name\": \"Monitoring components not required to deliver application\", \"kind\": \"statement\", \"quote\": \"Anything from this layer is not required to deliver GitLab the application, but allows administrators more insight into their infrastructure\"},\n{\"name\": \"Core process halt causes outage\", \"kind\": \"statement\", \"quote\": \"If any of these processes halt, a GitLab outage results.\"},\n{\"name\": \"Document intended for sysadmins and support engineers\", \"kind\": \"statement\", \"quote\": \"This document is designed to be consumed by systems administrators and GitLab Support Engineers\"}\n]}\n```",
+    "tokens_in": 3814,
+    "tokens_out": 2202,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "819b968d3cabe1f7b50dcfea731bd4d34ebdcc0e2acc48f0d53f5a867ac2e899": {
+    "content": "```json\n{\"mentions\": [\n{\"name\": \"GitLab Workhorse\", \"kind\": \"thing\", \"quote\": \"GitLab Workhorse is a program designed at GitLab to help alleviate pressure from Puma.\"},\n{\"name\": \"Grafana\", \"kind\": \"thing\", \"quote\": \"Grafana is an open source, feature rich metrics dashboard and graph editor for Graphite, Elasticsearch, OpenTSDB, Prometheus, and InfluxDB.\"},\n{\"name\": \"Jaeger\", \"kind\": \"thing\", \"quote\": \"Jaeger, inspired by Dapper and OpenZipkin, is a distributed tracing system.\"},\n{\"name\": \"Logrotate\", \"kind\": \"thing\", \"quote\": \"We bundle our own Logrotate to make sure we were logging responsibly.\"},\n{\"name\": \"Object storage\", \"kind\": \"thing\", \"quote\": \"GitLab requires an S3-compatible object storage for storing data such as CI artifacts, LFS objects, uploads, and container registry images.\"},\n{\"name\": \"NGINX\", \"kind\": \"thing\", \"quote\": \"NGINX has an Ingress port for all HTTP requests and routes them to the appropriate sub-systems within GitLab.\"},\n{\"name\": \"Node Exporter\", \"kind\": \"thing\", \"quote\": \"Node Exporter is a Prometheus tool that gives us metrics on the underlying machine (think CPU/Disk/Load).\"},\n{\"name\": \"Patroni\", \"kind\": \"thing\", \"quote\": \"#### Patroni\"},\n{\"name\": \"PgBouncer\", \"kind\": \"thing\", \"quote\": \"Lightweight connection pooler for PostgreSQL.\"},\n{\"name\": \"PgBouncer Exporter\", \"kind\": \"thing\", \"quote\": \"Prometheus exporter for PgBouncer. Exports metrics at 9127/metrics.\"},\n{\"name\": \"PostgreSQL\", \"kind\": \"thing\", \"quote\": \"GitLab packages the popular Database to provide storage for Application meta data and user information.\"},\n{\"name\": \"PostgreSQL Exporter\", \"kind\": \"thing\", \"quote\": \"`postgres_exporter` is the community provided Prometheus exporter that delivers data about PostgreSQL to Prometheus for use in Grafana Dashboards.\"},\n{\"name\": \"Prometheus\", \"kind\": \"thing\", \"quote\": \"Prometheus is a time-series tool that helps GitLab administrators expose metrics about the individual processes used to provide GitLab the service.\"},\n{\"name\": \"Redis\", \"kind\": \"thing\", \"quote\": \"Redis is packaged to provide a place to store: session data, temporary cache information, background job queues\"},\n{\"name\": \"Redis Exporter\", \"kind\": \"thing\", \"quote\": \"Redis Exporter is designed to give specific metrics about the Redis process to Prometheus so that we can graph these metrics in Grafana.\"},\n{\"name\": \"Registry\", \"kind\": \"thing\", \"quote\": \"The registry is what users use to store their own Docker images.\"},\n{\"name\": \"Sentry\", \"kind\": \"thing\", \"quote\": \"Sentry fundamentally is a service that helps you monitor and fix crashes in real time.\"},\n{\"name\": \"Sidekiq\", \"kind\": \"thing\", \"quote\": \"Sidekiq is a Ruby background job processor that pulls jobs from the Redis queue and processes them.\"},\n{\"name\": \"Puma\", \"kind\": \"thing\", \"quote\": \"Puma is a Ruby application server that is used to run the core Rails Application that provides the user facing features in GitLab.\"},\n{\"name\": \"Rails application\", \"kind\": \"thing\", \"quote\": \"Puma is a Ruby application server that is used to run the core Rails Application that provides the user facing features in GitLab.\"},\n{\"name\": \"Gitaly\", \"kind\": \"thing\", \"quote\": \"PostgreSQL/Gitaly/Redis - Depending on the type of request, it may hit these services to store or retrieve data.\"},\n{\"name\": \"LDAP Authentication\", \"kind\": \"thing\", \"quote\": \"#### LDAP Authentication\"},\n{\"name\": \"Outbound Email\", \"kind\": \"thing\", \"quote\": \"#### Outbound Email\"},\n{\"name\": \"Inbound Email\", \"kind\": \"thing\", \"quote\": \"#### Inbound Email\"},\n{\"name\": \"Web HTTP requests\", \"kind\": \"thing\", \"quote\": \"Web HTTP Requests (Viewing the UI/API)\"},\n{\"name\": \"Git HTTP/SSH requests\", \"kind\": \"thing\", \"quote\": \"Git HTTP/SSH Requests (Pushing/Pulling Git Data)\"},\n{\"name\": \"GitLab Web HTTP request cycle\", \"kind\": \"thing\", \"quote\": \"When making a request to an HTTP Endpoint (think `/users/sign_in`) the request takes the following path through the GitLab Service:\"},\n{\"name\": \"Workhorse acts as smart reverse proxy\", \"kind\": \"statement\", \"quote\": \"It's designed to act as a smart reverse proxy to help speed up GitLab as a whole.\"},\n{\"name\": \"Workhorse decides routing to reduce Puma load\", \"kind\": \"statement\", \"quote\": \"This determines if it needs to go to the Rails application or somewhere else to reduce load on Puma.\"},\n{\"name\": \"Object storage provider is user's responsibility\", \"kind\": \"statement\", \"quote\": \"GitLab is compatible with any object storage provider that offers full S3 API compatibility. The choice of provider is your responsibility.\"},\n{\"name\": \"Registry authenticates clients via GitLab tokens\", \"kind\": \"statement\", \"quote\": \"The client then requests a pull or push auth token from GitLab and retries the original request to the registry.\"},\n{\"name\": \"External registry can use GitLab as auth endpoint\", \"kind\": \"statement\", \"quote\": \"An external registry can also be configured to use GitLab as an auth endpoint.\"},\n{\"name\": \"Background jobs speed request/response cycle\", \"kind\": \"statement\", \"quote\": \"Background jobs allow GitLab to provide a faster request/response cycle by moving work into the background.\"},\n{\"name\": \"Puma is the default web server\", \"kind\": \"statement\", \"quote\": \"Puma is the default web server.\"},\n{\"name\": \"NGINX bundled unmodified\", \"kind\": \"statement\", \"quote\": \"We are bundling an unmodified version of the popular open source webserver.\"},\n{\"name\": \"Node Exporter provides machine metrics\", \"kind\": \"statement\", \"quote\": \"Node Exporter is a Prometheus tool that gives us metrics on the underlying machine (think CPU/Disk/Load).\"},\n{\"name\": \"Logging responsibly with logrotate\", \"kind\": \"statement\", \"quote\": \"GitLab is comprised of a large number of services that all log. We bundle our own Logrotate to make sure we were logging responsibly.\"},\n{\"name\": \"Distinction between request types matters\", \"kind\": \"statement\", \"quote\": \"It's important to understand the distinction as some processes are used in both and others are exclusive to a specific request type.\"}\n]}\n```",
+    "tokens_in": 4001,
+    "tokens_out": 2912,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "2b95be0e2daef852630c1a74c95c36ad10691bf451aadaf938a6f8b94ae45e5e": {
+    "content": "```json\n{\"mentions\": [\n{\"name\": \"GitLab\", \"kind\": \"thing\", \"quote\": \"### GitLab Git request cycle\"},\n{\"name\": \"Git on client\", \"kind\": \"thing\", \"quote\": \"participant Git on client\"},\n{\"name\": \"NGINX\", \"kind\": \"thing\", \"quote\": \"All requests pass through\\nNGINX and any other HTTP load balancers, but are not transformed in any\\nway by them.\"},\n{\"name\": \"Workhorse\", \"kind\": \"thing\", \"quote\": \"Git on client->>+Workhorse: GET /info/refs?service=git-upload-pack\"},\n{\"name\": \"Rails\", \"kind\": \"thing\", \"quote\": \"Workhorse->>+Rails: GET /info/refs?service=git-upload-pack\"},\n{\"name\": \"Gitaly\", \"kind\": \"thing\", \"quote\": \"Workhorse->>+Gitaly: SmartHTTPService.InfoRefsUploadPack request\"},\n{\"name\": \"Git on server\", \"kind\": \"thing\", \"quote\": \"Gitaly->>+Git on server: git upload-pack --stateless-rpc --advertise-refs\"},\n{\"name\": \"SSH server\", \"kind\": \"thing\", \"quote\": \"No GitLab components speak SSH directly - all SSH connections are made between\\nGit on the client machine and the SSH server, which terminates the connection.\"},\n{\"name\": \"AuthorizedKeysCommand\", \"kind\": \"thing\", \"quote\": \"`AuthorizedKeysCommand` is an executable provided by\\nGitLab Shell\"},\n{\"name\": \"GitLab Shell\", \"kind\": \"thing\", \"quote\": \"To serve repositories over SSH there's an add-on application called GitLab Shell which is installed in `/home/git/gitlab-shell`.\"},\n{\"name\": \"AuthorizedKeysWorker\", \"kind\": \"thing\", \"quote\": \"This is kept up to date by an `AuthorizedKeysWorker`\\nin Rails, scheduled to run whenever an SSH key is modified by a user.\"},\n{\"name\": \"AuthorizedPrincipalsCommand\", \"kind\": \"thing\", \"quote\": \"`AuthorizedKeysCommand` is replaced with an\\n`AuthorizedPrincipalsCommand`.\"},\n{\"name\": \"Bare repositories directory\", \"kind\": \"thing\", \"quote\": \"The bare repositories are located in `/home/git/repositories`.\"},\n{\"name\": \"Git user home directory\", \"kind\": \"thing\", \"quote\": \"GitLab is primarily installed within the `/home/git` user home directory as `git` user.\"},\n{\"name\": \"authorized_keys file\", \"kind\": \"thing\", \"quote\": \"the SSH server reads from the\\n`~git/.ssh/authorized_keys` file to determine what command to run for a given\\nSSH session.\"},\n{\"name\": \"Sidekiq\", \"kind\": \"thing\", \"quote\": \"As the `git` user it starts Sidekiq and Puma (a simple Ruby HTTP server\\nrunning on port `8080` by default).\"},\n{\"name\": \"Puma\", \"kind\": \"thing\", \"quote\": \"uses Apache `httpd` or NGINX to `proxypass`\\nPuma.\"},\n{\"name\": \"PostgreSQL\", \"kind\": \"thing\", \"quote\": \"It requires a persistent database\\n(PostgreSQL) and Redis database\"},\n{\"name\": \"Redis\", \"kind\": \"thing\", \"quote\": \"Redis (key-value store/non-persistent database):\"},\n{\"name\": \"Apache httpd\", \"kind\": \"thing\", \"quote\": \"Web server (one of the following):\"},\n{\"name\": \"GitLab init script\", \"kind\": \"thing\", \"quote\": \"The GitLab init script starts and stops Puma and Sidekiq:\"},\n{\"name\": \"SSH daemon init script\", \"kind\": \"thing\", \"quote\": \"SSH daemon:\\n\\n```plaintext\\n/etc/init.d/sshd\"},\n{\"name\": \"PostgreSQL init script\", \"kind\": \"thing\", \"quote\": \"$ /etc/init.d/postgresql\"},\n{\"name\": \"HTTP git operations are stateless\", \"kind\": \"statement\", \"quote\": \"Git operations over HTTP use the stateless \\\"smart\\\" protocol described in the\\nGit documentation\"},\n{\"name\": \"SSH git operations can be stateful\", \"kind\": \"statement\", \"quote\": \"Git operations over SSH can use the stateful protocol described in the\\nGit documentation\"},\n{\"name\": \"Responsibility split across GitLab components\", \"kind\": \"statement\", \"quote\": \"responsibility\\nfor handling these operations is split across several GitLab components.\"},\n{\"name\": \"SSH users differentiated by key\", \"kind\": \"statement\", \"quote\": \"GitLab\\nusers are differentiated by the SSH key presented by the client.\"},\n{\"name\": \"All SSH connections authenticated as git user\", \"kind\": \"statement\", \"quote\": \"To the SSH server, all connections are authenticated as the `git` user\"},\n{\"name\": \"SSH certificates may replace keys\", \"kind\": \"statement\", \"quote\": \"SSH certificates may be used\\ninstead of keys.\"},\n{\"name\": \"Fast SSH key lookup option\", \"kind\": \"statement\", \"quote\": \"assuming Fast SSH key lookup\\nis enabled.\"},\n{\"name\": \"Some operations bypass Gitaly\", \"kind\": \"statement\", \"quote\": \"GitLab Shell also has a few operations that do not involve Gitaly, such as\\nresetting two-factor authentication codes.\"},\n{\"name\": \"Components should run as separate system users\", \"kind\": \"statement\", \"quote\": \"All these components should run as different system users to GitLab\\n(for example, `postgres`, `redis`, and `www-data`, instead of `git`).\"},\n{\"name\": \"Repositories accessed via HTTP or SSH\", \"kind\": \"statement\", \"quote\": \"Repositories get accessed via HTTP or SSH.\"}\n]}\n```",
+    "tokens_in": 3914,
+    "tokens_out": 2335,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "4a99426cb71486ee8987fa8b7782a01a472192ef14167e3b44509b5d8ccd2c65": {
+    "content": "{\"mentions\": [\n{\"name\": \"GitLab\", \"kind\": \"thing\", \"quote\": \"GitLab (includes Puma and Sidekiq logs):\"},\n{\"name\": \"Puma\", \"kind\": \"thing\", \"quote\": \"GitLab (includes Puma and Sidekiq logs):\"},\n{\"name\": \"Sidekiq\", \"kind\": \"thing\", \"quote\": \"GitLab (includes Puma and Sidekiq logs):\"},\n{\"name\": \"GitLab log directory\", \"kind\": \"thing\", \"quote\": \"`/home/git/gitlab/log/` usually contains `application.log`, `production.log`, `sidekiq.log`\"},\n{\"name\": \"application.log\", \"kind\": \"thing\", \"quote\": \"`/home/git/gitlab/log/` usually contains `application.log`, `production.log`, `sidekiq.log`, `puma.stdout.log`\"},\n{\"name\": \"production.log\", \"kind\": \"thing\", \"quote\": \"`/home/git/gitlab/log/` usually contains `application.log`, `production.log`, `sidekiq.log`, `puma.stdout.log`\"},\n{\"name\": \"sidekiq.log\", \"kind\": \"thing\", \"quote\": \"`/home/git/gitlab/log/` usually contains `application.log`, `production.log`, `sidekiq.log`, `puma.stdout.log`\"},\n{\"name\": \"puma.stdout.log\", \"kind\": \"thing\", \"quote\": \"`puma.stdout.log`, `git_json.log`, and `puma.stderr.log`.\"},\n{\"name\": \"git_json.log\", \"kind\": \"thing\", \"quote\": \"`git_json.log`, and `puma.stderr.log`.\"},\n{\"name\": \"puma.stderr.log\", \"kind\": \"thing\", \"quote\": \"`git_json.log`, and `puma.stderr.log`.\"},\n{\"name\": \"GitLab Shell\", \"kind\": \"thing\", \"quote\": \"GitLab Shell:\\n\\n- `/home/git/gitlab-shell/gitlab-shell.log`\"},\n{\"name\": \"gitlab-shell.log\", \"kind\": \"thing\", \"quote\": \"`/home/git/gitlab-shell/gitlab-shell.log`\"},\n{\"name\": \"SSH\", \"kind\": \"thing\", \"quote\": \"SSH:\\n\\n- `/var/log/auth.log` auth log (on Ubuntu).\"},\n{\"name\": \"auth.log\", \"kind\": \"thing\", \"quote\": \"`/var/log/auth.log` auth log (on Ubuntu).\"},\n{\"name\": \"secure auth log\", \"kind\": \"thing\", \"quote\": \"`/var/log/secure` auth log (on RHEL).\"},\n{\"name\": \"Ubuntu\", \"kind\": \"thing\", \"quote\": \"`/var/log/auth.log` auth log (on Ubuntu).\"},\n{\"name\": \"RHEL\", \"kind\": \"thing\", \"quote\": \"`/var/log/secure` auth log (on RHEL).\"},\n{\"name\": \"NGINX\", \"kind\": \"thing\", \"quote\": \"NGINX:\\n\\n- `/var/log/nginx/` contains error and access logs.\"},\n{\"name\": \"Apache httpd\", \"kind\": \"thing\", \"quote\": \"Apache `httpd`:\"},\n{\"name\": \"Apache logs\", \"kind\": \"thing\", \"quote\": \"- Explanation of Apache logs.\"},\n{\"name\": \"/var/log/apache2/\", \"kind\": \"thing\", \"quote\": \"`/var/log/apache2/` contains error and output logs (on Ubuntu).\"},\n{\"name\": \"/var/log/httpd/\", \"kind\": \"thing\", \"quote\": \"`/var/log/httpd/` contains error and output logs (on RHEL).\"},\n{\"name\": \"Redis\", \"kind\": \"thing\", \"quote\": \"Redis:\\n\\n- `/var/log/redis/redis.log` there are also log-rotated logs there.\"},\n{\"name\": \"redis.log\", \"kind\": \"thing\", \"quote\": \"`/var/log/redis/redis.log` there are also log-rotated logs there.\"},\n{\"name\": \"PostgreSQL\", \"kind\": \"thing\", \"quote\": \"PostgreSQL:\\n\\n- `/var/log/postgresql/*`\"},\n{\"name\": \"GitLab configuration directory\", \"kind\": \"thing\", \"quote\": \"GitLab has configuration files located in `/home/git/gitlab/config/*`.\"},\n{\"name\": \"gitlab.yml\", \"kind\": \"thing\", \"quote\": \"- `gitlab.yml`: GitLab Rails configuration\"},\n{\"name\": \"puma.rb\", \"kind\": \"thing\", \"quote\": \"- `puma.rb`: Puma web server settings\"},\n{\"name\": \"database.yml\", \"kind\": \"thing\", \"quote\": \"- `database.yml`: Database connection settings\"},\n{\"name\": \"GitLab Shell config.yml\", \"kind\": \"thing\", \"quote\": \"GitLab Shell has a configuration file at `/home/git/gitlab-shell/config.yml`.\"},\n{\"name\": \"GitLab Rails\", \"kind\": \"thing\", \"quote\": \"- `gitlab.yml`: GitLab Rails configuration\"},\n{\"name\": \"ApplicationSetting\", \"kind\": \"thing\", \"quote\": \"Many other settings are better placed in the app itself, in `ApplicationSetting`.\"},\n{\"name\": \"Gitaly\", \"kind\": \"thing\", \"quote\": \"For example, Gitaly addresses, Redis addresses, Postgres addresses, and Consul addresses.\"},\n{\"name\": \"Consul\", \"kind\": \"thing\", \"quote\": \"For example, Gitaly addresses, Redis addresses, Postgres addresses, and Consul addresses.\"},\n{\"name\": \"Distributed Tracing configuration\", \"kind\": \"thing\", \"quote\": \"Distributed Tracing configuration, and some observability configurations.\"},\n{\"name\": \"Omnibus\", \"kind\": \"thing\", \"quote\": \"Ensure that it is also\\n   added to Omnibus.\"},\n{\"name\": \"Charts\", \"kind\": \"thing\", \"quote\": \"Ensure that it is also added to Charts, if needed.\"},\n{\"name\": \"GDK\", \"kind\": \"thing\", \"quote\": \"Ensure that it is also added to GDK.\"},\n{\"name\": \"Rake tasks\", \"kind\": \"thing\", \"quote\": \"GitLab provides Rake tasks with which you see version information and run a quick check on your configuration\"},\n{\"name\": \"gitlab:env:info task\", \"kind\": \"thing\", \"quote\": \"bundle exec rake gitlab:env:info RAILS_ENV=production\"},\n{\"name\": \"gitlab:check task\", \"kind\": \"thing\", \"quote\": \"bundle exec rake gitlab:check RAILS_ENV=production\"},\n{\"name\": \"git user\", \"kind\": \"thing\", \"quote\": \"It's recommended to sign in to the `git` user using either `sudo -i -u git` or\"},\n{\"name\": \"GitLab.com architecture\", \"kind\": \"thing\", \"quote\": \"The GitLab.com architecture\\nis detailed for your reference\"},\n{\"name\": \"AI architecture\", \"kind\": \"thing\", \"quote\": \"### AI architecture\"},\n{\"name\": \"SaaS model gateway\", \"kind\": \"thing\", \"quote\": \"A SaaS model gateway is available to enable AI-native features.\"},\n{\"name\": \"AI-native features\", \"kind\": \"thing\", \"quote\": \"A SaaS model gateway is available to enable AI-native features.\"},\n{\"name\": \"Settings belong in gitlab.yml\", \"kind\": \"statement\", \"quote\": \"Settings which belong in `gitlab.yml` include those related to:\"},\n{\"name\": \"Settings belong in ApplicationSetting\", \"kind\": \"statement\", \"quote\": \"Many other settings are better placed in the app itself, in `ApplicationSetting`.\"},\n{\"name\": \"UI management preferred over config files\", \"kind\": \"statement\", \"quote\": \"Managing settings in UI is usually a better user experience compared to managing configuration files.\"},\n{\"name\": \"gitlab.yml modification may be a poor tradeoff\", \"kind\": \"statement\", \"quote\": \"modifying `gitlab.yml` often seems like a faster iteration, but when you consider all the deployment methods below, it may be a poor tradeoff.\"},\n{\"name\": \"New gitlab.yml settings must be added to Omnibus\", \"kind\": \"statement\", \"quote\": \"Ensure that it is also\\n   added to Omnibus.\"},\n{\"name\": \"New gitlab.yml settings must be added to Charts if needed\", \"kind\": \"statement\", \"quote\": \"Ensure that it is also added to Charts, if needed.\"},\n{\"name\": \"New gitlab.yml settings must be added to GDK\", \"kind\": \"statement\", \"quote\": \"Ensure that it is also added to GDK.\"},\n{\"name\": \"Rake tasks check configuration\", \"kind\": \"statement\", \"quote\": \"run a quick check on your configuration to ensure it is configured properly within the application.\"},\n{\"name\": \"Sign in as git user recommended\", \"kind\": \"statement\", \"quote\": \"It's recommended to sign in to the `git` user using either `sudo -i -u git` or\"},\n{\"name\": \"sudo commands unreliable on RHEL\", \"kind\": \"statement\", \"quote\": \"Although the `sudo` commands provided by GitLab work in Ubuntu,\\n they don't always work in RHEL.\"},\n{\"name\": \"GitLab.com architecture useful only at large scale\", \"kind\": \"statement\", \"quote\": \"this architecture is only useful if you have\\nmillions of users.\"},\n{\"name\": \"SaaS model gateway enables AI-native features\", \"kind\": \"statement\", \"quote\": \"A SaaS model gateway is available to enable AI-native features.\"}\n]}",
+    "tokens_in": 2001,
+    "tokens_out": 3588,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "08f5dd58f4c4bff43dcb185a93ac546ef2d70b84ae2bf81c8587d7d7763ebc84": {
+    "content": "{\"class\": \"application.applicationcomponent\", \"confidence\": 0.45}",
+    "tokens_in": 19943,
+    "tokens_out": 391,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "d490dee31edf580ae8e5c3a56ff8d368bae653781df1fee4668eee004d50ca49": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.85}",
+    "tokens_in": 20015,
+    "tokens_out": 76,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "c7f7fb9c80cd3d1a0f5284dda2763eeba6a047df7586fa252728f19be95a6b19": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.85}",
+    "tokens_in": 19978,
+    "tokens_out": 64,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "811f2664c35d21672080facb345042055766833291fe6855247eb943c8a36664": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.7}",
+    "tokens_in": 20035,
+    "tokens_out": 161,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "48e7c3046d29a90d0f958118edd21ebe26c7d23aa3f706f17d492ce8d3d87a52": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.6}",
+    "tokens_in": 20001,
+    "tokens_out": 304,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "b43ea5b167473bb763fa5ed60d9a10ad0314c9301ba4c03da13122096215247f": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.85}",
+    "tokens_in": 20053,
+    "tokens_out": 68,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "f88b73494f04d2c90f90fcc8c55da4ecb72a1dbd0f3e7f0e4f7255e87c1bdd61": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.9}",
+    "tokens_in": 20089,
+    "tokens_out": 87,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "43afcc59043865b0ae6d943e93c64bd3cd8e421e640c4fd4a65d8ebfb9e05890": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.55}",
+    "tokens_in": 19958,
+    "tokens_out": 290,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "8524ba4a4d293fb24ee599ff8380209d6c35bea4d1d8601ca1be981764d47f7b": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.7}",
+    "tokens_in": 20068,
+    "tokens_out": 134,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "973d01ad54ddf3968f7e0dd4505a407dcfc1deb3029cafeb806380b26c02d77a": {
+    "content": "{\"class\": \"application.applicationcomponent\", \"confidence\": 0.5}",
+    "tokens_in": 19962,
+    "tokens_out": 440,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "d6f4bb61b1b9a622c8e3f5348eb96d8f53ed84ea6b5c74ce7d9e14f829b7b22b": {
+    "content": "{\"class\": \"technology.artifact\", \"confidence\": 0.6}",
+    "tokens_in": 20287,
+    "tokens_out": 156,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "879a5fae1a2950f279566f85dc725a0526ec0ff132530c00b60626c421e8a808": {
+    "content": "{\"class\": \"technology.systemsoftware\", \"confidence\": 0.8}",
+    "tokens_in": 20225,
+    "tokens_out": 103,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "a31f353efe2a4a751c9153710a21b88b262761eb53310310db06c32826d51caf": {
+    "content": "{\"class\": \"technology.node\", \"confidence\": 0.4}",
+    "tokens_in": 20270,
+    "tokens_out": 267,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "c925ee4b760f6280781af0b39a0ea0c4d97b90eedcd035ec1307bc428151ab1f": {
+    "content": "{\"class\": \"technology.artifact\", \"confidence\": 0.6}",
+    "tokens_in": 20287,
+    "tokens_out": 192,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "3b3c457077c9f2d55c56ea7efeec9fbd6eb75253d905431d6d5f15d13672bfd6": {
+    "content": "{\"class\": \"technology.systemsoftware\", \"confidence\": 0.55}",
+    "tokens_in": 20254,
+    "tokens_out": 379,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "75127660af4caba5c37a6566b44c4f42ad6395c203d198d0831f0022e2a9fda3": {
+    "content": "{\"class\": \"technology.systemsoftware\", \"confidence\": 0.8}",
+    "tokens_in": 20305,
+    "tokens_out": 121,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "ac2a6603ff53857c6593095679947445fea5209ed860e241437393a902affce6": {
+    "content": "{\"class\": \"technology.systemsoftware\", \"confidence\": 0.7}",
+    "tokens_in": 20318,
+    "tokens_out": 197,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "7536dc262797522a9c8f620b642055a57a5a5b972b61e1ad65313cec38270a04": {
+    "content": "{\"class\": \"technology.systemsoftware\", \"confidence\": 0.85}",
+    "tokens_in": 20313,
+    "tokens_out": 127,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "e018e9451daf91d0fe16424034ca69bedd2a3a2827ba1aadf932181ab87ee507": {
+    "content": "{\"class\": \"application.applicationcomponent\", \"confidence\": 0.6}",
+    "tokens_in": 20323,
+    "tokens_out": 279,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "c3169f2e5b419a1483e0b543f552e5f18fbb2545c88790519720289c062e931a": {
+    "content": "{\"class\": \"technology.systemsoftware\", \"confidence\": 0.5}",
+    "tokens_in": 20304,
+    "tokens_out": 367,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "fc8cb066311baa0f87a091729ae619f220830d3a5aa5774efd45e99f8e375b6b": {
+    "content": "{\"class\": \"technology.systemsoftware\", \"confidence\": 0.5}",
+    "tokens_in": 20294,
+    "tokens_out": 260,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "d94742f063fbe03ebb1d628c88d5a833eb31b3fb81d2a19ca6fe3f0b3a5a526e": {
+    "content": "{\"class\": \"technology.systemsoftware\", \"confidence\": 0.7}",
+    "tokens_in": 20355,
+    "tokens_out": 286,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "a0128e910845f25e541407f7d2516d2c0b2a10cfcccde0e7ece4d039e82d0f81": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.6}",
+    "tokens_in": 20319,
+    "tokens_out": 315,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "bc74d4d780002155de770215ce3d08933498ed747844b07746f52cc4fdac3d6e": {
+    "content": "{\"class\": \"technology.technologyinterface\", \"confidence\": 0.55}",
+    "tokens_in": 20326,
+    "tokens_out": 328,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "f784c07d276ab2f43ebbb5d076128b7c8757bb205c0b6e74035663afdbea866c": {
+    "content": "{\"class\": \"technology.artifact\", \"confidence\": 0.6}",
+    "tokens_in": 20327,
+    "tokens_out": 169,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "67ac5e3280460f80c6a45c339b8ad2000682429fcffb47659a26b835b887d0b8": {
+    "content": "{\"class\": \"application.applicationinterface\", \"confidence\": 0.6}",
+    "tokens_in": 20318,
+    "tokens_out": 378,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "6caedacc206ae7ea5239cfacb53cc0774467ef4dd31ff578a8c0412579658be5": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.7}",
+    "tokens_in": 20348,
+    "tokens_out": 185,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "9da2af5f88be0dde609445bb4fb0d67b3e2a0ab9061054792206d9d0ca0341b1": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.6}",
+    "tokens_in": 20330,
+    "tokens_out": 353,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "9476d55d4614dc82f42bfda7f4797ac40c34bb0cf1270556570470729d144b13": {
+    "content": "{\"class\": \"technology.artifact\", \"confidence\": 0.5}",
+    "tokens_in": 20359,
+    "tokens_out": 219,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "08dc4d2e529b25997e5bed2ab0bd5e5323e189ccee1f71d0d0e943b3840185f6": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.6}",
+    "tokens_in": 20344,
+    "tokens_out": 246,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "768e75025f03e3f6f7a9bea2e2246f2cf8649158537195e5f82fe86f6ec06b9e": {
+    "content": "{\"class\": \"application.applicationcomponent\", \"confidence\": 0.7}",
+    "tokens_in": 20331,
+    "tokens_out": 220,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "5ca88f0592889ecdf0927329d3a0b9ebb53333fc903d4aae67b2a9448772cf2b": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.6}",
+    "tokens_in": 20354,
+    "tokens_out": 203,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "721706baa2ec8e08d86681c60e8167c5afe2e147676d5ada48ef0554bcf0cb86": {
+    "content": "{\"class\": \"application.dataobject\", \"confidence\": 0.4}",
+    "tokens_in": 20331,
+    "tokens_out": 359,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "61e6b84e7d3338771d6fbc902a05ba6eeebfc7d33265a85fd4984110f8e1accf": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.9}",
+    "tokens_in": 20283,
+    "tokens_out": 19,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "823ba49391110de5d487328f85cd22c1de51b12e9cb14d8a8a02359ab87b7f33": {
+    "content": "{\"class\": \"application.applicationcomponent\", \"confidence\": 0.6}",
+    "tokens_in": 20263,
+    "tokens_out": 236,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "9d90be737c50e75bad5c0c7ba371b14d554f5d90f05532fa84416534f55ac388": {
+    "content": "{\"class\": \"application.applicationcomponent\", \"confidence\": 0.7}",
+    "tokens_in": 20303,
+    "tokens_out": 241,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "d23989ad08fcaee03be1b3152d7ae26cf4920ce094f55ac49fd1427b9a1e0560": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.6}",
+    "tokens_in": 20359,
+    "tokens_out": 179,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "2ad162d90a3e1c0901951bcbc0b3eee55521d5490c26ebe63fa1e2d8583ce287": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.8}",
+    "tokens_in": 20327,
+    "tokens_out": 167,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "b570cb8219089f553480430cf8f7a869c46e0059ad566bcd40af01eabe3488ba": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.85}",
+    "tokens_in": 20437,
+    "tokens_out": 66,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "08b4dc5c38851a862d2a2d147f2da2ef270530539eb54959299b007df8855332": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.8}",
+    "tokens_in": 20181,
+    "tokens_out": 91,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "3818a77b473822559f2b75c18e3c9e5bfd5d6e52b905a669fa622cc421eb1fd8": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.85}",
+    "tokens_in": 20389,
+    "tokens_out": 107,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "31eeb1134bbd44bce46ff538afc2784f2078ec77857989e229370dd4c78ee90d": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.8}",
+    "tokens_in": 20423,
+    "tokens_out": 189,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "7dff0da399fa5acc94654dcd6c569adede38e89ff1c5a735a0fa9b4f3533c819": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.7}",
+    "tokens_in": 20196,
+    "tokens_out": 157,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "dd9974a26047d1aff91497008763a30eb301f571d360496d881b0ca31585f337": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.9}",
+    "tokens_in": 20207,
+    "tokens_out": 65,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "0406f585301074635aeab8c11dab0173c796695925dc579045c85999ae791f8c": {
+    "content": "{\"class\": \"business.businessactor\", \"confidence\": 0.55}",
+    "tokens_in": 20447,
+    "tokens_out": 379,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "34d849ae643c98ff273e2fba2f96efead5662147a230450eb68d9b1ff46df488": {
+    "content": "{\"class\": \"motivation.principle\", \"confidence\": 0.6}",
+    "tokens_in": 20369,
+    "tokens_out": 192,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "66a745d85c550677544f6ec1ca585643778ee5ffa9339e7208a8e39dd6d785b4": {
+    "content": "{\"class\": \"motivation.principle\", \"confidence\": 0.8}",
+    "tokens_in": 20410,
+    "tokens_out": 90,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "0ac973616eef5e806a17d6fa73439166450b0cbc6c212c6df6cf1b0040c92619": {
+    "content": "{\"class\": \"motivation.principle\", \"confidence\": 0.55}",
+    "tokens_in": 20434,
+    "tokens_out": 239,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "59b42af7c9686a5c79c6ff46064d15a16f02da21ad0dd0020b43d63c7a1ce5d7": {
+    "content": "{\"class\": \"motivation.principle\", \"confidence\": 0.8}",
+    "tokens_in": 20456,
+    "tokens_out": 100,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "aa5804a681ba0b8f6ad2d0c2bf7cdee5b92b900ffc39ed56c48504cd0e2e201b": {
+    "content": "{\"class\": \"motivation.principle\", \"confidence\": 0.8}",
+    "tokens_in": 20493,
+    "tokens_out": 145,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "1c4aeb93d62c0eafd0f4a3d88e2ddda6f879804c35dc355c7f02e353c3728652": {
+    "content": "{\"class\": \"motivation.constraint\", \"confidence\": 0.7}",
+    "tokens_in": 20272,
+    "tokens_out": 153,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "dd932349efe4cb7b17dd4bb0b56f056227bd26b1f1106e86fd933f28dd6068e6": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.8}",
+    "tokens_in": 20338,
+    "tokens_out": 107,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "06e2e1cc273ee0d11e9d6d76e4662f3049b80db85f57b6902e8e9583c96ee96f": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.85}",
+    "tokens_in": 20167,
+    "tokens_out": 105,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "c75dd4ad8d3c4ed156a9d842bdb1d4384d58c090f56f1ba9268e3fe0fce88fc9": {
+    "content": "{\"class\": \"application.applicationcomponent\", \"confidence\": 0.6}",
+    "tokens_in": 20332,
+    "tokens_out": 190,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "235e7aa1d1279b70b86feec07a6fcd5c795ec0f322220850257904a58e232aca": {
+    "content": "{\"class\": \"technology.systemsoftware\", \"confidence\": 0.5}",
+    "tokens_in": 20260,
+    "tokens_out": 288,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "27ebc3a1a154e9ed49a946a511e3f5053782466c517ac7c7206afffbd8f2fe63": {
+    "content": "{\"class\": \"application.applicationcomponent\", \"confidence\": 0.4}",
+    "tokens_in": 20264,
+    "tokens_out": 391,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "07f3bf9b38e80e9e5d80e44376f4b89f0ff895eca7d2c87dd4713191a219be6c": {
+    "content": "{\"class\": \"application.applicationcomponent\", \"confidence\": 0.5}",
+    "tokens_in": 20376,
+    "tokens_out": 223,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "11ff454701a9dc5bfba4c4690c7bfbab6e91ff0bc3b464522352b0661504bcc6": {
+    "content": "{\"class\": \"application.applicationcomponent\", \"confidence\": 0.6}",
+    "tokens_in": 20393,
+    "tokens_out": 254,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "7d578b8bf3d57cffabf346b44d2fe416bf395becb7ade6e72df3d5d2501e4808": {
+    "content": "{\"class\": \"application.applicationcomponent\", \"confidence\": 0.6}",
+    "tokens_in": 20636,
+    "tokens_out": 193,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "49b265f9952eb8effb85396dd12af7a173e4ceb06720ff0bd421cc0312296ed6": {
+    "content": "{\"class\": \"application.applicationcomponent\", \"confidence\": 0.6}",
+    "tokens_in": 20737,
+    "tokens_out": 281,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "2861b1b0d478455ff8f100bfe9e1dd01813e3667e1ac8b34a6c8178e1dc160b2": {
+    "content": "{\"class\": \"application.applicationcomponent\", \"confidence\": 0.7}",
+    "tokens_in": 20717,
+    "tokens_out": 143,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "170366a5b0648f73932fca8b8ac1ba28ffc9f8b1ed1c6280abacb60ea0c46408": {
+    "content": "{\"class\": \"technology.systemsoftware\", \"confidence\": 0.6}",
+    "tokens_in": 20676,
+    "tokens_out": 200,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "4f6b6f00768cfcd37721e708e5d3e0726513de1471700d517ba2919c38ed6883": {
+    "content": "{\"class\": \"application.applicationcomponent\", \"confidence\": 0.6}",
+    "tokens_in": 20717,
+    "tokens_out": 239,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "7709dba7f9f9b9d670650756ee6e7fbcd0321717a59e81d903dbbc6dffc9ebe8": {
+    "content": "{\"class\": \"technology.systemsoftware\", \"confidence\": 0.6}",
+    "tokens_in": 20684,
+    "tokens_out": 276,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "327bc878da73aa0452d844cc7d5559cfb69176e8c988620ba0f705f05a0d75e6": {
+    "content": "{\"class\": \"technology.systemsoftware\", \"confidence\": 0.6}",
+    "tokens_in": 20728,
+    "tokens_out": 346,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "6117cc5156a5cc6e223a191f487bbc26bbd3e75466ef545f27b541e463f88641": {
+    "content": "{\"class\": \"technology.systemsoftware\", \"confidence\": 0.6}",
+    "tokens_in": 20646,
+    "tokens_out": 219,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "604c3d4411ec36a5055ff5ac4263967e5e974f4bb3f064ac306f878a1ed7f4fb": {
+    "content": "{\"class\": \"technology.technologyprocess\", \"confidence\": 0.55}",
+    "tokens_in": 20682,
+    "tokens_out": 345,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "08e88961fd2f56c3cc24e6e62fb0636f565ffaa3c278db11508a8bc56fcdfe15": {
+    "content": "{\"class\": \"application.applicationcomponent\", \"confidence\": 0.5}",
+    "tokens_in": 20660,
+    "tokens_out": 319,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "f63482b1ec359e39a2e93ec4e7ff2ea93f9d07fc3cd563f75d509478340a2d11": {
+    "content": "{\"class\": \"technology.technologyservice\", \"confidence\": 0.6}",
+    "tokens_in": 20676,
+    "tokens_out": 219,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "12a516f21dc02323a18f02d654fbafd96ed460cadb7c999481b9b6516ab087b3": {
+    "content": "{\"class\": \"technology.systemsoftware\", \"confidence\": 0.6}",
+    "tokens_in": 20727,
+    "tokens_out": 276,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "f3f9cd32c20bce826e1783828a483c39bb4cf87a1575dccc40c2133ca8774347": {
+    "content": "{\"class\": \"technology.systemsoftware\", \"confidence\": 0.6}",
+    "tokens_in": 20744,
+    "tokens_out": 286,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "8587f1daafdddde259e6f60c609230fdb278fc27fb2e2a8bddaf1f4162644794": {
+    "content": "{\"class\": \"technology.systemsoftware\", \"confidence\": 0.6}",
+    "tokens_in": 20725,
+    "tokens_out": 271,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "455f9e41f4276cee6b6aea42de265e524f30a80d39103ed449fa79e633b6069d": {
+    "content": "{\"class\": \"technology.systemsoftware\", \"confidence\": 0.5}",
+    "tokens_in": 20690,
+    "tokens_out": 543,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "aeb635ad5f822b86a7feb15849a70a62f3259cf8b33334bced57938f8c114884": {
+    "content": "{\"class\": \"technology.systemsoftware\", \"confidence\": 0.55}",
+    "tokens_in": 20757,
+    "tokens_out": 302,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "9cd3f6d8d58b6692b994b703736e91a18bfab1aab7fff0d934d957e7ed55f552": {
+    "content": "{\"class\": \"application.applicationcomponent\", \"confidence\": 0.5}",
+    "tokens_in": 20774,
+    "tokens_out": 328,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "594cb9880288f2b32cb02eb7a66ee8eb8397dff19d005ca0490df352e9397969": {
+    "content": "{\"class\": \"technology.systemsoftware\", \"confidence\": 0.6}",
+    "tokens_in": 20737,
+    "tokens_out": 242,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "fa270839b2567c7b7ac85e64f0fa7f6ab5452b288fa1d4627f8ed984849bfb5d": {
+    "content": "{\"class\": \"technology.technologyservice\", \"confidence\": 0.5}",
+    "tokens_in": 20754,
+    "tokens_out": 308,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "d2800875a5bfdceb500212c5de2daa6c41a581b3db46b9aa55e9f2ce43271f7a": {
+    "content": "{\"class\": \"technology.technologyservice\", \"confidence\": 0.5}",
+    "tokens_in": 20756,
+    "tokens_out": 318,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "3059647149970250870833f9a3fa9dfbf512ece132a782926575b128f87bab9d": {
+    "content": "{\"class\": \"technology.systemsoftware\", \"confidence\": 0.5}",
+    "tokens_in": 20743,
+    "tokens_out": 445,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "a4e6b90bed21202c4bf8953e6663ef0162731327b237165bcdc8234feffc490b": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.9}",
+    "tokens_in": 20213,
+    "tokens_out": 44,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "dc19b710795b7645d7e42c8c18b69667f6308d10889d86268f02d97bbdab472b": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.9}",
+    "tokens_in": 20220,
+    "tokens_out": 62,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "a5cf57544cef99acc0b7f08aa17c6a26c45ce5b33b3dbbd8b4e24b171a88099b": {
+    "content": "{\"class\": \"data-store.database\", \"confidence\": 0.55}",
+    "tokens_in": 20780,
+    "tokens_out": 331,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "32e528cdb92bb70278df49e3547bc6eb1cb7e6d1b84a6ebfd87b8a14d25159f8": {
+    "content": "{\"class\": \"technology.systemsoftware\", \"confidence\": 0.5}",
+    "tokens_in": 20758,
+    "tokens_out": 310,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "0914933e293eeb01093bc6bf84f0e606f1abc076b7600c130103d398fef534d3": {
+    "content": "{\"class\": \"technology.technologyservice\", \"confidence\": 0.5}",
+    "tokens_in": 20778,
+    "tokens_out": 310,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "95806f75a56e01bfe22ab591d8f273f706c3b75b3515a2f82d51798e78753099": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.9}",
+    "tokens_in": 20184,
+    "tokens_out": 51,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "24b12ae5f8c89e3c9edc90cda56a65c65cdbb31cf170b38353f46d839534ef74": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.9}",
+    "tokens_in": 20133,
+    "tokens_out": 19,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "ae2852a8e5f03bd9b9367392d4a219e320774c5ff780368d0e49b7a9a4891c48": {
+    "content": "{\"class\": \"technology.systemsoftware\", \"confidence\": 0.5}",
+    "tokens_in": 20768,
+    "tokens_out": 284,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "6717baa6efdbf4b6a68153c5784806796eae4bddbd224d17e6db4f8d49a808f8": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.9}",
+    "tokens_in": 20668,
+    "tokens_out": 74,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "f0468ffc843783e641b533b75528387af85b1ec4520c0001a34da9a8fa3b7c64": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.93}",
+    "tokens_in": 20173,
+    "tokens_out": 67,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "11ec4953046dda7ca233cca76587f28630846b0e3124e67fabf2760d7b1be77b": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.85}",
+    "tokens_in": 20139,
+    "tokens_out": 74,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "c3cccaad54d11eb2013cd47a1dc48c5c1539eb58f6d47f0eccefed9ca1240700": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.7}",
+    "tokens_in": 20723,
+    "tokens_out": 235,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "d0dfc356ce0af94e8dffab27499e00cad110706e6b77e55f37e3b6cea954b7f7": {
+    "content": "{\"class\": \"application.applicationcomponent\", \"confidence\": 0.6}",
+    "tokens_in": 20076,
+    "tokens_out": 208,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "3eec19cc8eae6c7d8df928694a5633cd19065363828ee08c25193daa0184ed6e": {
+    "content": "{\"class\": \"application.applicationcomponent\", \"confidence\": 0.5}",
+    "tokens_in": 20253,
+    "tokens_out": 268,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "fa7d496f1d6f9683de62a88a3c52142f3375bfe7e022030ba135be22e8c14ba5": {
+    "content": "{\"class\": \"application.applicationcomponent\", \"confidence\": 0.5}",
+    "tokens_in": 20473,
+    "tokens_out": 266,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "45d993248f57667e8ac243c96a56fd3c69b6edceb896d67f4f09ba752bcf4138": {
+    "content": "{\"class\": \"application.applicationcomponent\", \"confidence\": 0.6}",
+    "tokens_in": 20182,
+    "tokens_out": 329,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "3a4d7d6a29bbab9e53951d61c4035c0b5e7020b8a25ff6b0084e50957eace925": {
+    "content": "{\"class\": \"technology.systemsoftware\", \"confidence\": 0.6}",
+    "tokens_in": 20490,
+    "tokens_out": 308,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "11b3ac2bd042b992028b5163531295ee958eff85bc495d2a7aa96ccf24311757": {
+    "content": "{\"class\": \"application.applicationcomponent\", \"confidence\": 0.5}",
+    "tokens_in": 20489,
+    "tokens_out": 478,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "ad75c73ec6b134191f29f30420578fd48823036cb91d6acfc090d00d47d02d6b": {
+    "content": "{\"class\": \"technology.systemsoftware\", \"confidence\": 0.6}",
+    "tokens_in": 20490,
+    "tokens_out": 228,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "6c09b3b49acfe7bda76bc8b2c34014685594a05b9288cefbf2f9d1c423781e5d": {
+    "content": "{\"class\": \"technology.systemsoftware\", \"confidence\": 0.5}",
+    "tokens_in": 20484,
+    "tokens_out": 445,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "42d4caa7d98169d1c4449fbbbe3bafea24de24fba86e5d67819ec328a09cafb7": {
+    "content": "{\"class\": \"technology.systemsoftware\", \"confidence\": 0.45}",
+    "tokens_in": 20499,
+    "tokens_out": 367,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "24315cd7ab762b4d107b623146c4842be5a6207413d45ebab2e0209cd631757e": {
+    "content": "{\"class\": \"application.applicationinterface\", \"confidence\": 0.4}",
+    "tokens_in": 20454,
+    "tokens_out": 488,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "b2ad7cdfe61250b45d687018b1dc8cf19c43266ef1cb95acf6bcfa421ca7b13d": {
+    "content": "{\"class\": \"technology.technologyservice\", \"confidence\": 0.5}",
+    "tokens_in": 20435,
+    "tokens_out": 321,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "7e07bafced5ecfda5756f63b155a789a847e5b86304859973b486fa37cc10d08": {
+    "content": "{\"class\": \"technology.technologyservice\", \"confidence\": 0.6}",
+    "tokens_in": 20424,
+    "tokens_out": 204,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "6414209ca26c4fd6f5f093c7fa809cac6146674d649e230039f0fc7b3833e4f7": {
+    "content": "{\"class\": \"technology.systemsoftware\", \"confidence\": 0.6}",
+    "tokens_in": 20402,
+    "tokens_out": 148,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "9d9696a0e6053abe6656ffebdaccd977bd12ac13fab43009bd7b922af8a6d1d8": {
+    "content": "{\"class\": \"technology.systemsoftware\", \"confidence\": 0.4}",
+    "tokens_in": 20436,
+    "tokens_out": 345,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "38eb5260ef728e2ff521dd6c9790e1d5a9d92584801e30fdd4d20c43fed7bd58": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.7}",
+    "tokens_in": 19968,
+    "tokens_out": 248,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "68835348019557577bcdfb33abc674a96faca530913dd0f4967719ec7ab07a1f": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.8}",
+    "tokens_in": 20004,
+    "tokens_out": 210,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "f2c6a1f2b81e778c396989f6c2f41e0c75a091e086b48c564e47d19de4897232": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.7}",
+    "tokens_in": 19989,
+    "tokens_out": 205,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "d2eb147f7443fbf9528ed1ad5c0798f6fefcd4326d74c195ff37465dd6edd8ff": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.85}",
+    "tokens_in": 20069,
+    "tokens_out": 192,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "d04b00b6ecd0005cd61c0a92315df9de57a2ad1cda5f79c8ed597c396f3c74e3": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.6}",
+    "tokens_in": 19991,
+    "tokens_out": 290,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "16c6a70c7fb362dfcc4ed6eaed3cdf549cc32ee30b145312ae97eeb96c44ca2d": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.85}",
+    "tokens_in": 20169,
+    "tokens_out": 140,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "a02cc5b3367ac0e12f6dc6fe529f33d3771513c4f4e7f63fa2d0463d466df6c0": {
+    "content": "{\"class\": \"technology.node\", \"confidence\": 0.4}",
+    "tokens_in": 19995,
+    "tokens_out": 455,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "3d58a4200cb19d611cf5c99871ef3b51a266cf56f0d1af5bd4b3c296572d515d": {
+    "content": "{\"class\": \"application.applicationcomponent\", \"confidence\": 0.55}",
+    "tokens_in": 20315,
+    "tokens_out": 414,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "4190d9003026788df8827e7bd1371998f9d69917746020ba0a3566e8f16d3a44": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.8}",
+    "tokens_in": 20402,
+    "tokens_out": 107,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "f2cb84d37edc5fbd27868f6c8e0e224032d23d71bc2508b07ed2884792e5b9c5": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.8}",
+    "tokens_in": 20396,
+    "tokens_out": 144,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "df81668adf4bcfe85b938fdedd94994a4e54b0dbd98e83402223f007709f4ef8": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.85}",
+    "tokens_in": 20426,
+    "tokens_out": 147,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "8f931ebc43b68bd734c2ec793f0660d905714655ec5031e3d838b4da8e0bdf81": {
+    "content": "{\"class\": \"application.applicationservice\", \"confidence\": 0.55}",
+    "tokens_in": 20355,
+    "tokens_out": 373,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "36e6d2b9302336239f5b8513e27575fc9bc1fafa6c2827c47f57719f6daba51f": {
+    "content": "{\"class\": \"technology.technologyservice\", \"confidence\": 0.4}",
+    "tokens_in": 20385,
+    "tokens_out": 436,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "fb5906b593d0249b0ec1d5c5b2cb79718162ceff9d1ba9e9caabbe050c94bb09": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.8}",
+    "tokens_in": 20387,
+    "tokens_out": 100,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "46f2d119c72a4aafb31913bd695260867c13a8eeada36afd4f6bd9a806157c88": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.9}",
+    "tokens_in": 20420,
+    "tokens_out": 75,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "16c6475b1bf5758e4786f0dfa6936e8165779dba542dd7b25c539887394f77c8": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.8}",
+    "tokens_in": 20406,
+    "tokens_out": 190,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "d4ca9d916e4603a31f2f529fc79e6da1b4ad51ae767c86b740af7df9bc5fda23": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.9}",
+    "tokens_in": 20408,
+    "tokens_out": 72,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "06a23a2206ebb7654be5722fdf63d2807e4f46c1cea407202d508944312fcd9d": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.8}",
+    "tokens_in": 20373,
+    "tokens_out": 129,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "f4cb3991783d853e179531a53d99db9dbfabb6d7a5fc0a27372ee0f483808e82": {
+    "content": "{\"class\": \"technology.systemsoftware\", \"confidence\": 0.6}",
+    "tokens_in": 20530,
+    "tokens_out": 230,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "f15e63fecfd19523fe13be3ef7a304aceefcbec73db8af10a2a40ea319cbf03a": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.7}",
+    "tokens_in": 20391,
+    "tokens_out": 289,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "d56359908038f1ccd4044aa475dcccea2d91df8f697f7755cbc6f97d85086c18": {
+    "content": "{\"class\": \"application.applicationcomponent\", \"confidence\": 0.6}",
+    "tokens_in": 20541,
+    "tokens_out": 203,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "82ab8a4738e08002dd9efe0a4e198a053bf10a0b1457974649b4fba34337f117": {
+    "content": "{\"class\": \"technology.systemsoftware\", \"confidence\": 0.7}",
+    "tokens_in": 20540,
+    "tokens_out": 289,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "5cb0024c84149018b30457530e64dd1489559014fe77b754fd111d41879c1cc7": {
+    "content": "{\"class\": \"technology.technologyservice\", \"confidence\": 0.5}",
+    "tokens_in": 20451,
+    "tokens_out": 368,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "77b4567728f6282c795a7e960be4e61a5429793055ce5bd9af530b045d5c0f4d": {
+    "content": "{\"class\": \"application.applicationservice\", \"confidence\": 0.4}",
+    "tokens_in": 20412,
+    "tokens_out": 545,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "b1cd96554cd8eb74bf9704e9a97f589989721355240bf07e7d8e8958ad8f3c37": {
+    "content": "{\"class\": \"application.applicationinterface\", \"confidence\": 0.55}",
+    "tokens_in": 20318,
+    "tokens_out": 335,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "28842b44e7ebc65c8f90f9fa1f647ce037a43a17013b2e6f6ff7c92135f07fb4": {
+    "content": "{\"class\": \"application.applicationinterface\", \"confidence\": 0.5}",
+    "tokens_in": 20302,
+    "tokens_out": 422,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "addfdc2bcfb6bac02a28b37bad964e78b65b1a6f0c6c1fc3ad53f6a0dbb64b2e": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.4}",
+    "tokens_in": 20208,
+    "tokens_out": 403,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "4103298095b6512bdd67df2e9857b7bbd1bf01e43a27a89f5bf8690f9dc2c675": {
+    "content": "{\"class\": \"application.applicationfunction\", \"confidence\": 0.5}",
+    "tokens_in": 20151,
+    "tokens_out": 371,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "68f8ea1701011336864b506aa827bb6c733ea80f22da56bcce307e473dbabcad": {
+    "content": "{\"class\": \"application.applicationprocess\", \"confidence\": 0.5}",
+    "tokens_in": 20249,
+    "tokens_out": 544,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "e1d90007f14aae70c23b586bf0ad9af5f7acfcc072aa099155ed061a4da49bff": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.6}",
+    "tokens_in": 20609,
+    "tokens_out": 259,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "7902f6d699a5c8722209bc20b4ff47d1b67445dc8a0600d36c15a2a1080c9cfa": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.8}",
+    "tokens_in": 20464,
+    "tokens_out": 110,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "779f105a043b1a608236b9dcc4200846d92c2a7ed6ce9f7a1853f118eb55441a": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.8}",
+    "tokens_in": 20519,
+    "tokens_out": 150,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "4078d18a71552c142b4b51737a20d103768dc65315fbbd55cc1dd8d4f399f72a": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.9}",
+    "tokens_in": 20287,
+    "tokens_out": 19,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "2dc1778809799313ad798f8f610a41bf6ff8bce70a78f88d67677c921376605b": {
+    "content": "{\"class\": \"technology.systemsoftware\", \"confidence\": 0.5}",
+    "tokens_in": 20468,
+    "tokens_out": 344,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "9ed5fffe55bee59a660972abe0b02ff5a8e609806bf45f1d3ea6fc4047a9c66f": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.85}",
+    "tokens_in": 20555,
+    "tokens_out": 185,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "455d6bd158b347f4a6f34b3896e17447fb42dd38489e7da0a7b8623d5f48b1a8": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.6}",
+    "tokens_in": 20552,
+    "tokens_out": 354,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "2b19d472de643082a7c362251d71c6f34a9337e33fa4e73b5e4d2a98324f43a5": {
+    "content": "{\"class\": \"application.applicationprocess\", \"confidence\": 0.45}",
+    "tokens_in": 20501,
+    "tokens_out": 536,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "fdd57cd3d045022e7a6868502a45241d68fd07de59b61541d91f73a6bb7c5908": {
+    "content": "{\"class\": \"technology.systemsoftware\", \"confidence\": 0.5}",
+    "tokens_in": 20601,
+    "tokens_out": 364,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "358ef8fdf52bd705f8a4256463e0c8d7969575682fbd69547d4ea098c32c6b1f": {
+    "content": "{\"class\": \"application.applicationcomponent\", \"confidence\": 0.6}",
+    "tokens_in": 20436,
+    "tokens_out": 211,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "8aec8f31e23a67de57f6afbffd827048b32b97c36f00f582f848e5813177c6f9": {
+    "content": "{\"class\": \"application.applicationcomponent\", \"confidence\": 0.6}",
+    "tokens_in": 20452,
+    "tokens_out": 273,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "e9c46444511d2c91ea343917605a2f2132f5f20212348635b400e1a5807e82d0": {
+    "content": "{\"class\": \"technology.systemsoftware\", \"confidence\": 0.6}",
+    "tokens_in": 20679,
+    "tokens_out": 276,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "ab0ac030671920022003912daa39f48a4f554d84611955c8b7604b9696e53fba": {
+    "content": "{\"class\": \"technology.systemsoftware\", \"confidence\": 0.6}",
+    "tokens_in": 20527,
+    "tokens_out": 262,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "184f531889c08949d27bbe09ea8de7a9adc6087096ee0f6548842fa35522a098": {
+    "content": "{\"class\": \"technology.systemsoftware\", \"confidence\": 0.45}",
+    "tokens_in": 20317,
+    "tokens_out": 402,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "b2073cbf6d5dfd4f3eedfb2f0458bc313adc921a73d4ddf1d8a1c938055a54ec": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.6}",
+    "tokens_in": 20003,
+    "tokens_out": 346,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "da7a66e52981e05f4826ebee0e5568b8940a21ad7b9c5fd5180eaebdd1d811ab": {
+    "content": "{\"class\": \"application.applicationfunction\", \"confidence\": 0.6}",
+    "tokens_in": 20542,
+    "tokens_out": 217,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "f355999e590b54aeee42ea25a0375203329c2c1e885c531375cfa61abf1dab1b": {
+    "content": "{\"class\": \"technology.artifact\", \"confidence\": 0.6}",
+    "tokens_in": 20557,
+    "tokens_out": 145,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "9de265d8c5db8eefd2932ffde952482a700d7513a9b5b334044298e0d5b1c0df": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.6}",
+    "tokens_in": 20408,
+    "tokens_out": 169,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "14a323956f649298df13345140c4622ac14a1c2e0811b99efffb1b8dd999e342": {
+    "content": "{\"class\": \"technology.artifact\", \"confidence\": 0.35}",
+    "tokens_in": 20394,
+    "tokens_out": 254,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "28f84d7f48bad9867d2b92da8aa0faff547681675e8988f7daf5de78acc55130": {
+    "content": "{\"class\": \"technology.artifact\", \"confidence\": 0.5}",
+    "tokens_in": 20609,
+    "tokens_out": 324,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "97b2c35a7fd481bbb140f21390935e10609d0f6c527cbeacba152235783d42b2": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.6}",
+    "tokens_in": 20486,
+    "tokens_out": 372,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "57e76dc0867ef483c586bb4df9b241278121d4e05325df962d56a1fd8f8fb565": {
+    "content": "{\"class\": \"technology.systemsoftware\", \"confidence\": 0.8}",
+    "tokens_in": 20225,
+    "tokens_out": 148,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "32249b809e8bcc67634d864640386fdc12aba723a8dad60d121eb01886529819": {
+    "content": "{\"class\": \"technology.artifact\", \"confidence\": 0.6}",
+    "tokens_in": 20387,
+    "tokens_out": 156,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "82b9ed7e85705725168e195d9ee5561d8311eb2efbae1b859f3ae2cbf364a203": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.85}",
+    "tokens_in": 20158,
+    "tokens_out": 83,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "cde406180ed45462ec3341b9e53dc862775b9e7ffaea53d4e859b53b0dca6d51": {
+    "content": "{\"class\": \"technology.artifact\", \"confidence\": 0.6}",
+    "tokens_in": 20293,
+    "tokens_out": 179,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "c50070119b4488c01e4bf36e4d7308b33050800d765661e3b58125f15e73b4c5": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.85}",
+    "tokens_in": 20632,
+    "tokens_out": 88,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "375e0279fb536cfe01f6c6481d763ef96a0b74c18be697d37abbc7b8b76da1e0": {
+    "content": "{\"class\": \"technology.artifact\", \"confidence\": 0.6}",
+    "tokens_in": 20107,
+    "tokens_out": 148,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "d5a8ce8898613c930eb5548f5b865e27d892a625512c61883dcca14d5f2e6264": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.85}",
+    "tokens_in": 20193,
+    "tokens_out": 92,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "782b83b8996a2c310b19e155aeec2892d4c6e358b32c5094acb0966c2ab27007": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.8}",
+    "tokens_in": 20591,
+    "tokens_out": 119,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "d8d0bc8382a0a5be51e8b7c33782855bf72591c9d00c9154dd69d344ac818e72": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.8}",
+    "tokens_in": 20463,
+    "tokens_out": 99,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "84cc4d2d196bae6b7a9d0b7a8a5e0df106e4ec62c21036b8f320abdfdb9e50ed": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.8}",
+    "tokens_in": 20621,
+    "tokens_out": 230,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "f928a8314b78f5d69d27d4e61c7f5cf0fe839d8125f4d83d91ffbf57f3ddfae6": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.8}",
+    "tokens_in": 20460,
+    "tokens_out": 168,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "af90a3409b4d28dbf473afa4d671a61b2191f5260be550f83b8429f5f1eec027": {
+    "content": "{\"class\": \"security.actor\", \"confidence\": 0.4}",
+    "tokens_in": 20623,
+    "tokens_out": 322,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "5447056b1a30a8e8af7d081a6d1249c601e9a5a95ebf3fcc59431995ed6d3364": {
+    "content": "{\"class\": \"motivation.principle\", \"confidence\": 0.6}",
+    "tokens_in": 20511,
+    "tokens_out": 138,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "2b5d81c94bf9d4f659ddb7049f5d49c9e880bd58f43d1664916b3e4d90525257": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.8}",
+    "tokens_in": 20461,
+    "tokens_out": 131,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "b561346c33629b2994ab3d97a1fd9e9890e4160527c6b14d401334e8ca2c3346": {
+    "content": "{\"class\": \"technology.artifact\", \"confidence\": 0.7}",
+    "tokens_in": 20162,
+    "tokens_out": 121,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "73d2b031b126cdda9ef7487f9fff88b4b14b284b5811089ae0e0b5fb5cc36220": {
+    "content": "{\"class\": \"technology.artifact\", \"confidence\": 0.45}",
+    "tokens_in": 20146,
+    "tokens_out": 196,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "23fa013319221ba6d5d7380f41f02bc102330425041152b4b15ccb67c6398f07": {
+    "content": "{\"class\": \"technology.artifact\", \"confidence\": 0.8}",
+    "tokens_in": 20166,
+    "tokens_out": 124,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "f885f2416b6b7a018678e349133373c4b01a678ffc9d2ee53dd32c74aba79c40": {
+    "content": "{\"class\": \"technology.artifact\", \"confidence\": 0.6}",
+    "tokens_in": 20162,
+    "tokens_out": 191,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "70d0a25381d4a47b46b9912dbce069df8eff5e38ddbd5f53e30761e57a117865": {
+    "content": "{\"class\": \"technology.artifact\", \"confidence\": 0.6}",
+    "tokens_in": 20156,
+    "tokens_out": 148,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "e08e3099fb5596ad773766dfa7ea66dc2e5081d13f31b7c63007139c911d48cc": {
+    "content": "{\"class\": \"technology.artifact\", \"confidence\": 0.6}",
+    "tokens_in": 20142,
+    "tokens_out": 135,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "bd5eb212f020713e09f5b321d7ca0dae126c1114bf2237e1e0d15d7dcdc360f1": {
+    "content": "{\"class\": \"technology.artifact\", \"confidence\": 0.6}",
+    "tokens_in": 20145,
+    "tokens_out": 209,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "1cdafe70bf6bdada54a489d40b82934ee9ba3c31f5fbfb6f77db005be1815cd6": {
+    "content": "{\"class\": \"technology.artifact\", \"confidence\": 0.8}",
+    "tokens_in": 20171,
+    "tokens_out": 130,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "746dd893b2df514953cd573975321fe2a307d4ff830d939588372ed72cd18c6f": {
+    "content": "{\"class\": \"technology.artifact\", \"confidence\": 0.6}",
+    "tokens_in": 20180,
+    "tokens_out": 169,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "28b22f46763c42eeefc2b9bd579662be56a398350dbd234ea89c12437a1cc834": {
+    "content": "{\"class\": \"technology.artifact\", \"confidence\": 0.6}",
+    "tokens_in": 20187,
+    "tokens_out": 132,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "cfb57122e8d14a4f9af229f51b4bbcf532b70a9dd131acf28cad739f4a187a8e": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.8}",
+    "tokens_in": 20182,
+    "tokens_out": 153,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "963be7a1431a38ef2a8a297f53072b1e73713af1bdfe3e4cbbaf7b0cbf9fe076": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.8}",
+    "tokens_in": 20186,
+    "tokens_out": 161,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "4d07ae2884e0562b991688a1b597bac1d873699cdf2546ca97846b57f23a4839": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.85}",
+    "tokens_in": 20209,
+    "tokens_out": 93,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "2c37db96141fd326d40ddeef02e7e73bb834d59788a36c0b08cfcd0378bebdb7": {
+    "content": "{\"class\": \"technology.artifact\", \"confidence\": 0.4}",
+    "tokens_in": 20346,
+    "tokens_out": 219,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "ebbe696d00f1d775cfd2a904e33fbb9fb20b372a4df89b10b51e1c18558e2ab3": {
+    "content": "{\"class\": \"technology.artifact\", \"confidence\": 0.4}",
+    "tokens_in": 20251,
+    "tokens_out": 264,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "ecb23f5e6e689b409f221de34e0bcc55f92b79d2efb5840fabed47bbd9a3fc30": {
+    "content": "{\"class\": \"technology.artifact\", \"confidence\": 0.45}",
+    "tokens_in": 20285,
+    "tokens_out": 356,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "b690714fb27e763bce1992674835540ee9888ea9e7ec7886026f115306f4e495": {
+    "content": "{\"class\": \"technology.artifact\", \"confidence\": 0.7}",
+    "tokens_in": 20380,
+    "tokens_out": 135,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "3892859648ed7bdadc7e49f5382b1e14cfd3ebb1e9ab1900b0b4089bd2994fc6": {
+    "content": "{\"class\": \"technology.artifact\", \"confidence\": 0.7}",
+    "tokens_in": 20387,
+    "tokens_out": 169,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "5e81dd59dde7a857dec96b09cf671ea234639fe4fca3d42041cd5f4a50dc3430": {
+    "content": "{\"class\": \"technology.artifact\", \"confidence\": 0.35}",
+    "tokens_in": 20263,
+    "tokens_out": 398,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "67b19cd1151a5c0b09774306ba4ac552fe094cc0a0dcb3025293ef322c2ba1cc": {
+    "content": "{\"class\": \"technology.artifact\", \"confidence\": 0.8}",
+    "tokens_in": 20447,
+    "tokens_out": 154,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "74eb0824491e64dd95719732734f8cdb89d9fa656e7789dcdcf287458d62e4d9": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.85}",
+    "tokens_in": 20460,
+    "tokens_out": 111,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "94e680a207b0bc3ada0eb99f51952cd299fcc38c0d57f04c576d319be940a35d": {
+    "content": "{\"class\": \"technology.artifact\", \"confidence\": 0.7}",
+    "tokens_in": 20403,
+    "tokens_out": 203,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "77259f9141347b66172230c1513e09b0ada7c043cd857c4973a236ac8a1f306a": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.8}",
+    "tokens_in": 20306,
+    "tokens_out": 198,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "4833f316251477c3abcdc561c101c127ed11345c26a831e741048f640c36f083": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.55}",
+    "tokens_in": 20501,
+    "tokens_out": 391,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "d383e58f1d9d63ba153b4b7d597cd4e6753261ff0cb9371f26fd1f882de57bb9": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.8}",
+    "tokens_in": 20282,
+    "tokens_out": 153,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "392788996fa06954db92212207210666efa0dc38198b100ae1dccfb3c6114789": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.6}",
+    "tokens_in": 20380,
+    "tokens_out": 472,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "3af2026ea4dcef788bbc3ff0be60f97fed4bb8c8771794177ee54777313febb1": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.8}",
+    "tokens_in": 20249,
+    "tokens_out": 86,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "9a3c9d44c9ec1494c4de891eff672c88f1ac1f5356d58c0d5ae735c983c0b5fc": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.8}",
+    "tokens_in": 20153,
+    "tokens_out": 133,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "092f93f0be7650a371bcffae395bedf4014ed2e09c0adb45281d53707c77d6b6": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.85}",
+    "tokens_in": 20046,
+    "tokens_out": 122,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "17a9dd6ad509f2cebbb2b1faddb2cef0bef3a42757498b3d30351cc402bd704e": {
+    "content": "{\"class\": \"security.actor\", \"confidence\": 0.6}",
+    "tokens_in": 20110,
+    "tokens_out": 105,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "50a56138e257428ed1e79a5589f8fe9847c8026fad949de7f251c0e0a92d6468": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.7}",
+    "tokens_in": 20133,
+    "tokens_out": 183,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "90f10274dffb4d6be0f76a882182539e44a2a2f15335b8360dd2bd50474696a7": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.85}",
+    "tokens_in": 19997,
+    "tokens_out": 19,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "ce91a3163d6c965fe98ce8bc393b39192921b614da471af8441d3d1aefc74c01": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.8}",
+    "tokens_in": 19990,
+    "tokens_out": 256,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "d6d09c40426534a744cd48af9bfa279634d929b5750e7cf96920cb790d29e235": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.8}",
+    "tokens_in": 20471,
+    "tokens_out": 175,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "8701e976509c5dde1792550c35ea65eb660093dfa1019e89801225d23a784075": {
+    "content": "{\"class\": \"technology.technologyservice\", \"confidence\": 0.4}",
+    "tokens_in": 20000,
+    "tokens_out": 362,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "36362f10d9b8f3b9db5a4fa36a3e633cc71725d9269346edb4b7f21140771873": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.8}",
+    "tokens_in": 20466,
+    "tokens_out": 183,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "bd18a0bdfa7aac6e9007136fa47ee61f2d6a10f6511e578876d659ef4236f63b": {
+    "content": "{\"class\": \"motivation.principle\", \"confidence\": 0.45}",
+    "tokens_in": 20450,
+    "tokens_out": 299,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "2c6b633982cdd8c4f5fd01e57b42333a1d2194e1351280c1bfdbc214662de3ab": {
+    "content": "{\"class\": \"motivation.requirement\", \"confidence\": 0.5}",
+    "tokens_in": 20320,
+    "tokens_out": 345,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "d05fa6bb6d5d10bbd70252a5c97c252307db0a2e59dc9bd2e7b3c2e47a7bf0b6": {
+    "content": "{\"class\": \"motivation.principle\", \"confidence\": 0.45}",
+    "tokens_in": 20423,
+    "tokens_out": 389,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "561cd35f72fbdcfefe45c49ed74d52d8373f6d45b4b6a02b0667bd28ae9a17a9": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.85}",
+    "tokens_in": 20224,
+    "tokens_out": 83,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "12afa02a74695cf3342f83a393dab85cc94c01cf1611676c6f9fad43a24c9c31": {
+    "content": "{\"class\": \"motivation.requirement\", \"confidence\": 0.5}",
+    "tokens_in": 20268,
+    "tokens_out": 151,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "f00ebffc3f01a902880cad41c92f3664cdbd5c4d27fc3ec5d378734a0600cc1e": {
+    "content": "{\"class\": \"motivation.principle\", \"confidence\": 0.55}",
+    "tokens_in": 20299,
+    "tokens_out": 276,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "8119d5fd9be701fa8d271708cda96072f5662ee32b107690291db1af1a44b86c": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.85}",
+    "tokens_in": 20118,
+    "tokens_out": 88,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "5d8d40fb1e7ef4d82844d955a2e398d2857238f464e401d4e7faa0c5f235cdc2": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.85}",
+    "tokens_in": 20034,
+    "tokens_out": 132,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "343bc0ad7e2f29c21a6277f652e37638a4bdf8e5421a48fee7e6b8c1d62e44b4": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.9}",
+    "tokens_in": 20105,
+    "tokens_out": 89,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "0fdfdae50dfe194991e703e668d329f3f72688617d2c52b60cd4110e909473b3": {
+    "content": "{\"class\": \"technology.technologyservice\", \"confidence\": 0.4}",
+    "tokens_in": 20007,
+    "tokens_out": 327,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "2dcbea70ad5af6ff2783e72012fd21fba9bff67d782096757629dd15d596e482": {
+    "content": "```json\n{\n  \"triples\": [\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"NGINX\", \"label\": \"NGINX\"},\n      \"predicate\": {\"property_definition_id\": \"serves\", \"label\": \"serves\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"GitLab Workhorse\", \"label\": \"GitLab Workhorse\"},\n      \"confidence\": 0.6,\n      \"provenance\": {\"text_offset_start\": 1480, \"text_offset_end\": 1545, \"raw\": \"uses NGINX or Apache as a web server to proxy through\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"Apache\", \"label\": \"Apache\"},\n      \"predicate\": {\"property_definition_id\": \"serves\", \"label\": \"serves\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"GitLab Workhorse\", \"label\": \"GitLab Workhorse\"},\n      \"confidence\": 0.6,\n      \"provenance\": {\"text_offset_start\": 1480, \"text_offset_end\": 1545, \"raw\": \"uses NGINX or Apache as a web server to proxy through\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"GitLab Workhorse\", \"label\": \"GitLab Workhorse\"},\n      \"predicate\": {\"property_definition_id\": \"accesses\", \"label\": \"accesses\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"gitlab/public directory\", \"label\": \"gitlab/public directory\"},\n      \"confidence\": 0.9,\n      \"provenance\": {\"text_offset_start\": 1870, \"text_offset_end\": 1915, \"raw\": \"Workhorse accesses the `gitlab/public` directory\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"GitLab Shell\", \"label\": \"GitLab Shell\"},\n      \"predicate\": {\"property_definition_id\": \"accesses\", \"label\": \"accesses\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"SSH keys\", \"label\": \"SSH keys\"},\n      \"confidence\": 0.8,\n      \"provenance\": {\"text_offset_start\": 2420, \"text_offset_end\": 2510, \"raw\": \"The add-on component GitLab Shell serves repositories over SSH. It manages the SSH keys\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"GitLab Shell\", \"label\": \"GitLab Shell\"},\n      \"predicate\": {\"property_definition_id\": \"accesses\", \"label\": \"accesses\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"Bare Git repositories\", \"label\": \"Bare Git repositories\"},\n      \"confidence\": 0.85,\n      \"provenance\": {\"text_offset_start\": 2600, \"text_offset_end\": 2660, \"raw\": \"GitLab Shell accesses the bare\\nrepositories through Gitaly\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"GitLab Shell\", \"label\": \"GitLab Shell\"},\n      \"predicate\": {\"property_definition_id\": \"uses\", \"label\": \"uses\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"Gitaly\", \"label\": \"Gitaly\"},\n      \"confidence\": 0.8,\n      \"provenance\": {\"text_offset_start\": 2600, \"text_offset_end\": 2660, \"raw\": \"GitLab Shell accesses the bare\\nrepositories through Gitaly\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"GitLab Shell\", \"label\": \"GitLab Shell\"},\n      \"predicate\": {\"property_definition_id\": \"accesses\", \"label\": \"accesses\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"GitLab API\", \"label\": \"GitLab API\"},\n      \"confidence\": 0.6,\n      \"provenance\": {\"text_offset_start\": 2740, \"text_offset_end\": 2800, \"raw\": \"GitLab Shell queries the GitLab API to determine authorization and access\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"Gitaly\", \"label\": \"Gitaly\"},\n      \"predicate\": {\"property_definition_id\": \"provides\", \"label\": \"provides\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"API to the GitLab web app\", \"label\": \"API to the GitLab web app\"},\n      \"confidence\": 0.5,\n      \"provenance\": {\"text_offset_start\": 2810, \"text_offset_end\": 2910, \"raw\": \"Gitaly executes Git operations from GitLab Shell and the GitLab web app, and provides an API to the\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"Sidekiq\", \"label\": \"Sidekiq\"},\n      \"predicate\": {\"property_definition_id\": \"depends-on\", \"label\": \"depends-on\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"Redis\", \"label\": \"Redis\"},\n      \"confidence\": 0.75,\n      \"provenance\": {\"text_offset_start\": 1330, \"text_offset_end\": 1400, \"raw\": \"Sidekiq as a job queue which, in turn, uses Redis as a non-persistent\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"GitLab.com\", \"label\": \"GitLab.com\"},\n      \"predicate\": {\"property_definition_id\": \"composes\", \"label\": \"composes\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"GitLab Helm chart\", \"label\": \"GitLab Helm chart\"},\n      \"confidence\": 0.5,\n      \"provenance\": {\"text_offset_start\": 1060, \"text_offset_end\": 1150, \"raw\": \"deployed using our official GitLab Helm chart and the official Linux package\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"GitLab.com\", \"label\": \"GitLab.com\"},\n      \"predicate\": {\"property_definition_id\": \"composes\", \"label\": \"composes\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"Official Linux package\", \"label\": \"Official Linux package\"},\n      \"confidence\": 0.5,\n      \"provenance\": {\"text_offset_start\": 1060, \"text_offset_end\": 1150, \"raw\": \"deployed using our official GitLab Helm chart and the official Linux package\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"API-first philosophy\", \"label\": \"API-first philosophy\"},\n      \"predicate\": {\"property_definition_id\": \"influence\", \"label\": \"influence\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"Kubernetes compatibility first\", \"label\": \"Kubernetes compatibility first\"},\n      \"confidence\": 0.6,\n      \"provenance\": {\"text_offset_start\": 3700, \"text_offset_end\": 3870, \"raw\": \"Since components written with the API-first philosophy in mind are compatible with both methods, all new features and services must be written to consider Kubernetes compatibility first.\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"Services exchange information through APIs\", \"label\": \"Services exchange information through APIs\"},\n      \"predicate\": {\"property_definition_id\": \"influence\", \"label\": \"influence\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"Avoid files for service exchange\", \"label\": \"Avoid files for service exchange\"},\n      \"confidence\": 0.6,\n      \"provenance\": {\"text_offset_start\": 3390, \"text_offset_end\": 3560, \"raw\": \"Services that need to have access to the same files, need to be able to exchange information through the appropriate APIs. Whenever possible, this should not be done with files.\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"Shared files not an option on Kubernetes\", \"label\": \"Shared files not an option on Kubernetes\"},\n      \"predicate\": {\"property_definition_id\": \"influence\", \"label\": \"influence\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"Avoid files for service exchange\", \"label\": \"Avoid files for service exchange\"},\n      \"confidence\": 0.45,\n      \"provenance\": {\"text_offset_start\": 2990, \"text_offset_end\": 3065, \"raw\": \"Shared files are not an option for the application running on the Kubernetes\"}\n    }\n  ]\n}\n```",
+    "tokens_in": 4334,
+    "tokens_out": 7806,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "8dcda95049146873b86de044d0130b0dff768ff5407ed1d48385cde05719e21c": {
+    "content": "```json\n{\n  \"triples\": [\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"NGINX\", \"label\": \"NGINX\"},\n      \"predicate\": {\"property_definition_id\": \"serves\", \"label\": \"serves\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"GitLab Workhorse\", \"label\": \"GitLab Workhorse\"},\n      \"confidence\": 0.8,\n      \"provenance\": {\"text_offset_start\": 1, \"text_offset_end\": 1, \"raw\": \"NGINX --> GitLabWorkhorse\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"NGINX\", \"label\": \"NGINX\"},\n      \"predicate\": {\"property_definition_id\": \"serves\", \"label\": \"serves\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"GitLab Pages\", \"label\": \"GitLab Pages\"},\n      \"confidence\": 0.8,\n      \"provenance\": {\"text_offset_start\": 1, \"text_offset_end\": 1, \"raw\": \"NGINX -- TCP 8090 --> GitLabPages\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"NGINX\", \"label\": \"NGINX\"},\n      \"predicate\": {\"property_definition_id\": \"serves\", \"label\": \"serves\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"GitLab agent server\", \"label\": \"GitLab agent server\"},\n      \"confidence\": 0.75,\n      \"provenance\": {\"text_offset_start\": 1, \"text_offset_end\": 1, \"raw\": \"NGINX -- TCP 8150 --> GitLabKas\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"NGINX\", \"label\": \"NGINX\"},\n      \"predicate\": {\"property_definition_id\": \"serves\", \"label\": \"serves\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"Registry\", \"label\": \"Registry\"},\n      \"confidence\": 0.8,\n      \"provenance\": {\"text_offset_start\": 1, \"text_offset_end\": 1, \"raw\": \"NGINX --> Registry\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"Puma (GitLab Rails)\", \"label\": \"Puma (GitLab Rails)\"},\n      \"predicate\": {\"property_definition_id\": \"uses\", \"label\": \"uses\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"Registry\", \"label\": \"Registry\"},\n      \"confidence\": 0.75,\n      \"provenance\": {\"text_offset_start\": 1, \"text_offset_end\": 1, \"raw\": \"Puma <--> Registry\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"Puma (GitLab Rails)\", \"label\": \"Puma (GitLab Rails)\"},\n      \"predicate\": {\"property_definition_id\": \"uses\", \"label\": \"uses\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"GitLab Workhorse\", \"label\": \"GitLab Workhorse\"},\n      \"confidence\": 0.7,\n      \"provenance\": {\"text_offset_start\": 1, \"text_offset_end\": 1, \"raw\": \"GitLabWorkhorse[GitLab Workhorse] <--> Puma\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"Puma (GitLab Rails)\", \"label\": \"Puma (GitLab Rails)\"},\n      \"predicate\": {\"property_definition_id\": \"uses\", \"label\": \"uses\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"Praefect\", \"label\": \"Praefect\"},\n      \"confidence\": 0.7,\n      \"provenance\": {\"text_offset_start\": 1, \"text_offset_end\": 1, \"raw\": \"Puma --> Praefect\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"GitLab agent server\", \"label\": \"GitLab agent server\"},\n      \"predicate\": {\"property_definition_id\": \"uses\", \"label\": \"uses\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"GitLab Workhorse\", \"label\": \"GitLab Workhorse\"},\n      \"confidence\": 0.7,\n      \"provenance\": {\"text_offset_start\": 1, \"text_offset_end\": 1, \"raw\": \"GitLabKas[GitLab agent server] --> GitLabWorkhorse\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"GitLab Pages\", \"label\": \"GitLab Pages\"},\n      \"predicate\": {\"property_definition_id\": \"uses\", \"label\": \"uses\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"GitLab Workhorse\", \"label\": \"GitLab Workhorse\"},\n      \"confidence\": 0.7,\n      \"provenance\": {\"text_offset_start\": 1, \"text_offset_end\": 1, \"raw\": \"GitLabPages[GitLab Pages] --> GitLabWorkhorse\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"GitLab Shell\", \"label\": \"GitLab Shell\"},\n      \"predicate\": {\"property_definition_id\": \"uses\", \"label\": \"uses\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"GitLab Workhorse\", \"label\": \"GitLab Workhorse\"},\n      \"confidence\": 0.7,\n      \"provenance\": {\"text_offset_start\": 1, \"text_offset_end\": 1, \"raw\": \"GitLabShell --> GitLabWorkhorse\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"GitLab Shell\", \"label\": \"GitLab Shell\"},\n      \"predicate\": {\"property_definition_id\": \"uses\", \"label\": \"uses\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"Praefect\", \"label\": \"Praefect\"},\n      \"confidence\": 0.7,\n      \"provenance\": {\"text_offset_start\": 1, \"text_offset_end\": 1, \"raw\": \"GitLabShell --> Praefect\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"Praefect\", \"label\": \"Praefect\"},\n      \"predicate\": {\"property_definition_id\": \"uses\", \"label\": \"uses\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"Gitaly\", \"label\": \"Gitaly\"},\n      \"confidence\": 0.75,\n      \"provenance\": {\"text_offset_start\": 1, \"text_offset_end\": 1, \"raw\": \"Praefect --> Gitaly\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"Gitaly\", \"label\": \"Gitaly\"},\n      \"predicate\": {\"property_definition_id\": \"uses\", \"label\": \"uses\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"GitLab Workhorse\", \"label\": \"GitLab Workhorse\"},\n      \"confidence\": 0.7,\n      \"provenance\": {\"text_offset_start\": 1, \"text_offset_end\": 1, \"raw\": \"Gitaly --> GitLabWorkhorse\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"Sidekiq\", \"label\": \"Sidekiq\"},\n      \"predicate\": {\"property_definition_id\": \"depends-on\", \"label\": \"depends-on\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"Redis\", \"label\": \"Redis\"},\n      \"confidence\": 0.8,\n      \"provenance\": {\"text_offset_start\": 1, \"text_offset_end\": 1, \"raw\": \"Sidekiq --> Redis\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"Sidekiq\", \"label\": \"Sidekiq\"},\n      \"predicate\": {\"property_definition_id\": \"depends-on\", \"label\": \"depends-on\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"PgBouncer\", \"label\": \"PgBouncer\"},\n      \"confidence\": 0.8,\n      \"provenance\": {\"text_offset_start\": 1, \"text_offset_end\": 1, \"raw\": \"Sidekiq --> PgBouncer\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"Sidekiq\", \"label\": \"Sidekiq\"},\n      \"predicate\": {\"property_definition_id\": \"depends-on\", \"label\": \"depends-on\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"Consul\", \"label\": \"Consul\"},\n      \"confidence\": 0.75,\n      \"provenance\": {\"text_offset_start\": 1, \"text_offset_end\": 1, \"raw\": \"Sidekiq ---> Consul\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"Sidekiq\", \"label\": \"Sidekiq\"},\n      \"predicate\": {\"property_definition_id\": \"depends-on\", \"label\": \"depends-on\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"Sentinel\", \"label\": \"Sentinel\"},\n      \"confidence\": 0.75,\n      \"provenance\": {\"text_offset_start\": 1, \"text_offset_end\": 1, \"raw\": \"Sidekiq --> Sentinel\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"PostgreSQL\", \"label\": \"PostgreSQL\"},\n      \"predicate\": {\"property_definition_id\": \"depends-on\", \"label\": \"depends-on\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"Consul\", \"label\": \"Consul\"},\n      \"confidence\": 0.75,\n      \"provenance\": {\"text_offset_start\": 1, \"text_offset_end\": 1, \"raw\": \"PostgreSQL --> Consul\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"PgBouncer\", \"label\": \"PgBouncer\"},\n      \"predicate\": {\"property_definition_id\": \"depends-on\", \"label\": \"depends-on\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"PostgreSQL\", \"label\": \"PostgreSQL\"},\n      \"confidence\": 0.8,\n      \"provenance\": {\"text_offset_start\": 1, \"text_offset_end\": 1, \"raw\": \"PgBouncer --> PostgreSQL\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"PgBouncer\", \"label\": \"PgBouncer\"},\n      \"predicate\": {\"property_definition_id\": \"depends-on\", \"label\": \"depends-on\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"Consul\", \"label\": \"Consul\"},\n      \"confidence\": 0.75,\n      \"provenance\": {\"text_offset_start\": 1, \"text_offset_end\": 1, \"raw\": \"PgBouncer --> Consul\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"Grafana\", \"label\": \"Grafana\"},\n      \"predicate\": {\"property_definition_id\": \"depends-on\", \"label\": \"depends-on\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"Prometheus\", \"label\": \"Prometheus\"},\n      \"confidence\": 0.7,\n      \"provenance\": {\"text_offset_start\": 1, \"text_offset_end\": 1, \"raw\": \"Grafana -- TCP 9090 --> Prometheus[Prometheus]\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"Redis Exporter\", \"label\": \"Redis Exporter\"},\n      \"predicate\": {\"property_definition_id\": \"depends-on\", \"label\": \"depends-on\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"Redis\", \"label\": \"Redis\"},\n      \"confidence\": 0.75,\n      \"provenance\": {\"text_offset_start\": 1, \"text_offset_end\": 1, \"raw\": \"RedisExporter[Redis Exporter] --> Redis\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"PostgreSQL Exporter\", \"label\": \"PostgreSQL Exporter\"},\n      \"predicate\": {\"property_definition_id\": \"depends-on\", \"label\": \"depends-on\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"PostgreSQL\", \"label\": \"PostgreSQL\"},\n      \"confidence\": 0.75,\n      \"provenance\": {\"text_offset_start\": 1, \"text_offset_end\": 1, \"raw\": \"PostgreSQLExporter[PostgreSQL Exporter] --> PostgreSQL\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"PgBouncer Exporter\", \"label\": \"PgBouncer Exporter\"},\n      \"predicate\": {\"property_definition_id\": \"depends-on\", \"label\": \"depends-on\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"PgBouncer\", \"label\": \"PgBouncer\"},\n      \"confidence\": 0.75,\n      \"provenance\": {\"text_offset_start\": 1, \"text_offset_end\": 1, \"raw\": \"PgBouncerExporter[PgBouncer Exporter] --> PgBouncer\"}\n    }\n  ]\n}\n```",
+    "tokens_in": 5494,
+    "tokens_out": 7984,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "51829f6d3492d57472358572505ae46162c7727c88d9ab43422e1dae7d279f04": {
+    "content": "```json\n{\n  \"triples\": [\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"Praefect\", \"label\": \"Praefect\"},\n      \"predicate\": {\"property_definition_id\": \"uses\", \"label\": \"uses\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"Gitaly\", \"label\": \"Gitaly\"},\n      \"confidence\": 0.6,\n      \"provenance\": {\"text_offset_start\": 0, \"text_offset_end\": 0, \"raw\": \"A transparent proxy between any Git client and Gitaly storage nodes.\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"NGINX\", \"label\": \"NGINX\"},\n      \"predicate\": {\"property_definition_id\": \"serves\", \"label\": \"serves\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"appropriate components\", \"label\": \"appropriate components\"},\n      \"confidence\": 0.5,\n      \"provenance\": {\"text_offset_start\": 0, \"text_offset_end\": 0, \"raw\": \"NGINX | Routes requests to appropriate components, terminates SSL\"}\n    }\n  ]\n}\n```",
+    "tokens_in": 5220,
+    "tokens_out": 3442,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "0e503253ea42a32d7455dc9c20610098cc3fd6c83096fc56dd12e00de3d2d3e1": {
+    "content": "```json\n{\n  \"triples\": [\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"Praefect\", \"label\": \"Praefect\"},\n      \"predicate\": {\"property_definition_id\": \"uses\", \"label\": \"uses\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"Gitaly\", \"label\": \"Gitaly\"},\n      \"confidence\": 0.8,\n      \"provenance\": {\n        \"text_offset_start\": 0,\n        \"text_offset_end\": 0,\n        \"raw\": \"Praefect is a transparent proxy between each Git client and the Gitaly\"\n      }\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"Redis Exporter\", \"label\": \"Redis Exporter\"},\n      \"predicate\": {\"property_definition_id\": \"depends-on\", \"label\": \"depends-on\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"Redis\", \"label\": \"Redis\"},\n      \"confidence\": 0.5,\n      \"provenance\": {\n        \"text_offset_start\": 0,\n        \"text_offset_end\": 0,\n        \"raw\": \"Prometheus endpoint with Redis metrics\"\n      }\n    }\n  ]\n}\n```\n\nOffsets are approximate because the source is a long table with line wrapping. The Redis Exporter triple is an inference from its description as a Prometheus endpoint exposing Redis metrics, so its confidence is lower.",
+    "tokens_in": 5394,
+    "tokens_out": 1942,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "db06a957ec3976045981185b3573b5baff3af88629fd7c11659ca1ad808451bb": {
+    "content": "```json\n{\n  \"triples\": [\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"Sidekiq\", \"label\": \"Sidekiq\"},\n      \"predicate\": {\"property_definition_id\": \"depends-on\", \"label\": \"depends-on\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"Redis\", \"label\": \"Redis\"},\n      \"confidence\": 0.8,\n      \"provenance\": {\"text_offset_start\": 0, \"text_offset_end\": 0, \"raw\": \"Sidekiq is a Ruby background job processor that pulls jobs from the Redis queue and processes them.\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"Puma\", \"label\": \"Puma\"},\n      \"predicate\": {\"property_definition_id\": \"serves\", \"label\": \"serves\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"Rails application\", \"label\": \"Rails application\"},\n      \"confidence\": 0.8,\n      \"provenance\": {\"text_offset_start\": 0, \"text_offset_end\": 0, \"raw\": \"Puma is a Ruby application server that is used to run the core Rails Application that provides the user facing features in GitLab.\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"Registry\", \"label\": \"Registry\"},\n      \"predicate\": {\"property_definition_id\": \"uses\", \"label\": \"uses\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"NGINX\", \"label\": \"NGINX\"},\n      \"confidence\": 0.7,\n      \"provenance\": {\"text_offset_start\": 0, \"text_offset_end\": 0, \"raw\": \"registry uses NGINX as a load balancer\"}\n    }\n  ]\n}\n```",
+    "tokens_in": 5932,
+    "tokens_out": 3229,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "c1d237faad4267fdbe396624d6154766da1eec96057a93b528e7ea8a20055820": {
+    "content": "```json\n{\n  \"triples\": [\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"Workhorse\", \"label\": \"Workhorse\"},\n      \"predicate\": {\"property_definition_id\": \"uses\", \"label\": \"uses\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"Gitaly\", \"label\": \"Gitaly\"},\n      \"confidence\": 0.8,\n      \"provenance\": {\"text_offset_start\": 1500, \"text_offset_end\": 1575, \"raw\": \"Workhorse->>+Gitaly: SmartHTTPService.InfoRefsUploadPack request\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"Workhorse\", \"label\": \"Workhorse\"},\n      \"predicate\": {\"property_definition_id\": \"uses\", \"label\": \"uses\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"Rails\", \"label\": \"Rails\"},\n      \"confidence\": 0.8,\n      \"provenance\": {\"text_offset_start\": 1000, \"text_offset_end\": 1064, \"raw\": \"Workhorse->>+Rails: GET /info/refs?service=git-upload-pack\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"Gitaly\", \"label\": \"Gitaly\"},\n      \"predicate\": {\"property_definition_id\": \"uses\", \"label\": \"uses\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"Git on server\", \"label\": \"Git on server\"},\n      \"confidence\": 0.75,\n      \"provenance\": {\"text_offset_start\": 1580, \"text_offset_end\": 1650, \"raw\": \"Gitaly->>+Git on server: git upload-pack --stateless-rpc --advertise-refs\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"GitLab Shell\", \"label\": \"GitLab Shell\"},\n      \"predicate\": {\"property_definition_id\": \"uses\", \"label\": \"uses\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"Gitaly\", \"label\": \"Gitaly\"},\n      \"confidence\": 0.8,\n      \"provenance\": {\"text_offset_start\": 4000, \"text_offset_end\": 4060, \"raw\": \"GitLab Shell->>+Gitaly: SSHService.SSHUploadPack request\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"GitLab Shell\", \"label\": \"GitLab Shell\"},\n      \"predicate\": {\"property_definition_id\": \"uses\", \"label\": \"uses\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"Rails\", \"label\": \"Rails\"},\n      \"confidence\": 0.8,\n      \"provenance\": {\"text_offset_start\": 3700, \"text_offset_end\": 3770, \"raw\": \"GitLab Shell->>+Rails: GET /internal/api/allowed?action=upload_pack&key_id=1\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"SSH server\", \"label\": \"SSH server\"},\n      \"predicate\": {\"property_definition_id\": \"serves\", \"label\": \"serves\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"GitLab Shell\", \"label\": \"GitLab Shell\"},\n      \"confidence\": 0.6,\n      \"provenance\": {\"text_offset_start\": 3600, \"text_offset_end\": 3660, \"raw\": \"SSH server->>+GitLab Shell: gitlab-shell upload-pack key_id=1\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"NGINX\", \"label\": \"NGINX\"},\n      \"predicate\": {\"property_definition_id\": \"serves\", \"label\": \"serves\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"Workhorse\", \"label\": \"Workhorse\"},\n      \"confidence\": 0.55,\n      \"provenance\": {\"text_offset_start\": 900, \"text_offset_end\": 990, \"raw\": \"NGINX and any other HTTP load balancers, but are not transformed in any\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"Git on client\", \"label\": \"Git on client\"},\n      \"predicate\": {\"property_definition_id\": \"depends-on\", \"label\": \"depends-on\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"SSH server\", \"label\": \"SSH server\"},\n      \"confidence\": 0.6,\n      \"provenance\": {\"text_offset_start\": 3050, \"text_offset_end\": 3150, \"raw\": \"Git on the client machine and the SSH server, which terminates the connection.\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"AuthorizedKeysCommand\", \"label\": \"AuthorizedKeysCommand\"},\n      \"predicate\": {\"property_definition_id\": \"realizes\", \"label\": \"realizes\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"GitLab Shell\", \"label\": \"GitLab Shell\"},\n      \"confidence\": 0.5,\n      \"provenance\": {\"text_offset_start\": 3200, \"text_offset_end\": 3260, \"raw\": \"is an executable provided by\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"AuthorizedKeysWorker\", \"label\": \"AuthorizedKeysWorker\"},\n      \"predicate\": {\"property_definition_id\": \"accesses\", \"label\": \"accesses\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"authorized_keys file\", \"label\": \"authorized_keys file\"},\n      \"confidence\": 0.55,\n      \"provenance\": {\"text_offset_start\": 4700, \"text_offset_end\": 4790, \"raw\": \"This is kept up to date by an `AuthorizedKeysWorker`\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"Apache httpd\", \"label\": \"Apache httpd\"},\n      \"predicate\": {\"property_definition_id\": \"depends-on\", \"label\": \"depends-on\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"Puma\", \"label\": \"Puma\"},\n      \"confidence\": 0.7,\n      \"provenance\": {\"text_offset_start\": 5300, \"text_offset_end\": 5380, \"raw\": \"uses Apache `httpd` or NGINX to `proxypass` Puma\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"NGINX\", \"label\": \"NGINX\"},\n      \"predicate\": {\"property_definition_id\": \"depends-on\", \"label\": \"depends-on\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"Puma\", \"label\": \"Puma\"},\n      \"confidence\": 0.6,\n      \"provenance\": {\"text_offset_start\": 5300, \"text_offset_end\": 5380, \"raw\": \"uses Apache `httpd` or NGINX to `proxypass` Puma\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"GitLab init script\", \"label\": \"GitLab init script\"},\n      \"predicate\": {\"property_definition_id\": \"realizes\", \"label\": \"realizes\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"Puma\", \"label\": \"Puma\"},\n      \"confidence\": 0.6,\n      \"provenance\": {\"text_offset_start\": 6000, \"text_offset_end\": 6080, \"raw\": \"The GitLab init script starts and stops Puma and Sidekiq:\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"GitLab init script\", \"label\": \"GitLab init script\"},\n      \"predicate\": {\"property_definition_id\": \"realizes\", \"label\": \"realizes\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"Sidekiq\", \"label\": \"Sidekiq\"},\n      \"confidence\": 0.6,\n      \"provenance\": {\"text_offset_start\": 6000, \"text_offset_end\": 6080, \"raw\": \"The GitLab init script starts and stops Puma and Sidekiq:\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"SSH daemon init script\", \"label\": \"SSH daemon init script\"},\n      \"predicate\": {\"property_definition_id\": \"realizes\", \"label\": \"realizes\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"SSH server\", \"label\": \"SSH server\"},\n      \"confidence\": 0.5,\n      \"provenance\": {\"text_offset_start\": 6400, \"text_offset_end\": 6420, \"raw\": \"/etc/init.d/sshd\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"PostgreSQL init script\", \"label\": \"PostgreSQL init script\"},\n      \"predicate\": {\"property_definition_id\": \"realizes\", \"label\": \"realizes\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"PostgreSQL\", \"label\": \"PostgreSQL\"},\n      \"confidence\": 0.5,\n      \"provenance\": {\"text_offset_start\": 6800, \"text_offset_end\": 6830, \"raw\": \"/etc/init.d/postgresql\"}\n    }\n  ]\n}\n```",
+    "tokens_in": 5020,
+    "tokens_out": 6249,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "151f67638f0a3e49f13c96df35808ad0d48a86d84f69c81e50da5f52c8f9f7f7": {
+    "content": "```json\n{\n  \"triples\": [\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"GitLab log directory\", \"label\": \"GitLab log directory\"},\n      \"predicate\": {\"property_definition_id\": \"aggregates\", \"label\": \"aggregates\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"application.log\", \"label\": \"application.log\"},\n      \"confidence\": 0.9,\n      \"provenance\": {\"text_offset_start\": 76, \"text_offset_end\": 224, \"raw\": \"`/home/git/gitlab/log/` usually contains `application.log`, `production.log`, `sidekiq.log`, `puma.stdout.log`, `git_json.log`, and `puma.stderr.log`.\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"GitLab log directory\", \"label\": \"GitLab log directory\"},\n      \"predicate\": {\"property_definition_id\": \"aggregates\", \"label\": \"aggregates\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"production.log\", \"label\": \"production.log\"},\n      \"confidence\": 0.9,\n      \"provenance\": {\"text_offset_start\": 76, \"text_offset_end\": 224, \"raw\": \"`/home/git/gitlab/log/` usually contains `application.log`, `production.log`, `sidekiq.log`, `puma.stdout.log`, `git_json.log`, and `puma.stderr.log`.\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"GitLab log directory\", \"label\": \"GitLab log directory\"},\n      \"predicate\": {\"property_definition_id\": \"aggregates\", \"label\": \"aggregates\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"sidekiq.log\", \"label\": \"sidekiq.log\"},\n      \"confidence\": 0.9,\n      \"provenance\": {\"text_offset_start\": 76, \"text_offset_end\": 224, \"raw\": \"`/home/git/gitlab/log/` usually contains `application.log`, `production.log`, `sidekiq.log`, `puma.stdout.log`, `git_json.log`, and `puma.stderr.log`.\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"GitLab log directory\", \"label\": \"GitLab log directory\"},\n      \"predicate\": {\"property_definition_id\": \"aggregates\", \"label\": \"aggregates\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"puma.stdout.log\", \"label\": \"puma.stdout.log\"},\n      \"confidence\": 0.9,\n      \"provenance\": {\"text_offset_start\": 76, \"text_offset_end\": 224, \"raw\": \"`/home/git/gitlab/log/` usually contains `application.log`, `production.log`, `sidekiq.log`, `puma.stdout.log`, `git_json.log`, and `puma.stderr.log`.\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"GitLab log directory\", \"label\": \"GitLab log directory\"},\n      \"predicate\": {\"property_definition_id\": \"aggregates\", \"label\": \"aggregates\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"git_json.log\", \"label\": \"git_json.log\"},\n      \"confidence\": 0.9,\n      \"provenance\": {\"text_offset_start\": 76, \"text_offset_end\": 224, \"raw\": \"`/home/git/gitlab/log/` usually contains `application.log`, `production.log`, `sidekiq.log`, `puma.stdout.log`, `git_json.log`, and `puma.stderr.log`.\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"GitLab log directory\", \"label\": \"GitLab log directory\"},\n      \"predicate\": {\"property_definition_id\": \"aggregates\", \"label\": \"aggregates\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"puma.stderr.log\", \"label\": \"puma.stderr.log\"},\n      \"confidence\": 0.9,\n      \"provenance\": {\"text_offset_start\": 76, \"text_offset_end\": 224, \"raw\": \"`/home/git/gitlab/log/` usually contains `application.log`, `production.log`, `sidekiq.log`, `puma.stdout.log`, `git_json.log`, and `puma.stderr.log`.\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"GitLab configuration directory\", \"label\": \"GitLab configuration directory\"},\n      \"predicate\": {\"property_definition_id\": \"aggregates\", \"label\": \"aggregates\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"gitlab.yml\", \"label\": \"gitlab.yml\"},\n      \"confidence\": 0.85,\n      \"provenance\": {\"text_offset_start\": 804, \"text_offset_end\": 965, \"raw\": \"GitLab has configuration files located in `/home/git/gitlab/config/*`. Commonly referenced\\nconfiguration files include:\\n\\n- `gitlab.yml`: GitLab Rails configuration\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"GitLab configuration directory\", \"label\": \"GitLab configuration directory\"},\n      \"predicate\": {\"property_definition_id\": \"aggregates\", \"label\": \"aggregates\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"puma.rb\", \"label\": \"puma.rb\"},\n      \"confidence\": 0.85,\n      \"provenance\": {\"text_offset_start\": 966, \"text_offset_end\": 1010, \"raw\": \"- `puma.rb`: Puma web server settings\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"GitLab configuration directory\", \"label\": \"GitLab configuration directory\"},\n      \"predicate\": {\"property_definition_id\": \"aggregates\", \"label\": \"aggregates\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"database.yml\", \"label\": \"database.yml\"},\n      \"confidence\": 0.85,\n      \"provenance\": {\"text_offset_start\": 1011, \"text_offset_end\": 1055, \"raw\": \"- `database.yml`: Database connection settings\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"SaaS model gateway\", \"label\": \"SaaS model gateway\"},\n      \"predicate\": {\"property_definition_id\": \"realizes\", \"label\": \"realizes\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"AI-native features\", \"label\": \"AI-native features\"},\n      \"confidence\": 0.6,\n      \"provenance\": {\"text_offset_start\": 2600, \"text_offset_end\": 2664, \"raw\": \"A SaaS model gateway is available to enable AI-native features.\"}\n    }\n  ]\n}\n```",
+    "tokens_in": 3547,
+    "tokens_out": 6067,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  }
+}

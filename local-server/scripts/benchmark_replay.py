@@ -50,6 +50,7 @@ from domain.ontology.ports import OntologyRepository
 from domain.ontology.services import OntologyService
 from domain.pipelines.entities import PipelineType
 from domain.pipelines.exceptions import PipelineExecutionError
+from domain.pipelines.individual_extraction.find_then_type import FindThenTypeOrchestrator
 from domain.pipelines.individual_extraction.orchestrator import (
     IndividualExtractionOrchestrator,
     IndividualExtractionState,
@@ -92,6 +93,29 @@ CASSETTE_DIR = (
     / "cassettes"
     / "extraction_benchmark"
 )
+# The implementations of individual extraction the benchmark can run, each with
+# the model its cassettes are recorded with and where those cassettes are.
+DEFAULT_IMPLEMENTATION = "default"
+FIND_THEN_TYPE = "find_then_type"
+FIND_THEN_TYPE_MODEL = "claude-haiku-5-5"
+
+
+@dataclass(frozen=True)
+class Implementation:
+    """One implementation of individual extraction as the benchmark runs it."""
+
+    orchestrator: type[IndividualExtractionOrchestrator]
+    model: str
+    # The folder of its cassettes beside CASSETTE_DIR; None for CASSETTE_DIR itself
+    cassette_dir: str | None = None
+
+
+IMPLEMENTATIONS: dict[str, Implementation] = {
+    DEFAULT_IMPLEMENTATION: Implementation(IndividualExtractionOrchestrator, BENCHMARK_MODEL),
+    FIND_THEN_TYPE: Implementation(
+        FindThenTypeOrchestrator, FIND_THEN_TYPE_MODEL, "extraction_benchmark_find_then_type"
+    ),
+}
 # Which documents the loop optimises on, and which only vetoes (never selects).
 DEV_DOCUMENTS = ("edit_check", "gitlab_architecture")
 HOLDOUT_DOCUMENTS = ("wikimedia_enterprise",)
@@ -144,21 +168,29 @@ def benchmark_ontology() -> BenchmarkOntology:
     )
 
 
-def cassette_path(document_id: str) -> Path:
-    return CASSETTE_DIR / f"{document_id}.json"
+def cassette_path(document_id: str, implementation: str = DEFAULT_IMPLEMENTATION) -> Path:
+    """Where an implementation's recording of a document is."""
+    folder = IMPLEMENTATIONS[implementation].cassette_dir
+    directory = CASSETTE_DIR.with_name(folder) if folder else CASSETTE_DIR
+    return directory / f"{document_id}.json"
 
 
 async def extract_document(
     ontology: BenchmarkOntology,
     provider: LLMProvider,
     document_id: str,
-    model: str = BENCHMARK_MODEL,
+    model: str | None = None,
     config: dict[str, Any] | None = None,
+    implementation: str = DEFAULT_IMPLEMENTATION,
 ) -> tuple[list[Predicted], list[PredictedRelationship]]:
     """
     Extract one benchmark document as a source and return what a proposal
     would hold: the planned individual and relationship creates.
+
+    ``model`` is the implementation's own unless given.
     """
+    chosen = IMPLEMENTATIONS[implementation]
+    model = model or chosen.model
     data = (BENCHMARK_DIR / document_id / "source.md").read_bytes()
     source = MarkdownReader().read(data)
     service = ExtractionService(
@@ -172,7 +204,7 @@ async def extract_document(
         extraction_run_repo=SQLiteExtractionRunRepository(ontology.session_factory),
         schema_index=ontology.schema_index,
     )
-    orchestrator = IndividualExtractionOrchestrator(
+    orchestrator = chosen.orchestrator(
         llm_provider=provider, extraction_service=service, config=config
     )
     state = IndividualExtractionState(
@@ -261,9 +293,13 @@ class DocumentResult:
     detail: str = ""
 
 
-async def replay_document(document_id: str, config: dict[str, Any] | None = None) -> DocumentResult:
-    """Replay one document from its cassette and score it."""
-    path = cassette_path(document_id)
+async def replay_document(
+    document_id: str,
+    config: dict[str, Any] | None = None,
+    implementation: str = DEFAULT_IMPLEMENTATION,
+) -> DocumentResult:
+    """Replay one document from an implementation's cassette and score it."""
+    path = cassette_path(document_id, implementation)
     if not path.exists():
         return DocumentResult(document_id, "not_recorded")
     provider = CassetteLLMProvider(path)
@@ -272,7 +308,11 @@ async def replay_document(document_id: str, config: dict[str, Any] | None = None
     failure = ""
     try:
         individuals, relationships = await extract_document(
-            benchmark_ontology(), cast(LLMProvider, provider), document_id, config=config
+            benchmark_ontology(),
+            cast(LLMProvider, provider),
+            document_id,
+            config=config,
+            implementation=implementation,
         )
     except PipelineExecutionError as exc:
         # A prompt with no recording fails its chunk, and the run with it when
@@ -287,9 +327,13 @@ async def replay_document(document_id: str, config: dict[str, Any] | None = None
 
 
 async def replay_all(
-    documents: list[str] | None = None, config: dict[str, Any] | None = None
+    documents: list[str] | None = None,
+    config: dict[str, Any] | None = None,
+    implementation: str = DEFAULT_IMPLEMENTATION,
 ) -> list[DocumentResult]:
-    return [await replay_document(d, config) for d in documents or benchmark_documents()]
+    return [
+        await replay_document(d, config, implementation) for d in documents or benchmark_documents()
+    ]
 
 
 def summarize(results: list[DocumentResult]) -> dict[str, Any]:
@@ -323,7 +367,9 @@ def summarize(results: list[DocumentResult]) -> dict[str, Any]:
     }
 
 
-async def record_document(document_id: str, model: str) -> DocumentResult:
+async def record_document(
+    document_id: str, model: str, implementation: str = DEFAULT_IMPLEMENTATION
+) -> DocumentResult:
     """Extract one document with the live LLM, recording every call, and score it."""
     from adapters.llm.provider_router import LLMProviderRouter
     from config import get_config_manager
@@ -336,12 +382,16 @@ async def record_document(document_id: str, model: str) -> DocumentResult:
         anthropic_api_key=llm.anthropic_api_key,
         openrouter_api_key=llm.openrouter_api_key,
     )
-    path = cassette_path(document_id)
+    path = cassette_path(document_id, implementation)
     path.parent.mkdir(parents=True, exist_ok=True)
     recorder = RecordingLLMProvider(router, path)
     try:
         individuals, relationships = await extract_document(
-            benchmark_ontology(), cast(LLMProvider, recorder), document_id, model=model
+            benchmark_ontology(),
+            cast(LLMProvider, recorder),
+            document_id,
+            model=model,
+            implementation=implementation,
         )
     except PipelineExecutionError as exc:
         raise SystemExit(f"{document_id}: {exc}; nothing was saved. Record it again.") from exc
@@ -379,7 +429,15 @@ def main() -> int:
     )
     parser.add_argument("--record", action="store_true", help="Record cassettes with the live LLM")
     parser.add_argument("--spend", action="store_true", help="Confirm --record may call the LLM")
-    parser.add_argument("--model", default=BENCHMARK_MODEL, help="The model to record with")
+    parser.add_argument(
+        "--implementation",
+        choices=sorted(IMPLEMENTATIONS),
+        default=DEFAULT_IMPLEMENTATION,
+        help="The implementation of individual extraction to run",
+    )
+    parser.add_argument(
+        "--model", help="The model to record with (the implementation's own by default)"
+    )
     parser.add_argument("--json", action="store_true", help="Print the summary as JSON")
     args = parser.parse_args()
     documents = args.document or benchmark_documents()
@@ -388,14 +446,16 @@ def main() -> int:
             raise SystemExit(
                 "--record calls the live LLM, which costs money; pass --spend to go ahead"
             )
-        if args.model != BENCHMARK_MODEL:
+        expected = IMPLEMENTATIONS[args.implementation].model
+        model = args.model or expected
+        if model != expected:
             print(
-                f"note: replay expects {BENCHMARK_MODEL}; cassettes recorded with "
-                f"{args.model} will read as stale"
+                f"note: replay expects {expected}; cassettes recorded with "
+                f"{model} will read as stale"
             )
-        results = [asyncio.run(record_document(d, args.model)) for d in documents]
+        results = [asyncio.run(record_document(d, model, args.implementation)) for d in documents]
     else:
-        results = asyncio.run(replay_all(documents))
+        results = asyncio.run(replay_all(documents, implementation=args.implementation))
     print_results(results)
     summary = summarize(results)
     if args.json:
