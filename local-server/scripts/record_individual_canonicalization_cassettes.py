@@ -44,17 +44,12 @@ from adapters.nlp.spacy_processor import SpacyNLPProcessor
 from config import get_settings
 from domain.ontology.ports import OntologyRepository
 from domain.pipelines.entities import PipelineType
-from domain.pipelines.individual_extraction.configurations.open_v1 import (
-    get_open_v1_config,
-)
-from domain.pipelines.individual_extraction.open_orchestrator import (
-    OpenIndividualExtractionOrchestrator,
-)
 from domain.pipelines.individual_extraction.orchestrator import (
     IndividualExtractionState,
 )
+from scripts import benchmark_replay
 from scripts.eval_ontology import build_eval_ontology
-from tests.fixtures.pipeline_fixtures import load_fixture
+from scripts.quality_tournament import scenario_input
 from tests.integration.pipelines._harness.cassettes import RecordingLLMProvider
 from tests.integration.pipelines._harness.dataset_split import (
     DR_BOOTSTRAP_SCENARIOS,
@@ -105,14 +100,20 @@ async def _record() -> int:
     embedding = CachingEmbeddingService(SentenceTransformerEmbedding())
     eval_repo, eval_index = build_eval_ontology(embedding)
     real_provider = _real_llm_provider()
-    config = {**get_open_v1_config(), "llm_canonicalization": True}
+    # The run's model, temperature and output-token limit are the open_v1
+    # default configuration's (the resolver's), as the tournament replays them;
+    # never the corpus fixture's pinned model
+    selection = benchmark_replay.pipeline_resolver().resolve(
+        benchmark_replay.PIPELINE_TYPE, "open_v1"
+    )
+    config = {**selection.config, "llm_canonicalization": True}
 
     _CASSETTE_DIR.mkdir(parents=True, exist_ok=True)
     recorded = 0
     for scenario in _SCENARIOS:
         cassette_path = _CASSETTE_DIR / f"{_CASSETTE_PREFIX}{scenario}.json"
         provider = RecordingLLMProvider(real_provider, cassette_path)
-        orch = OpenIndividualExtractionOrchestrator(
+        orch = selection.implementation(
             llm_provider=provider,
             nlp_processor=nlp,
             embedding_service=embedding,
@@ -120,11 +121,10 @@ async def _record() -> int:
             config=config,
             ontology_repo=cast(OntologyRepository, eval_repo),
         )
-        fixture = dict(load_fixture("individual_extraction", scenario))
         state = IndividualExtractionState(
             run_id=str(uuid4()),
             pipeline_type=PipelineType.INDIVIDUAL_EXTRACTION,
-            input_data=fixture,
+            input_data=selection.run_input(scenario_input(scenario)),
         )
         await orch.execute(state)
         if provider._recordings:

@@ -52,14 +52,14 @@ function loadPureDeclarations() {
   const sandbox = { console };
   vm.createContext(sandbox);
   vm.runInContext(
-    `${declarations}\nglobalThis.__mechanics = { clamp, meetsFloors, selectTargets, acceptGate, BACKLOGS, GATE_MARGINS, TARGET_NAME, FAILURE_KINDS, FROZEN_PATHS, DEFAULT_HOLDOUT_FLOORS, evaluatePrompt, experimentPrompt, verifyPrompt, decidePrompt, ledgerReadPrompt, isMeasured, hasGuard, guardAgreesWithMargins, gateCandidates, stopAfter, marginsFor, backlogFor, own, tt, othersStanding, ranTheTarget, standingOf, decideAll, baselineProblems, recordingAdvice };`,
+    `${declarations}\nglobalThis.__mechanics = { clamp, meetsFloors, selectTargets, acceptGate, BACKLOGS, GATE_MARGINS, TARGET_NAME, FAILURE_KINDS, FROZEN_PATHS, DEFAULT_HOLDOUT_FLOORS, evaluatePrompt, experimentPrompt, verifyPrompt, decidePrompt, ledgerReadPrompt, isMeasured, hasGuard, guardAgreesWithMargins, gateCandidates, stopAfter, marginsFor, backlogFor, own, tt, othersStanding, ranTheTarget, standingOf, decideAll, baselineProblems, recordingAdvice, RECORDED_TARGETS, TRIPLE_CORPUS_TARGET, expectedOthers, frozenPathsIn, ruleViolations, measuredModelOf };`,
     sandbox,
     { filename: SOURCE_PATH },
   );
   return sandbox.__mechanics;
 }
 
-const { clamp, meetsFloors, selectTargets, acceptGate, BACKLOGS, GATE_MARGINS, TARGET_NAME, FAILURE_KINDS, FROZEN_PATHS, DEFAULT_HOLDOUT_FLOORS, evaluatePrompt, experimentPrompt, verifyPrompt, decidePrompt, ledgerReadPrompt, isMeasured, hasGuard, guardAgreesWithMargins, gateCandidates, stopAfter, marginsFor, backlogFor, own, tt, othersStanding, ranTheTarget, standingOf, decideAll, baselineProblems, recordingAdvice } =
+const { clamp, meetsFloors, selectTargets, acceptGate, BACKLOGS, GATE_MARGINS, TARGET_NAME, FAILURE_KINDS, FROZEN_PATHS, DEFAULT_HOLDOUT_FLOORS, evaluatePrompt, experimentPrompt, verifyPrompt, decidePrompt, ledgerReadPrompt, isMeasured, hasGuard, guardAgreesWithMargins, gateCandidates, stopAfter, marginsFor, backlogFor, own, tt, othersStanding, ranTheTarget, standingOf, decideAll, baselineProblems, recordingAdvice, RECORDED_TARGETS, TRIPLE_CORPUS_TARGET, expectedOthers, frozenPathsIn, ruleViolations, measuredModelOf } =
   loadPureDeclarations();
 
 // The measured margins of the `default` implementation: the gate tests below
@@ -657,7 +657,7 @@ test("the incumbent's measurement takes the baseline of every other recorded tar
   assert.ok(evaluate.includes("Exit 4"));
 });
 test("what says which orchestrator and model a target runs is frozen", () => {
-  for (const needle of ["local-server/configs/", "domain/pipelines/registry.py", "individual_extraction/bootstrap.py", "individual_extraction/configurations/"]) {
+  for (const needle of ["local-server/configs/", "domain/pipelines/registry.py", "domain/pipelines/selection.py", "individual_extraction/bootstrap.py", "individual_extraction/configurations/"]) {
     assert.ok(FROZEN_PATHS.some((p) => p.includes(needle)), `nothing freezes ${needle}`);
   }
   assert.ok(experimentPrompt(HYPOTHESIS, FTT_EVALUATION).includes("local-server/configs/"));
@@ -671,10 +671,12 @@ test("recordings already stale on main are named, and a candidate may add none",
   assert.ok(verifyPrompt(CANDIDATE, DEFAULT_TARGET, []).includes("(nothing)"));
   assert.ok(verifyPrompt(CANDIDATE, DEFAULT_TARGET, undefined).includes("(nothing)"));
 });
-test("the ledger is read for the implementation and the configuration being refined", () => {
+test("rejections are read for the implementation and configuration, acceptances for the implementation", () => {
   const prompt = ledgerReadPrompt(FTT_TARGET);
   assert.ok(prompt.includes(`ledger.py rejected-hypotheses ${FTT_FLAGS}\``));
-  assert.ok(prompt.includes(`ledger.py accepted-hypotheses ${FTT_FLAGS}\``));
+  // An acceptance is merged code, which every configuration of the implementation runs.
+  assert.ok(prompt.includes("ledger.py accepted-hypotheses --implementation find_then_type`"));
+  assert.ok(!prompt.includes("accepted-hypotheses --implementation find_then_type --configuration"));
 });
 
 test("the verifier reproduces every number the gate reads", () => {
@@ -752,6 +754,7 @@ const FTT_INCUMBENT = {
   guard: NOT_APPLICABLE,
   failureCounts: { relationship_missed: 109, spurious: 93, missed_supporting: 67, missed_core: 18, mistyped: 15, excluded_extracted: 9 },
   staleElsewhere: ["open_v1"],
+  recordedModels: ["claude-haiku-5-5"],
   otherTargets: [DEFAULT_OTHER],
   otherGuards: [DEFAULT_OTHER_GUARD],
 };
@@ -787,6 +790,7 @@ function passingVerdict(overrides = {}) {
     singleChangeOk: true,
     diffMatchesHypothesis: true,
     measuredModel: FTT_TARGET.model,
+    recordedModels: [FTT_TARGET.model],
     otherTargets: [{ ...DEFAULT_OTHER }],
     otherGuards: [{ ...DEFAULT_OTHER_GUARD }],
     verdict: "pass",
@@ -819,14 +823,40 @@ test("a verdict of pass is not enough: another target left stale, or not reporte
   assert.equal(staleGuard.status, "unmeasured");
   assert.ok(staleGuard.reason.includes("triple corpus"));
 });
-test("a stale other target is unmeasured, not rejected, even when the verifier also failed the candidate", () => {
+test("a stale other target is unmeasured, not rejected, when the verifier failed nothing but that", () => {
   const result = standing({}, {
     verdict: "fail",
-    scoresReproduced: false,
     reason: "default went stale",
     otherTargets: [{ ...DEFAULT_OTHER, status: "stale", devTypedF1: undefined }],
   });
   assert.equal(result.status, "unmeasured");
+});
+test("a rule violation wins over everything: with another target stale too, it is a rejection", () => {
+  const staleOther = { otherTargets: [{ ...DEFAULT_OTHER, status: "stale", devTypedF1: undefined }] };
+  for (const flag of ["integrityOk", "testsReproduced", "scoresReproduced", "singleChangeOk", "diffMatchesHypothesis"]) {
+    const result = standing({}, { ...staleOther, [flag]: false, verdict: "fail" });
+    assert.equal(result.status, "rejected", flag);
+  }
+  const gold = standing({ changedFiles: ["local-server/tests/integration/fixtures/pipelines/extraction_benchmark/edit_check/gold.json"] }, staleOther);
+  assert.equal(gold.status, "rejected");
+  assert.ok(gold.reason.includes("frozen paths"));
+  // And over a model swap.
+  assert.equal(standing({ model: "claude-opus-5-5" }, { integrityOk: false }).status, "rejected");
+});
+test("a frozen path in the candidate's own changed files is a rejection, whatever the verifier said", () => {
+  for (const file of [
+    "local-server/configs/extraction-find-then-type.json",
+    "local-server/domain/pipelines/individual_extraction/bootstrap.py",
+    "local-server/domain/pipelines/selection.py",
+    "local-server/experiments/ledger.jsonl",
+    "local-server/scripts/benchmark_replay.py",
+  ]) {
+    const result = standing({ changedFiles: ["local-server/domain/extraction/prompts.py", file] });
+    assert.equal(result.status, "rejected", file);
+    assert.deepEqual([...frozenPathsIn(["a.py", file])], [file]);
+  }
+  assert.equal(frozenPathsIn(["local-server/domain/extraction/prompts.py", "local-server/tests/integration/fixtures/cassettes/extraction_benchmark/edit_check.json"]).length, 0);
+  assert.equal(frozenPathsIn(undefined).length, 0);
 });
 test("a change that damages another recorded target is rejected, by that target's own margin", () => {
   // default's epsilon is 0.02: a drop of exactly that is tolerated, more is not.
@@ -844,11 +874,16 @@ test("a change that damages another recorded target is rejected, by that target'
 });
 test("another target with no margins of its own is allowed no drop at all", () => {
   const unknown = { implementation: "third", configuration: "extraction-third", status: "scored", devTypedF1: 0.3, devFoundF1: 0.4 };
-  const evaluation = { otherTargets: [unknown], otherGuards: [] };
-  const same = othersStanding(evaluation, { otherTargets: [{ ...unknown }], otherGuards: [] });
-  assert.equal(same.status, "ok");
-  const lower = othersStanding(evaluation, { otherTargets: [{ ...unknown, devTypedF1: 0.2999 }], otherGuards: [] });
-  assert.equal(lower.status, "regressed");
+  RECORDED_TARGETS.push({ implementation: "third", configuration: "extraction-third" });
+  try {
+    const evaluation = { otherTargets: [unknown], otherGuards: [] };
+    const same = othersStanding(evaluation, { otherTargets: [{ ...unknown }], otherGuards: [] });
+    assert.equal(same.status, "ok");
+    const lower = othersStanding(evaluation, { otherTargets: [{ ...unknown, devTypedF1: 0.2999 }], otherGuards: [] });
+    assert.equal(lower.status, "regressed");
+  } finally {
+    RECORDED_TARGETS.pop();
+  }
 });
 test("a candidate measured with another model is unmeasured: a change of model is not an experiment", () => {
   const byReport = standing({ model: "claude-opus-5-5" });
@@ -860,6 +895,25 @@ test("a candidate measured with another model is unmeasured: a change of model i
   assert.equal(standing({}, { measuredModel: undefined }).status, "unmeasured");
   assert.equal(standing({ configuration: "extraction-other" }).status, "unmeasured");
   assert.equal(ranTheTarget(fttCandidate(), passingVerdict(), FTT_TARGET).ok, true);
+});
+test("the model compared is what the recordings hold, not what the configuration names", () => {
+  // Recorded with another model under the same configuration's name: caught.
+  const swapped = standing({}, { recordedModels: ["claude-opus-5-5"] });
+  assert.equal(swapped.status, "unmeasured");
+  assert.ok(swapped.reason.includes("claude-opus-5-5"));
+  assert.equal(standing({}, { recordedModels: [FTT_TARGET.model, "claude-opus-5-5"] }).status, "unmeasured");
+  assert.equal(standing({}, { recordedModels: [] }).status, "unmeasured");
+  assert.equal(standing({}, { recordedModels: undefined }).status, "unmeasured");
+});
+test("the ledger records the model the recordings hold, and the candidate's report beside it", () => {
+  assert.equal(measuredModelOf(fttCandidate(), passingVerdict({ recordedModels: ["claude-opus-5-5"] })), "claude-opus-5-5");
+  assert.equal(measuredModelOf(fttCandidate(), passingVerdict({ recordedModels: [] })), FTT_TARGET.model);
+  assert.equal(measuredModelOf(fttCandidate({ model: "x" }), null), "x");
+  const others = { targets: [], guards: [] };
+  const entry = ledgerEntryOf(decidePrompt(FTT_CANDIDATE, "unmeasured", "another model", 2, "experiment/x", FTT_TARGET, GATE_MARGINS.find_then_type, others, "claude-opus-5-5"));
+  assert.equal(entry.model, "claude-opus-5-5");
+  assert.equal(entry.reported_model, "claude-haiku-5-5");
+  assert.equal(entry.incumbent_model, "claude-haiku-5-5");
 });
 test("a failed check is a rejection, and no verdict at all is unmeasured", () => {
   for (const flag of ["integrityOk", "testsReproduced", "scoresReproduced", "singleChangeOk", "diffMatchesHypothesis"]) {
@@ -885,12 +939,48 @@ test("decideAll accepts the best verified candidate and records what each change
   assert.equal(byId.good.others.targets.length, 1);
   assert.equal(byId.failed.others, null);
 });
-test("the iteration does not start when something else a change could move has no score on main", () => {
-  assert.equal(baselineProblems(FTT_INCUMBENT).length, 0);
-  assert.equal(baselineProblems({ ...FTT_INCUMBENT, otherTargets: [{ ...DEFAULT_OTHER, status: "stale", devTypedF1: undefined }] }).length, 1);
-  assert.equal(baselineProblems({ ...FTT_INCUMBENT, otherGuards: [{ ...DEFAULT_OTHER_GUARD, status: "not_registered", strict_f1: undefined }] }).length, 1);
-  assert.equal(baselineProblems({ ...FTT_INCUMBENT, otherTargets: undefined }).length, 1);
-  assert.equal(baselineProblems({ ...FTT_INCUMBENT, otherTargets: [], otherGuards: [] }).length, 0);
+test("what a change could move comes from the recorded targets, not from the measurement", () => {
+  const ftt = expectedOthers(FTT_TARGET);
+  assert.equal(ftt.targets.map((t) => t.implementation).join(","), "default");
+  assert.equal(ftt.guards.map((t) => t.configuration).join(","), "extraction-openrouter-default");
+  const twoPass = expectedOthers(DEFAULT_TARGET);
+  assert.equal(twoPass.targets.map((t) => t.implementation).join(","), "find_then_type");
+  assert.equal(twoPass.guards.length, 0, "the corpus is two-pass's own guard");
+  // Another configuration of two-pass: both recorded targets, and the corpus, are others.
+  const other = expectedOthers({ implementation: "default", configuration: "extraction-default" });
+  assert.equal(other.targets.length, 2);
+  assert.equal(other.guards.length, 1);
+});
+test("the iteration does not start when something else a change could move is missing or has no score on main", () => {
+  assert.equal(baselineProblems(FTT_INCUMBENT, FTT_TARGET).length, 0);
+  assert.equal(baselineProblems({ ...FTT_INCUMBENT, otherTargets: [{ ...DEFAULT_OTHER, status: "stale", devTypedF1: undefined }] }, FTT_TARGET).length, 1);
+  assert.equal(baselineProblems({ ...FTT_INCUMBENT, otherGuards: [{ ...DEFAULT_OTHER_GUARD, status: "not_registered", strict_f1: undefined }] }, FTT_TARGET).length, 1);
+  assert.equal(baselineProblems({ ...FTT_INCUMBENT, otherTargets: undefined }, FTT_TARGET).length, 1);
+  // An empty baseline is not one: both of find_then_type's others are missing.
+  const empty = baselineProblems({ ...FTT_INCUMBENT, otherTargets: [], otherGuards: [] }, FTT_TARGET);
+  assert.equal(empty.length, 2);
+  assert.ok(empty.every((problem) => problem.includes("missing from the baseline")));
+  // Two-pass with its recorded configuration has find_then_type's benchmark to compare, and no other guard.
+  const twoPass = { ...FTT_INCUMBENT, ...DEFAULT_TARGET, otherTargets: [{ ...DEFAULT_OTHER, ...FTT_TARGET, devTypedF1: 0.4648, devFoundF1: 0.5343 }], otherGuards: [] };
+  assert.equal(baselineProblems(twoPass, DEFAULT_TARGET).length, 0);
+  assert.equal(baselineProblems({ ...twoPass, otherTargets: [] }, DEFAULT_TARGET).length, 1);
+});
+test("RECORDED_TARGETS and TRIPLE_CORPUS_TARGET are what the Python scripts pin", () => {
+  const replay = fs.readFileSync(path.join(__dirname, "../../local-server/scripts/benchmark_replay.py"), "utf8");
+  const block = replay.slice(replay.indexOf("RECORDED_WITH: dict[str, str] = {"), replay.indexOf("}", replay.indexOf("RECORDED_WITH: dict[str, str] = {")));
+  const pinned = [...block.matchAll(/"([^"]+)": "([^"]+)"/g)].map(([, implementation, configuration]) => ({ implementation, configuration }));
+  assert.equal(
+    pinned.map((t) => `${t.implementation}/${t.configuration}`).sort().join(","),
+    RECORDED_TARGETS.map((t) => `${t.implementation}/${t.configuration}`).sort().join(","),
+  );
+  const tournament = fs.readFileSync(path.join(__dirname, "../../local-server/scripts/quality_tournament.py"), "utf8");
+  const corpus = tournament.match(/^TRIPLE_CORPUS_IMPLEMENTATION = "([^"]+)"/m)[1];
+  assert.equal(TRIPLE_CORPUS_TARGET.implementation, corpus);
+  assert.equal(TRIPLE_CORPUS_TARGET.configuration, pinned.find((t) => t.implementation === corpus).configuration);
+  // Every recorded target's implementation has margins; those measured with it name it.
+  for (const target of RECORDED_TARGETS) {
+    assert.equal(GATE_MARGINS[target.implementation].configuration, target.configuration);
+  }
 });
 test("the triple corpus is offered for recording only to a target it guards", () => {
   assert.ok(recordingAdvice(DEFAULT_TARGET).includes("record_default_cassettes.py --record"));
@@ -967,6 +1057,29 @@ await asyncTest("run: a verifier that passes a candidate with another target sta
     assert.ok(!c.prompt.includes("git merge --no-ff"));
   }
 });
+await asyncTest("run: an empty baseline stops the iteration before it spends (N1)", async () => {
+  for (const evaluate of [
+    { ...FTT_INCUMBENT, otherTargets: [] },
+    { ...FTT_INCUMBENT, otherGuards: [] },
+  ]) {
+    const { result, steps } = await runWorkflow(ASKED, { evaluate });
+    assert.equal(result.status, "error");
+    assert.ok(result.reason.includes("missing from the baseline"), result.reason);
+    assert.deepEqual(steps, ["evaluate"]);
+  }
+});
+await asyncTest("run: a candidate that lists a frozen path is rejected though its verifier passed it", async () => {
+  const { result } = await runWorkflow(ASKED, {
+    experiment: (id) => fttCandidate({ hypothesisId: id, changedFiles: ["local-server/configs/extraction-find-then-type.json"], dev: { typed_f1: 0.7, f1: 0.7 } }),
+  });
+  assert.equal(result.status, "no_accept");
+  for (const d of result.decisions) assert.equal(d.decision, "rejected");
+});
+await asyncTest("run: an incumbent whose recordings hold another model than its configuration's stops before spending", async () => {
+  const { result, steps } = await runWorkflow(ASKED, { evaluate: { ...FTT_INCUMBENT, recordedModels: ["claude-opus-5-5"] } });
+  assert.equal(result.status, "error");
+  assert.deepEqual(steps, ["evaluate"]);
+});
 await asyncTest("run: a verifier that reports no other targets at all does not get the candidate accepted", async () => {
   const { result } = await runWorkflow(ASKED, { verify: (id) => passingVerdict({ hypothesisId: id, otherTargets: undefined, otherGuards: undefined }) });
   assert.equal(result.status, "no_accept");
@@ -975,7 +1088,7 @@ await asyncTest("run: a verifier that reports no other targets at all does not g
 await asyncTest("run: a gain that is only a change of model is not accepted, and the ledger records the model that ran", async () => {
   const { result, calls } = await runWorkflow(ASKED, {
     experiment: (id) => fttCandidate({ hypothesisId: id, model: "claude-opus-5-5", dev: { typed_f1: 0.6, f1: 0.6 } }),
-    verify: (id) => passingVerdict({ hypothesisId: id, measuredModel: "claude-opus-5-5" }),
+    verify: (id) => passingVerdict({ hypothesisId: id, measuredModel: "claude-opus-5-5", recordedModels: ["claude-opus-5-5"] }),
   });
   assert.equal(result.status, "no_accept");
   for (const d of result.decisions) assert.equal(d.decision, "unmeasured");
@@ -1009,11 +1122,12 @@ await asyncTest("run: an incumbent that reports a guard number where the margins
 });
 await asyncTest("run: default with a configuration its margins were not measured with runs provisional, with no guard", async () => {
   const other = { implementation: "default", configuration: "extraction-default", model: "claude-opus-4-7" };
-  const incumbent = { ...FTT_INCUMBENT, ...other, otherTargets: [DEFAULT_OTHER], otherGuards: [DEFAULT_OTHER_GUARD] };
+  const fttOther = { ...DEFAULT_OTHER, ...FTT_TARGET, devTypedF1: 0.4648, devFoundF1: 0.5343 };
+  const incumbent = { ...FTT_INCUMBENT, ...other, recordedModels: [other.model], otherTargets: [DEFAULT_OTHER, fttOther], otherGuards: [DEFAULT_OTHER_GUARD] };
   const { result, calls } = await runWorkflow({ implementation: "default", configuration: "extraction-default" }, {
     evaluate: incumbent,
     experiment: (id) => fttCandidate({ ...other, hypothesisId: id }),
-    verify: (id) => passingVerdict({ hypothesisId: id, measuredModel: other.model }),
+    verify: (id) => passingVerdict({ hypothesisId: id, measuredModel: other.model, recordedModels: [other.model], otherTargets: [{ ...DEFAULT_OTHER }, { ...fttOther }] }),
   });
   assert.equal(result.provisionalMargins, true);
   assert.equal(result.configuration, "extraction-default");

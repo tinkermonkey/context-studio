@@ -90,6 +90,7 @@ from domain.pipelines.exceptions import PipelineExecutionError
 from domain.pipelines.individual_extraction.orchestrator import (
     IndividualExtractionState,
 )
+from domain.pipelines.selection import RUN_PARAMETERS
 from scripts import benchmark_replay
 from scripts.default_pipeline_ontology import (
     DefaultPipelineOntologyResolver,
@@ -212,10 +213,23 @@ _DEFAULT_CASSETTE_PREFIX = "individual_extraction_"
 TRIPLE_CORPUS_IMPLEMENTATION = "default"
 
 
+def scenario_input(scenario: str) -> dict[str, Any]:
+    """
+    A corpus scenario's input without the run parameters its fixture pins
+    (model, temperature, output-token limit): a run takes those from its
+    configuration (PipelineSelection.run_input), and every orchestrator
+    honours a model named in its input, so a pinned one would replace it.
+    """
+    fixture = load_fixture("individual_extraction", scenario)
+    return {key: value for key, value in fixture.items() if key not in RUN_PARAMETERS}
+
+
 def triple_corpus_target() -> benchmark_replay.BenchmarkTarget:
     """
-    What the `default*` variants run: the implementation above with the
-    configuration its recordings were made with (benchmark_replay.RECORDED_WITH).
+    What the `default*` variants run: the two-pass implementation (its id is
+    `default`, a name: the type's default implementation is find_then_type),
+    named explicitly, with the configuration its recordings were made with
+    (benchmark_replay.RECORDED_WITH).
 
     The corpus fixtures pin claude-opus-4-7; the recorder
     (scripts/record_default_cassettes.py) and the replay here both replace it
@@ -360,15 +374,11 @@ def _make_open_v1_variant(nlp, embedding, eval_repo=None, eval_index=None) -> Va
     into the grounding stage so the schema-grounding knobs move the metric;
     grounding self-skips per scenario when the ontology can't be resolved.
     """
-    implementations, configurations = benchmark_replay.pipeline_registries()
     implementation = "open_v1"
-    configuration = benchmark_replay.default_configuration(implementation)
-    orchestrator = implementations.get(benchmark_replay.PIPELINE_TYPE, implementation)
-    registered = configurations.get_latest(
-        benchmark_replay.PIPELINE_TYPE, implementation, configuration
+    selection = benchmark_replay.pipeline_resolver().resolve(
+        benchmark_replay.PIPELINE_TYPE, implementation
     )
-    if orchestrator is None or registered is None:
-        raise RuntimeError(f"the pipeline registry has no {implementation!r} implementation")
+    orchestrator = selection.implementation
 
     async def run_scenario(config: dict[str, Any], scenario: str) -> list[dict]:
         orch = orchestrator(
@@ -379,11 +389,10 @@ def _make_open_v1_variant(nlp, embedding, eval_repo=None, eval_index=None) -> Va
             config=config,
             ontology_repo=eval_repo,
         )
-        fixture = dict(load_fixture("individual_extraction", scenario))
         state = IndividualExtractionState(
             run_id=str(uuid4()),
             pipeline_type=PipelineType.INDIVIDUAL_EXTRACTION,
-            input_data=fixture,
+            input_data=selection.run_input(scenario_input(scenario)),
         )
         result_state = await orch.execute(state)
         return (result_state.result or {}).get("triples", [])
@@ -393,12 +402,12 @@ def _make_open_v1_variant(nlp, embedding, eval_repo=None, eval_index=None) -> Va
     # switch it back off if it fails to help.
     return Variant(
         name="open_v1",
-        base_config={**registered.config, "llm_canonicalization": True},
+        base_config={**selection.config, "llm_canonicalization": True},
         knob_space=dict(_INDIVIDUAL_SPACE),
         run_scenario=run_scenario,
         implementation=implementation,
-        configuration=configuration,
-        model=str(registered.config.get("model") or ""),
+        configuration=selection.configuration_ref,
+        model=str(selection.parameters.get("model") or ""),
     )
 
 
@@ -464,17 +473,14 @@ def _make_default_variant(
             extraction_service=extraction_service,
             config=dict(target.config),
         )
-        fixture = dict(load_fixture("individual_extraction", scenario))
         # Resolve to the SAME taxonomy the recorder used (its title is the only
-        # ontology-derived value in the prompt hash) and override the
-        # fixture-pinned model to the target's — both must match
+        # ontology-derived value in the prompt hash), and run with the target's
+        # model, not the fixture's pinned one: both must match
         # record_default_cassettes.py or the cassette key misses.
-        fixture["ontology_id"] = taxonomy.id
-        fixture["model"] = target.model
         state = IndividualExtractionState(
             run_id=str(uuid4()),
             pipeline_type=PipelineType.INDIVIDUAL_EXTRACTION,
-            input_data=fixture,
+            input_data=target.run_input({**scenario_input(scenario), "ontology_id": taxonomy.id}),
         )
         try:
             result_state = await orch.execute(state)
@@ -1102,8 +1108,17 @@ def _stale_for_target(
     variants: dict[str, Variant],
     target: benchmark_replay.BenchmarkTarget,
 ) -> list[str]:
-    """The stale variants that run the target's implementation: the ones that end the run."""
-    return sorted(v for v in stale if variants[v].implementation == target.implementation)
+    """
+    The stale variants that run the target, its implementation with its
+    configuration: the ones that end the run. A variant of the same
+    implementation with another configuration is not the target's.
+    """
+    return sorted(
+        v
+        for v in stale
+        if (variants[v].implementation, variants[v].configuration)
+        == (target.implementation, target.configuration)
+    )
 
 
 def _exit_code(gating: list[str], benchmark_status: str) -> int:
@@ -1487,8 +1502,8 @@ async def _amain(args) -> int:
     gating = _stale_for_target(stale, registry, target)
     if gating:
         print(
-            f"ERROR: the triple-corpus cassettes of {gating} are stale (they run the "
-            f"{target.implementation} implementation). Re-record with "
+            f"ERROR: the triple-corpus cassettes of {gating} are stale (they run "
+            f"{target.implementation} with {target.configuration}). Re-record with "
             "scripts/record_default_cassettes.py --record."
         )
     if benchmark_summary["status"] == "stale":

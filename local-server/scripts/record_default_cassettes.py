@@ -51,7 +51,6 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from pathlib import Path
 
-from tests.fixtures.pipeline_fixtures import load_fixture
 from tests.integration.pipelines._harness.dataset_split import (
     REPLAY_SCENARIOS,
     OntologyContext,
@@ -91,11 +90,6 @@ def union_scenarios() -> list[str]:
 def cassette_path_for(scenario: str) -> Path:
     """Return the standard cassette path for one scenario."""
     return _CASSETTE_DIR / f"individual_extraction_{scenario}.json"
-
-
-def _fixture_model(scenario: str) -> str:
-    """Read the pinned model id from a scenario's input fixture."""
-    return load_fixture("individual_extraction", scenario).get("model", "")
 
 
 def print_plan(scenarios: list[str]) -> None:
@@ -165,7 +159,7 @@ def record_all(scenarios: list[str]) -> int:
         DefaultPipelineOntologyResolver,
         dr_spec_available,
     )
-    from scripts.quality_tournament import triple_corpus_target
+    from scripts.quality_tournament import scenario_input, triple_corpus_target
     from tests.fakes.fake_embedding_service import FakeEmbeddingService
     from tests.fakes.fake_nlp_processor import FakeNLPProcessor
     from tests.fakes.fake_reference_source import FakeReferenceSource
@@ -255,13 +249,12 @@ def record_all(scenarios: list[str]) -> int:
         # `extract_triples` resolves it. The extraction prompt keys on the
         # ontology's title, not this id string, so this override does not
         # perturb the cassette key.
-        fixture_input = dict(load_fixture("individual_extraction", scenario))
-        fixture_input["ontology_id"] = taxonomy.id
-        # Override the fixture-pinned model (claude-opus-4-7) to the model of the
-        # configuration these cassettes are recorded with. The cassette key
-        # includes the model, so this MUST match the same override in
-        # quality_tournament._make_default_variant's replay.
-        fixture_input["model"] = target.model
+        # The run parameters (model, temperature, output-token limit) are the
+        # configuration's, not the fixture's pinned ones (claude-opus-4-7). The
+        # cassette key includes the model, so this MUST match
+        # quality_tournament._make_default_variant's replay, which builds its
+        # input the same way.
+        fixture_input = target.run_input({**scenario_input(scenario), "ontology_id": taxonomy.id})
 
         state = IndividualExtractionState(
             run_id=str(uuid4()),

@@ -4,12 +4,15 @@ process, and score it against their gold extractions.
 
 What runs is chosen the way every run is chosen: an implementation of the
 pipeline type and one of its configurations (`--implementation`,
-`--configuration`). The orchestrator comes from the implementation registry and
-the model, temperature and stage prompts from the configuration, as
+`--configuration`), selected through the pipeline resolver
+(`domain/pipelines/selection.py`). The orchestrator comes from the
+implementation registry and the model, temperature, output-token limit and
+stage prompts from the configuration, as
 `domain/pipelines/individual_extraction/bootstrap.py` registers them; nothing
 here names a model. With no flags the target is the type's default
-implementation with the configuration its recordings were made with
-(`RECORDED_WITH`, else the implementation's default configuration).
+implementation (`find_then_type`) with the configuration its recordings were
+made with (`RECORDED_WITH`, else the implementation's default configuration).
+The two-pass implementation's id is `default`: a name, not the type's default.
 
 Each document goes through the path a user's source takes: its markdown
 headings are read, the text is chunked, each chunk is extracted by the
@@ -24,7 +27,7 @@ the class catalog the app would offer.
 
 Offline by default: every LLM call is answered from a recorded cassette. Each
 target has its own folder under tests/integration/fixtures/cassettes/
-(`cassette_dir`): `extraction_benchmark/` for the `default` implementation,
+(`cassette_dir`): `extraction_benchmark/` for the two-pass implementation (id `default`),
 `extraction_benchmark_<implementation>/` for any other, and a
 `__<configuration>` suffix for a configuration other than the one the
 implementation's benchmark runs with. A document with no cassette is reported
@@ -66,7 +69,12 @@ from domain.extraction.services import ExtractionService
 from domain.ontology.ports import OntologyRepository
 from domain.ontology.services import OntologyService
 from domain.pipelines.entities import PipelineType
-from domain.pipelines.exceptions import PipelineExecutionError
+from domain.pipelines.exceptions import (
+    ConfigurationDisabledError,
+    PipelineExecutionError,
+    UnknownConfigurationError,
+    UnknownImplementationError,
+)
 from domain.pipelines.individual_extraction.bootstrap import register_individual_extraction
 from domain.pipelines.individual_extraction.orchestrator import (
     IndividualExtractionOrchestrator,
@@ -78,6 +86,7 @@ from domain.pipelines.registry import (
     PipelineConfigurationRegistry,
     PipelineImplementationRegistry,
 )
+from domain.pipelines.selection import PipelineResolver, PipelineSelection
 from domain.versioning.proposals import OperationKind
 from scripts.dr_ontology_loader import DR_TAXONOMY_IDENTIFIER, import_dr_ontology
 from tests.fakes.fake_nlp_processor import FakeNLPProcessor
@@ -104,8 +113,8 @@ from tests.integration.pipelines._harness.dr_spec import dr_spec_dir
 BENCHMARK_DR_SPEC_VERSION = "0.11.0"
 EMBEDDING_MODEL = "all-MiniLM-L12-v2"
 PIPELINE_TYPE = PipelineType.INDIVIDUAL_EXTRACTION
-# The folder of the `default` implementation's recordings; every other target's
-# folder is named after it (cassette_dir).
+# The folder of the two-pass implementation's recordings (id `default`); every
+# other target's folder is named after it (cassette_dir).
 CASSETTE_DIR = (
     Path(__file__).resolve().parents[1]
     / "tests"
@@ -120,11 +129,10 @@ UNSUFFIXED_IMPLEMENTATION = "default"
 # The configuration each implementation's committed recordings were made with,
 # by name. The cassette key includes the model, so naming the configuration
 # keeps the recordings answering whatever the implementation's default
-# configuration becomes, and whatever is registered before it: the `default`
-# implementation's benchmark and triple-corpus cassettes were recorded with
-# Gemini 3 Flash, which is `extraction-openrouter-default`, not its default
-# configuration `extraction-default` (which PR #1598 moves from Claude Opus to
-# Claude Haiku). To measure another configuration, ask for it with
+# configuration becomes: the two-pass implementation (id `default`) was
+# recorded with Gemini 3 Flash, which is `extraction-openrouter-default`, not
+# its default configuration `extraction-default` (Claude Haiku 5.5 since
+# PR #1598). To measure another configuration, ask for it with
 # --configuration: it gets a cassette folder of its own.
 RECORDED_WITH: dict[str, str] = {
     "default": "extraction-openrouter-default",
@@ -138,23 +146,42 @@ class UnknownTargetError(ValueError):
 
 @dataclass(frozen=True)
 class BenchmarkTarget:
-    """What a benchmark run runs: an implementation with one of its configurations."""
+    """
+    What a benchmark run runs: an implementation with one of its
+    configurations, as the pipeline resolver selects it.
+    """
 
     implementation: str
     configuration: str
-    # The implementation's class, from the implementation registry
-    orchestrator: type[IndividualExtractionOrchestrator]
-    # The configuration's contents: provider, model, temperature, stage prompts
-    config: Mapping[str, Any]
+    selection: PipelineSelection
+
+    @property
+    def orchestrator(self) -> type[IndividualExtractionOrchestrator]:
+        """The implementation's orchestrator class, from the implementation registry."""
+        return self.selection.implementation
+
+    @property
+    def config(self) -> dict[str, Any]:
+        """The configuration's contents: provider, model, temperature, stage prompts."""
+        return self.selection.config
 
     @property
     def model(self) -> str:
-        """The model the configuration names; a run uses its configuration's model."""
-        return str(self.config.get("model") or "")
+        """The model the run uses: the configuration's, as the resolver gives it."""
+        return str(self.selection.parameters.get("model") or "")
 
     @property
     def temperature(self) -> float:
-        return float(self.config.get("temperature") or 0.0)
+        return float(self.selection.parameters.get("temperature") or 0.0)
+
+    def run_input(self, input_data: Mapping[str, Any]) -> dict[str, Any]:
+        """
+        A run's input with the configuration's model, temperature and
+        output-token limit filled in, by the resolver's rule
+        (PipelineSelection.run_input). The output-token limit is not part of a
+        cassette's key, so a change of it leaves recordings answering.
+        """
+        return self.selection.run_input(input_data)
 
     @property
     def flags(self) -> str:
@@ -178,26 +205,26 @@ def pipeline_registries() -> tuple[PipelineImplementationRegistry, PipelineConfi
     return implementations, configurations
 
 
-def default_implementation() -> str:
-    """
-    The pipeline type's default implementation.
+def pipeline_resolver() -> PipelineResolver:
+    """The resolver every run is selected through, over the registries above."""
+    return PipelineResolver(*pipeline_registries())
 
-    The registry has no lookup that states its defaults (2026-11-14): the
-    default is read as the first implementation the bootstrap registers for the
-    type. This function and default_configuration are the only places that
-    reading is made; point them at the registry's own lookups when it has them.
-    """
-    implementations, _ = pipeline_registries()
-    return next(iter(implementations.list_by_type(PIPELINE_TYPE)))
+
+def default_implementation() -> str:
+    """The pipeline type's default implementation, as registration declares it."""
+    try:
+        return pipeline_resolver().implementation(PIPELINE_TYPE)[0]
+    except UnknownImplementationError as exc:
+        raise UnknownTargetError(str(exc)) from exc
 
 
 def default_configuration(implementation: str) -> str:
-    """An implementation's default configuration: the first registered for it (see above)."""
+    """An implementation's default configuration, as registration declares it."""
     _, configurations = pipeline_registries()
-    registered = configurations.list_configs(PIPELINE_TYPE, implementation)
-    if not registered:
-        raise UnknownTargetError(f"implementation {implementation!r} has no configuration")
-    return registered[0][0]
+    configuration = configurations.default_configuration(PIPELINE_TYPE, implementation)
+    if configuration is None:
+        raise UnknownTargetError(f"implementation {implementation!r} has no default configuration")
+    return configuration
 
 
 def benchmark_configuration(implementation: str) -> str:
@@ -209,43 +236,42 @@ def resolve_target(
     implementation: str | None = None, configuration: str | None = None
 ) -> BenchmarkTarget:
     """
-    The benchmark target for an implementation and a configuration, each
-    defaulting through the registry (and RECORDED_WITH for the configuration).
+    The benchmark target for an implementation and a configuration, selected
+    through the pipeline resolver: the implementation defaults to the type's
+    default (registration declares it: `find_then_type` since PR #1598), the
+    configuration to the one the implementation's recordings were made with
+    (RECORDED_WITH), else to its default.
 
     Raises:
         UnknownTargetError: If the implementation is not registered or cannot
             extract a source chunk by chunk, or the configuration is not one of
             the implementation's
     """
-    implementations, configurations = pipeline_registries()
-    registered = implementations.list_by_type(PIPELINE_TYPE)
-    implementation = implementation or default_implementation()
-    orchestrator = registered.get(implementation)
-    if orchestrator is None:
-        raise UnknownTargetError(
-            f"no implementation {implementation!r} of {PIPELINE_TYPE.value}; "
-            f"registered: {', '.join(sorted(registered))}"
-        )
+    resolver = pipeline_resolver()
+    try:
+        implementation, orchestrator = resolver.implementation(PIPELINE_TYPE, implementation)
+    except UnknownImplementationError as exc:
+        raise UnknownTargetError(f"no implementation {implementation!r}: {exc}") from exc
     if not issubclass(orchestrator, IndividualExtractionOrchestrator):
         raise UnknownTargetError(
             f"implementation {implementation!r} does not extract a source chunk by chunk, "
             "so the benchmark cannot run it"
         )
-    configuration = configuration or benchmark_configuration(implementation)
-    version = configurations.get_latest(PIPELINE_TYPE, implementation, configuration)
-    if version is None:
-        known = sorted(ref for ref, _ in configurations.list_configs(PIPELINE_TYPE, implementation))
+    configuration = configuration or RECORDED_WITH.get(implementation)
+    try:
+        selection = resolver.resolve(PIPELINE_TYPE, implementation, configuration)
+    except (UnknownConfigurationError, ConfigurationDisabledError) as exc:
         raise UnknownTargetError(
-            f"no configuration {configuration!r} of implementation {implementation!r}; "
-            f"registered: {', '.join(known)}"
-        )
-    return BenchmarkTarget(implementation, configuration, orchestrator, dict(version.config))
+            f"no configuration {configuration!r} of implementation {implementation!r}: {exc}"
+        ) from exc
+    return BenchmarkTarget(implementation, selection.configuration_ref, selection)
 
 
 def cassette_dir(target: BenchmarkTarget) -> Path:
     """
-    Where a target's recordings are: CASSETTE_DIR for the `default`
-    implementation, `<CASSETTE_DIR>_<implementation>` for any other, and a
+    Where a target's recordings are: CASSETTE_DIR for the two-pass
+    implementation (id `default`, the first benchmark recorded),
+    `<CASSETTE_DIR>_<implementation>` for any other, and a
     `__<configuration>` suffix for a configuration other than the one the
     implementation's benchmark runs with.
     """
@@ -339,8 +365,9 @@ async def extract_document(
     would hold: the planned individual and relationship creates.
 
     The run is the target's: its implementation's orchestrator, given its
-    configuration (so the configuration's stage prompts are the ones sent), with
-    the configuration's model and temperature. Another model is another
+    configuration (so the configuration's stage prompts are the ones sent), and
+    the input the resolver gives a run of it (the configuration's model,
+    temperature and output-token limit). Another model is another
     configuration, so another target with recordings of its own.
     """
     target = target or resolve_target()
@@ -363,15 +390,15 @@ async def extract_document(
     state = IndividualExtractionState(
         run_id=str(uuid4()),
         pipeline_type=PipelineType.INDIVIDUAL_EXTRACTION,
-        input_data={
-            "text": source.text,
-            "ontology_id": ontology.taxonomy_id,
-            "model": target.model,
-            "temperature": target.temperature,
-            "headings": [
-                {"start": h.start, "title": h.title, "level": h.level} for h in source.headings
-            ],
-        },
+        input_data=target.run_input(
+            {
+                "text": source.text,
+                "ontology_id": ontology.taxonomy_id,
+                "headings": [
+                    {"start": h.start, "title": h.title, "level": h.level} for h in source.headings
+                ],
+            }
+        ),
     )
     result = (await orchestrator.execute(state)).result or {}
     failed = result.get("failed_chunks") or []
@@ -482,14 +509,35 @@ async def replay_all(
     return [await replay_document(d, target) for d in documents or benchmark_documents()]
 
 
+def recorded_models(target: BenchmarkTarget, documents: list[str]) -> list[str]:
+    """
+    The models a target's recordings of the documents hold: every distinct
+    `model` of their cassette entries. A run asks for its configuration's
+    model, so for recordings that answer it this is that one model; anything
+    else means the recordings were made with another.
+    """
+    models: set[str] = set()
+    for document_id in documents:
+        path = cassette_path(document_id, target)
+        if not path.exists():
+            continue
+        entries = json.loads(path.read_text())
+        models.update(
+            str(entry.get("model"))
+            for entry in (entries.values() if isinstance(entries, dict) else entries)
+            if isinstance(entry, dict) and entry.get("model")
+        )
+    return sorted(models)
+
+
 def summarize(
     results: list[DocumentResult], target: BenchmarkTarget | None = None
 ) -> dict[str, Any]:
     """
     What was run (the target's implementation, configuration and model, when
-    given), the dev and holdout means, the failure counts over dev, and whether
-    the run can be trusted: `status` is "scored" only when every benchmark
-    document scored.
+    given, and the models its recordings hold: `recorded_models`), the dev and
+    holdout means, the failure counts over dev, and whether the run can be
+    trusted: `status` is "scored" only when every benchmark document scored.
     A run over some of the documents is "partial": a split's mean is given only
     when all of its documents scored, so one document never stands for dev. A
     document whose extraction failed with every prompt answered is "failed".
@@ -508,8 +556,14 @@ def summarize(
     whole_holdout = len(holdout) == len(HOLDOUT_DOCUMENTS)
     if status == "scored" and not (whole_dev and whole_holdout):
         status = "partial"
+    recorded = (
+        {"recorded_models": recorded_models(target, [r.document_id for r in results])}
+        if target
+        else {}
+    )
     return {
         **(target.describe() if target else {}),
+        **recorded,
         "status": status,
         "documents": {r.document_id: r.status for r in results},
         "dev": mean_metrics(dev) if whole_dev else {},

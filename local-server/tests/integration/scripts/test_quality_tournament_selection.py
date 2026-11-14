@@ -16,9 +16,12 @@ import sys
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
+from dataclasses import replace
+
 import pytest
 
 import scripts.quality_tournament as quality_tournament
+from domain.pipelines.selection import RUN_PARAMETERS
 from scripts import benchmark_replay
 from scripts.benchmark_replay import DocumentResult, resolve_target, summarize
 from scripts.quality_tournament import (
@@ -36,11 +39,25 @@ from scripts.quality_tournament import (
     _render_stale_section,
     _stale_for_target,
     _write_benchmark_report,
+    scenario_input,
     triple_corpus_target,
 )
+from tests.fixtures.pipeline_fixtures import load_fixture
 from tests.integration.pipelines._harness.report import MetricsEmitter
 
 TWO_PASS = "default"
+
+
+class _Resolver:
+    """A resolver whose one selection runs a given orchestrator class."""
+
+    def __init__(self, selection, orchestrator):
+        self._selection = replace(selection, implementation=orchestrator)
+
+    def resolve(self, *_):
+        return self._selection
+
+
 FIND_THEN_TYPE = "find_then_type"
 _GROUPS = ("dev", "holdout", "bootstrap", "wave4", "arxiv")
 
@@ -66,7 +83,7 @@ def _row(variant: str, strict_f1: float = 0.93, **ran: str) -> dict:
     }
 
 
-def _variant(name: str, implementation: str) -> Variant:
+def _variant(name: str, implementation: str, configuration: str) -> Variant:
     async def run_scenario(config, scenario):
         return []
 
@@ -76,6 +93,7 @@ def _variant(name: str, implementation: str) -> Variant:
         knob_space={},
         run_scenario=run_scenario,
         implementation=implementation,
+        configuration=configuration,
     )
 
 
@@ -96,6 +114,44 @@ class TestWhatTheVariantsRun:
             assert variant.implementation == TWO_PASS
             assert variant.configuration == target.configuration
             assert variant.model == target.model
+
+    def test_a_corpus_scenario_runs_with_its_configurations_model_not_the_fixtures(self):
+        """Every orchestrator honours a model in its input: the fixture's must not reach it."""
+        fixture = load_fixture("individual_extraction", "sme_waypoint_business_operations")
+        assert fixture["model"] == "claude-opus-4-7", "the fixture pins a model"
+        stripped = scenario_input("sme_waypoint_business_operations")
+        assert not set(stripped) & set(RUN_PARAMETERS)
+        assert stripped["text"] == fixture["text"]
+        for target in (triple_corpus_target(),):
+            run_input = target.run_input(stripped)
+            assert run_input["model"] == "google/gemini-3-flash-preview"
+
+    async def test_the_open_v1_variant_runs_with_its_configurations_model(self, monkeypatch):
+        seen: list[dict] = []
+
+        class Recording:
+            def __init__(self, **_):
+                pass
+
+            async def execute(self, state):
+                seen.append(dict(state.input_data))
+                state.result = {"triples": []}
+                return state
+
+        resolver = benchmark_replay.pipeline_resolver()
+        selection = resolver.resolve(benchmark_replay.PIPELINE_TYPE, "open_v1")
+        monkeypatch.setattr(
+            benchmark_replay,
+            "pipeline_resolver",
+            lambda: _Resolver(selection, Recording),
+        )
+        variant = quality_tournament._make_open_v1_variant(None, None)
+        assert variant.model == selection.parameters["model"]
+        await variant.run_scenario(variant.base_config, "sme_waypoint_business_operations")
+        (run_input,) = seen
+        assert run_input["model"] == selection.parameters["model"]
+        assert run_input["model"] != "claude-opus-4-7"
+        assert run_input["max_tokens"] == selection.parameters["max_tokens"]
 
     def test_no_variant_and_no_helper_of_the_removed_grounded_variant_remains(self):
         assert not [name for name in dir(quality_tournament) if "grounded" in name.lower()]
@@ -162,9 +218,11 @@ class TestGuard:
 
 class TestStaleGate:
     VARIANTS = {
-        "default": _variant("default", TWO_PASS),
-        "default+grounding": _variant("default+grounding", TWO_PASS),
-        "open_v1": _variant("open_v1", "open_v1"),
+        "default": _variant("default", TWO_PASS, "extraction-openrouter-default"),
+        "default+grounding": _variant(
+            "default+grounding", TWO_PASS, "extraction-openrouter-default"
+        ),
+        "open_v1": _variant("open_v1", "open_v1", "extraction-open-v1"),
     }
 
     def test_only_variants_that_run_the_target_gate_the_run(self):
@@ -174,6 +232,13 @@ class TestStaleGate:
             "default+grounding"
         ]
         assert _stale_for_target(stale, self.VARIANTS, resolve_target(FIND_THEN_TYPE)) == []
+
+    def test_a_variant_of_the_implementation_with_another_configuration_does_not_gate(self):
+        """Two-pass with extraction-default is not what the triple-corpus variants run."""
+        stale = {"default": {"calls": 17, "misses": 3}}
+        target = resolve_target(TWO_PASS, "extraction-default")
+        assert _stale_for_target(stale, self.VARIANTS, target) == []
+        assert _stale_for_target(stale, self.VARIANTS, resolve_target(TWO_PASS)) == ["default"]
 
     def test_a_stale_benchmark_recording_is_named_with_the_command_that_records_it(self):
         target = resolve_target(FIND_THEN_TYPE)

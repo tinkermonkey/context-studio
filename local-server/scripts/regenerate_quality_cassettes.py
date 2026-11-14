@@ -49,6 +49,18 @@ from tests.integration.pipelines._harness.cassettes import (
 )
 
 
+def fixture_model(fixture_input: dict, scenario: str) -> str:
+    """
+    The model a scenario's cassette is keyed with: the one its input fixture
+    pins, which is what the quality suite replaying these cassettes sends.
+    Nothing here supplies a model a fixture leaves out.
+    """
+    model = fixture_input.get("model")
+    if not isinstance(model, str) or not model:
+        raise ValueError(f"fixture {scenario} names no model")
+    return model
+
+
 def create_test_database():
     """Create a temporary test database."""
     tmpdir = tempfile.mkdtemp()
@@ -160,7 +172,7 @@ async def regenerate_individual_extraction_cassettes():
                 extraction_service=extraction_service,
             )
 
-            model = fixture_input.get("model", "claude-opus-4-7")
+            model = fixture_model(fixture_input, scenario)
             temperature = fixture_input.get("temperature", 0.0)
             text = fixture_input.get("text", "")
 
@@ -268,9 +280,6 @@ async def regenerate_schema_extraction_cassettes():
                 llm_provider=recording_provider,
                 ontology_repo=ontology_repo,
             )
-
-            fixture_input.get("model", "claude-opus-4-7")
-            fixture_input.get("temperature", 0.0)
 
             # Convert text to documents list if needed
             pipeline_input = fixture_input.copy()

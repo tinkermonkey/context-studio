@@ -19,23 +19,26 @@ pair every run is selected by. An experiment entry must carry both.
 
 `dev` and `holdout` are the extraction benchmark's measures and `guard` the
 triple corpus's (entries before the 2026-11 baseline reset carry triple-corpus
-metrics in `dev`/`holdout`). The guard applies only to an implementation the
-triple corpus has recordings of; for any other the entry records
-`"guard": {"applies": false, "reason": "..."}`, never another implementation's
+metrics in `dev`/`holdout`). The guard applies only to the target the triple
+corpus has recordings of (the two-pass implementation, id `default`, with
+`extraction-openrouter-default`); for any other target the entry records
+`"guard": {"applies": false, "reason": "..."}`, never another target's
 number. A `decision: "unmeasured"` entry has all three null when the candidate
 could not be measured, and its claimed numbers when it was measured but the
 verifier returned nothing.
 
-**Hypothesis ids are scoped by what was refined: the implementation and the
-configuration.** A hypothesis is a change to one implementation, judged by
-measurements made with one configuration (its model decides what a change is
-worth), so `rejected_hypotheses` and `accepted_hypotheses` take both and return
-only that pair's entries: `cross_chunk_relationships` rejected for `default` is
-still open for `find_then_type`, and a hypothesis rejected for `default` with
-`extraction-openrouter-default` is still open for `default` with
-`extraction-default`. An entry written before the fields existed has neither
-and counts for every pair (all such entries predate the 2026-11 baseline
-reset, so none is read today).
+**Rejections are scoped by implementation and configuration; acceptances by
+implementation.** A hypothesis is a change to one implementation's code. A
+rejection was a judgement made with one configuration's model, so
+`rejected_hypotheses` takes both: `cross_chunk_relationships` rejected for
+`default` is still open for `find_then_type`, and one rejected for `default`
+with `extraction-openrouter-default` is still open for `default` with
+`extraction-default`. An acceptance merged the change into the
+implementation's code, which every configuration of it runs, so
+`accepted_hypotheses` takes the implementation alone: a merged hypothesis is
+not drafted and paid for again under another configuration. An entry written
+before the fields existed has neither and counts for every one (all such
+entries predate the 2026-11 baseline reset, so none is read today).
 
 Entries may also carry an optional `bootstrap` field — the Wave 1 DR
 bootstrap-scenario diagnostics (`karpathy_loop_dr_ontology_design.md` §5,
@@ -91,8 +94,7 @@ has shell access but no in-process import of this package — see
     EOF
     python experiments/ledger.py rejected-hypotheses --implementation find_then_type \
         --configuration extraction-find-then-type
-    python experiments/ledger.py accepted-hypotheses --implementation find_then_type \
-        --configuration extraction-find-then-type
+    python experiments/ledger.py accepted-hypotheses --implementation find_then_type
     python experiments/ledger.py baseline-reset --ontology-context dr_spec --spec-version 0.8.4 \
         --base-commit "$(git rev-parse HEAD)" 'Replaced the placeholder ontology with the DR spec.'
     python experiments/ledger.py baseline-reset --ontology-context extraction_benchmark \
@@ -409,12 +411,12 @@ def rejected_hypotheses(
 def accepted_hypotheses(
     ledger_path: Optional[Union[Path, str]] = None,
     implementation: Optional[str] = None,
-    configuration: Optional[str] = None,
 ) -> list[str]:
     """
     Return the distinct `hypothesis` strings of every accepted experiment
     recorded since the last baseline reset, in first-seen order, scoped by
-    implementation and configuration as `rejected_hypotheses` is.
+    implementation only: the merged change is the implementation's code,
+    which every one of its configurations runs.
 
     Target selection (§4.3 step 2) excludes these: an accepted hypothesis is
     already merged into the incumbent, so re-drafting it produces a candidate
@@ -424,7 +426,7 @@ def accepted_hypotheses(
     ontology/corpus swap makes a previously-merged hypothesis retryable again,
     since the incumbent it was merged into no longer exists.
     """
-    return _decided_hypotheses("accepted", ledger_path, implementation, configuration)
+    return _decided_hypotheses("accepted", ledger_path, implementation, None)
 
 
 def _main(argv: Optional[list[str]] = None) -> int:
@@ -466,12 +468,14 @@ def _main(argv: Optional[list[str]] = None) -> int:
             help="The implementation being refined: hypothesis ids are scoped by it."
             " Omit for every implementation's",
         )
-        decided_parser.add_argument(
-            "--configuration",
-            default=None,
-            help="The configuration it is measured with: ids are scoped by it too."
-            " Omit for every configuration's",
-        )
+        if decided == "rejected":
+            # An acceptance is merged code, which every configuration runs
+            decided_parser.add_argument(
+                "--configuration",
+                default=None,
+                help="The configuration it is measured with: rejections are scoped by it"
+                " too. Omit for every configuration's",
+            )
 
     baseline_reset_parser = subparsers.add_parser(
         "baseline-reset", help="Append a baseline-reset checkpoint entry"
@@ -549,9 +553,7 @@ def _main(argv: Optional[list[str]] = None) -> int:
         return 0
 
     if args.command == "accepted-hypotheses":
-        for hypothesis in accepted_hypotheses(
-            args.ledger_path, args.implementation, args.configuration
-        ):
+        for hypothesis in accepted_hypotheses(args.ledger_path, args.implementation):
             print(hypothesis)
         return 0
 

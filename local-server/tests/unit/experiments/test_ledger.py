@@ -623,10 +623,10 @@ class TestHypothesesScopedByImplementation:
         assert rejected_hypotheses(ledger_path, "default", "extraction-default") == [
             "layer_guidance_in_prompt"
         ]
-        assert accepted_hypotheses(ledger_path, "default", "extraction-default") == []
-        assert accepted_hypotheses(ledger_path, "default", "extraction-openrouter-default") == [
-            "chunk_context_header"
-        ]
+        # An acceptance is merged code, which every configuration runs: it is
+        # not drafted again under another configuration of the implementation
+        assert accepted_hypotheses(ledger_path, "default") == ["chunk_context_header"]
+        assert accepted_hypotheses(ledger_path, "find_then_type") == []
         # Without a configuration, the implementation's whole history is read
         assert rejected_hypotheses(ledger_path, "default") == [
             "full_class_catalog",
@@ -649,6 +649,31 @@ class TestHypothesesScopedByImplementation:
         # A reset of one configuration is not a reset of the implementation
         assert rejected_hypotheses(ledger_path, "default") == ["full_class_catalog"]
         assert accepted_hypotheses(ledger_path, "default") == ["chunk_context_header"]
+
+    def test_cli_scopes_acceptances_by_implementation_alone(self, tmp_path, capsys):
+        ledger_path = self._two_configurations(tmp_path)
+        ledger_cli(
+            [
+                "--ledger-path",
+                str(ledger_path),
+                "accepted-hypotheses",
+                "--implementation",
+                "default",
+            ]
+        )
+        assert capsys.readouterr().out.split() == ["chunk_context_header"]
+        with pytest.raises(SystemExit):
+            ledger_cli(
+                [
+                    "--ledger-path",
+                    str(ledger_path),
+                    "accepted-hypotheses",
+                    "--implementation",
+                    "default",
+                    "--configuration",
+                    "extraction-default",
+                ]
+            )
 
     def test_cli_lists_one_configurations_hypotheses(self, tmp_path, capsys):
         ledger_path = self._two_configurations(tmp_path)

@@ -39,6 +39,7 @@ from scripts.benchmark_replay import (
     default_implementation,
     extract_document,
     pipeline_registries,
+    pipeline_resolver,
     recorded_targets,
     replay_document,
     resolve_target,
@@ -55,7 +56,9 @@ from tests.integration.pipelines._harness.benchmark import (
 
 DOCUMENT = "wikimedia_enterprise"
 ACTOR = "business.businessactor"
-# The implementations with committed recordings, by their registry ids
+# The implementations with committed recordings, by their registry ids. The
+# two-pass implementation's id is `default`, a name only: the type's default
+# implementation is find_then_type.
 TWO_PASS = "default"
 FIND_THEN_TYPE = "find_then_type"
 ALL_DOCUMENTS = sorted([*DEV_DOCUMENTS, *HOLDOUT_DOCUMENTS])
@@ -74,9 +77,11 @@ class StubProvider:
         self.offered: list[set[str]] = []
         # (system prompt, model, temperature) of every call
         self.calls: list[tuple[str, str, object]] = []
+        self.limits: list[object] = []
 
     def complete(self, system_prompt, user_prompt, model, **kwargs: object) -> LLMResponse:
         self.calls.append((system_prompt, model, kwargs.get("temperature")))
+        self.limits.append(kwargs.get("max_tokens"))
         triples = []
         if "Identify the individuals" in user_prompt:
             offered = set(_OFFERED.findall(user_prompt))
@@ -151,7 +156,9 @@ def test_pinned_spec_builds_the_schema_the_gold_files_were_made_against(ontology
 
 async def test_document_runs_as_a_source_into_scored_predictions(ontology):
     provider = StubProvider("Wikimedia Foundation", ACTOR)
-    individuals, relationships = await extract_document(ontology, provider, DOCUMENT)
+    individuals, relationships = await extract_document(
+        ontology, provider, DOCUMENT, resolve_target(TWO_PASS)
+    )
 
     assert len(provider.offered) > 1, "the document should be extracted chunk by chunk"
     assert [i.title for i in individuals] == ["Wikimedia Foundation"], "chunks merge into one"
@@ -166,14 +173,14 @@ async def test_document_runs_as_a_source_into_scored_predictions(ontology):
 
 async def test_a_document_without_a_cassette_is_not_scored(tmp_path, monkeypatch):
     monkeypatch.setattr("scripts.benchmark_replay.CASSETTE_DIR", tmp_path)
-    result = await replay_document(DOCUMENT)
+    result = await replay_document(DOCUMENT, resolve_target(TWO_PASS))
     assert (result.status, result.score) == ("not_recorded", None)
 
 
 async def test_a_stale_cassette_is_reported_not_scored_as_zero(ontology, tmp_path, monkeypatch):
     monkeypatch.setattr("scripts.benchmark_replay.CASSETTE_DIR", tmp_path)
     (tmp_path / f"{DOCUMENT}.json").write_text("{}")
-    result = await replay_document(DOCUMENT)
+    result = await replay_document(DOCUMENT, resolve_target(TWO_PASS))
     assert result.status == "stale"
     assert result.score is None
     assert result.misses == result.calls > 0
@@ -285,13 +292,26 @@ def test_with_nothing_asked_for_the_target_is_the_registrys_default_implementati
     target = resolve_target()
 
     assert target.implementation == default_implementation()
-    assert target.implementation == next(iter(implementations.list_by_type(PIPELINE_TYPE)))
+    assert target.implementation == implementations.default_implementation(PIPELINE_TYPE)
+    assert target.implementation == FIND_THEN_TYPE, "find_then_type is the type's default"
+    assert TWO_PASS != default_implementation(), "the two-pass id `default` is only a name"
     assert target.orchestrator is implementations.get(PIPELINE_TYPE, target.implementation)
     registered = configurations.get_latest(
         PIPELINE_TYPE, target.implementation, target.configuration
     )
     assert target.config == registered.config
     assert target.model == registered.config["model"], "the model is the configuration's"
+
+
+def test_the_run_input_is_the_resolvers():
+    """Model, temperature and output-token limit come from the pipeline resolver."""
+    for implementation in (TWO_PASS, FIND_THEN_TYPE):
+        target = resolve_target(implementation)
+        selection = pipeline_resolver().resolve(PIPELINE_TYPE, implementation, target.configuration)
+        assert target.run_input({"text": "t"}) == selection.run_input({"text": "t"})
+        filled = target.run_input({"text": "t"})
+        assert filled["model"] == target.model
+        assert filled["max_tokens"] == target.config["max_tokens"]
 
 
 def test_the_default_benchmark_runs_with_the_configuration_its_recordings_were_made_with():
@@ -337,14 +357,19 @@ def test_every_recorded_implementation_is_pinned_to_the_configuration_it_was_rec
     assert {t.implementation for t in recorded_targets()} == set(RECORDED_WITH)
 
 
-def test_a_configuration_registered_first_does_not_inherit_the_recordings(monkeypatch):
-    """A new first (default) configuration of find_then_type is another target, another folder."""
+def test_a_new_default_configuration_does_not_inherit_the_recordings(monkeypatch):
+    """A new default configuration of find_then_type is another target, another folder."""
     before = resolve_target(FIND_THEN_TYPE)
     implementations = PipelineImplementationRegistry()
     configurations = PipelineConfigurationRegistry()
+    register_individual_extraction(implementations, None)
     newer = {**before.config, "model": "another-model"}
-    configurations.register(PIPELINE_TYPE, FIND_THEN_TYPE, "extraction-find-then-type-2", newer)
-    register_individual_extraction(implementations, configurations)
+    configurations.register(
+        PIPELINE_TYPE, FIND_THEN_TYPE, "extraction-find-then-type-2", newer, default=True
+    )
+    configurations.register(
+        PIPELINE_TYPE, FIND_THEN_TYPE, "extraction-find-then-type", dict(before.config)
+    )
     monkeypatch.setattr(
         "scripts.benchmark_replay.pipeline_registries", lambda: (implementations, configurations)
     )
@@ -354,6 +379,7 @@ def test_a_configuration_registered_first_does_not_inherit_the_recordings(monkey
     assert (after.configuration, after.model) == (before.configuration, before.model)
     assert cassette_dir(after) == cassette_dir(before)
     asked = resolve_target(FIND_THEN_TYPE, "extraction-find-then-type-2")
+    assert asked.model == "another-model"
     assert cassette_dir(asked).name == (
         "extraction_benchmark_find_then_type__extraction-find-then-type-2"
     )
@@ -400,31 +426,47 @@ def test_each_committed_recording_belongs_to_a_registered_target():
         (TWO_PASS, "extraction-openrouter-default"),
         (FIND_THEN_TYPE, "extraction-find-then-type"),
     }
-    default, find_then_type = (
+    two_pass, find_then_type = (
+        cassette_path(DOCUMENT, resolve_target(TWO_PASS)),
         cassette_path(DOCUMENT),
-        cassette_path(DOCUMENT, resolve_target(FIND_THEN_TYPE)),
     )
-    assert default.parent.name == "extraction_benchmark"
+    assert two_pass.parent.name == "extraction_benchmark"
     assert find_then_type.parent.name == "extraction_benchmark_find_then_type"
-    assert default.parent.parent == find_then_type.parent.parent
-    assert default.exists() and find_then_type.exists()
+    assert two_pass.parent.parent == find_then_type.parent.parent
+    assert two_pass.exists() and find_then_type.exists()
 
 
-async def test_the_run_uses_its_configurations_model_temperature_and_stage_prompts(ontology):
+async def test_the_run_uses_its_configurations_model_temperature_and_stage_prompts(
+    ontology, monkeypatch
+):
     """A prompt-only experiment is a configuration: its stage prompts are the ones sent."""
     base = resolve_target(TWO_PASS)
-    config = {
-        **base.config,
-        "model": "a-configured-model",
-        "temperature": 0.3,
-        "stage_prompts": {"identify_individuals": {"system": "CONFIGURED IDENTIFY PROMPT"}},
-    }
+    implementations = PipelineImplementationRegistry()
+    configurations = PipelineConfigurationRegistry()
+    register_individual_extraction(implementations, configurations)
+    configurations.register(
+        PIPELINE_TYPE,
+        TWO_PASS,
+        "test-configured",
+        {
+            **base.config,
+            "model": "a-configured-model",
+            "temperature": 0.3,
+            "max_tokens": 1234,
+            "stage_prompts": {"identify_individuals": {"system": "CONFIGURED IDENTIFY PROMPT"}},
+        },
+    )
+    monkeypatch.setattr(
+        "scripts.benchmark_replay.pipeline_registries", lambda: (implementations, configurations)
+    )
+    configured = resolve_target(TWO_PASS, "test-configured")
     provider = StubProvider("Wikimedia Foundation", ACTOR)
-    await extract_document(ontology, provider, DOCUMENT, replace(base, config=config))
+    await extract_document(ontology, provider, DOCUMENT, configured)
 
     assert provider.calls
     assert {model for _, model, _ in provider.calls} == {"a-configured-model"}
     assert {temperature for _, _, temperature in provider.calls} == {0.3}
+    assert set(provider.limits) == {1234}, "the configuration's output-token limit reaches the call"
     assert "CONFIGURED IDENTIFY PROMPT" in {system for system, _, _ in provider.calls}
 
     plain = StubProvider("Wikimedia Foundation", ACTOR)
@@ -445,11 +487,12 @@ def test_a_summary_says_what_was_run():
 
 # -- the committed recordings still answer today's prompts --------------------
 
-# Dev means of the committed recordings: what experiments/README.md and the
+# Split means of the committed recordings that the accept gate reads (dev
+# typed F1 and found F1, holdout typed F1): what experiments/README.md and the
 # ledger's 2026-11-14 baseline_reset entry state.
-COMMITTED_DEV = {
-    TWO_PASS: {"typed_f1": 0.1138, "f1": 0.4112},
-    FIND_THEN_TYPE: {"typed_f1": 0.4648, "f1": 0.5343},
+COMMITTED_SCORES = {
+    TWO_PASS: {"dev": {"typed_f1": 0.1138, "f1": 0.4112}, "holdout": {"typed_f1": 0.156}},
+    FIND_THEN_TYPE: {"dev": {"typed_f1": 0.4648, "f1": 0.5343}, "holdout": {"typed_f1": 0.4813}},
 }
 _REPLAYED: dict[tuple[str, str], DocumentResult] = {}
 
@@ -465,7 +508,7 @@ async def replayed(implementation: str, document: str) -> DocumentResult:
 @pytest.mark.parametrize("document", ALL_DOCUMENTS)
 async def test_default_recordings_replay(ontology, document):
     """
-    The recorded runs of the `default` implementation answer today's prompts
+    The recorded runs of the two-pass implementation (id `default`) answer today's prompts
     with the model of the configuration they were recorded with. A change to
     the two-pass prompts, to what feeds them, or to that configuration's model
     fails here until they are recorded again
@@ -493,7 +536,7 @@ async def test_find_then_type_recordings_replay_and_keep_their_gain(ontology, do
     assert result.score.metrics["type_accuracy"] > 0.6
 
 
-@pytest.mark.parametrize("implementation", sorted(COMMITTED_DEV))
+@pytest.mark.parametrize("implementation", sorted(COMMITTED_SCORES))
 async def test_committed_recordings_score_what_the_baselines_state(ontology, implementation):
     """
     A change that leaves every prompt as it was (merging, planning,
@@ -505,15 +548,17 @@ async def test_committed_recordings_score_what_the_baselines_state(ontology, imp
     summary = summarize(results, target)
 
     assert summary["status"] == "scored", summary["documents"]
-    for measure, committed in COMMITTED_DEV[implementation].items():
-        assert summary["dev"][measure] == pytest.approx(committed, abs=0.0005), (
-            f"dev {measure} of {implementation} with {target.configuration} is "
-            f"{summary['dev'][measure]}, and the committed baseline says {committed}. Nothing was "
-            "recorded again, so a change to code after the LLM calls moved the score. If that "
-            "is intended, update COMMITTED_DEV here, the tables in experiments/README.md and "
-            "documentation/karpathy_loop_design.md, and record the new baseline in the ledger "
-            "(experiments/ledger.py baseline-reset)."
-        )
+    assert summary["recorded_models"] == [target.model]
+    for split, measures in COMMITTED_SCORES[implementation].items():
+        for measure, committed in measures.items():
+            assert summary[split][measure] == pytest.approx(committed, abs=0.0005), (
+                f"{split} {measure} of {implementation} with {target.configuration} is "
+                f"{summary[split][measure]}, and the committed baseline says {committed}. Nothing "
+                "was recorded again, so a change to code after the LLM calls moved the score. If "
+                "that is intended, update COMMITTED_SCORES here, the tables in "
+                "experiments/README.md and documentation/karpathy_loop_design.md, and record the "
+                "new baseline in the ledger (experiments/ledger.py baseline-reset)."
+            )
 
 
 # -- the command line -------------------------------------------------------
@@ -547,8 +592,8 @@ def test_main_with_no_flags_replays_the_registrys_default_target(monkeypatch, ca
     out = capsys.readouterr().out
 
     assert exit_code == 0
-    assert seen == [(TWO_PASS, "extraction-openrouter-default", tuple(benchmark_documents()))]
-    assert "target: implementation default, configuration extraction-openrouter-default" in out
+    assert seen == [(FIND_THEN_TYPE, "extraction-find-then-type", tuple(benchmark_documents()))]
+    assert "target: implementation find_then_type, configuration extraction-find-then-type" in out
     assert "status: scored" in out
     assert "dev typed F1 0.000, found F1 0.000" in out
 
@@ -561,13 +606,17 @@ def test_main_runs_the_target_its_flags_name(monkeypatch, capsys):
     assert [(i, c) for i, c, _ in seen] == [(FIND_THEN_TYPE, "extraction-find-then-type")]
     assert "cassettes: extraction_benchmark_find_then_type/" in capsys.readouterr().out
 
-    _, seen = _run_main(monkeypatch, ["--configuration", "extraction-default"])
+    _, seen = _run_main(monkeypatch, ["--implementation", TWO_PASS])
+    assert [(i, c) for i, c, _ in seen] == [(TWO_PASS, "extraction-openrouter-default")]
+    _, seen = _run_main(
+        monkeypatch, ["--implementation", TWO_PASS, "--configuration", "extraction-default"]
+    )
     assert [(i, c) for i, c, _ in seen] == [(TWO_PASS, "extraction-default")]
 
 
 @pytest.mark.parametrize("status", ["stale", "not_recorded", "failed"])
 def test_main_exits_non_zero_when_the_target_was_not_scored(monkeypatch, capsys, status):
-    exit_code, _ = _run_main(monkeypatch, [], {TWO_PASS: status})
+    exit_code, _ = _run_main(monkeypatch, [], {FIND_THEN_TYPE: status})
     assert exit_code == 2
     assert f"status: {status}" in capsys.readouterr().out
 
@@ -598,13 +647,14 @@ def test_main_all_replays_every_recorded_target(monkeypatch, capsys):
     targets = json.loads(captured.out)["targets"]
 
     assert exit_code == 0
+    # In registration order: find_then_type, the type's default, first
     assert [(i, c) for i, c, _ in seen] == [
-        (TWO_PASS, "extraction-openrouter-default"),
         (FIND_THEN_TYPE, "extraction-find-then-type"),
+        (TWO_PASS, "extraction-openrouter-default"),
     ]
     assert [(t["implementation"], t["status"]) for t in targets] == [
-        (TWO_PASS, "scored"),
         (FIND_THEN_TYPE, "scored"),
+        (TWO_PASS, "scored"),
     ]
     assert captured.err.count("target: implementation") == 2
 

@@ -70,6 +70,19 @@ const GATE_MARGINS = {
     missing: 'full re-recording noise: three recordings of the unchanged implementation, every stage (find, type, relate), as was done for `default`; the spread of dev found F1, dev typed F1 and holdout typed F1 over them',
   },
 }
+// Every target that has committed benchmark recordings, as
+// scripts/benchmark_replay.py pins them (RECORDED_WITH), and the one target the
+// triple corpus was recorded with (quality_tournament.triple_corpus_target: the
+// two-pass implementation, whose id `default` is only a name). What a change
+// could move is computed from these, never from an agent's answer: a baseline
+// that leaves one out stops the iteration. The mechanics test checks them
+// against the Python scripts.
+const RECORDED_TARGETS = [
+  { implementation: 'default', configuration: 'extraction-openrouter-default' },
+  { implementation: 'find_then_type', configuration: 'extraction-find-then-type' },
+]
+const TRIPLE_CORPUS_TARGET = { implementation: 'default', configuration: 'extraction-openrouter-default' }
+
 // §1 exit criterion: floors on the holdout document's typed measures.
 const DEFAULT_HOLDOUT_FLOORS = { precision: 0.6, recall: 0.5, f1: 0.5 }
 const DEFAULT_INTEGRATION_BRANCH = 'experiment/karpathy-loop'
@@ -104,6 +117,7 @@ const FROZEN_PATHS = [
   // experiment; it is another configuration, measured as another target.
   'local-server/configs/',
   'local-server/domain/pipelines/registry.py',
+  'local-server/domain/pipelines/selection.py',
   'local-server/domain/pipelines/individual_extraction/bootstrap.py',
   'local-server/domain/pipelines/individual_extraction/configurations/',
 ]
@@ -118,8 +132,11 @@ const FROZEN_PATHS = [
 // only the individuals' found F1 and typed F1, so a change that moves only
 // relationships or confidences cannot pass it however well it works. Unblock
 // one when the gate reads a measure it can move.
-// The ledger scopes hypothesis ids by implementation, so the same id in two
-// backlogs is two hypotheses.
+// The ledger scopes rejections by implementation and configuration and
+// acceptances by implementation, so the same id in two backlogs is two
+// hypotheses.
+// `default` is the two-pass implementation's id, a name only: the type's
+// default implementation is `find_then_type` (bootstrap.py).
 //
 // `default` (the two-pass shape: domain/extraction/services.py,
 // domain/pipelines/individual_extraction/orchestrator.py). Hypotheses from the
@@ -259,15 +276,18 @@ const FIND_THEN_TYPE_BACKLOG = [
       'Type each mention three times and keep the answer two calls agree on (no agreement: the answer with the highest confidence). The model takes no temperature, and a repeat of the same typing call changes about one answer in six; the catalog is a cached system prompt, so two more calls per mention cost little input. The three calls must differ in the cassette key (give each its own `seed`), or they are recorded and replayed as one. This triples the typing calls of a recording (about 570 to 1,700 for the benchmark): say what the recording cost.',
   },
   {
-    // Measured with claude-haiku-5-5: the relate stage's answer was cut at its
-    // 8,000 output-token limit on the GitLab document in two of four takes (a
-    // failed chunk, so the run is not scored), and relationship recall on the
-    // Edit check document came out between 0.00 and 0.09 from take to take.
+    // Measured with claude-haiku-5-5 before PR #1598: the relate stage's answer
+    // was cut at its output-token limit, then a fixed 8,000, on the GitLab
+    // document in two of four takes (a failed chunk, so the run is not scored),
+    // and relationship recall on the Edit check document came out between 0.00
+    // and 0.09 from take to take. Since #1598 every find_then_type stage runs
+    // with its configuration's limit (16,000); whether the cuts are gone is
+    // unmeasured.
     id: 'relate_within_output_limit',
     kinds: ['relationship_missed'],
     blocked: true,
     summary:
-      'Keep the relate stage inside its output limit. It is asked for every relationship among all of a chunk\u2019s typed individuals in one answer capped at 8,000 output tokens (`max_tokens` in domain/extraction/services.py); find-then-type types far more individuals per chunk than the two-pass shape, so the answer is cut on dense chunks. Ask for the relationships of a bounded number of subjects per call. The relate stage is shared with the `default` implementation (`derive_relationships` in domain/extraction/prompts.py): a change to it makes both implementations\u2019 recordings stale.',
+      'Keep the relate stage inside its output limit. It is asked for every relationship among all of a chunk\u2019s typed individuals in one answer capped by the configuration\u2019s output-token limit (`max_tokens` in configs/extraction-find-then-type.json, 16,000 since PR #1598; it was a fixed 8,000 when the cuts were seen, and the limit cannot exceed 20,000); find-then-type types far more individuals per chunk than the two-pass shape, so the answer can be cut on dense chunks. First check, from a recording, whether the cuts still happen at 16,000. Ask for the relationships of a bounded number of subjects per call. The relate stage is shared with the `default` implementation (`derive_relationships` in domain/extraction/prompts.py): a change to it makes both implementations\u2019 recordings stale.',
   },
   {
     id: 'cross_chunk_relationships',
@@ -370,6 +390,8 @@ const EVALUATION_SCHEMA = {
     // Recordings the target does not read that were already stale on `main`
     // (variant names). A candidate may add nothing to this list.
     staleElsewhere: { type: 'array', items: { type: 'string' } },
+    // The models the target's benchmark recordings hold (`recorded_models`).
+    recordedModels: { type: 'array', items: { type: 'string' } },
     dev: BENCHMARK_METRICS,
     holdout: BENCHMARK_METRICS,
     guard: GUARD_METRICS,
@@ -430,7 +452,7 @@ const EXPERIMENT_RESULT_SCHEMA = {
 
 const VERIFY_SCHEMA = {
   type: 'object',
-  required: ['hypothesisId', 'integrityOk', 'forbiddenPathHits', 'testsReproduced', 'scoresReproduced', 'singleChangeOk', 'diffMatchesHypothesis', 'measuredModel', 'otherTargets', 'otherGuards', 'verdict', 'reason'],
+  required: ['hypothesisId', 'integrityOk', 'forbiddenPathHits', 'testsReproduced', 'scoresReproduced', 'singleChangeOk', 'diffMatchesHypothesis', 'measuredModel', 'recordedModels', 'otherTargets', 'otherGuards', 'verdict', 'reason'],
   properties: {
     hypothesisId: { type: 'string' },
     integrityOk: { type: 'boolean' },
@@ -439,8 +461,11 @@ const VERIFY_SCHEMA = {
     scoresReproduced: { type: 'boolean' },
     singleChangeOk: { type: 'boolean' },
     diffMatchesHypothesis: { type: 'boolean' },
-    // The model the target's replay ran on the candidate's branch.
+    // The model the target's replay ran on the candidate's branch, and the
+    // models its recordings there hold: what the script compares with the
+    // incumbent's model.
     measuredModel: { type: 'string' },
+    recordedModels: { type: 'array', items: { type: 'string' } },
     // Every other recorded benchmark target and the triple corpus's other
     // measure, replayed in the candidate's worktree: a change to a part the
     // implementations share shows here. The script judges them.
@@ -499,19 +524,18 @@ function describeGuard(guard) {
 // implementation and the configuration: a rejection under one says nothing
 // about the same id under another.
 function ledgerReadPrompt(target) {
-  const scope = targetFlags(target)
   return [
     'From `local-server/`, with its virtual environment active, read the loop ledger\'s hypothesis history',
     `for the \`${target.implementation}\` implementation measured with its \`${target.configuration}\` configuration:`,
-    `1. \`python experiments/ledger.py rejected-hypotheses ${scope}\` — return every`,
+    `1. \`python experiments/ledger.py rejected-hypotheses ${targetFlags(target)}\` — return every`,
     '   printed line (one hypothesis id per line; empty output means no rejections yet) as',
-    '   `rejectedHypotheses`.',
-    `2. \`python experiments/ledger.py accepted-hypotheses ${scope}\` — return every`,
-    '   printed line as `acceptedHypotheses` (empty output means no acceptances yet). These are already',
-    '   merged into the incumbent, so selection skips them: re-drafting a merged hypothesis can only lose',
-    '   the accept gate.',
-    'Both commands list only that implementation\'s and configuration\'s entries since the last baseline',
-    'reset that applies to them.',
+    '   `rejectedHypotheses`. A rejection was judged with one configuration\'s model, so these are that',
+    '   configuration\'s.',
+    `2. \`python experiments/ledger.py accepted-hypotheses --implementation ${target.implementation}\` — return`,
+    '   every printed line as `acceptedHypotheses` (empty output means no acceptances yet). These are',
+    '   already merged into the implementation\'s code, which every configuration of it runs, so selection',
+    '   skips them: re-drafting a merged hypothesis can only lose the accept gate.',
+    'Both commands list only entries since the last baseline reset that applies to them.',
     'Return structured output only — no prose.',
   ].join('\n')
 }
@@ -534,7 +558,8 @@ function measureSteps(target) {
     '     `staleElsewhere`, and give an empty list when there is no such section.',
     'b. Find the newest `experiments/reports/tournament_<run_id>.md` digest (`scoreboardPath`) and the',
     '   `experiments/reports/tournament_<run_id>_benchmark.json` beside it (`errorReportPath`).',
-    'c. Read the benchmark JSON. Its `implementation`, `configuration` and `model` say what was run. Its',
+    'c. Read the benchmark JSON. Its `implementation`, `configuration` and `model` say what was run, and',
+    '   its `recorded_models` list the models its recordings hold: give that list as `recordedModels`. Its',
     '   `status` must be "scored"; "not_recorded" or "stale" becomes the `measurementStatus` (the',
     '   benchmark cassettes of that implementation and configuration are missing or out of date), and',
     '   any other status ("partial": a benchmark document is missing) is "failed". When scored: `dev` and',
@@ -656,8 +681,8 @@ function experimentPrompt(hypothesis, evaluation) {
     '   `python scripts/check_domain_imports.py`); set `testsPassed` and `testsSummary`.',
     '7. Measure the candidate exactly as the incumbent was measured:',
     ...measureSteps(target),
-    '   Report `measurementStatus`, `implementation`, `configuration`, `model`, `dev`, `holdout`, `guard`',
-    '   and `otherGuards`. A status other than "scored" means step 4',
+    '   Report `measurementStatus`, `implementation`, `configuration`, `model`, `dev`, `holdout` and',
+    '   `guard`. A status other than "scored" means step 4',
     '   was needed and skipped, or failed: fix that rather than reporting numbers. If it still cannot be',
     '   scored, report the status and say why in `measurementDetail`, and leave `dev`, `holdout` and',
     '   `guard` out: never report a number the steps above did not produce.',
@@ -714,7 +739,8 @@ function verifyPrompt(candidate, target, staleOnMain) {
     '   `scoresReproduced` for another target: the script compares each with its baseline.',
     `   The entry whose \`implementation\` is "${target.implementation}" and \`configuration\` is`,
     `   "${target.configuration}" must have status "scored" and show the claimed dev typed_f1, dev f1 and`,
-    '   holdout typed_f1 to three decimals. Give that entry\'s `model` as `measuredModel`.',
+    '   holdout typed_f1 to three decimals. Give that entry\'s `model` as `measuredModel` and its',
+    '   `recorded_models` (the models its recordings on this branch hold) as `recordedModels`.',
     `   Then run \`${tournamentCommand(target)}\``,
     '   (it replays recordings only): it must exit 0, a "STALE CASSETTES" section in the newest',
     '   `experiments/reports/tournament_<run_id>.md` digest may name nothing but what was already stale',
@@ -736,18 +762,21 @@ function verifyPrompt(candidate, target, staleOnMain) {
 // model}); `margins` the gate margins it was judged by; `others` what the
 // change did to every other recorded target ({targets, guards}, each with its
 // measure before and after), or null when the verifier returned nothing.
-function decidePrompt(candidate, decision, reason, iteration, integrationBranch, target, margins, others) {
+function decidePrompt(candidate, decision, reason, iteration, integrationBranch, target, margins, others, measuredModel) {
   const ledgerEntry = {
-    // Hypothesis ids are scoped by implementation, so the id names it.
+    // Hypothesis ids are scoped by implementation (rejections by its
+    // configuration too), so the id names the implementation.
     experiment_id: `${iteration}-${target.implementation}-${candidate.hypothesisId}`,
     iteration,
     // What was refined, and what its measurements were made with.
     implementation: target.implementation,
     configuration: target.configuration,
-    // The model the candidate's measurement ran, by its own report, beside the
-    // incumbent's: a decision is "accepted" or "rejected" only when they are
-    // the same.
-    model: candidate.model || null,
+    // The model the candidate's measurement ran: what its recordings hold, by
+    // the verifier's replay, when it reported that; else the candidate's own
+    // report, kept beside it. A decision is "accepted" only when it is the
+    // incumbent's.
+    model: measuredModel || candidate.model || null,
+    reported_model: candidate.model || null,
     incumbent_model: target.model,
     hypothesis: candidate.hypothesisId,
     // `variant` names the change; `agent` the branch that did it.
@@ -1041,24 +1070,50 @@ function guardAgreesWithMargins(guard, margins) {
   return Number.isFinite(margins.guardSlack) === (guard.applies !== false)
 }
 
+// What a change made for `target` could move: every other recorded benchmark
+// target, and the triple corpus's measure when it is not the target's guard.
+function expectedOthers(target) {
+  return {
+    targets: RECORDED_TARGETS.filter((recorded) => !sameTarget(recorded, target)),
+    guards: sameTarget(TRIPLE_CORPUS_TARGET, target) ? [] : [TRIPLE_CORPUS_TARGET],
+  }
+}
+
 // What stops an iteration before it spends: something else a change could move
-// has no score on `main`, so no candidate could be compared with it.
-function baselineProblems(evaluation) {
-  const problems = []
+// is missing from the baseline, or has no score on `main`, so no candidate
+// could be compared with it. What must be there comes from RECORDED_TARGETS,
+// not from the measurement: an empty list is not a baseline.
+function baselineProblems(evaluation, target) {
   if (!Array.isArray(evaluation.otherTargets) || !Array.isArray(evaluation.otherGuards)) {
     return ['the measurement did not list the other recorded targets (otherTargets, otherGuards)']
   }
-  for (const other of evaluation.otherTargets) {
-    if (other.status !== 'scored' || !Number.isFinite(other.devTypedF1)) {
+  const expected = expectedOthers(target)
+  const problems = []
+  for (const recorded of expected.targets) {
+    const other = evaluation.otherTargets.find((entry) => sameTarget(entry, recorded))
+    if (!other) {
+      problems.push(`the benchmark of ${describeTarget(recorded)} is missing from the baseline`)
+    } else if (other.status !== 'scored' || !Number.isFinite(other.devTypedF1)) {
       problems.push(`the benchmark of ${describeTarget(other)} is not scored on main (${other.status})`)
     }
   }
-  for (const other of evaluation.otherGuards) {
-    if (other.status !== 'scored' || !Number.isFinite(other.strict_f1)) {
+  for (const recorded of expected.guards) {
+    const other = evaluation.otherGuards.find((entry) => sameTarget(entry, recorded))
+    if (!other) {
+      problems.push(`the triple corpus's measure of ${describeTarget(recorded)} is missing from the baseline`)
+    } else if (other.status !== 'scored' || !Number.isFinite(other.strict_f1)) {
       problems.push(`the triple corpus's measure of ${describeTarget(other)} is not scored on main (${other.status})`)
     }
   }
   return problems
+}
+
+// The models a candidate's recordings were made with, by the verifier's replay,
+// when it reported them: the model the ledger records.
+function measuredModelOf(candidate, verdict) {
+  const recorded = verdict && Array.isArray(verdict.recordedModels) ? verdict.recordedModels : []
+  if (recorded.length > 0) return recorded.join(', ')
+  return (verdict && verdict.measuredModel) || candidate.model || null
 }
 
 // What a change made for one target did to every other recorded one: each
@@ -1074,7 +1129,7 @@ function baselineProblems(evaluation) {
 function othersStanding(evaluation, verdict) {
   const unmeasured = []
   const regressed = []
-  const targets = (evaluation.otherTargets || []).map((before) => {
+  const targets = (evaluation.otherTargets || []).filter((before) => RECORDED_TARGETS.some((recorded) => sameTarget(recorded, before))).map((before) => {
     const after = ((verdict && verdict.otherTargets) || []).find((entry) => sameTarget(entry, before))
     const status = after ? after.status : 'not_replayed'
     if (status !== 'scored' || !Number.isFinite(after.devTypedF1)) {
@@ -1094,7 +1149,7 @@ function othersStanding(evaluation, verdict) {
       dev_f1: { before: before.devFoundF1, after: after && Number.isFinite(after.devFoundF1) ? after.devFoundF1 : null },
     }
   })
-  const guards = (evaluation.otherGuards || []).map((before) => {
+  const guards = (evaluation.otherGuards || []).filter((before) => sameTarget(before, TRIPLE_CORPUS_TARGET)).map((before) => {
     const after = ((verdict && verdict.otherGuards) || []).find((entry) => sameTarget(entry, before))
     const status = after ? after.status : 'not_replayed'
     if (status !== 'scored' || !Number.isFinite(after.strict_f1)) {
@@ -1129,15 +1184,48 @@ function ranTheTarget(candidate, verdict, target) {
   if (verdict.measuredModel !== target.model) {
     return { ok: false, reason: `not measured as the incumbent was: the verifier's replay ran model ${JSON.stringify(verdict.measuredModel)}, the incumbent ${target.model}` }
   }
+  // What the recordings hold, not what the configuration names: a recording
+  // made with another model and keyed as this one's would otherwise pass.
+  const recorded = Array.isArray(verdict.recordedModels) ? verdict.recordedModels : []
+  if (recorded.length === 0 || recorded.some((model) => model !== target.model)) {
+    return { ok: false, reason: `not measured as the incumbent was: the recordings on the candidate's branch hold ${JSON.stringify(recorded)}, the incumbent's model is ${target.model}` }
+  }
   return { ok: true }
 }
 
+// A frozen path in the candidate's own list of what it changed. The verifier
+// checks the diff too; this check does not depend on it.
+function frozenPathsIn(changedFiles) {
+  return (Array.isArray(changedFiles) ? changedFiles : [])
+    .filter((file) => FROZEN_PATHS.some((frozen) => file === frozen || file.startsWith(frozen) || file === frozen.replace(/\/$/, '')))
+}
+
+// What the verifier found against the rules themselves: any of these makes the
+// candidate a rejection, whatever else is true of it.
+function ruleViolations(candidate, verdict) {
+  const violations = []
+  const frozen = frozenPathsIn(candidate.changedFiles).concat(verdict.forbiddenPathHits || [])
+  if (frozen.length > 0) violations.push(`changes frozen paths: ${[...new Set(frozen)].join(', ')}`)
+  if (!verdict.integrityOk) violations.push('integrity check failed')
+  if (!verdict.singleChangeOk) violations.push('bundles more than one change')
+  if (!verdict.diffMatchesHypothesis) violations.push('the diff does not implement the hypothesis')
+  if (!verdict.testsReproduced) violations.push('its tests do not pass')
+  if (!verdict.scoresReproduced) violations.push('its claimed scores do not reproduce')
+  return violations
+}
+
 // Where a candidate stands once its verifier has reported, decided here and not
-// by the verifier's verdict alone:
-//   - "unmeasured": nothing can be said about the hypothesis (no verdict;
-//     another target's recordings left stale; a measurement made with another
-//     model). Recorded, and the hypothesis stays selectable.
-//   - "rejected": it failed a check, or it damages another recorded target.
+// by the verifier's verdict alone, in this order:
+//   - "unmeasured" when there is no verdict;
+//   - "rejected" when it broke a rule (a frozen path in its changes, a failed
+//     integrity, single-change, diff, test or score check): a rule violation
+//     wins over everything after it, so a candidate that edited a gold file is
+//     never left selectable because it also left another target stale;
+//   - "unmeasured" when nothing can be said about the hypothesis (another
+//     target's recordings left stale or not replayed; a measurement made with
+//     another model). Recorded, and the hypothesis stays selectable;
+//   - "rejected" when the verifier failed it for another reason, or it damages
+//     another recorded target;
 //   - "verified": it goes to the accept gate.
 function standingOf(pair, evaluation, target) {
   const { candidate, verdict } = pair
@@ -1145,6 +1233,10 @@ function standingOf(pair, evaluation, target) {
     return { status: 'unmeasured', reason: 'not verified: the verifier agent returned no result', others: null }
   }
   const others = othersStanding(evaluation, verdict)
+  const violations = ruleViolations(candidate, verdict)
+  if (violations.length > 0) {
+    return { status: 'rejected', reason: `failed verification: ${violations.join('; ')}. ${verdict.reason || ''}`.trim(), others: others.record }
+  }
   if (others.status === 'unmeasured') {
     return { status: 'unmeasured', reason: `not measured: ${others.reasons.join('; ')}. Record again what the change made stale`, others: others.record }
   }
@@ -1152,14 +1244,7 @@ function standingOf(pair, evaluation, target) {
   if (!ran.ok) {
     return { status: 'unmeasured', reason: ran.reason, others: others.record }
   }
-  const passed = verdict.verdict === 'pass'
-    && verdict.integrityOk
-    && verdict.testsReproduced
-    && verdict.scoresReproduced
-    && verdict.singleChangeOk
-    && verdict.diffMatchesHypothesis
-    && (verdict.forbiddenPathHits || []).length === 0
-  if (!passed) {
+  if (verdict.verdict !== 'pass') {
     return { status: 'rejected', reason: `failed verification: ${verdict.reason}`, others: others.record }
   }
   if (others.status === 'regressed') {
@@ -1191,17 +1276,18 @@ function gateCandidates(verified, incumbent, margins) {
 // Every decision of an iteration: each verified pair by where it stands and by
 // the gate, then the candidates that could not be measured at all.
 function decideAll(paired, unmeasured, evaluation, target, margins) {
-  const judged = paired.map((p) => ({ ...p, standing: standingOf(p, evaluation, target) }))
+  const judged = paired.map((p) => ({ ...p, standing: { ...standingOf(p, evaluation, target), measuredModel: measuredModelOf(p.candidate, p.verdict) } }))
   const { gated, best } = gateCandidates(judged.filter((p) => p.standing.status === 'verified'), evaluation, margins)
   const decisions = judged.map((p) => {
     const others = p.standing.others
+    const measuredModel = p.standing.measuredModel
     if (p.standing.status !== 'verified') {
-      return { candidate: p.candidate, decision: p.standing.status, reason: p.standing.reason, others }
+      return { candidate: p.candidate, decision: p.standing.status, reason: p.standing.reason, others, measuredModel }
     }
     // By identity, not by hypothesis id: an id is whatever the agent returned.
     const gatedEntry = gated.find((g) => g.candidate === p.candidate)
     if (gatedEntry === best) {
-      return { candidate: p.candidate, decision: 'accepted', reason: 'passed verification and the §6 accept gate', others }
+      return { candidate: p.candidate, decision: 'accepted', reason: 'passed verification and the §6 accept gate', others, measuredModel }
     }
     if (gatedEntry.gate.passes) {
       return {
@@ -1209,6 +1295,7 @@ function decideAll(paired, unmeasured, evaluation, target, margins) {
         decision: 'deferred',
         reason: `passed the §6 accept gate, but ${best.candidate.hypothesisId} scored higher and one change is accepted per iteration; not written to the ledger, so it is drafted again against the new incumbent`,
         others,
+        measuredModel,
       }
     }
     return {
@@ -1216,6 +1303,7 @@ function decideAll(paired, unmeasured, evaluation, target, margins) {
       decision: 'rejected',
       reason: `verified but failed the §6 accept gate: ${gatedEntry.gate.reasons.join('; ')}`,
       others,
+      measuredModel,
     }
   }).concat(unmeasured.map((candidate) => ({
     // Recorded, with its cost, but not as a rejection: a recording that failed or
@@ -1228,6 +1316,7 @@ function decideAll(paired, unmeasured, evaluation, target, margins) {
     decision: 'unmeasured',
     reason: `not measured (${candidate.measurementStatus}): ${candidate.measurementDetail || 'no detail given'}`,
     others: null,
+    measuredModel: candidate.model || null,
   })))
   return { decisions, best }
 }
@@ -1390,7 +1479,11 @@ if (!guardAgreesWithMargins(evaluation.guard, margins)) {
   })
 }
 // Every other recorded target is a baseline a candidate is compared with.
-const elsewhere = baselineProblems(evaluation)
+const elsewhere = baselineProblems(evaluation, target)
+const incumbentRecorded = Array.isArray(evaluation.recordedModels) ? evaluation.recordedModels : []
+if (incumbentRecorded.length === 0 || incumbentRecorded.some((model) => model !== target.model)) {
+  elsewhere.push(`the target's own recordings hold ${JSON.stringify(incumbentRecorded)}, not its configuration's model ${target.model}`)
+}
 if (elsewhere.length > 0) {
   return result({
     status: 'error',
@@ -1471,7 +1564,7 @@ const { decisions, best } = decideAll(paired, unmeasured, evaluation, target, ma
 const accepted = Boolean(best)
 
 const outcomes = await parallel(decisions.map((d) => () =>
-  agent(decidePrompt(d.candidate, d.decision, d.reason, iteration, integrationBranch, target, margins, d.others), {
+  agent(decidePrompt(d.candidate, d.decision, d.reason, iteration, integrationBranch, target, margins, d.others, d.measuredModel), {
     schema: DECIDE_SCHEMA,
     phase: 'Decide',
     label: `decide:${d.candidate.hypothesisId}`,

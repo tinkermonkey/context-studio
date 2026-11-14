@@ -63,12 +63,18 @@ python scripts/extraction_benchmark.py score --document edit_check --proposal <i
 ```
 
 **What it runs is chosen like any run:** an implementation of individual extraction and one of its
-configurations (`--implementation`, `--configuration`). The orchestrator comes from the pipeline
-implementation registry and the model, temperature and stage prompts from the configuration, as
+configurations (`--implementation`, `--configuration`), selected through the pipeline resolver
+(`domain/pipelines/selection.py`). The orchestrator comes from the pipeline implementation registry
+and the model, temperature, output-token limit and stage prompts from the configuration, as
 `domain/pipelines/individual_extraction/bootstrap.py` registers them; the script names no model.
 A configuration's stage prompts are the ones sent, so a prompt-only variant is a configuration.
-With no flags the target is the type's default implementation, with the configuration its
-recordings were made with:
+
+**`default` is a name.** Since PR #1598 the type's default implementation is `find_then_type`; the
+two-pass implementation keeps the id `default`, which says nothing about being the default. With
+no flags the target is the type's default implementation, with the configuration its recordings
+were made with, so `python scripts/benchmark_replay.py` replays `find_then_type` and prints
+`dev typed F1 0.465, found F1 0.534`. To replay two-pass, name it: `--implementation default`
+(prints `dev typed F1 0.114, found F1 0.411`).
 
 | target | recordings | recorded with |
 |---|---|---|
@@ -77,15 +83,22 @@ recordings were made with:
 
 Each recorded implementation's benchmark is pinned by name to the configuration it was recorded
 with (`RECORDED_WITH` in the script), not to the implementation's default configuration. For
-`default` the two differ: its default is `extraction-default` (Claude Opus today; PR #1598 moves it
-to Claude Haiku), and the cassette key includes the model. Measuring `default` with `extraction-default` is another target
-(`--configuration extraction-default`) with a folder of its own
+two-pass the two differ: its default is `extraction-default`, which moved from Claude Opus to
+Claude Haiku 5.5 on 2026-11-14 (PR #1598), and the cassette key includes the model. Measuring
+two-pass with `extraction-default` is another target
+(`--implementation default --configuration extraction-default`) with a folder of its own
 (`extraction_benchmark__extraction-default/`), and needs its own recording. In general a target's
-folder is `extraction_benchmark` (`default`) or `extraction_benchmark_<implementation>`, plus
+folder is `extraction_benchmark` (two-pass) or `extraction_benchmark_<implementation>`, plus
 `__<configuration>` for a configuration other than the one the implementation's benchmark runs
-with. The registry has no lookup that states its defaults yet, so the script reads them as the
-first implementation, and each implementation's first configuration, that the bootstrap registers
-(`default_implementation`, `default_configuration`: the only two places).
+with. The defaults are the registry's own (`default_implementation`, `default_configuration` of
+the registries; the script asks the resolver), so nothing here spells one.
+
+The run's input is the resolver's (`PipelineSelection.run_input`): the configuration's model,
+temperature and output-token limit. The output-token limit comes from the configuration since
+PR #1598 (two-pass `extraction-default` 20,000, `extraction-openrouter-default` 8,000,
+`find_then_type` 16,000 on every stage; 20,000 at most anywhere). It is not part of a cassette's
+key, so the committed recordings replay unchanged; a change of limit is still a change of what a
+live recording would get back.
 
 `benchmark_replay.py` runs the target in process, each document as a source (chunked,
 merged, planned), against the pinned DR spec the gold files were made for, with real embeddings
@@ -201,9 +214,11 @@ in the repository.
   only (`_Candidate.typed_in`). Loosening the "none" rule by wording alone lost (13 more right, 24
   more wrong, 78 more mentions recorded that gold does not hold; dev typed F1 0.41). Typing a
   mention from all of its occurrences is untried, and heads the backlog.
-- The relate stage hit its 8,000 output-token limit on the GitLab document in two of four takes
-  (a failed chunk, so that take is not scored), and relationship recall on the Edit check document
-  came out between 0.00 and 0.09.
+- The relate stage hit its output-token limit, then 8,000 (fixed in code), on the GitLab document
+  in two of four takes (a failed chunk, so that take is not scored), and relationship recall on the
+  Edit check document came out between 0.00 and 0.09. Since PR #1598 every `find_then_type` stage
+  runs with its configuration's limit, 16,000; whether that is enough for the GitLab document has
+  not been measured.
 - Not measured: how much a full re-recording (find, type and relate) moves the scores. The find
   stage's noise is unknown.
 
@@ -211,9 +226,9 @@ Loop C can refine this implementation (`args: {implementation: "find_then_type"}
 gate margins that are **provisional**: epsilon 0.03 and holdout slack 0.06, set from the typing
 figures above, not from re-recordings. Before its verdicts on `find_then_type` can be trusted,
 three recordings of the unchanged implementation are needed (about $0.30 each), as were made for
-`default`, to replace those margins with measured ones; and the relate stage has to stop hitting
-its output limit, or about half the recordings of the GitLab document will fail and their
-experiments end `unmeasured`. The triple-corpus guard does not apply to it: that corpus has no
+two-pass, to replace those margins with measured ones; and the relate stage has to stay within its
+output limit (16,000 now; the cuts were seen at 8,000), or recordings of the GitLab document will
+fail and their experiments end `unmeasured`. The triple-corpus guard does not apply to it: that corpus has no
 recordings of this implementation.
 
 `tests/integration/pipelines/test_extraction_benchmark_replay.py` replays these cassettes and the
@@ -333,9 +348,14 @@ iteration:
 The iteration refines one implementation, measured with one of its configurations:
 `args.implementation` and `args.configuration`, each defaulting through the pipeline registry as
 in `benchmark_replay.py`. With neither, the workflow passes no flag to the scripts and reads what
-they resolved from the benchmark report. An implementation needs two things in the workflow
-script: a backlog (`BACKLOGS`) and gate margins (`GATE_MARGINS`). `default` and `find_then_type`
-have both; for any other the iteration stops with an error instead of borrowing another's.
+they resolved from the benchmark report: since PR #1598 that is `find_then_type` with
+`extraction-find-then-type`. To refine two-pass, name it: `args: {implementation: "default"}`
+(`default` is its id, not the registry's default). An implementation needs two things in the
+workflow script: a backlog (`BACKLOGS`) and gate margins (`GATE_MARGINS`). Two-pass and
+`find_then_type` have both; for any other the iteration stops with an error instead of borrowing
+another's. What a change could move (`RECORDED_TARGETS`, `TRIPLE_CORPUS_TARGET`) is listed in the
+script too, checked by its mechanics test against what the Python scripts pin, so an incumbent
+measurement that leaves one out of its baseline stops the iteration.
 
 1. **Evaluate** — runs Loop B for the target and reads the incumbent's benchmark measures (dev:
    `edit_check`, `gitlab_architecture`; holdout: `wikimedia_enterprise`), its failure counts, and
@@ -346,8 +366,8 @@ have both; for any other the iteration stops with an error instead of borrowing 
    iteration with `status: "error"` before anything is spent, as does a guard that disagrees with
    the target's margins; recordings nothing here reads that are stale on `main` are noted
    (`staleElsewhere`).
-2. **Select** — reads `ledger.jsonl` for the hypotheses already decided for this implementation
-   and configuration (ids are scoped by both), ranks the benchmark's failure kinds (`missed_core`,
+2. **Select** — reads `ledger.jsonl` for the hypotheses already rejected for this implementation
+   and configuration, and already accepted (merged) for this implementation, ranks the benchmark's failure kinds (`missed_core`,
    `missed_supporting`, `mistyped`, `spurious`, `excluded_extracted`, `relationship_missed`) by
    count and maps the top ones to the implementation's backlog (design doc §7). Hypotheses marked
    `blocked` are never selected: the gate reads the individuals' found F1 and typed F1 only, so a
@@ -402,7 +422,8 @@ judged by the same figures as provisional ones, with no guard, and has its own h
 | `default` | `extraction-openrouter-default` | 0.02 | 0.04 | dev strict-F1, slack 0.02 | three recordings of the unchanged implementation (above) |
 | `find_then_type` | `extraction-find-then-type` | 0.03 (provisional) | 0.06 (provisional) | not applicable | typing noise only, two takes (scratch runs, not in the repository); full re-recording noise not measured |
 
-To run one iteration against `find_then_type`:
+To run one iteration against `find_then_type` (the registry's default, so `args: {iteration: 1}`
+does the same):
 
 ```
 Workflow  scriptPath: .claude/workflows/karpathy-loop.js
@@ -429,8 +450,9 @@ iteration. Ledger entries are appended in the main checkout's working tree and a
 by the loop: commit `experiments/ledger.jsonl` with the promotion.
 
 `node .claude/workflows/karpathy-loop.mechanics.test.mjs` checks the gate, the margins and
-backlogs of each implementation, target selection, and that the prompts measure, record and
-verify the chosen target, without running any agent.
+backlogs of each implementation, target selection, the decisions the script makes from the
+verifier's report, and that the prompts measure, record and verify the chosen target; it also runs
+the whole script against stub agents. It runs no real agent.
 
 ## `ledger.py` / `ledger.jsonl`
 
@@ -446,16 +468,17 @@ package — can record a decision without hand-writing JSON:
 python experiments/ledger.py append '{"experiment_id": "12-default-copular", ...}'
 python experiments/ledger.py rejected-hypotheses --implementation find_then_type \
     --configuration extraction-find-then-type
-python experiments/ledger.py accepted-hypotheses --implementation find_then_type \
-    --configuration extraction-find-then-type
+python experiments/ledger.py accepted-hypotheses --implementation find_then_type
 ```
 
 An experiment entry must name the `implementation` and `configuration` it refined and measured
-(`append` refuses one that does not), and **hypothesis ids are scoped by both**: the two commands
-above list one target's entries, so `cross_chunk_relationships` rejected for `default` is still
-open for `find_then_type`, and a hypothesis rejected for `default` with
-`extraction-openrouter-default` is still open for `default` with `extraction-default`. Without the
-flags they list everyone's.
+(`append` refuses one that does not). **Rejections are scoped by both**, because a rejection was
+judged with one configuration's model: `cross_chunk_relationships` rejected for two-pass is still
+open for `find_then_type`, and a hypothesis rejected for two-pass with
+`extraction-openrouter-default` is still open for two-pass with `extraction-default`.
+**Acceptances are scoped by the implementation alone**, because an accepted change is merged into
+the implementation's code, which every configuration of it runs: it is not drafted and paid for
+again under another configuration. Without the flags the commands list everyone's.
 Where the triple-corpus guard does not apply, the entry's `guard` is `{"applies": false,
 "reason": …}`, not another implementation's number.
 
