@@ -1,0 +1,2312 @@
+{
+  "arm": "A",
+  "model": "claude-haiku-5-5",
+  "document": "gitlab_architecture",
+  "take": 2,
+  "individuals": [
+    {
+      "title": "GitLab Community Edition (CE)",
+      "classes": [
+        "application.applicationcomponent"
+      ],
+      "passages": [
+        {
+          "start": 105,
+          "end": 144,
+          "quote": "The open source Community Edition (CE)."
+        }
+      ]
+    },
+    {
+      "title": "GitLab Enterprise Edition (EE)",
+      "classes": [
+        "application.applicationcomponent"
+      ],
+      "passages": [
+        {
+          "start": 147,
+          "end": 185,
+          "quote": "The open core Enterprise Edition (EE)."
+        }
+      ]
+    },
+    {
+      "title": "GNU/Linux",
+      "classes": [
+        "technology.systemsoftware"
+      ],
+      "passages": [
+        {
+          "start": 979,
+          "end": 1022,
+          "quote": "A typical install of GitLab is on GNU/Linux"
+        }
+      ]
+    },
+    {
+      "title": "GitLab Helm chart",
+      "classes": [
+        "technology.artifact"
+      ],
+      "passages": [
+        {
+          "start": 1162,
+          "end": 1198,
+          "quote": "using our\nofficial GitLab Helm chart"
+        }
+      ]
+    },
+    {
+      "title": "official Linux package",
+      "classes": [
+        "technology.artifact"
+      ],
+      "passages": [
+        {
+          "start": 1203,
+          "end": 1230,
+          "quote": "the official Linux package."
+        }
+      ]
+    },
+    {
+      "title": "NGINX",
+      "classes": [
+        "technology.systemsoftware"
+      ],
+      "passages": [
+        {
+          "start": 1232,
+          "end": 1291,
+          "quote": "A typical installation uses NGINX or Apache as a web server"
+        },
+        {
+          "start": 6322,
+          "end": 6334,
+          "quote": "NGINX[NGINX]"
+        },
+        {
+          "start": 17317,
+          "end": 17422,
+          "quote": "| NGINX                                       | Routes requests to appropriate components, terminates SSL"
+        },
+        {
+          "start": 29168,
+          "end": 29277,
+          "quote": "NGINX has an Ingress port for all HTTP requests and routes them to the appropriate sub-systems within GitLab."
+        },
+        {
+          "start": 35496,
+          "end": 35561,
+          "quote": "All requests pass through\nNGINX and any other HTTP load balancers"
+        },
+        {
+          "start": 43154,
+          "end": 43213,
+          "quote": "NGINX:\n\n- `/var/log/nginx/` contains error and access logs."
+        }
+      ]
+    },
+    {
+      "title": "Apache",
+      "classes": [
+        "technology.systemsoftware"
+      ],
+      "passages": [
+        {
+          "start": 1232,
+          "end": 1291,
+          "quote": "A typical installation uses NGINX or Apache as a web server"
+        }
+      ]
+    },
+    {
+      "title": "GitLab Workhorse",
+      "classes": [
+        "application.applicationcomponent"
+      ],
+      "passages": [
+        {
+          "start": 1292,
+          "end": 1343,
+          "quote": "to proxy through\nGitLab Workhorse and into the Puma"
+        },
+        {
+          "start": 6957,
+          "end": 7000,
+          "quote": "GitLabWorkhorse[GitLab Workhorse] <--> Puma"
+        },
+        {
+          "start": 16236,
+          "end": 16321,
+          "quote": "| GitLab Workhorse                 | Smart reverse proxy, handles large HTTP requests"
+        },
+        {
+          "start": 27295,
+          "end": 27381,
+          "quote": "GitLab Workhorse is a program designed at GitLab to help alleviate pressure from Puma."
+        },
+        {
+          "start": 35759,
+          "end": 35780,
+          "quote": "participant Workhorse"
+        }
+      ]
+    },
+    {
+      "title": "Puma",
+      "classes": [
+        "technology.systemsoftware"
+      ],
+      "passages": [
+        {
+          "start": 1364,
+          "end": 1441,
+          "quote": "GitLab serves web pages and the GitLab API using the Puma\napplication server."
+        },
+        {
+          "start": 33506,
+          "end": 33636,
+          "quote": "Puma is a Ruby application server that is used to run the core Rails Application that provides the user facing features in GitLab."
+        },
+        {
+          "start": 41163,
+          "end": 41211,
+          "quote": "uses Apache `httpd` or NGINX to `proxypass`\nPuma"
+        },
+        {
+          "start": 43715,
+          "end": 43750,
+          "quote": "`puma.rb`: Puma web server settings"
+        }
+      ]
+    },
+    {
+      "title": "Sidekiq",
+      "classes": [
+        "technology.systemsoftware"
+      ],
+      "passages": [
+        {
+          "start": 1442,
+          "end": 1472,
+          "quote": "It uses Sidekiq as a job queue"
+        },
+        {
+          "start": 20604,
+          "end": 20673,
+          "quote": "Sidekiq                                   | Background jobs processor"
+        },
+        {
+          "start": 33107,
+          "end": 33206,
+          "quote": "Sidekiq is a Ruby background job processor that pulls jobs from the Redis queue and processes them."
+        },
+        {
+          "start": 41352,
+          "end": 41396,
+          "quote": "As the `git` user it starts Sidekiq and Puma"
+        },
+        {
+          "start": 42929,
+          "end": 43001,
+          "quote": "`sidekiq.log`, `puma.stdout.log`, `git_json.log`, and `puma.stderr.log`."
+        }
+      ]
+    },
+    {
+      "title": "Redis",
+      "classes": [
+        "technology.systemsoftware"
+      ],
+      "passages": [
+        {
+          "start": 1489,
+          "end": 1556,
+          "quote": "uses Redis as a non-persistent\ndatabase backend for job information"
+        },
+        {
+          "start": 7721,
+          "end": 7749,
+          "quote": "Redis\n        Puma --> Redis"
+        },
+        {
+          "start": 19718,
+          "end": 19779,
+          "quote": "Redis                                       | Caching service"
+        },
+        {
+          "start": 41139,
+          "end": 41157,
+          "quote": "and Redis database"
+        },
+        {
+          "start": 43391,
+          "end": 43466,
+          "quote": "Redis:\n\n- `/var/log/redis/redis.log` there are also log-rotated logs there."
+        }
+      ]
+    },
+    {
+      "title": "PostgreSQL",
+      "classes": [
+        "technology.systemsoftware"
+      ],
+      "passages": [
+        {
+          "start": 1911,
+          "end": 1985,
+          "quote": "The GitLab application uses PostgreSQL for persistent database information"
+        },
+        {
+          "start": 7311,
+          "end": 7351,
+          "quote": "PostgreSQL\n        PostgreSQL --> Consul"
+        },
+        {
+          "start": 18836,
+          "end": 18887,
+          "quote": "| PostgreSQL                             | Database"
+        },
+        {
+          "start": 30417,
+          "end": 30520,
+          "quote": "GitLab packages the popular Database to provide storage for Application meta data and user information."
+        },
+        {
+          "start": 41092,
+          "end": 41138,
+          "quote": "It requires a persistent database\n(PostgreSQL)"
+        },
+        {
+          "start": 43468,
+          "end": 43506,
+          "quote": "PostgreSQL:\n\n- `/var/log/postgresql/*`"
+        }
+      ]
+    },
+    {
+      "title": "Unix domain socket",
+      "classes": [
+        "technology.technologyinterface"
+      ],
+      "passages": [
+        {
+          "start": 1600,
+          "end": 1668,
+          "quote": "communication between Puma and Workhorse is via a Unix domain socket"
+        }
+      ]
+    },
+    {
+      "title": "gitlab/public directory",
+      "classes": [
+        "technology.artifact"
+      ],
+      "passages": [
+        {
+          "start": 1721,
+          "end": 1769,
+          "quote": "Workhorse accesses the `gitlab/public` directory"
+        }
+      ]
+    },
+    {
+      "title": "bare Git repositories",
+      "classes": [
+        "technology.artifact"
+      ],
+      "passages": [
+        {
+          "start": 2048,
+          "end": 2163,
+          "quote": "GitLab stores the bare Git repositories in the location\ndefined in the configuration file, `repositories:` section."
+        }
+      ]
+    },
+    {
+      "title": "GitLab API",
+      "classes": [
+        "application.applicationinterface"
+      ],
+      "passages": [
+        {
+          "start": 2241,
+          "end": 2345,
+          "quote": "When serving repositories over HTTP/HTTPS GitLab uses the GitLab API to resolve authorization and\naccess"
+        }
+      ]
+    },
+    {
+      "title": "GitLab Shell",
+      "classes": [
+        "application.applicationcomponent"
+      ],
+      "passages": [
+        {
+          "start": 2373,
+          "end": 2436,
+          "quote": "The add-on component GitLab Shell serves repositories over SSH."
+        },
+        {
+          "start": 6343,
+          "end": 6368,
+          "quote": "GitLabShell[GitLab Shell]"
+        },
+        {
+          "start": 16019,
+          "end": 16091,
+          "quote": "| GitLab Shell                         | Handles `git` over SSH sessions"
+        },
+        {
+          "start": 26949,
+          "end": 27028,
+          "quote": "GitLab Shell is a program designed at GitLab to handle SSH-based `git` sessions"
+        },
+        {
+          "start": 40758,
+          "end": 40886,
+          "quote": "To serve repositories over SSH there's an add-on application called GitLab Shell which is installed in `/home/git/gitlab-shell`."
+        },
+        {
+          "start": 43003,
+          "end": 43061,
+          "quote": "GitLab Shell:\n\n- `/home/git/gitlab-shell/gitlab-shell.log`"
+        }
+      ]
+    },
+    {
+      "title": "GitLab Shell SSH keys location",
+      "classes": [
+        "technology.artifact"
+      ],
+      "passages": [
+        {
+          "start": 2437,
+          "end": 2539,
+          "quote": "It manages the SSH keys within the\nlocation defined in the configuration file, `GitLab Shell` section."
+        }
+      ]
+    },
+    {
+      "title": "Gitaly",
+      "classes": [
+        "application.applicationcomponent"
+      ],
+      "passages": [
+        {
+          "start": 2833,
+          "end": 2904,
+          "quote": "Gitaly executes Git operations from GitLab Shell and the GitLab web app"
+        },
+        {
+          "start": 8155,
+          "end": 8174,
+          "quote": "Praefect --> Gitaly"
+        },
+        {
+          "start": 13825,
+          "end": 13929,
+          "quote": "| Gitaly                                     | Git RPC service for handling all Git calls made by GitLab"
+        },
+        {
+          "start": 24303,
+          "end": 24384,
+          "quote": "Gitaly is a service designed by GitLab to remove our need for NFS for Git storage"
+        },
+        {
+          "start": 34941,
+          "end": 35053,
+          "quote": "PostgreSQL/Gitaly/Redis - Depending on the type of request, it may hit these services to store or retrieve data."
+        },
+        {
+          "start": 35807,
+          "end": 35825,
+          "quote": "participant Gitaly"
+        },
+        {
+          "start": 44052,
+          "end": 44141,
+          "quote": "For example, Gitaly addresses, Redis addresses, Postgres addresses, and Consul addresses."
+        }
+      ]
+    },
+    {
+      "title": "GitLab web app",
+      "classes": [
+        "application.applicationcomponent"
+      ],
+      "passages": [
+        {
+          "start": 2833,
+          "end": 2904,
+          "quote": "Gitaly executes Git operations from GitLab Shell and the GitLab web app"
+        }
+      ]
+    },
+    {
+      "title": "GitLab Pages",
+      "classes": [
+        "application.applicationcomponent"
+      ],
+      "passages": [
+        {
+          "start": 5310,
+          "end": 5343,
+          "quote": "NGINX -- TCP 8090 --> GitLabPages"
+        },
+        {
+          "start": 7068,
+          "end": 7113,
+          "quote": "GitLabPages[GitLab Pages] --> GitLabWorkhorse"
+        },
+        {
+          "start": 14475,
+          "end": 14537,
+          "quote": "| GitLab Pages                         | Hosts static websites"
+        },
+        {
+          "start": 26068,
+          "end": 26163,
+          "quote": "GitLab Pages is a feature that allows you to publish static websites directly from a repository"
+        }
+      ]
+    },
+    {
+      "title": "API-first philosophy",
+      "classes": [
+        "motivation.principle"
+      ],
+      "passages": [
+        {
+          "start": 4257,
+          "end": 4346,
+          "quote": "components written with the API-first philosophy in mind are compatible with both methods"
+        }
+      ]
+    },
+    {
+      "title": "Kubernetes compatibility first",
+      "classes": [
+        "motivation.principle"
+      ],
+      "passages": [
+        {
+          "start": 4348,
+          "end": 4437,
+          "quote": "all new features and services must be written to consider Kubernetes compatibility first."
+        }
+      ]
+    },
+    {
+      "title": "Services exchange information through APIs, not files",
+      "classes": [
+        "motivation.principle"
+      ],
+      "passages": [
+        {
+          "start": 4072,
+          "end": 4249,
+          "quote": "Services that need to have access to the same\nfiles, need to be able to exchange information through the appropriate APIs. Whenever possible,\nthis should not be done with files."
+        }
+      ]
+    },
+    {
+      "title": "SSH keys file must not be manually edited",
+      "classes": [
+        "technology.artifact"
+      ],
+      "passages": [
+        {
+          "start": 2540,
+          "end": 2598,
+          "quote": "The file in that location should never be manually edited."
+        }
+      ]
+    },
+    {
+      "title": "Default Unix socket communication between Puma and Workhorse",
+      "classes": [
+        "technology.path"
+      ],
+      "passages": [
+        {
+          "start": 1588,
+          "end": 1720,
+          "quote": "By default, communication between Puma and Workhorse is via a Unix domain socket, but forwarding\nrequests via TCP is also supported."
+        }
+      ]
+    },
+    {
+      "title": "Workhorse serves static content bypassing Puma",
+      "classes": [
+        "application.applicationfunction"
+      ],
+      "passages": [
+        {
+          "start": 1721,
+          "end": 1830,
+          "quote": "Workhorse accesses the `gitlab/public` directory, bypassing the\nPuma application server to serve static pages"
+        }
+      ]
+    },
+    {
+      "title": "Browser",
+      "classes": [
+        "technology.systemsoftware"
+      ],
+      "passages": [
+        {
+          "start": 5923,
+          "end": 5941,
+          "quote": "Browser((Browser))"
+        }
+      ]
+    },
+    {
+      "title": "Git client",
+      "classes": [
+        "security.actor"
+      ],
+      "passages": [
+        {
+          "start": 5946,
+          "end": 5956,
+          "quote": "Git((Git))"
+        }
+      ]
+    },
+    {
+      "title": "GitLab Geo",
+      "classes": [
+        "application.applicationcomponent"
+      ],
+      "passages": [
+        {
+          "start": 6006,
+          "end": 6047,
+          "quote": "Geo{{GitLab Geo}} -- TCP 80, 443 --> HTTP"
+        },
+        {
+          "start": 14262,
+          "end": 14338,
+          "quote": "| GitLab Geo                        | Geographically distributed GitLab site"
+        },
+        {
+          "start": 24969,
+          "end": 25053,
+          "quote": "Geo is a premium feature built to help speed up the development of distributed teams"
+        }
+      ]
+    },
+    {
+      "title": "GitLab Runner",
+      "classes": [
+        "application.applicationcomponent"
+      ],
+      "passages": [
+        {
+          "start": 6107,
+          "end": 6150,
+          "quote": "Runner{{GitLab Runner}} -- TCP 443 --> HTTP"
+        },
+        {
+          "start": 26512,
+          "end": 26568,
+          "quote": "GitLab Runner runs jobs and sends the results to GitLab."
+        },
+        {
+          "start": 20163,
+          "end": 20227,
+          "quote": "Runner                              | Executes GitLab CI/CD jobs"
+        }
+      ]
+    },
+    {
+      "title": "GitLab agent",
+      "classes": [
+        "application.applicationcomponent"
+      ],
+      "passages": [
+        {
+          "start": 6153,
+          "end": 6197,
+          "quote": "K8sAgent{{GitLab agent}} -- TCP 443 --> HTTP"
+        }
+      ]
+    },
+    {
+      "title": "HTTP/HTTPS ingress",
+      "classes": [
+        "technology.technologyinterface"
+      ],
+      "passages": [
+        {
+          "start": 6276,
+          "end": 6294,
+          "quote": "HTTP[[HTTP/HTTPS]]"
+        }
+      ]
+    },
+    {
+      "title": "SSH ingress",
+      "classes": [
+        "technology.technologyinterface"
+      ],
+      "passages": [
+        {
+          "start": 6303,
+          "end": 6313,
+          "quote": "SSH[[SSH]]"
+        }
+      ]
+    },
+    {
+      "title": "Puma (GitLab Rails)",
+      "classes": [
+        "application.applicationcomponent"
+      ],
+      "passages": [
+        {
+          "start": 6894,
+          "end": 6921,
+          "quote": "Puma[\"Puma (GitLab Rails)\"]"
+        },
+        {
+          "start": 19278,
+          "end": 19371,
+          "quote": "Puma (GitLab Rails)                          | Handles requests for the web interface and API"
+        }
+      ]
+    },
+    {
+      "title": "GitLab agent server",
+      "classes": [
+        "application.applicationcomponent"
+      ],
+      "passages": [
+        {
+          "start": 7009,
+          "end": 7059,
+          "quote": "GitLabKas[GitLab agent server] --> GitLabWorkhorse"
+        }
+      ]
+    },
+    {
+      "title": "Container Registry",
+      "classes": [
+        "application.applicationcomponent"
+      ],
+      "passages": [
+        {
+          "start": 6770,
+          "end": 6788,
+          "quote": "NGINX --> Registry"
+        },
+        {
+          "start": 19942,
+          "end": 20041,
+          "quote": "Registry                                 | Container registry, allows pushing and pulling of images"
+        },
+        {
+          "start": 31920,
+          "end": 31984,
+          "quote": "The registry is what users use to store their own Docker images."
+        }
+      ]
+    },
+    {
+      "title": "Mailroom",
+      "classes": [
+        "application.applicationcomponent"
+      ],
+      "passages": [
+        {
+          "start": 7122,
+          "end": 7146,
+          "quote": "Mailroom\n        Sidekiq"
+        }
+      ]
+    },
+    {
+      "title": "Grafana",
+      "classes": [
+        "technology.systemsoftware"
+      ],
+      "passages": [
+        {
+          "start": 7216,
+          "end": 7249,
+          "quote": "Grafana\n        NGINX --> Grafana"
+        },
+        {
+          "start": 27664,
+          "end": 27803,
+          "quote": "Grafana is an open source, feature rich metrics dashboard and graph editor for Graphite, Elasticsearch, OpenTSDB, Prometheus, and InfluxDB."
+        }
+      ]
+    },
+    {
+      "title": "Consul",
+      "classes": [
+        "technology.systemsoftware"
+      ],
+      "passages": [
+        {
+          "start": 7330,
+          "end": 7351,
+          "quote": "PostgreSQL --> Consul"
+        },
+        {
+          "start": 13175,
+          "end": 13255,
+          "quote": "| Consul                                     | Database node discovery, failover"
+        },
+        {
+          "start": 23673,
+          "end": 23730,
+          "quote": "Consul is a tool for service discovery and configuration."
+        },
+        {
+          "start": 44052,
+          "end": 44141,
+          "quote": "For example, Gitaly addresses, Redis addresses, Postgres addresses, and Consul addresses."
+        }
+      ]
+    },
+    {
+      "title": "Database migrations",
+      "classes": [
+        "technology.technologyprocess"
+      ],
+      "passages": [
+        {
+          "start": 7459,
+          "end": 7484,
+          "quote": "Migrations --> PostgreSQL"
+        },
+        {
+          "start": 13399,
+          "end": 13452,
+          "quote": "| Database Migrations           | Database migrations"
+        },
+        {
+          "start": 23797,
+          "end": 23821,
+          "quote": "#### Database migrations"
+        }
+      ]
+    },
+    {
+      "title": "PgBouncer",
+      "classes": [
+        "technology.systemsoftware"
+      ],
+      "passages": [
+        {
+          "start": 7545,
+          "end": 7565,
+          "quote": "PgBouncer --> Consul"
+        },
+        {
+          "start": 18406,
+          "end": 18487,
+          "quote": "| PgBouncer                               | Database connection pooling, failover"
+        },
+        {
+          "start": 29999,
+          "end": 30044,
+          "quote": "Lightweight connection pooler for PostgreSQL."
+        }
+      ]
+    },
+    {
+      "title": "Sentinel",
+      "classes": [
+        "technology.systemsoftware"
+      ],
+      "passages": [
+        {
+          "start": 7906,
+          "end": 7925,
+          "quote": "Sentinel <--> Redis"
+        }
+      ]
+    },
+    {
+      "title": "Praefect",
+      "classes": [
+        "application.applicationcomponent"
+      ],
+      "passages": [
+        {
+          "start": 8155,
+          "end": 8174,
+          "quote": "Praefect --> Gitaly"
+        },
+        {
+          "start": 19055,
+          "end": 19168,
+          "quote": "| Praefect                                 | A transparent proxy between any Git client and Gitaly storage nodes."
+        },
+        {
+          "start": 24726,
+          "end": 24796,
+          "quote": "Praefect is a transparent proxy between each Git client and the Gitaly"
+        }
+      ]
+    },
+    {
+      "title": "PostgreSQL used by Praefect",
+      "classes": [
+        "data-store.database"
+      ],
+      "passages": [
+        {
+          "start": 8339,
+          "end": 8378,
+          "quote": "Praefect <--> PraefectPGSQL[PostgreSQL]"
+        }
+      ]
+    },
+    {
+      "title": "Object storage",
+      "classes": [
+        "technology.technologyservice"
+      ],
+      "passages": [
+        {
+          "start": 8576,
+          "end": 8607,
+          "quote": "ObjectStorage[\"Object storage\"]"
+        },
+        {
+          "start": 17101,
+          "end": 17176,
+          "quote": "| Object storage                     | S3-compatible object storage service"
+        },
+        {
+          "start": 28579,
+          "end": 28718,
+          "quote": "GitLab requires an S3-compatible object storage for storing data such as CI artifacts, LFS objects, uploads, and container registry images."
+        }
+      ]
+    },
+    {
+      "title": "Redis Exporter",
+      "classes": [
+        "technology.systemsoftware"
+      ],
+      "passages": [
+        {
+          "start": 9105,
+          "end": 9144,
+          "quote": "RedisExporter[Redis Exporter] --> Redis"
+        },
+        {
+          "start": 19503,
+          "end": 19578,
+          "quote": "Redis Exporter                     | Prometheus endpoint with Redis metrics"
+        },
+        {
+          "start": 31618,
+          "end": 31754,
+          "quote": "Redis Exporter is designed to give specific metrics about the Redis process to Prometheus so that we can graph these metrics in Grafana."
+        }
+      ]
+    },
+    {
+      "title": "PostgreSQL Exporter",
+      "classes": [
+        "technology.systemsoftware"
+      ],
+      "passages": [
+        {
+          "start": 9202,
+          "end": 9256,
+          "quote": "PostgreSQLExporter[PostgreSQL Exporter] --> PostgreSQL"
+        },
+        {
+          "start": 18626,
+          "end": 18703,
+          "quote": "| PostgreSQL Exporter           | Prometheus endpoint with PostgreSQL metrics"
+        },
+        {
+          "start": 30694,
+          "end": 30840,
+          "quote": "`postgres_exporter` is the community provided Prometheus exporter that delivers data about PostgreSQL to Prometheus for use in Grafana Dashboards."
+        }
+      ]
+    },
+    {
+      "title": "PgBouncer Exporter",
+      "classes": [
+        "technology.systemsoftware"
+      ],
+      "passages": [
+        {
+          "start": 9265,
+          "end": 9316,
+          "quote": "PgBouncerExporter[PgBouncer Exporter] --> PgBouncer"
+        },
+        {
+          "start": 18195,
+          "end": 18272,
+          "quote": "| PgBouncer Exporter             | Prometheus endpoint with PgBouncer metrics"
+        },
+        {
+          "start": 30186,
+          "end": 30253,
+          "quote": "Prometheus exporter for PgBouncer. Exports metrics at 9127/metrics."
+        }
+      ]
+    },
+    {
+      "title": "Node Exporter",
+      "classes": [
+        "technology.systemsoftware"
+      ],
+      "passages": [
+        {
+          "start": 9379,
+          "end": 9433,
+          "quote": "Prometheus -- TCP 9100 --> NodeExporter[Node Exporter]"
+        },
+        {
+          "start": 17541,
+          "end": 17620,
+          "quote": "| Node Exporter                       | Prometheus endpoint with system metrics"
+        },
+        {
+          "start": 29517,
+          "end": 29622,
+          "quote": "Node Exporter is a Prometheus tool that gives us metrics on the underlying machine (think CPU/Disk/Load)."
+        }
+      ]
+    },
+    {
+      "title": "GitLab Exporter",
+      "classes": [
+        "technology.systemsoftware"
+      ],
+      "passages": [
+        {
+          "start": 9442,
+          "end": 9500,
+          "quote": "Prometheus -- TCP 9168 --> GitLabExporter[GitLab Exporter]"
+        },
+        {
+          "start": 14048,
+          "end": 14123,
+          "quote": "| GitLab Exporter                   | Generates a variety of GitLab metrics"
+        },
+        {
+          "start": 25445,
+          "end": 25524,
+          "quote": "GitLab Exporter is a process designed in house that allows us to export metrics"
+        }
+      ]
+    },
+    {
+      "title": "SMTP Gateway",
+      "classes": [
+        "technology.node"
+      ],
+      "passages": [
+        {
+          "start": 9866,
+          "end": 9884,
+          "quote": "SMTP[SMTP Gateway]"
+        }
+      ]
+    },
+    {
+      "title": "LDAP",
+      "classes": [
+        "technology.technologyservice"
+      ],
+      "passages": [
+        {
+          "start": 10061,
+          "end": 10085,
+          "quote": "Puma -- TCP 369 --> LDAP"
+        }
+      ]
+    },
+    {
+      "title": "Elasticsearch",
+      "classes": [
+        "technology.systemsoftware"
+      ],
+      "passages": [
+        {
+          "start": 10178,
+          "end": 10212,
+          "quote": "Puma -- TCP 9200 --> Elasticsearch"
+        },
+        {
+          "start": 13609,
+          "end": 13678,
+          "quote": "| Elasticsearch                       | Improved search within GitLab"
+        },
+        {
+          "start": 24099,
+          "end": 24172,
+          "quote": "Elasticsearch is a distributed RESTful search engine built for the cloud."
+        }
+      ]
+    },
+    {
+      "title": "Zoekt",
+      "classes": [
+        "technology.systemsoftware"
+      ],
+      "passages": [
+        {
+          "start": 10320,
+          "end": 10338,
+          "quote": "Zoekt --> Praefect"
+        }
+      ]
+    },
+    {
+      "title": "Sentry",
+      "classes": [
+        "technology.technologyservice"
+      ],
+      "passages": [
+        {
+          "start": 10406,
+          "end": 10439,
+          "quote": "Sidekiq -- TCP 80, 443 --> Sentry"
+        },
+        {
+          "start": 32659,
+          "end": 32745,
+          "quote": "Sentry fundamentally is a service that helps you monitor and fix crashes in real time."
+        }
+      ]
+    },
+    {
+      "title": "Gitaly makes API calls to GitLab Workhorse",
+      "classes": [
+        "technology.path"
+      ],
+      "passages": [
+        {
+          "start": 8387,
+          "end": 8412,
+          "quote": "%% Gitaly makes API calls"
+        }
+      ]
+    },
+    {
+      "title": "AI Gateway",
+      "classes": [
+        "application.applicationcomponent"
+      ],
+      "passages": [
+        {
+          "start": 12511,
+          "end": 12579,
+          "quote": "| AI Gateway                             | GitLab AI-native features"
+        },
+        {
+          "start": 22798,
+          "end": 22892,
+          "quote": "GitLab AI Gateway is a standalone-service that will give access to AI features to all users of"
+        }
+      ]
+    },
+    {
+      "title": "GitLab Duo Workflow Service",
+      "classes": [
+        "application.applicationcomponent"
+      ],
+      "passages": [
+        {
+          "start": 12730,
+          "end": 12815,
+          "quote": "| GitLab Duo Workflow Service                             | GitLab AI-native features"
+        },
+        {
+          "start": 23203,
+          "end": 23297,
+          "quote": "GitLab Duo Workflow Service is our agentic AI Features that is deployed via our Runway service"
+        }
+      ]
+    },
+    {
+      "title": "Certificate Management",
+      "classes": [
+        "technology.technologyservice"
+      ],
+      "passages": [
+        {
+          "start": 12968,
+          "end": 13026,
+          "quote": "| Certificate Management     | TLS Settings, Let's Encrypt"
+        },
+        {
+          "start": 23359,
+          "end": 23386,
+          "quote": "#### Certificate management"
+        }
+      ]
+    },
+    {
+      "title": "GitLab agent for Kubernetes",
+      "classes": [
+        "application.applicationcomponent"
+      ],
+      "passages": [
+        {
+          "start": 14692,
+          "end": 14788,
+          "quote": "| GitLab agent for Kubernetes              | Integrate Kubernetes clusters in a cloud-native way"
+        },
+        {
+          "start": 25709,
+          "end": 25764,
+          "quote": "The GitLab agent for Kubernetes is an active in-cluster"
+        }
+      ]
+    },
+    {
+      "title": "GitLab self-monitoring: Alertmanager",
+      "classes": [
+        "technology.systemsoftware"
+      ],
+      "passages": [
+        {
+          "start": 14914,
+          "end": 15010,
+          "quote": "| GitLab self-monitoring: Alertmanager | Deduplicates, groups, and routes alerts from Prometheus"
+        },
+        {
+          "start": 9562,
+          "end": 9589,
+          "quote": "Prometheus --> Alertmanager"
+        },
+        {
+          "start": 22305,
+          "end": 22356,
+          "quote": "Alert manager is a tool provided by Prometheus that"
+        }
+      ]
+    },
+    {
+      "title": "GitLab self-monitoring: Grafana",
+      "classes": [
+        "apm.dashboard"
+      ],
+      "passages": [
+        {
+          "start": 15131,
+          "end": 15194,
+          "quote": "| GitLab self-monitoring: Grafana           | Metrics dashboard"
+        }
+      ]
+    },
+    {
+      "title": "GitLab self-monitoring: Jaeger",
+      "classes": [
+        "technology.systemsoftware"
+      ],
+      "passages": [
+        {
+          "start": 15353,
+          "end": 15444,
+          "quote": "| GitLab self-monitoring: Jaeger             | View traces generated by the GitLab instance"
+        },
+        {
+          "start": 10521,
+          "end": 10551,
+          "quote": "Sidekiq -- UDP 6831 --> Jaeger"
+        },
+        {
+          "start": 27988,
+          "end": 28063,
+          "quote": "Jaeger, inspired by Dapper and OpenZipkin, is a distributed tracing system."
+        }
+      ]
+    },
+    {
+      "title": "GitLab self-monitoring: Prometheus",
+      "classes": [
+        "technology.systemsoftware"
+      ],
+      "passages": [
+        {
+          "start": 15576,
+          "end": 15678,
+          "quote": "| GitLab self-monitoring: Prometheus     | Time-series database, metrics collection, and query service"
+        },
+        {
+          "start": 9007,
+          "end": 9053,
+          "quote": "Grafana -- TCP 9090 --> Prometheus[Prometheus]"
+        },
+        {
+          "start": 30984,
+          "end": 31131,
+          "quote": "Prometheus is a time-series tool that helps GitLab administrators expose metrics about the individual processes used to provide GitLab the service."
+        }
+      ]
+    },
+    {
+      "title": "GitLab self-monitoring: Sentry",
+      "classes": [
+        "technology.systemsoftware"
+      ],
+      "passages": [
+        {
+          "start": 15795,
+          "end": 15887,
+          "quote": "| GitLab self-monitoring: Sentry             | Track errors generated by the GitLab instance"
+        }
+      ]
+    },
+    {
+      "title": "Inbound email (SMTP)",
+      "classes": [
+        "application.applicationinterface"
+      ],
+      "passages": [
+        {
+          "start": 16449,
+          "end": 16522,
+          "quote": "| Inbound email (SMTP)                | Receive messages to update issues"
+        }
+      ]
+    },
+    {
+      "title": "Jaeger integration",
+      "classes": [
+        "technology.technologyservice"
+      ],
+      "passages": [
+        {
+          "start": 16666,
+          "end": 16750,
+          "quote": "| Jaeger integration                         | Distributed tracing for deployed apps"
+        }
+      ]
+    },
+    {
+      "title": "LDAP Authentication",
+      "classes": [
+        "technology.technologyservice"
+      ],
+      "passages": [
+        {
+          "start": 16890,
+          "end": 16977,
+          "quote": "| LDAP Authentication           | Authenticate users against centralized LDAP directory"
+        }
+      ]
+    },
+    {
+      "title": "Outbound email (SMTP)",
+      "classes": [
+        "technology.technologyservice"
+      ],
+      "passages": [
+        {
+          "start": 17757,
+          "end": 17824,
+          "quote": "| Outbound email (SMTP)              | Send email messages to users"
+        }
+      ]
+    },
+    {
+      "title": "Patroni",
+      "classes": [
+        "technology.systemsoftware"
+      ],
+      "passages": [
+        {
+          "start": 17973,
+          "end": 18080,
+          "quote": "| Patroni                                   | Manage PostgreSQL HA cluster leader selection and replication"
+        }
+      ]
+    },
+    {
+      "title": "Sentry integration",
+      "classes": [
+        "technology.systemsoftware"
+      ],
+      "passages": [
+        {
+          "start": 20380,
+          "end": 20457,
+          "quote": "Sentry integration                         | Error tracking for deployed apps"
+        }
+      ]
+    },
+    {
+      "title": "Token Revocation API",
+      "classes": [
+        "application.applicationservice"
+      ],
+      "passages": [
+        {
+          "start": 20826,
+          "end": 20886,
+          "quote": "Token Revocation API   | Receives and revokes leaked secrets"
+        }
+      ]
+    },
+    {
+      "title": "Documentation audience",
+      "classes": [
+        "motivation.stakeholder"
+      ],
+      "passages": [
+        {
+          "start": 21051,
+          "end": 21146,
+          "quote": "This document is designed to be consumed by systems administrators and GitLab Support Engineers"
+        }
+      ]
+    },
+    {
+      "title": "Gitaly handles all Git access",
+      "classes": [
+        "application.applicationcomponent"
+      ],
+      "passages": [
+        {
+          "start": 24475,
+          "end": 24541,
+          "quote": "As of 11.3.0, this service handles all Git level access in GitLab."
+        }
+      ]
+    },
+    {
+      "title": "Logrotate",
+      "classes": [
+        "technology.systemsoftware"
+      ],
+      "passages": [
+        {
+          "start": 28306,
+          "end": 28375,
+          "quote": "We bundle our own Logrotate to make sure we were logging responsibly."
+        }
+      ]
+    },
+    {
+      "title": "Rails application",
+      "classes": [
+        "application.applicationcomponent"
+      ],
+      "passages": [
+        {
+          "start": 33506,
+          "end": 33636,
+          "quote": "Puma is a Ruby application server that is used to run the core Rails Application that provides the user facing features in GitLab."
+        }
+      ]
+    },
+    {
+      "title": "Outbound Email",
+      "classes": [
+        "application.applicationcomponent"
+      ],
+      "passages": []
+    },
+    {
+      "title": "Inbound Email",
+      "classes": [
+        "application.applicationcomponent"
+      ],
+      "passages": []
+    },
+    {
+      "title": "Git HTTP/SSH requests",
+      "classes": [
+        "application.applicationinterface"
+      ],
+      "passages": [
+        {
+          "start": 34320,
+          "end": 34368,
+          "quote": "Git HTTP/SSH Requests (Pushing/Pulling Git Data)"
+        }
+      ]
+    },
+    {
+      "title": "Full S3 API compatibility required",
+      "classes": [
+        "motivation.constraint"
+      ],
+      "passages": [
+        {
+          "start": 28719,
+          "end": 28811,
+          "quote": "GitLab is compatible with any object storage provider that offers full S3 API compatibility."
+        }
+      ]
+    },
+    {
+      "title": "Unmodified NGINX bundled",
+      "classes": [
+        "technology.systemsoftware"
+      ],
+      "passages": [
+        {
+          "start": 29278,
+          "end": 29353,
+          "quote": "We are bundling an unmodified version of the popular open source webserver."
+        }
+      ]
+    },
+    {
+      "title": "PgBouncer pools connections",
+      "classes": [
+        "technology.systemsoftware"
+      ],
+      "passages": [
+        {
+          "start": 29999,
+          "end": 30044,
+          "quote": "Lightweight connection pooler for PostgreSQL."
+        }
+      ]
+    },
+    {
+      "title": "Registry authentication via GitLab",
+      "classes": [
+        "technology.technologyinteraction"
+      ],
+      "passages": [
+        {
+          "start": 31985,
+          "end": 32076,
+          "quote": "The bundled registry uses NGINX as a load balancer and GitLab as an authentication manager."
+        }
+      ]
+    },
+    {
+      "title": "Puma is default web server",
+      "classes": [
+        "technology.systemsoftware"
+      ],
+      "passages": [
+        {
+          "start": 33327,
+          "end": 33358,
+          "quote": "Puma is the default web server."
+        }
+      ]
+    },
+    {
+      "title": "Web request path through GitLab",
+      "classes": [
+        "technology.technologyprocess"
+      ],
+      "passages": [
+        {
+          "start": 34674,
+          "end": 34841,
+          "quote": "NGINX - Acts as our first line reverse proxy. GitLab Workhorse - This determines if it needs to go to the Rails application or somewhere else to reduce load on Puma."
+        }
+      ]
+    },
+    {
+      "title": "Git on client",
+      "classes": [
+        "technology.systemsoftware"
+      ],
+      "passages": [
+        {
+          "start": 35707,
+          "end": 35732,
+          "quote": "participant Git on client"
+        }
+      ]
+    },
+    {
+      "title": "Git on server",
+      "classes": [
+        "technology.systemsoftware"
+      ],
+      "passages": [
+        {
+          "start": 35830,
+          "end": 35855,
+          "quote": "participant Git on server"
+        }
+      ]
+    },
+    {
+      "title": "Rails",
+      "classes": [
+        "application.applicationcomponent"
+      ],
+      "passages": [
+        {
+          "start": 35785,
+          "end": 35802,
+          "quote": "participant Rails"
+        }
+      ]
+    },
+    {
+      "title": "SSH server",
+      "classes": [
+        "technology.systemsoftware"
+      ],
+      "passages": [
+        {
+          "start": 37808,
+          "end": 37830,
+          "quote": "participant SSH server"
+        }
+      ]
+    },
+    {
+      "title": "AuthorizedKeysCommand",
+      "classes": [
+        "technology.artifact"
+      ],
+      "passages": [
+        {
+          "start": 37679,
+          "end": 37744,
+          "quote": "`AuthorizedKeysCommand` is an executable provided by\nGitLab Shell"
+        }
+      ]
+    },
+    {
+      "title": "AuthorizedPrincipalsCommand",
+      "classes": [
+        "technology.technologyfunction"
+      ],
+      "passages": [
+        {
+          "start": 39616,
+          "end": 39689,
+          "quote": "`AuthorizedKeysCommand` is replaced with an\n`AuthorizedPrincipalsCommand`"
+        }
+      ]
+    },
+    {
+      "title": "AuthorizedKeysWorker",
+      "classes": [
+        "application.applicationcomponent"
+      ],
+      "passages": [
+        {
+          "start": 39432,
+          "end": 39493,
+          "quote": "This is kept up to date by an `AuthorizedKeysWorker`\nin Rails"
+        }
+      ]
+    },
+    {
+      "title": "authorized_keys file",
+      "classes": [
+        "technology.artifact"
+      ],
+      "passages": [
+        {
+          "start": 39311,
+          "end": 39373,
+          "quote": "the SSH server reads from the\n`~git/.ssh/authorized_keys` file"
+        }
+      ]
+    },
+    {
+      "title": "Apache httpd",
+      "classes": [
+        "technology.systemsoftware"
+      ],
+      "passages": [
+        {
+          "start": 41163,
+          "end": 41191,
+          "quote": "uses Apache `httpd` or NGINX"
+        },
+        {
+          "start": 43215,
+          "end": 43261,
+          "quote": "Apache `httpd`:\n\n- Explanation of Apache logs."
+        }
+      ]
+    },
+    {
+      "title": "SSH daemon",
+      "classes": [
+        "technology.systemsoftware"
+      ],
+      "passages": [
+        {
+          "start": 42186,
+          "end": 42228,
+          "quote": "SSH daemon:\n\n```plaintext\n/etc/init.d/sshd"
+        }
+      ]
+    },
+    {
+      "title": "repositories directory",
+      "classes": [
+        "technology.artifact"
+      ],
+      "passages": [
+        {
+          "start": 40549,
+          "end": 40611,
+          "quote": "The bare repositories are located in `/home/git/repositories`."
+        }
+      ]
+    },
+    {
+      "title": "git upload-pack",
+      "classes": [
+        "technology.systemsoftware"
+      ],
+      "passages": [
+        {
+          "start": 36236,
+          "end": 36284,
+          "quote": "git upload-pack --stateless-rpc --advertise-refs"
+        }
+      ]
+    },
+    {
+      "title": "Internal API authorized_keys endpoint",
+      "classes": [
+        "api.operation"
+      ],
+      "passages": [
+        {
+          "start": 38200,
+          "end": 38245,
+          "quote": "GET /internal/api/authorized_keys?key=AAAA..."
+        }
+      ]
+    },
+    {
+      "title": "Internal API allowed endpoint",
+      "classes": [
+        "api.operation"
+      ],
+      "passages": [
+        {
+          "start": 38553,
+          "end": 38606,
+          "quote": "GET /internal/api/allowed?action=upload_pack&key_id=1"
+        }
+      ]
+    },
+    {
+      "title": "SmartHTTPService.InfoRefsUploadPack",
+      "classes": [
+        "application.applicationservice"
+      ],
+      "passages": [
+        {
+          "start": 36142,
+          "end": 36206,
+          "quote": "Workhorse->>+Gitaly: SmartHTTPService.InfoRefsUploadPack request"
+        }
+      ]
+    },
+    {
+      "title": "SmartHTTPService.PostUploadPack",
+      "classes": [
+        "application.applicationservice"
+      ],
+      "passages": [
+        {
+          "start": 36704,
+          "end": 36764,
+          "quote": "Workhorse->>+Gitaly: SmartHTTPService.PostUploadPack request"
+        }
+      ]
+    },
+    {
+      "title": "SSHService.SSHUploadPack",
+      "classes": [
+        "application.applicationservice"
+      ],
+      "passages": [
+        {
+          "start": 38699,
+          "end": 38755,
+          "quote": "GitLab Shell->>+Gitaly: SSHService.SSHUploadPack request"
+        }
+      ]
+    },
+    {
+      "title": "git fetch operation",
+      "classes": [
+        "application.applicationinteraction"
+      ],
+      "passages": [
+        {
+          "start": 35452,
+          "end": 35495,
+          "quote": "Here is a sequence diagram for `git fetch`."
+        }
+      ]
+    },
+    {
+      "title": "/etc/init.d/gitlab init script",
+      "classes": [
+        "technology.artifact"
+      ],
+      "passages": [
+        {
+          "start": 41870,
+          "end": 41927,
+          "quote": "The GitLab init script starts and stops Puma and Sidekiq:"
+        }
+      ]
+    },
+    {
+      "title": "/etc/init.d/redis init script",
+      "classes": [
+        "technology.artifact"
+      ],
+      "passages": [
+        {
+          "start": 42023,
+          "end": 42071,
+          "quote": "Redis (key-value store/non-persistent database):"
+        }
+      ]
+    },
+    {
+      "title": "/etc/init.d/sshd init script",
+      "classes": [
+        "technology.artifact"
+      ],
+      "passages": [
+        {
+          "start": 42212,
+          "end": 42252,
+          "quote": "/etc/init.d/sshd\nUsage: /etc/init.d/sshd"
+        }
+      ]
+    },
+    {
+      "title": "/etc/init.d/httpd init script",
+      "classes": [
+        "technology.artifact"
+      ],
+      "passages": [
+        {
+          "start": 42379,
+          "end": 42409,
+          "quote": "/etc/init.d/httpd\nUsage: httpd"
+        }
+      ]
+    },
+    {
+      "title": "/etc/init.d/nginx init script",
+      "classes": [
+        "technology.artifact"
+      ],
+      "passages": [
+        {
+          "start": 42519,
+          "end": 42551,
+          "quote": "$ /etc/init.d/nginx\nUsage: nginx"
+        }
+      ]
+    },
+    {
+      "title": "/etc/init.d/postgresql init script",
+      "classes": [
+        "technology.artifact"
+      ],
+      "passages": [
+        {
+          "start": 42651,
+          "end": 42705,
+          "quote": "$ /etc/init.d/postgresql\nUsage: /etc/init.d/postgresql"
+        }
+      ]
+    },
+    {
+      "title": "Authorized keys updated when SSH key modified",
+      "classes": [
+        "application.applicationprocess"
+      ],
+      "passages": [
+        {
+          "start": 39495,
+          "end": 39554,
+          "quote": "scheduled to run whenever an SSH key is modified by a user."
+        }
+      ]
+    },
+    {
+      "title": "Components run as separate system users",
+      "classes": [
+        "motivation.principle"
+      ],
+      "passages": [
+        {
+          "start": 41213,
+          "end": 41280,
+          "quote": "All these components should run as different system users to GitLab"
+        }
+      ]
+    },
+    {
+      "title": "Operations without Gitaly handled by Rails internal API",
+      "classes": [
+        "application.applicationfunction"
+      ],
+      "passages": [
+        {
+          "start": 40013,
+          "end": 40108,
+          "quote": "there is no round-trip into Gitaly - Rails performs the action as part\nof the internal API call"
+        }
+      ]
+    },
+    {
+      "title": "application.log",
+      "classes": [
+        "technology.artifact"
+      ],
+      "passages": [
+        {
+          "start": 42875,
+          "end": 42942,
+          "quote": "usually contains `application.log`, `production.log`, `sidekiq.log`"
+        }
+      ]
+    },
+    {
+      "title": "production.log",
+      "classes": [
+        "technology.artifact"
+      ],
+      "passages": [
+        {
+          "start": 42875,
+          "end": 42942,
+          "quote": "usually contains `application.log`, `production.log`, `sidekiq.log`"
+        }
+      ]
+    },
+    {
+      "title": "sidekiq.log",
+      "classes": [
+        "technology.artifact"
+      ],
+      "passages": [
+        {
+          "start": 42875,
+          "end": 42942,
+          "quote": "usually contains `application.log`, `production.log`, `sidekiq.log`"
+        }
+      ]
+    },
+    {
+      "title": "puma.stdout.log",
+      "classes": [
+        "technology.artifact"
+      ],
+      "passages": [
+        {
+          "start": 42944,
+          "end": 43001,
+          "quote": "`puma.stdout.log`, `git_json.log`, and `puma.stderr.log`."
+        }
+      ]
+    },
+    {
+      "title": "git_json.log",
+      "classes": [
+        "technology.artifact"
+      ],
+      "passages": [
+        {
+          "start": 42944,
+          "end": 43001,
+          "quote": "`puma.stdout.log`, `git_json.log`, and `puma.stderr.log`."
+        }
+      ]
+    },
+    {
+      "title": "puma.stderr.log",
+      "classes": [
+        "technology.artifact"
+      ],
+      "passages": [
+        {
+          "start": 42963,
+          "end": 43001,
+          "quote": "`git_json.log`, and `puma.stderr.log`."
+        }
+      ]
+    },
+    {
+      "title": "gitlab-shell.log",
+      "classes": [
+        "technology.artifact"
+      ],
+      "passages": [
+        {
+          "start": 43020,
+          "end": 43061,
+          "quote": "`/home/git/gitlab-shell/gitlab-shell.log`"
+        }
+      ]
+    },
+    {
+      "title": "auth.log",
+      "classes": [
+        "technology.artifact"
+      ],
+      "passages": [
+        {
+          "start": 43071,
+          "end": 43112,
+          "quote": "`/var/log/auth.log` auth log (on Ubuntu)."
+        }
+      ]
+    },
+    {
+      "title": "secure auth log",
+      "classes": [
+        "technology.artifact"
+      ],
+      "passages": [
+        {
+          "start": 43115,
+          "end": 43152,
+          "quote": "`/var/log/secure` auth log (on RHEL)."
+        }
+      ]
+    },
+    {
+      "title": "gitlab.yml",
+      "classes": [
+        "technology.artifact"
+      ],
+      "passages": [
+        {
+          "start": 43670,
+          "end": 43712,
+          "quote": "- `gitlab.yml`: GitLab Rails configuration"
+        }
+      ]
+    },
+    {
+      "title": "database.yml",
+      "classes": [
+        "technology.artifact"
+      ],
+      "passages": [
+        {
+          "start": 43751,
+          "end": 43797,
+          "quote": "- `database.yml`: Database connection settings"
+        }
+      ]
+    },
+    {
+      "title": "config.yml",
+      "classes": [
+        "technology.artifact"
+      ],
+      "passages": [
+        {
+          "start": 43799,
+          "end": 43876,
+          "quote": "GitLab Shell has a configuration file at `/home/git/gitlab-shell/config.yml`."
+        }
+      ]
+    },
+    {
+      "title": "SaaS model gateway",
+      "classes": [
+        "technology.technologyservice"
+      ],
+      "passages": [
+        {
+          "start": 45692,
+          "end": 45755,
+          "quote": "A SaaS model gateway is available to enable AI-native features."
+        }
+      ]
+    },
+    {
+      "title": "Rails-initialization settings belong in gitlab.yml",
+      "classes": [
+        "motivation.principle"
+      ],
+      "passages": [
+        {
+          "start": 44262,
+          "end": 44389,
+          "quote": "Anything that needs to be configured during Rails initialization, possibly before the Postgres connection has been established."
+        }
+      ]
+    },
+    {
+      "title": "Most settings better placed in ApplicationSetting",
+      "classes": [
+        "motivation.principle"
+      ],
+      "passages": [
+        {
+          "start": 44391,
+          "end": 44472,
+          "quote": "Many other settings are better placed in the app itself, in `ApplicationSetting`."
+        }
+      ]
+    },
+    {
+      "title": "UI management gives better user experience",
+      "classes": [
+        "motivation.value"
+      ],
+      "passages": [
+        {
+          "start": 44473,
+          "end": 44574,
+          "quote": "Managing settings in UI is usually a better user experience compared to managing configuration files."
+        }
+      ]
+    },
+    {
+      "title": "Editing gitlab.yml may be a poor tradeoff",
+      "classes": [
+        "motivation.assessment"
+      ],
+      "passages": [
+        {
+          "start": 44673,
+          "end": 44751,
+          "quote": "when you consider all the deployment methods below, it may be a poor tradeoff."
+        }
+      ]
+    },
+    {
+      "title": "New gitlab.yml settings must be added to Omnibus, Charts, GDK",
+      "classes": [
+        "motivation.requirement"
+      ],
+      "passages": [
+        {
+          "start": 44753,
+          "end": 44839,
+          "quote": "When adding a setting to `gitlab.yml`: 1. Ensure that it is also added to Omnibus."
+        }
+      ]
+    }
+  ],
+  "relationships": [
+    {
+      "source": "NGINX",
+      "predicate": "serves",
+      "target": "GitLab Workhorse"
+    },
+    {
+      "source": "Apache",
+      "predicate": "serves",
+      "target": "GitLab Workhorse"
+    },
+    {
+      "source": "Puma",
+      "predicate": "serves",
+      "target": "GitLab web app"
+    },
+    {
+      "source": "Sidekiq",
+      "predicate": "depends-on",
+      "target": "Redis"
+    },
+    {
+      "source": "GitLab Shell",
+      "predicate": "uses",
+      "target": "Gitaly"
+    },
+    {
+      "source": "Puma (GitLab Rails)",
+      "predicate": "uses",
+      "target": "Container Registry"
+    },
+    {
+      "source": "GitLab Workhorse",
+      "predicate": "uses",
+      "target": "Puma (GitLab Rails)"
+    },
+    {
+      "source": "GitLab agent server",
+      "predicate": "uses",
+      "target": "GitLab Workhorse"
+    },
+    {
+      "source": "GitLab Pages",
+      "predicate": "uses",
+      "target": "GitLab Workhorse"
+    },
+    {
+      "source": "GitLab Shell",
+      "predicate": "uses",
+      "target": "GitLab Workhorse"
+    },
+    {
+      "source": "GitLab Shell",
+      "predicate": "uses",
+      "target": "Praefect"
+    },
+    {
+      "source": "Praefect",
+      "predicate": "uses",
+      "target": "Gitaly"
+    },
+    {
+      "source": "Gitaly",
+      "predicate": "uses",
+      "target": "GitLab Workhorse"
+    },
+    {
+      "source": "Puma (GitLab Rails)",
+      "predicate": "uses",
+      "target": "Praefect"
+    },
+    {
+      "source": "NGINX",
+      "predicate": "serves",
+      "target": "GitLab Pages"
+    },
+    {
+      "source": "NGINX",
+      "predicate": "serves",
+      "target": "GitLab agent server"
+    },
+    {
+      "source": "NGINX",
+      "predicate": "serves",
+      "target": "Container Registry"
+    },
+    {
+      "source": "Sidekiq",
+      "predicate": "depends-on",
+      "target": "PgBouncer"
+    },
+    {
+      "source": "PgBouncer",
+      "predicate": "depends-on",
+      "target": "PostgreSQL"
+    },
+    {
+      "source": "PostgreSQL",
+      "predicate": "depends-on",
+      "target": "Consul"
+    },
+    {
+      "source": "Sentinel",
+      "predicate": "depends-on",
+      "target": "Redis"
+    },
+    {
+      "source": "Redis Exporter",
+      "predicate": "depends-on",
+      "target": "Redis"
+    },
+    {
+      "source": "PostgreSQL Exporter",
+      "predicate": "depends-on",
+      "target": "PostgreSQL"
+    },
+    {
+      "source": "PgBouncer Exporter",
+      "predicate": "depends-on",
+      "target": "PgBouncer"
+    },
+    {
+      "source": "GitLab Exporter",
+      "predicate": "depends-on",
+      "target": "PostgreSQL"
+    },
+    {
+      "source": "Puma",
+      "predicate": "serves",
+      "target": "Rails application"
+    },
+    {
+      "source": "PostgreSQL",
+      "predicate": "serves",
+      "target": "Rails application"
+    },
+    {
+      "source": "Object storage",
+      "predicate": "serves",
+      "target": "Container Registry"
+    },
+    {
+      "source": "Grafana",
+      "predicate": "depends-on",
+      "target": "GitLab self-monitoring: Prometheus"
+    },
+    {
+      "source": "SSH server",
+      "predicate": "accesses",
+      "target": "authorized_keys file"
+    },
+    {
+      "source": "AuthorizedKeysWorker",
+      "predicate": "assigned-to",
+      "target": "Authorized keys updated when SSH key modified"
+    },
+    {
+      "source": "Rails",
+      "predicate": "assigned-to",
+      "target": "Operations without Gitaly handled by Rails internal API"
+    },
+    {
+      "source": "AuthorizedKeysCommand",
+      "predicate": "realizes",
+      "target": "GitLab Shell"
+    },
+    {
+      "source": "Apache httpd",
+      "predicate": "depends-on",
+      "target": "Puma"
+    },
+    {
+      "source": "NGINX",
+      "predicate": "depends-on",
+      "target": "Puma"
+    },
+    {
+      "source": "Puma",
+      "predicate": "accesses",
+      "target": "puma.stdout.log"
+    },
+    {
+      "source": "Puma",
+      "predicate": "accesses",
+      "target": "puma.stderr.log"
+    },
+    {
+      "source": "Sidekiq",
+      "predicate": "accesses",
+      "target": "sidekiq.log"
+    }
+  ],
+  "calls": 241,
+  "usage": {
+    "input": 256587,
+    "cache_write": 0,
+    "cache_read": 4428979,
+    "output": 106060
+  },
+  "usd": 0.12297849,
+  "latency_s": 249.7,
+  "incomplete_responses": 0,
+  "cassette": "take2/gitlab_architecture.json (in the --cassettes folder; not committed)"
+}

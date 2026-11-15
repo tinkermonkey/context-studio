@@ -1,0 +1,408 @@
+{
+ "arm": "B-haiku",
+ "model": "claude-haiku-5-5",
+ "document": "edit_check",
+ "take": 3,
+ "effort": "high",
+ "max_tokens": 64000,
+ "prompt_sha256": "fe903290e1879723a20da8985cff39ba0f376161732cf9990e18acf1cff75eac",
+ "failed": false,
+ "attempts": [
+  {
+   "attempt": 1,
+   "problem": null,
+   "usage": {
+    "input": 11783,
+    "cache_write": 0,
+    "cache_read": 66242,
+    "output": 16866
+   },
+   "usd": 0.01027372,
+   "latency_s": 60.3
+  }
+ ],
+ "individuals": [
+  {
+   "title": "Edit Check",
+   "class": "product.feature",
+   "quote": "Offer people actionable feedback about Wikipedia policies while they are editing."
+  },
+  {
+   "title": "Reference check",
+   "class": "product.feature",
+   "quote": "Reference check"
+  },
+  {
+   "title": "Link check and Reference reliability",
+   "class": "product.feature",
+   "quote": "Link check and Reference reliability"
+  },
+  {
+   "title": "Paste Check",
+   "class": "product.feature",
+   "quote": "Paste Check"
+  },
+  {
+   "title": "Tone check",
+   "class": "product.feature",
+   "quote": "Tone check"
+  },
+  {
+   "title": "Suggestion Mode",
+   "class": "product.feature",
+   "quote": "Suggestion Mode"
+  },
+  {
+   "title": "TextMatch",
+   "class": "product.feature",
+   "quote": "TextMatch"
+  },
+  {
+   "title": "Multi-Check",
+   "class": "product.feature",
+   "quote": "To learn whether the Multi-Check was effective at causing"
+  },
+  {
+   "title": "Desktop siderail",
+   "class": "product.feature",
+   "quote": "Edit checks are shown at the side on Desktop."
+  },
+  {
+   "title": "Project start 2022-10-01",
+   "class": "product.milestone",
+   "quote": "| Start: | 2022-10-01 |"
+  },
+  {
+   "title": "Editing Team",
+   "class": "motivation.stakeholder",
+   "quote": "The Editing Team is working on a set of improvements for the visual editor"
+  },
+  {
+   "title": "Wikimedia Foundation Product Department",
+   "class": "motivation.stakeholder",
+   "quote": "the Wikimedia Foundation's Product Department is prioritizing this work"
+  },
+  {
+   "title": "Wikipedia communities",
+   "class": "motivation.stakeholder",
+   "quote": "Some communities have started to use the textMatch feature to create custom local types of Suggestion."
+  },
+  {
+   "title": "Experienced volunteers and moderators",
+   "class": "motivation.stakeholder",
+   "quote": "Experienced volunteers/moderators \u2013 need to do more work reverting low-quality edits"
+  },
+  {
+   "title": "Newcomers and Junior Contributors from Sub-Saharan Africa",
+   "class": "motivation.stakeholder",
+   "quote": "To equip newcomers and Junior Contributors from Sub-Saharan Africa with the know-how and tools"
+  },
+  {
+   "title": "Newcomers from Sub-Saharan Africa feel safe publishing",
+   "class": "motivation.goal",
+   "quote": "Newcomers and Junior Contributors from Sub-Saharan Africa will feel safe and confident enough while editing to publish changes they are proud of"
+  },
+  {
+   "title": "Moderators notice quality improvements and configure Edit Check",
+   "class": "motivation.goal",
+   "quote": "Moderators at the English and French Wikipedias will notice improvements in the quality of edits newcomers are making and be motivated to configure how Edit Check presents policies to them."
+  },
+  {
+   "title": "Newcomers feel safe and motivated making changes",
+   "class": "motivation.goal",
+   "quote": "will feel safe and motivated making changes to Wikipedia"
+  },
+  {
+   "title": "Visual editor does not show policies",
+   "class": "motivation.assessment",
+   "quote": "The trouble is that the visual editor and other editing interfaces do not make people aware of the Wikipedia policies and guidelines they are expected to follow."
+  },
+  {
+   "title": "Inexperienced volunteers become frustrated by reverts",
+   "class": "motivation.assessment",
+   "quote": "become disappointed and frustrated when the good-faith change(s) they arrived to the wiki seeking to make are undone (read: reverted)"
+  },
+  {
+   "title": "Wikipedia projects struggle to diversify volunteers",
+   "class": "motivation.assessment",
+   "quote": "struggle to grow and diversify their volunteer populations"
+  },
+  {
+   "title": "Sub-Saharan Africa underrepresented among editors",
+   "class": "motivation.assessment",
+   "quote": "people from Sub-Saharan Africa represent only 1% of active unique editors"
+  },
+  {
+   "title": "Start with limited, straightforward reference rules",
+   "class": "motivation.principle",
+   "quote": "relatively limited and straightforward set of rules in order to"
+  },
+  {
+   "title": "Reference Check activates on unreferenced new paragraphs",
+   "class": "motivation.requirement",
+   "quote": "A minimum of one new paragraph of text is added to the article someone is editing"
+  },
+  {
+   "title": "Prompt newcomers to add references to new content",
+   "class": "motivation.requirement",
+   "quote": "prompt them to do so"
+  },
+  {
+   "title": "Moderators configure when Edit Check activates",
+   "class": "motivation.requirement",
+   "quote": "moderators be empowered to configure when, and for whom, Edit Check becomes activated"
+  },
+  {
+   "title": "Reference Check A/B Test",
+   "class": "motivation.assessment",
+   "quote": "To learn whether the Reference Edit Check is effective at causing"
+  },
+  {
+   "title": "Multi-Check (References) A/B Test",
+   "class": "motivation.assessment",
+   "quote": "we ran an A/B test with 12 Wikipedias"
+  },
+  {
+   "title": "Multi-Check Phase 1 Impact Analysis",
+   "class": "motivation.assessment",
+   "quote": "To decide how \u2013 if at all \u2013 this change impacted volunteer disruption and edit quality"
+  },
+  {
+   "title": "Increase quality of edits from Sub-Saharan Africa",
+   "class": "motivation.outcome",
+   "quote": "Increase the quality of edits newcomers and Junior Contributors editing from within Sub-Saharan Africa publish in the main namespace"
+  },
+  {
+   "title": "Multi-Check increased edits with references",
+   "class": "motivation.outcome",
+   "quote": "Multi-Check caused statistically significant increases in the proportion of edits that include a reference"
+  },
+  {
+   "title": "Reference Check increased constructive edits with references",
+   "class": "motivation.outcome",
+   "quote": "to publish a new content edit that includes a reference and is constructive (not reverted within 48 hours)"
+  },
+  {
+   "title": "Revert rate fell 15.7% after siderail change",
+   "class": "motivation.outcome",
+   "quote": "The revert rate of new content edits where Reference Check was activated decreased by **15.7%**."
+  },
+  {
+   "title": "Reference Check increased constructive retention 16%",
+   "class": "motivation.outcome",
+   "quote": "16 percent more likely to return to make a non-reverted edit in their second month"
+  },
+  {
+   "title": "Reference Check reduced revert rate 8.6%",
+   "class": "motivation.outcome",
+   "quote": "New content edit revert rate **decreased by 8.6%** if Reference Check was available."
+  },
+  {
+   "title": "Edit completion rate fell 10% with Reference Check",
+   "class": "motivation.assessment",
+   "quote": "Overall, there was a **10% decrease** in edit completion rate for edits where Reference Check was shown."
+  },
+  {
+   "title": "Edit completion rate drastically decreases",
+   "class": "motivation.assessment",
+   "quote": "Edit completion rate drastically decreases"
+  },
+  {
+   "title": "Blocks increase",
+   "class": "motivation.assessment",
+   "quote": "Blocks increase | Proportion of contributors blocked after publishing an edit where Edit Check was shown is significantly higher"
+  },
+  {
+   "title": "Edit Check is too resource intensive to scale",
+   "class": "motivation.assessment",
+   "quote": "Edit Check is too resource intensive to scale"
+  }
+ ],
+ "relationships": [
+  {
+   "source": "Edit Check",
+   "predicate": "aggregates",
+   "target": "Reference check",
+   "quote": "Several features are available within Edit Check:"
+  },
+  {
+   "source": "Edit Check",
+   "predicate": "aggregates",
+   "target": "Link check and Reference reliability",
+   "quote": "Several features are available within Edit Check:"
+  },
+  {
+   "source": "Edit Check",
+   "predicate": "aggregates",
+   "target": "Paste Check",
+   "quote": "Several features are available within Edit Check:"
+  },
+  {
+   "source": "Edit Check",
+   "predicate": "associated-with",
+   "target": "Tone check",
+   "quote": "The Editing team works on new Checks:"
+  },
+  {
+   "source": "Edit Check",
+   "predicate": "associated-with",
+   "target": "Suggestion Mode",
+   "quote": "The Editing team works on the related features:"
+  },
+  {
+   "source": "Edit Check",
+   "predicate": "associated-with",
+   "target": "TextMatch",
+   "quote": "The Editing team works on the related features:"
+  },
+  {
+   "source": "Editing Team",
+   "predicate": "associated-with",
+   "target": "Edit Check",
+   "quote": "The Editing Team is working on a set of improvements for the visual editor"
+  },
+  {
+   "source": "Wikimedia Foundation Product Department",
+   "predicate": "associated-with",
+   "target": "Edit Check",
+   "quote": "the Wikimedia Foundation's Product Department is prioritizing this work"
+  },
+  {
+   "source": "Wikipedia communities",
+   "predicate": "uses",
+   "target": "TextMatch",
+   "quote": "Some communities have started to use the textMatch feature to create custom local types of Suggestion."
+  },
+  {
+   "source": "Reference Check A/B Test",
+   "predicate": "tests",
+   "target": "Reference check",
+   "quote": "To learn whether the Reference Edit Check is effective at causing"
+  },
+  {
+   "source": "Multi-Check (References) A/B Test",
+   "predicate": "tests",
+   "target": "Multi-Check",
+   "quote": "To learn whether the Multi-Check was effective at causing"
+  },
+  {
+   "source": "Multi-Check (References) A/B Test",
+   "predicate": "measures-outcome",
+   "target": "Multi-Check increased edits with references",
+   "quote": "Multi-Check caused statistically significant increases in the proportion of edits that include a reference"
+  },
+  {
+   "source": "Reference Check A/B Test",
+   "predicate": "measures-outcome",
+   "target": "Reference Check increased constructive edits with references",
+   "quote": "to publish a new content edit that includes a reference and is constructive (not reverted within 48 hours)"
+  },
+  {
+   "source": "Reference Check A/B Test",
+   "predicate": "measures-outcome",
+   "target": "Reference Check increased constructive retention 16%",
+   "quote": "16 percent more likely to return to make a non-reverted edit in their second month"
+  },
+  {
+   "source": "Reference Check A/B Test",
+   "predicate": "measures-outcome",
+   "target": "Reference Check reduced revert rate 8.6%",
+   "quote": "New content edit revert rate **decreased by 8.6%** if Reference Check was available."
+  },
+  {
+   "source": "Reference Check A/B Test",
+   "predicate": "measures-outcome",
+   "target": "Edit completion rate fell 10% with Reference Check",
+   "quote": "Overall, there was a **10% decrease** in edit completion rate for edits where Reference Check was shown."
+  },
+  {
+   "source": "Multi-Check Phase 1 Impact Analysis",
+   "predicate": "measures-outcome",
+   "target": "Revert rate fell 15.7% after siderail change",
+   "quote": "The revert rate of new content edits where Reference Check was activated decreased by **15.7%**."
+  },
+  {
+   "source": "Desktop siderail",
+   "predicate": "associated-with",
+   "target": "Edit Check",
+   "quote": "Edit checks are shown at the side on Desktop."
+  },
+  {
+   "source": "Reference Check activates on unreferenced new paragraphs",
+   "predicate": "triggers",
+   "target": "Reference check",
+   "quote": "This strategy amounts to the initial reference Edit Check becoming activated if/when all of the following conditions are met:"
+  },
+  {
+   "source": "Reference check",
+   "predicate": "satisfies",
+   "target": "Prompt newcomers to add references to new content",
+   "quote": "prompt them to do so"
+  },
+  {
+   "source": "Start with limited, straightforward reference rules",
+   "predicate": "governs",
+   "target": "Reference check",
+   "quote": "relatively limited and straightforward set of rules in order to"
+  },
+  {
+   "source": "Edit Check",
+   "predicate": "supports",
+   "target": "Newcomers from Sub-Saharan Africa feel safe publishing",
+   "quote": "To equip newcomers and Junior Contributors from Sub-Saharan Africa with the know-how and tools"
+  },
+  {
+   "source": "Experienced volunteers and moderators",
+   "predicate": "uses",
+   "target": "Edit Check",
+   "quote": "Edit Check will enable volunteers, on a per project basis to:"
+  }
+ ],
+ "usage": {
+  "input": 11783,
+  "cache_write": 0,
+  "cache_read": 66242,
+  "output": 16866
+ },
+ "usd": 0.01027372,
+ "latency_s": 60.3,
+ "raw_response": {
+  "id": "msg_011Ch4s2ChdPx6JZz6FuvLpw",
+  "container": null,
+  "content": [
+   {
+    "thinking": "",
+    "type": "thinking"
+   },
+   {
+    "citations": null,
+    "text": "{\"individuals\":[{\"title\":\"Edit Check\",\"class\":\"product.feature\",\"quote\":\"Offer people actionable feedback about Wikipedia policies while they are editing.\"},{\"title\":\"Reference check\",\"class\":\"product.feature\",\"quote\":\"Reference check\"},{\"title\":\"Link check and Reference reliability\",\"class\":\"product.feature\",\"quote\":\"Link check and Reference reliability\"},{\"title\":\"Paste Check\",\"class\":\"product.feature\",\"quote\":\"Paste Check\"},{\"title\":\"Tone check\",\"class\":\"product.feature\",\"quote\":\"Tone check\"},{\"title\":\"Suggestion Mode\",\"class\":\"product.feature\",\"quote\":\"Suggestion Mode\"},{\"title\":\"TextMatch\",\"class\":\"product.feature\",\"quote\":\"TextMatch\"},{\"title\":\"Multi-Check\",\"class\":\"product.feature\",\"quote\":\"To learn whether the Multi-Check was effective at causing\"},{\"title\":\"Desktop siderail\",\"class\":\"product.feature\",\"quote\":\"Edit checks are shown at the side on Desktop.\"},{\"title\":\"Project start 2022-10-01\",\"class\":\"product.milestone\",\"quote\":\"| Start: | 2022-10-01 |\"},{\"title\":\"Editing Team\",\"class\":\"motivation.stakeholder\",\"quote\":\"The Editing Team is working on a set of improvements for the visual editor\"},{\"title\":\"Wikimedia Foundation Product Department\",\"class\":\"motivation.stakeholder\",\"quote\":\"the Wikimedia Foundation's Product Department is prioritizing this work\"},{\"title\":\"Wikipedia communities\",\"class\":\"motivation.stakeholder\",\"quote\":\"Some communities have started to use the textMatch feature to create custom local types of Suggestion.\"},{\"title\":\"Experienced volunteers and moderators\",\"class\":\"motivation.stakeholder\",\"quote\":\"Experienced volunteers/moderators \u2013 need to do more work reverting low-quality edits\"},{\"title\":\"Newcomers and Junior Contributors from Sub-Saharan Africa\",\"class\":\"motivation.stakeholder\",\"quote\":\"To equip newcomers and Junior Contributors from Sub-Saharan Africa with the know-how and tools\"},{\"title\":\"Newcomers from Sub-Saharan Africa feel safe publishing\",\"class\":\"motivation.goal\",\"quote\":\"Newcomers and Junior Contributors from Sub-Saharan Africa will feel safe and confident enough while editing to publish changes they are proud of\"},{\"title\":\"Moderators notice quality improvements and configure Edit Check\",\"class\":\"motivation.goal\",\"quote\":\"Moderators at the English and French Wikipedias will notice improvements in the quality of edits newcomers are making and be motivated to configure how Edit Check presents policies to them.\"},{\"title\":\"Newcomers feel safe and motivated making changes\",\"class\":\"motivation.goal\",\"quote\":\"will feel safe and motivated making changes to Wikipedia\"},{\"title\":\"Visual editor does not show policies\",\"class\":\"motivation.assessment\",\"quote\":\"The trouble is that the visual editor and other editing interfaces do not make people aware of the Wikipedia policies and guidelines they are expected to follow.\"},{\"title\":\"Inexperienced volunteers become frustrated by reverts\",\"class\":\"motivation.assessment\",\"quote\":\"become disappointed and frustrated when the good-faith change(s) they arrived to the wiki seeking to make are undone (read: reverted)\"},{\"title\":\"Wikipedia projects struggle to diversify volunteers\",\"class\":\"motivation.assessment\",\"quote\":\"struggle to grow and diversify their volunteer populations\"},{\"title\":\"Sub-Saharan Africa underrepresented among editors\",\"class\":\"motivation.assessment\",\"quote\":\"people from Sub-Saharan Africa represent only 1% of active unique editors\"},{\"title\":\"Start with limited, straightforward reference rules\",\"class\":\"motivation.principle\",\"quote\":\"relatively limited and straightforward set of rules in order to\"},{\"title\":\"Reference Check activates on unreferenced new paragraphs\",\"class\":\"motivation.requirement\",\"quote\":\"A minimum of one new paragraph of text is added to the article someone is editing\"},{\"title\":\"Prompt newcomers to add references to new content\",\"class\":\"motivation.requirement\",\"quote\":\"prompt them to do so\"},{\"title\":\"Moderators configure when Edit Check activates\",\"class\":\"motivation.requirement\",\"quote\":\"moderators be empowered to configure when, and for whom, Edit Check becomes activated\"},{\"title\":\"Reference Check A/B Test\",\"class\":\"motivation.assessment\",\"quote\":\"To learn whether the Reference Edit Check is effective at causing\"},{\"title\":\"Multi-Check (References) A/B Test\",\"class\":\"motivation.assessment\",\"quote\":\"we ran an A/B test with 12 Wikipedias\"},{\"title\":\"Multi-Check Phase 1 Impact Analysis\",\"class\":\"motivation.assessment\",\"quote\":\"To decide how \u2013 if at all \u2013 this change impacted volunteer disruption and edit quality\"},{\"title\":\"Increase quality of edits from Sub-Saharan Africa\",\"class\":\"motivation.outcome\",\"quote\":\"Increase the quality of edits newcomers and Junior Contributors editing from within Sub-Saharan Africa publish in the main namespace\"},{\"title\":\"Multi-Check increased edits with references\",\"class\":\"motivation.outcome\",\"quote\":\"Multi-Check caused statistically significant increases in the proportion of edits that include a reference\"},{\"title\":\"Reference Check increased constructive edits with references\",\"class\":\"motivation.outcome\",\"quote\":\"to publish a new content edit that includes a reference and is constructive (not reverted within 48 hours)\"},{\"title\":\"Revert rate fell 15.7% after siderail change\",\"class\":\"motivation.outcome\",\"quote\":\"The revert rate of new content edits where Reference Check was activated decreased by **15.7%**.\"},{\"title\":\"Reference Check increased constructive retention 16%\",\"class\":\"motivation.outcome\",\"quote\":\"16 percent more likely to return to make a non-reverted edit in their second month\"},{\"title\":\"Reference Check reduced revert rate 8.6%\",\"class\":\"motivation.outcome\",\"quote\":\"New content edit revert rate **decreased by 8.6%** if Reference Check was available.\"},{\"title\":\"Edit completion rate fell 10% with Reference Check\",\"class\":\"motivation.assessment\",\"quote\":\"Overall, there was a **10% decrease** in edit completion rate for edits where Reference Check was shown.\"},{\"title\":\"Edit completion rate drastically decreases\",\"class\":\"motivation.assessment\",\"quote\":\"Edit completion rate drastically decreases\"},{\"title\":\"Blocks increase\",\"class\":\"motivation.assessment\",\"quote\":\"Blocks increase | Proportion of contributors blocked after publishing an edit where Edit Check was shown is significantly higher\"},{\"title\":\"Edit Check is too resource intensive to scale\",\"class\":\"motivation.assessment\",\"quote\":\"Edit Check is too resource intensive to scale\"}],\"relationships\":[{\"source\":\"Edit Check\",\"predicate\":\"aggregates\",\"target\":\"Reference check\",\"quote\":\"Several features are available within Edit Check:\"},{\"source\":\"Edit Check\",\"predicate\":\"aggregates\",\"target\":\"Link check and Reference reliability\",\"quote\":\"Several features are available within Edit Check:\"},{\"source\":\"Edit Check\",\"predicate\":\"aggregates\",\"target\":\"Paste Check\",\"quote\":\"Several features are available within Edit Check:\"},{\"source\":\"Edit Check\",\"predicate\":\"associated-with\",\"target\":\"Tone check\",\"quote\":\"The Editing team works on new Checks:\"},{\"source\":\"Edit Check\",\"predicate\":\"associated-with\",\"target\":\"Suggestion Mode\",\"quote\":\"The Editing team works on the related features:\"},{\"source\":\"Edit Check\",\"predicate\":\"associated-with\",\"target\":\"TextMatch\",\"quote\":\"The Editing team works on the related features:\"},{\"source\":\"Editing Team\",\"predicate\":\"associated-with\",\"target\":\"Edit Check\",\"quote\":\"The Editing Team is working on a set of improvements for the visual editor\"},{\"source\":\"Wikimedia Foundation Product Department\",\"predicate\":\"associated-with\",\"target\":\"Edit Check\",\"quote\":\"the Wikimedia Foundation's Product Department is prioritizing this work\"},{\"source\":\"Wikipedia communities\",\"predicate\":\"uses\",\"target\":\"TextMatch\",\"quote\":\"Some communities have started to use the textMatch feature to create custom local types of Suggestion.\"},{\"source\":\"Reference Check A/B Test\",\"predicate\":\"tests\",\"target\":\"Reference check\",\"quote\":\"To learn whether the Reference Edit Check is effective at causing\"},{\"source\":\"Multi-Check (References) A/B Test\",\"predicate\":\"tests\",\"target\":\"Multi-Check\",\"quote\":\"To learn whether the Multi-Check was effective at causing\"},{\"source\":\"Multi-Check (References) A/B Test\",\"predicate\":\"measures-outcome\",\"target\":\"Multi-Check increased edits with references\",\"quote\":\"Multi-Check caused statistically significant increases in the proportion of edits that include a reference\"},{\"source\":\"Reference Check A/B Test\",\"predicate\":\"measures-outcome\",\"target\":\"Reference Check increased constructive edits with references\",\"quote\":\"to publish a new content edit that includes a reference and is constructive (not reverted within 48 hours)\"},{\"source\":\"Reference Check A/B Test\",\"predicate\":\"measures-outcome\",\"target\":\"Reference Check increased constructive retention 16%\",\"quote\":\"16 percent more likely to return to make a non-reverted edit in their second month\"},{\"source\":\"Reference Check A/B Test\",\"predicate\":\"measures-outcome\",\"target\":\"Reference Check reduced revert rate 8.6%\",\"quote\":\"New content edit revert rate **decreased by 8.6%** if Reference Check was available.\"},{\"source\":\"Reference Check A/B Test\",\"predicate\":\"measures-outcome\",\"target\":\"Edit completion rate fell 10% with Reference Check\",\"quote\":\"Overall, there was a **10% decrease** in edit completion rate for edits where Reference Check was shown.\"},{\"source\":\"Multi-Check Phase 1 Impact Analysis\",\"predicate\":\"measures-outcome\",\"target\":\"Revert rate fell 15.7% after siderail change\",\"quote\":\"The revert rate of new content edits where Reference Check was activated decreased by **15.7%**.\"},{\"source\":\"Desktop siderail\",\"predicate\":\"associated-with\",\"target\":\"Edit Check\",\"quote\":\"Edit checks are shown at the side on Desktop.\"},{\"source\":\"Reference Check activates on unreferenced new paragraphs\",\"predicate\":\"triggers\",\"target\":\"Reference check\",\"quote\":\"This strategy amounts to the initial reference Edit Check becoming activated if/when all of the following conditions are met:\"},{\"source\":\"Reference check\",\"predicate\":\"satisfies\",\"target\":\"Prompt newcomers to add references to new content\",\"quote\":\"prompt them to do so\"},{\"source\":\"Start with limited, straightforward reference rules\",\"predicate\":\"governs\",\"target\":\"Reference check\",\"quote\":\"relatively limited and straightforward set of rules in order to\"},{\"source\":\"Edit Check\",\"predicate\":\"supports\",\"target\":\"Newcomers from Sub-Saharan Africa feel safe publishing\",\"quote\":\"To equip newcomers and Junior Contributors from Sub-Saharan Africa with the know-how and tools\"},{\"source\":\"Experienced volunteers and moderators\",\"predicate\":\"uses\",\"target\":\"Edit Check\",\"quote\":\"Edit Check will enable volunteers, on a per project basis to:\"}]}",
+    "type": "text"
+   }
+  ],
+  "model": "claude-haiku-5-5",
+  "role": "assistant",
+  "stop_details": null,
+  "stop_reason": "end_turn",
+  "stop_sequence": null,
+  "type": "message",
+  "usage": {
+   "cache_creation": {
+    "ephemeral_1h_input_tokens": 0,
+    "ephemeral_5m_input_tokens": 0
+   },
+   "cache_creation_input_tokens": 0,
+   "cache_read_input_tokens": 66242,
+   "inference_geo": "global",
+   "input_tokens": 11783,
+   "output_tokens": 16866,
+   "output_tokens_details": {
+    "thinking_tokens": 13047
+   },
+   "server_tool_use": null,
+   "service_tier": "standard",
+   "speed": "standard"
+  },
+  "diagnostics": null
+ }
+}
