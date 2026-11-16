@@ -43,6 +43,7 @@ from domain.pipelines.entities import (
     PipelineRunStatus,
     PipelineType,
     SourceRun,
+    StageProgress,
 )
 from domain.pipelines.entities import (
     SchemaConnectionRefinementRun as DomainSchemaConnectionRefinementRun,
@@ -872,6 +873,9 @@ class PipelineRepository:
             orm_obj.started_at = None  # type: ignore[assignment]
             orm_obj.items_done = None  # type: ignore[assignment]
             orm_obj.items_total = None  # type: ignore[assignment]
+            orm_obj.stage = None  # type: ignore[assignment]
+            orm_obj.stage_done = None  # type: ignore[assignment]
+            orm_obj.stage_total = None  # type: ignore[assignment]
             orm_obj.proposal_id = None  # type: ignore[assignment]
             ended_attempt = dict(orm_obj.llm_metadata or {})
             earlier = list(ended_attempt.pop(EARLIER_ATTEMPTS, []))
@@ -884,9 +888,17 @@ class PipelineRepository:
 
         return self._write("re-queue a pipeline run", requeue)
 
-    def update_progress(self, run_id: str, items_done: int, items_total: int | None) -> bool:
+    def update_progress(
+        self,
+        run_id: str,
+        items_done: int,
+        items_total: int | None,
+        stage: StageProgress | None = None,
+    ) -> bool:
         """
-        Record how many work items the run has finished, out of how many.
+        Record how many work items the run has finished, out of how many, and
+        with ``stage`` the stage it is in, in one transaction. Without
+        ``stage`` the run's stage is left as it is.
 
         Returns:
             True if updated, False if not found
@@ -898,6 +910,10 @@ class PipelineRepository:
                 return False
             orm_obj.items_done = items_done  # type: ignore[assignment]
             orm_obj.items_total = items_total  # type: ignore[assignment]
+            if stage is not None:
+                orm_obj.stage = stage.stage  # type: ignore[assignment]
+                orm_obj.stage_done = stage.done  # type: ignore[assignment]
+                orm_obj.stage_total = stage.total  # type: ignore[assignment]
             return True
 
         return self._write("update pipeline run progress", update)
@@ -944,6 +960,9 @@ class PipelineRepository:
                     PipelineRun.created_at,
                     PipelineRun.items_done,
                     PipelineRun.items_total,
+                    PipelineRun.stage,
+                    PipelineRun.stage_done,
+                    PipelineRun.stage_total,
                     PipelineRun.proposal_id,
                 )
                 .filter(source_id.in_(list(source_ids)))
@@ -968,6 +987,9 @@ class PipelineRepository:
                 ),
                 items_done=items_done,
                 items_total=items_total,
+                stage=stage,
+                stage_done=stage_done,
+                stage_total=stage_total,
                 proposal_id=proposal_id,
             )
             for (
@@ -980,6 +1002,9 @@ class PipelineRepository:
                 created_at,
                 items_done,
                 items_total,
+                stage,
+                stage_done,
+                stage_total,
                 proposal_id,
             ) in rows
         ]
@@ -1055,6 +1080,9 @@ class PipelineRepository:
             "source_text": orm_obj.source_text,
             "items_done": orm_obj.items_done,
             "items_total": orm_obj.items_total,
+            "stage": orm_obj.stage,
+            "stage_done": orm_obj.stage_done,
+            "stage_total": orm_obj.stage_total,
             "proposal_id": orm_obj.proposal_id,
         }
 

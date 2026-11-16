@@ -19,6 +19,7 @@ from .entities import (
     PipelineRunStatus,
     PipelineType,
     SourceRun,
+    StageProgress,
 )
 
 if TYPE_CHECKING:
@@ -623,8 +624,19 @@ class PipelineRunStatusWriter(Protocol):
         """Update run status to RUNNING with started_at timestamp."""
         ...
 
-    def update_progress(self, run_id: str, items_done: int, items_total: int | None) -> bool:
-        """Record how many work items the run has finished, out of how many."""
+    def update_progress(
+        self,
+        run_id: str,
+        items_done: int,
+        items_total: int | None,
+        stage: StageProgress | None = None,
+    ) -> bool:
+        """
+        Record how many work items the run has finished, out of how many, and
+        with ``stage`` the stage it is in, in the same write: a reader never
+        sees the one without the other. Without ``stage`` the run's stage is
+        left as it is.
+        """
         ...
 
 

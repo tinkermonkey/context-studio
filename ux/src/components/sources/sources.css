@@ -247,6 +247,39 @@
     color: rgb(var(--canvas-fg-1));
   }
 
+  /* Stages of a run that reports them (find-then-type) */
+  .extract-run__stages {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 22px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .extract-run__stage {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    font-size: 13px;
+    color: rgb(var(--canvas-fg-2));
+  }
+
+  .extract-run__stage--current {
+    font-weight: 600;
+    color: rgb(var(--canvas-fg-1));
+  }
+
+  .extract-run__stage--waiting {
+    color: rgb(var(--canvas-fg-3));
+  }
+
+  .extract-run__stage-n {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: rgb(var(--canvas-fg-3));
+  }
+
   .extract-run__skipped {
     margin: 0;
     font-size: 13px;

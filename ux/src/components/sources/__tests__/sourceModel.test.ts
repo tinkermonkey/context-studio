@@ -6,6 +6,7 @@ import {
 import {
   charsInPages,
   chunkRange,
+  chunkStates,
   configurationPrice,
   emptyChunksWarning,
   estimateCost,
@@ -22,9 +23,11 @@ import {
   parsePages,
   proposalCounts,
   runChunks,
+  runProgress,
   skippedText,
   skipReasonLabel,
   sourceDetail,
+  stageSteps,
   statusNote,
 } from "../sourceModel";
 import { createConfiguration, createRun, createSource } from "./fixtures";
@@ -373,5 +376,103 @@ describe("sourceModel", () => {
         "Extraction failed for 2 of 3 chunks: chunks 2 and 3. What they hold is missing.",
       );
     });
+  });
+});
+
+describe("sourceModel — a run's progress", () => {
+  it("measures a run that reports no stage in chunks read", () => {
+    expect(runProgress({ items_done: 1, items_total: 3 })).toEqual({
+      stage: undefined,
+      done: 1,
+      total: 3,
+      percent: 33,
+      chunksRead: 1,
+      chunks: 3,
+    });
+    // Before the run reports anything
+    expect(runProgress(undefined)).toMatchObject({ stage: undefined, total: 0, percent: 0 });
+    expect(runProgress({ items_done: null, items_total: null }).percent).toBe(0);
+  });
+
+  it("measures a staged run in its stage's own count, beside the chunks read", () => {
+    const typing = runProgress({
+      items_done: 0,
+      items_total: 4,
+      stage: "type_mention",
+      stage_done: 40,
+      stage_total: 166,
+    });
+    expect(typing).toEqual({
+      stage: "type_mention",
+      done: 40,
+      total: 166,
+      percent: 24,
+      chunksRead: 0,
+      chunks: 4,
+    });
+  });
+
+  it("reads a stage it does not know, or one with no count yet, without failing", () => {
+    const unknown = runProgress({
+      items_done: 2,
+      items_total: 4,
+      stage: "some_later_stage",
+      stage_done: 9,
+      stage_total: 10,
+    });
+    expect(unknown).toMatchObject({ stage: undefined, done: 2, total: 4, percent: 50 });
+    const uncounted = runProgress({ items_done: 0, items_total: 4, stage: "find_mentions" });
+    expect(uncounted).toMatchObject({ stage: "find_mentions", done: 0, total: 0, percent: 0 });
+  });
+
+  it("says which stages are done, under way and waiting", () => {
+    expect(stageSteps("find_mentions").map((s) => s.state)).toEqual([
+      "current",
+      "waiting",
+      "waiting",
+    ]);
+    expect(stageSteps("type_mention")).toEqual([
+      { stage: "find_mentions", state: "done" },
+      { stage: "type_mention", state: "current" },
+      { stage: "derive_relationships", state: "waiting" },
+    ]);
+    expect(stageSteps("derive_relationships").map((s) => s.state)).toEqual([
+      "done",
+      "done",
+      "current",
+    ]);
+  });
+
+  it("says what each chunk is at, by stage", () => {
+    const at = (fields: Parameters<typeof runProgress>[0], running = true) =>
+      chunkStates(runProgress(fields), running);
+    // No stage: chunks are read one after another
+    expect(at({ items_done: 1, items_total: 3 })).toEqual(["read", "reading", "waiting"]);
+    expect(at({ items_done: 1, items_total: 3 }, false)).toEqual(["read", "waiting", "waiting"]);
+    const staged = { items_done: 0, items_total: 3 };
+    expect(at({ ...staged, stage: "find_mentions", stage_done: 1, stage_total: 3 })).toEqual([
+      "searched",
+      "finding",
+      "waiting",
+    ]);
+    // Typing is over the whole source: every chunk is searched, none is read
+    expect(at({ ...staged, stage: "type_mention", stage_done: 5, stage_total: 90 })).toEqual([
+      "searched",
+      "searched",
+      "searched",
+    ]);
+    expect(
+      at({
+        items_done: 1,
+        items_total: 3,
+        stage: "derive_relationships",
+        stage_done: 1,
+        stage_total: 3,
+      }),
+    ).toEqual(["read", "reading", "searched"]);
+    // A run that stopped in a stage is at nothing
+    expect(at({ ...staged, stage: "find_mentions", stage_done: 1, stage_total: 3 }, false)).toEqual(
+      ["searched", "waiting", "waiting"],
+    );
   });
 });

@@ -1248,6 +1248,9 @@ class PipelineRun(BatchRun):
         input_data: The run's full input, kept so a background worker can execute it
         items_done: Work items finished so far (progress)
         items_total: Work items the run will process (progress)
+        stage: The stage the run last reported being in (an implementation's stage key)
+        stage_done: How far through that stage the run is
+        stage_total: What the stage counts, in all
         proposal_id: The change proposal the run produced (no FK: a proposal is a
             batch run of its own, and the run's record outlives it)
     """
@@ -1326,6 +1329,9 @@ class PipelineRun(BatchRun):
     )
     items_done = Column(Integer, nullable=True, doc="Work items finished so far")
     items_total = Column(Integer, nullable=True, doc="Work items the run will process")
+    stage = Column(String(100), nullable=True, doc="The stage the run last reported being in")
+    stage_done = Column(Integer, nullable=True, doc="How far through that stage the run is")
+    stage_total = Column(Integer, nullable=True, doc="What the stage counts, in all")
     proposal_id = Column(String(36), nullable=True, doc="The change proposal the run produced")
 
     __mapper_args__: Dict[str, Any] = {

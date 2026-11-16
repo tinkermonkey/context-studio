@@ -18,6 +18,8 @@ Individual extraction has three registered implementations (`local-server/domain
 
 All implementations share what follows extraction: recognition of extracted individuals against existing ones (exact label, then a conservative vector match; its tie-break call is hard-coded to Gemini 3 Flash), the chunk merge, and the source proposer. A run on a source with failed chunks produces a partial proposal that supersedes no other.
 
+A run on a source counts its progress in chunks (`items_done` of `items_total`). A `find_then_type` run counts a chunk as done only once its relationships are read, so it also reports the stage it is in and how far through it: `find_mentions` (chunks searched), `type_mention` (distinct mentions typed), `derive_relationships` (chunks read), as `stage`, `stage_done` and `stage_total` on the run. The Extract page, the sources list and the MCP `get_run` tool show it. The two-pass shape reports chunks only.
+
 Schema extraction has `default` (Gemini 3 Flash, configuration `schema-extraction-default`) and `open_v1`.
 
 ## How a pipeline is selected
