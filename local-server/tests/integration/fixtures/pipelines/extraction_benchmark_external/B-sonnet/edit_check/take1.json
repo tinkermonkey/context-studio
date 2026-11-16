@@ -1,0 +1,231 @@
+{
+ "arm": "B-sonnet",
+ "model": "claude-sonnet-5-5",
+ "document": "edit_check",
+ "take": 1,
+ "effort": "high",
+ "max_tokens": 64000,
+ "prompt_sha256": "fe903290e1879723a20da8985cff39ba0f376161732cf9990e18acf1cff75eac",
+ "failed": false,
+ "attempts": [
+  {
+   "attempt": 1,
+   "problem": null,
+   "usage": {
+    "input": 11783,
+    "cache_write": 66242,
+    "cache_read": 0,
+    "output": 1871
+   },
+   "usd": 0.207881,
+   "latency_s": 13.1
+  }
+ ],
+ "individuals": [
+  {
+   "title": "Edit Check",
+   "class": "product.feature",
+   "quote": "Offer people actionable feedback about Wikipedia policies while they are editing."
+  },
+  {
+   "title": "Editing Team",
+   "class": "motivation.stakeholder",
+   "quote": "The Editing Team is working on a set of improvements for the visual editor"
+  },
+  {
+   "title": "Reference check",
+   "class": "product.feature",
+   "quote": "**Reference check**"
+  },
+  {
+   "title": "Paste Check",
+   "class": "product.feature",
+   "quote": "**Paste Check**"
+  },
+  {
+   "title": "Tone check",
+   "class": "product.feature",
+   "quote": "**Tone check**"
+  },
+  {
+   "title": "Suggestion Mode",
+   "class": "product.feature",
+   "quote": "**Suggestion Mode**"
+  },
+  {
+   "title": "TextMatch",
+   "class": "product.feature",
+   "quote": "**TextMatch**"
+  },
+  {
+   "title": "Newcomers and Junior Contributors confidence objective",
+   "class": "motivation.goal",
+   "quote": "Newcomers and Junior Contributors from Sub-Saharan Africa will feel safe and confident enough while editing to publish changes they are proud of and that experienced volunteers consider useful."
+  },
+  {
+   "title": "Moderators notice quality improvements objective",
+   "class": "motivation.goal",
+   "quote": "Moderators at the English and French Wikipedias will notice improvements in the quality of edits newcomers are making and be motivated to configure how Edit Check presents policies to them."
+  },
+  {
+   "title": "Newcomers and Junior Contributors",
+   "class": "motivation.stakeholder",
+   "quote": "Newcomers and Junior Contributors from Sub-Saharan Africa"
+  },
+  {
+   "title": "Experienced volunteers/moderators",
+   "class": "motivation.stakeholder",
+   "quote": "**Experienced volunteers/moderators** \u2013 need to do more work reverting low-quality edits"
+  },
+  {
+   "title": "Inexperienced volunteers",
+   "class": "motivation.stakeholder",
+   "quote": "**Inexperienced volunteers** \u2013 become disappointed and frustrated when the good-faith change(s) they arrived to the wiki seeking to make are undone"
+  },
+  {
+   "title": "Visual editor does not make people aware of policies",
+   "class": "motivation.assessment",
+   "quote": "the visual editor and other editing interfaces do not make people aware of the Wikipedia policies and guidelines they are expected to follow."
+  },
+  {
+   "title": "Reference Edit Check activation conditions",
+   "class": "motivation.requirement",
+   "quote": "A minimum of one new paragraph of text is added to the article someone is editing"
+  },
+  {
+   "title": "Moderators must be able to configure Edit Check",
+   "class": "motivation.principle",
+   "quote": "The Editing Team thinks it is crucial that moderators be empowered to configure when, and for whom, Edit Check becomes activated."
+  },
+  {
+   "title": "Multi-Check A/B Test",
+   "class": "testing.contextvariation",
+   "quote": "we ran an A/B test with 12 Wikipedias."
+  },
+  {
+   "title": "Reference Check A/B Test",
+   "class": "testing.contextvariation",
+   "quote": "we conducted an A/B test with 15 Wikipedias."
+  },
+  {
+   "title": "Multi-Check",
+   "class": "product.feature",
+   "quote": "Multi-Check was deployed to all wikis where Reference Check is currently available on June 25, 2025."
+  },
+  {
+   "title": "Mobile publishing step",
+   "class": "product.feature",
+   "quote": "The first version of Edit Check will introduce a new step within the *mobile* visual editor's publishing workflow"
+  },
+  {
+   "title": "Desktop siderail",
+   "class": "product.feature",
+   "quote": "This change shifted Edit Checks from appearing *within* articles to appearing *alongside* them, in a new \"siderail.\""
+  },
+  {
+   "title": "Special:EditChecks",
+   "class": "product.feature",
+   "quote": "Clearer and more accurate details in `Special:EditChecks` which shows the local configuration"
+  },
+  {
+   "title": "Sub-Saharan Africa underrepresentation",
+   "class": "motivation.assessment",
+   "quote": "People from Sub-Saharan Africa are underrepresented within the movement"
+  },
+  {
+   "title": "Increase quality of edits outcome",
+   "class": "motivation.outcome",
+   "quote": "Increase the quality of edits newcomers and Junior Contributors editing from within Sub-Saharan Africa publish in the main namespace"
+  },
+  {
+   "title": "Edit Check too resource intensive risk",
+   "class": "motivation.assessment",
+   "quote": "Edit Check is too resource intensive to scale"
+  },
+  {
+   "title": "Reference Check increased quality finding",
+   "class": "motivation.outcome",
+   "quote": "Reference Check caused an **increase in the quality of edits** newcomers publish and **did not cause any significant disruption**."
+  },
+  {
+   "title": "Reference Detection design",
+   "class": "product.feature",
+   "quote": "Reference Detection"
+  }
+ ],
+ "relationships": [
+  {
+   "source": "Reference check",
+   "predicate": "composes",
+   "target": "Edit Check",
+   "quote": "Several features are available within Edit Check:"
+  },
+  {
+   "source": "Paste Check",
+   "predicate": "composes",
+   "target": "Edit Check",
+   "quote": "Several features are available within Edit Check:"
+  },
+  {
+   "source": "Multi-Check A/B Test",
+   "predicate": "tests",
+   "target": "Multi-Check",
+   "quote": "To learn whether the Multi-Check was effective at causing, newcomers to publish new content edits that include references"
+  },
+  {
+   "source": "Reference Check A/B Test",
+   "predicate": "tests",
+   "target": "Reference check",
+   "quote": "To learn whether the Reference Edit Check is effective at causing **newcomers to make edits they intended and experienced volunteers value**"
+  },
+  {
+   "source": "Edit Check",
+   "predicate": "serves",
+   "target": "Newcomers and Junior Contributors",
+   "quote": "To equip newcomers and Junior Contributors from Sub-Saharan Africa with the know-how and tools"
+  }
+ ],
+ "usage": {
+  "input": 11783,
+  "cache_write": 66242,
+  "cache_read": 0,
+  "output": 1871
+ },
+ "usd": 0.207881,
+ "latency_s": 13.1,
+ "raw_response": {
+  "id": "msg_011Ch4s1xuRHZhoE1DvLyEVH",
+  "container": null,
+  "content": [
+   {
+    "citations": null,
+    "text": "{\"individuals\":[{\"title\":\"Edit Check\",\"class\":\"product.feature\",\"quote\":\"Offer people actionable feedback about Wikipedia policies while they are editing.\"},{\"title\":\"Editing Team\",\"class\":\"motivation.stakeholder\",\"quote\":\"The Editing Team is working on a set of improvements for the visual editor\"},{\"title\":\"Reference check\",\"class\":\"product.feature\",\"quote\":\"**Reference check**\"},{\"title\":\"Paste Check\",\"class\":\"product.feature\",\"quote\":\"**Paste Check**\"},{\"title\":\"Tone check\",\"class\":\"product.feature\",\"quote\":\"**Tone check**\"},{\"title\":\"Suggestion Mode\",\"class\":\"product.feature\",\"quote\":\"**Suggestion Mode**\"},{\"title\":\"TextMatch\",\"class\":\"product.feature\",\"quote\":\"**TextMatch**\"},{\"title\":\"Newcomers and Junior Contributors confidence objective\",\"class\":\"motivation.goal\",\"quote\":\"Newcomers and Junior Contributors from Sub-Saharan Africa will feel safe and confident enough while editing to publish changes they are proud of and that experienced volunteers consider useful.\"},{\"title\":\"Moderators notice quality improvements objective\",\"class\":\"motivation.goal\",\"quote\":\"Moderators at the English and French Wikipedias will notice improvements in the quality of edits newcomers are making and be motivated to configure how Edit Check presents policies to them.\"},{\"title\":\"Newcomers and Junior Contributors\",\"class\":\"motivation.stakeholder\",\"quote\":\"Newcomers and Junior Contributors from Sub-Saharan Africa\"},{\"title\":\"Experienced volunteers/moderators\",\"class\":\"motivation.stakeholder\",\"quote\":\"**Experienced volunteers/moderators** \u2013 need to do more work reverting low-quality edits\"},{\"title\":\"Inexperienced volunteers\",\"class\":\"motivation.stakeholder\",\"quote\":\"**Inexperienced volunteers** \u2013 become disappointed and frustrated when the good-faith change(s) they arrived to the wiki seeking to make are undone\"},{\"title\":\"Visual editor does not make people aware of policies\",\"class\":\"motivation.assessment\",\"quote\":\"the visual editor and other editing interfaces do not make people aware of the Wikipedia policies and guidelines they are expected to follow.\"},{\"title\":\"Reference Edit Check activation conditions\",\"class\":\"motivation.requirement\",\"quote\":\"A minimum of one new paragraph of text is added to the article someone is editing\"},{\"title\":\"Moderators must be able to configure Edit Check\",\"class\":\"motivation.principle\",\"quote\":\"The Editing Team thinks it is crucial that moderators be empowered to configure when, and for whom, Edit Check becomes activated.\"},{\"title\":\"Multi-Check A/B Test\",\"class\":\"testing.contextvariation\",\"quote\":\"we ran an A/B test with 12 Wikipedias.\"},{\"title\":\"Reference Check A/B Test\",\"class\":\"testing.contextvariation\",\"quote\":\"we conducted an A/B test with 15 Wikipedias.\"},{\"title\":\"Multi-Check\",\"class\":\"product.feature\",\"quote\":\"Multi-Check was deployed to all wikis where Reference Check is currently available on June 25, 2025.\"},{\"title\":\"Mobile publishing step\",\"class\":\"product.feature\",\"quote\":\"The first version of Edit Check will introduce a new step within the *mobile* visual editor's publishing workflow\"},{\"title\":\"Desktop siderail\",\"class\":\"product.feature\",\"quote\":\"This change shifted Edit Checks from appearing *within* articles to appearing *alongside* them, in a new \\\"siderail.\\\"\"},{\"title\":\"Special:EditChecks\",\"class\":\"product.feature\",\"quote\":\"Clearer and more accurate details in `Special:EditChecks` which shows the local configuration\"},{\"title\":\"Sub-Saharan Africa underrepresentation\",\"class\":\"motivation.assessment\",\"quote\":\"People from Sub-Saharan Africa are underrepresented within the movement\"},{\"title\":\"Increase quality of edits outcome\",\"class\":\"motivation.outcome\",\"quote\":\"Increase the quality of edits newcomers and Junior Contributors editing from within Sub-Saharan Africa publish in the main namespace\"},{\"title\":\"Edit Check too resource intensive risk\",\"class\":\"motivation.assessment\",\"quote\":\"Edit Check is too resource intensive to scale\"},{\"title\":\"Reference Check increased quality finding\",\"class\":\"motivation.outcome\",\"quote\":\"Reference Check caused an **increase in the quality of edits** newcomers publish and **did not cause any significant disruption**.\"},{\"title\":\"Reference Detection design\",\"class\":\"product.feature\",\"quote\":\"Reference Detection\"}],\"relationships\":[{\"source\":\"Reference check\",\"predicate\":\"composes\",\"target\":\"Edit Check\",\"quote\":\"Several features are available within Edit Check:\"},{\"source\":\"Paste Check\",\"predicate\":\"composes\",\"target\":\"Edit Check\",\"quote\":\"Several features are available within Edit Check:\"},{\"source\":\"Multi-Check A/B Test\",\"predicate\":\"tests\",\"target\":\"Multi-Check\",\"quote\":\"To learn whether the Multi-Check was effective at causing, newcomers to publish new content edits that include references\"},{\"source\":\"Reference Check A/B Test\",\"predicate\":\"tests\",\"target\":\"Reference check\",\"quote\":\"To learn whether the Reference Edit Check is effective at causing **newcomers to make edits they intended and experienced volunteers value**\"},{\"source\":\"Edit Check\",\"predicate\":\"serves\",\"target\":\"Newcomers and Junior Contributors\",\"quote\":\"To equip newcomers and Junior Contributors from Sub-Saharan Africa with the know-how and tools\"}]}",
+    "type": "text"
+   }
+  ],
+  "model": "claude-sonnet-5-5",
+  "role": "assistant",
+  "stop_details": null,
+  "stop_reason": "end_turn",
+  "stop_sequence": null,
+  "type": "message",
+  "usage": {
+   "cache_creation": {
+    "ephemeral_1h_input_tokens": 0,
+    "ephemeral_5m_input_tokens": 66242
+   },
+   "cache_creation_input_tokens": 66242,
+   "cache_read_input_tokens": 0,
+   "inference_geo": "global",
+   "input_tokens": 11783,
+   "output_tokens": 1871,
+   "output_tokens_details": {
+    "thinking_tokens": 0
+   },
+   "server_tool_use": null,
+   "service_tier": "standard",
+   "speed": "standard"
+  },
+  "diagnostics": null
+ }
+}

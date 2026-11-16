@@ -1,0 +1,1342 @@
+{
+ "arm": "A",
+ "model": "claude-haiku-5-5",
+ "document": "wikimedia_enterprise",
+ "take": 1,
+ "individuals": [
+  {
+   "title": "Wikimedia Enterprise",
+   "classes": [
+    "business.businessservice"
+   ],
+   "passages": [
+    {
+     "start": 153,
+     "end": 258,
+     "quote": "**Wikimedia Enterprise** is a service of the Wikimedia Foundation available via enterprise.wikimedia.com."
+    }
+   ]
+  },
+  {
+   "title": "Wikimedia Foundation",
+   "classes": [
+    "business.businessactor"
+   ],
+   "passages": [
+    {
+     "start": 153,
+     "end": 258,
+     "quote": "**Wikimedia Enterprise** is a service of the Wikimedia Foundation available via enterprise.wikimedia.com."
+    },
+    {
+     "start": 9140,
+     "end": 9210,
+     "quote": "primary decision making for it will rest with the Wikimedia Foundation"
+    },
+    {
+     "start": 11242,
+     "end": 11341,
+     "quote": "Requests will be reviewed by *Wikimedia Foundation* staff in accordance with the following criteria"
+    },
+    {
+     "start": 20186,
+     "end": 20257,
+     "quote": "which sits under the Advancement Department in the Wikimedia Foundation"
+    }
+   ]
+  },
+  {
+   "title": "Wikimedia API team",
+   "classes": [
+    "business.businessactor"
+   ],
+   "passages": [
+    {
+     "start": 3970,
+     "end": 4101,
+     "quote": "Emphasizing a self-funding set of specific use cases allows the Wikimedia API team to focus on volunteers, teams, and organizations"
+    }
+   ]
+  },
+  {
+   "title": "High-volume commercial reusers",
+   "classes": [
+    "motivation.stakeholder"
+   ],
+   "passages": [
+    {
+     "start": 259,
+     "end": 360,
+     "quote": "The goal of the service is to build services for high-volume commercial reusers of Wikimedia content."
+    }
+   ]
+  },
+  {
+   "title": "Large-scale content reusers",
+   "classes": [
+    "motivation.stakeholder"
+   ],
+   "passages": [
+    {
+     "start": 3226,
+     "end": 3322,
+     "quote": "Wikimedia Enterprise's focus is on businesses that reuse our content, typically at a large scale"
+    }
+   ]
+  },
+  {
+   "title": "Heavy for-profit users",
+   "classes": [
+    "motivation.stakeholder"
+   ],
+   "passages": [
+    {
+     "start": 2544,
+     "end": 2655,
+     "quote": "Most financial benefit for Wikimedia would likely only come from a very small handful of heavy for-profit users"
+    }
+   ]
+  },
+  {
+   "title": "Universities and university researchers",
+   "classes": [
+    "motivation.stakeholder"
+   ],
+   "passages": [
+    {
+     "start": 3092,
+     "end": 3211,
+     "quote": "but also for universities and university researchers; archives and archivists; along with the wider Wikimedia movement."
+    }
+   ]
+  },
+  {
+   "title": "Archives and archivists",
+   "classes": [
+    "motivation.stakeholder"
+   ],
+   "passages": [
+    {
+     "start": 3092,
+     "end": 3211,
+     "quote": "but also for universities and university researchers; archives and archivists; along with the wider Wikimedia movement."
+    }
+   ]
+  },
+  {
+   "title": "Wikimedia movement",
+   "classes": [
+    "motivation.stakeholder"
+   ],
+   "passages": [
+    {
+     "start": 2661,
+     "end": 2705,
+     "quote": "would feed back into the Wikimedia movement."
+    }
+   ]
+  },
+  {
+   "title": "Best last revision",
+   "classes": [
+    "motivation.requirement"
+   ],
+   "passages": [
+    {
+     "start": 3933,
+     "end": 3968,
+     "quote": "**Quality**: a \u201cbest last revision\u201d"
+    }
+   ]
+  },
+  {
+   "title": "Regular current snapshots",
+   "classes": [
+    "motivation.requirement"
+   ],
+   "passages": [
+    {
+     "start": 3811,
+     "end": 3873,
+     "quote": "**Frequency**: Regular current snapshots of Wikimedia projects"
+    }
+   ]
+  },
+  {
+   "title": "Machine-readable content formats",
+   "classes": [
+    "motivation.goal"
+   ],
+   "passages": [
+    {
+     "start": 4428,
+     "end": 4564,
+     "quote": "Make more of our movement's content available in consistent machine-readable formats, freely available for all researchers and re-users."
+    }
+   ]
+  },
+  {
+   "title": "Service launch and announcement",
+   "classes": [
+    "product.milestone"
+   ],
+   "passages": [
+    {
+     "start": 361,
+     "end": 493,
+     "quote": "The service was announced in March 2021 (blogpost, WIRED article) and launched in October 2021 (Press release, OpenFutures article)."
+    }
+   ]
+  },
+  {
+   "title": "Service goal: build services for reusers",
+   "classes": [
+    "motivation.goal"
+   ],
+   "passages": [
+    {
+     "start": 259,
+     "end": 360,
+     "quote": "The goal of the service is to build services for high-volume commercial reusers of Wikimedia content."
+    }
+   ]
+  },
+  {
+   "title": "Faster, more reliable data services at scale",
+   "classes": [
+    "motivation.goal"
+   ],
+   "passages": [
+    {
+     "start": 643,
+     "end": 754,
+     "quote": "providing data services at a large scale, so that they are faster and more comprehensive, reliable, and secure."
+    }
+   ]
+  },
+  {
+   "title": "Improve reader experience beyond own websites",
+   "classes": [
+    "motivation.goal"
+   ],
+   "passages": [
+    {
+     "start": 755,
+     "end": 858,
+     "quote": "Wikimedia Enterprise aims to improve the user experience of Wikimedia's readers beyond our own websites"
+    }
+   ]
+  },
+  {
+   "title": "Increase reach and discoverability of content",
+   "classes": [
+    "motivation.goal"
+   ],
+   "passages": [
+    {
+     "start": 860,
+     "end": 913,
+     "quote": "increase the reach and discoverability of the content"
+    }
+   ]
+  },
+  {
+   "title": "Improve attribution and verifiability by reusers",
+   "classes": [
+    "motivation.goal"
+   ],
+   "passages": [
+    {
+     "start": 919,
+     "end": 1042,
+     "quote": "improve awareness and ease of attribution and verifiability by the organizations that reuse Wikimedia project data the most"
+    }
+   ]
+  },
+  {
+   "title": "High barrier to entry for Wikimedia data",
+   "classes": [
+    "motivation.assessment"
+   ],
+   "passages": [
+    {
+     "start": 1075,
+     "end": 1193,
+     "quote": "There is a very high barrier to entry for using Wikimedia data, outside of the common use cases of reading or editing."
+    }
+   ]
+  },
+  {
+   "title": "Large companies should reinvest in communities",
+   "classes": [
+    "motivation.driver"
+   ],
+   "passages": [
+    {
+     "start": 2171,
+     "end": 2301,
+     "quote": "There has long been a feeling among community members that these companies should do more to reinvest in the Wikimedia communities"
+    }
+   ]
+  },
+  {
+   "title": "Sustainable approach with clearer enterprise relationship",
+   "classes": [
+    "motivation.goal"
+   ],
+   "passages": [
+    {
+     "start": 2371,
+     "end": 2543,
+     "quote": "This led to the idea of developing a new approach that is more sustainable in the long term and provides a much clearer relationship between Wikimedia and enterprise users."
+    }
+   ]
+  },
+  {
+   "title": "Responsibility to democratize data",
+   "classes": [
+    "motivation.principle"
+   ],
+   "passages": [
+    {
+     "start": 2747,
+     "end": 2871,
+     "quote": "there is a responsibility to democratize our data for organizations that do not possess the resources of these largest users"
+    }
+   ]
+  },
+  {
+   "title": "Level the playing field without reinforcing monopolies",
+   "classes": [
+    "motivation.goal"
+   ],
+   "passages": [
+    {
+     "start": 2873,
+     "end": 2989,
+     "quote": "to ensure we are leveling the playing field and helping to foster a healthy internet without reinforcing monopolies."
+    }
+   ]
+  },
+  {
+   "title": "Reuser requirement: frequency",
+   "classes": [
+    "motivation.requirement"
+   ],
+   "passages": [
+    {
+     "start": 3742,
+     "end": 3807,
+     "quote": "Reusers of our content are looking for three critical components:"
+    }
+   ]
+  },
+  {
+   "title": "Reuser requirement: reliability",
+   "classes": [
+    "motivation.requirement"
+   ],
+   "passages": [
+    {
+     "start": 3876,
+     "end": 3930,
+     "quote": "**Reliability**: Dependable, accessible infrastructure"
+    }
+   ]
+  },
+  {
+   "title": "Program goal: content availability",
+   "classes": [
+    "motivation.goal"
+   ],
+   "passages": [
+    {
+     "start": 4415,
+     "end": 4512,
+     "quote": "**Content**: Make more of our movement's content available in consistent machine-readable formats"
+    }
+   ]
+  },
+  {
+   "title": "Program goal: reduce resource load",
+   "classes": [
+    "motivation.goal"
+   ],
+   "passages": [
+    {
+     "start": 4567,
+     "end": 4686,
+     "quote": "**Resource-load**: Reduce the need for high-intensity site-scraping by the highest-frequency and highest-volume reusers"
+    }
+   ]
+  },
+  {
+   "title": "Program goal: clearer fundraising from largest reusers",
+   "classes": [
+    "motivation.goal"
+   ],
+   "passages": [
+    {
+     "start": 4737,
+     "end": 4870,
+     "quote": "**Fundraising**: Provide a clearer and more consistent way for the largest re-users to reinvest derived benefits back to the movement"
+    }
+   ]
+  },
+  {
+   "title": "Benefits should extend beyond startups",
+   "classes": [
+    "motivation.goal"
+   ],
+   "passages": [
+    {
+     "start": 2990,
+     "end": 3090,
+     "quote": "The benefits of such a service shouldn't just be for startups or alternatives to the internet giants"
+    }
+   ]
+  },
+  {
+   "title": "Wikimedia Enterprise APIs",
+   "classes": [
+    "business.product"
+   ],
+   "passages": []
+  },
+  {
+   "title": "Enterprise project team",
+   "classes": [
+    "business.businessactor"
+   ],
+   "passages": [
+    {
+     "start": 7864,
+     "end": 7956,
+     "quote": "The Enterprise project team is developing a new resource aimed at for-profit content reusers"
+    }
+   ]
+  },
+  {
+   "title": "Wikimedia Cloud Services",
+   "classes": [
+    "technology.technologyservice"
+   ],
+   "passages": [
+    {
+     "start": 10392,
+     "end": 10465,
+     "quote": "Using Wikimedia Cloud Services. You get the same access as a paid account"
+    }
+   ]
+  },
+  {
+   "title": "Free account",
+   "classes": [
+    "security.role"
+   ],
+   "passages": [
+    {
+     "start": 10212,
+     "end": 10313,
+     "quote": "Creating a free account on the official website and using the Enterprise API access for free accounts"
+    },
+    {
+     "start": 17933,
+     "end": 18004,
+     "quote": "updated monthly on a free account and weekly or daily on a paid account"
+    }
+   ]
+  },
+  {
+   "title": "Structured Contents (beta) datasets",
+   "classes": [
+    "technology.artifact"
+   ],
+   "passages": [
+    {
+     "start": 10722,
+     "end": 10802,
+     "quote": "Downloading Structured Contents (beta) datasets hosted on third-party platforms."
+    }
+   ]
+  },
+  {
+   "title": "Wikimedia projects are libre",
+   "classes": [
+    "motivation.principle"
+   ],
+   "passages": [
+    {
+     "start": 5625,
+     "end": 5698,
+     "quote": "Wikimedia projects are, have always been, and will always remain *libre*."
+    }
+   ]
+  },
+  {
+   "title": "Wikimedia projects are gratis",
+   "classes": [
+    "motivation.principle"
+   ],
+   "passages": [
+    {
+     "start": 6056,
+     "end": 6130,
+     "quote": "Wikimedia projects are, have always been, and will always remain *gratis*."
+    }
+   ]
+  },
+  {
+   "title": "Anyone may reuse Wikimedia content without restriction",
+   "classes": [
+    "motivation.principle"
+   ],
+   "passages": [
+    {
+     "start": 5699,
+     "end": 5816,
+     "quote": "The principles of free cultural works mean that anyone can use Wikimedia without restriction, including commercially."
+    }
+   ]
+  },
+  {
+   "title": "Non-commercial licenses rejected",
+   "classes": [
+    "motivation.principle"
+   ],
+   "passages": [
+    {
+     "start": 5849,
+     "end": 5944,
+     "quote": "It is why we reject \u2018non-commercial\u2019 licenses, as they would limit the kinds of reuse possible."
+    }
+   ]
+  },
+  {
+   "title": "Commercial reuse valued as distribution of knowledge",
+   "classes": [
+    "motivation.value"
+   ],
+   "passages": [
+    {
+     "start": 5959,
+     "end": 6046,
+     "quote": "we consider commercial reuse an important means of distributing knowledge to audiences."
+    }
+   ]
+  },
+  {
+   "title": "Free access to knowledge core to mission",
+   "classes": [
+    "motivation.value"
+   ],
+   "passages": [
+    {
+     "start": 6131,
+     "end": 6285,
+     "quote": "The ability to freely access the knowledge available across all Wikimedia projects has always been core to the mission of the Foundation and the movement."
+    }
+   ]
+  },
+  {
+   "title": "Content available for reuse at no cost",
+   "classes": [
+    "motivation.principle"
+   ],
+   "passages": [
+    {
+     "start": 6533,
+     "end": 6652,
+     "quote": "made available for reuse in various forms (including but not limited to database dumps, APIs, and scraping) at no cost."
+    }
+   ]
+  },
+  {
+   "title": "Enterprise API revenue supports Wikimedia mission",
+   "classes": [
+    "motivation.constraint"
+   ],
+   "passages": [
+    {
+     "start": 8190,
+     "end": 8276,
+     "quote": "All Enterprise API revenue will unequivocally be used to support the Wikimedia mission"
+    }
+   ]
+  },
+  {
+   "title": "Enterprise API use not required for for-profit reuse",
+   "classes": [
+    "motivation.constraint"
+   ],
+   "passages": [
+    {
+     "start": 8048,
+     "end": 8189,
+     "quote": "Use of this offering will not be required for for-profit content reuse; companies can continue to use the current tools available at no cost."
+    }
+   ]
+  },
+  {
+   "title": "Avoid revenue dependencies in product design",
+   "classes": [
+    "motivation.principle"
+   ],
+   "passages": [
+    {
+     "start": 7245,
+     "end": 7355,
+     "quote": "taking care to avoid revenue dependencies or other undue external influence in product design and development."
+    }
+   ]
+  },
+  {
+   "title": "Team seeks community feedback and integrates it",
+   "classes": [
+    "motivation.principle"
+   ],
+   "passages": [
+    {
+     "start": 8592,
+     "end": 8702,
+     "quote": "The team is committed to listening, engaging, and where possible, integrating the feedback we get on our work."
+    }
+   ]
+  },
+  {
+   "title": "Access for all principle",
+   "classes": [
+    "motivation.principle"
+   ],
+   "passages": [
+    {
+     "start": 10022,
+     "end": 10163,
+     "quote": "in accordance with the project's principle of *access for all*, there are also various ways to access the Wikimedia Enterprise APIs for free."
+    }
+   ]
+  },
+  {
+   "title": "Cloud services calls need no authorization header",
+   "classes": [
+    "security.authenticationconfig"
+   ],
+   "passages": [
+    {
+     "start": 10597,
+     "end": 10719,
+     "quote": "make your calls to any endpoint described in the Enterprise API documentation **without passing an authorization header**."
+    }
+   ]
+  },
+  {
+   "title": "Paid enterprise access with SLAs and dedicated support",
+   "classes": [
+    "business.product"
+   ],
+   "passages": [
+    {
+     "start": 9931,
+     "end": 10003,
+     "quote": "with associated Service Level Agreements and dedicated customer support."
+    }
+   ]
+  },
+  {
+   "title": "Wikimedia Deutschland",
+   "classes": [
+    "business.businessactor"
+   ],
+   "passages": [
+    {
+     "start": 11463,
+     "end": 11548,
+     "quote": "the request will be reviewed in coordination with staff from *Wikimedia Deutschland*."
+    }
+   ]
+  },
+  {
+   "title": "Wikimedia Enterprise operating principles",
+   "classes": [
+    "motivation.principle"
+   ],
+   "passages": [
+    {
+     "start": 13831,
+     "end": 13921,
+     "quote": "In accordance with the Wikimedia Enterprise operating principles regarding non-exclusivity"
+    }
+   ]
+  },
+  {
+   "title": "On-demand API",
+   "classes": [
+    "application.applicationservice"
+   ],
+   "passages": [
+    {
+     "start": 16863,
+     "end": 16910,
+     "quote": "Retrieve single articles with the On-demand API"
+    }
+   ]
+  },
+  {
+   "title": "Realtime API",
+   "classes": [
+    "application.applicationservice"
+   ],
+   "passages": [
+    {
+     "start": 16913,
+     "end": 16966,
+     "quote": "Receive changes instantly with Realtime API streaming"
+    }
+   ]
+  },
+  {
+   "title": "Snapshot API",
+   "classes": [
+    "application.applicationservice"
+   ],
+   "passages": [
+    {
+     "start": 17567,
+     "end": 17670,
+     "quote": "The Enterprise Snapshot API allows users to retrieve entire Wikimedia projects as a database dump file."
+    }
+   ]
+  },
+  {
+   "title": "Structured JSON response format",
+   "classes": [
+    "api.schema"
+   ],
+   "passages": [
+    {
+     "start": 16636,
+     "end": 16712,
+     "quote": "All of our APIs return the same structured JSON (or ND-JSON) response format"
+    }
+   ]
+  },
+  {
+   "title": "Compressed dumps",
+   "classes": [
+    "technology.artifact"
+   ],
+   "passages": [
+    {
+     "start": 17844,
+     "end": 17931,
+     "quote": "Compressed dumps (in both wikitext and HTML) of supported text-based Wikimedia projects"
+    }
+   ]
+  },
+  {
+   "title": "Article payload data",
+   "classes": [
+    "application.dataobject"
+   ],
+   "passages": [
+    {
+     "start": 16968,
+     "end": 17071,
+     "quote": "API responses payloads include article data such as summary, image, Wikidata QID, license, and metadata"
+    }
+   ]
+  },
+  {
+   "title": "Exceptional access is only granted when standard options are exhausted",
+   "classes": [
+    "motivation.constraint"
+   ],
+   "passages": [
+    {
+     "start": 12607,
+     "end": 12708,
+     "quote": "Exceptional free access to a paid account can only be granted when all standard options are exhausted"
+    }
+   ]
+  },
+  {
+   "title": "Copyright licenses must be followed",
+   "classes": [
+    "motivation.constraint"
+   ],
+   "passages": [
+    {
+     "start": 12014,
+     "end": 12155,
+     "quote": "All users of Wikimedia Enterprise services must abide by the copyright licenses on Wikimedia content. They are inherent and cannot be waived."
+    }
+   ]
+  },
+  {
+   "title": "Exceptional access is in-kind support",
+   "classes": [
+    "motivation.meaning"
+   ],
+   "passages": [
+    {
+     "start": 13390,
+     "end": 13460,
+     "quote": "Providing exceptional access is effectively a form of in-kind support."
+    }
+   ]
+  },
+  {
+   "title": "New features and datasets must be available to all",
+   "classes": [
+    "motivation.principle"
+   ],
+   "passages": [
+    {
+     "start": 13923,
+     "end": 14001,
+     "quote": "any newly developed software feature or dataset must be made available to all."
+    }
+   ]
+  },
+  {
+   "title": "Use case must not create closed knowledge silos",
+   "classes": [
+    "motivation.constraint"
+   ],
+   "passages": [
+    {
+     "start": 14861,
+     "end": 14983,
+     "quote": "The proposed use-case should not deliberately create or reinforce closed knowledge silos, proprietary forks of the content"
+    }
+   ]
+  },
+  {
+   "title": "Business model must not conflict with Wikimedia values",
+   "classes": [
+    "motivation.constraint"
+   ],
+   "passages": [
+    {
+     "start": 15964,
+     "end": 16050,
+     "quote": "The business-model should at the very least not be in conflict with Wikimedia\u2019s values"
+    }
+   ]
+  },
+  {
+   "title": "Free access requires commitment to open knowledge",
+   "classes": [
+    "motivation.requirement"
+   ],
+   "passages": [
+    {
+     "start": 15548,
+     "end": 15667,
+     "quote": "the user should also be able to demonstrate a commitment to open knowledge, transparency, and/or public-benefit mission"
+    }
+   ]
+  },
+  {
+   "title": "Snapshot dumps updated on free and paid cadence",
+   "classes": [
+    "technology.artifact"
+   ],
+   "passages": [
+    {
+     "start": 17844,
+     "end": 18004,
+     "quote": "Compressed dumps (in both wikitext and HTML) of supported text-based Wikimedia projects, updated monthly on a free account and weekly or daily on a paid account"
+    }
+   ]
+  },
+  {
+   "title": "Wikimedia Enterprise On-demand API",
+   "classes": [
+    "application.applicationservice"
+   ],
+   "passages": [
+    {
+     "start": 18480,
+     "end": 18608,
+     "quote": "The Wikimedia Enterprise On-demand API allows users to retrieve single articles from any supported Wikimedia project at anytime."
+    }
+   ]
+  },
+  {
+   "title": "Wikimedia Enterprise Realtime API",
+   "classes": [
+    "application.applicationservice"
+   ],
+   "passages": [
+    {
+     "start": 19385,
+     "end": 19494,
+     "quote": "The Enterprise Realtime API allows users to stream updates in real-time from any supported Wikimedia project."
+    }
+   ]
+  },
+  {
+   "title": "Commercial Partnerships division",
+   "classes": [
+    "business.businessactor"
+   ],
+   "passages": [
+    {
+     "start": 20134,
+     "end": 20229,
+     "quote": "helmed by the **Commercial Partnerships** division, which sits under the Advancement Department"
+    }
+   ]
+  },
+  {
+   "title": "Advancement Department",
+   "classes": [
+    "business.businessactor"
+   ],
+   "passages": [
+    {
+     "start": 20186,
+     "end": 20257,
+     "quote": "which sits under the Advancement Department in the Wikimedia Foundation"
+    }
+   ]
+  },
+  {
+   "title": "Technical Partnerships team",
+   "classes": [
+    "business.businessactor"
+   ],
+   "passages": [
+    {
+     "start": 21130,
+     "end": 21189,
+     "quote": "to reflect the inclusion of the Technical Partnerships team"
+    }
+   ]
+  },
+  {
+   "title": "PartnerHero",
+   "classes": [
+    "business.businessactor"
+   ],
+   "passages": [
+    {
+     "start": 20550,
+     "end": 20599,
+     "quote": "**PartnerHero** provide customer support services"
+    }
+   ]
+  },
+  {
+   "title": "Vuurr",
+   "classes": [
+    "business.businessactor"
+   ],
+   "passages": [
+    {
+     "start": 20601,
+     "end": 20642,
+     "quote": "**Vuurr** are assisting our sales process"
+    }
+   ]
+  },
+  {
+   "title": "Super Natural Design",
+   "classes": [
+    "business.businessactor"
+   ],
+   "passages": [
+    {
+     "start": 20648,
+     "end": 20713,
+     "quote": "**Super Natural Design** are the designers of the project website"
+    }
+   ]
+  },
+  {
+   "title": "Perrine Winkler",
+   "classes": [
+    "business.businessactor"
+   ],
+   "passages": [
+    {
+     "start": 20715,
+     "end": 20805,
+     "quote": "**Perrine Winkler** has been contracted to help with rebranding the team behind Enterprise"
+    }
+   ]
+  },
+  {
+   "title": "Speed & Function",
+   "classes": [
+    "business.businessactor"
+   ],
+   "passages": [
+    {
+     "start": 20896,
+     "end": 20972,
+     "quote": "Engineering support was provided in the first years by **Speed & Function**."
+    }
+   ]
+  },
+  {
+   "title": "LLC overseeing the project",
+   "classes": [
+    "business.businessactor"
+   ],
+   "passages": [
+    {
+     "start": 21207,
+     "end": 21304,
+     "quote": "The board of the LLC overseeing the project are *Ex officio* from Wikimedia Foundation leadership"
+    }
+   ]
+  },
+  {
+   "title": "Sheetal Puri",
+   "classes": [
+    "business.businessactor"
+   ],
+   "passages": [
+    {
+     "start": 21359,
+     "end": 21415,
+     "quote": "This includes the Chief Advancement Officer Sheetal Puri"
+    }
+   ]
+  },
+  {
+   "title": "Stephen LaPorte",
+   "classes": [
+    "business.businessactor"
+   ],
+   "passages": [
+    {
+     "start": 21417,
+     "end": 21448,
+     "quote": "General Counsel Stephen LaPorte"
+    }
+   ]
+  },
+  {
+   "title": "Selena Deckelman",
+   "classes": [
+    "business.businessactor"
+   ],
+   "passages": [
+    {
+     "start": 21450,
+     "end": 21503,
+     "quote": "Chief Product and Technology Officer Selena Deckelman"
+    }
+   ]
+  },
+  {
+   "title": "Lane Becker",
+   "classes": [
+    "business.businessactor"
+   ],
+   "passages": [
+    {
+     "start": 21509,
+     "end": 21554,
+     "quote": "Lane Becker who serves as the LLC's president"
+    }
+   ]
+  },
+  {
+   "title": "Wikimedia Foundation Board of Trustees",
+   "classes": [
+    "business.businessactor"
+   ],
+   "passages": [
+    {
+     "start": 21556,
+     "end": 21638,
+     "quote": "The LLC is subject to the governance of the Wikimedia Foundation Board of Trustees"
+    }
+   ]
+  },
+  {
+   "title": "Batch compressed article downloads",
+   "classes": [
+    "product.feature"
+   ],
+   "passages": [
+    {
+     "start": 19591,
+     "end": 19675,
+     "quote": "Batch: Download compressed files of all articles that were changed, generated hourly"
+    }
+   ]
+  },
+  {
+   "title": "Realtime firehose streaming",
+   "classes": [
+    "product.softwarecapability"
+   ],
+   "passages": [
+    {
+     "start": 19498,
+     "end": 19588,
+     "quote": "Streaming: Receive streaming (firehose) updates of every change as they occur in real-time"
+    }
+   ]
+  },
+  {
+   "title": "Event filtering by project or revision namespace",
+   "classes": [
+    "product.softwarecapability"
+   ],
+   "passages": [
+    {
+     "start": 19807,
+     "end": 19859,
+     "quote": "Filtering of events by Project or Revision Namespace"
+    }
+   ]
+  },
+  {
+   "title": "Enterprise Realtime API filtering requirement",
+   "classes": [
+    "motivation.requirement"
+   ],
+   "passages": [
+    {
+     "start": 19159,
+     "end": 19230,
+     "quote": "allow them to filter the changes they receive to limit their processing"
+    }
+   ]
+  },
+  {
+   "title": "Reliable data access requested by high-volume reusers",
+   "classes": [
+    "motivation.requirement"
+   ],
+   "passages": [
+    {
+     "start": 18308,
+     "end": 18379,
+     "quote": "High-volume reusers have requested a reliable means to gather this data"
+    }
+   ]
+  },
+  {
+   "title": "Stable HTTP connections to avoid data loss",
+   "classes": [
+    "motivation.requirement"
+   ],
+   "passages": [
+    {
+     "start": 19232,
+     "end": 19288,
+     "quote": "guarantee stable HTTP connections to ensure no data loss"
+    }
+   ]
+  },
+  {
+   "title": "Reduced API calls per event via a more useful schema",
+   "classes": [
+    "motivation.outcome"
+   ],
+   "passages": [
+    {
+     "start": 19294,
+     "end": 19382,
+     "quote": "supply a more useful schema to limit the number of API calls they need to make per event"
+    }
+   ]
+  },
+  {
+   "title": "Instant updates for new content, edits, deletions and breaking news",
+   "classes": [
+    "product.softwarecapability"
+   ],
+   "passages": [
+    {
+     "start": 19678,
+     "end": 19804,
+     "quote": "Instant updates for new content, any edits, deletions, and breaking news events including community-curated visibility changes"
+    }
+   ]
+  },
+  {
+   "title": "Latest page data on demand to augment other APIs",
+   "classes": [
+    "product.softwarecapability"
+   ],
+   "passages": [
+    {
+     "start": 18755,
+     "end": 18837,
+     "quote": "Request the latest page data anytime to augment your Realtime or Snapshot API data"
+    }
+   ]
+  },
+  {
+   "title": "Renaming to Commercial Partnerships in December 2025",
+   "classes": [
+    "business.businessevent"
+   ],
+   "passages": [
+    {
+     "start": 20974,
+     "end": 21128,
+     "quote": "Since December 2025, the division working on the Wikimedia Enterprise Initiative changed its name from 'Wikimedia Enterprise' to 'Commercial Partnerships'"
+    }
+   ]
+  }
+ ],
+ "relationships": [
+  {
+   "source": "Wikimedia Enterprise",
+   "predicate": "realizes",
+   "target": "Service goal: build services for reusers"
+  },
+  {
+   "source": "Wikimedia Enterprise",
+   "predicate": "realizes",
+   "target": "Faster, more reliable data services at scale"
+  },
+  {
+   "source": "Wikimedia Enterprise",
+   "predicate": "realizes",
+   "target": "Improve reader experience beyond own websites"
+  },
+  {
+   "source": "Wikimedia Enterprise",
+   "predicate": "realizes",
+   "target": "Increase reach and discoverability of content"
+  },
+  {
+   "source": "Wikimedia Enterprise",
+   "predicate": "realizes",
+   "target": "Improve attribution and verifiability by reusers"
+  },
+  {
+   "source": "Wikimedia Enterprise",
+   "predicate": "realizes",
+   "target": "Sustainable approach with clearer enterprise relationship"
+  },
+  {
+   "source": "Large-scale content reusers",
+   "predicate": "associated-with",
+   "target": "Reuser requirement: frequency"
+  },
+  {
+   "source": "Large-scale content reusers",
+   "predicate": "associated-with",
+   "target": "Reuser requirement: reliability"
+  },
+  {
+   "source": "Large-scale content reusers",
+   "predicate": "associated-with",
+   "target": "Best last revision"
+  },
+  {
+   "source": "Heavy for-profit users",
+   "predicate": "associated-with",
+   "target": "Large companies should reinvest in communities"
+  },
+  {
+   "source": "High barrier to entry for Wikimedia data",
+   "predicate": "influence",
+   "target": "Increase reach and discoverability of content"
+  },
+  {
+   "source": "Large companies should reinvest in communities",
+   "predicate": "influence",
+   "target": "Sustainable approach with clearer enterprise relationship"
+  },
+  {
+   "source": "Responsibility to democratize data",
+   "predicate": "influence",
+   "target": "Level the playing field without reinforcing monopolies"
+  },
+  {
+   "source": "Responsibility to democratize data",
+   "predicate": "influence",
+   "target": "Benefits should extend beyond startups"
+  },
+  {
+   "source": "Wikimedia projects are libre",
+   "predicate": "influence",
+   "target": "Non-commercial licenses rejected"
+  },
+  {
+   "source": "Wikimedia projects are libre",
+   "predicate": "influence",
+   "target": "Anyone may reuse Wikimedia content without restriction"
+  },
+  {
+   "source": "Wikimedia projects are gratis",
+   "predicate": "influence",
+   "target": "Content available for reuse at no cost"
+  },
+  {
+   "source": "Free access to knowledge core to mission",
+   "predicate": "associated-with",
+   "target": "Content available for reuse at no cost"
+  },
+  {
+   "source": "Enterprise API use not required for for-profit reuse",
+   "predicate": "influence",
+   "target": "Content available for reuse at no cost"
+  },
+  {
+   "source": "On-demand API",
+   "predicate": "accesses",
+   "target": "Article payload data"
+  },
+  {
+   "source": "Wikimedia Enterprise On-demand API",
+   "predicate": "realizes",
+   "target": "Latest page data on demand to augment other APIs"
+  },
+  {
+   "source": "Wikimedia Enterprise On-demand API",
+   "predicate": "satisfies",
+   "target": "Reliable data access requested by high-volume reusers"
+  },
+  {
+   "source": "Wikimedia Enterprise Realtime API",
+   "predicate": "realizes",
+   "target": "Realtime firehose streaming"
+  },
+  {
+   "source": "Wikimedia Enterprise Realtime API",
+   "predicate": "realizes",
+   "target": "Batch compressed article downloads"
+  },
+  {
+   "source": "Wikimedia Enterprise Realtime API",
+   "predicate": "realizes",
+   "target": "Event filtering by project or revision namespace"
+  },
+  {
+   "source": "Wikimedia Enterprise Realtime API",
+   "predicate": "realizes",
+   "target": "Instant updates for new content, edits, deletions and breaking news"
+  },
+  {
+   "source": "Wikimedia Enterprise Realtime API",
+   "predicate": "satisfies",
+   "target": "Enterprise Realtime API filtering requirement"
+  },
+  {
+   "source": "Wikimedia Enterprise Realtime API",
+   "predicate": "satisfies",
+   "target": "Stable HTTP connections to avoid data loss"
+  }
+ ],
+ "calls": 160,
+ "recorded_tokens": {
+  "input_all": 3097904,
+  "output": 60967
+ },
+ "usd": null,
+ "latency_s": null,
+ "source": "tests/integration/fixtures/cassettes/extraction_benchmark_find_then_type/wikimedia_enterprise.json"
+}

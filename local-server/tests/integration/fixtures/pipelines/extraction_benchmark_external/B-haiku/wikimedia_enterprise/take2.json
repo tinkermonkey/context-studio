@@ -1,0 +1,386 @@
+{
+ "arm": "B-haiku",
+ "model": "claude-haiku-5-5",
+ "document": "wikimedia_enterprise",
+ "take": 2,
+ "effort": "high",
+ "max_tokens": 64000,
+ "prompt_sha256": "fe903290e1879723a20da8985cff39ba0f376161732cf9990e18acf1cff75eac",
+ "failed": false,
+ "attempts": [
+  {
+   "attempt": 1,
+   "problem": null,
+   "usage": {
+    "input": 6800,
+    "cache_write": 0,
+    "cache_read": 66242,
+    "output": 13135
+   },
+   "usd": 0.00790992,
+   "latency_s": 45.0
+  }
+ ],
+ "individuals": [
+  {
+   "title": "Wikimedia Enterprise",
+   "class": "business.product",
+   "quote": "**Wikimedia Enterprise** is a service of the Wikimedia Foundation available via enterprise.wikimedia.com."
+  },
+  {
+   "title": "Wikimedia Foundation",
+   "class": "business.businessactor",
+   "quote": "Given the nature of the service, primary decision making for it will rest with the Wikimedia Foundation."
+  },
+  {
+   "title": "Commercial Partnerships",
+   "class": "business.businessactor",
+   "quote": "The Wikimedia Enterprise project is helmed by the **Commercial Partnerships** division"
+  },
+  {
+   "title": "Advancement Department",
+   "class": "business.businessactor",
+   "quote": "which sits under the Advancement Department in the Wikimedia Foundation"
+  },
+  {
+   "title": "Wikimedia Enterprise LLC",
+   "class": "business.businessactor",
+   "quote": "The LLC is subject to the governance of the Wikimedia Foundation Board of Trustees"
+  },
+  {
+   "title": "Wikimedia Foundation Board of Trustees",
+   "class": "business.businessactor",
+   "quote": "subject to the governance of the Wikimedia Foundation Board of Trustees"
+  },
+  {
+   "title": "Sheetal Puri",
+   "class": "business.businessactor",
+   "quote": "This includes the Chief Advancement Officer Sheetal Puri"
+  },
+  {
+   "title": "Stephen LaPorte",
+   "class": "business.businessactor",
+   "quote": "General Counsel Stephen LaPorte"
+  },
+  {
+   "title": "Selena Deckelman",
+   "class": "business.businessactor",
+   "quote": "Chief Product and Technology Officer Selena Deckelman"
+  },
+  {
+   "title": "Lane Becker",
+   "class": "business.businessactor",
+   "quote": "Lane Becker who serves as the LLC's president"
+  },
+  {
+   "title": "Perrine Winkler",
+   "class": "business.businessactor",
+   "quote": "has been contracted to help with rebranding the team behind Enterprise to Commercial Partnerships"
+  },
+  {
+   "title": "PartnerHero",
+   "class": "business.businessactor",
+   "quote": "**PartnerHero** provide customer support services"
+  },
+  {
+   "title": "Vuurr",
+   "class": "business.businessactor",
+   "quote": "**Vuurr** are assisting our sales process"
+  },
+  {
+   "title": "Super Natural Design",
+   "class": "business.businessactor",
+   "quote": "**Super Natural Design** are the designers of the project website"
+  },
+  {
+   "title": "Speed & Function",
+   "class": "business.businessactor",
+   "quote": "Engineering support was provided in the first years by **Speed & Function**."
+  },
+  {
+   "title": "Wikimedia Deutschland",
+   "class": "business.businessactor",
+   "quote": "the request will be reviewed in coordination with staff from *Wikimedia Deutschland*."
+  },
+  {
+   "title": "Snapshot API",
+   "class": "application.applicationservice",
+   "quote": "The Enterprise Snapshot API allows users to retrieve entire Wikimedia projects as a database dump file."
+  },
+  {
+   "title": "On-demand API",
+   "class": "application.applicationservice",
+   "quote": "The Wikimedia Enterprise On-demand API allows users to retrieve single articles from any supported Wikimedia project at anytime."
+  },
+  {
+   "title": "Realtime API",
+   "class": "application.applicationservice",
+   "quote": "The Enterprise Realtime API allows users to stream updates in real-time from any supported Wikimedia project."
+  },
+  {
+   "title": "Movement Strategy recommendations",
+   "class": "motivation.driver",
+   "quote": "In the Movement Strategy recommendations to *increase the sustainability of our movement* and *improve user experience* there are the recommendations to"
+  },
+  {
+   "title": "Increase the sustainability of our movement",
+   "class": "motivation.goal",
+   "quote": "under the heading of *Increase the sustainability of our movement* the Movement Strategy process asked the Wikimedia Foundation to explore"
+  },
+  {
+   "title": "Improve user experience",
+   "class": "motivation.goal",
+   "quote": "under the heading *Improve User Experience*, a further recommendation stated"
+  },
+  {
+   "title": "Access for all",
+   "class": "motivation.principle",
+   "quote": "in accordance with the project's principle of *access for all*"
+  },
+  {
+   "title": "Non-exclusivity principle",
+   "class": "motivation.principle",
+   "quote": "In accordance with the Wikimedia Enterprise operating principles regarding non-exclusivity"
+  },
+  {
+   "title": "Content program goal",
+   "class": "motivation.goal",
+   "quote": "**Content**: Make more of our movement's content available in consistent machine-readable formats, freely available for all researchers and re-users."
+  },
+  {
+   "title": "Resource-load program goal",
+   "class": "motivation.goal",
+   "quote": "**Resource-load**: Reduce the need for high-intensity site-scraping by the highest-frequency and highest-volume reusers"
+  },
+  {
+   "title": "Fundraising program goal",
+   "class": "motivation.goal",
+   "quote": "**Fundraising**: Provide a clearer and more consistent way for the largest re-users to reinvest derived benefits back to the movement"
+  },
+  {
+   "title": "Enterprise API revenue supports Wikimedia mission",
+   "class": "motivation.goal",
+   "quote": "All Enterprise API revenue will unequivocally be used to support the Wikimedia mission"
+  },
+  {
+   "title": "Frequency requirement for reusers",
+   "class": "motivation.requirement",
+   "quote": "**Frequency**: Regular current snapshots of Wikimedia projects"
+  },
+  {
+   "title": "Reliability requirement for reusers",
+   "class": "motivation.requirement",
+   "quote": "**Reliability**: Dependable, accessible infrastructure"
+  },
+  {
+   "title": "Quality requirement for reusers",
+   "class": "motivation.requirement",
+   "quote": "**Quality**: a \u201cbest last revision\u201d"
+  },
+  {
+   "title": "Very high barrier to entry for Wikimedia data",
+   "class": "motivation.assessment",
+   "quote": "There is a very high barrier to entry for using Wikimedia data, outside of the common use cases of reading or editing."
+  },
+  {
+   "title": "Exceptional access",
+   "class": "business.businessservice",
+   "quote": "you may request free **exceptional access** to the higher rate of the Enterprise APIs."
+  },
+  {
+   "title": "Six exceptional access criteria",
+   "class": "motivation.requirement",
+   "quote": "with a response to the six criteria described below"
+  },
+  {
+   "title": "Commercial Sales and Contracts Policy",
+   "class": "motivation.constraint",
+   "quote": "as described on the *Wikimedia Foundation Commercial Sales and Contracts Policy*."
+  },
+  {
+   "title": "99% SLA for contracted accounts",
+   "class": "motivation.outcome",
+   "quote": "Contracted accounts receive 99% SLA and support response-time guarantees."
+  },
+  {
+   "title": "Wikimedia Enterprise launch in October 2021",
+   "class": "business.businessevent",
+   "quote": "launched in October 2021 (Press release, OpenFutures article)"
+  }
+ ],
+ "relationships": [
+  {
+   "source": "Wikimedia Foundation",
+   "predicate": "provides",
+   "target": "Wikimedia Enterprise",
+   "quote": "**Wikimedia Enterprise** is a service of the Wikimedia Foundation available via enterprise.wikimedia.com."
+  },
+  {
+   "source": "Advancement Department",
+   "predicate": "aggregates",
+   "target": "Commercial Partnerships",
+   "quote": "which sits under the Advancement Department in the Wikimedia Foundation"
+  },
+  {
+   "source": "Commercial Partnerships",
+   "predicate": "governs",
+   "target": "Wikimedia Enterprise",
+   "quote": "The Wikimedia Enterprise project is helmed by the **Commercial Partnerships** division"
+  },
+  {
+   "source": "Wikimedia Foundation Board of Trustees",
+   "predicate": "governs",
+   "target": "Wikimedia Enterprise LLC",
+   "quote": "The LLC is subject to the governance of the Wikimedia Foundation Board of Trustees"
+  },
+  {
+   "source": "Commercial Sales and Contracts Policy",
+   "predicate": "constrains",
+   "target": "Wikimedia Enterprise LLC",
+   "quote": "The LLC is subject to the governance of the Wikimedia Foundation Board of Trustees as described on the *Wikimedia Foundation Commercial Sales and Contracts Policy*."
+  },
+  {
+   "source": "Sheetal Puri",
+   "predicate": "associated-with",
+   "target": "Wikimedia Enterprise LLC",
+   "quote": "This includes the Chief Advancement Officer Sheetal Puri"
+  },
+  {
+   "source": "Stephen LaPorte",
+   "predicate": "associated-with",
+   "target": "Wikimedia Enterprise LLC",
+   "quote": "General Counsel Stephen LaPorte"
+  },
+  {
+   "source": "Selena Deckelman",
+   "predicate": "associated-with",
+   "target": "Wikimedia Enterprise LLC",
+   "quote": "Chief Product and Technology Officer Selena Deckelman"
+  },
+  {
+   "source": "Lane Becker",
+   "predicate": "associated-with",
+   "target": "Wikimedia Enterprise LLC",
+   "quote": "Lane Becker who serves as the LLC's president"
+  },
+  {
+   "source": "PartnerHero",
+   "predicate": "supports",
+   "target": "Wikimedia Enterprise",
+   "quote": "**PartnerHero** provide customer support services"
+  },
+  {
+   "source": "Vuurr",
+   "predicate": "supports",
+   "target": "Wikimedia Enterprise",
+   "quote": "**Vuurr** are assisting our sales process"
+  },
+  {
+   "source": "Speed & Function",
+   "predicate": "supports",
+   "target": "Wikimedia Enterprise",
+   "quote": "Engineering support was provided in the first years by **Speed & Function**."
+  },
+  {
+   "source": "Wikimedia Enterprise",
+   "predicate": "provides",
+   "target": "Snapshot API",
+   "quote": "Three APIs; same data with different retrieval methods:"
+  },
+  {
+   "source": "Wikimedia Enterprise",
+   "predicate": "provides",
+   "target": "On-demand API",
+   "quote": "Three APIs; same data with different retrieval methods:"
+  },
+  {
+   "source": "Wikimedia Enterprise",
+   "predicate": "provides",
+   "target": "Realtime API",
+   "quote": "Three APIs; same data with different retrieval methods:"
+  },
+  {
+   "source": "Wikimedia Deutschland",
+   "predicate": "supports",
+   "target": "Exceptional access",
+   "quote": "the request will be reviewed in coordination with staff from *Wikimedia Deutschland*."
+  },
+  {
+   "source": "Six exceptional access criteria",
+   "predicate": "constrains",
+   "target": "Exceptional access",
+   "quote": "with a response to the six criteria described below"
+  },
+  {
+   "source": "Movement Strategy recommendations",
+   "predicate": "influence",
+   "target": "Increase the sustainability of our movement",
+   "quote": "under the heading of *Increase the sustainability of our movement* the Movement Strategy process asked the Wikimedia Foundation to explore"
+  },
+  {
+   "source": "Movement Strategy recommendations",
+   "predicate": "influence",
+   "target": "Improve user experience",
+   "quote": "under the heading *Improve User Experience*, a further recommendation stated"
+  },
+  {
+   "source": "Access for all",
+   "predicate": "governs",
+   "target": "Wikimedia Enterprise",
+   "quote": "in accordance with the project's principle of *access for all*, there are also various ways to access the Wikimedia Enterprise APIs for free."
+  },
+  {
+   "source": "Non-exclusivity principle",
+   "predicate": "governs",
+   "target": "Wikimedia Enterprise",
+   "quote": "In accordance with the Wikimedia Enterprise operating principles regarding non-exclusivity"
+  }
+ ],
+ "usage": {
+  "input": 6800,
+  "cache_write": 0,
+  "cache_read": 66242,
+  "output": 13135
+ },
+ "usd": 0.00790992,
+ "latency_s": 45.0,
+ "raw_response": {
+  "id": "msg_011Ch4s2CLp2b1N2ZeEkvGJf",
+  "container": null,
+  "content": [
+   {
+    "thinking": "",
+    "type": "thinking"
+   },
+   {
+    "citations": null,
+    "text": "{\"individuals\":[{\"title\":\"Wikimedia Enterprise\",\"class\":\"business.product\",\"quote\":\"**Wikimedia Enterprise** is a service of the Wikimedia Foundation available via enterprise.wikimedia.com.\"},{\"title\":\"Wikimedia Foundation\",\"class\":\"business.businessactor\",\"quote\":\"Given the nature of the service, primary decision making for it will rest with the Wikimedia Foundation.\"},{\"title\":\"Commercial Partnerships\",\"class\":\"business.businessactor\",\"quote\":\"The Wikimedia Enterprise project is helmed by the **Commercial Partnerships** division\"},{\"title\":\"Advancement Department\",\"class\":\"business.businessactor\",\"quote\":\"which sits under the Advancement Department in the Wikimedia Foundation\"},{\"title\":\"Wikimedia Enterprise LLC\",\"class\":\"business.businessactor\",\"quote\":\"The LLC is subject to the governance of the Wikimedia Foundation Board of Trustees\"},{\"title\":\"Wikimedia Foundation Board of Trustees\",\"class\":\"business.businessactor\",\"quote\":\"subject to the governance of the Wikimedia Foundation Board of Trustees\"},{\"title\":\"Sheetal Puri\",\"class\":\"business.businessactor\",\"quote\":\"This includes the Chief Advancement Officer Sheetal Puri\"},{\"title\":\"Stephen LaPorte\",\"class\":\"business.businessactor\",\"quote\":\"General Counsel Stephen LaPorte\"},{\"title\":\"Selena Deckelman\",\"class\":\"business.businessactor\",\"quote\":\"Chief Product and Technology Officer Selena Deckelman\"},{\"title\":\"Lane Becker\",\"class\":\"business.businessactor\",\"quote\":\"Lane Becker who serves as the LLC's president\"},{\"title\":\"Perrine Winkler\",\"class\":\"business.businessactor\",\"quote\":\"has been contracted to help with rebranding the team behind Enterprise to Commercial Partnerships\"},{\"title\":\"PartnerHero\",\"class\":\"business.businessactor\",\"quote\":\"**PartnerHero** provide customer support services\"},{\"title\":\"Vuurr\",\"class\":\"business.businessactor\",\"quote\":\"**Vuurr** are assisting our sales process\"},{\"title\":\"Super Natural Design\",\"class\":\"business.businessactor\",\"quote\":\"**Super Natural Design** are the designers of the project website\"},{\"title\":\"Speed & Function\",\"class\":\"business.businessactor\",\"quote\":\"Engineering support was provided in the first years by **Speed & Function**.\"},{\"title\":\"Wikimedia Deutschland\",\"class\":\"business.businessactor\",\"quote\":\"the request will be reviewed in coordination with staff from *Wikimedia Deutschland*.\"},{\"title\":\"Snapshot API\",\"class\":\"application.applicationservice\",\"quote\":\"The Enterprise Snapshot API allows users to retrieve entire Wikimedia projects as a database dump file.\"},{\"title\":\"On-demand API\",\"class\":\"application.applicationservice\",\"quote\":\"The Wikimedia Enterprise On-demand API allows users to retrieve single articles from any supported Wikimedia project at anytime.\"},{\"title\":\"Realtime API\",\"class\":\"application.applicationservice\",\"quote\":\"The Enterprise Realtime API allows users to stream updates in real-time from any supported Wikimedia project.\"},{\"title\":\"Movement Strategy recommendations\",\"class\":\"motivation.driver\",\"quote\":\"In the Movement Strategy recommendations to *increase the sustainability of our movement* and *improve user experience* there are the recommendations to\"},{\"title\":\"Increase the sustainability of our movement\",\"class\":\"motivation.goal\",\"quote\":\"under the heading of *Increase the sustainability of our movement* the Movement Strategy process asked the Wikimedia Foundation to explore\"},{\"title\":\"Improve user experience\",\"class\":\"motivation.goal\",\"quote\":\"under the heading *Improve User Experience*, a further recommendation stated\"},{\"title\":\"Access for all\",\"class\":\"motivation.principle\",\"quote\":\"in accordance with the project's principle of *access for all*\"},{\"title\":\"Non-exclusivity principle\",\"class\":\"motivation.principle\",\"quote\":\"In accordance with the Wikimedia Enterprise operating principles regarding non-exclusivity\"},{\"title\":\"Content program goal\",\"class\":\"motivation.goal\",\"quote\":\"**Content**: Make more of our movement's content available in consistent machine-readable formats, freely available for all researchers and re-users.\"},{\"title\":\"Resource-load program goal\",\"class\":\"motivation.goal\",\"quote\":\"**Resource-load**: Reduce the need for high-intensity site-scraping by the highest-frequency and highest-volume reusers\"},{\"title\":\"Fundraising program goal\",\"class\":\"motivation.goal\",\"quote\":\"**Fundraising**: Provide a clearer and more consistent way for the largest re-users to reinvest derived benefits back to the movement\"},{\"title\":\"Enterprise API revenue supports Wikimedia mission\",\"class\":\"motivation.goal\",\"quote\":\"All Enterprise API revenue will unequivocally be used to support the Wikimedia mission\"},{\"title\":\"Frequency requirement for reusers\",\"class\":\"motivation.requirement\",\"quote\":\"**Frequency**: Regular current snapshots of Wikimedia projects\"},{\"title\":\"Reliability requirement for reusers\",\"class\":\"motivation.requirement\",\"quote\":\"**Reliability**: Dependable, accessible infrastructure\"},{\"title\":\"Quality requirement for reusers\",\"class\":\"motivation.requirement\",\"quote\":\"**Quality**: a \u201cbest last revision\u201d\"},{\"title\":\"Very high barrier to entry for Wikimedia data\",\"class\":\"motivation.assessment\",\"quote\":\"There is a very high barrier to entry for using Wikimedia data, outside of the common use cases of reading or editing.\"},{\"title\":\"Exceptional access\",\"class\":\"business.businessservice\",\"quote\":\"you may request free **exceptional access** to the higher rate of the Enterprise APIs.\"},{\"title\":\"Six exceptional access criteria\",\"class\":\"motivation.requirement\",\"quote\":\"with a response to the six criteria described below\"},{\"title\":\"Commercial Sales and Contracts Policy\",\"class\":\"motivation.constraint\",\"quote\":\"as described on the *Wikimedia Foundation Commercial Sales and Contracts Policy*.\"},{\"title\":\"99% SLA for contracted accounts\",\"class\":\"motivation.outcome\",\"quote\":\"Contracted accounts receive 99% SLA and support response-time guarantees.\"},{\"title\":\"Wikimedia Enterprise launch in October 2021\",\"class\":\"business.businessevent\",\"quote\":\"launched in October 2021 (Press release, OpenFutures article)\"}],\"relationships\":[{\"source\":\"Wikimedia Foundation\",\"predicate\":\"provides\",\"target\":\"Wikimedia Enterprise\",\"quote\":\"**Wikimedia Enterprise** is a service of the Wikimedia Foundation available via enterprise.wikimedia.com.\"},{\"source\":\"Advancement Department\",\"predicate\":\"aggregates\",\"target\":\"Commercial Partnerships\",\"quote\":\"which sits under the Advancement Department in the Wikimedia Foundation\"},{\"source\":\"Commercial Partnerships\",\"predicate\":\"governs\",\"target\":\"Wikimedia Enterprise\",\"quote\":\"The Wikimedia Enterprise project is helmed by the **Commercial Partnerships** division\"},{\"source\":\"Wikimedia Foundation Board of Trustees\",\"predicate\":\"governs\",\"target\":\"Wikimedia Enterprise LLC\",\"quote\":\"The LLC is subject to the governance of the Wikimedia Foundation Board of Trustees\"},{\"source\":\"Commercial Sales and Contracts Policy\",\"predicate\":\"constrains\",\"target\":\"Wikimedia Enterprise LLC\",\"quote\":\"The LLC is subject to the governance of the Wikimedia Foundation Board of Trustees as described on the *Wikimedia Foundation Commercial Sales and Contracts Policy*.\"},{\"source\":\"Sheetal Puri\",\"predicate\":\"associated-with\",\"target\":\"Wikimedia Enterprise LLC\",\"quote\":\"This includes the Chief Advancement Officer Sheetal Puri\"},{\"source\":\"Stephen LaPorte\",\"predicate\":\"associated-with\",\"target\":\"Wikimedia Enterprise LLC\",\"quote\":\"General Counsel Stephen LaPorte\"},{\"source\":\"Selena Deckelman\",\"predicate\":\"associated-with\",\"target\":\"Wikimedia Enterprise LLC\",\"quote\":\"Chief Product and Technology Officer Selena Deckelman\"},{\"source\":\"Lane Becker\",\"predicate\":\"associated-with\",\"target\":\"Wikimedia Enterprise LLC\",\"quote\":\"Lane Becker who serves as the LLC's president\"},{\"source\":\"PartnerHero\",\"predicate\":\"supports\",\"target\":\"Wikimedia Enterprise\",\"quote\":\"**PartnerHero** provide customer support services\"},{\"source\":\"Vuurr\",\"predicate\":\"supports\",\"target\":\"Wikimedia Enterprise\",\"quote\":\"**Vuurr** are assisting our sales process\"},{\"source\":\"Speed & Function\",\"predicate\":\"supports\",\"target\":\"Wikimedia Enterprise\",\"quote\":\"Engineering support was provided in the first years by **Speed & Function**.\"},{\"source\":\"Wikimedia Enterprise\",\"predicate\":\"provides\",\"target\":\"Snapshot API\",\"quote\":\"Three APIs; same data with different retrieval methods:\"},{\"source\":\"Wikimedia Enterprise\",\"predicate\":\"provides\",\"target\":\"On-demand API\",\"quote\":\"Three APIs; same data with different retrieval methods:\"},{\"source\":\"Wikimedia Enterprise\",\"predicate\":\"provides\",\"target\":\"Realtime API\",\"quote\":\"Three APIs; same data with different retrieval methods:\"},{\"source\":\"Wikimedia Deutschland\",\"predicate\":\"supports\",\"target\":\"Exceptional access\",\"quote\":\"the request will be reviewed in coordination with staff from *Wikimedia Deutschland*.\"},{\"source\":\"Six exceptional access criteria\",\"predicate\":\"constrains\",\"target\":\"Exceptional access\",\"quote\":\"with a response to the six criteria described below\"},{\"source\":\"Movement Strategy recommendations\",\"predicate\":\"influence\",\"target\":\"Increase the sustainability of our movement\",\"quote\":\"under the heading of *Increase the sustainability of our movement* the Movement Strategy process asked the Wikimedia Foundation to explore\"},{\"source\":\"Movement Strategy recommendations\",\"predicate\":\"influence\",\"target\":\"Improve user experience\",\"quote\":\"under the heading *Improve User Experience*, a further recommendation stated\"},{\"source\":\"Access for all\",\"predicate\":\"governs\",\"target\":\"Wikimedia Enterprise\",\"quote\":\"in accordance with the project's principle of *access for all*, there are also various ways to access the Wikimedia Enterprise APIs for free.\"},{\"source\":\"Non-exclusivity principle\",\"predicate\":\"governs\",\"target\":\"Wikimedia Enterprise\",\"quote\":\"In accordance with the Wikimedia Enterprise operating principles regarding non-exclusivity\"}]}",
+    "type": "text"
+   }
+  ],
+  "model": "claude-haiku-5-5",
+  "role": "assistant",
+  "stop_details": null,
+  "stop_reason": "end_turn",
+  "stop_sequence": null,
+  "type": "message",
+  "usage": {
+   "cache_creation": {
+    "ephemeral_1h_input_tokens": 0,
+    "ephemeral_5m_input_tokens": 0
+   },
+   "cache_creation_input_tokens": 0,
+   "cache_read_input_tokens": 66242,
+   "inference_geo": "global",
+   "input_tokens": 6800,
+   "output_tokens": 13135,
+   "output_tokens_details": {
+    "thinking_tokens": 9471
+   },
+   "server_tool_use": null,
+   "service_tier": "standard",
+   "speed": "standard"
+  },
+  "diagnostics": null
+ }
+}
