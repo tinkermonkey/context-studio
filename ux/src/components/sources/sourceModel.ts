@@ -253,7 +253,8 @@ export type ChunkState = "waiting" | "finding" | "searched" | "reading" | "read"
  * What each chunk of a running run is at. A run with no stage reads its chunks
  * one after another. A staged run searches every chunk for mentions first,
  * types the mentions of the whole source (no chunk moves meanwhile), then
- * reads each chunk's relationships.
+ * reads each chunk's relationships. A chunk whose search failed is "searched"
+ * like the others: which chunks failed is known only once the run ends.
  */
 export function chunkStates(progress: RunProgress, running: boolean): ChunkState[] {
   const { stage, done, chunks, chunksRead } = progress;

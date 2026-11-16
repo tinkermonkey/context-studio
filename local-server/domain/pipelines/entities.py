@@ -455,6 +455,22 @@ class NotesToClaimsRun(PipelineRun):
 
 
 @dataclass(frozen=True)
+class StageProgress:
+    """
+    The stage a run is in and how far through it the run is.
+
+    Attributes:
+        stage: The key of one of the implementation's stages
+        done: How far through it the run is, in what the stage counts
+        total: What the stage counts, in all
+    """
+
+    stage: str
+    done: int
+    total: int
+
+
+@dataclass(frozen=True)
 class SourceRun:
     """
     An extraction run on a source, as the source's last extraction shows it

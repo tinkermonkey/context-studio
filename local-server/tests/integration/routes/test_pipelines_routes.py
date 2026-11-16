@@ -28,7 +28,7 @@ from adapters.web.extraction_examples import load_extraction_examples
 from adapters.web.pipelines_routes import router
 from domain.extraction.exceptions import InvalidInputError
 from domain.pipelines.apply_result import ApplyResult
-from domain.pipelines.entities import PipelineRunStatus, PipelineType
+from domain.pipelines.entities import PipelineRunStatus, PipelineType, StageProgress
 from domain.pipelines.exceptions import (
     PipelineExecutionError,
     PipelineExternalServiceError,
@@ -1360,7 +1360,7 @@ class TestRunStatusLifecycle:
         assert body["failure_reason"] is None
 
     def test_a_running_run_exposes_the_stage_it_reported(self, client, pipeline_run_repo):
-        """GET /api/pipelines/runs/{run_id} gives the stage beside the chunk count."""
+        """GET /api/pipelines/runs/{run_id} and the run list give the stage with the chunk count."""
         run = pipeline_run_repo.create(
             batch_run_id=create_batch_row(pipeline_run_repo._session_factory, "batch-stage"),
             pipeline_type=PipelineType.INDIVIDUAL_EXTRACTION,
@@ -1376,8 +1376,9 @@ class TestRunStatusLifecycle:
         before = client.get(f"/api/pipelines/runs/{run.id}").json()
         assert (before["stage"], before["stage_done"], before["stage_total"]) == (None, None, None)
 
-        assert pipeline_run_repo.update_stage(run.id, "type_mention", 40, 166) is True
-        assert pipeline_run_repo.update_stage("no-such-run", "type_mention", 1, 2) is False
+        typing = StageProgress("type_mention", 40, 166)
+        assert pipeline_run_repo.update_progress(run.id, 0, 4, typing) is True
+        assert pipeline_run_repo.update_progress("no-such-run", 0, 4, typing) is False
 
         body = client.get(f"/api/pipelines/runs/{run.id}").json()
         assert body["status"] == "running"
@@ -1387,6 +1388,19 @@ class TestRunStatusLifecycle:
             40,
             166,
         )
+        [listed] = client.get("/api/pipelines/runs").json()["items"]
+        assert listed["id"] == run.id
+        assert (listed["items_done"], listed["items_total"]) == (0, 4)
+        assert (listed["stage"], listed["stage_done"], listed["stage_total"]) == (
+            "type_mention",
+            40,
+            166,
+        )
+
+        # A write that names no stage leaves the run's stage as it is
+        pipeline_run_repo.update_progress(run.id, 1, 4)
+        after = pipeline_run_repo.get(run.id)
+        assert (after.items_done, after.stage, after.stage_done) == (1, "type_mention", 40)
 
     def test_run_status_transitions_to_completed(self, client, registries):
         """A successful run transitions to COMPLETED status."""

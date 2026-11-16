@@ -205,9 +205,13 @@ export const sourcesCopy = {
     waiting: "waiting",
     reading: "reading",
     read: "read",
-    /** A staged run (find-then-type): the chunk is being searched, or has been. */
+    /**
+     * A staged run (find-then-type): the chunk is being searched, or has been.
+     * "Searched" says nothing of what was found: the run tells only at its end
+     * which chunks gave candidates and which failed.
+     */
     finding: "finding mentions",
-    searched: "mentions found",
+    searched: "searched for mentions",
     readingRelationships: "reading relationships",
     found: (n: number) => `${n} found`,
     failed: "failed",

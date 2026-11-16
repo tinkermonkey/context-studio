@@ -599,7 +599,7 @@ describe("ExtractSourcePage — progress and result", () => {
         "chip--neutral",
       );
 
-      expect(chip("extract-chunk-1", "mentions found")).toHaveClass("chip--cyan");
+      expect(chip("extract-chunk-1", "searched for mentions")).toHaveClass("chip--cyan");
       expect(chip("extract-chunk-2", "finding mentions")).toHaveClass("chip--amber");
       expect(chip("extract-chunk-3", "waiting")).toHaveClass("chip--neutral");
       expect(chip("extract-chunk-4", "waiting")).toHaveClass("chip--neutral");
@@ -625,7 +625,7 @@ describe("ExtractSourcePage — progress and result", () => {
 
       // Every chunk is searched; none is read, and none reads as being read
       for (const n of [1, 2, 3, 4]) {
-        expect(chip(`extract-chunk-${n}`, "mentions found")).toHaveClass("chip--cyan");
+        expect(chip(`extract-chunk-${n}`, "searched for mentions")).toHaveClass("chip--cyan");
       }
       expect(screen.queryByText("reading")).not.toBeInTheDocument();
     });
@@ -649,7 +649,7 @@ describe("ExtractSourcePage — progress and result", () => {
 
       expect(chip("extract-chunk-1", "read")).toHaveClass("chip--emerald");
       expect(chip("extract-chunk-2", "reading relationships")).toHaveClass("chip--amber");
-      expect(chip("extract-chunk-3", "mentions found")).toHaveClass("chip--cyan");
+      expect(chip("extract-chunk-3", "searched for mentions")).toHaveClass("chip--cyan");
     });
   });
 

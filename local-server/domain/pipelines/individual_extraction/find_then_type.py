@@ -41,10 +41,11 @@ A run with failed chunks proposes what it has as a partial proposal, which
 supersedes no other proposal of the source. Progress is counted in chunks, as
 for the two-pass shape: a chunk is done when its relationships are read, so
 the count stays at 0 while mentions are found and typed. What the run is doing
-meanwhile is its stage, reported beside the chunk count: the stage's key (one
-of STAGE_PROMPTS) with how far through it the run is, in chunks searched while
-finding, distinct mentions typed while typing, and chunks whose relationships
-are read while relating.
+meanwhile is its stage, reported with the chunk count in one write: the stage's
+key (one of STAGE_PROMPTS) with how far through it the run is, in chunks
+searched while finding (a chunk whose find failed counts: it was searched),
+distinct mentions typed while typing, and chunks whose relationships are read
+while relating. A progress write that fails is logged and never fails the run.
 """
 
 from __future__ import annotations
@@ -63,6 +64,7 @@ from domain.extraction.prompts import (
     FIND_THEN_TYPE_STAGES,
     TYPE_MENTION,
 )
+from domain.pipelines.entities import StageProgress
 from domain.pipelines.exceptions import PipelineExecutionError
 from domain.pipelines.individual_extraction.chunk_merge import merge_chunk_triples
 from domain.pipelines.individual_extraction.labels import LabelKeys, has_corporate_suffix
@@ -201,8 +203,7 @@ class FindThenTypeOrchestrator(IndividualExtractionOrchestrator):
             return f"Chunk {index + 1} of {total}: " if report else ""
 
         if report:
-            self._report_progress(0, total)
-            self._report_stage(FIND_MENTIONS, 0, total)
+            self._report_progress(0, total, StageProgress(FIND_MENTIONS, 0, total))
         spent: list[Any] = []  # every call's result: what the run cost
         warnings: list[str] = []
         # Per chunk, why it is a failed chunk: (reason, the result that failed)
@@ -238,7 +239,7 @@ class FindThenTypeOrchestrator(IndividualExtractionOrchestrator):
             warnings.extend(where(index) + w for w in result.warnings)
             found.append(result.mentions)
             if report:
-                self._report_stage(FIND_MENTIONS, index + 1, total)
+                self._report_progress(0, total, StageProgress(FIND_MENTIONS, index + 1, total))
         if all(problems):
             raise _failure(
                 [failed for chunk in problems for _, failed in chunk],
@@ -304,7 +305,7 @@ class FindThenTypeOrchestrator(IndividualExtractionOrchestrator):
 
         # 3. Relate, per chunk
         if report:
-            self._report_stage(DERIVE_RELATIONSHIPS, 0, total)
+            self._report_progress(0, total, StageProgress(DERIVE_RELATIONSHIPS, 0, total))
         refusal: str | None = None
         for index, text in enumerate(texts):
             await asyncio.sleep(0)  # a cancelled run stops here
@@ -339,8 +340,8 @@ class FindThenTypeOrchestrator(IndividualExtractionOrchestrator):
                     )
                 )
             if report:
-                self._report_progress(index + 1, total)
-                self._report_stage(DERIVE_RELATIONSHIPS, index + 1, total)
+                done = index + 1
+                self._report_progress(done, total, StageProgress(DERIVE_RELATIONSHIPS, done, total))
 
         # Recognition reads the graph: once, over every chunk's triples
         every_triple = [triple for triples in chunk_triples for triple in triples]
@@ -410,7 +411,8 @@ class FindThenTypeOrchestrator(IndividualExtractionOrchestrator):
         Type every candidate, _TYPING_CONCURRENCY calls at a time, each on a
         worker thread (the call reads nothing but its arguments). With
         ``report``, the stage says how many of the candidates' calls have
-        returned, after each one.
+        returned, after each one; no chunk is done meanwhile. A call cut short
+        by the run's cancellation reports nothing.
 
         The first call is made alone: it is the one that writes the catalog to
         a provider's cache, which the others then read. Once a call is refused
@@ -423,8 +425,13 @@ class FindThenTypeOrchestrator(IndividualExtractionOrchestrator):
         gate = asyncio.Semaphore(_TYPING_CONCURRENCY)
         stopped = False
         returned = 0  # typing calls that have come back
-        if report:
-            self._report_stage(TYPE_MENTION, 0, len(candidates))
+
+        def report_typed() -> None:
+            if report:
+                stage = StageProgress(TYPE_MENTION, returned, len(candidates))
+                self._report_progress(0, len(texts), stage)
+
+        report_typed()
 
         async def type_one(candidate: _Candidate) -> None:
             nonlocal stopped, returned
@@ -443,8 +450,7 @@ class FindThenTypeOrchestrator(IndividualExtractionOrchestrator):
                 )
                 spent.append(candidate.typing)
                 returned += 1
-                if report:
-                    self._report_stage(TYPE_MENTION, returned, len(candidates))
+                report_typed()
                 if candidate.typing.failure_reason and candidate.typing.provider_refused:
                     stopped = True
 

@@ -327,16 +327,15 @@ class _FakeExtraction:
 class _StatusWriter:
     def __init__(self):
         self.progress: list[tuple[int, int | None]] = []
-        self.stages: list[tuple[str, int, int]] = []
+        self.stages: list = []
 
     def update_running_status(self, run_id, started_at):
         pass
 
-    def update_progress(self, run_id, items_done, items_total):
+    def update_progress(self, run_id, items_done, items_total, stage=None):
         self.progress.append((items_done, items_total))
-
-    def update_stage(self, run_id, stage, stage_done, stage_total):
-        self.stages.append((stage, stage_done, stage_total))
+        if stage is not None:
+            self.stages.append(stage)
 
 
 def _state(**input_data):

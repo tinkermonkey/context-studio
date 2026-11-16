@@ -25,7 +25,7 @@ from adapters.persistence.sqlite.models import Base
 from adapters.persistence.sqlite.pipeline_run_repo import PipelineRepository
 from adapters.pipelines.run_executor import BackgroundRunExecutor
 from adapters.web.pipelines_routes import router
-from domain.pipelines.entities import BatchStatus, PipelineRunStatus, PipelineType
+from domain.pipelines.entities import BatchStatus, PipelineRunStatus, PipelineType, StageProgress
 from domain.pipelines.exceptions import (
     PipelineExecutionError,
     UnknownConfigurationError,
@@ -420,8 +420,7 @@ class TestBatchCancelAndResume:
     ):
         repo = PipelineRepository(session_factory)
         run = submit_noop(executor)
-        repo.update_progress(run.id, 3, 7)
-        repo.update_stage(run.id, "type_mention", 2, 9)
+        repo.update_progress(run.id, 3, 7, StageProgress("type_mention", 2, 9))
         repo.set_proposal_id(run.id, "proposal-1")
         repo.update_failure_info(run.id, "boom")
         bare = repo.create(
@@ -548,6 +547,23 @@ class TestRequeuedRunSpend:
         requeued = repo.get(run.id)
         assert requeued.status == PipelineRunStatus.PENDING
         assert requeued.llm_metadata == {"earlier_attempts": [FIRST_ATTEMPT]}
+
+    def test_requeue_through_the_executor_clears_the_stage_with_the_progress(
+        self, executor, session_factory
+    ):
+        repo = PipelineRepository(session_factory)
+        run = submit_noop(executor)
+        repo.update_progress(run.id, 0, 4, StageProgress("type_mention", 40, 166))
+        repo.update_failure_info(run.id, "Extraction failed")
+        failed = repo.get(run.id)
+        assert (failed.stage, failed.stage_done, failed.stage_total) == ("type_mention", 40, 166)
+
+        assert executor.requeue(run.id, {}) is True
+
+        requeued = repo.get(run.id)
+        assert requeued.status == PipelineRunStatus.PENDING
+        assert (requeued.items_done, requeued.items_total) == (None, None)
+        assert (requeued.stage, requeued.stage_done, requeued.stage_total) == (None, None, None)
 
     def test_requeue_of_a_run_that_recorded_nothing_leaves_llm_metadata_empty(
         self, executor, session_factory

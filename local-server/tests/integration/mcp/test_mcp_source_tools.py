@@ -33,6 +33,7 @@ from domain.extraction.exceptions import SourceNotReadyError
 from domain.extraction.sources import SourceService
 from domain.graph.services import GraphAnalysisService
 from domain.ontology.exceptions import DatasetRequiredError, EntityNotFoundError
+from domain.pipelines.entities import StageProgress
 from domain.pipelines.exceptions import PipelineInputError
 from domain.pipelines.individual_extraction.bootstrap import register_individual_extraction
 from domain.pipelines.registry import (
@@ -543,6 +544,28 @@ class TestExtractSource:
             "find_then_type",
             "extraction-find-then-type",
         )
+
+    async def test_get_source_and_list_sources_give_the_stage_a_run_is_in(self, setup, house):
+        async with mcp_client(setup.workspace, write_tools=setup.tools()) as client:
+            _, source, _ = await call(client, "add_source", add_text(house))
+            _, started, _ = await call(client, "extract_source", {"source_id": source["id"]})
+            [run] = started["runs"]
+            # What the run writes while it types mentions (no worker runs it here)
+            setup.runs.update_progress(run["run_id"], 0, 4, StageProgress("type_mention", 40, 166))
+
+            _, got, _ = await call(client, "get_source", {"source_id": source["id"]})
+            _, listed, _ = await call(client, "list_sources", {"taxonomy_id": house["taxonomy"]})
+
+        [in_list] = listed["items"]
+        for last in (got["last_extraction"], in_list["last_extraction"]):
+            [last_run] = last["runs"]
+            assert last_run["run_id"] == run["run_id"]
+            assert (last_run["items_done"], last_run["items_total"]) == (0, 4)
+            assert (last_run["stage"], last_run["stage_done"], last_run["stage_total"]) == (
+                "type_mention",
+                40,
+                166,
+            )
 
     async def test_the_implementation_and_configuration_can_be_named(self, setup, house):
         async with mcp_client(setup.workspace, write_tools=setup.tools()) as client:

@@ -8,17 +8,20 @@ this module provides the structure only.
 
 from __future__ import annotations
 
+import logging
 from abc import ABC, abstractmethod
 from collections.abc import Mapping
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from typing import Any, Literal
 
-from domain.pipelines.entities import PipelineRunStatus, PipelineType
+from domain.pipelines.entities import PipelineRunStatus, PipelineType, StageProgress
 from domain.pipelines.exceptions import PipelineInputError
 from domain.pipelines.ports import LLMProvider, LLMResponse, PipelineRunStatusWriter
 from domain.pipelines.selection import RUN_PARAMETERS
 from domain.pipelines.stage_prompts import StageDefinition
+
+_logger = logging.getLogger(__name__)
 
 MODEL_REQUIRED = "model is required: the run's configuration names none, nor does its input"
 
@@ -171,25 +174,34 @@ class PipelineOrchestrator(ABC):
         if self._run_id and self._status_writer:
             self._status_writer.update_running_status(self._run_id, datetime.now(timezone.utc))
 
-    def _report_progress(self, items_done: int, items_total: int | None) -> None:
+    def _report_progress(
+        self, items_done: int, items_total: int | None, stage: StageProgress | None = None
+    ) -> None:
         """
-        Record progress on the run: items_done of items_total work items.
+        Record progress on the run: items_done of items_total work items, and
+        with ``stage`` the stage the run is in and how far through it (what a
+        run is doing while its work items stay where they are). Both are one
+        write, so no reader sees them disagree.
+
+        Progress is what a run shows while it works, not part of its result: a
+        write that fails is logged and the run goes on.
 
         Only writes if both run_id and status_writer are available.
         """
-        if self._run_id and self._status_writer:
-            self._status_writer.update_progress(self._run_id, items_done, items_total)
-
-    def _report_stage(self, stage: str, stage_done: int, stage_total: int) -> None:
-        """
-        Record the stage the run is in and how far through it: stage_done of
-        stage_total of whatever the stage counts. It says what a run is doing
-        while its work items (see _report_progress) stay where they are.
-
-        Only writes if both run_id and status_writer are available.
-        """
-        if self._run_id and self._status_writer:
-            self._status_writer.update_stage(self._run_id, stage, stage_done, stage_total)
+        if not (self._run_id and self._status_writer):
+            return
+        reported = (items_done, items_total) if stage is None else (items_done, items_total, stage)
+        try:
+            self._status_writer.update_progress(self._run_id, *reported)
+        except Exception:
+            _logger.warning(
+                "Could not record the progress of run %s (%s of %s items%s); the run goes on",
+                self._run_id,
+                items_done,
+                items_total,
+                f", {stage.stage} {stage.done} of {stage.total}" if stage else "",
+                exc_info=True,
+            )
 
     @abstractmethod
     async def execute(self, state: PipelineState) -> PipelineState:

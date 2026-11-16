@@ -43,6 +43,7 @@ from domain.pipelines.entities import (
     PipelineRunStatus,
     PipelineType,
     SourceRun,
+    StageProgress,
 )
 from domain.pipelines.entities import (
     SchemaConnectionRefinementRun as DomainSchemaConnectionRefinementRun,
@@ -887,9 +888,17 @@ class PipelineRepository:
 
         return self._write("re-queue a pipeline run", requeue)
 
-    def update_progress(self, run_id: str, items_done: int, items_total: int | None) -> bool:
+    def update_progress(
+        self,
+        run_id: str,
+        items_done: int,
+        items_total: int | None,
+        stage: StageProgress | None = None,
+    ) -> bool:
         """
-        Record how many work items the run has finished, out of how many.
+        Record how many work items the run has finished, out of how many, and
+        with ``stage`` the stage it is in, in one transaction. Without
+        ``stage`` the run's stage is left as it is.
 
         Returns:
             True if updated, False if not found
@@ -901,28 +910,13 @@ class PipelineRepository:
                 return False
             orm_obj.items_done = items_done  # type: ignore[assignment]
             orm_obj.items_total = items_total  # type: ignore[assignment]
+            if stage is not None:
+                orm_obj.stage = stage.stage  # type: ignore[assignment]
+                orm_obj.stage_done = stage.done  # type: ignore[assignment]
+                orm_obj.stage_total = stage.total  # type: ignore[assignment]
             return True
 
         return self._write("update pipeline run progress", update)
-
-    def update_stage(self, run_id: str, stage: str, stage_done: int, stage_total: int) -> bool:
-        """
-        Record the stage the run is in and how far through it the run is.
-
-        Returns:
-            True if updated, False if not found
-        """
-
-        def update(session: Session) -> bool:
-            orm_obj = session.query(PipelineRun).filter(PipelineRun.id == run_id).first()
-            if not orm_obj:
-                return False
-            orm_obj.stage = stage  # type: ignore[assignment]
-            orm_obj.stage_done = stage_done  # type: ignore[assignment]
-            orm_obj.stage_total = stage_total  # type: ignore[assignment]
-            return True
-
-        return self._write("update pipeline run stage", update)
 
     def set_proposal_id(self, run_id: str, proposal_id: str) -> bool:
         """

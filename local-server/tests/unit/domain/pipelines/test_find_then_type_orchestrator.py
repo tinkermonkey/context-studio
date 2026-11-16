@@ -221,22 +221,35 @@ class _FakeExtraction:
 
 
 class _StatusWriter:
-    def __init__(self):
-        self.progress: list = []
-        self.stages: list = []
-        # Every write in order: ("progress" | the stage's key, done, total)
+    """
+    Records each progress write: (items_done, items_total, stage, stage_done,
+    stage_total). ``fails`` picks the writes that raise, as a database would.
+    """
+
+    def __init__(self, fails=None):
         self.writes: list = []
+        self.failed: list = []
+        self._fails = fails
 
     def update_running_status(self, run_id, started_at):
         pass
 
-    def update_progress(self, run_id, items_done, items_total):
-        self.progress.append((items_done, items_total))
-        self.writes.append(("progress", items_done, items_total))
+    def update_progress(self, run_id, items_done, items_total, stage=None):
+        write = (items_done, items_total, stage.stage, stage.done, stage.total)
+        if self._fails and self._fails(write):
+            self.failed.append(write)
+            raise RuntimeError("(sqlite3.OperationalError) database is locked")
+        self.writes.append(write)
 
-    def update_stage(self, run_id, stage, stage_done, stage_total):
-        self.stages.append((stage, stage_done, stage_total))
-        self.writes.append((stage, stage_done, stage_total))
+    @property
+    def progress(self) -> list:
+        """The chunk count each time it moved."""
+        counts = [write[:2] for write in self.writes]
+        return [count for i, count in enumerate(counts) if i == 0 or count != counts[i - 1]]
+
+    @property
+    def stages(self) -> list:
+        return [write[2:] for write in self.writes]
 
 
 class _Proposer:
@@ -387,25 +400,50 @@ class TestFindThenTypeFlow:
             *[("derive_relationships", done, 3) for done in range(4)],
         ]
 
-    async def test_no_chunk_is_done_until_its_relationships_are_read(self):
+    async def test_the_chunk_count_and_the_stage_are_one_write(self):
+        extraction = _FakeExtraction()
         writer = _StatusWriter()
 
-        await _run(_FakeExtraction(), writer)
+        await _run(extraction, writer)
 
-        first_relate = writer.writes.index(("derive_relationships", 0, 3))
-        before = writer.writes[:first_relate]
-        assert [w for w in before if w[0] == "progress"] == [("progress", 0, 3)]
-        assert {w[0] for w in before} == {"progress", "find_mentions", "type_mention"}
-        # From there the chunk count and the stage move together
-        assert writer.writes[first_relate:] == [
-            ("derive_relationships", 0, 3),
-            ("progress", 1, 3),
-            ("derive_relationships", 1, 3),
-            ("progress", 2, 3),
-            ("derive_relationships", 2, 3),
-            ("progress", 3, 3),
-            ("derive_relationships", 3, 3),
+        mentions = len(extraction.typed)
+        # No chunk is done while mentions are found and typed
+        assert writer.writes[: 4 + mentions + 1] == [
+            *[(0, 3, "find_mentions", done, 3) for done in range(4)],
+            *[(0, 3, "type_mention", done, mentions) for done in range(mentions + 1)],
         ]
+        # From there the chunk count and the stage move together, never apart
+        assert writer.writes[4 + mentions + 1 :] == [
+            (done, 3, "derive_relationships", done, 3) for done in range(4)
+        ]
+
+    @pytest.mark.parametrize(
+        "stage, logged_as",
+        [
+            ("find_mentions", "(0 of 3 items, find_mentions 2 of 3)"),
+            ("type_mention", "(0 of 3 items, type_mention 2 of 301)"),
+            ("derive_relationships", "(2 of 3 items, derive_relationships 2 of 3)"),
+        ],
+    )
+    async def test_a_progress_write_that_fails_is_logged_and_the_run_goes_on(
+        self, stage, logged_as, caplog
+    ):
+        extraction = _FakeExtraction()
+        # The database refuses one write in the middle of the stage
+        writer = _StatusWriter(fails=lambda write: write[2:4] == (stage, 2))
+
+        with caplog.at_level("WARNING"):
+            state = await _run(extraction, writer)
+
+        assert state.current_status == PipelineRunStatus.COMPLETED
+        assert len(extraction.typed) == 301 and len(extraction.related) == 3
+        assert "failed_chunks" not in state.result
+        assert len(writer.failed) == 1
+        # The writes after it are made as if nothing happened
+        assert writer.stages[-1] == ("derive_relationships", 3, 3)
+        [logged] = [r for r in caplog.records if "Could not record the progress" in r.message]
+        assert f"of run run-1 {logged_as}; the run goes on" in logged.getMessage()
+        assert "database is locked" in str(logged.exc_info[1])
 
     async def test_the_typing_stage_counts_the_calls_that_returned(self):
         # A refused call stops the typing: the stage stays at the calls that were made
@@ -864,3 +902,21 @@ class TestStoppingTheTyping:
         await asyncio.sleep(0.05)
         assert len(extraction.typed) == made
         assert extraction.related == []
+
+    async def test_a_cancelled_run_reports_nothing_after_it_is_cancelled(self):
+        # The calls in flight when the run is cancelled still return, on their threads
+        extraction = _FakeExtraction(type_delay=0.02)
+        writer = _StatusWriter()
+        run = asyncio.ensure_future(_run(extraction, writer))
+        while len(extraction.typed) < 10:
+            await asyncio.sleep(0.001)
+
+        run.cancel()
+        with pytest.raises(asyncio.CancelledError):
+            await run
+
+        written = list(writer.writes)
+        assert written[-1][2] == "type_mention"
+        await asyncio.sleep(0.1)  # longer than a typing call takes
+        assert extraction.in_flight == 0
+        assert writer.writes == written
