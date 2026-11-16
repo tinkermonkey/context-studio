@@ -29,7 +29,9 @@
 import assert from "node:assert/strict";
 import vm from "node:vm";
 import fs from "node:fs";
+import os from "node:os";
 import path from "node:path";
+import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -52,14 +54,14 @@ function loadPureDeclarations() {
   const sandbox = { console };
   vm.createContext(sandbox);
   vm.runInContext(
-    `${declarations}\nglobalThis.__mechanics = { clamp, meetsFloors, selectTargets, acceptGate, BACKLOGS, GATE_MARGINS, TARGET_NAME, FAILURE_KINDS, FROZEN_PATHS, DEFAULT_HOLDOUT_FLOORS, evaluatePrompt, experimentPrompt, verifyPrompt, decidePrompt, ledgerReadPrompt, isMeasured, hasGuard, guardAgreesWithMargins, gateCandidates, stopAfter, marginsFor, backlogFor, own, tt, othersStanding, ranTheTarget, standingOf, decideAll, baselineProblems, recordingAdvice, RECORDED_TARGETS, TRIPLE_CORPUS_TARGET, expectedOthers, frozenPathsIn, ruleViolations, measuredModelOf };`,
+    `${declarations}\nglobalThis.__mechanics = { clamp, meetsFloors, selectTargets, acceptGate, BACKLOGS, GATE_MARGINS, TARGET_NAME, FAILURE_KINDS, FROZEN_PATHS, DEFAULT_HOLDOUT_FLOORS, evaluatePrompt, experimentPrompt, verifyPrompt, decidePrompt, ledgerReadPrompt, isMeasured, hasGuard, guardAgreesWithMargins, gateCandidates, stopAfter, marginsFor, backlogFor, own, tt, othersStanding, ranTheTarget, standingOf, decideAll, baselineProblems, recordingAdvice, RECORDED_TARGETS, TRIPLE_CORPUS_TARGET, expectedOthers, frozenPathsIn, ruleViolations, measuredModelOf, ledgerEntry, recordRequest, recordPrompt, campaignPageSuffix, DEFAULT_CONFIGURATIONS, EXPERIMENT_PAGE, isCampaignPageOf, recordProblem };`,
     sandbox,
     { filename: SOURCE_PATH },
   );
   return sandbox.__mechanics;
 }
 
-const { clamp, meetsFloors, selectTargets, acceptGate, BACKLOGS, GATE_MARGINS, TARGET_NAME, FAILURE_KINDS, FROZEN_PATHS, DEFAULT_HOLDOUT_FLOORS, evaluatePrompt, experimentPrompt, verifyPrompt, decidePrompt, ledgerReadPrompt, isMeasured, hasGuard, guardAgreesWithMargins, gateCandidates, stopAfter, marginsFor, backlogFor, own, tt, othersStanding, ranTheTarget, standingOf, decideAll, baselineProblems, recordingAdvice, RECORDED_TARGETS, TRIPLE_CORPUS_TARGET, expectedOthers, frozenPathsIn, ruleViolations, measuredModelOf } =
+const { clamp, meetsFloors, selectTargets, acceptGate, BACKLOGS, GATE_MARGINS, TARGET_NAME, FAILURE_KINDS, FROZEN_PATHS, DEFAULT_HOLDOUT_FLOORS, evaluatePrompt, experimentPrompt, verifyPrompt, decidePrompt, ledgerReadPrompt, isMeasured, hasGuard, guardAgreesWithMargins, gateCandidates, stopAfter, marginsFor, backlogFor, own, tt, othersStanding, ranTheTarget, standingOf, decideAll, baselineProblems, recordingAdvice, RECORDED_TARGETS, TRIPLE_CORPUS_TARGET, expectedOthers, frozenPathsIn, ruleViolations, measuredModelOf, ledgerEntry, recordRequest, recordPrompt, campaignPageSuffix, DEFAULT_CONFIGURATIONS, EXPERIMENT_PAGE, isCampaignPageOf, recordProblem } =
   loadPureDeclarations();
 
 // The measured margins of the `default` implementation: the gate tests below
@@ -553,11 +555,17 @@ const CANDIDATE = {
 const FTT_CANDIDATE = { ...CANDIDATE, ...FTT_TARGET, hypothesisId: "type_from_all_occurrences", guard: NOT_APPLICABLE };
 const HYPOTHESIS = { id: "x", summary: "y", targetKind: "mistyped" };
 
-// The JSON a decide prompt hands to `ledger.py append --stdin`.
-function ledgerEntryOf(prompt) {
-  const line = prompt.split("\n").find((l) => l.startsWith('{"experiment_id"'));
-  assert.ok(line, "the prompt carries no ledger entry");
+// The JSON a record prompt hands to `experiments/campaign.py` on standard input.
+function recordRequestOf(prompt) {
+  const line = prompt.split("\n").find((l) => l.startsWith('{"implementation"'));
+  assert.ok(line, "the prompt carries no record request");
   return JSON.parse(line);
+}
+// The first ledger entry a record prompt carries.
+function ledgerEntryOf(prompt) {
+  const [entry] = recordRequestOf(prompt).entries;
+  assert.ok(entry, "the record request carries no ledger entry");
+  return entry;
 }
 
 test("the experimenter and the verifier are both given every frozen path", () => {
@@ -687,17 +695,25 @@ test("the verifier reproduces every number the gate reads", () => {
   assert.ok(verify.includes("guard strict-F1 0.9, guard soft-F1 0.95"));
 });
 test("an accepted candidate is merged without checking a branch out in the repository root", () => {
-  const decide = decidePrompt(CANDIDATE, "accepted", "ok", 1, "experiment/x", DEFAULT_TARGET, DEFAULT_MARGINS, []);
+  const decide = decidePrompt(CANDIDATE, "accepted", "ok", 1, "experiment/x");
   assert.ok(decide.includes("git worktree add"));
   assert.ok(!decide.includes("git checkout experiment/x"));
-  assert.ok(decide.includes("ledger.py append --stdin"));
+  assert.ok(decide.includes("Set `merged: true` only when the merge commit was made"));
+  // The temporary worktree is made under the OS temp directory and removed whatever happened.
+  assert.ok(decide.includes("TMP_WORKTREE=$(mktemp -d)"));
+  assert.ok(decide.includes("never inside the repository"));
+  const lastSteps = decide.slice(decide.indexOf("Last, whatever happened above"));
+  assert.ok(lastSteps.includes('git worktree remove --force "$TMP_WORKTREE"') && lastSteps.includes("git worktree prune"));
+  // The ledger and the record are written once per iteration, by the record step.
+  assert.ok(!decide.includes("ledger.py append"));
+  assert.ok(!decide.includes("campaign.py"));
 });
-test("a ledger entry records what was refined, the margins it was judged by, and a guard that did not apply", () => {
+test("a ledger entry records what was refined, the margins it was judged by, a guard that did not apply, and the incumbent", () => {
   const others = {
     targets: [{ implementation: "default", configuration: "extraction-openrouter-default", status: "scored", dev_typed_f1: { before: 0.1138, after: 0.1138 }, dev_f1: { before: 0.4112, after: 0.4112 } }],
     guards: [{ implementation: "default", configuration: "extraction-openrouter-default", status: "scored", strict_f1: { before: 0.9319, after: 0.9319 } }],
   };
-  const entry = ledgerEntryOf(decidePrompt(FTT_CANDIDATE, "rejected", "no gain", 2, "experiment/x", FTT_TARGET, GATE_MARGINS.find_then_type, others));
+  const entry = ledgerEntry(FTT_CANDIDATE, "rejected", "no gain", 2, FTT_TARGET, GATE_MARGINS.find_then_type, others, undefined, FTT_EVALUATION);
   assert.equal(entry.experiment_id, "2-find_then_type-type_from_all_occurrences");
   assert.equal(entry.implementation, "find_then_type");
   assert.equal(entry.configuration, "extraction-find-then-type");
@@ -712,31 +728,108 @@ test("a ledger entry records what was refined, the margins it was judged by, and
   assert.equal(entry.other_targets[0].implementation, "default");
   assert.equal(entry.other_targets[0].dev_typed_f1.before, 0.1138);
   assert.equal(entry.other_guards[0].strict_f1.after, 0.9319);
+  // Before and after side by side: the incumbent's dev and holdout typed F1.
+  assert.equal(entry.incumbent.dev.typed_f1, FTT_EVALUATION.dev.typed_f1);
+  assert.equal(entry.incumbent.holdout.typed_f1, FTT_EVALUATION.holdout.typed_f1);
   // A candidate measured with another model is recorded with that model.
-  const swapped = ledgerEntryOf(decidePrompt({ ...FTT_CANDIDATE, model: "claude-opus-5-5" }, "unmeasured", "another model", 2, "experiment/x", FTT_TARGET, GATE_MARGINS.find_then_type, others));
+  const swapped = ledgerEntry({ ...FTT_CANDIDATE, model: "claude-opus-5-5" }, "unmeasured", "another model", 2, FTT_TARGET, GATE_MARGINS.find_then_type, others, undefined, FTT_EVALUATION);
   assert.equal(swapped.model, "claude-opus-5-5");
   assert.equal(swapped.incumbent_model, "claude-haiku-5-5");
 
-  const measured = ledgerEntryOf(decidePrompt(CANDIDATE, "accepted", "ok", 1, "experiment/x", DEFAULT_TARGET, DEFAULT_MARGINS, []));
+  const measured = ledgerEntry(CANDIDATE, "accepted", "ok", 1, DEFAULT_TARGET, DEFAULT_MARGINS, null, undefined, EVALUATION);
   assert.equal(measured.implementation, "default");
   assert.equal(measured.configuration, "extraction-openrouter-default");
   assert.equal(measured.guard.strict_f1, 0.9);
   assert.equal(measured.margins.provisional, false);
 });
-test("a deferred candidate is discarded without a ledger entry; an unmeasured one is recorded with null measures", () => {
-  const deferred = decidePrompt(CANDIDATE, "deferred", "another scored higher", 1, "experiment/x", DEFAULT_TARGET, DEFAULT_MARGINS, []);
-  assert.ok(!deferred.includes("ledger.py append"));
-  assert.ok(deferred.includes("git worktree remove --force /tmp/wt"));
+test("a deferred or rejected candidate's worktree is discarded; an unmeasured one is recorded with null measures", () => {
+  for (const decision of ["deferred", "rejected", "unmeasured"]) {
+    const decide = decidePrompt(CANDIDATE, decision, "why", 1, "experiment/x");
+    assert.ok(decide.includes("git worktree remove --force /tmp/wt"));
+    assert.ok(decide.includes("git branch -D wt-1"));
+    assert.ok(!decide.includes("git merge"));
+  }
   const unmeasured = { ...CANDIDATE, measurementStatus: "stale" };
   for (const group of ["dev", "holdout", "guard"]) delete unmeasured[group];
-  const recorded = decidePrompt(unmeasured, "unmeasured", "not measured (stale)", 1, "experiment/x", DEFAULT_TARGET, DEFAULT_MARGINS, []);
-  assert.ok(recorded.includes('"dev":null,"holdout":null'));
-  assert.ok(recorded.includes('"decision":"unmeasured"'));
-  assert.ok(recorded.includes("ledger.py append --stdin"));
-  assert.ok(recorded.includes("git worktree remove --force /tmp/wt"));
-  const entry = ledgerEntryOf(recorded);
+  const entry = ledgerEntry(unmeasured, "unmeasured", "not measured (stale)", 1, DEFAULT_TARGET, DEFAULT_MARGINS, null, undefined, EVALUATION);
+  assert.equal(entry.dev, null);
+  assert.equal(entry.holdout, null);
   assert.equal(entry.guard, null);
+  assert.equal(entry.decision, "unmeasured");
   assert.equal(entry.implementation, "default");
+});
+
+// -- the record: ledger, campaign page, current state ------------------------
+
+test("an experimenter may not write the record: documentation/extraction/ is frozen", () => {
+  assert.ok(FROZEN_PATHS.includes("documentation/extraction/"));
+  assert.ok(experimentPrompt(HYPOTHESIS, FTT_EVALUATION).includes("documentation/extraction/"));
+  assert.ok(verifyPrompt(FTT_CANDIDATE, FTT_TARGET, []).includes("documentation/extraction/"));
+  for (const file of ["documentation/extraction/README.md", "documentation/extraction/experiments/README.md", "documentation/extraction/experiments/2026-11-16-loop-find_then_type.md"]) {
+    assert.equal(frozenPathsIn([file]).length, 1, file);
+    const violations = ruleViolations({ changedFiles: [file] }, { integrityOk: true, singleChangeOk: true, diffMatchesHypothesis: true, testsReproduced: true, scoresReproduced: true, forbiddenPathHits: [] });
+    assert.ok(violations.some((v) => v.includes("changes frozen paths")), file);
+  }
+  // Other documentation is not the record of an experiment.
+  assert.equal(frozenPathsIn(["documentation/karpathy_loop_design.md"]).length, 0);
+});
+test("each implementation's default configuration is the one the registry registers as its default", () => {
+  const bootstrap = fs.readFileSync(path.join(__dirname, "../../local-server/domain/pipelines/individual_extraction/bootstrap.py"), "utf8");
+  const registered = [...bootstrap.matchAll(/config_registry\.register\(\s*PipelineType\.INDIVIDUAL_EXTRACTION,\s*"([^"]+)",\s*"([^"]+)",[^)]*?\)?,?\s*default=True/g)]
+    .map(([, implementation, configuration]) => `${implementation}/${configuration}`);
+  for (const [implementation, configuration] of Object.entries(DEFAULT_CONFIGURATIONS)) {
+    assert.ok(registered.includes(`${implementation}/${configuration}`), `${implementation}'s default is not ${configuration}: ${registered}`);
+  }
+  for (const implementation of Object.keys(BACKLOGS)) assert.ok(own(DEFAULT_CONFIGURATIONS, implementation), implementation);
+});
+test("a campaign's page names the configuration only when it is not the implementation's default", () => {
+  assert.equal(campaignPageSuffix(FTT_TARGET), "loop-find_then_type");
+  assert.equal(campaignPageSuffix(DEFAULT_TARGET), "loop-default-extraction-openrouter-default");
+  assert.equal(campaignPageSuffix({ implementation: "default", configuration: "extraction-default" }), "loop-default");
+  assert.ok(EXPERIMENT_PAGE.test(`documentation/extraction/experiments/2026-11-16-${campaignPageSuffix(DEFAULT_TARGET)}.md`));
+  assert.ok(!EXPERIMENT_PAGE.test("documentation/extraction/README.md"));
+  assert.ok(!EXPERIMENT_PAGE.test("documentation/extraction/experiments/../README.md"));
+});
+test("the record step appends the ledger and writes the page in one commit on the integration branch", () => {
+  const entry = ledgerEntry(FTT_CANDIDATE, "rejected", "no gain", 2, FTT_TARGET, GATE_MARGINS.find_then_type, null, undefined, FTT_EVALUATION);
+  const request = recordRequest({ target: FTT_TARGET, margins: GATE_MARGINS.find_then_type, iteration: 2, entries: [entry], acceptedHypothesis: null, experimentPage: null, budgetUsd: 20, stop: null });
+  assert.equal(request.page, null, "a campaign's first page is named by the record step, after today's date");
+  assert.equal(request.page_suffix, "loop-find_then_type");
+  assert.equal(request.margins.provisional, true);
+  assert.ok(request.margins.basis && request.margins.missing);
+  const prompt = recordPrompt(request, "experiment/x", [{ candidate: FTT_CANDIDATE, decision: "rejected", reason: "no gain" }]);
+  // Cross-realm objects never share a prototype: compare their JSON.
+  assert.equal(JSON.stringify(recordRequestOf(prompt)), JSON.stringify(request));
+  assert.ok(prompt.includes('TMP_WORKTREE=$(mktemp -d)'));
+  assert.ok(prompt.includes('git worktree add "$TMP_WORKTREE" experiment/x'));
+  assert.ok(prompt.includes("never inside the repository"));
+  assert.ok(prompt.includes("experiments/campaign.py --also-ledger <root>/local-server/experiments/ledger.jsonl"));
+  const last = prompt.slice(prompt.indexOf("6. Last, whatever happened above"));
+  assert.ok(last.includes('git worktree remove --force "$TMP_WORKTREE"') && last.includes("git worktree prune"));
+  assert.ok(prompt.indexOf("6. Last") > prompt.indexOf("5. In the temporary worktree"), "the cleanup is the last step");
+  assert.ok(prompt.includes("git merge --no-edit main"));
+  assert.ok(prompt.includes("<<'RECORD_EOF'"));
+  assert.ok(prompt.split("\n").includes("RECORD_EOF"), "the heredoc delimiter line is unindented");
+  assert.ok(prompt.includes("git add local-server/experiments/ledger.jsonl documentation/extraction/"));
+  assert.ok(prompt.includes("Never edit between the `<!-- loop:` markers"));
+  assert.ok(!prompt.includes("What we know"), "the current state's prose is not touched without an accept");
+  const onAccept = recordPrompt({ ...request, accepted_hypothesis: "type_from_all_occurrences" }, "experiment/x", []);
+  assert.ok(onAccept.includes("What we know"));
+  // A threaded page is the one written to.
+  const later = recordRequest({ target: FTT_TARGET, margins: GATE_MARGINS.find_then_type, iteration: 3, entries: [entry], experimentPage: "documentation/extraction/experiments/2026-11-16-loop-find_then_type.md" });
+  assert.equal(later.page, "documentation/extraction/experiments/2026-11-16-loop-find_then_type.md");
+});
+test("the ledger is read where the loop commits it: the integration branch until it is promoted", () => {
+  const prompt = ledgerReadPrompt(FTT_TARGET, "experiment/x");
+  assert.ok(prompt.includes("git show experiment/x:local-server/experiments/ledger.jsonl"));
+  assert.ok(prompt.includes("--also-ledger <that file>"));
+  // No ancestry test: after a squash promotion the branch is never an ancestor of main again.
+  assert.ok(!prompt.includes("merge-base"));
+  assert.ok(prompt.includes(`ledger.py rejected-hypotheses ${FTT_FLAGS}\``));
+});
+test("the ledger merges as a union, so main and the integration branch can both append", () => {
+  const attributes = fs.readFileSync(path.join(__dirname, "../../.gitattributes"), "utf8");
+  assert.ok(attributes.split("\n").includes("local-server/experiments/ledger.jsonl merge=union"));
 });
 
 // -- what the script decides from the verifier's report ---------------------
@@ -910,7 +1003,7 @@ test("the ledger records the model the recordings hold, and the candidate's repo
   assert.equal(measuredModelOf(fttCandidate(), passingVerdict({ recordedModels: [] })), FTT_TARGET.model);
   assert.equal(measuredModelOf(fttCandidate({ model: "x" }), null), "x");
   const others = { targets: [], guards: [] };
-  const entry = ledgerEntryOf(decidePrompt(FTT_CANDIDATE, "unmeasured", "another model", 2, "experiment/x", FTT_TARGET, GATE_MARGINS.find_then_type, others, "claude-opus-5-5"));
+  const entry = ledgerEntry(FTT_CANDIDATE, "unmeasured", "another model", 2, FTT_TARGET, GATE_MARGINS.find_then_type, others, "claude-opus-5-5", FTT_EVALUATION);
   assert.equal(entry.model, "claude-opus-5-5");
   assert.equal(entry.reported_model, "claude-haiku-5-5");
   assert.equal(entry.incumbent_model, "claude-haiku-5-5");
@@ -1010,7 +1103,11 @@ async function runWorkflow(args, answers = {}) {
     if (step === "select") return { rejectedHypotheses: [], acceptedHypotheses: [] };
     if (step === "experiment") return fttCandidate({ hypothesisId: id });
     if (step === "verify") return passingVerdict({ hypothesisId: id });
-    if (step === "decide") return { hypothesisId: id, decision: "recorded", ledgerAppended: true };
+    if (step === "decide") return { hypothesisId: id, decision: "recorded", merged: true };
+    if (step === "record") {
+      const request = recordRequestOf(prompt);
+      return { ledgerAppended: request.entries.length, ledgerSkipped: 0, committed: true, commit: "abc1234", experimentPage: request.page || `documentation/extraction/experiments/2026-11-16-${request.page_suffix}.md` };
+    }
     throw new Error(`unexpected step ${opts.label}`);
   };
   const parallel = (thunks) => Promise.all(thunks.map((thunk) => thunk()));
@@ -1053,9 +1150,12 @@ await asyncTest("run: a verifier that passes a candidate with another target sta
   assert.ok(result.decisions.length > 0);
   for (const d of result.decisions) assert.equal(d.decision, "unmeasured");
   for (const c of calls.filter((c) => c.step === "decide")) {
-    assert.ok(c.prompt.includes('"decision":"unmeasured"'));
+    assert.ok(c.prompt.includes("was UNMEASURED"));
     assert.ok(!c.prompt.includes("git merge --no-ff"));
   }
+  const entries = recordRequestOf(calls.find((c) => c.step === "record").prompt).entries;
+  assert.equal(entries.length, result.decisions.length);
+  for (const entry of entries) assert.equal(entry.decision, "unmeasured");
 });
 await asyncTest("run: an empty baseline stops the iteration before it spends (N1)", async () => {
   for (const evaluate of [
@@ -1092,7 +1192,7 @@ await asyncTest("run: a gain that is only a change of model is not accepted, and
   });
   assert.equal(result.status, "no_accept");
   for (const d of result.decisions) assert.equal(d.decision, "unmeasured");
-  const entry = ledgerEntryOf(calls.find((c) => c.step === "decide").prompt);
+  const entry = ledgerEntryOf(calls.find((c) => c.step === "record").prompt);
   assert.equal(entry.model, "claude-opus-5-5");
   assert.equal(entry.incumbent_model, "claude-haiku-5-5");
 });
@@ -1132,7 +1232,7 @@ await asyncTest("run: default with a configuration its margins were not measured
   assert.equal(result.provisionalMargins, true);
   assert.equal(result.configuration, "extraction-default");
   assert.ok(calls.find((c) => c.step === "select").prompt.includes("--implementation default --configuration extraction-default"));
-  const entry = ledgerEntryOf(calls.find((c) => c.step === "decide").prompt);
+  const entry = ledgerEntryOf(calls.find((c) => c.step === "record").prompt);
   assert.equal(entry.margins.provisional, true);
   assert.equal(entry.margins.guard_slack, null);
   assert.equal(entry.guard.applies, false);
@@ -1179,6 +1279,282 @@ await asyncTest("run: a name that is not an entry of the maps is refused before 
   const { result, steps } = await runWorkflow({}, { evaluate: { ...FTT_INCUMBENT, implementation: "constructor" } });
   assert.equal(result.status, "error");
   assert.deepEqual(steps, ["evaluate"]);
+});
+
+// -- the record of a campaign, orchestration included -------------------------
+
+const FTT_PAGE = "documentation/extraction/experiments/2026-11-16-loop-find_then_type.md";
+
+await asyncTest("run: a campaign's first iteration has the record step name its page, and returns it to thread", async () => {
+  const { result, calls } = await runWorkflow(ASKED);
+  const request = recordRequestOf(calls.find((c) => c.step === "record").prompt);
+  assert.equal(request.page, null);
+  assert.equal(request.page_suffix, "loop-find_then_type");
+  assert.equal(result.experimentPage, FTT_PAGE);
+  assert.equal(result.stop.reason.includes("not committed"), false);
+  // The record is the iteration's last step, after every git step of the decisions.
+  assert.equal(calls[calls.length - 1].step, "record");
+  assert.equal(calls.filter((c) => c.step === "record").length, 1);
+});
+await asyncTest("run: a later iteration of the campaign writes to the page it was given, and creates none", async () => {
+  const { result, calls } = await runWorkflow({ ...ASKED, experimentPage: FTT_PAGE }, {
+    verify: (id) => passingVerdict({ hypothesisId: id, otherTargets: [{ ...DEFAULT_OTHER, status: "stale", devTypedF1: undefined }] }),
+  });
+  assert.equal(recordRequestOf(calls.find((c) => c.step === "record").prompt).page, FTT_PAGE);
+  assert.equal(result.experimentPage, FTT_PAGE);
+  // Every path that stops early still returns the page, so a driver never starts a second one.
+  const early = await runWorkflow({ ...ASKED, experimentPage: FTT_PAGE }, { experiment: () => null });
+  assert.equal(early.result.experimentPage, FTT_PAGE);
+});
+await asyncTest("run: a page that is not a campaign page, or is another target's, is refused before anything is spent", async () => {
+  for (const experimentPage of ["documentation/extraction/README.md", "../x.md", "documentation/extraction/experiments/2026-11-16-loop-a b.md"]) {
+    const { result, steps } = await runWorkflow({ ...ASKED, experimentPage });
+    assert.equal(result.status, "error", experimentPage);
+    assert.deepEqual(steps, []);
+  }
+  const other = await runWorkflow({ ...ASKED, experimentPage: "documentation/extraction/experiments/2026-11-16-loop-default-extraction-openrouter-default.md" });
+  assert.equal(other.result.status, "error");
+  assert.ok(other.result.reason.includes("not a campaign page of find_then_type"));
+  assert.deepEqual(other.steps, ["evaluate"]);
+});
+await asyncTest("run: the current-state page is given an accept only when the accept was merged", async () => {
+  const accepted = await runWorkflow(ASKED);
+  assert.equal(accepted.result.status, "accepted");
+  const request = recordRequestOf(accepted.calls.find((c) => c.step === "record").prompt);
+  assert.equal(request.accepted_hypothesis, accepted.result.acceptedHypothesis);
+  // Deferred candidates leave no entry.
+  assert.deepEqual(request.entries.map((e) => e.decision), ["accepted"]);
+  for (const decide of [(id) => ({ hypothesisId: id, decision: "accepted", merged: false, notes: "conflict in prompts.py" }), () => null]) {
+    const unmerged = await runWorkflow(ASKED, { decide });
+    const sent = recordRequestOf(unmerged.calls.find((c) => c.step === "record").prompt);
+    assert.equal(sent.accepted_hypothesis, null, "not a lead");
+    assert.deepEqual([...sent.entries.map((e) => e.decision)], ["accept_unmerged"]);
+    assert.equal(unmerged.result.status, "no_accept");
+    assert.equal(unmerged.result.acceptedHypothesis, null);
+    assert.ok(unmerged.result.stop.reason.includes("could not be merged"));
+    assert.ok(unmerged.result.decisions.some((d) => d.decision === "accept_unmerged"));
+  }
+  const none = await runWorkflow(ASKED, { verify: (id) => passingVerdict({ hypothesisId: id, otherTargets: [{ ...DEFAULT_OTHER, devTypedF1: 0.05 }] }) });
+  assert.equal(none.result.status, "no_accept");
+  assert.equal(recordRequestOf(none.calls.find((c) => c.step === "record").prompt).accepted_hypothesis, null);
+});
+await asyncTest("run: an iteration whose record was not committed stops the loop and returns the whole request", async () => {
+  for (const record of [null, { ledgerAppended: 0, committed: false, experimentPage: "", notes: "campaign.py failed" }]) {
+    const { result } = await runWorkflow(ASKED, {
+      record,
+      verify: (id) => passingVerdict({ hypothesisId: id, otherTargets: [{ ...DEFAULT_OTHER, devTypedF1: 0.05 }] }),
+    });
+    assert.equal(result.status, "no_accept");
+    assert.ok(result.stop && result.stop.reason.includes("not committed"), JSON.stringify(result.stop));
+    assert.ok(result.recordRequest.entries.length > 0);
+    assert.equal(result.recordRequest.page_suffix, "loop-find_then_type");
+    assert.ok(result.recordProblem);
+  }
+});
+
+// The record step's script itself, run on a copy of the pages with the
+// requests this workflow builds: what a campaign's iterations do to them.
+const LOCAL_SERVER = path.join(__dirname, "../../local-server");
+const DOCS = path.join(__dirname, "../../documentation/extraction");
+const PYTHON = process.env.PYTHON || "python3";
+
+function campaignRecord(docsRoot, ledgerPath, request, today) {
+  const run = spawnSync(PYTHON, ["experiments/campaign.py", "--docs-root", docsRoot, "--ledger-path", ledgerPath, "--today", today], {
+    cwd: LOCAL_SERVER,
+    input: JSON.stringify(request),
+    encoding: "utf8",
+  });
+  assert.equal(run.status, 0, `campaign.py failed: ${run.stderr}`);
+  return JSON.parse(run.stdout.trim().split("\n").pop());
+}
+
+test("a campaign's page is created once, its table regenerated, its index row kept single, the current state touched only on accept", () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "campaign-"));
+  const docsRoot = path.join(root, "extraction");
+  fs.mkdirSync(path.join(docsRoot, "experiments"), { recursive: true });
+  fs.copyFileSync(path.join(DOCS, "README.md"), path.join(docsRoot, "README.md"));
+  fs.copyFileSync(path.join(DOCS, "experiments", "README.md"), path.join(docsRoot, "experiments", "README.md"));
+  const ledgerPath = path.join(root, "ledger.jsonl");
+  const currentStateBefore = fs.readFileSync(path.join(docsRoot, "README.md"), "utf8");
+  const margins = GATE_MARGINS.find_then_type;
+  const entryAt = (iteration, decision, candidate = FTT_CANDIDATE) => ledgerEntry(candidate, decision, decision === "accepted" ? "passed" : "no gain", iteration, FTT_TARGET, margins, null, undefined, FTT_EVALUATION);
+  const pageFile = (page) => path.join(docsRoot, "experiments", path.basename(page));
+  const indexRows = () => fs.readFileSync(path.join(docsRoot, "experiments", "README.md"), "utf8").split("\n").filter((l) => l.includes("](2026-11-16-loop-find_then_type.md)"));
+
+  // Iteration 1: the page is created, named after the campaign's first day.
+  const first = campaignRecord(docsRoot, ledgerPath, recordRequest({ target: FTT_TARGET, margins, iteration: 1, entries: [entryAt(1, "rejected")], experimentPage: null, budgetUsd: 20, stop: null }), "2026-11-16");
+  assert.equal(first.page, FTT_PAGE);
+  assert.equal(first.created, true);
+  assert.equal(first.appended, 1);
+  let page = fs.readFileSync(pageFile(first.page), "utf8");
+  const template = fs.readFileSync(path.join(DOCS, "experiments", "_template.md"), "utf8");
+  const headings = (text) => text.split("\n").filter((l) => l.startsWith("## "));
+  assert.deepEqual(headings(page), headings(template), "the page has the template's sections");
+  assert.ok(page.includes("**provisional**"), "the decision rule says the margins are provisional");
+  assert.ok(page.includes(`ε = ${margins.epsilon}`));
+  assert.equal(indexRows().length, 1);
+  assert.equal(fs.readFileSync(path.join(docsRoot, "README.md"), "utf8"), currentStateBefore);
+
+  // The loop's note, outside the markers, survives the next iteration.
+  fs.writeFileSync(pageFile(first.page), page.replace("(written by the loop):\n", "(written by the loop):\n\n- Iteration 1: a note.\n"));
+
+  // Iteration 2, another day: the same page, its table regenerated, not appended to.
+  const second = campaignRecord(docsRoot, ledgerPath, recordRequest({ target: FTT_TARGET, margins, iteration: 2, entries: [entryAt(2, "unmeasured")], experimentPage: first.page, budgetUsd: 20, stop: null }), "2026-11-17");
+  assert.equal(second.page, FTT_PAGE);
+  assert.equal(second.created, false);
+  page = fs.readFileSync(pageFile(second.page), "utf8");
+  assert.ok(page.includes("- Iteration 1: a note."));
+  assert.equal(page.split("<!-- loop:results:start -->").length, 2);
+  assert.equal(page.split("| iteration | hypothesis |").length, 2, "one table");
+  assert.equal(page.split("\n").filter((l) => l.startsWith("| 1 |") || l.startsWith("| 2 |")).length, 2, "one row per entry");
+  assert.equal(indexRows().length, 1, "the index row is updated, not added again");
+  assert.ok(indexRows()[0].includes("2 iteration(s)"));
+  assert.equal(fs.readFileSync(path.join(docsRoot, "README.md"), "utf8"), currentStateBefore, "no accept, no change to the current state");
+
+  // Iteration 3: an accept, merged, updates the current state's row and date.
+  const better = { ...FTT_CANDIDATE, dev: { typed_f1: 0.5123, f1: 0.55, relationship_recall: 0.17 }, holdout: { typed_f1: 0.4711, relationship_recall: 0.02 } };
+  const third = campaignRecord(docsRoot, ledgerPath, recordRequest({ target: FTT_TARGET, margins, iteration: 3, entries: [entryAt(3, "accepted", better)], acceptedHypothesis: better.hypothesisId, experimentPage: second.page, budgetUsd: 20, stop: { reason: "accepted: promote" } }), "2026-11-18");
+  assert.equal(third.lead_recorded, true);
+  const currentState = fs.readFileSync(path.join(docsRoot, "README.md"), "utf8");
+  assert.ok(currentState.includes("**As of 2026-11-18.**"));
+  // A loop accept is a lead: the numbers table is byte-identical.
+  const numbers = (text) => text.split("## Best current numbers")[1].split("\n## ")[0];
+  assert.equal(numbers(currentState), numbers(currentStateBefore));
+  const leads = currentState.split("<!-- loop:leads:start -->")[1].split("<!-- loop:leads:end -->")[0];
+  assert.ok(!leads.includes("None yet."));
+  const [lead] = leads.split("\n").filter((l) => l.startsWith("- "));
+  assert.ok(lead.includes("`type_from_all_occurrences`") && lead.includes("0.2000 → 0.5123") && lead.includes("one take"));
+  assert.ok(lead.includes("(experiments/2026-11-16-loop-find_then_type.md)") && lead.includes("To confirm with three takes"));
+  assert.equal(indexRows().length, 1);
+  assert.ok(indexRows()[0].includes("Lead (one take): `type_from_all_occurrences`"));
+  assert.ok(!indexRows()[0].includes("Adopted"));
+  assert.ok(fs.readFileSync(pageFile(third.page), "utf8").includes("Lead (one take): `type_from_all_occurrences` (iteration 3), merged to the integration branch; confirm with three takes before it counts."));
+  assert.equal(fs.readFileSync(ledgerPath, "utf8").trim().split("\n").length, 3);
+  fs.rmSync(root, { recursive: true, force: true });
+});
+
+// -- the record, after the review ---------------------------------------------
+
+test("a campaign page is a target's when its name after the date is the target's suffix, or that with a number", () => {
+  assert.equal(isCampaignPageOf(FTT_PAGE, FTT_TARGET), true);
+  assert.equal(isCampaignPageOf(FTT_PAGE.replace(".md", "-2.md"), FTT_TARGET), true);
+  assert.equal(isCampaignPageOf(FTT_PAGE.replace(".md", "-x.md"), FTT_TARGET), false);
+  assert.equal(isCampaignPageOf("documentation/extraction/experiments/2026-11-16-loop-default-extraction-openrouter-default.md", FTT_TARGET), false);
+  // The default configuration's page is not another configuration's.
+  assert.equal(isCampaignPageOf("documentation/extraction/experiments/2026-11-16-loop-default-extraction-openrouter-default.md", { implementation: "default", configuration: "extraction-default" }), false);
+  assert.equal(isCampaignPageOf("documentation/extraction/experiments/2026-11-16-loop-default-2.md", { implementation: "default", configuration: "extraction-default" }), true);
+});
+test("a record counts as done when every entry is appended or already held, and committed", () => {
+  const request = { entries: [{}, {}] };
+  assert.equal(recordProblem({ ledgerAppended: 2, ledgerSkipped: 0, committed: true }, request), null);
+  assert.equal(recordProblem({ ledgerAppended: 0, ledgerSkipped: 2, committed: true }, request), null, "a re-run");
+  assert.ok(recordProblem({ ledgerAppended: 1, committed: true }, request).includes("1 of 2"));
+  assert.ok(recordProblem({ ledgerAppended: 2, committed: false, notes: "hook failed" }, request).includes("hook failed"));
+  assert.ok(recordProblem(null, request).includes("returned nothing"));
+  assert.equal(recordProblem({ ledgerAppended: 0, committed: true }, { entries: [] }), null, "a stop record");
+});
+await asyncTest("run: a stop before anything is decided writes the stop into the campaign's page, when it is known", async () => {
+  const PAGED = { ...ASKED, configuration: "extraction-find-then-type", experimentPage: FTT_PAGE };
+  const cases = [
+    [{ ...PAGED, cumulativeCostUsd: 5, totalBudgetUsd: 5 }, {}, ["record"], "budget exhausted"],
+    [{ ...PAGED, consecutiveNoAccept: 3 }, {}, ["record"], "plateau"],
+    [PAGED, { evaluate: { ...FTT_INCUMBENT, holdout: { typed_f1: 0.6, typed_precision: 0.7, typed_recall: 0.6 } } }, ["evaluate", "record"], "holdout typed floors met"],
+    [PAGED, { select: { rejectedHypotheses: BACKLOGS.find_then_type.map((h) => h.id), acceptedHypotheses: [] } }, ["evaluate", "select", "record"], "the hypothesis backlog is exhausted"],
+    [{ ...PAGED, consecutiveNoAccept: 2 }, { experiment: () => null }, null, "plateau"],
+  ];
+  for (const [args, answers, steps, stop] of cases) {
+    const run = await runWorkflow(args, answers);
+    if (steps) assert.deepEqual([...run.steps], steps, stop);
+    const record = run.calls[run.calls.length - 1];
+    assert.equal(record.step, "record", stop);
+    assert.equal(record.id, "stop");
+    const request = recordRequestOf(record.prompt);
+    assert.equal(request.entries.length, 0);
+    assert.equal(request.page, FTT_PAGE);
+    assert.ok(request.stop.includes(stop), `${request.stop} / ${stop}`);
+    assert.ok(record.prompt.includes("Write nothing yourself"));
+    assert.ok(record.prompt.includes('git worktree remove --force "$TMP_WORKTREE"'));
+    assert.equal(run.result.recordProblem, null);
+    assert.equal(run.result.experimentPage, FTT_PAGE);
+  }
+  // Without a page there is nothing to update, and nothing is spent on it.
+  const unpaged = await runWorkflow({ ...ASKED, cumulativeCostUsd: 5, totalBudgetUsd: 5 });
+  assert.deepEqual([...unpaged.steps], []);
+  // A page of another target is never written to.
+  const other = await runWorkflow({ implementation: "default", configuration: "extraction-openrouter-default", experimentPage: FTT_PAGE, cumulativeCostUsd: 5, totalBudgetUsd: 5 });
+  assert.deepEqual([...other.steps], []);
+});
+await asyncTest("run: a second campaign's page of the same day is threaded like the first", async () => {
+  const page = FTT_PAGE.replace(".md", "-2.md");
+  const { result, calls } = await runWorkflow({ ...ASKED, experimentPage: page });
+  assert.equal(result.status, "accepted");
+  assert.equal(recordRequestOf(calls.find((c) => c.step === "record").prompt).page, page);
+  assert.equal(result.experimentPage, page);
+});
+
+function campaignRecordFails(docsRoot, ledgerPath, request, today) {
+  const run = spawnSync(PYTHON, ["experiments/campaign.py", "--docs-root", docsRoot, "--ledger-path", ledgerPath, "--today", today], {
+    cwd: LOCAL_SERVER,
+    input: JSON.stringify(request),
+    encoding: "utf8",
+  });
+  assert.equal(run.status, 1, `campaign.py should have refused: ${run.stdout}`);
+  assert.ok(run.stderr.startsWith("ERROR:") && !run.stderr.includes("Traceback"), run.stderr);
+  return run.stderr;
+}
+
+test("the record step's script: a same-day campaign, a re-run, a reset, a stop, and what it refuses", () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "campaign-"));
+  const docsRoot = path.join(root, "extraction");
+  fs.mkdirSync(path.join(docsRoot, "experiments"), { recursive: true });
+  fs.copyFileSync(path.join(DOCS, "README.md"), path.join(docsRoot, "README.md"));
+  fs.copyFileSync(path.join(DOCS, "experiments", "README.md"), path.join(docsRoot, "experiments", "README.md"));
+  const ledgerPath = path.join(root, "ledger.jsonl");
+  const margins = GATE_MARGINS.find_then_type;
+  const at = (iteration, hypothesisId, decision) => ledgerEntry({ ...FTT_CANDIDATE, hypothesisId }, decision, "why", iteration, FTT_TARGET, margins, null, undefined, FTT_EVALUATION);
+  const requestOf = (fields) => recordRequest({ target: FTT_TARGET, margins, budgetUsd: 20, stop: null, experimentPage: null, ...fields });
+  const ledgerLines = () => fs.readFileSync(ledgerPath, "utf8").trim().split("\n").length;
+  const indexText = () => fs.readFileSync(path.join(docsRoot, "experiments", "README.md"), "utf8");
+
+  const first = campaignRecord(docsRoot, ledgerPath, requestOf({ iteration: 1, entries: [at(1, "a", "rejected")], stop: { reason: "plateau" } }), "2026-11-16");
+  // A second campaign the same day gets its own page.
+  const second = campaignRecord(docsRoot, ledgerPath, requestOf({ iteration: 1, entries: [at(1, "b", "rejected")] }), "2026-11-16");
+  assert.equal(second.page, FTT_PAGE.replace(".md", "-2.md"));
+  assert.ok(!fs.readFileSync(path.join(docsRoot, "experiments", path.basename(first.page)), "utf8").includes("`b`"));
+
+  // The same request again changes nothing.
+  const again = requestOf({ iteration: 1, entries: [at(1, "b", "rejected")], experimentPage: second.page });
+  const pageBefore = fs.readFileSync(path.join(docsRoot, "experiments", path.basename(second.page)), "utf8");
+  const rerun = campaignRecord(docsRoot, ledgerPath, again, "2026-11-16");
+  assert.equal(rerun.appended, 0);
+  assert.equal(rerun.skipped, 1);
+  assert.equal(ledgerLines(), 2);
+  assert.equal(fs.readFileSync(path.join(docsRoot, "experiments", path.basename(second.page)), "utf8"), pageBefore);
+
+  // A baseline reset mid-campaign does not erase the campaign's rows.
+  const reset = spawnSync(PYTHON, ["experiments/ledger.py", "--ledger-path", ledgerPath, "baseline-reset", "--ontology-context", "extraction_benchmark", "--implementation", "find_then_type", "--configuration", "extraction-find-then-type", "re-recorded"], { cwd: LOCAL_SERVER, encoding: "utf8" });
+  assert.equal(reset.status, 0, reset.stderr);
+  campaignRecord(docsRoot, ledgerPath, requestOf({ iteration: 2, entries: [at(2, "c", "rejected")], experimentPage: second.page }), "2026-11-17");
+  const page = fs.readFileSync(path.join(docsRoot, "experiments", path.basename(second.page)), "utf8");
+  assert.ok(page.includes("| 1 | `b` |") && page.includes("| 2 | `c` |"));
+
+  // A stop with no entries reaches the verdict and the index row.
+  campaignRecord(docsRoot, ledgerPath, recordRequest({ target: { ...FTT_TARGET, model: undefined }, margins: null, iteration: 3, entries: [], experimentPage: second.page, budgetUsd: 20, stop: { reason: "budget exhausted" } }), "2026-11-18");
+  assert.ok(fs.readFileSync(path.join(docsRoot, "experiments", path.basename(second.page)), "utf8").includes("Stopped: budget exhausted."));
+  const secondRow = indexText().split("\n").filter((l) => l.includes(`](${path.basename(second.page)})`));
+  assert.equal(secondRow.length, 1);
+  assert.ok(secondRow[0].includes("(stopped)") && !secondRow[0].includes("Running"));
+
+  // Refused, with nothing written: two index rows for one campaign, a model that would break a table, an entry that is not an object.
+  const lines = ledgerLines();
+  const index = indexText();
+  fs.writeFileSync(path.join(docsRoot, "experiments", "README.md"), index.replace(secondRow[0], `${secondRow[0]}\n${secondRow[0]}`));
+  assert.ok(campaignRecordFails(docsRoot, ledgerPath, requestOf({ iteration: 4, entries: [at(4, "d", "rejected")], experimentPage: second.page }), "2026-11-19").includes("2 rows"));
+  fs.writeFileSync(path.join(docsRoot, "experiments", "README.md"), index);
+  campaignRecordFails(docsRoot, ledgerPath, { ...requestOf({ iteration: 4, entries: [at(4, "d", "rejected")] }), model: "a | b" }, "2026-11-19");
+  campaignRecordFails(docsRoot, ledgerPath, { ...requestOf({ iteration: 4, entries: [] }), entries: [1] }, "2026-11-19");
+  assert.equal(ledgerLines(), lines);
+  fs.rmSync(root, { recursive: true, force: true });
 });
 
 console.log(`\n${passCount} passed, ${failCount} failed`);

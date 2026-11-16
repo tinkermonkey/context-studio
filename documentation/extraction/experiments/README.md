@@ -2,7 +2,7 @@
 
 One page per experiment or review, oldest first. The current state they led to is in [../README.md](../README.md).
 
-Read the numbers with these limits in mind: since 2026-11 everything is measured on a three-document benchmark whose gold was drafted and checked by models, not people; on that benchmark a difference under about 0.08 typed F1 is noise. Results before 2026-11 were measured on a different corpus and are not comparable.
+Read the numbers with these limits in mind: since 2026-11 everything is measured on a three-document benchmark whose gold was drafted and checked by models, not people; on that benchmark a difference under the noise threshold stated in [the current state](../README.md#how-quality-is-measured) is noise. Results before 2026-11 were measured on a different corpus and are not comparable. How to add a page: [Recording an experiment](#recording-an-experiment).
 
 | date | page | question | result | verdict |
 |---|---|---|---|---|
@@ -15,6 +15,29 @@ Read the numbers with these limits in mind: since 2026-11 everything is measured
 | 2026-11-14 | [Direction review](2026-11-14-direction-review.md) | An independent, deliberately critical review against the literature and off-the-shelf tools | "Narrow, don't replace": 0.11 to 0.47 repaired a broken baseline; the measurement is thin; the real competitor is one strong-model call | Recommendations listed in [../README.md](../README.md#recommended-next-steps) |
 | 2026-11-15 | [Head-to-head](2026-11-15-head-to-head.md) | `find_then_type` against one call per document to Claude, three takes per arm | One Opus 5.5 call: typed F1 0.62 / 0.66 vs 0.45 / 0.44, but worse on relationships and 5-8 times the cost; one Sonnet or Haiku call does not win | Opus single call wins on individuals by the rule set in advance; not adopted yet (decision open) |
 
-## Adding a page
+## Recording an experiment
 
-Name it `YYYY-MM-DD-short-name.md`. Say the question, the method (documents, model, takes, cost), the numbers, the limits, and a verdict, and add a row above. Then update [../README.md](../README.md) if the verdict changes the current state.
+These rules apply to people and agents alike.
+
+**What needs a page.** Any run that spends money to measure extraction; any measured change to an extraction pipeline's stages, prompts or configurations; every refinement-loop campaign; any review of the direction. A free replay of existing recordings does not.
+
+**The page.** Name it `YYYY-MM-DD-short-name.md` and start from [`_template.md`](_template.md), keeping its sections: question, decision rule, method, results, limits, verdict, reproduce, links.
+
+**The decision rule comes first.** Write it on the page before the first paid run: the measure, the splits, and which difference adopts, rejects or is inconclusive.
+
+**Evidence.**
+
+- At least three takes for any claimed gain, with paired deltas against the incumbent (same document, same take index).
+- A difference under the noise threshold stated in [the current state](../README.md#how-quality-is-measured) is not a result.
+- The holdout document is never used for tuning: no prompt or rule is written or chosen by its score.
+- A single take is labelled as one wherever its number appears.
+
+**Data.** Commit what must replay, and put the command that replays it on the page. Anything else is named on the page with "scratch; not reproducible from the repository."
+
+**Same pull request.** The page, its row in the table above, and, when the verdict changes anything [the current state](../README.md) says, that page and its "As of" date go in the same pull request.
+
+**Nowhere else.** Extraction results do not go in `claudes_thoughts` reports, and not only in PR descriptions, scratch folders or session notes: link to the page from those instead.
+
+**The refinement loop follows these rules by itself.** Each campaign (consecutive iterations against one implementation and configuration, from one driver) gets one page, `YYYY-MM-DD-loop-<implementation>[-<configuration>].md` (the configuration only when it is not the implementation's default; `-2`, `-3` for a second campaign the same day). The loop's record step (`local-server/experiments/campaign.py`) creates it on the campaign's first recorded iteration, regenerates its results table and verdict from the ledger at every iteration and when the loop stops, and keeps its row above current. These edits are committed with the ledger entries on the loop's integration branch and reach `main` with its promotion. An experimenter may not write under `documentation/extraction/`: only the record step does.
+
+**A loop accept is a lead, not a result.** The loop's decision rule is its accept gate, fixed in code before the campaign starts. An accept is one take judged by a margin below the noise threshold, so it does not meet the evidence rules above: the record step lists it under "Leads from the refinement loop" on [the current state](../README.md#leads-from-the-refinement-loop) and updates its "As of" date, and no number there moves until a three-take experiment, with its own page, confirms it. A candidate that passed the gate but could not be merged is recorded as `accept_unmerged`, and is not a lead.

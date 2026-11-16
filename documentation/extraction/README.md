@@ -46,7 +46,7 @@ How much to trust it:
 
 - **The gold is model-made.** It was drafted by Claude Fable 5.2 from the DR definitions, re-extracted blind by a second model pass and adjudicated by a model; no person has checked it. It may favour approaches that, like the drafting, read whole documents with full definitions.
 - **It is small:** three documents, 297 gold individuals, 51 of the 193 classes represented. The holdout document has been used in earlier prompt work.
-- **Noise:** `find_then_type` typed F1 ranges 0.426-0.465 on dev and 0.393-0.481 on the holdout over three takes. The independent review put the threshold for a real difference at about 0.08 typed F1.
+- **Noise threshold: 0.08 typed F1.** A smaller difference between two approaches is not a result. `find_then_type` typed F1 ranges 0.426-0.465 on dev and 0.393-0.481 on the holdout over three takes, and the independent review put the threshold for a real difference at about 0.08. This is the one place the threshold is stated; the [rules for recording an experiment](experiments/README.md#recording-an-experiment) refer to it.
 
 An older corpus of short test passages (`fixtures/pipelines/individual_extraction/`) is still used as a guard for the two-pass implementation; it does not represent real documents (see [Before the benchmark](experiments/2026-05-to-09-before-the-benchmark.md)).
 
@@ -75,7 +75,15 @@ In user terms, `find_then_type` finds about 56-58% of what the gold holds (81-84
 
 ## The refinement loop
 
-The agent-driven refinement loop (Loop C, `.claude/workflows/karpathy-loop.js`, `documentation/karpathy_loop_design.md`, `local-server/experiments/README.md`) can now target any implementation and configuration (PR #1597). It has never run an iteration on the extraction benchmark. Its four past accepts optimised the short-passage corpus. Its accept margins for `find_then_type` are provisional until three paid re-recordings measure whole-take noise. The direction review recommends keeping it paused until the gold is human-checked.
+The agent-driven refinement loop (Loop C, `.claude/workflows/karpathy-loop.js`, `documentation/karpathy_loop_design.md`, `local-server/experiments/README.md`) can now target any implementation and configuration (PR #1597). It has never run an iteration on the extraction benchmark. Its four past accepts optimised the short-passage corpus. Its accept margins for `find_then_type` are provisional until three paid re-recordings measure whole-take noise. The direction review recommends keeping it paused until the gold is human-checked. When it runs, each campaign records itself: one page under [experiments/](experiments/README.md) with its iterations generated from the ledger, and, on an accept, a line under the leads below. Its decision rule is its accept gate, fixed in code before a campaign starts.
+
+## Leads from the refinement loop
+
+A loop accept is one take judged by a margin below the noise threshold: a lead, not a result. It is listed here, and no number on this page moves, until a three-take experiment confirms it; then that experiment's page updates the numbers above and removes the line. The loop writes the lines between the markers (`local-server/experiments/campaign.py`).
+
+<!-- loop:leads:start -->
+None yet.
+<!-- loop:leads:end -->
 
 ## Open decisions
 
@@ -92,7 +100,7 @@ From the [direction review](experiments/2026-11-14-direction-review.md) and the 
 3. **Then decide the extraction core** (decision 1) and delete what loses, including `open_v1`.
 4. **Measure value to a reviewer**, not only F1: time and acceptance when reviewing a proposal against modelling from scratch.
 
-Stop doing: drawing conclusions from single recordings or differences under about 0.08; scoring prompt experiments on the holdout; building more variants and tournament machinery before the measurement is trustworthy.
+Stop doing: drawing conclusions from single recordings or differences under the noise threshold; scoring prompt experiments on the holdout; building more variants and tournament machinery before the measurement is trustworthy.
 
 ## Known gaps
 
@@ -112,3 +120,7 @@ Stop doing: drawing conclusions from single recordings or differences under abou
 | Benchmark scripts | `local-server/scripts/benchmark_replay.py`, `benchmark_external.py`, `quality_tournament.py` |
 | Refinement loop | `.claude/workflows/karpathy-loop.js`, `documentation/karpathy_loop_design.md`, `local-server/experiments/` |
 | Experiments | [experiments/](experiments/README.md) |
+
+## Keeping this page current
+
+How experiments are recorded, and when this page changes with them, is in [Recording an experiment](experiments/README.md#recording-an-experiment). In short: a verdict that changes anything stated here updates this page and its "As of" date in the same pull request as the experiment's page. The refinement loop changes only its leads and the date: its accepts are one take each, so they never move the numbers on this page.

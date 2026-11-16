@@ -16,8 +16,9 @@ experiments/
 ├── reports/<run_id>.{json,md}   # error reports (§3.2) — one pair per evaluation run
 │                                #   tournament_<run_id>_benchmark.json: the benchmark pass
 │                                #   benchmark_<document>_<label>_<stamp>.{json,md}: a scored proposal
-├── ledger.py                    # read/write helpers + CLI for ledger.jsonl (Loop C)
+├── ledger.py                    # read/write helpers + CLI for ledger.jsonl (Loop C); `render` prints a table
 ├── ledger.jsonl                 # append-only experiment record (accepted + rejected)
+├── campaign.py                  # Loop C's record step: ledger → campaign page → current state
 └── README.md                    # this file
 ```
 
@@ -387,7 +388,7 @@ measurement that leaves one out of its baseline stops the iteration.
    discarded; the hypothesis stays selectable.
 4. **Verify** — an adversarial agent checks each candidate: none of the frozen paths changed (the
    harness, the gold extractions, the schema snapshots, the tournament and benchmark scripts, the
-   ledger, and what says which orchestrator and model a target runs: `configs/`, the registry, the
+   ledger, `documentation/extraction/` (only the record step writes the record), and what says which orchestrator and model a target runs: `configs/`, the registry, the
    bootstrap and `configurations/`), nothing in the diff is specific to a benchmark document, tests
    reproduce, the target's committed cassettes replay to every number the gate reads (dev found F1
    and typed F1, holdout typed F1, and the guard as the benchmark report states it), nothing is
@@ -411,10 +412,55 @@ measurement that leaves one out of its baseline stops the iteration.
    Of the candidates that pass, the one with the highest dev typed F1 is accepted: merged into
    `experiment/karpathy-loop` with a ledger entry. Others that pass are discarded without a ledger
    entry, so they are drafted again against the new incumbent. Everything else → discard the
-   worktree, append a ledger entry with the reason. Every entry records the implementation, the
+   worktree, a ledger entry with the reason. Every entry records the implementation, the
    configuration, the model the candidate ran beside the incumbent's, the margins used and whether
    they were provisional, the guard (or that it did not apply), and every other recorded target's
-   measure before and after the change.
+   measure before and after the change, and the incumbent's numbers it was compared with.
+6. **Record** — once every decision's git step is done, one agent writes the iteration down (see
+   "The record" below) and commits it on `experiment/karpathy-loop`.
+
+### The record
+
+Loop C keeps one record at three levels, each generated from the one before:
+
+1. **Ledger** (`ledger.jsonl`, machine, per iteration): one entry per decided hypothesis.
+2. **Campaign page** (people, per campaign): consecutive iterations against one implementation and
+   configuration from one driver share one page,
+   `documentation/extraction/experiments/YYYY-MM-DD-loop-<implementation>[-<configuration>].md`
+   (the configuration only when it is not the implementation's default), with its row in that
+   folder's index. It follows the rules every experiment follows
+   (`documentation/extraction/experiments/README.md`, "Recording an experiment"); its decision rule
+   is the accept gate with the margins in force.
+3. **Current-state page** (`documentation/extraction/README.md`, only what changed): on an accept
+   that was merged, one line under "Leads from the refinement loop" and the "As of" date. No
+   number on that page moves: the loop's decision rule is its accept gate, fixed in code before
+   the campaign starts, and an accept is one take judged by a margin below the noise threshold,
+   a lead that a three-take experiment must confirm. An accept whose merge failed is recorded as
+   `accept_unmerged`, and is not a lead.
+
+`campaign.py` does the mechanical part in one command: it appends the iteration's entries (stamped
+with the campaign and the date; one either ledger already holds is skipped, so a re-run is a
+no-op), creates the page on the campaign's first recorded iteration (`-2`, `-3` for a second
+campaign the same day), regenerates its results table (`ledger.py render --campaign`, every entry of
+the campaign whatever reset came between) and verdict between `<!-- loop:… -->` markers, keeps its
+index row single and current, and on a merged accept writes its lead. When the loop stops before
+deciding anything and the page is known, the same command runs with no entries and the stop. The
+record step's agent adds one note per iteration. Everything is committed in one commit on the
+integration branch, from a temporary worktree under the OS temp directory that is removed whatever
+happens (after merging `main` into it; the ledger merges as a union, `/.gitattributes`), so the
+record reaches `main` with the promotion of that branch, accept or not. The workflow threads the
+page as `experimentPage`; when a record fails, its result carries the whole request
+(`recordRequest`) to run by hand.
+
+```bash
+# from local-server/, venv active: the table a campaign page shows
+python experiments/ledger.py render --implementation find_then_type \
+    --configuration extraction-find-then-type [--campaign 2026-11-16-loop-find_then_type]
+# read the integration branch's ledger with this one
+git show experiment/karpathy-loop:local-server/experiments/ledger.jsonl > /tmp/branch-ledger.jsonl
+python experiments/ledger.py --also-ledger /tmp/branch-ledger.jsonl rejected-hypotheses \
+    --implementation find_then_type --configuration extraction-find-then-type
+```
 
 The margins are measured with one configuration each. A target with another configuration of the
 same implementation (`{"implementation": "default", "configuration": "extraction-default"}`) is
@@ -440,7 +486,7 @@ Invoke it with the `Workflow` tool by `scriptPath` (`.claude/workflows/karpathy-
 workflow launched by `name` can run a stale cached copy), e.g. `args: {iteration: 1}`. Each call
 is one iteration: call it repeatedly (e.g. via `/loop`) and thread state through `args` from the
 previous call's return value (`implementation`, `configuration`, `iteration`,
-`consecutiveNoAccept`, `hypothesisCount`,
+`consecutiveNoAccept`, `experimentPage`, `hypothesisCount`,
 `integrationBranch`, `holdoutFloors`, `maxConsecutiveNoAccept`, `cumulativeCostUsd`,
 `totalBudgetUsd`). The returned `status` (`"stopped"` / `"accepted"` / `"no_accept"` / `"error"`)
 and `stop` field tell the driver whether to keep iterating: halt whenever `stop` is not null.
@@ -449,8 +495,11 @@ iterations, when the backlog is exhausted, when the budget in `args` is used up 
 an iteration starts, so the last iteration can overrun it), and after every accept. The
 incumbent is measured on `main` and experimenter worktrees fork from `main`, so an accepted
 change has to be promoted from the integration branch to `main`, by PR, before the next
-iteration. Ledger entries are appended in the main checkout's working tree and are not committed
-by the loop: commit `experiments/ledger.jsonl` with the promotion.
+iteration. The integration branch also holds every iteration's record (ledger entries and
+experiment page, committed by the loop), so promote it after a plateau too. Until it is
+promoted, history is in two places (and a squash promotion leaves the branch never an ancestor of
+`main` again), so the Select step reads both: the checkout's ledger with the branch's,
+`ledger.py --also-ledger <file>`, each entry once, ordered by date.
 
 `node .claude/workflows/karpathy-loop.mechanics.test.mjs` checks the gate, the margins and
 backlogs of each implementation, target selection, the decisions the script makes from the
