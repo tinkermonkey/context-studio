@@ -1,5 +1,7 @@
 # experiments/
 
+> **Current state of the extraction pipelines:** [`documentation/extraction/README.md`](../../documentation/extraction/README.md). Experiments and results: [`documentation/extraction/experiments/`](../../documentation/extraction/experiments/README.md).
+
 Artifacts produced and consumed by the Karpathy loop — the automated
 evaluate → analyze-errors → propose → verify → accept/reject cycle for the
 individual-extraction pipelines. See

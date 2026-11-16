@@ -1,5 +1,7 @@
 # Karpathy Loop — Automated Refinement of Individual Extraction
 
+> **Current state of the extraction pipelines:** [`documentation/extraction/README.md`](extraction/README.md). Experiments and results: [`documentation/extraction/experiments/`](extraction/experiments/README.md).
+
 **Status:** Implemented (loop built and run; refinement paused at a clean baseline) **Date:** 2026-07-05 **Scope:** `local-server/` individual-extraction implementations (`default` two-pass LLM, `find_then_type`, `open_v1`) **Companion analysis:** `local-server/documentation/claudes_thoughts/individual_extraction_design_analysis.md` **Outcome record:** `documentation/individual_extraction_refinement_learnings.md`
 
 > **Update (2026-11-14, PR #1598):** `find_then_type` is now the default implementation of individual extraction. The two-pass implementation keeps the id `default`, which is only a name. Everything below that takes "no flag" or "the registry's default" means `find_then_type`; what is about the two-pass recordings (the triple-corpus guard, `record_default_cassettes.py`, the `default*` tournament variants) names two-pass explicitly. `extraction-default` is Claude Haiku 5.5, and every run's model, temperature and output-token limit come from its configuration through one resolver (`domain/pipelines/selection.py`).
