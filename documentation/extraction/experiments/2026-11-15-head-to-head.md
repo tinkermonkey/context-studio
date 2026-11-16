@@ -1,3 +1,14 @@
+---
+date: 2026-11-15
+kind: experiment
+implementations: [find_then_type]
+models: [claude-haiku-5-5, claude-opus-5-5, claude-sonnet-5-5]
+takes: 3
+cost_usd: 6.01
+verdict: open
+reproducible: yes
+---
+
 # Extraction head-to-head: find_then_type vs one call to Claude (2026-11-15)
 
 Question: keep the multi-stage individual-extraction pipeline (`find_then_type`, the app's default) or replace it with one call per document? Measured on the extraction benchmark (`edit_check` and `gitlab_architecture` dev, `wikimedia_enterprise` holdout), three takes per arm per document, scored by `tests/integration/pipelines/_harness/benchmark.py` unchanged, judged by a decision rule fixed before any run. Paths below are under `local-server/`. Merged as PR #1601. Harness: `scripts/benchmark_external.py`; saved takes: `tests/integration/fixtures/pipelines/extraction_benchmark_external/` (`python scripts/benchmark_external.py replay` re-scores them free). Total spend $6.01 (Anthropic only).

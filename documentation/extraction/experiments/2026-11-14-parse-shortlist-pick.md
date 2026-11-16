@@ -1,3 +1,14 @@
+---
+date: 2026-11-14
+kind: experiment
+implementations: []
+models: [claude-haiku-5-5, cloudflare/clef]
+takes: 1
+cost_usd: 2.39
+verdict: rejected
+reproducible: no
+---
+
 # Parse, shortlist, pick: one take on `gitlab_architecture` (2026-11-14)
 
 ## Verdict

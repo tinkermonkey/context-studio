@@ -1,3 +1,14 @@
+---
+date: 2026-05-08
+kind: history
+implementations: [default, open_v1, grounded_v1]
+models: [claude-opus-4-7, google/gemini-3-flash-preview]
+takes: null
+cost_usd: null
+verdict: n/a
+reproducible: partly
+---
+
 # Before the benchmark: the triple-corpus era (2026-05 to 2026-09)
 
 Individual extraction was first measured on a corpus of short passages written for the test and scored as subject-predicate-object triples (`local-server/tests/integration/fixtures/pipelines/individual_extraction/`). Everything on this page was measured on that corpus, or earlier on a public one, not on the extraction benchmark of real documents. Its numbers are not comparable with the benchmark's, and the main lesson of the period is that they were flattering.

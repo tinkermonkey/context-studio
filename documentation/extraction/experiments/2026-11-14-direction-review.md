@@ -1,3 +1,14 @@
+---
+date: 2026-11-14
+kind: review
+implementations: [find_then_type, default, open_v1]
+models: []
+takes: null
+cost_usd: 0
+verdict: n/a
+reproducible: n/a
+---
+
 # Extraction direction review — 2026-11-14
 
 Scope: individual and relationship extraction against the Documentation Robotics (DR) taxonomy, as on

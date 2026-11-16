@@ -1,3 +1,14 @@
+---
+date: 2026-11-13
+kind: experiment
+implementations: []
+models: [cloudflare/clef, cloudflare/clef-flash, claude-haiku-5-5, claude-sonnet-5-5, claude-opus-5-5, gliner2.5-base-v1]
+takes: 1
+cost_usd: null
+verdict: adopted
+reproducible: no
+---
+
 # Typing and decision-model probes (2026-11-13)
 
 **Question.** Could a decision model (Cloudflare's Clef, behind the `domain/decision` port) rate candidate classes for a chunk's individuals, with a stronger LLM adjudicating weak ones? More generally: where does typing fail, and what fixes it?

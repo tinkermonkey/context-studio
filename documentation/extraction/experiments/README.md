@@ -23,6 +23,21 @@ These rules apply to people and agents alike.
 
 **The page.** Name it `YYYY-MM-DD-short-name.md` and start from [`_template.md`](_template.md), keeping its sections: question, decision rule, method, results, limits, verdict, reproduce, links.
 
+**The metadata header.** Every page opens with a small header between `---` lines, so the catalogue can be listed and checked by a script:
+
+| field | holds |
+|---|---|
+| `date` | the day it started, `YYYY-MM-DD`, matching the file name |
+| `kind` | `experiment`, `loop-campaign`, `review` or `history` |
+| `implementations` | the implementations it ran, as a list (`[]` for a prototype outside the registry) |
+| `models` | the models it called, as a list |
+| `takes` | takes per arm, or `null` when that does not apply |
+| `cost_usd` | what it spent in dollars, or `null` when not recorded |
+| `verdict` | `adopted`, `rejected`, `inconclusive`, `lead` (a loop accept), `open` (decision pending), `running` or `n/a` |
+| `reproducible` | `yes` (replays from the repository), `partly`, `no` (scratch) or `n/a` |
+
+Values are a word or date, a number, `null`, or a list in brackets. Keep `verdict` and `cost_usd` current as the experiment goes. From `local-server/`, `python experiments/page_metadata.py list` prints the catalogue and `python experiments/page_metadata.py check` checks every header; a unit test runs the same check, so a page with a missing or invalid header fails CI. The refinement loop writes and refreshes its campaign pages' headers itself.
+
 **The decision rule comes first.** Write it on the page before the first paid run: the measure, the splits, and which difference adopts, rejects or is inconclusive.
 
 **Evidence.**

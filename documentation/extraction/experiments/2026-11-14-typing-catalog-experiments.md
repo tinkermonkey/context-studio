@@ -1,3 +1,14 @@
+---
+date: 2026-11-14
+kind: experiment
+implementations: [find_then_type]
+models: [claude-haiku-5-5]
+takes: 1
+cost_usd: 1.00
+verdict: rejected
+reproducible: no
+---
+
 # Typing-stage experiments on `find_then_type` (2026-11-14)
 
 **Question.** Does offering whole class definitions in the typing catalog (instead of their first 260 characters) improve typing? And how noisy is typing?
