@@ -9,6 +9,7 @@ ledger file for every test so nothing touches the real, tracked
 import json
 import logging
 import os
+import re
 import sys
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
@@ -17,6 +18,7 @@ import pytest
 
 from experiments.ledger import (
     BASELINE_RESET_DECISION,
+    RENDER_COLUMNS,
     LedgerEntryError,
     accepted_hypotheses,
     append_baseline_reset,
@@ -25,6 +27,8 @@ from experiments.ledger import (
     latest_baseline_reset,
     read_entries,
     rejected_hypotheses,
+    render_table,
+    target_entries,
     validate_entry,
 )
 from experiments.ledger import _main as ledger_cli
@@ -902,3 +906,128 @@ class TestCli:
         assert exit_code == 1
         assert not ledger_path.exists()
         assert "ERROR" in capsys.readouterr().err
+
+
+class TestRender:
+    """`render`: one target's entries since its last reset, as a campaign page shows them."""
+
+    def _measured(self, iteration, hypothesis, decision, **overrides):
+        entry = _entry(
+            experiment_id=f"{iteration}-find_then_type-{hypothesis}",
+            iteration=iteration,
+            implementation="find_then_type",
+            configuration="extraction-find-then-type",
+            hypothesis=hypothesis,
+            model="claude-haiku-5-5",
+            dev={"typed_f1": 0.4712, "f1": 0.54},
+            holdout={"typed_f1": 0.45},
+            incumbent={"dev": {"typed_f1": 0.4648, "f1": 0.5343}, "holdout": {"typed_f1": 0.4811}},
+            other_targets=[
+                {
+                    "implementation": "default",
+                    "configuration": "extraction-openrouter-default",
+                    "status": "scored",
+                    "dev_typed_f1": {"before": 0.1138, "after": 0.1038},
+                }
+            ],
+            other_guards=[
+                {
+                    "implementation": "default",
+                    "configuration": "extraction-openrouter-default",
+                    "status": "stale",
+                    "strict_f1": {"before": 0.9319, "after": None},
+                }
+            ],
+            decision=decision,
+            reason="dev typed F1 | did not beat",
+            cost_usd=0.31,
+            agent="wt-1",
+            base_commit="73bf76c4abcdef",
+        )
+        entry.update(overrides)
+        return entry
+
+    def _ledger(self, tmp_path):
+        ledger_path = tmp_path / "ledger.jsonl"
+        append_entry(self._measured(1, "old", "rejected"), ledger_path=ledger_path)
+        append_baseline_reset(
+            "re-recorded",
+            "extraction_benchmark",
+            ledger_path=ledger_path,
+            implementation="find_then_type",
+            configuration="extraction-find-then-type",
+        )
+        append_entry(
+            self._measured(
+                2, "type_from_all_occurrences", "rejected", campaign="c1", date="2026-11-16"
+            ),
+            ledger_path=ledger_path,
+        )
+        append_entry(_entry(), ledger_path=ledger_path)  # another target
+        append_entry(
+            self._measured(
+                3, "scope_question_at_typing", "unmeasured", campaign="c2", date="2026-11-18"
+            ),
+            ledger_path=ledger_path,
+        )
+        return ledger_path
+
+    def test_one_row_per_entry_of_the_target_since_its_reset(self, tmp_path):
+        ledger_path = self._ledger(tmp_path)
+        entries = target_entries("find_then_type", "extraction-find-then-type", ledger_path)
+        assert [e["iteration"] for e in entries] == [2, 3]
+        lines = render_table(entries).split("\n")
+        assert lines[0].startswith("| iteration | hypothesis | decision | dev typed F1 |")
+        assert lines[1] == "|" + "---|" * len(RENDER_COLUMNS)
+        assert len(lines) == 4
+        row = lines[2]
+        assert "| 2 | `type_from_all_occurrences` | rejected |" in row
+        assert "0.4648 → 0.4712" in row
+        assert "0.4811 → 0.4500" in row
+        assert "`default` -0.0100" in row
+        assert "triple corpus stale" in row
+        assert "$0.31" in row
+        assert "`wt-1` from `73bf76c4`" in row
+        # A pipe in free text cannot end the cell early.
+        assert "dev typed F1 \\| did not beat" in row
+        assert len(re.split(r"(?<!\\)\|", row)) == len(RENDER_COLUMNS) + 2
+
+    def test_since_a_date_and_one_campaign(self, tmp_path):
+        ledger_path = self._ledger(tmp_path)
+        target = ("find_then_type", "extraction-find-then-type")
+        assert [
+            e["iteration"] for e in target_entries(*target, ledger_path, since="2026-11-17")
+        ] == [3]
+        assert [e["iteration"] for e in target_entries(*target, ledger_path, campaign="c1")] == [2]
+
+    def test_an_entry_without_an_incumbent_or_measures_shows_none(self):
+        entry = self._measured(1, "h", "unmeasured", dev=None, holdout=None, incumbent=None)
+        entry["other_targets"] = []
+        entry["other_guards"] = []
+        row = render_table([entry]).split("\n")[2]
+        assert "n/a → n/a" in row
+        assert "| none |" in row
+
+    def test_no_entries_is_a_header_alone(self):
+        assert render_table([]).split("\n")[1] == "|" + "---|" * len(RENDER_COLUMNS)
+        assert len(render_table([]).split("\n")) == 2
+
+    def test_cli(self, tmp_path, capsys):
+        ledger_path = self._ledger(tmp_path)
+        exit_code = ledger_cli(
+            [
+                "--ledger-path",
+                str(ledger_path),
+                "render",
+                "--implementation",
+                "find_then_type",
+                "--configuration",
+                "extraction-find-then-type",
+                "--campaign",
+                "c2",
+            ]
+        )
+        assert exit_code == 0
+        out = capsys.readouterr().out.strip().split("\n")
+        assert len(out) == 3
+        assert "`scope_question_at_typing`" in out[2]

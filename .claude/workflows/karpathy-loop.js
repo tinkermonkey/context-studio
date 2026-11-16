@@ -1,13 +1,14 @@
 export const meta = {
   name: 'karpathy-loop',
   description: 'Run one Loop C iteration for individual-extraction refinement: evaluate one implementation (with one of its configurations) on the benchmark documents, select failure targets, fan out experimenter agents, verify, accept/reject, update the ledger.',
-  whenToUse: 'Invoke to run exactly ONE Karpathy-loop iteration (documentation/karpathy_loop_design.md §4.3) for one implementation of the local-server individual-extraction pipeline. What is refined is chosen like any run: `args.implementation` and `args.configuration`, each defaulting through the pipeline registry (the type\'s default implementation; the configuration its benchmark recordings were made with, else its default), so pass `{implementation: "find_then_type"}` to refine that one. An implementation needs a backlog and gate margins in this script (`BACKLOGS`, `GATE_MARGINS`): `default` and `find_then_type` have them, and `find_then_type`\'s margins are provisional (see `GATE_MARGINS`). The objective is the extraction benchmark (long documents scored on the individuals found, tests/integration/fixtures/pipelines/extraction_benchmark/); the short-passage triple corpus is a regression guard for an implementation it has recordings of (`default`) and not applicable to any other. Each call is one iteration; drive repeated iterations from outside this script (e.g. via /loop) and thread state across calls through `args`: {implementation, configuration, iteration, consecutiveNoAccept, hypothesisCount, integrationBranch, holdoutFloors, maxConsecutiveNoAccept, cumulativeCostUsd, totalBudgetUsd}. Read the returned `stop` field (and `status`) after every call: "stopped" means a floor/plateau/budget stop-check tripped and the outer loop should halt; "error" means the evaluation could not be trusted (stale or unrecorded cassettes) and a human must record them; "accepted" always comes with a `stop`, because the accepted change sits on the integration branch while the incumbent is measured on `main`: promote that branch to `main` (by PR) before the next call. Halt whenever `stop` is not null. Otherwise pass the returned `consecutiveNoAccept`, `cumulativeCostUsd` and incremented `iteration` into the next call’s args. Do not invoke casually: one iteration runs the variant tournament plus several worktree-isolated coding agents, and every experiment that changes a prompt re-records cassettes with the live LLM.',
+  whenToUse: 'Invoke to run exactly ONE Karpathy-loop iteration (documentation/karpathy_loop_design.md §4.3) for one implementation of the local-server individual-extraction pipeline. What is refined is chosen like any run: `args.implementation` and `args.configuration`, each defaulting through the pipeline registry (the type\'s default implementation; the configuration its benchmark recordings were made with, else its default), so pass `{implementation: "find_then_type"}` to refine that one. An implementation needs a backlog and gate margins in this script (`BACKLOGS`, `GATE_MARGINS`): `default` and `find_then_type` have them, and `find_then_type`\'s margins are provisional (see `GATE_MARGINS`). The objective is the extraction benchmark (long documents scored on the individuals found, tests/integration/fixtures/pipelines/extraction_benchmark/); the short-passage triple corpus is a regression guard for an implementation it has recordings of (`default`) and not applicable to any other. Each call is one iteration; drive repeated iterations from outside this script (e.g. via /loop) and thread state across calls through `args`: {implementation, configuration, experimentPage, iteration, consecutiveNoAccept, hypothesisCount, integrationBranch, holdoutFloors, maxConsecutiveNoAccept, cumulativeCostUsd, totalBudgetUsd}. Read the returned `stop` field (and `status`) after every call: "stopped" means a floor/plateau/budget stop-check tripped and the outer loop should halt; "error" means the evaluation could not be trusted (stale or unrecorded cassettes) and a human must record them; "accepted" always comes with a `stop`, because the accepted change sits on the integration branch while the incumbent is measured on `main`: promote that branch to `main` (by PR) before the next call. Halt whenever `stop` is not null. Otherwise pass the returned `consecutiveNoAccept`, `cumulativeCostUsd`, `experimentPage` and incremented `iteration` into the next call’s args. Every iteration that decides anything commits its record on the integration branch: the ledger entries, the campaign\'s experiment page under documentation/extraction/experiments/ (created on the campaign\'s first iteration, named after its date; leave `experimentPage` out to start a campaign) and, on a merged accept, a lead line on the current-state page (a lead, one take: no number there moves); promoting that branch to `main` carries them. Do not invoke casually: one iteration runs the variant tournament plus several worktree-isolated coding agents, and every experiment that changes a prompt re-records cassettes with the live LLM.',
   phases: [
     { title: 'Evaluate', detail: 'Run Loop B (variant tournament + benchmark replay of the chosen implementation and configuration); read the incumbent scores and failure counts' },
     { title: 'Select', detail: 'Rank benchmark failure kinds by count; drop hypotheses the ledger already decided' },
     { title: 'Experiment', detail: 'Fan out one worktree-isolated agent per hypothesis' },
     { title: 'Verify', detail: 'Adversarial gate-integrity check per candidate' },
-    { title: 'Decide', detail: 'Accept gate on every verified candidate; merge the best that passes, discard the rest, append the ledger' },
+    { title: 'Decide', detail: 'Accept gate on every verified candidate; merge the best that passes, discard the rest' },
+    { title: 'Record', detail: 'Append the ledger and write the campaign\'s experiment page, committed together on the integration branch' },
   ],
 }
 
@@ -120,7 +121,24 @@ const FROZEN_PATHS = [
   'local-server/domain/pipelines/selection.py',
   'local-server/domain/pipelines/individual_extraction/bootstrap.py',
   'local-server/domain/pipelines/individual_extraction/configurations/',
+  // The record people read: the current state, the experiment pages and their
+  // index. An experimenter never writes the record of its own experiment; the
+  // record step (recordPrompt) does, from the ledger.
+  'documentation/extraction/',
 ]
+
+// Each implementation's default configuration, as the pipeline registry
+// registers it (domain/pipelines/individual_extraction/bootstrap.py; the
+// mechanics test checks them). A campaign's page names its configuration only
+// when it is not this one.
+const DEFAULT_CONFIGURATIONS = {
+  default: 'extraction-default',
+  find_then_type: 'extraction-find-then-type',
+}
+
+// A campaign's experiment page, from the repository root
+// (documentation/extraction/experiments/README.md, "Recording an experiment").
+const EXPERIMENT_PAGE = /^documentation\/extraction\/experiments\/\d{4}-\d{2}-\d{2}-loop-[A-Za-z0-9][A-Za-z0-9_.+-]*\.md$/
 
 // Seeded hypothesis backlogs (documentation/karpathy_loop_design.md §7), one
 // per implementation: a hypothesis is a change to one implementation's shape,
@@ -478,13 +496,28 @@ const VERIFY_SCHEMA = {
 
 const DECIDE_SCHEMA = {
   type: 'object',
-  required: ['hypothesisId', 'decision', 'ledgerAppended'],
+  required: ['hypothesisId', 'decision'],
   properties: {
     hypothesisId: { type: 'string' },
     decision: { type: 'string', enum: ['accepted', 'rejected', 'deferred', 'unmeasured'] },
     merged: { type: 'boolean' },
     worktreeDiscarded: { type: 'boolean' },
-    ledgerAppended: { type: 'boolean' },
+    notes: { type: 'string' },
+  },
+}
+
+// What the record step reports: how many ledger entries `campaign.py`
+// appended, whether the record was committed on the integration branch, and
+// the campaign's page, threaded into the next iteration.
+const RECORD_SCHEMA = {
+  type: 'object',
+  required: ['ledgerAppended', 'committed', 'experimentPage'],
+  properties: {
+    ledgerAppended: { type: 'integer' },
+    ledgerSkipped: { type: 'integer' },
+    committed: { type: 'boolean' },
+    commit: { type: 'string' },
+    experimentPage: { type: 'string' },
     notes: { type: 'string' },
   },
 }
@@ -523,10 +556,20 @@ function describeGuard(guard) {
 // Hypothesis ids are scoped in the ledger by what was refined, the
 // implementation and the configuration: a rejection under one says nothing
 // about the same id under another.
-function ledgerReadPrompt(target) {
+//
+// The loop commits its ledger entries on the integration branch (recordPrompt),
+// so the history is in two places: the checkout's ledger (`main`, and whatever
+// a promotion brought there, squashed or not) and the branch's (what is not
+// promoted yet). Both are read, every time, and `ledger.py` combines them: each
+// entry once, ordered by date. No ancestry test decides which one is current.
+function ledgerReadPrompt(target, integrationBranch) {
   return [
     'From `local-server/`, with its virtual environment active, read the loop ledger\'s hypothesis history',
-    `for the \`${target.implementation}\` implementation measured with its \`${target.configuration}\` configuration:`,
+    `for the \`${target.implementation}\` implementation measured with its \`${target.configuration}\` configuration.`,
+    `Both ledgers: if the local branch \`${integrationBranch}\` exists (\`git rev-parse --verify --quiet refs/heads/${integrationBranch}\`)`,
+    `and holds a ledger, fetch it: \`git show ${integrationBranch}:local-server/experiments/ledger.jsonl > <a new file under the OS temp directory>\`,`,
+    'and put `--also-ledger <that file>` right after `ledger.py` in both commands below: they then read the checkout\'s',
+    'ledger and the branch\'s together, each entry once. Without the branch, run them as they are. Delete the file afterwards.',
     `1. \`python experiments/ledger.py rejected-hypotheses ${targetFlags(target)}\` — return every`,
     '   printed line (one hypothesis id per line; empty output means no rejections yet) as',
     '   `rejectedHypotheses`. A rejection was judged with one configuration\'s model, so these are that',
@@ -758,12 +801,14 @@ function verifyPrompt(candidate, target, staleOnMain) {
   ].join('\n')
 }
 
-// `target` is what the iteration refined ({implementation, configuration,
-// model}); `margins` the gate margins it was judged by; `others` what the
-// change did to every other recorded target ({targets, guards}, each with its
-// measure before and after), or null when the verifier returned nothing.
-function decidePrompt(candidate, decision, reason, iteration, integrationBranch, target, margins, others, measuredModel) {
-  const ledgerEntry = {
+// One ledger entry (documentation/karpathy_loop_design.md §8). `target` is
+// what the iteration refined ({implementation, configuration, model});
+// `margins` the gate margins it was judged by; `others` what the change did to
+// every other recorded target ({targets, guards}, each with its measure before
+// and after), or null when the verifier returned nothing; `incumbent` the
+// measurement of `main` it was compared with.
+function ledgerEntry(candidate, decision, reason, iteration, target, margins, others, measuredModel, incumbent) {
+  return {
     // Hypothesis ids are scoped by implementation (rejections by its
     // configuration too), so the id names the implementation.
     experiment_id: `${iteration}-${target.implementation}-${candidate.hypothesisId}`,
@@ -787,6 +832,13 @@ function decidePrompt(candidate, decision, reason, iteration, integrationBranch,
     // null for a candidate that could not be measured.
     dev: candidate.dev || null,
     holdout: candidate.holdout || null,
+    // The incumbent's, so the record shows before and after side by side.
+    incumbent: incumbent
+      ? {
+          dev: { typed_f1: incumbent.dev && incumbent.dev.typed_f1, f1: incumbent.dev && incumbent.dev.f1 },
+          holdout: { typed_f1: incumbent.holdout && incumbent.holdout.typed_f1 },
+        }
+      : null,
     // The triple corpus, kept so the record shows what the guard saw:
     // `{applies: false, reason}` when it does not apply to the implementation.
     guard: candidate.guard || null,
@@ -803,20 +855,22 @@ function decidePrompt(candidate, decision, reason, iteration, integrationBranch,
     cost_usd: candidate.recordingCostUsd || 0,
     agent: candidate.branchName,
   }
-  // Passed to the agent as a literal heredoc body (see the `append --stdin`
-  // step below), never interpolated into a single-quoted shell argument —
-  // `reason` routinely contains free-form LLM text (verifier prose) that can
-  // carry apostrophes, backticks, or `$`, any of which would break a
-  // single-quoted `'...'` shell literal.
-  const ledgerEntryJson = JSON.stringify(ledgerEntry)
+}
 
+// The git half of a decision: merge an accepted candidate into the integration
+// branch, discard every other worktree. The ledger entry and the experiment
+// record are written afterwards, once for the whole iteration (recordPrompt),
+// because they go on the integration branch too and one branch cannot take
+// several writers at once.
+function decidePrompt(candidate, decision, reason, iteration, integrationBranch) {
   const lines = [
     `Experiment "${candidate.hypothesisId}" in worktree ${candidate.worktreePath}`,
     `(branch ${candidate.branchName}) was ${decision.toUpperCase()} in Karpathy-loop iteration ${iteration}`,
-    '(documentation/karpathy_loop_design.md §4.3 step 5 / §8).',
+    '(documentation/karpathy_loop_design.md §4.3 step 5).',
     `Reason: ${reason}`,
     '',
-    'Work from the repository root (NOT the worktree) for every step below.',
+    'Work from the repository root (NOT the worktree) for every step below. Do not touch the ledger or',
+    'anything under `documentation/`: a later step records this decision.',
   ]
 
   if (decision === 'accepted') {
@@ -824,49 +878,166 @@ function decidePrompt(candidate, decision, reason, iteration, integrationBranch,
       `1. Ensure a local branch \`${integrationBranch}\` exists (create it from \`main\` if absent:`,
       `   \`git branch ${integrationBranch} main\`).`,
       '2. Merge in a temporary worktree, never by checking the branch out in the repository root (the',
-      '   root stays on the branch it is on: the incumbent is measured there, and the ledger file below',
-      '   is an uncommitted change in it):',
-      `   \`git worktree add <a new temporary directory> ${integrationBranch}\`, then inside it`,
-      `   \`git merge --no-ff ${candidate.branchName}\`, then \`git worktree remove\` it. The candidate's`,
-      '   recorded cassettes come with the merge. Resolve only trivial conflicts; if the merge is not',
-      '   trivial, `git merge --abort`, remove the temporary worktree, set `merged: false` and report the',
-      '   conflict instead of guessing.',
-      '3. From `local-server/`, append the ledger entry via stdin. Do NOT paste the JSON into a',
-      '   single-quoted shell argument — free-form text in `reason` can contain apostrophes, backticks,',
-      '   or `$` that break shell quoting. Run this exactly, with the heredoc delimiter line unindented:',
-      "   python experiments/ledger.py append --stdin <<'LEDGER_ENTRY_EOF'",
-      ledgerEntryJson,
-      '   LEDGER_ENTRY_EOF',
-      '   Set `ledgerAppended: true` only if this command exits 0.',
-      `4. \`git worktree remove ${candidate.worktreePath}\` (do NOT delete branch ${candidate.branchName} —`,
-      '   it is now merged history on the integration branch).',
-    )
-  } else if (decision === 'deferred') {
-    // Passed the gate but another candidate was accepted. No ledger entry: a
-    // "rejected" entry would keep a hypothesis that passed from being drafted
-    // again against the new incumbent.
-    lines.push(
-      '1. Do NOT append a ledger entry; set `ledgerAppended: false`.',
-      `2. \`git worktree remove --force ${candidate.worktreePath}\`.`,
-      `3. \`git branch -D ${candidate.branchName}\`.`,
+      '   root stays on the branch it is on: the incumbent is measured there). Make its directory under the',
+      '   OS temp directory, never inside the repository: `TMP_WORKTREE=$(mktemp -d)`, then',
+      `   \`git worktree add "$TMP_WORKTREE" ${integrationBranch}\`, and inside it \`git merge --no-ff ${candidate.branchName}\`.`,
+      '   The candidate\'s recorded cassettes come with the merge. Resolve only trivial conflicts; if the merge is',
+      '   not trivial, `git merge --abort`, set `merged: false` and report the conflict in `notes` instead of',
+      '   guessing. Set `merged: true` only when the merge commit was made.',
+      `3. \`git worktree remove ${candidate.worktreePath}\` (do NOT delete branch ${candidate.branchName}: it is`,
+      '   merged history on the integration branch, or, if the merge failed, what a person resolves by hand).',
+      '4. Last, whatever happened above (merged, aborted, or an error part-way): from the repository root,',
+      '   `git worktree remove --force "$TMP_WORKTREE"` and `git worktree prune`, before you return.',
     )
   } else {
-    // "rejected" and "unmeasured" both leave a ledger entry and no worktree.
-    // Only a "rejected" entry keeps the hypothesis from being selected again.
+    // "deferred" (passed the gate, another was accepted: drafted again against
+    // the new incumbent), "rejected" and "unmeasured" all leave no worktree.
     lines.push(
-      '1. From `local-server/`, append the ledger entry via stdin (same rationale as the accepted path —',
-      '   do NOT paste the JSON into a single-quoted shell argument). Run this exactly, with the heredoc',
-      '   delimiter line unindented:',
-      "   python experiments/ledger.py append --stdin <<'LEDGER_ENTRY_EOF'",
-      ledgerEntryJson,
-      '   LEDGER_ENTRY_EOF',
-      '   Set `ledgerAppended: true` only if this command exits 0.',
-      `2. \`git worktree remove --force ${candidate.worktreePath}\`.`,
-      `3. \`git branch -D ${candidate.branchName}\`.`,
+      `1. \`git worktree remove --force ${candidate.worktreePath}\`.`,
+      `2. \`git branch -D ${candidate.branchName}\`.`,
     )
   }
   lines.push('', 'Return structured output only — no prose.')
   return lines.join('\n')
+}
+
+// The name of a campaign's page after its date: the implementation, and the
+// configuration only when it is not the implementation's default.
+function campaignPageSuffix(target) {
+  const named = own(DEFAULT_CONFIGURATIONS, target.implementation) && DEFAULT_CONFIGURATIONS[target.implementation] === target.configuration
+  return named ? `loop-${target.implementation}` : `loop-${target.implementation}-${target.configuration}`
+}
+
+// Whether a campaign page is one of this target's: its name after the date is
+// the target's suffix, or that suffix and a number (a second campaign the same
+// day, `-2`).
+function isCampaignPageOf(page, target) {
+  const rest = String(page).slice(String(page).lastIndexOf('/') + 1).slice('YYYY-MM-DD-'.length)
+  const suffix = campaignPageSuffix(target)
+  return rest === `${suffix}.md` || (rest.startsWith(`${suffix}-`) && /^\d+\.md$/.test(rest.slice(suffix.length + 1)))
+}
+
+// What `experiments/campaign.py` is given: the iteration's ledger entries and
+// what the campaign's page states. `experimentPage` is the page threaded from
+// earlier iterations, or null on a campaign's first: the script then names it
+// after today's date (a workflow cannot read the clock). `acceptedHypothesis`
+// is set only when the accepted change was merged into the integration branch:
+// then the current-state page is updated too.
+function recordRequest({ target, margins, iteration, entries, acceptedHypothesis, experimentPage, budgetUsd, stop }) {
+  return {
+    implementation: target.implementation,
+    configuration: target.configuration,
+    // Unknown when the loop stops before measuring: campaign.py then takes it
+    // from the campaign's entries.
+    model: target.model || null,
+    page: experimentPage || null,
+    page_suffix: campaignPageSuffix(target),
+    iteration,
+    entries,
+    accepted_hypothesis: acceptedHypothesis || null,
+    // Stated on a page when it is created; a stop-only record creates none.
+    margins: margins
+      ? {
+          epsilon: margins.epsilon,
+          holdout_slack: margins.holdoutSlack,
+          coverage_slack: margins.coverageSlack,
+          guard_slack: margins.guardSlack,
+          provisional: Boolean(margins.provisional),
+          basis: margins.basis,
+          missing: margins.missing || null,
+        }
+      : null,
+    budget_usd: budgetUsd == null ? null : budgetUsd,
+    stop: (stop && stop.reason) || null,
+  }
+}
+
+// §4.3 step 5, the record: the ledger entries, the campaign's experiment page,
+// its index row and, on a merged accept, a lead line on the current-state page (never a number there), committed together
+// on the integration branch, so they reach `main` with its promotion. The
+// mechanical parts are `campaign.py`'s; the agent writes one note. The request
+// goes to it as a literal heredoc body, never as a single-quoted shell
+// argument: a `reason` is free-form agent text that can carry apostrophes,
+// backticks or `$`.
+function recordPrompt(request, integrationBranch, decisions) {
+  const branch = integrationBranch
+  const stopOnly = request.entries.length === 0
+  const lines = [
+    stopOnly
+      ? `Record that the refinement loop stopped (${request.stop}) on the campaign page ${request.page}, for \`${request.implementation}\` with \`${request.configuration}\``
+      : `Record iteration ${request.iteration} of the refinement loop for \`${request.implementation}\` with \`${request.configuration}\``,
+    '(documentation/karpathy_loop_design.md §4.3 step 5, §8): the ledger entries and the campaign\'s experiment page,',
+    `committed together on the integration branch \`${branch}\`, so the record reaches \`main\` when that branch is promoted.`,
+    '',
+  ]
+  if (!stopOnly) {
+    lines.push(
+      'What was decided (for your note; the entries below carry the numbers):',
+      ...decisions.map((d) => `- \`${d.candidate.hypothesisId}\`: ${d.decision}. ${d.reason}`),
+      '',
+    )
+  }
+  lines.push(
+    'Work from the repository root (NOT a candidate worktree). Below, <root> is that root (`git rev-parse --show-toplevel`),',
+    'and <interpreter> its virtual environment\'s Python, `<root>/local-server/.venv/bin/python`.',
+    `1. Ensure a local branch \`${branch}\` exists (\`git branch ${branch} main\` if absent).`,
+    '2. Make the temporary worktree under the OS temp directory, never inside the repository:',
+    `   \`TMP_WORKTREE=$(mktemp -d)\`, then \`git worktree add "$TMP_WORKTREE" ${branch}\`. Inside it, \`git merge --no-edit main\`,`,
+    '   so the record is written on top of what `main` holds now (the ledger merges as a union, by `.gitattributes`). If',
+    '   that merge conflicts, `git merge --abort`, go on without it, and say so in `notes`.',
+    '3. From `$TMP_WORKTREE/local-server/`, run this exactly, with the heredoc delimiter line unindented:',
+    "   <interpreter> experiments/campaign.py --also-ledger <root>/local-server/experiments/ledger.jsonl <<'RECORD_EOF'",
+    JSON.stringify(request),
+    'RECORD_EOF',
+    '   It reads the branch\'s ledger and the checkout\'s together, appends the entries neither holds yet (stamped with',
+    '   the campaign and the date; an entry already there is skipped, so running it twice changes nothing), and writes,',
+    '   under `documentation/extraction/`, the campaign\'s page (created on its first iteration), its row in the',
+    '   experiments index and, on an accept that was merged, a lead line and the "As of" date on the current-state',
+    '   page. It prints JSON: `page`, `created`, `appended`, `skipped`, `index_row`, `lead_recorded`. If it exits',
+    '   non-zero it wrote nothing: skip steps 4 and 5, and put its error in `notes`.',
+  )
+  if (stopOnly) {
+    lines.push('4. Write nothing yourself: there is no note for a stop.')
+  } else {
+    lines.push(
+      '4. The narrative, the only part you write. In the page it printed, add one line at the end of the Results',
+      `   section, under its "Notes" line: \`- Iteration ${request.iteration}: <one sentence: what was tried and what it showed>\`.`,
+    )
+    if (request.accepted_hypothesis) {
+      lines.push(
+        '   In `documentation/extraction/README.md`, change "What we know" only if this lead changes a statement there,',
+        '   by one sentence at most, saying it is one take. Never change a number on that page.',
+      )
+    }
+    lines.push(
+      '   Never edit between the `<!-- loop:` markers, the experiments index table or the numbers: the command owns',
+      '   them and regenerates them at every iteration.',
+    )
+  }
+  lines.push(
+    '5. In the temporary worktree: `git add local-server/experiments/ledger.jsonl documentation/extraction/`, then',
+    `   \`git commit -m "[Loop] ${request.implementation} ${stopOnly ? 'stopped' : `iteration ${request.iteration}`}: ledger and experiment record"\`.`,
+    '6. Last, whatever happened above (committed, nothing to commit, or an error part-way): from <root>,',
+    '   `git worktree remove --force "$TMP_WORKTREE"` and `git worktree prune`, before you return.',
+    '',
+    'Return `ledgerAppended` (the printed `appended`, 0 if it failed), `ledgerSkipped` (the printed `skipped`),',
+    '`committed`, `commit` (the new commit\'s hash), `experimentPage` (the printed `page`, else the request\'s `page`,',
+    'else an empty string) and `notes`. Structured output only — no prose.',
+  )
+  return lines.join('\n')
+}
+
+// What is wrong with a record step's answer, or null when it recorded every
+// entry (appended, or already held: a re-run) and committed.
+function recordProblem(recorded, request) {
+  if (!recorded) return 'the record step returned nothing'
+  const appended = Number.isInteger(recorded.ledgerAppended) ? recorded.ledgerAppended : 0
+  const skipped = Number.isInteger(recorded.ledgerSkipped) ? recorded.ledgerSkipped : 0
+  if (appended + skipped !== request.entries.length) {
+    return `${appended} of ${request.entries.length} entries appended, ${skipped} already held; ${recorded.notes || 'no notes'}`
+  }
+  if (recorded.committed !== true) return `not committed; ${recorded.notes || 'no notes'}`
+  return null
 }
 
 function clamp(value, min, max) {
@@ -1332,13 +1503,15 @@ function recordingAdvice(target) {
 
 // The `stop` field of an iteration that ran: an accepted change has to reach
 // `main` before the next iteration measures the incumbent there, and a run of
-// iterations without an accept is a plateau.
+// iterations without an accept is a plateau. Either way the integration branch
+// holds the campaign's record (ledger entries and experiment page), which
+// reaches `main` with its promotion.
 function stopAfter(accepted, nextConsecutiveNoAccept, maxConsecutiveNoAccept, integrationBranch) {
   if (accepted) {
-    return { reason: `accepted: promote ${integrationBranch} to main before the next iteration (the incumbent is measured on main)` }
+    return { reason: `accepted: promote ${integrationBranch} to main before the next iteration (the incumbent is measured on main); it carries the change and the campaign's record` }
   }
   if (nextConsecutiveNoAccept >= maxConsecutiveNoAccept) {
-    return { reason: `plateau reached after this iteration (${nextConsecutiveNoAccept} consecutive no-accept)` }
+    return { reason: `plateau reached after this iteration (${nextConsecutiveNoAccept} consecutive no-accept); promote ${integrationBranch} to main: it holds the campaign's record` }
   }
   return null
 }
@@ -1382,11 +1555,37 @@ const requested = {
 // target included: what `args` asked for until the measurement has said what
 // that resolves to, so a driver never falls back to the registry's default
 // between two iterations of the same target.
-const threaded = { implementation: requested.implementation, configuration: requested.configuration, provisionalMargins: null }
+// `experimentPage` is the campaign's page: absent on a campaign's first
+// iteration (the record step names it), then threaded so every later iteration
+// writes to the same page.
+const threaded = { implementation: requested.implementation, configuration: requested.configuration, provisionalMargins: null, experimentPage: loopArgs.experimentPage || null }
 function result(fields) {
   return { iteration, consecutiveNoAccept, cumulativeCostUsd, ...threaded, ...fields }
 }
 
+// A stop belongs in the campaign's record too, or its page says "Running"
+// forever. When the campaign's page is known and is this target's, the record
+// step writes the stop into its verdict and index row: the same request and
+// command as an iteration's record, with no entries.
+async function withStopRecorded(fields, recordTarget) {
+  const reason = fields.stop && fields.stop.reason
+  const knownTarget = Boolean(recordTarget) && TARGET_NAME.test(String(recordTarget.implementation)) && TARGET_NAME.test(String(recordTarget.configuration))
+  if (!reason || !threaded.experimentPage || !knownTarget || !isCampaignPageOf(threaded.experimentPage, recordTarget)) {
+    return result(fields)
+  }
+  phase('Record')
+  const request = recordRequest({ target: recordTarget, margins: marginsFor(recordTarget), iteration, entries: [], experimentPage: threaded.experimentPage, budgetUsd: totalBudgetUsd, stop: fields.stop })
+  const recorded = await agent(recordPrompt(request, integrationBranch, []), { schema: RECORD_SCHEMA, phase: 'Record', label: 'record:stop' })
+  return result({ ...fields, record: recorded, recordRequest: request, recordProblem: recordProblem(recorded, request) })
+}
+
+if (threaded.experimentPage != null && !EXPERIMENT_PAGE.test(String(threaded.experimentPage))) {
+  return result({
+    status: 'error',
+    reason: `args.experimentPage is not a campaign page (documentation/extraction/experiments/YYYY-MM-DD-loop-<name>.md): ${JSON.stringify(threaded.experimentPage)}`,
+    stop: { reason: 'args.experimentPage is not a campaign page' },
+  })
+}
 for (const [name, value] of Object.entries(requested)) {
   if (value != null && !TARGET_NAME.test(String(value))) {
     return result({
@@ -1408,18 +1607,18 @@ if (requested.implementation && !(backlogFor(requested.implementation) && own(GA
 // §4.3 step 6, pre-flight half: don't spend anything on an iteration the
 // caller already knows should not run.
 if (consecutiveNoAccept >= maxConsecutiveNoAccept) {
-  return result({
+  return await withStopRecorded({
     status: 'stopped',
     reason: `plateau: ${consecutiveNoAccept} consecutive no-accept iterations (>= ${maxConsecutiveNoAccept}) — escalate to human`,
     stop: { reason: 'plateau' },
-  })
+  }, { implementation: requested.implementation, configuration: requested.configuration })
 }
 if (totalBudgetUsd != null && cumulativeCostUsd >= totalBudgetUsd) {
-  return result({
+  return await withStopRecorded({
     status: 'stopped',
     reason: `budget exhausted: cumulative $${cumulativeCostUsd} >= cap $${totalBudgetUsd}`,
     stop: { reason: 'budget exhausted' },
-  })
+  }, { implementation: requested.implementation, configuration: requested.configuration })
 }
 
 phase('Evaluate')
@@ -1457,6 +1656,15 @@ if (!TARGET_NAME.test(String(target.implementation)) || !TARGET_NAME.test(String
 }
 threaded.implementation = target.implementation
 threaded.configuration = target.configuration
+// A page threaded from another target's campaign would mix two records.
+if (threaded.experimentPage && !isCampaignPageOf(threaded.experimentPage, target)) {
+  return result({
+    status: 'error',
+    reason: `args.experimentPage ${threaded.experimentPage} is not a campaign page of ${describeTarget(target)} (its name after the date is ${campaignPageSuffix(target)}.md, or that with -2, -3): leave it out to start a campaign`,
+    stop: { reason: 'args.experimentPage belongs to another target' },
+    evaluation,
+  })
+}
 const backlog = backlogFor(target.implementation)
 const margins = marginsFor(target)
 if (!backlog || !margins) {
@@ -1498,30 +1706,30 @@ if (margins.provisional) {
 
 // §4.3 step 6, other half: stop on success before spending anything else.
 if (meetsFloors(evaluation.holdout, holdoutFloors)) {
-  return result({
+  return await withStopRecorded({
     status: 'stopped',
     reason: 'holdout typed floors met (§1 exit criterion)',
     stop: { reason: 'holdout typed floors met' },
     evaluation,
-  })
+  }, target)
 }
 
 phase('Select')
-const ledgerInfo = await agent(ledgerReadPrompt(target), { schema: LEDGER_SCHEMA, phase: 'Select', label: 'select:ledger', effort: 'low' })
+const ledgerInfo = await agent(ledgerReadPrompt(target, integrationBranch), { schema: LEDGER_SCHEMA, phase: 'Select', label: 'select:ledger', effort: 'low' })
 const rejectedHypotheses = (ledgerInfo && ledgerInfo.rejectedHypotheses) || []
 const acceptedHypotheses = (ledgerInfo && ledgerInfo.acceptedHypotheses) || []
 const targets = selectTargets(evaluation.failureCounts, rejectedHypotheses, acceptedHypotheses, hypothesisCount, backlog)
 log(`Selected ${targets.length} target hypothesis(es): ${targets.map((t) => t.id).join(', ') || '(none — the backlog is exhausted)'}`)
 
 if (targets.length === 0) {
-  return result({
+  return await withStopRecorded({
     status: 'no_accept',
     reason: `no untried hypotheses remain in the ${target.implementation} backlog (all already rejected, accepted or blocked) — read the benchmark report and add new hypotheses to BACKLOGS.${target.implementation}`,
     consecutiveNoAccept: consecutiveNoAccept + 1,
     // Another iteration would select nothing again.
     stop: { reason: 'the hypothesis backlog is exhausted' },
     evaluation,
-  })
+  }, target)
 }
 
 phase('Experiment')
@@ -1542,7 +1750,7 @@ const candidates = returned.filter(isMeasured)
 const unmeasured = returned.filter((c) => !isMeasured(c))
 
 if (returned.length === 0) {
-  return result({
+  return await withStopRecorded({
     status: 'no_accept',
     reason: 'no experimenter returned a result (agents failed or were skipped)',
     consecutiveNoAccept: consecutiveNoAccept + 1,
@@ -1550,7 +1758,7 @@ if (returned.length === 0) {
     evaluation,
     targets,
     experimentResults,
-  })
+  }, target)
 }
 
 phase('Verify')
@@ -1560,18 +1768,65 @@ const verdicts = await parallel(candidates.map((candidate) => () =>
 const paired = candidates.map((candidate, i) => ({ candidate, verdict: verdicts[i] }))
 
 phase('Decide')
-const { decisions, best } = decideAll(paired, unmeasured, evaluation, target, margins)
-const accepted = Boolean(best)
+const judged = decideAll(paired, unmeasured, evaluation, target, margins)
+const best = judged.best
+const decisions = judged.decisions
 
 const outcomes = await parallel(decisions.map((d) => () =>
-  agent(decidePrompt(d.candidate, d.decision, d.reason, iteration, integrationBranch, target, margins, d.others, d.measuredModel), {
+  agent(decidePrompt(d.candidate, d.decision, d.reason, iteration, integrationBranch), {
     schema: DECIDE_SCHEMA,
     phase: 'Decide',
     label: `decide:${d.candidate.hypothesisId}`,
   })
 ))
 
+// An accept counts only once it is merged into the integration branch. One
+// whose merge failed, or whose merge step gave no answer, is recorded as
+// `accept_unmerged`: not an acceptance, not a lead, and the loop stops for a
+// person, who has the candidate's branch.
+const acceptIndex = decisions.findIndex((d) => d.decision === 'accepted')
+const acceptOutcome = acceptIndex >= 0 ? outcomes[acceptIndex] : null
+const accepted = Boolean(acceptOutcome && acceptOutcome.merged === true)
+let unmergedStop = null
+if (acceptIndex >= 0 && !accepted) {
+  const failed = decisions[acceptIndex]
+  const why = (acceptOutcome && acceptOutcome.notes) || (acceptOutcome ? 'the merge was not made' : 'the merge step gave no answer')
+  decisions[acceptIndex] = { ...failed, decision: 'accept_unmerged', reason: `${failed.reason}, but it could not be merged into ${integrationBranch}: ${why}` }
+  unmergedStop = { reason: `${failed.candidate.hypothesisId} passed the accept gate but could not be merged into ${integrationBranch} (${why}): its branch ${failed.candidate.branchName} is kept; merge it by hand, or discard it` }
+}
+
 const nextConsecutiveNoAccept = accepted ? 0 : consecutiveNoAccept + 1
+let stop = unmergedStop || stopAfter(accepted, nextConsecutiveNoAccept, maxConsecutiveNoAccept, integrationBranch)
+
+// The record, after every git step of the decisions: one writer on the
+// integration branch. A deferred candidate leaves no entry: a "rejected" one
+// would keep a hypothesis that passed from being drafted again against the new
+// incumbent. Only an accept that was merged becomes a lead.
+phase('Record')
+const ledgerEntries = decisions
+  .filter((d) => d.decision !== 'deferred')
+  .map((d) => ledgerEntry(d.candidate, d.decision, d.reason, iteration, target, margins, d.others, d.measuredModel, evaluation))
+const request = recordRequest({
+  target,
+  margins,
+  iteration,
+  entries: ledgerEntries,
+  acceptedHypothesis: accepted ? best.candidate.hypothesisId : null,
+  experimentPage: threaded.experimentPage,
+  budgetUsd: totalBudgetUsd,
+  stop,
+})
+const recorded = await agent(recordPrompt(request, integrationBranch, decisions), { schema: RECORD_SCHEMA, phase: 'Record', label: 'record:ledger' })
+if (recorded && EXPERIMENT_PAGE.test(String(recorded.experimentPage))) {
+  threaded.experimentPage = recorded.experimentPage
+}
+// A decision the ledger does not hold would be drafted, and paid for, again.
+const problem = recordProblem(recorded, request)
+if (problem) {
+  stop = {
+    reason: `the record of this iteration was not committed on ${integrationBranch} (${problem}): pipe \`recordRequest\` as JSON to local-server/experiments/campaign.py in a worktree of that branch, and commit, before the next iteration`,
+  }
+}
 
 return result({
   status: accepted ? 'accepted' : 'no_accept',
@@ -1584,5 +1839,8 @@ return result({
   unmeasured,
   decisions,
   outcomes,
-  stop: stopAfter(accepted, nextConsecutiveNoAccept, maxConsecutiveNoAccept, integrationBranch),
+  record: recorded,
+  recordRequest: request,
+  recordProblem: problem,
+  stop,
 })

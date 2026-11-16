@@ -1,0 +1,2 @@
+# The loop ledger is append-only: when two branches append, keep both sides' lines.
+local-server/experiments/ledger.jsonl merge=union

@@ -1,6 +1,9 @@
 # Individual-extraction benchmark
 
-Hand-made extractions of three prose documents against the Documentation Robotics (DR) schema.
+> **Current state of the extraction pipelines:** [`documentation/extraction/README.md`](../../../../../../documentation/extraction/README.md). Experiments and results: [`documentation/extraction/experiments/`](../../../../../../documentation/extraction/experiments/README.md).
+
+Model-made extractions of three prose documents against the Documentation Robotics (DR) schema,
+drafted and checked by models (see "How they were made"); no person has checked them yet.
 They are the baseline the individual-extraction pipelines are scored against: each `gold.json`
 holds every individual a careful modeller finds in its `source.md`, typed against DR, with the
 passages that evidence it.
