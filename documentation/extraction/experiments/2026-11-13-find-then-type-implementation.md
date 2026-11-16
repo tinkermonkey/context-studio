@@ -1,3 +1,14 @@
+---
+date: 2026-11-13
+kind: experiment
+implementations: [find_then_type]
+models: [claude-haiku-5-5]
+takes: 1
+cost_usd: 0.30
+verdict: adopted
+reproducible: yes
+---
+
 # The `find_then_type` implementation, recorded (2026-11-13)
 
 **What.** The find-then-type prototype built as a registered implementation of individual extraction (PR #1595, merged 2026-11-14): `local-server/domain/extraction/find_then_type.py`, `local-server/domain/pipelines/individual_extraction/find_then_type.py`.

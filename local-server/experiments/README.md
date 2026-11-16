@@ -19,6 +19,7 @@ experiments/
 ├── ledger.py                    # read/write helpers + CLI for ledger.jsonl (Loop C); `render` prints a table
 ├── ledger.jsonl                 # append-only experiment record (accepted + rejected)
 ├── campaign.py                  # Loop C's record step: ledger → campaign page → current state
+├── page_metadata.py             # experiment page headers: `list` the catalogue, `check` every page
 └── README.md                    # this file
 ```
 

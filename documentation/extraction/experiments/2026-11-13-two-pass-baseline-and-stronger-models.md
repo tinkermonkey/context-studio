@@ -1,3 +1,14 @@
+---
+date: 2026-11-13
+kind: experiment
+implementations: [default]
+models: [google/gemini-3-flash-preview, claude-haiku-5-5, claude-sonnet-5-5, claude-opus-5-5]
+takes: 1
+cost_usd: null
+verdict: rejected
+reproducible: partly
+---
+
 # Two-pass baseline on the benchmark, and stronger models (2026-11-13)
 
 **Question.** How does the two-pass pipeline (then the default) do on real documents, and does a stronger model fix it?

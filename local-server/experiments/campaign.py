@@ -80,6 +80,7 @@ from experiments.ledger import (
     target_entries,
     validate_entry,
 )
+from experiments.page_metadata import with_header
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 DOCS_RELATIVE = Path("documentation") / "extraction"
@@ -242,6 +243,40 @@ def verdict_text(entries: list[dict[str, Any]], stop: Optional[str]) -> str:
     if _provisional(entries):
         parts.append("Judged under provisional margins.")
     return " ".join(parts)
+
+
+def page_header(
+    request: dict[str, Any],
+    name: str,
+    model: str,
+    entries: list[dict[str, Any]],
+    stop: Optional[str],
+) -> dict[str, Any]:
+    """
+    The campaign page's metadata header (experiments/page_metadata.py), from the
+    ledger: one take per candidate, the cost the entries recorded, and the
+    verdict as the page states it (an accept is a lead).
+    """
+    costs = [e["cost_usd"] for e in entries if isinstance(e.get("cost_usd"), (int, float))]
+    if _decided(entries, "accepted"):
+        verdict = "lead"
+    elif not stop:
+        verdict = "running"
+    elif entries and all(e.get("decision") != "rejected" for e in entries):
+        verdict = "inconclusive"
+    else:
+        verdict = "rejected"
+    return {
+        "date": name[:10],
+        "kind": "loop-campaign",
+        "implementations": [request["implementation"]],
+        "models": [model],
+        "takes": 1,
+        "cost_usd": round(sum(costs), 2) if costs else None,
+        "verdict": verdict,
+        # The incumbent and accepted changes replay; rejected candidates' recordings are deleted
+        "reproducible": "partly",
+    }
 
 
 def index_cells(
@@ -603,6 +638,7 @@ def record(
         page = page_path.read_text()
     page = replace_block(page, "results", results_block(entries))
     page = replace_block(page, "verdict", verdict_text(entries, stop))
+    page = with_header(page, page_header(request, name, model, entries, stop))
 
     index_path = experiments / INDEX_NAME
     index, index_row = upsert_index_row(

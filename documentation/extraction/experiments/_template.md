@@ -1,6 +1,17 @@
+---
+date: YYYY-MM-DD
+kind: experiment
+implementations: [find_then_type]
+models: [claude-haiku-5-5]
+takes: 3
+cost_usd: null
+verdict: open
+reproducible: yes
+---
+
 # Short title (YYYY-MM-DD)
 
-Copy to `YYYY-MM-DD-short-name.md`. Keep every heading; delete these italic prompts. [The rules](README.md#recording-an-experiment) say what each section must hold.
+Copy to `YYYY-MM-DD-short-name.md`. Fill in the header above (its fields are described in [the rules](README.md#recording-an-experiment)) and keep it current as the experiment goes. Keep every heading; delete these italic prompts. [The rules](README.md#recording-an-experiment) say what each section must hold.
 
 ## Question
 

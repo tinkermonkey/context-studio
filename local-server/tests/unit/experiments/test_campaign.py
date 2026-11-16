@@ -30,6 +30,7 @@ from experiments.ledger import (
     read_entries,
     rejected_hypotheses,
 )
+from experiments.page_metadata import check, split, validate
 
 REPO_ROOT = Path(__file__).resolve().parents[4]
 DOCS = REPO_ROOT / "documentation" / "extraction"
@@ -417,6 +418,48 @@ class TestRecord:
         page = _page(docs)
         assert page.count("<!-- loop:verdict:end -->") == 1
         record(_request(2, [_entry(2, "b", "rejected")], page=PAGE), "2026-11-17", docs, ledger)
+
+
+class TestPageHeader:
+    def test_a_new_page_opens_with_a_valid_header(self, docs, ledger):
+        record(_request(1, [_entry(1, "a", "rejected")]), "2026-11-16", docs, ledger)
+
+        header, _ = split(_page(docs))
+        validate(header)
+        assert header == {
+            "date": "2026-11-16",
+            "kind": "loop-campaign",
+            "implementations": ["find_then_type"],
+            "models": ["claude-haiku-5-5"],
+            "takes": 1,
+            "cost_usd": 0.3,
+            "verdict": "running",
+            "reproducible": "partly",
+        }
+        assert check(docs / "experiments") == []
+
+    def test_the_header_follows_the_ledger_at_every_iteration(self, docs, ledger):
+        record(_request(1, [_entry(1, "a", "rejected")]), "2026-11-16", docs, ledger)
+        record(
+            _request(2, [_entry(2, "b", "accepted")], page=PAGE, accepted="b"),
+            "2026-11-16",
+            docs,
+            ledger,
+        )
+
+        page = _page(docs)
+        header, body = split(page)
+        assert header["verdict"] == "lead"
+        assert header["cost_usd"] == 0.6
+        assert page.count("\n---\n") == 1  # one header, not one per iteration
+        assert body.startswith("# Refinement loop")
+
+    def test_a_campaign_that_stops_with_nothing_accepted_is_rejected(self, docs, ledger):
+        record(_request(1, [_entry(1, "a", "rejected")]), "2026-11-16", docs, ledger)
+        record(_request(2, [], page=PAGE, stop="plateau"), "2026-11-16", docs, ledger)
+
+        header, _ = split(_page(docs))
+        assert header["verdict"] == "rejected"
 
 
 class TestHelpers:
