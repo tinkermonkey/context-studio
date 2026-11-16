@@ -2,19 +2,21 @@ import { useState } from "react";
 import { Button, Field, FormCallout, SegmentedControl } from "@tinkermonkey/heimdall-ui";
 import { useToasts } from "@/components/ui/Toast";
 import { useRunWizard } from "@/api/hooks/pipeline/useRunWizard";
-import { ImplementationConfigPicker, decodeConfigSelection } from "../ImplementationConfigPicker";
+import { selectionRequestFields, usePipelineSelection } from "@/hooks/usePipelineSelection";
+import { ImplementationConfigPicker } from "../ImplementationConfigPicker";
 import { EntitySearchPicker, type Entity } from "../EntitySearchPicker";
-import { BatchToggle } from "./BatchToggle";
 import type { components } from "@/api/types";
 import "./Wizards.css";
 
 type PipelineRunRequest = components["schemas"]["PipelineRunRequest"];
 
+// The names the server's grounding adapter registers its sources under
+// (case-sensitive; an unknown name is refused).
 const KNOWLEDGE_SOURCES = [
-  { id: "dbpedia", label: "DBpedia" },
-  { id: "conceptnet", label: "ConceptNet" },
-  { id: "wikidata", label: "Wikidata" },
-  { id: "schema_org", label: "Schema.org" },
+  { id: "dbpedia", name: "DBpedia" },
+  { id: "conceptnet", name: "ConceptNet" },
+  { id: "wikidata", name: "Wikidata" },
+  { id: "schema_org", name: "schema.org" },
 ];
 
 export function SchemaGroundingWizard() {
@@ -22,31 +24,22 @@ export function SchemaGroundingWizard() {
   const { isSubmitting, errors, setErrors, handleSubmit } = useRunWizard({
     type: "schema_node_grounding",
   });
+  const selection = usePipelineSelection("schema_node_grounding");
 
-  const [selectedNodes, setSelectedNodes] = useState<Entity[]>([]);
+  // One node per run: the pipeline grounds one label.
+  const [selectedNode, setSelectedNode] = useState<Entity | null>(null);
   const [selectedSources, setSelectedSources] = useState<string[]>([]);
-  const [implementationId, setImplementationId] = useState("");
-  const [configRef, setConfigRef] = useState("");
   const [nodeType, setNodeType] = useState<"Class" | "PropertyDefinition">("Class");
-  const [runAsBatch, setRunAsBatch] = useState(false);
 
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
 
-    if (selectedNodes.length === 0) {
-      newErrors.nodes = "At least one target node is required";
+    if (!selectedNode) {
+      newErrors.nodes = "A target node is required";
     }
 
     if (selectedSources.length === 0) {
       newErrors.sources = "At least one knowledge source is required";
-    }
-
-    if (!implementationId.trim()) {
-      newErrors.implementationId = "Implementation is required";
-    }
-
-    if (!configRef.trim()) {
-      newErrors.configRef = "Configuration is required";
     }
 
     if (Object.keys(newErrors).length > 0) {
@@ -66,13 +59,13 @@ export function SchemaGroundingWizard() {
     }
 
     try {
-      const { configRef: configRefPart } = decodeConfigSelection(configRef);
       const request: PipelineRunRequest = {
-        implementation_id: implementationId,
-        configuration_ref: configRefPart,
-        nodes: selectedNodes.map((n) => ({ id: n.id })),
+        ...selectionRequestFields(selection),
+        // The label is what is grounded; the id says which node the result is for.
+        node_id: selectedNode!.id,
+        node_label: selectedNode!.label,
+        node_type: nodeType,
         sources: selectedSources,
-        run_as_batch: runAsBatch,
       };
 
       await handleSubmit(request);
@@ -80,11 +73,6 @@ export function SchemaGroundingWizard() {
       const errorMessage = error instanceof Error ? error.message : "Failed to run pipeline";
       toast("error", errorMessage);
     }
-  };
-
-  const handleNodeSelect = (entities: Entity[]) => {
-    setSelectedNodes(entities);
-    setErrors((prev) => ({ ...prev, nodes: undefined }));
   };
 
   const toggleSource = (sourceId: string) => {
@@ -101,7 +89,7 @@ export function SchemaGroundingWizard() {
           value={nodeType}
           onChange={(value) => {
             setNodeType(value as "Class" | "PropertyDefinition");
-            setSelectedNodes([]);
+            setSelectedNode(null);
             setErrors((prev) => ({ ...prev, nodes: undefined }));
           }}
           options={[
@@ -112,12 +100,14 @@ export function SchemaGroundingWizard() {
         />
       </Field>
 
-      <Field label="Target Nodes" required error={errors.nodes} errorId="nodes-error">
+      <Field label="Target Node" required error={errors.nodes} errorId="nodes-error">
         <EntitySearchPicker
           entityType={nodeType}
-          selectedIds={selectedNodes.map((n) => n.id)}
-          onSelectMultiple={handleNodeSelect}
-          multiSelect
+          selectedId={selectedNode?.id}
+          onSelect={(entity) => {
+            setSelectedNode(entity);
+            setErrors((prev) => ({ ...prev, nodes: undefined }));
+          }}
           placeholder={`Search ${nodeType === "Class" ? "classes" : "property definitions"} to ground…`}
           aria-invalid={!!errors.nodes}
           aria-describedby={errors.nodes ? "nodes-error" : undefined}
@@ -138,56 +128,37 @@ export function SchemaGroundingWizard() {
             <label key={source.id} className="sources-label">
               <input
                 type="checkbox"
-                checked={selectedSources.includes(source.id)}
-                onChange={() => toggleSource(source.id)}
+                checked={selectedSources.includes(source.name)}
+                onChange={() => toggleSource(source.name)}
                 disabled={isSubmitting}
                 data-testid={`schema-grounding-source-${source.id}`}
               />
-              {source.label}
+              {source.name}
             </label>
           ))}
         </div>
       </Field>
 
       <ImplementationConfigPicker
-        pipelineType="schema_node_grounding"
-        selectedImplementationId={implementationId}
-        selectedConfigRef={configRef}
-        onSelectImplementation={(id) => {
-          setImplementationId(id);
-          setErrors((prev) => ({ ...prev, implementationId: undefined }));
-          setConfigRef("");
-        }}
-        onSelectConfig={(compositeValue) => {
-          setConfigRef(compositeValue);
-          setErrors((prev) => ({ ...prev, configRef: undefined }));
-        }}
+        selection={selection}
+        idPrefix="schema-grounding"
         disabled={isSubmitting}
-        implementationError={errors.implementationId}
-        configError={errors.configRef}
-      />
-
-      <BatchToggle
-        checked={runAsBatch}
-        onChange={setRunAsBatch}
-        disabled={isSubmitting}
-        testIdPrefix="schema-grounding"
       />
 
       {isSubmitting && (
         <FormCallout variant="info" data-testid="schema-grounding-loading">
-          Running pipeline — this may take up to a minute
+          Starting the run — it opens in Runs, where its progress shows
         </FormCallout>
       )}
 
       <Button
         type="submit"
         variant="primary"
-        disabled={isSubmitting || selectedNodes.length === 0 || selectedSources.length === 0}
+        disabled={isSubmitting || !selectedNode || selectedSources.length === 0}
         aria-busy={isSubmitting}
         data-testid="schema-grounding-submit"
       >
-        {isSubmitting ? "Running…" : "Run Pipeline"}
+        {isSubmitting ? "Starting…" : "Run Pipeline"}
       </Button>
     </form>
   );

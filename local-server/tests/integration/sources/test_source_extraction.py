@@ -82,9 +82,12 @@ class FakeExtraction:
     def __init__(self, house):
         self.house = house
         self.calls = 0
+        # The (model, output-token limit) each call was asked to use
+        self.parameters: set = set()
 
-    def extract_triples(self, text, ontology_id, model, temperature, **_):
+    def extract_triples(self, text, ontology_id, model, temperature, max_tokens=None, **_):
         self.calls += 1
+        self.parameters.add((model, max_tokens))
         triples = []
         if "WRF555SDFZ" in text:
             start = text.index("WRF555SDFZ")
@@ -222,8 +225,7 @@ def app(tmp_path, factory, parts, house, extraction):
     app.state.source_extraction_service = SourceExtractionService(
         sources=sources,
         ontology_repo=parts.repo,
-        implementations=implementations,
-        configurations=configurations,
+        resolver=executor.resolver,
         submitter=executor,
         runs=runs,
         proposals=parts.proposals_repo,
@@ -266,7 +268,44 @@ def finished(app, run_id):
 
 
 def extract(client, source_id, **body):
-    return client.post(f"/api/sources/{source_id}/extract", json={"dataset": "home", **body})
+    """
+    Extract a source with the two-pass implementation, whose service the fakes
+    here stand in for, unless the body names another. Its id is "default": a
+    name, not the type's default (see TestDefaultImplementation).
+    """
+    return client.post(
+        f"/api/sources/{source_id}/extract",
+        json={"dataset": "home", "implementation_id": "default", **body},
+    )
+
+
+class TestDefaultImplementation:
+    def test_nothing_named_extracts_with_find_then_type(self, client, app, house):
+        source = add_pdf(client, house)
+
+        response = client.post(f"/api/sources/{source['id']}/extract", json={"dataset": "home"})
+
+        assert response.status_code == 202, response.text
+        [run] = response.json()["runs"]
+        stored = app.state.runs.get(run["run_id"])
+        # Individual extraction's default implementation and its default configuration
+        assert stored.implementation_id == "find_then_type"
+        assert stored.configuration_ref == "extraction-find-then-type"
+
+    def test_naming_default_extracts_with_two_pass(self, client, app, house):
+        source = add_pdf(client, house)
+
+        response = client.post(
+            f"/api/sources/{source['id']}/extract",
+            json={"dataset": "home", "implementation_id": "default"},
+        )
+
+        assert response.status_code == 202, response.text
+        stored = app.state.runs.get(response.json()["runs"][0]["run_id"])
+        assert (stored.implementation_id, stored.configuration_ref) == (
+            "default",
+            "extraction-default",
+        )
 
 
 class TestExtractRoute:
@@ -333,6 +372,51 @@ class TestExtractRoute:
         assert stored.implementation_id == "find_then_type"
         assert stored.configuration_ref == "extraction-find-then-type"
         assert stored.input_summary["source_id"] == source["id"]
+
+    def test_a_source_run_executes_with_its_configurations_model_and_limit(
+        self, client, app, house, extraction
+    ):
+        source = add_pdf(client, house)
+        [run] = extract(
+            client, source["id"], configuration_ref="extraction-openrouter-default"
+        ).json()["runs"]
+        app.state.executor.start()
+
+        done = wait_for(lambda: finished(app, run["run_id"]))
+
+        assert done.status is PipelineRunStatus.COMPLETED, done.failure_reason
+        assert extraction.parameters == {("google/gemini-3-flash-preview", 8000)}
+
+    def test_the_schema_run_is_chosen_as_any_run_is(self, client, app, house):
+        source = add_pdf(client, house)
+
+        named = extract(
+            client,
+            source["id"],
+            schema=True,
+            schema_implementation_id="default",
+            schema_configuration_ref="schema-extraction-default",
+        )
+        another_implementations = extract(
+            client, source["id"], schema=True, schema_configuration_ref="schema-extraction-open-v1"
+        )
+        cannot_extract = extract(
+            client, source["id"], schema=True, schema_implementation_id="open_v1"
+        )
+
+        assert named.status_code == 202, named.text
+        schema_run = app.state.runs.get(named.json()["runs"][1]["run_id"])
+        assert (schema_run.implementation_id, schema_run.configuration_ref) == (
+            "default",
+            "schema-extraction-default",
+        )
+        assert another_implementations.status_code == 422
+        assert (
+            "is a configuration of the open_v1 implementation"
+            in (another_implementations.json()["detail"])
+        )
+        assert cannot_extract.status_code == 422
+        assert "can extract a source (one of: default)" in cannot_extract.json()["detail"]
 
     @pytest.mark.parametrize(
         "body, names",
@@ -438,7 +522,7 @@ class TestExtractionToProposal:
                 "status": "completed",
                 "items_done": 1,
                 "items_total": 1,
-                # The default implementation reports chunks only
+                # The two-pass implementation reports chunks only
                 "stage": None,
                 "stage_done": None,
                 "stage_total": None,
@@ -590,7 +674,9 @@ class HeldTypingExtraction:
             **fields,
         )
 
-    def find_mentions(self, text, ontology_id, model, temperature, stage_prompts=None):
+    def find_mentions(
+        self, text, ontology_id, model, temperature, stage_prompts=None, max_tokens=None
+    ):
         mentions = [
             Mention(name, "thing", name, text.index(name), text.index(name) + len(name))
             for name in self.NAMES
@@ -601,13 +687,22 @@ class HeldTypingExtraction:
     def typing_prompt(self, ontology_id, stage_prompts=None):
         return SimpleNamespace(system="the catalog")
 
-    def type_mention(self, prompt, context, mention, model, temperature):
+    def type_mention(self, prompt, context, mention, model, temperature, max_tokens=None):
         self.typing.set()
         assert self.release.wait(10), "the test never let the typing go on"
         class_ref = "house_appliance" if mention.name == "WRF555SDFZ" else "Business"
         return self._result(class_ref=class_ref, confidence=0.9)
 
-    def relate(self, text, typing_triples, ontology_id, model, temperature, stage_prompts=None):
+    def relate(
+        self,
+        text,
+        typing_triples,
+        ontology_id,
+        model,
+        temperature,
+        stage_prompts=None,
+        max_tokens=None,
+    ):
         start = text.index("made by Acme")
         triple = {
             "subject": {"kind": "individual", "id": "", "label": "WRF555SDFZ"},
@@ -623,7 +718,11 @@ class HeldTypingExtraction:
 
 
 class TestFindThenTypeStage:
-    """A find-then-type run on a source says which stage it is in while it runs."""
+    """
+    A find-then-type run on a source says which stage it is in while it runs.
+    The extract call names no implementation: find-then-type is the type's
+    default, selected by the resolver and executed by the background executor.
+    """
 
     @pytest.fixture()
     def extraction(self, house):
@@ -635,7 +734,10 @@ class TestFindThenTypeStage:
         self, client, app, house, extraction
     ):
         source = add_pdf(client, house)
-        [run] = extract(client, source["id"], implementation_id="find_then_type").json()["runs"]
+        response = client.post(f"/api/sources/{source['id']}/extract", json={"dataset": "home"})
+        assert response.status_code == 202, response.text
+        [run] = response.json()["runs"]
+        assert app.state.runs.get(run["run_id"]).implementation_id == "find_then_type"
         app.state.executor.start()
         assert extraction.typing.wait(10)
 

@@ -150,7 +150,9 @@ export function RunMeta({
       {STATUS_CHIP[slot.status]}
       <span className="xr-mono-muted">
         {pipelineType}
-        {run ? ` · ${run.configuration_slug} v${run.configuration_version}` : ""}
+        {run
+          ? ` · ${run.implementation_id} · ${run.configuration_ref} v${run.configuration_version}`
+          : ""}
         {duration ? ` · ${duration}` : ""}
       </span>
     </div>

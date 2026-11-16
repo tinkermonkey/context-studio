@@ -77,6 +77,26 @@ describe("RunDetailDrawer", () => {
     expect(screen.queryByTestId("run-open-extraction-review")).not.toBeInTheDocument();
   });
 
+  it("shows the run's implementation and its configuration, each under its own label", async () => {
+    serveRun(
+      makeRun({
+        implementation_id: "two_step",
+        configuration_ref: "schema-extraction-alt",
+        // Not what is shown: the slug used to stand in for the implementation.
+        configuration_slug: "slug-not-shown",
+        configuration_version: 3,
+      }),
+    );
+    render(<RunDetailDrawer runId="run-1" />);
+
+    const implementation = await screen.findByText("Implementation");
+    expect(implementation.nextElementSibling).toHaveTextContent(/^two_step$/);
+    expect(screen.getByText("Configuration").nextElementSibling).toHaveTextContent(
+      /^schema-extraction-alt \(v3\)$/,
+    );
+    expect(screen.queryByText(/slug-not-shown/)).not.toBeInTheDocument();
+  });
+
   it("renders the lower-case completed status as an emerald chip", async () => {
     serveRun(makeRun());
     render(<RunDetailDrawer runId="run-1" />);

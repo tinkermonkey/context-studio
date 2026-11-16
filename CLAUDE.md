@@ -56,7 +56,7 @@ Context Studio is local-first, designed to be packaged as a desktop app and run 
 
 ### General Guidelines
 
-- **Do not create documentation files** like implementation reports, design docs, etc.
+- **Do not create documentation files** like implementation reports, design docs, etc. Exception: extraction experiments are recorded as pages under `documentation/extraction/experiments/`, by the rules in its `README.md`.
 - Use meaningful variable and function names - **avoid terms like "enhanced", "improved", "optimized"** in names
 - **Configuration Management**: This is a desktop app - configuration is managed exclusively through the config.json file. Do not implement environment variable overrides for configuration settings. The .env file may be used for development convenience (e.g., setting CONFIG_PATH), but should not override application configuration.
 - **Screenshots**: Save all debugging/review screenshots to `/screenshots/` at the repo root. This directory is gitignored.
@@ -238,6 +238,10 @@ All imports point inward. `domain/` has **zero imports** from `adapters/`, `data
 - **Environment Variables**: Use `.env` files for sensitive configurations and secrets
 - **Virtual Environment**: Always use `local-server/.venv` — activate it before running any Python command
 - **Alembic Migrations**: Run migrations from `local-server/` directory with `--config adapters/persistence/sqlite/alembic.ini` or use the helper script `scripts/run_migrations.py`
+
+### Extraction experiments
+
+The current state of the extraction pipelines is `documentation/extraction/README.md`. Every experiment on them (paid runs, measured pipeline changes, refinement-loop campaigns) gets a page by the rules in `documentation/extraction/experiments/README.md`, not a `claudes_thoughts` report.
 
 ### Common Pitfalls
 

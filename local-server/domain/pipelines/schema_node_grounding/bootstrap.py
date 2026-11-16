@@ -38,6 +38,7 @@ def register_schema_node_grounding(
             PipelineType.SCHEMA_NODE_GROUNDING,
             "default",
             SchemaGroundingOrchestrator,
+            default=True,
         )
 
     if config_registry is not None:
@@ -46,4 +47,5 @@ def register_schema_node_grounding(
             "default",
             "grounding-default",
             get_default_config(),
+            default=True,
         )

@@ -31,18 +31,14 @@ This records one cassette per scenario (17 scenarios total), each containing bot
 
 Cost estimate: ~2-5 USD (depends on model and token usage)
 
-### Step 2: Record Grounded Pipeline Cassettes
+### Step 2: (removed) Grounded Pipeline Cassettes
 
-The `grounded_v1` variant uses NLP-grounded typing (spaCy chunks + LLM confirmation).
-
-```bash
-python scripts/record_grounded_cassettes.py --dry-run   # Preview first
-python scripts/record_grounded_cassettes.py --record    # Make real LLM calls
-```
-
-This records cassettes for per-chunk LLM confirmation calls (many calls per scenario).
-
-Cost estimate: ~10-20 USD (more calls than default pipeline)
+The `grounded_v1` tournament variant (NLP-grounded typing) and its recorder
+(`scripts/record_grounded_cassettes.py`) were removed on 2026-11-14: its cassettes had been
+deleted when the prompts gained source spans (#1243), so it never registered, and its last scored
+result was a STAY. There is nothing to record for it. The benchmark's cassettes are recorded with
+`python scripts/benchmark_replay.py --record --spend --implementation <id> --configuration <ref>`
+(see `experiments/README.md`).
 
 ### Step 3: Run Quality Tournament
 
@@ -65,7 +61,6 @@ The accept gate passes when:
 
 ```bash
 git add tests/integration/fixtures/cassettes/individual_extraction_default/
-git add tests/integration/fixtures/cassettes/individual_grounded_typing/
 git commit -m "Re-record cassettes with updated two-pass extraction prompts"
 
 python scripts/quality_tournament.py --pipeline individual | tee tournament_results.txt
@@ -75,7 +70,7 @@ git commit -m "Run quality tournament with re-recorded cassettes — accept gate
 
 ## Verification Checklist
 
-- [ ] All cassette files in `individual_extraction_default/` and `individual_grounded_typing/` exist
+- [ ] All cassette files in `individual_extraction_default/` exist
 - [ ] Each cassette has the expected number of hash entries (newly recorded cassettes should have 1-4 entries, all with real LLM responses)
 - [ ] Tournament runs without CassetteStaleError or hash-mismatch errors
 - [ ] Tournament produces a markdown scoreboard and per-variant error reports

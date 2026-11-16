@@ -18,8 +18,10 @@ def register_claim_triage(
     (what run_refinement uses when no implementation or configuration is named).
     """
     if impl_registry is not None:
-        impl_registry.register_impl(PipelineType.CLAIM_TRIAGE, "default", ClaimTriageOrchestrator)
+        impl_registry.register_impl(
+            PipelineType.CLAIM_TRIAGE, "default", ClaimTriageOrchestrator, default=True
+        )
     if config_registry is not None:
         config_registry.register(
-            PipelineType.CLAIM_TRIAGE, "default", "default", get_default_config()
+            PipelineType.CLAIM_TRIAGE, "default", "default", get_default_config(), default=True
         )

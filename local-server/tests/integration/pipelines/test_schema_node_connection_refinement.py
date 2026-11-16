@@ -137,6 +137,7 @@ class TestConnectionRefinementExecution:
         orchestrator = ConnectionRefinementOrchestrator(
             llm_provider=FakeLLMProvider(response_content="[]"),
             traversal=traversal,
+            config={"model": "test-model"},
         )
         state = ConnectionRefinementState(
             run_id=str(uuid4()),
@@ -154,6 +155,7 @@ class TestConnectionRefinementExecution:
         orchestrator = ConnectionRefinementOrchestrator(
             llm_provider=FakeLLMProvider(response_content="[]"),
             traversal=traversal,
+            config={"model": "test-model"},
         )
         state = ConnectionRefinementState(
             run_id=str(uuid4()),
@@ -193,6 +195,7 @@ class TestConnectionRefinementExecution:
         orchestrator = ConnectionRefinementOrchestrator(
             llm_provider=FakeLLMProvider(response_content=_deltas_response(canon_deltas)),
             traversal=traversal,
+            config={"model": "test-model"},
         )
         state = ConnectionRefinementState(
             run_id=str(uuid4()),
@@ -244,6 +247,7 @@ class TestConnectionRefinementExecution:
         orchestrator = ConnectionRefinementOrchestrator(
             llm_provider=FakeLLMProvider(response_content=_deltas_response(too_many)),
             traversal=traversal,
+            config={"model": "test-model"},
         )
         state = ConnectionRefinementState(
             run_id=str(uuid4()),
@@ -275,6 +279,7 @@ class TestConnectionRefinementExecution:
         orchestrator = ConnectionRefinementOrchestrator(
             llm_provider=FakeLLMProvider(response_content=json.dumps(wrapped)),
             traversal=traversal,
+            config={"model": "test-model"},
         )
         state = ConnectionRefinementState(
             run_id=str(uuid4()),
@@ -303,7 +308,9 @@ class TestConnectionRefinementViaHarness:
             '"object": "Database"}]}'
         )
         llm_provider = FakeLLMProvider(response_content=llm_response)
-        orchestrator = ConnectionRefinementOrchestrator(llm_provider=llm_provider, traversal=None)
+        orchestrator = ConnectionRefinementOrchestrator(
+            llm_provider=llm_provider, traversal=None, config={"model": "test-model"}
+        )
 
         actual, expected = await run_pipeline_against_fixture(
             orchestrator,

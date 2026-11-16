@@ -164,7 +164,7 @@ export function RunDetailDrawer({ runId, onClose, onOpenExtractionReview }: RunD
   const metadataRows = [
     { key: "ID", value: <span className="run-detail-id">{run.id}</span> },
     { key: "Type", value: pipelineTypeDisplay },
-    { key: "Implementation", value: run.configuration_slug || "—" },
+    { key: "Implementation", value: run.implementation_id || "—" },
     { key: "Configuration", value: `${run.configuration_ref} (v${run.configuration_version})` },
     {
       key: "Status",

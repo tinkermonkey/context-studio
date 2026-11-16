@@ -214,10 +214,10 @@ describe("PropertyDrawer - definition Suggest", () => {
     await user.click(screen.getByRole("button", { name: /Suggest/ }));
 
     await waitFor(() => {
-      expect(runBody).toMatchObject({
-        configuration_ref: "definition-refinement-default",
-        node_id: "prop-001",
-      });
+      expect(runBody).toMatchObject({ node_id: "prop-001" });
     });
+    // The server's default implementation and configuration run: none is named.
+    expect(runBody).not.toHaveProperty("implementation_id");
+    expect(runBody).not.toHaveProperty("configuration_ref");
   });
 });

@@ -1,5 +1,7 @@
 # Graph Extraction Benchmarks
 
+> **Current state of the extraction pipelines:** [`documentation/extraction/README.md`](../../documentation/extraction/README.md). Experiments and results: [`documentation/extraction/experiments/`](../../documentation/extraction/experiments/README.md).
+
 This document tracks the performance of the knowledge graph extraction pipeline across different dataset tracks, configurations, and iterations.
 
 ## Baseline (Phase 4.5) — 2026-05-08

@@ -108,8 +108,8 @@ def test_a_background_enrichment_run_proposes_definitions_that_apply(world):
     )
     run = executor.submit(
         PipelineType.SCHEMA_NODE_DEFINITION_REFINEMENT,
-        "default",
-        "default",
+        None,
+        None,
         {"taxonomy_id": world.taxonomy.id, "scope": ["house_kitchen"]},
     )
     executor.start()

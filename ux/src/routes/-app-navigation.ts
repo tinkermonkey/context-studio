@@ -210,10 +210,6 @@ const DYNAMIC_ROUTE_LABELS: Array<{
     labels: (m) => ["Pipelines", "Pipeline Types", decodeSegment(m[1]), "Run"],
   },
   {
-    pattern: /^\/app\/pipelines\/types\/([^/]+)$/,
-    labels: (m) => ["Pipelines", "Pipeline Types", decodeSegment(m[1])],
-  },
-  {
     pattern: /^\/app\/pipelines\/batches\/([^/]+)$/,
     labels: (m) => ["Pipelines", "Runs", `Batch ${decodeSegment(m[1])}`],
   },

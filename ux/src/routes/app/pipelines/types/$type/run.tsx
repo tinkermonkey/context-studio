@@ -1,19 +1,7 @@
 import { createFileRoute, useParams } from "@tanstack/react-router";
 import { PageHeader } from "@tinkermonkey/heimdall-ui";
-import { SchemaExtractionWizard } from "@/components/pipeline/wizards/SchemaExtractionWizard";
-import { IndividualExtractionWizard } from "@/components/pipeline/wizards/IndividualExtractionWizard";
-import { SchemaGroundingWizard } from "@/components/pipeline/wizards/SchemaGroundingWizard";
-import { DefinitionRefinementWizard } from "@/components/pipeline/wizards/DefinitionRefinementWizard";
-import { ConnectionRefinementWizard } from "@/components/pipeline/wizards/ConnectionRefinementWizard";
+import { RUN_WIZARDS } from "@/components/pipeline/wizards";
 import "./run.css";
-
-const WIZARD_MAP: Record<string, React.ComponentType> = {
-  schema_extraction: SchemaExtractionWizard,
-  individual_extraction: IndividualExtractionWizard,
-  schema_node_grounding: SchemaGroundingWizard,
-  schema_node_definition_refinement: DefinitionRefinementWizard,
-  schema_node_connection_refinement: ConnectionRefinementWizard,
-};
 
 export const Route = createFileRoute("/app/pipelines/types/$type/run")({
   component: RunWizardPage,
@@ -22,7 +10,7 @@ export const Route = createFileRoute("/app/pipelines/types/$type/run")({
 function RunWizardPage() {
   const { type } = useParams({ from: "/app/pipelines/types/$type/run" as any });
 
-  const WizardComponent = WIZARD_MAP[type as string];
+  const WizardComponent = RUN_WIZARDS[type as string];
 
   if (!WizardComponent) {
     return (

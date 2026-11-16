@@ -26,9 +26,11 @@ export function useRunWizard(options: UseRunWizardOptions) {
     setErrors({});
 
     try {
+      // Started in the background: the pending run comes back at once and the
+      // run drawer follows it, so a long run is not cut off by the request timeout.
       const run = await runPipeline({
         type,
-        request,
+        request: { ...request, async: true },
       });
 
       await navigate({

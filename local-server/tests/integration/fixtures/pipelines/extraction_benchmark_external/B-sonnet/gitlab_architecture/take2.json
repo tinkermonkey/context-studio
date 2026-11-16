@@ -1,0 +1,382 @@
+{
+ "arm": "B-sonnet",
+ "model": "claude-sonnet-5-5",
+ "document": "gitlab_architecture",
+ "take": 2,
+ "effort": "high",
+ "max_tokens": 64000,
+ "prompt_sha256": "fe903290e1879723a20da8985cff39ba0f376161732cf9990e18acf1cff75eac",
+ "failed": false,
+ "attempts": [
+  {
+   "attempt": 1,
+   "problem": null,
+   "usage": {
+    "input": 17951,
+    "cache_write": 0,
+    "cache_read": 66242,
+    "output": 8617
+   },
+   "usd": 0.1286962,
+   "latency_s": 54.4
+  }
+ ],
+ "individuals": [
+  {
+   "title": "GitLab Community Edition (CE)",
+   "class": "business.product",
+   "quote": "The open source Community Edition (CE)."
+  },
+  {
+   "title": "GitLab Enterprise Edition (EE)",
+   "class": "business.product",
+   "quote": "The open core Enterprise Edition (EE)."
+  },
+  {
+   "title": "GitLab Workhorse",
+   "class": "application.applicationcomponent",
+   "quote": "GitLab Workhorse is a program designed at GitLab to help alleviate pressure from Puma."
+  },
+  {
+   "title": "Puma",
+   "class": "application.applicationcomponent",
+   "quote": "Puma is a Ruby application server that is used to run the core Rails Application that provides the user facing features in GitLab."
+  },
+  {
+   "title": "Sidekiq",
+   "class": "application.applicationcomponent",
+   "quote": "Sidekiq is a Ruby background job processor that pulls jobs from the Redis queue and processes them."
+  },
+  {
+   "title": "Redis",
+   "class": "technology.systemsoftware",
+   "quote": "Redis is packaged to provide a place to store:"
+  },
+  {
+   "title": "PostgreSQL",
+   "class": "technology.systemsoftware",
+   "quote": "GitLab packages the popular Database to provide storage for Application meta data and user information."
+  },
+  {
+   "title": "NGINX",
+   "class": "technology.systemsoftware",
+   "quote": "NGINX has an Ingress port for all HTTP requests and routes them to the appropriate sub-systems within GitLab."
+  },
+  {
+   "title": "Gitaly",
+   "class": "application.applicationcomponent",
+   "quote": "Gitaly is a service designed by GitLab to remove our need for NFS for Git storage in distributed deployments of GitLab"
+  },
+  {
+   "title": "GitLab Shell",
+   "class": "application.applicationcomponent",
+   "quote": "GitLab Shell is a program designed at GitLab to handle SSH-based `git` sessions, and modifies the list of authorized keys."
+  },
+  {
+   "title": "Praefect",
+   "class": "application.applicationcomponent",
+   "quote": "Praefect is a transparent proxy between each Git client and the Gitaly coordinating the replication of"
+  },
+  {
+   "title": "GitLab Pages",
+   "class": "application.applicationcomponent",
+   "quote": "GitLab Pages is a feature that allows you to publish static websites directly from a repository in GitLab."
+  },
+  {
+   "title": "GitLab Runner",
+   "class": "application.applicationcomponent",
+   "quote": "GitLab Runner runs jobs and sends the results to GitLab."
+  },
+  {
+   "title": "GitLab Geo",
+   "class": "application.applicationcomponent",
+   "quote": "Geo is a premium feature built to help speed up the development of distributed teams by providing one or more read-only mirrors of a primary GitLab instance."
+  },
+  {
+   "title": "GitLab Exporter",
+   "class": "application.applicationcomponent",
+   "quote": "GitLab Exporter is a process designed in house that allows us to export metrics about GitLab application internals to Prometheus."
+  },
+  {
+   "title": "Prometheus",
+   "class": "technology.systemsoftware",
+   "quote": "Prometheus is a time-series tool that helps GitLab administrators expose metrics about the individual processes used to provide GitLab the service."
+  },
+  {
+   "title": "Grafana",
+   "class": "technology.systemsoftware",
+   "quote": "Grafana is an open source, feature rich metrics dashboard and graph editor for Graphite, Elasticsearch, OpenTSDB, Prometheus, and InfluxDB."
+  },
+  {
+   "title": "Alertmanager",
+   "class": "technology.systemsoftware",
+   "quote": "Alert manager is a tool provided by Prometheus that"
+  },
+  {
+   "title": "Jaeger",
+   "class": "technology.systemsoftware",
+   "quote": "Jaeger, inspired by Dapper and OpenZipkin, is a distributed tracing system."
+  },
+  {
+   "title": "Sentry",
+   "class": "technology.systemsoftware",
+   "quote": "Sentry fundamentally is a service that helps you monitor and fix crashes in real time."
+  },
+  {
+   "title": "Consul",
+   "class": "technology.systemsoftware",
+   "quote": "Consul is a tool for service discovery and configuration."
+  },
+  {
+   "title": "PgBouncer",
+   "class": "technology.systemsoftware",
+   "quote": "Lightweight connection pooler for PostgreSQL."
+  },
+  {
+   "title": "PgBouncer Exporter",
+   "class": "application.applicationcomponent",
+   "quote": "Prometheus exporter for PgBouncer. Exports metrics at 9127/metrics."
+  },
+  {
+   "title": "PostgreSQL Exporter",
+   "class": "application.applicationcomponent",
+   "quote": "`postgres_exporter` is the community provided Prometheus exporter that delivers data about PostgreSQL to Prometheus for use in Grafana Dashboards."
+  },
+  {
+   "title": "Redis Exporter",
+   "class": "application.applicationcomponent",
+   "quote": "Redis Exporter is designed to give specific metrics about the Redis process to Prometheus so that we can graph these metrics in Grafana."
+  },
+  {
+   "title": "Node Exporter",
+   "class": "application.applicationcomponent",
+   "quote": "Node Exporter is a Prometheus tool that gives us metrics on the underlying machine (think CPU/Disk/Load)."
+  },
+  {
+   "title": "Elasticsearch",
+   "class": "technology.systemsoftware",
+   "quote": "Elasticsearch is a distributed RESTful search engine built for the cloud."
+  },
+  {
+   "title": "Object storage",
+   "class": "technology.technologyservice",
+   "quote": "GitLab requires an S3-compatible object storage for storing data such as CI artifacts, LFS objects, uploads, and container registry images."
+  },
+  {
+   "title": "Registry",
+   "class": "application.applicationcomponent",
+   "quote": "The registry is what users use to store their own Docker images."
+  },
+  {
+   "title": "AI Gateway",
+   "class": "application.applicationcomponent",
+   "quote": "GitLab AI Gateway is a standalone-service that will give access to AI features to all users of"
+  },
+  {
+   "title": "GitLab Duo Workflow Service",
+   "class": "application.applicationcomponent",
+   "quote": "GitLab Duo Workflow Service is our agentic AI Features that is deployed via our Runway service in the"
+  },
+  {
+   "title": "GitLab agent for Kubernetes",
+   "class": "application.applicationcomponent",
+   "quote": "The GitLab agent for Kubernetes is an active in-cluster"
+  },
+  {
+   "title": "Logrotate",
+   "class": "technology.systemsoftware",
+   "quote": "We bundle our own Logrotate"
+  },
+  {
+   "title": "Patroni",
+   "class": "application.applicationcomponent",
+   "quote": "Manage PostgreSQL HA cluster leader selection and replication"
+  },
+  {
+   "title": "GitLab API",
+   "class": "application.applicationinterface",
+   "quote": "GitLab serves web pages and the GitLab API using the Puma"
+  },
+  {
+   "title": "GitLab.com",
+   "class": "technology.node",
+   "quote": "The largest known GitLab instance is on GitLab.com, which is deployed using our"
+  },
+  {
+   "title": "Official GitLab Helm chart",
+   "class": "technology.artifact",
+   "quote": "official GitLab Helm chart"
+  },
+  {
+   "title": "Official Linux package",
+   "class": "technology.artifact",
+   "quote": "the official Linux package"
+  },
+  {
+   "title": "Kubernetes compatibility first",
+   "class": "motivation.requirement",
+   "quote": "new features and services must be written to consider Kubernetes compatibility first."
+  },
+  {
+   "title": "Services exchange information through APIs not files",
+   "class": "motivation.requirement",
+   "quote": "files, need to be able to exchange information through the appropriate APIs."
+  },
+  {
+   "title": "Systems administrators and GitLab Support Engineers",
+   "class": "motivation.stakeholder",
+   "quote": "This document is designed to be consumed by systems administrators and GitLab Support Engineers who want to understand more about the internals of GitLab and how they work together."
+  }
+ ],
+ "relationships": [
+  {
+   "source": "NGINX",
+   "predicate": "flows-to",
+   "target": "GitLab Workhorse",
+   "quote": "A typical installation uses NGINX or Apache as a web server to proxy through"
+  },
+  {
+   "source": "Sidekiq",
+   "predicate": "uses",
+   "target": "Redis",
+   "quote": "It uses Sidekiq as a job queue which, in turn, uses Redis as a non-persistent"
+  },
+  {
+   "source": "GitLab Shell",
+   "predicate": "uses",
+   "target": "Gitaly",
+   "quote": "repositories through Gitaly to serve Git objects, and communicates with Redis to submit jobs to"
+  },
+  {
+   "source": "GitLab Shell",
+   "predicate": "uses",
+   "target": "Redis",
+   "quote": "repositories through Gitaly to serve Git objects, and communicates with Redis to submit jobs to"
+  },
+  {
+   "source": "Praefect",
+   "predicate": "replicates",
+   "target": "Gitaly",
+   "quote": "Praefect is a transparent proxy between each Git client and the Gitaly coordinating the replication of"
+  },
+  {
+   "source": "GitLab Exporter",
+   "predicate": "flows-to",
+   "target": "Prometheus",
+   "quote": "allows us to export metrics about GitLab application internals to Prometheus."
+  },
+  {
+   "source": "PostgreSQL Exporter",
+   "predicate": "monitors",
+   "target": "PostgreSQL",
+   "quote": "delivers data about PostgreSQL to Prometheus for use in Grafana Dashboards."
+  },
+  {
+   "source": "PostgreSQL Exporter",
+   "predicate": "flows-to",
+   "target": "Prometheus",
+   "quote": "delivers data about PostgreSQL to Prometheus for use in Grafana Dashboards."
+  },
+  {
+   "source": "Redis Exporter",
+   "predicate": "monitors",
+   "target": "Redis",
+   "quote": "Redis Exporter is designed to give specific metrics about the Redis process to Prometheus so that we can graph these metrics in Grafana."
+  },
+  {
+   "source": "Redis Exporter",
+   "predicate": "flows-to",
+   "target": "Prometheus",
+   "quote": "Redis Exporter is designed to give specific metrics about the Redis process to Prometheus so that we can graph these metrics in Grafana."
+  },
+  {
+   "source": "PgBouncer Exporter",
+   "predicate": "monitors",
+   "target": "PgBouncer",
+   "quote": "Prometheus exporter for PgBouncer. Exports metrics at 9127/metrics."
+  },
+  {
+   "source": "PgBouncer",
+   "predicate": "serves",
+   "target": "PostgreSQL",
+   "quote": "Lightweight connection pooler for PostgreSQL."
+  },
+  {
+   "source": "Registry",
+   "predicate": "uses",
+   "target": "NGINX",
+   "quote": "registry uses NGINX as a load balancer and GitLab as an authentication manager."
+  },
+  {
+   "source": "Sidekiq",
+   "predicate": "accesses",
+   "target": "Redis",
+   "quote": "Sidekiq is a Ruby background job processor that pulls jobs from the Redis queue and processes them."
+  },
+  {
+   "source": "GitLab Workhorse",
+   "predicate": "supports",
+   "target": "Puma",
+   "quote": "GitLab Workhorse is a program designed at GitLab to help alleviate pressure from Puma."
+  },
+  {
+   "source": "Puma",
+   "predicate": "provides",
+   "target": "GitLab API",
+   "quote": "GitLab serves web pages and the GitLab API using the Puma"
+  },
+  {
+   "source": "GitLab.com",
+   "predicate": "depends-on",
+   "target": "Official GitLab Helm chart",
+   "quote": "The largest known GitLab instance is on GitLab.com, which is deployed using our"
+  }
+ ],
+ "usage": {
+  "input": 17951,
+  "cache_write": 0,
+  "cache_read": 66242,
+  "output": 8617
+ },
+ "usd": 0.1286962,
+ "latency_s": 54.4,
+ "raw_response": {
+  "id": "msg_011Ch4s2J27hoTnrumU66u1w",
+  "container": null,
+  "content": [
+   {
+    "thinking": "",
+    "type": "thinking"
+   },
+   {
+    "citations": null,
+    "text": "{\"individuals\":[{\"title\":\"GitLab Community Edition (CE)\",\"class\":\"business.product\",\"quote\":\"The open source Community Edition (CE).\"},{\"title\":\"GitLab Enterprise Edition (EE)\",\"class\":\"business.product\",\"quote\":\"The open core Enterprise Edition (EE).\"},{\"title\":\"GitLab Workhorse\",\"class\":\"application.applicationcomponent\",\"quote\":\"GitLab Workhorse is a program designed at GitLab to help alleviate pressure from Puma.\"},{\"title\":\"Puma\",\"class\":\"application.applicationcomponent\",\"quote\":\"Puma is a Ruby application server that is used to run the core Rails Application that provides the user facing features in GitLab.\"},{\"title\":\"Sidekiq\",\"class\":\"application.applicationcomponent\",\"quote\":\"Sidekiq is a Ruby background job processor that pulls jobs from the Redis queue and processes them.\"},{\"title\":\"Redis\",\"class\":\"technology.systemsoftware\",\"quote\":\"Redis is packaged to provide a place to store:\"},{\"title\":\"PostgreSQL\",\"class\":\"technology.systemsoftware\",\"quote\":\"GitLab packages the popular Database to provide storage for Application meta data and user information.\"},{\"title\":\"NGINX\",\"class\":\"technology.systemsoftware\",\"quote\":\"NGINX has an Ingress port for all HTTP requests and routes them to the appropriate sub-systems within GitLab.\"},{\"title\":\"Gitaly\",\"class\":\"application.applicationcomponent\",\"quote\":\"Gitaly is a service designed by GitLab to remove our need for NFS for Git storage in distributed deployments of GitLab\"},{\"title\":\"GitLab Shell\",\"class\":\"application.applicationcomponent\",\"quote\":\"GitLab Shell is a program designed at GitLab to handle SSH-based `git` sessions, and modifies the list of authorized keys.\"},{\"title\":\"Praefect\",\"class\":\"application.applicationcomponent\",\"quote\":\"Praefect is a transparent proxy between each Git client and the Gitaly coordinating the replication of\"},{\"title\":\"GitLab Pages\",\"class\":\"application.applicationcomponent\",\"quote\":\"GitLab Pages is a feature that allows you to publish static websites directly from a repository in GitLab.\"},{\"title\":\"GitLab Runner\",\"class\":\"application.applicationcomponent\",\"quote\":\"GitLab Runner runs jobs and sends the results to GitLab.\"},{\"title\":\"GitLab Geo\",\"class\":\"application.applicationcomponent\",\"quote\":\"Geo is a premium feature built to help speed up the development of distributed teams by providing one or more read-only mirrors of a primary GitLab instance.\"},{\"title\":\"GitLab Exporter\",\"class\":\"application.applicationcomponent\",\"quote\":\"GitLab Exporter is a process designed in house that allows us to export metrics about GitLab application internals to Prometheus.\"},{\"title\":\"Prometheus\",\"class\":\"technology.systemsoftware\",\"quote\":\"Prometheus is a time-series tool that helps GitLab administrators expose metrics about the individual processes used to provide GitLab the service.\"},{\"title\":\"Grafana\",\"class\":\"technology.systemsoftware\",\"quote\":\"Grafana is an open source, feature rich metrics dashboard and graph editor for Graphite, Elasticsearch, OpenTSDB, Prometheus, and InfluxDB.\"},{\"title\":\"Alertmanager\",\"class\":\"technology.systemsoftware\",\"quote\":\"Alert manager is a tool provided by Prometheus that\"},{\"title\":\"Jaeger\",\"class\":\"technology.systemsoftware\",\"quote\":\"Jaeger, inspired by Dapper and OpenZipkin, is a distributed tracing system.\"},{\"title\":\"Sentry\",\"class\":\"technology.systemsoftware\",\"quote\":\"Sentry fundamentally is a service that helps you monitor and fix crashes in real time.\"},{\"title\":\"Consul\",\"class\":\"technology.systemsoftware\",\"quote\":\"Consul is a tool for service discovery and configuration.\"},{\"title\":\"PgBouncer\",\"class\":\"technology.systemsoftware\",\"quote\":\"Lightweight connection pooler for PostgreSQL.\"},{\"title\":\"PgBouncer Exporter\",\"class\":\"application.applicationcomponent\",\"quote\":\"Prometheus exporter for PgBouncer. Exports metrics at 9127/metrics.\"},{\"title\":\"PostgreSQL Exporter\",\"class\":\"application.applicationcomponent\",\"quote\":\"`postgres_exporter` is the community provided Prometheus exporter that delivers data about PostgreSQL to Prometheus for use in Grafana Dashboards.\"},{\"title\":\"Redis Exporter\",\"class\":\"application.applicationcomponent\",\"quote\":\"Redis Exporter is designed to give specific metrics about the Redis process to Prometheus so that we can graph these metrics in Grafana.\"},{\"title\":\"Node Exporter\",\"class\":\"application.applicationcomponent\",\"quote\":\"Node Exporter is a Prometheus tool that gives us metrics on the underlying machine (think CPU/Disk/Load).\"},{\"title\":\"Elasticsearch\",\"class\":\"technology.systemsoftware\",\"quote\":\"Elasticsearch is a distributed RESTful search engine built for the cloud.\"},{\"title\":\"Object storage\",\"class\":\"technology.technologyservice\",\"quote\":\"GitLab requires an S3-compatible object storage for storing data such as CI artifacts, LFS objects, uploads, and container registry images.\"},{\"title\":\"Registry\",\"class\":\"application.applicationcomponent\",\"quote\":\"The registry is what users use to store their own Docker images.\"},{\"title\":\"AI Gateway\",\"class\":\"application.applicationcomponent\",\"quote\":\"GitLab AI Gateway is a standalone-service that will give access to AI features to all users of\"},{\"title\":\"GitLab Duo Workflow Service\",\"class\":\"application.applicationcomponent\",\"quote\":\"GitLab Duo Workflow Service is our agentic AI Features that is deployed via our Runway service in the\"},{\"title\":\"GitLab agent for Kubernetes\",\"class\":\"application.applicationcomponent\",\"quote\":\"The GitLab agent for Kubernetes is an active in-cluster\"},{\"title\":\"Logrotate\",\"class\":\"technology.systemsoftware\",\"quote\":\"We bundle our own Logrotate\"},{\"title\":\"Patroni\",\"class\":\"application.applicationcomponent\",\"quote\":\"Manage PostgreSQL HA cluster leader selection and replication\"},{\"title\":\"GitLab API\",\"class\":\"application.applicationinterface\",\"quote\":\"GitLab serves web pages and the GitLab API using the Puma\"},{\"title\":\"GitLab.com\",\"class\":\"technology.node\",\"quote\":\"The largest known GitLab instance is on GitLab.com, which is deployed using our\"},{\"title\":\"Official GitLab Helm chart\",\"class\":\"technology.artifact\",\"quote\":\"official GitLab Helm chart\"},{\"title\":\"Official Linux package\",\"class\":\"technology.artifact\",\"quote\":\"the official Linux package\"},{\"title\":\"Kubernetes compatibility first\",\"class\":\"motivation.requirement\",\"quote\":\"new features and services must be written to consider Kubernetes compatibility first.\"},{\"title\":\"Services exchange information through APIs not files\",\"class\":\"motivation.requirement\",\"quote\":\"files, need to be able to exchange information through the appropriate APIs.\"},{\"title\":\"Systems administrators and GitLab Support Engineers\",\"class\":\"motivation.stakeholder\",\"quote\":\"This document is designed to be consumed by systems administrators and GitLab Support Engineers who want to understand more about the internals of GitLab and how they work together.\"}],\"relationships\":[{\"source\":\"NGINX\",\"predicate\":\"flows-to\",\"target\":\"GitLab Workhorse\",\"quote\":\"A typical installation uses NGINX or Apache as a web server to proxy through\"},{\"source\":\"Sidekiq\",\"predicate\":\"uses\",\"target\":\"Redis\",\"quote\":\"It uses Sidekiq as a job queue which, in turn, uses Redis as a non-persistent\"},{\"source\":\"GitLab Shell\",\"predicate\":\"uses\",\"target\":\"Gitaly\",\"quote\":\"repositories through Gitaly to serve Git objects, and communicates with Redis to submit jobs to\"},{\"source\":\"GitLab Shell\",\"predicate\":\"uses\",\"target\":\"Redis\",\"quote\":\"repositories through Gitaly to serve Git objects, and communicates with Redis to submit jobs to\"},{\"source\":\"Praefect\",\"predicate\":\"replicates\",\"target\":\"Gitaly\",\"quote\":\"Praefect is a transparent proxy between each Git client and the Gitaly coordinating the replication of\"},{\"source\":\"GitLab Exporter\",\"predicate\":\"flows-to\",\"target\":\"Prometheus\",\"quote\":\"allows us to export metrics about GitLab application internals to Prometheus.\"},{\"source\":\"PostgreSQL Exporter\",\"predicate\":\"monitors\",\"target\":\"PostgreSQL\",\"quote\":\"delivers data about PostgreSQL to Prometheus for use in Grafana Dashboards.\"},{\"source\":\"PostgreSQL Exporter\",\"predicate\":\"flows-to\",\"target\":\"Prometheus\",\"quote\":\"delivers data about PostgreSQL to Prometheus for use in Grafana Dashboards.\"},{\"source\":\"Redis Exporter\",\"predicate\":\"monitors\",\"target\":\"Redis\",\"quote\":\"Redis Exporter is designed to give specific metrics about the Redis process to Prometheus so that we can graph these metrics in Grafana.\"},{\"source\":\"Redis Exporter\",\"predicate\":\"flows-to\",\"target\":\"Prometheus\",\"quote\":\"Redis Exporter is designed to give specific metrics about the Redis process to Prometheus so that we can graph these metrics in Grafana.\"},{\"source\":\"PgBouncer Exporter\",\"predicate\":\"monitors\",\"target\":\"PgBouncer\",\"quote\":\"Prometheus exporter for PgBouncer. Exports metrics at 9127/metrics.\"},{\"source\":\"PgBouncer\",\"predicate\":\"serves\",\"target\":\"PostgreSQL\",\"quote\":\"Lightweight connection pooler for PostgreSQL.\"},{\"source\":\"Registry\",\"predicate\":\"uses\",\"target\":\"NGINX\",\"quote\":\"registry uses NGINX as a load balancer and GitLab as an authentication manager.\"},{\"source\":\"Sidekiq\",\"predicate\":\"accesses\",\"target\":\"Redis\",\"quote\":\"Sidekiq is a Ruby background job processor that pulls jobs from the Redis queue and processes them.\"},{\"source\":\"GitLab Workhorse\",\"predicate\":\"supports\",\"target\":\"Puma\",\"quote\":\"GitLab Workhorse is a program designed at GitLab to help alleviate pressure from Puma.\"},{\"source\":\"Puma\",\"predicate\":\"provides\",\"target\":\"GitLab API\",\"quote\":\"GitLab serves web pages and the GitLab API using the Puma\"},{\"source\":\"GitLab.com\",\"predicate\":\"depends-on\",\"target\":\"Official GitLab Helm chart\",\"quote\":\"The largest known GitLab instance is on GitLab.com, which is deployed using our\"}]}",
+    "type": "text"
+   }
+  ],
+  "model": "claude-sonnet-5-5",
+  "role": "assistant",
+  "stop_details": null,
+  "stop_reason": "end_turn",
+  "stop_sequence": null,
+  "type": "message",
+  "usage": {
+   "cache_creation": {
+    "ephemeral_1h_input_tokens": 0,
+    "ephemeral_5m_input_tokens": 0
+   },
+   "cache_creation_input_tokens": 0,
+   "cache_read_input_tokens": 66242,
+   "inference_geo": "global",
+   "input_tokens": 17951,
+   "output_tokens": 8617,
+   "output_tokens_details": {
+    "thinking_tokens": 4970
+   },
+   "server_tool_use": null,
+   "service_tier": "standard",
+   "speed": "standard"
+  },
+  "diagnostics": null
+ }
+}

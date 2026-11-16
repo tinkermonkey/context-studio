@@ -9,6 +9,7 @@ ledger file for every test so nothing touches the real, tracked
 import json
 import logging
 import os
+import re
 import sys
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
@@ -17,6 +18,7 @@ import pytest
 
 from experiments.ledger import (
     BASELINE_RESET_DECISION,
+    RENDER_COLUMNS,
     LedgerEntryError,
     accepted_hypotheses,
     append_baseline_reset,
@@ -25,6 +27,8 @@ from experiments.ledger import (
     latest_baseline_reset,
     read_entries,
     rejected_hypotheses,
+    render_table,
+    target_entries,
     validate_entry,
 )
 from experiments.ledger import _main as ledger_cli
@@ -35,6 +39,8 @@ def _entry(**overrides):
     base = {
         "experiment_id": "1-copular_appositive_handling",
         "iteration": 1,
+        "implementation": "default",
+        "configuration": "extraction-openrouter-default",
         "hypothesis": "copular_appositive_handling",
         "variant": "open_v1+copular",
         "diff_stat": "1 file changed, 20 insertions(+)",
@@ -471,6 +477,274 @@ class TestRejectedHypothesesScopedToBaselineReset:
         assert rejected_hypotheses(ledger_path) == ["a"]
 
 
+class TestEntriesNameWhatTheyRefined:
+    @pytest.mark.parametrize("field", ["implementation", "configuration"])
+    @pytest.mark.parametrize("decision", ["accepted", "rejected", "unmeasured"])
+    def test_an_experiment_entry_without_its_target_is_refused(self, field, decision):
+        entry = _entry(decision=decision)
+        del entry[field]
+        with pytest.raises(LedgerEntryError, match=field):
+            validate_entry(entry)
+        with pytest.raises(LedgerEntryError, match=field):
+            validate_entry(_entry(decision=decision, **{field: ""}))
+
+    def test_a_baseline_reset_needs_no_target(self, tmp_path):
+        ledger_path = tmp_path / "ledger.jsonl"
+        entry = append_baseline_reset("new spec", "dr_spec", ledger_path=ledger_path)
+        assert "implementation" not in entry and "configuration" not in entry
+        validate_entry(entry)
+
+    def test_a_guard_that_does_not_apply_is_recorded_as_such(self, tmp_path):
+        ledger_path = tmp_path / "ledger.jsonl"
+        guard = {"applies": False, "reason": "no triple-corpus recordings of find_then_type"}
+        append_entry(
+            _entry(implementation="find_then_type", guard=guard, decision="rejected"),
+            ledger_path=ledger_path,
+        )
+        assert read_entries(ledger_path)[0]["guard"] == guard
+
+
+class TestHypothesesScopedByImplementation:
+    CONFIGURATIONS = {
+        "default": "extraction-openrouter-default",
+        "find_then_type": "extraction-find-then-type",
+    }
+
+    def _ledger(self, tmp_path):
+        ledger_path = tmp_path / "ledger.jsonl"
+        for implementation, hypothesis, decision in [
+            ("default", "cross_chunk_relationships", "rejected"),
+            ("default", "full_class_catalog", "accepted"),
+            ("find_then_type", "type_from_all_occurrences", "rejected"),
+            ("find_then_type", "full_class_catalog", "rejected"),
+        ]:
+            append_entry(
+                _entry(
+                    experiment_id=f"1-{implementation}-{hypothesis}",
+                    implementation=implementation,
+                    configuration=self.CONFIGURATIONS[implementation],
+                    hypothesis=hypothesis,
+                    decision=decision,
+                ),
+                ledger_path=ledger_path,
+            )
+        return ledger_path
+
+    def test_a_rejection_under_one_implementation_leaves_the_id_open_under_another(self, tmp_path):
+        ledger_path = self._ledger(tmp_path)
+        assert rejected_hypotheses(ledger_path, "default") == ["cross_chunk_relationships"]
+        assert rejected_hypotheses(ledger_path, "find_then_type") == [
+            "type_from_all_occurrences",
+            "full_class_catalog",
+        ]
+        assert accepted_hypotheses(ledger_path, "default") == ["full_class_catalog"]
+        assert accepted_hypotheses(ledger_path, "find_then_type") == []
+
+    def test_without_an_implementation_every_one_is_read(self, tmp_path):
+        ledger_path = self._ledger(tmp_path)
+        assert rejected_hypotheses(ledger_path) == [
+            "cross_chunk_relationships",
+            "type_from_all_occurrences",
+            "full_class_catalog",
+        ]
+
+    def test_an_implementation_with_no_entries_has_no_history(self, tmp_path):
+        ledger_path = self._ledger(tmp_path)
+        assert rejected_hypotheses(ledger_path, "open_v1") == []
+        assert accepted_hypotheses(ledger_path, "open_v1") == []
+
+    def test_an_entry_written_before_the_field_counts_for_every_implementation(self, tmp_path):
+        ledger_path = tmp_path / "ledger.jsonl"
+        legacy = _entry(hypothesis="gap_fill_stage", decision="rejected")
+        del legacy["implementation"], legacy["configuration"]
+        ledger_path.write_text(json.dumps(legacy) + "\n")
+        assert rejected_hypotheses(ledger_path, "default") == ["gap_fill_stage"]
+        assert rejected_hypotheses(ledger_path, "find_then_type") == ["gap_fill_stage"]
+
+    def test_a_reset_that_names_an_implementation_resets_only_its_history(self, tmp_path):
+        ledger_path = self._ledger(tmp_path)
+        entry = append_baseline_reset(
+            "find_then_type recorded again",
+            "extraction_benchmark",
+            ledger_path=ledger_path,
+            implementation="find_then_type",
+            configuration="extraction-find-then-type",
+            baseline={"dev": {"typed_f1": 0.47}},
+        )
+        assert entry["implementation"] == "find_then_type"
+        assert entry["configuration"] == "extraction-find-then-type"
+        assert entry["baseline"] == {"dev": {"typed_f1": 0.47}}
+        assert rejected_hypotheses(ledger_path, "find_then_type") == []
+        assert rejected_hypotheses(ledger_path, "default") == ["cross_chunk_relationships"]
+        assert accepted_hypotheses(ledger_path, "default") == ["full_class_catalog"]
+        # Read without an implementation, the entries that reset covers are gone too
+        unscoped = entries_since_last_baseline_reset(ledger_path)
+        assert {e["implementation"] for e in unscoped} == {"default"}
+        assert len(unscoped) == 2
+
+    def test_a_reset_that_names_no_implementation_resets_every_history(self, tmp_path):
+        ledger_path = self._ledger(tmp_path)
+        append_baseline_reset("new gold files", "extraction_benchmark", ledger_path=ledger_path)
+        for implementation in ("default", "find_then_type", None):
+            assert rejected_hypotheses(ledger_path, implementation) == []
+            assert accepted_hypotheses(ledger_path, implementation) == []
+
+    def test_reads_never_return_a_reset_entry(self, tmp_path):
+        ledger_path = self._ledger(tmp_path)
+        append_baseline_reset(
+            "find_then_type recorded again",
+            "extraction_benchmark",
+            ledger_path=ledger_path,
+            implementation="find_then_type",
+        )
+        for implementation in ("default", "find_then_type", None):
+            entries = entries_since_last_baseline_reset(ledger_path, implementation)
+            assert all(e["decision"] != BASELINE_RESET_DECISION for e in entries)
+
+    def _two_configurations(self, tmp_path):
+        ledger_path = tmp_path / "ledger.jsonl"
+        for configuration, hypothesis, decision in [
+            ("extraction-openrouter-default", "full_class_catalog", "rejected"),
+            ("extraction-openrouter-default", "chunk_context_header", "accepted"),
+            ("extraction-default", "layer_guidance_in_prompt", "rejected"),
+        ]:
+            append_entry(
+                _entry(
+                    experiment_id=f"1-default-{hypothesis}",
+                    configuration=configuration,
+                    hypothesis=hypothesis,
+                    decision=decision,
+                ),
+                ledger_path=ledger_path,
+            )
+        return ledger_path
+
+    def test_a_rejection_under_one_configuration_leaves_the_id_open_under_another(self, tmp_path):
+        ledger_path = self._two_configurations(tmp_path)
+        assert rejected_hypotheses(ledger_path, "default", "extraction-openrouter-default") == [
+            "full_class_catalog"
+        ]
+        assert rejected_hypotheses(ledger_path, "default", "extraction-default") == [
+            "layer_guidance_in_prompt"
+        ]
+        # An acceptance is merged code, which every configuration runs: it is
+        # not drafted again under another configuration of the implementation
+        assert accepted_hypotheses(ledger_path, "default") == ["chunk_context_header"]
+        assert accepted_hypotheses(ledger_path, "find_then_type") == []
+        # Without a configuration, the implementation's whole history is read
+        assert rejected_hypotheses(ledger_path, "default") == [
+            "full_class_catalog",
+            "layer_guidance_in_prompt",
+        ]
+
+    def test_a_reset_that_names_a_configuration_resets_only_its_history(self, tmp_path):
+        ledger_path = self._two_configurations(tmp_path)
+        append_baseline_reset(
+            "default recorded again with extraction-default",
+            "extraction_benchmark",
+            ledger_path=ledger_path,
+            implementation="default",
+            configuration="extraction-default",
+        )
+        assert rejected_hypotheses(ledger_path, "default", "extraction-default") == []
+        assert rejected_hypotheses(ledger_path, "default", "extraction-openrouter-default") == [
+            "full_class_catalog"
+        ]
+        # A reset of one configuration is not a reset of the implementation
+        assert rejected_hypotheses(ledger_path, "default") == ["full_class_catalog"]
+        assert accepted_hypotheses(ledger_path, "default") == ["chunk_context_header"]
+
+    def test_cli_scopes_acceptances_by_implementation_alone(self, tmp_path, capsys):
+        ledger_path = self._two_configurations(tmp_path)
+        ledger_cli(
+            [
+                "--ledger-path",
+                str(ledger_path),
+                "accepted-hypotheses",
+                "--implementation",
+                "default",
+            ]
+        )
+        assert capsys.readouterr().out.split() == ["chunk_context_header"]
+        with pytest.raises(SystemExit):
+            ledger_cli(
+                [
+                    "--ledger-path",
+                    str(ledger_path),
+                    "accepted-hypotheses",
+                    "--implementation",
+                    "default",
+                    "--configuration",
+                    "extraction-default",
+                ]
+            )
+
+    def test_cli_lists_one_configurations_hypotheses(self, tmp_path, capsys):
+        ledger_path = self._two_configurations(tmp_path)
+        exit_code = ledger_cli(
+            [
+                "--ledger-path",
+                str(ledger_path),
+                "rejected-hypotheses",
+                "--implementation",
+                "default",
+                "--configuration",
+                "extraction-default",
+            ]
+        )
+        assert exit_code == 0
+        assert capsys.readouterr().out.split() == ["layer_guidance_in_prompt"]
+
+    def test_cli_lists_one_implementations_hypotheses(self, tmp_path, capsys):
+        ledger_path = self._ledger(tmp_path)
+        exit_code = ledger_cli(
+            [
+                "--ledger-path",
+                str(ledger_path),
+                "rejected-hypotheses",
+                "--implementation",
+                "find_then_type",
+            ]
+        )
+        assert exit_code == 0
+        assert capsys.readouterr().out.split() == [
+            "type_from_all_occurrences",
+            "full_class_catalog",
+        ]
+        ledger_cli(
+            [
+                "--ledger-path",
+                str(ledger_path),
+                "accepted-hypotheses",
+                "--implementation",
+                "default",
+            ]
+        )
+        assert capsys.readouterr().out.split() == ["full_class_catalog"]
+
+    def test_cli_baseline_reset_can_name_an_implementation(self, tmp_path, capsys):
+        ledger_path = self._ledger(tmp_path)
+        exit_code = ledger_cli(
+            [
+                "--ledger-path",
+                str(ledger_path),
+                "baseline-reset",
+                "--ontology-context",
+                "extraction_benchmark",
+                "--implementation",
+                "find_then_type",
+                "--configuration",
+                "extraction-find-then-type",
+                "recorded again",
+            ]
+        )
+        assert exit_code == 0
+        reset = read_entries(ledger_path)[-1]
+        assert reset["implementation"] == "find_then_type"
+        assert reset["configuration"] == "extraction-find-then-type"
+        assert rejected_hypotheses(ledger_path, "find_then_type") == []
+
+
 class TestCli:
     def test_append_command_writes_entry(self, tmp_path, capsys):
         ledger_path = tmp_path / "ledger.jsonl"
@@ -632,3 +906,128 @@ class TestCli:
         assert exit_code == 1
         assert not ledger_path.exists()
         assert "ERROR" in capsys.readouterr().err
+
+
+class TestRender:
+    """`render`: one target's entries since its last reset, as a campaign page shows them."""
+
+    def _measured(self, iteration, hypothesis, decision, **overrides):
+        entry = _entry(
+            experiment_id=f"{iteration}-find_then_type-{hypothesis}",
+            iteration=iteration,
+            implementation="find_then_type",
+            configuration="extraction-find-then-type",
+            hypothesis=hypothesis,
+            model="claude-haiku-5-5",
+            dev={"typed_f1": 0.4712, "f1": 0.54},
+            holdout={"typed_f1": 0.45},
+            incumbent={"dev": {"typed_f1": 0.4648, "f1": 0.5343}, "holdout": {"typed_f1": 0.4811}},
+            other_targets=[
+                {
+                    "implementation": "default",
+                    "configuration": "extraction-openrouter-default",
+                    "status": "scored",
+                    "dev_typed_f1": {"before": 0.1138, "after": 0.1038},
+                }
+            ],
+            other_guards=[
+                {
+                    "implementation": "default",
+                    "configuration": "extraction-openrouter-default",
+                    "status": "stale",
+                    "strict_f1": {"before": 0.9319, "after": None},
+                }
+            ],
+            decision=decision,
+            reason="dev typed F1 | did not beat",
+            cost_usd=0.31,
+            agent="wt-1",
+            base_commit="73bf76c4abcdef",
+        )
+        entry.update(overrides)
+        return entry
+
+    def _ledger(self, tmp_path):
+        ledger_path = tmp_path / "ledger.jsonl"
+        append_entry(self._measured(1, "old", "rejected"), ledger_path=ledger_path)
+        append_baseline_reset(
+            "re-recorded",
+            "extraction_benchmark",
+            ledger_path=ledger_path,
+            implementation="find_then_type",
+            configuration="extraction-find-then-type",
+        )
+        append_entry(
+            self._measured(
+                2, "type_from_all_occurrences", "rejected", campaign="c1", date="2026-11-16"
+            ),
+            ledger_path=ledger_path,
+        )
+        append_entry(_entry(), ledger_path=ledger_path)  # another target
+        append_entry(
+            self._measured(
+                3, "scope_question_at_typing", "unmeasured", campaign="c2", date="2026-11-18"
+            ),
+            ledger_path=ledger_path,
+        )
+        return ledger_path
+
+    def test_one_row_per_entry_of_the_target_since_its_reset(self, tmp_path):
+        ledger_path = self._ledger(tmp_path)
+        entries = target_entries("find_then_type", "extraction-find-then-type", ledger_path)
+        assert [e["iteration"] for e in entries] == [2, 3]
+        lines = render_table(entries).split("\n")
+        assert lines[0].startswith("| iteration | hypothesis | decision | dev typed F1 |")
+        assert lines[1] == "|" + "---|" * len(RENDER_COLUMNS)
+        assert len(lines) == 4
+        row = lines[2]
+        assert "| 2 | `type_from_all_occurrences` | rejected |" in row
+        assert "0.4648 → 0.4712" in row
+        assert "0.4811 → 0.4500" in row
+        assert "`default` -0.0100" in row
+        assert "triple corpus stale" in row
+        assert "$0.31" in row
+        assert "`wt-1` from `73bf76c4`" in row
+        # A pipe in free text cannot end the cell early.
+        assert "dev typed F1 \\| did not beat" in row
+        assert len(re.split(r"(?<!\\)\|", row)) == len(RENDER_COLUMNS) + 2
+
+    def test_since_a_date_and_one_campaign(self, tmp_path):
+        ledger_path = self._ledger(tmp_path)
+        target = ("find_then_type", "extraction-find-then-type")
+        assert [
+            e["iteration"] for e in target_entries(*target, ledger_path, since="2026-11-17")
+        ] == [3]
+        assert [e["iteration"] for e in target_entries(*target, ledger_path, campaign="c1")] == [2]
+
+    def test_an_entry_without_an_incumbent_or_measures_shows_none(self):
+        entry = self._measured(1, "h", "unmeasured", dev=None, holdout=None, incumbent=None)
+        entry["other_targets"] = []
+        entry["other_guards"] = []
+        row = render_table([entry]).split("\n")[2]
+        assert "n/a → n/a" in row
+        assert "| none |" in row
+
+    def test_no_entries_is_a_header_alone(self):
+        assert render_table([]).split("\n")[1] == "|" + "---|" * len(RENDER_COLUMNS)
+        assert len(render_table([]).split("\n")) == 2
+
+    def test_cli(self, tmp_path, capsys):
+        ledger_path = self._ledger(tmp_path)
+        exit_code = ledger_cli(
+            [
+                "--ledger-path",
+                str(ledger_path),
+                "render",
+                "--implementation",
+                "find_then_type",
+                "--configuration",
+                "extraction-find-then-type",
+                "--campaign",
+                "c2",
+            ]
+        )
+        assert exit_code == 0
+        out = capsys.readouterr().out.strip().split("\n")
+        assert len(out) == 3
+        assert "`scope_question_at_typing`" in out[2]

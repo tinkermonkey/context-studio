@@ -22,6 +22,12 @@ export function usePipelineRuns(params?: RunListParams) {
   return useQuery({
     queryKey: QUERY_KEYS.pipelineRuns(params),
     queryFn: () => pipelineService.listRuns(params),
+    // A run started in the background is listed while still pending or running:
+    // keep reading the list until none is, so its row shows how it ended.
+    refetchInterval: (query) =>
+      query.state.data?.items.some((run) => hasRunStatus(run.status, "pending", "running"))
+        ? 2000
+        : false,
   });
 }
 

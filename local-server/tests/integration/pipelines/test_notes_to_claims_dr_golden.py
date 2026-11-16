@@ -30,6 +30,7 @@ from adapters.persistence.sqlite.models import Base
 from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
 from domain.pipelines.entities import PipelineType
 from domain.pipelines.notes_to_claims import NotesToClaimsOrchestrator, NotesToClaimsState
+from domain.pipelines.notes_to_claims.configurations.default import get_default_config
 from domain.pipelines.requested_via import REQUESTED_VIA, RequestedVia
 from domain.versioning.claims import ClaimFilter, ClaimService
 from scripts.dr_ontology_loader import import_dr_ontology
@@ -147,7 +148,10 @@ def split_notes(repo, claims, llm, taxonomy_id, notes):
             REQUESTED_VIA: RequestedVia.MCP.value,
         },
     )
-    orchestrator = NotesToClaimsOrchestrator(llm, repo, claims, run_id="run-golden")
+    # The model the cassette was recorded with: the registered configuration's
+    orchestrator = NotesToClaimsOrchestrator(
+        llm, repo, claims, config={"model": get_default_config()["model"]}, run_id="run-golden"
+    )
     return asyncio.run(orchestrator.execute(state)).result
 
 

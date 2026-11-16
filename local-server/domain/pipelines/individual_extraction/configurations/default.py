@@ -1,8 +1,10 @@
 """
-Default configuration for Individual Extraction pipeline.
+Configurations of the two-pass and find-then-type Individual Extraction
+implementations, loaded from the JSON files in configs/.
 
-Loads Wave A's extraction-default.json configuration, preserving the original
-Anthropic/Claude Opus provider and model choice.
+Each file's max_tokens is the most output tokens one model call of a run may
+produce. Claude 5.5 models think before they answer and the thinking counts
+toward it, so their limits are well above what the answer alone needs.
 """
 
 import json
@@ -22,16 +24,14 @@ def get_default_config() -> dict:
     """
     Return the default individual extraction configuration.
 
-    Loads the existing Wave A extraction-default.json, preserving
-    backward compatibility with existing extraction runs and benchmarks.
+    Loads extraction-default.json, which uses Claude Haiku 5.5 through the
+    Anthropic provider.
 
     Returns:
         Configuration dict with LLM settings (Anthropic provider)
     """
     config = _load_config_from_file("extraction-default.json")
-    config["description"] = (
-        "Default individual extraction pipeline with Anthropic Claude Opus (Wave A compatible)"
-    )
+    config["description"] = "Default individual extraction pipeline with Anthropic Claude Haiku 5.5"
     return config
 
 

@@ -40,6 +40,18 @@ from tests.fakes.fake_llm_provider import FakeLLMProvider
 from tests.integration.pipelines._harness.cassettes import RecordingLLMProvider
 
 
+def fixture_model(fixture_input: dict, scenario: str) -> str:
+    """
+    The model a scenario's cassette is keyed with: the one its input fixture
+    pins, which is what the quality suite replaying these cassettes sends.
+    Nothing here supplies a model a fixture leaves out.
+    """
+    model = fixture_input.get("model")
+    if not isinstance(model, str) or not model:
+        raise ValueError(f"fixture {scenario} names no model")
+    return model
+
+
 def create_test_database():
     """Create a temporary test database."""
     tmpdir = tempfile.mkdtemp()
@@ -157,7 +169,7 @@ async def regenerate_definition_cassettes():
                 traversal=traversal,
             )
 
-            model = fixture_input.get("model", "claude-opus-4-7")
+            model = fixture_model(fixture_input, scenario)
             temperature = fixture_input.get("temperature", 0.0)
 
             state = DefinitionRefinementState(
@@ -282,7 +294,7 @@ async def regenerate_connection_cassettes():
                 traversal=traversal,
             )
 
-            model = fixture_input.get("model", "claude-opus-4-7")
+            model = fixture_model(fixture_input, scenario)
             temperature = fixture_input.get("temperature", 0.0)
 
             state = ConnectionRefinementState(

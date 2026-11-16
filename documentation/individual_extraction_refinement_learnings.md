@@ -1,5 +1,9 @@
 # Individual-Extraction Refinement — Consolidated Learnings
 
+> **Superseded.** These results were measured on short test passages; on real documents the same pipeline scored typed F1 0.114 (2026-11-13).
+>
+> **Current state of the extraction pipelines:** [`documentation/extraction/README.md`](extraction/README.md). Experiments and results: [`documentation/extraction/experiments/`](extraction/experiments/README.md).
+
 Companion to `karpathy_loop_design.md`. Captures the durable outcomes and lessons
 from the Karpathy-loop refinement of the `default` (LLM) individual-extraction
 pipeline, so the effort can be paused at a clean baseline without losing what was

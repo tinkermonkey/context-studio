@@ -7,7 +7,6 @@ import {
   type CandidateItem,
 } from "@/api/hooks/pipeline/usePipelineRuns";
 import { provenanceText } from "./provenanceText";
-import { CONNECTION_REFINEMENT_CONFIG_REF } from "./defaultConfigs";
 import { useToasts } from "@/components/ui/Toast";
 import { hasRunStatus } from "@/api/hooks/pipeline/runStatus";
 import "./Suggesters.css";
@@ -47,9 +46,8 @@ export function RelationshipSuggester({ classId }: RelationshipSuggesterProps) {
     try {
       const result = await runMutation.mutateAsync({
         type: "schema_node_connection_refinement",
+        // Nothing is named: the server runs the type's default implementation and configuration.
         request: {
-          implementation_id: "default",
-          configuration_ref: CONNECTION_REFINEMENT_CONFIG_REF,
           scope_id: classId,
         },
       });

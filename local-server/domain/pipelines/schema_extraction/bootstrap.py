@@ -38,6 +38,7 @@ def register_schema_extraction(
             PipelineType.SCHEMA_EXTRACTION,
             "default",
             SchemaExtractionOrchestrator,
+            default=True,
         )
         impl_registry.register_impl(
             PipelineType.SCHEMA_EXTRACTION,
@@ -52,10 +53,12 @@ def register_schema_extraction(
             "default",
             "schema-extraction-default",
             get_default_config(),
+            default=True,
         )
         config_registry.register(
             PipelineType.SCHEMA_EXTRACTION,
             "open_v1",
             "schema-extraction-open-v1",
             get_open_v1_config(),
+            default=True,
         )

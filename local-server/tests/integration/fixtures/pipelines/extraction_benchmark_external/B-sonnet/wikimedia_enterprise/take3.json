@@ -1,0 +1,308 @@
+{
+ "arm": "B-sonnet",
+ "model": "claude-sonnet-5-5",
+ "document": "wikimedia_enterprise",
+ "take": 3,
+ "effort": "high",
+ "max_tokens": 64000,
+ "prompt_sha256": "fe903290e1879723a20da8985cff39ba0f376161732cf9990e18acf1cff75eac",
+ "failed": false,
+ "attempts": [
+  {
+   "attempt": 1,
+   "problem": null,
+   "usage": {
+    "input": 6800,
+    "cache_write": 0,
+    "cache_read": 66242,
+    "output": 2964
+   },
+   "usd": 0.0498642,
+   "latency_s": 15.6
+  }
+ ],
+ "individuals": [
+  {
+   "title": "Wikimedia Enterprise",
+   "class": "business.businessservice",
+   "quote": "**Wikimedia Enterprise** is a service of the Wikimedia Foundation available via enterprise.wikimedia.com."
+  },
+  {
+   "title": "Wikimedia Foundation",
+   "class": "business.businessactor",
+   "quote": "Wikimedia Enterprise** is a service of the Wikimedia Foundation"
+  },
+  {
+   "title": "Commercial Partnerships division",
+   "class": "business.businessactor",
+   "quote": "The Wikimedia Enterprise project is helmed by the **Commercial Partnerships** division, which sits under the Advancement Department in the Wikimedia Foundation."
+  },
+  {
+   "title": "High-volume commercial reusers",
+   "class": "motivation.stakeholder",
+   "quote": "The goal of the service is to build services for high-volume commercial reusers of Wikimedia content."
+  },
+  {
+   "title": "Build services for high-volume commercial reusers",
+   "class": "motivation.goal",
+   "quote": "The goal of the service is to build services for high-volume commercial reusers of Wikimedia content."
+  },
+  {
+   "title": "Content program goal",
+   "class": "motivation.goal",
+   "quote": "Make more of our movement's content available in consistent machine-readable formats, freely available for all researchers and re-users."
+  },
+  {
+   "title": "Resource-load program goal",
+   "class": "motivation.goal",
+   "quote": "Reduce the need for high-intensity site-scraping by the highest-frequency and highest-volume reusers, which currently target our production servers."
+  },
+  {
+   "title": "Fundraising program goal",
+   "class": "motivation.goal",
+   "quote": "Provide a clearer and more consistent way for the largest re-users to reinvest derived benefits back to the movement, instead of making occasional altruistic donations that vary in size."
+  },
+  {
+   "title": "High barrier to entry for using Wikimedia data",
+   "class": "motivation.assessment",
+   "quote": "There is a very high barrier to entry for using Wikimedia data, outside of the common use cases of reading or editing."
+  },
+  {
+   "title": "Movement Strategy recommendations",
+   "class": "motivation.driver",
+   "quote": "In the Movement Strategy recommendations to *increase the sustainability of our movement* and *improve user experience*"
+  },
+  {
+   "title": "Frequency",
+   "class": "motivation.requirement",
+   "quote": "**Frequency**: Regular current snapshots of Wikimedia projects"
+  },
+  {
+   "title": "Reliability",
+   "class": "motivation.requirement",
+   "quote": "**Reliability**: Dependable, accessible infrastructure"
+  },
+  {
+   "title": "Quality",
+   "class": "motivation.requirement",
+   "quote": "**Quality**: a \u201cbest last revision\u201d"
+  },
+  {
+   "title": "Access for all",
+   "class": "motivation.principle",
+   "quote": "in accordance with the project's principle of *access for all*"
+  },
+  {
+   "title": "Non-exclusivity principle",
+   "class": "motivation.principle",
+   "quote": "any newly developed software feature or dataset must be made available to all"
+  },
+  {
+   "title": "Wikimedia projects remain libre and gratis",
+   "class": "motivation.principle",
+   "quote": "Wikimedia projects are, have always been, and will always remain *libre*."
+  },
+  {
+   "title": "Enterprise API revenue supports Wikimedia mission",
+   "class": "motivation.constraint",
+   "quote": "All Enterprise API revenue will unequivocally be used to support the Wikimedia mission"
+  },
+  {
+   "title": "Copyright licenses must be abided by",
+   "class": "motivation.constraint",
+   "quote": "All users of Wikimedia Enterprise services must abide by the copyright licenses on Wikimedia content. They are inherent and cannot be waived."
+  },
+  {
+   "title": "Enterprise APIs",
+   "class": "application.applicationservice",
+   "quote": "The *primary* use case of the suite of Enterprise APIs is paid access for large commercial organisations"
+  },
+  {
+   "title": "Snapshot API",
+   "class": "application.applicationservice",
+   "quote": "The Enterprise Snapshot API allows users to retrieve entire Wikimedia projects as a database dump file."
+  },
+  {
+   "title": "On-demand API",
+   "class": "application.applicationservice",
+   "quote": "The Wikimedia Enterprise On-demand API allows users to retrieve single articles from any supported Wikimedia project at anytime."
+  },
+  {
+   "title": "Realtime API",
+   "class": "application.applicationservice",
+   "quote": "The Enterprise Realtime API allows users to stream updates in real-time from any supported Wikimedia project."
+  },
+  {
+   "title": "Exceptional access",
+   "class": "business.businessprocess",
+   "quote": "you may request free **exceptional access** to the higher rate of the Enterprise APIs."
+  },
+  {
+   "title": "Wikimedia Cloud Services free access",
+   "class": "business.businessservice",
+   "quote": "You get the same access as a paid account when making a call to any Enterprise API endpoint from within PAWS, Wikimedia Cloud VPS, or Toolforge."
+  },
+  {
+   "title": "Free account access",
+   "class": "business.businessservice",
+   "quote": "Creating a free account on the official website and using the Enterprise API access for free accounts."
+  },
+  {
+   "title": "Service Level Agreement",
+   "class": "business.contract",
+   "quote": "associated Service Level Agreements and dedicated customer support"
+  },
+  {
+   "title": "Wikimedia Enterprise LLC",
+   "class": "business.businessactor",
+   "quote": "The board of the LLC overseeing the project are *Ex officio* from Wikimedia Foundation leadership"
+  },
+  {
+   "title": "Wikimedia Foundation Board of Trustees",
+   "class": "business.businessactor",
+   "quote": "The LLC is subject to the governance of the Wikimedia Foundation Board of Trustees"
+  },
+  {
+   "title": "Wikimedia Foundation Commercial Sales and Contracts Policy",
+   "class": "motivation.constraint",
+   "quote": "as described on the *Wikimedia Foundation Commercial Sales and Contracts Policy*"
+  },
+  {
+   "title": "Human rights assessment",
+   "class": "business.businessprocess",
+   "quote": "A human rights assessment is undertaken by the WMF for certain users of paid accounts for the Enterprise APIs"
+  },
+  {
+   "title": "Structured Contents datasets",
+   "class": "business.businessobject",
+   "quote": "Downloading Structured Contents (beta) datasets hosted on third-party platforms."
+  },
+  {
+   "title": "Data Dictionary",
+   "class": "business.businessobject",
+   "quote": "All data fields and schema are explained in detail on the project's Data Dictionary website page."
+  },
+  {
+   "title": "99% SLA for contracted accounts",
+   "class": "motivation.requirement",
+   "quote": "Contracted accounts receive 99% SLA and support response-time guarantees."
+  }
+ ],
+ "relationships": [
+  {
+   "source": "Wikimedia Enterprise",
+   "predicate": "realizes",
+   "target": "Build services for high-volume commercial reusers",
+   "quote": "The goal of the service is to build services for high-volume commercial reusers of Wikimedia content."
+  },
+  {
+   "source": "Wikimedia Enterprise",
+   "predicate": "serves",
+   "target": "High-volume commercial reusers",
+   "quote": "The goal of the service is to build services for high-volume commercial reusers of Wikimedia content."
+  },
+  {
+   "source": "Commercial Partnerships division",
+   "predicate": "assigned-to",
+   "target": "Wikimedia Enterprise",
+   "quote": "The Wikimedia Enterprise project is helmed by the **Commercial Partnerships** division"
+  },
+  {
+   "source": "Wikimedia Enterprise LLC",
+   "predicate": "constrained-by",
+   "target": "Wikimedia Foundation Board of Trustees",
+   "quote": "The LLC is subject to the governance of the Wikimedia Foundation Board of Trustees"
+  },
+  {
+   "source": "Snapshot API",
+   "predicate": "composes",
+   "target": "Enterprise APIs",
+   "quote": "Three APIs; same data with different retrieval methods:"
+  },
+  {
+   "source": "On-demand API",
+   "predicate": "composes",
+   "target": "Enterprise APIs",
+   "quote": "Three APIs; same data with different retrieval methods:"
+  },
+  {
+   "source": "Realtime API",
+   "predicate": "composes",
+   "target": "Enterprise APIs",
+   "quote": "Three APIs; same data with different retrieval methods:"
+  },
+  {
+   "source": "Wikimedia Cloud Services free access",
+   "predicate": "accesses",
+   "target": "Enterprise APIs",
+   "quote": "You get the same access as a paid account when making a call to any Enterprise API endpoint"
+  },
+  {
+   "source": "Free account access",
+   "predicate": "accesses",
+   "target": "Enterprise APIs",
+   "quote": "Creating a free account on the official website and using the Enterprise API access for free accounts."
+  },
+  {
+   "source": "Exceptional access",
+   "predicate": "constrained-by",
+   "target": "Non-exclusivity principle",
+   "quote": "In accordance with the Wikimedia Enterprise operating principles regarding non-exclusivity, any newly developed software feature or dataset must be made available to all."
+  },
+  {
+   "source": "Snapshot API",
+   "predicate": "satisfies",
+   "target": "Frequency",
+   "quote": "Up to a daily snapshots cadence"
+  },
+  {
+   "source": "Wikimedia Enterprise",
+   "predicate": "governs",
+   "target": "Human rights assessment",
+   "quote": "in accordance with the Human Rights Policy and Commercial Sales and Contracts Policy."
+  }
+ ],
+ "usage": {
+  "input": 6800,
+  "cache_write": 0,
+  "cache_read": 66242,
+  "output": 2964
+ },
+ "usd": 0.0498642,
+ "latency_s": 15.6,
+ "raw_response": {
+  "id": "msg_011Ch4sHQzEs4NmM2AXBfcEA",
+  "container": null,
+  "content": [
+   {
+    "citations": null,
+    "text": "{\"individuals\":[{\"title\":\"Wikimedia Enterprise\",\"class\":\"business.businessservice\",\"quote\":\"**Wikimedia Enterprise** is a service of the Wikimedia Foundation available via enterprise.wikimedia.com.\"},{\"title\":\"Wikimedia Foundation\",\"class\":\"business.businessactor\",\"quote\":\"Wikimedia Enterprise** is a service of the Wikimedia Foundation\"},{\"title\":\"Commercial Partnerships division\",\"class\":\"business.businessactor\",\"quote\":\"The Wikimedia Enterprise project is helmed by the **Commercial Partnerships** division, which sits under the Advancement Department in the Wikimedia Foundation.\"},{\"title\":\"High-volume commercial reusers\",\"class\":\"motivation.stakeholder\",\"quote\":\"The goal of the service is to build services for high-volume commercial reusers of Wikimedia content.\"},{\"title\":\"Build services for high-volume commercial reusers\",\"class\":\"motivation.goal\",\"quote\":\"The goal of the service is to build services for high-volume commercial reusers of Wikimedia content.\"},{\"title\":\"Content program goal\",\"class\":\"motivation.goal\",\"quote\":\"Make more of our movement's content available in consistent machine-readable formats, freely available for all researchers and re-users.\"},{\"title\":\"Resource-load program goal\",\"class\":\"motivation.goal\",\"quote\":\"Reduce the need for high-intensity site-scraping by the highest-frequency and highest-volume reusers, which currently target our production servers.\"},{\"title\":\"Fundraising program goal\",\"class\":\"motivation.goal\",\"quote\":\"Provide a clearer and more consistent way for the largest re-users to reinvest derived benefits back to the movement, instead of making occasional altruistic donations that vary in size.\"},{\"title\":\"High barrier to entry for using Wikimedia data\",\"class\":\"motivation.assessment\",\"quote\":\"There is a very high barrier to entry for using Wikimedia data, outside of the common use cases of reading or editing.\"},{\"title\":\"Movement Strategy recommendations\",\"class\":\"motivation.driver\",\"quote\":\"In the Movement Strategy recommendations to *increase the sustainability of our movement* and *improve user experience*\"},{\"title\":\"Frequency\",\"class\":\"motivation.requirement\",\"quote\":\"**Frequency**: Regular current snapshots of Wikimedia projects\"},{\"title\":\"Reliability\",\"class\":\"motivation.requirement\",\"quote\":\"**Reliability**: Dependable, accessible infrastructure\"},{\"title\":\"Quality\",\"class\":\"motivation.requirement\",\"quote\":\"**Quality**: a \u201cbest last revision\u201d\"},{\"title\":\"Access for all\",\"class\":\"motivation.principle\",\"quote\":\"in accordance with the project's principle of *access for all*\"},{\"title\":\"Non-exclusivity principle\",\"class\":\"motivation.principle\",\"quote\":\"any newly developed software feature or dataset must be made available to all\"},{\"title\":\"Wikimedia projects remain libre and gratis\",\"class\":\"motivation.principle\",\"quote\":\"Wikimedia projects are, have always been, and will always remain *libre*.\"},{\"title\":\"Enterprise API revenue supports Wikimedia mission\",\"class\":\"motivation.constraint\",\"quote\":\"All Enterprise API revenue will unequivocally be used to support the Wikimedia mission\"},{\"title\":\"Copyright licenses must be abided by\",\"class\":\"motivation.constraint\",\"quote\":\"All users of Wikimedia Enterprise services must abide by the copyright licenses on Wikimedia content. They are inherent and cannot be waived.\"},{\"title\":\"Enterprise APIs\",\"class\":\"application.applicationservice\",\"quote\":\"The *primary* use case of the suite of Enterprise APIs is paid access for large commercial organisations\"},{\"title\":\"Snapshot API\",\"class\":\"application.applicationservice\",\"quote\":\"The Enterprise Snapshot API allows users to retrieve entire Wikimedia projects as a database dump file.\"},{\"title\":\"On-demand API\",\"class\":\"application.applicationservice\",\"quote\":\"The Wikimedia Enterprise On-demand API allows users to retrieve single articles from any supported Wikimedia project at anytime.\"},{\"title\":\"Realtime API\",\"class\":\"application.applicationservice\",\"quote\":\"The Enterprise Realtime API allows users to stream updates in real-time from any supported Wikimedia project.\"},{\"title\":\"Exceptional access\",\"class\":\"business.businessprocess\",\"quote\":\"you may request free **exceptional access** to the higher rate of the Enterprise APIs.\"},{\"title\":\"Wikimedia Cloud Services free access\",\"class\":\"business.businessservice\",\"quote\":\"You get the same access as a paid account when making a call to any Enterprise API endpoint from within PAWS, Wikimedia Cloud VPS, or Toolforge.\"},{\"title\":\"Free account access\",\"class\":\"business.businessservice\",\"quote\":\"Creating a free account on the official website and using the Enterprise API access for free accounts.\"},{\"title\":\"Service Level Agreement\",\"class\":\"business.contract\",\"quote\":\"associated Service Level Agreements and dedicated customer support\"},{\"title\":\"Wikimedia Enterprise LLC\",\"class\":\"business.businessactor\",\"quote\":\"The board of the LLC overseeing the project are *Ex officio* from Wikimedia Foundation leadership\"},{\"title\":\"Wikimedia Foundation Board of Trustees\",\"class\":\"business.businessactor\",\"quote\":\"The LLC is subject to the governance of the Wikimedia Foundation Board of Trustees\"},{\"title\":\"Wikimedia Foundation Commercial Sales and Contracts Policy\",\"class\":\"motivation.constraint\",\"quote\":\"as described on the *Wikimedia Foundation Commercial Sales and Contracts Policy*\"},{\"title\":\"Human rights assessment\",\"class\":\"business.businessprocess\",\"quote\":\"A human rights assessment is undertaken by the WMF for certain users of paid accounts for the Enterprise APIs\"},{\"title\":\"Structured Contents datasets\",\"class\":\"business.businessobject\",\"quote\":\"Downloading Structured Contents (beta) datasets hosted on third-party platforms.\"},{\"title\":\"Data Dictionary\",\"class\":\"business.businessobject\",\"quote\":\"All data fields and schema are explained in detail on the project's Data Dictionary website page.\"},{\"title\":\"99% SLA for contracted accounts\",\"class\":\"motivation.requirement\",\"quote\":\"Contracted accounts receive 99% SLA and support response-time guarantees.\"}],\"relationships\":[{\"source\":\"Wikimedia Enterprise\",\"predicate\":\"realizes\",\"target\":\"Build services for high-volume commercial reusers\",\"quote\":\"The goal of the service is to build services for high-volume commercial reusers of Wikimedia content.\"},{\"source\":\"Wikimedia Enterprise\",\"predicate\":\"serves\",\"target\":\"High-volume commercial reusers\",\"quote\":\"The goal of the service is to build services for high-volume commercial reusers of Wikimedia content.\"},{\"source\":\"Commercial Partnerships division\",\"predicate\":\"assigned-to\",\"target\":\"Wikimedia Enterprise\",\"quote\":\"The Wikimedia Enterprise project is helmed by the **Commercial Partnerships** division\"},{\"source\":\"Wikimedia Enterprise LLC\",\"predicate\":\"constrained-by\",\"target\":\"Wikimedia Foundation Board of Trustees\",\"quote\":\"The LLC is subject to the governance of the Wikimedia Foundation Board of Trustees\"},{\"source\":\"Snapshot API\",\"predicate\":\"composes\",\"target\":\"Enterprise APIs\",\"quote\":\"Three APIs; same data with different retrieval methods:\"},{\"source\":\"On-demand API\",\"predicate\":\"composes\",\"target\":\"Enterprise APIs\",\"quote\":\"Three APIs; same data with different retrieval methods:\"},{\"source\":\"Realtime API\",\"predicate\":\"composes\",\"target\":\"Enterprise APIs\",\"quote\":\"Three APIs; same data with different retrieval methods:\"},{\"source\":\"Wikimedia Cloud Services free access\",\"predicate\":\"accesses\",\"target\":\"Enterprise APIs\",\"quote\":\"You get the same access as a paid account when making a call to any Enterprise API endpoint\"},{\"source\":\"Free account access\",\"predicate\":\"accesses\",\"target\":\"Enterprise APIs\",\"quote\":\"Creating a free account on the official website and using the Enterprise API access for free accounts.\"},{\"source\":\"Exceptional access\",\"predicate\":\"constrained-by\",\"target\":\"Non-exclusivity principle\",\"quote\":\"In accordance with the Wikimedia Enterprise operating principles regarding non-exclusivity, any newly developed software feature or dataset must be made available to all.\"},{\"source\":\"Snapshot API\",\"predicate\":\"satisfies\",\"target\":\"Frequency\",\"quote\":\"Up to a daily snapshots cadence\"},{\"source\":\"Wikimedia Enterprise\",\"predicate\":\"governs\",\"target\":\"Human rights assessment\",\"quote\":\"in accordance with the Human Rights Policy and Commercial Sales and Contracts Policy.\"}]}",
+    "type": "text"
+   }
+  ],
+  "model": "claude-sonnet-5-5",
+  "role": "assistant",
+  "stop_details": null,
+  "stop_reason": "end_turn",
+  "stop_sequence": null,
+  "type": "message",
+  "usage": {
+   "cache_creation": {
+    "ephemeral_1h_input_tokens": 0,
+    "ephemeral_5m_input_tokens": 0
+   },
+   "cache_creation_input_tokens": 0,
+   "cache_read_input_tokens": 66242,
+   "inference_geo": "global",
+   "input_tokens": 6800,
+   "output_tokens": 2964,
+   "output_tokens_details": {
+    "thinking_tokens": 0
+   },
+   "server_tool_use": null,
+   "service_tier": "standard",
+   "speed": "standard"
+  },
+  "diagnostics": null
+ }
+}

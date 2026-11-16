@@ -264,8 +264,9 @@ async def remove_source(
         },
         422: {
             "description": (
-                "A bad page range, an implementation that can't extract a source, or a"
-                " configuration that isn't one of the implementation's"
+                "A bad page range, an implementation that is unknown or can't extract a"
+                " source, or a configuration that isn't one of the implementation's or is"
+                " disabled"
             )
         },
         503: {"description": "Background pipeline runs are not available"},
@@ -276,10 +277,12 @@ async def extract_source(
 ) -> SourceExtractResponse:
     """
     Extract a ready source into proposals, in the background: an
-    individual-extraction run (of `implementation_id`; `default` when omitted)
+    individual-extraction run (of `implementation_id` and `configuration_ref`;
+    the registered defaults when omitted)
     that reads it chunk by chunk (the chunks are the run's items) and ends in
     one proposal for review in the dataset; with
-    `schema`, a schema-extraction run over the same text too, with its own
+    `schema`, a schema-extraction run over the same text too (of
+    `schema_implementation_id` and `schema_configuration_ref`), with its own
     proposal. Follow the runs with GET /api/pipelines/runs/{id}, or the
     source's `last_extraction`. Unless `skip_boilerplate` is false, the
     source's warranty, safety, legal and contact sections and its copies in
@@ -302,6 +305,8 @@ async def extract_source(
             RequestedVia.API,
             body.skip_boilerplate,
             body.implementation_id,
+            body.schema_implementation_id,
+            body.schema_configuration_ref,
         )
     except Exception as exc:
         raise _http_error(exc) from exc

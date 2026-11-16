@@ -115,7 +115,7 @@ class TestWarningEmissions:
         state = SchemaExtractionState(
             run_id="test-run",
             pipeline_type=PipelineType.SCHEMA_EXTRACTION,
-            input_data={"documents": ["Microservice is a pattern."]},
+            input_data={"documents": ["Microservice is a pattern."], "model": "m"},
             source_text="Microservice is a pattern.",
             normalized_text="Microservice is a pattern.",
             text_chunks=["Microservice is a pattern."],
@@ -201,7 +201,7 @@ class TestWarningEmissions:
         state = SchemaExtractionState(
             run_id="test-run",
             pipeline_type=PipelineType.SCHEMA_EXTRACTION,
-            input_data={"documents": ["Microservice interacts with Gateway."]},
+            input_data={"documents": ["Microservice interacts with Gateway."], "model": "m"},
             source_text="Microservice interacts with Gateway.",
             normalized_text="Microservice interacts with Gateway.",
             text_chunks=["Microservice interacts with Gateway."],
@@ -239,7 +239,7 @@ class TestWarningEmissions:
         state = SchemaExtractionState(
             run_id="test-run",
             pipeline_type=PipelineType.SCHEMA_EXTRACTION,
-            input_data={"documents": ["test"]},
+            input_data={"documents": ["test"], "model": "m"},
             parse_warnings=[
                 {
                     "stage": "definition_synthesis",
@@ -340,7 +340,7 @@ class TestFencedJsonReplies:
         fields = dict(
             run_id="test-run",
             pipeline_type=PipelineType.SCHEMA_EXTRACTION,
-            input_data={"documents": [self._TEXT]},
+            input_data={"documents": [self._TEXT], "model": "m"},
             source_text=self._TEXT,
             normalized_text=self._TEXT,
             text_chunks=[self._TEXT],
@@ -424,7 +424,7 @@ def _state_with(*labels: str) -> SchemaExtractionState:
     return SchemaExtractionState(
         run_id="run",
         pipeline_type=PipelineType.SCHEMA_EXTRACTION,
-        input_data={},
+        input_data={"model": "m"},
         source_text=_SOURCE,
         normalized_text=" ".join(_SOURCE.split()),
         candidate_classes=[
@@ -670,7 +670,7 @@ class TestClassification:
         state = SchemaExtractionState(
             run_id="test-run",
             pipeline_type=PipelineType.SCHEMA_EXTRACTION,
-            input_data=input_data,
+            input_data={"model": "m", **input_data},
             candidate_concepts=["dataobject", "Gateway", "Microservice"],
         )
         return orchestrator._stage_classification(state)
@@ -769,7 +769,10 @@ class TestPlacement:
         state = SchemaExtractionState(
             run_id="test-run",
             pipeline_type=PipelineType.SCHEMA_EXTRACTION,
-            input_data=input_data if input_data is not None else {"scope": "tx-h"},
+            input_data={
+                "model": "m",
+                **(input_data if input_data is not None else {"scope": "tx-h"}),
+            },
             candidate_classes=[
                 CandidateClass(label=label, proposed_definition=f"{label} defined.")
                 for label in labels

@@ -45,7 +45,12 @@ from domain.pipelines.individual_extraction.configurations.open_v1 import (
 from domain.pipelines.individual_extraction.orchestrator import (
     IndividualExtractionState,
 )
-from domain.pipelines.orchestration.base import PipelineOrchestrator, PipelineState
+from domain.pipelines.orchestration.base import (
+    PipelineOrchestrator,
+    PipelineState,
+    implementation_settings,
+    llm_parameters,
+)
 from domain.pipelines.ports import LLMProvider, PipelineRunStatusWriter
 
 _logger = logging.getLogger(__name__)
@@ -106,11 +111,19 @@ class OpenIndividualExtractionOrchestrator(PipelineOrchestrator):
         self._embedding = embedding_service
         self._schema_index = schema_index
         self._ontology_repo = ontology_repo
-        self._cfg = IndividualOpenV1Config.from_dict(config or get_open_v1_config())
+        # Built with no configuration it takes open_v1's settings, but no model:
+        # a call's model, temperature and output limit are the run's
+        # (llm_parameters: its input, then the configuration given here)
+        self._config = config or {}
+        self._run_input: dict[str, Any] = {}
+        self._cfg = IndividualOpenV1Config.from_dict(
+            config or implementation_settings(get_open_v1_config())
+        )
 
     async def execute(self, state: PipelineState) -> PipelineState:
         """Run the open individual-extraction pipeline and populate state.result."""
         self._write_running_status()
+        self._run_input = state.input_data
 
         text = state.input_data.get("text", "")
         if not text or not text.strip():
@@ -400,9 +413,7 @@ class OpenIndividualExtractionOrchestrator(PipelineOrchestrator):
             response = await self._call_llm(
                 system_prompt=system_prompt,
                 user_prompt=user_prompt,
-                model=self._cfg.model,
-                temperature=self._cfg.temperature,
-                max_tokens=self._cfg.max_tokens,
+                **llm_parameters(self._run_input, self._config, self._cfg.max_tokens),
             )
             parsed = json.loads(_extract_json_obj(response.content))
         except Exception as exc:  # noqa: BLE001 - canonicalization is best-effort
@@ -781,9 +792,7 @@ class OpenIndividualExtractionOrchestrator(PipelineOrchestrator):
             response = await self._call_llm(
                 system_prompt=system_prompt,
                 user_prompt=user_prompt,
-                model=self._cfg.model,
-                temperature=self._cfg.temperature,
-                max_tokens=200,
+                **llm_parameters(self._run_input, self._config, 200),
             )
             choice = ""
             payload = re.search(r"\{.*\}", response.content or "", re.S)

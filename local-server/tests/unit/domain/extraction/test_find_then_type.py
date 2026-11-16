@@ -281,6 +281,16 @@ class TestFindMentions:
             llm, _no_sleep, TEXT, "Ontology: DR", "model-1", 0.0, PROMPTS["find_mentions"]
         )
 
+    def test_the_calls_limit_is_the_one_given_or_the_stages_own(self):
+        llm = _ScriptedLLM(_found(WORKHORSE), _found(WORKHORSE))
+
+        self._find(llm)
+        find_then_type.find_mentions(
+            llm, _no_sleep, TEXT, "Ontology: DR", "model-1", 0.0, PROMPTS["find_mentions"], 30000
+        )
+
+        assert [request["max_tokens"] for request in llm.requests] == [16000, 30000]
+
     def test_one_call_lists_the_mentions(self):
         llm = _ScriptedLLM(_found(WORKHORSE, GOAL))
 
@@ -330,6 +340,18 @@ class TestTypeMention:
     def _type(self, llm, mention=MENTION):
         prompt = build_typing_prompt("DR", CLASSES, PROMPTS[TYPE_MENTION])
         return find_then_type.type_mention(llm, _no_sleep, prompt, TEXT, mention, "model-1", 0.0)
+
+    def test_the_calls_limit_is_the_one_given_or_the_stages_own(self):
+        answer = '{"class": "application.component", "confidence": 0.9}'
+        llm = _ScriptedLLM(answer, answer)
+        prompt = build_typing_prompt("DR", CLASSES, PROMPTS[TYPE_MENTION])
+
+        self._type(llm)
+        find_then_type.type_mention(
+            llm, _no_sleep, prompt, TEXT, self.MENTION, "model-1", 0.0, 16000
+        )
+
+        assert [request["max_tokens"] for request in llm.requests] == [4000, 16000]
 
     def test_one_call_types_the_mention(self):
         llm = _ScriptedLLM('{"class": "application.component", "confidence": 0.9}')

@@ -39,7 +39,6 @@ import { Route as AppSchemaSchemesIdRouteImport } from './routes/app/schema/sche
 import { Route as AppSchemaClassesIdRouteImport } from './routes/app/schema/classes_.$id'
 import { Route as AppPipelinesBatchesBatchIdRouteImport } from './routes/app/pipelines/batches/$batchId'
 import { Route as AppDataIndividualsIdRouteImport } from './routes/app/data/individuals_.$id'
-import { Route as AppPipelinesTypesTypeIndexRouteImport } from './routes/app/pipelines/types/$type.index'
 import { Route as AppPipelinesTypesTypeRunRouteImport } from './routes/app/pipelines/types/$type/run'
 import { Route as AppDataSourcesSourceIdExtractRouteImport } from './routes/app/data/sources_.$sourceId.extract'
 
@@ -194,12 +193,6 @@ const AppDataIndividualsIdRoute = AppDataIndividualsIdRouteImport.update({
   path: '/data/individuals/$id',
   getParentRoute: () => AppRoute,
 } as any)
-const AppPipelinesTypesTypeIndexRoute =
-  AppPipelinesTypesTypeIndexRouteImport.update({
-    id: '/pipelines/types/$type/',
-    path: '/pipelines/types/$type/',
-    getParentRoute: () => AppRoute,
-  } as any)
 const AppPipelinesTypesTypeRunRoute =
   AppPipelinesTypesTypeRunRouteImport.update({
     id: '/pipelines/types/$type/run',
@@ -246,7 +239,6 @@ export interface FileRoutesByFullPath {
   '/app/schema/schemes/': typeof AppSchemaSchemesIndexRoute
   '/app/data/sources/$sourceId/extract': typeof AppDataSourcesSourceIdExtractRoute
   '/app/pipelines/types/$type/run': typeof AppPipelinesTypesTypeRunRoute
-  '/app/pipelines/types/$type/': typeof AppPipelinesTypesTypeIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -279,7 +271,6 @@ export interface FileRoutesByTo {
   '/app/schema/schemes': typeof AppSchemaSchemesIndexRoute
   '/app/data/sources/$sourceId/extract': typeof AppDataSourcesSourceIdExtractRoute
   '/app/pipelines/types/$type/run': typeof AppPipelinesTypesTypeRunRoute
-  '/app/pipelines/types/$type': typeof AppPipelinesTypesTypeIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -315,7 +306,6 @@ export interface FileRoutesById {
   '/app/schema/schemes/': typeof AppSchemaSchemesIndexRoute
   '/app/data/sources_/$sourceId/extract': typeof AppDataSourcesSourceIdExtractRoute
   '/app/pipelines/types/$type/run': typeof AppPipelinesTypesTypeRunRoute
-  '/app/pipelines/types/$type/': typeof AppPipelinesTypesTypeIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -352,7 +342,6 @@ export interface FileRouteTypes {
     | '/app/schema/schemes/'
     | '/app/data/sources/$sourceId/extract'
     | '/app/pipelines/types/$type/run'
-    | '/app/pipelines/types/$type/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -385,7 +374,6 @@ export interface FileRouteTypes {
     | '/app/schema/schemes'
     | '/app/data/sources/$sourceId/extract'
     | '/app/pipelines/types/$type/run'
-    | '/app/pipelines/types/$type'
   id:
     | '__root__'
     | '/'
@@ -420,7 +408,6 @@ export interface FileRouteTypes {
     | '/app/schema/schemes/'
     | '/app/data/sources_/$sourceId/extract'
     | '/app/pipelines/types/$type/run'
-    | '/app/pipelines/types/$type/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -641,13 +628,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppDataIndividualsIdRouteImport
       parentRoute: typeof AppRoute
     }
-    '/app/pipelines/types/$type/': {
-      id: '/app/pipelines/types/$type/'
-      path: '/pipelines/types/$type'
-      fullPath: '/app/pipelines/types/$type/'
-      preLoaderRoute: typeof AppPipelinesTypesTypeIndexRouteImport
-      parentRoute: typeof AppRoute
-    }
     '/app/pipelines/types/$type/run': {
       id: '/app/pipelines/types/$type/run'
       path: '/pipelines/types/$type/run'
@@ -705,7 +685,6 @@ interface AppRouteChildren {
   AppSchemaTaxonomiesIdRoute: typeof AppSchemaTaxonomiesIdRoute
   AppDataSourcesSourceIdExtractRoute: typeof AppDataSourcesSourceIdExtractRoute
   AppPipelinesTypesTypeRunRoute: typeof AppPipelinesTypesTypeRunRoute
-  AppPipelinesTypesTypeIndexRoute: typeof AppPipelinesTypesTypeIndexRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
@@ -737,7 +716,6 @@ const AppRouteChildren: AppRouteChildren = {
   AppSchemaTaxonomiesIdRoute: AppSchemaTaxonomiesIdRoute,
   AppDataSourcesSourceIdExtractRoute: AppDataSourcesSourceIdExtractRoute,
   AppPipelinesTypesTypeRunRoute: AppPipelinesTypesTypeRunRoute,
-  AppPipelinesTypesTypeIndexRoute: AppPipelinesTypesTypeIndexRoute,
 }
 
 const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)

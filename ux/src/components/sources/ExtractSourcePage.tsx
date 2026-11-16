@@ -6,18 +6,13 @@ import {
   PageHeader,
   Panel,
   SegmentedControl,
-  Select,
   TextInput,
 } from "@tinkermonkey/heimdall-ui";
 import { ApiError } from "@/api/client/interceptors";
 import { useDatasets } from "@/api/hooks/ontology/useDatasets";
 import { useTaxonomy } from "@/api/hooks/ontology/useTaxonomies";
 import { useSource } from "@/api/hooks/sources/useSource";
-import {
-  useExtractionConfigurations,
-  useExtractionImplementations,
-  useExtractSource,
-} from "@/api/hooks/sources/useExtractSource";
+import { canExtractSource, useExtractSource } from "@/api/hooks/sources/useExtractSource";
 import {
   isRunActive,
   useCancelExtractionRun,
@@ -25,8 +20,14 @@ import {
 } from "@/api/hooks/sources/useExtractionRun";
 import type { ExtractionRunRef, Source } from "@/api/services/sources";
 import { formatAge } from "@/components/proposals/proposalModel";
+import { ImplementationConfigPicker } from "@/components/pipeline/ImplementationConfigPicker";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
 import { useToasts } from "@/components/ui/Toast";
+import {
+  selectionRequestFields,
+  usePipelineSelection,
+  type PipelineSelection,
+} from "@/hooks/usePipelineSelection";
 import { ChunkList } from "./ChunkList";
 import { ExtractRunPanel } from "./ExtractRunPanel";
 import { sourcesCopy } from "./copy";
@@ -47,9 +48,15 @@ import type { components } from "@/api/types";
 type DatasetResponse = components["schemas"]["DatasetResponse"];
 
 const copy = sourcesCopy.extract;
-const SERVER_DEFAULT = "";
-/** The implementation the server extracts with when none is named. */
-const DEFAULT_IMPLEMENTATION = "default";
+
+/** The extract request's fields for the schema run's selection; a part not selected is left out. */
+function schemaRunFields(selection: PipelineSelection) {
+  const { implementation_id, configuration_ref } = selectionRequestFields(selection);
+  return {
+    ...(implementation_id ? { schema_implementation_id: implementation_id } : {}),
+    ...(configuration_ref ? { schema_configuration_ref: configuration_ref } : {}),
+  };
+}
 
 export interface ExtractSourcePageProps {
   sourceId: string;
@@ -89,10 +96,11 @@ function ConfigureForm({
   onPagesChange,
 }: ConfigureFormProps) {
   const extract = useExtractSource();
-  const { implementations } = useExtractionImplementations();
+  // The server refuses an implementation that cannot extract a source, so none is offered.
+  const selection = usePipelineSelection("individual_extraction", { offers: canExtractSource });
+  // The schema run, when one is asked for, is selected on its own.
+  const schemaSelection = usePipelineSelection("schema_extraction", { offers: canExtractSource });
   const [dataset, setDataset] = useState(source.dataset_id);
-  const [implementationChoice, setImplementationChoice] = useState<string | undefined>(undefined);
-  const [configChoice, setConfigChoice] = useState<string | undefined>(undefined);
   const [schema, setSchema] = useState(false);
   const [skipBoilerplate, setSkipBoilerplate] = useState(true);
   const [pages, setPages] = useState("");
@@ -102,29 +110,19 @@ function ConfigureForm({
   const schemaOffered = mirrored === false;
   const suggestSchema = schema && schemaOffered;
 
-  const implementation =
-    implementations.find((i) => i.id === implementationChoice) ??
-    implementations.find((i) => i.id === DEFAULT_IMPLEMENTATION) ??
-    implementations[0];
-  const implementationId = implementation?.id ?? SERVER_DEFAULT;
-  const { configurations } = useExtractionConfigurations(implementationId);
-  // Unless one is chosen: the configuration the implementation extracts a source with.
-  const configRef =
-    configChoice ??
-    configurations.find((c) => c.config_ref === implementation?.source_configuration)?.config_ref ??
-    configurations[0]?.config_ref ??
-    SERVER_DEFAULT;
-  const config = configurations.find((c) => c.config_ref === configRef);
   const parsed = parsePages(pages, source.pages);
   const chars = "pages" in parsed ? charsInPages(source, parsed.pages) : source.chars;
   const chunks = chunkRange(chars);
-  const price = configurationPrice(config);
-  const runs = suggestSchema ? 2 : 1;
-  const cost = price
-    ? formatRange(
-        formatUsd(estimateCost(chars, chunks.min, runs, price)),
-        formatUsd(estimateCost(chars, chunks.max, runs, price)),
-      )
+  // Each run costs what its own configuration's model does; without a price for
+  // every run there is no total to show.
+  const prices = [
+    configurationPrice(selection.configuration),
+    ...(suggestSchema ? [configurationPrice(schemaSelection.configuration)] : []),
+  ];
+  const total = (chunkCount: number) =>
+    prices.reduce((sum, price) => sum + (price ? estimateCost(chars, chunkCount, 1, price) : 0), 0);
+  const cost = prices.every(Boolean)
+    ? formatRange(formatUsd(total(chunks.min)), formatUsd(total(chunks.max)))
     : undefined;
   const datasetLabel = datasets.find((d) => d.id === dataset)?.identifier ?? dataset;
 
@@ -141,8 +139,8 @@ function ConfigureForm({
         sourceId: source.id,
         body: {
           dataset,
-          ...(implementationId ? { implementation_id: implementationId } : {}),
-          ...(configRef ? { configuration_ref: configRef } : {}),
+          ...selectionRequestFields(selection),
+          ...(suggestSchema ? schemaRunFields(schemaSelection) : {}),
           ...(spec ? { pages: spec } : {}),
           schema: suggestSchema,
           skip_boilerplate: skipBoilerplate,
@@ -176,51 +174,13 @@ function ConfigureForm({
           />
         </Field>
 
-        <Field
-          label={copy.implementationLabel}
-          htmlFor="extract-implementation"
-          hint={copy.implementationHint}
-        >
-          <Select
-            id="extract-implementation"
-            value={implementationId}
-            onChange={(v) => {
-              setImplementationChoice(v);
-              // A configuration belongs to one implementation.
-              setConfigChoice(undefined);
-              setStartError(undefined);
-            }}
-            placeholder={copy.implementationPlaceholder}
-            ariaLabel={copy.implementationLabel}
-            data-testid="extract-implementation"
-          >
-            {implementations.map((i) => (
-              <Select.Item key={i.id} value={i.id}>
-                {i.id}
-              </Select.Item>
-            ))}
-          </Select>
-        </Field>
-
-        <Field label={copy.configLabel} htmlFor="extract-config" hint={copy.configHint}>
-          <Select
-            id="extract-config"
-            value={configRef}
-            onChange={(v) => {
-              setConfigChoice(v);
-              setStartError(undefined);
-            }}
-            placeholder={copy.configPlaceholder}
-            ariaLabel={copy.configLabel}
-            data-testid="extract-config"
-          >
-            {configurations.map((c) => (
-              <Select.Item key={c.id} value={c.config_ref} description={c.model ?? undefined}>
-                {c.config_ref}
-              </Select.Item>
-            ))}
-          </Select>
-        </Field>
+        <ImplementationConfigPicker
+          selection={selection}
+          idPrefix="extract"
+          legend={copy.individualRunLegend}
+          disabled={extract.isPending}
+          onChange={() => setStartError(undefined)}
+        />
 
         <label
           className={schemaOffered ? "extract-check" : "extract-check extract-check--disabled"}
@@ -252,6 +212,16 @@ function ConfigureForm({
             </span>
           </span>
         </label>
+
+        {suggestSchema && (
+          <ImplementationConfigPicker
+            selection={schemaSelection}
+            idPrefix="extract-schema"
+            legend={copy.schemaRunLegend}
+            disabled={extract.isPending}
+            onChange={() => setStartError(undefined)}
+          />
+        )}
 
         <label className="extract-check" htmlFor="extract-skip-boilerplate">
           <input

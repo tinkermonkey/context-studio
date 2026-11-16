@@ -124,7 +124,8 @@ class IndividualOpenV1Config:
             ground_predicates=bool(config.get("ground_predicates", False)),
             coverage_completion=bool(config.get("coverage_completion", False)),
             predicate_similarity_threshold=predicate_similarity_threshold,
-            model=str(config.get("model", "google/gemini-3-flash-preview")),
+            # No model of its own: a run's is its configuration's or its input's
+            model=str(config.get("model") or ""),
             temperature=float(config.get("temperature", 0.0)),
             max_tokens=int(config.get("max_tokens", 1500)),
             nlp_grounded_typing=nlp_grounded_typing,

@@ -13,6 +13,7 @@ import pytest
 
 from adapters.chat.run_tools import build_run_tools
 from adapters.persistence.sqlite.pipeline_run_repo import PipelineRepository
+from domain.pipelines.individual_extraction.bootstrap import register_individual_extraction
 from domain.pipelines.requested_via import RequestedVia
 from tests.integration.chat.conftest import OPERATION_ID, TAXONOMY_ID
 from tests.integration.mcp.test_mcp_server import mcp_client, result_of
@@ -24,6 +25,8 @@ LINKS = "\n\nPages in Context Studio:\n"
 @pytest.fixture
 def run_setup(dr_workspace):
     executor = make_executor(dr_workspace.session_factory)
+    # The tool offers the pipelines that have an implementation registered
+    register_individual_extraction(executor._implementations, executor._configurations)
     runs = PipelineRepository(dr_workspace.session_factory)
     executor.start()
     yield executor, runs, build_run_tools(executor, runs, dr_workspace.ontology, RequestedVia.MCP)
@@ -148,7 +151,7 @@ async def test_run_tools_report_bad_arguments_as_errors(dr_workspace, run_setup)
                     "pipeline": "no_op",
                     "options": {"configuration_ref": "missing"},
                 },
-                "Configuration not found",
+                "'missing' is not a configuration of the 'default' implementation of no_op",
             ),
         ):
             result, text = await call(client, "run_refinement", arguments)

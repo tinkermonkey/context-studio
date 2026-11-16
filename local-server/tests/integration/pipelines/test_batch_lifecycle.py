@@ -121,7 +121,7 @@ class TestBatchLifecycle:
         )
 
         assert response.status_code == status.HTTP_404_NOT_FOUND
-        assert "Implementation not found" in response.json()["detail"]
+        assert "'nonexistent-impl' is not an implementation of no_op" in (response.json()["detail"])
 
     def test_batch_aggregate_counts_transition_as_runs_change(
         self, client, pipeline_run_repo, batch_repo

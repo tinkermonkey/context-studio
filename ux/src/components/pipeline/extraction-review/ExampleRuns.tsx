@@ -55,11 +55,12 @@ export function ExampleRuns({ exampleId, exampleTitle, onOpenRun }: ExampleRunsP
               width: "120px",
               render: (v: unknown) => <Chip variant="neutral">{KIND_LABEL[String(v)]}</Chip>,
             },
+            { key: "implementation_id", label: "Implementation" },
             {
-              key: "configuration_slug",
+              key: "configuration_ref",
               label: "Configuration",
               render: (_: unknown, r: PipelineRunResponse) =>
-                `${r.configuration_slug} v${r.configuration_version}`,
+                `${r.configuration_ref} v${r.configuration_version}`,
             },
             { key: "status", label: "Status", width: "120px" },
           ]}

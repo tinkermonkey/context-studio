@@ -106,6 +106,14 @@ def _serialize_triple_provenance(triple: dict) -> dict:
 # large taxonomies; the imported DR spec has ~186 classes, comfortably under it.
 _MAX_CATALOG_CLASSES = 300
 
+# What an ExtractionRun records as its configuration when its caller names none
+UNNAMED_CONFIGURATION = "(none)"
+
+# The most output tokens one call of the two-pass stages may produce when the
+# caller names no limit. A run's configuration names its own (max_tokens): a
+# model that thinks before it answers needs more than its answer takes.
+_MAX_OUTPUT_TOKENS = 8000
+
 # Upper bound on the number of ontology-permitted predicates injected into the
 # relationship pass's prompt. The finite predicate vocabulary the second pass
 # clamps to stays a bounded fraction of the prompt for large taxonomies; the
@@ -556,6 +564,8 @@ class ExtractionService:
         temperature: float,
         stage_prompts: Mapping[str, Any] | None = None,
         dataset_id: str | None = None,
+        max_tokens: int | None = None,
+        configuration_ref: str | None = None,
     ) -> TripleExtractionResult:
         """
         Extract RDF triples from text, scoped to a specific ontology.
@@ -572,6 +582,10 @@ class ExtractionService:
             stage_prompts: A configuration's prompt overrides, stage key ->
                 {"system", "user"} (see domain/extraction/prompts.py); None or a
                 missing stage uses the default prompts
+            max_tokens: The most output tokens one LLM call may produce (the
+                run's configuration's); 8000 when None
+            configuration_ref: The configuration the run executes with, recorded
+                on its ExtractionRun; a caller outside a pipeline run has none
 
         Returns:
             Dictionary with keys:
@@ -602,6 +616,7 @@ class ExtractionService:
             raise InvalidInputError(f"Ontology {ontology_id} not found")
 
         prompts = resolve_stage_prompts(INDIVIDUAL_EXTRACTION_STAGES, stage_prompts)
+        max_tokens = max_tokens or _MAX_OUTPUT_TOKENS
 
         # Create extraction run record
         run_id = str(uuid4())
@@ -611,7 +626,7 @@ class ExtractionService:
             id=run_id,
             source_document_uri=None,
             source_text_hash=text_hash,
-            pipeline_config_ref="extraction-default",
+            pipeline_config_ref=configuration_ref or UNNAMED_CONFIGURATION,
             model=model,
             temperature=temperature,
         )
@@ -643,11 +658,27 @@ class ExtractionService:
                 # LLM confirmation, then reuses the same relationship derivation.
                 if self._extraction_mode == "nlp_grounded":
                     extracted_triples, extraction_warnings = self._extract_triples_nlp_grounded(
-                        text, ontology, ontology_id, model, temperature, spent, prompts, dataset_id
+                        text,
+                        ontology,
+                        ontology_id,
+                        model,
+                        temperature,
+                        spent,
+                        prompts,
+                        dataset_id,
+                        max_tokens,
                     )
                 else:
                     extracted_triples, extraction_warnings = self._extract_triples_two_pass(
-                        text, ontology, ontology_id, model, temperature, spent, prompts, dataset_id
+                        text,
+                        ontology,
+                        ontology_id,
+                        model,
+                        temperature,
+                        spent,
+                        prompts,
+                        dataset_id,
+                        max_tokens,
                     )
                 triples_extracted = len(extracted_triples)
                 triples_committed = triples_extracted
@@ -734,6 +765,7 @@ class ExtractionService:
         model: str,
         temperature: float,
         stage_prompts: Mapping[str, Any] | None = None,
+        max_tokens: int | None = None,
     ) -> MentionsResult:
         """
         List what a text mentions, typing nothing (the find stage): one LLM call.
@@ -773,6 +805,7 @@ class ExtractionService:
             model,
             temperature,
             prompts[FIND_MENTIONS],
+            max_tokens,
         )
 
     def typing_prompt(
@@ -810,6 +843,7 @@ class ExtractionService:
         mention: Mention,
         model: str,
         temperature: float,
+        max_tokens: int | None = None,
     ) -> TypingResult:
         """
         Type one mention against the run's class catalog (the type stage): one
@@ -824,7 +858,7 @@ class ExtractionService:
             record; a failure_reason when it could not be typed
         """
         return find_then_type.type_mention(
-            self._llm, self._sleep, prompt, context, mention, model, temperature
+            self._llm, self._sleep, prompt, context, mention, model, temperature, max_tokens
         )
 
     def relate(
@@ -835,6 +869,7 @@ class ExtractionService:
         model: str,
         temperature: float,
         stage_prompts: Mapping[str, Any] | None = None,
+        max_tokens: int | None = None,
     ) -> TripleExtractionResult:
         """
         State the relationships a text asserts between typed individuals (pass
@@ -867,7 +902,15 @@ class ExtractionService:
         try:
             individuals = self._identified_individuals(typing_triples)
             relationships, derive_warnings = self._derive_relationships(
-                text, ontology, individuals, ontology_id, model, temperature, spent, prompts
+                text,
+                ontology,
+                individuals,
+                ontology_id,
+                model,
+                temperature,
+                spent,
+                prompts,
+                max_tokens or _MAX_OUTPUT_TOKENS,
             )
             stamped, stamp_warnings = self._type_concept_objects(
                 relationships, typing_triples, ontology
@@ -1074,6 +1117,7 @@ class ExtractionService:
         spent: _TokenTally,
         prompts: Mapping[str, StagePrompt] | None = None,
         dataset_id: str | None = None,
+        max_tokens: int = _MAX_OUTPUT_TOKENS,
     ) -> tuple[list[dict], list[str]]:
         """
         Run the two-pass individual-then-relationship extraction (design doc §7).
@@ -1114,6 +1158,7 @@ class ExtractionService:
             text,
             ontology_id,
             spent,
+            max_tokens,
         )
         individual_triples = self._canonicalize_triples_against_ontology(
             individual_triples, ontology
@@ -1121,7 +1166,7 @@ class ExtractionService:
 
         individuals = self._identified_individuals(individual_triples)
         relationship_triples, rel_warnings = self._derive_relationships(
-            text, ontology, individuals, ontology_id, model, temperature, spent, prompts
+            text, ontology, individuals, ontology_id, model, temperature, spent, prompts, max_tokens
         )
         all_relationship_triples, typing_warnings = self._type_concept_objects(
             relationship_triples, individual_triples, ontology
@@ -1133,7 +1178,16 @@ class ExtractionService:
         return combined, all_warnings
 
     def _derive_relationships(
-        self, text, ontology, individuals, ontology_id, model, temperature, spent, prompts=None
+        self,
+        text,
+        ontology,
+        individuals,
+        ontology_id,
+        model,
+        temperature,
+        spent,
+        prompts=None,
+        max_tokens: int = _MAX_OUTPUT_TOKENS,
     ) -> tuple[list[dict], list[str]]:
         """
         Derive relationships over already-identified individuals (shared pass 2).
@@ -1160,6 +1214,7 @@ class ExtractionService:
             text,
             ontology_id,
             spent,
+            max_tokens,
         )
         relationship_triples = [
             triple for triple in relationship_triples if not self._is_typing_triple(triple)
@@ -1176,6 +1231,7 @@ class ExtractionService:
         text: str,
         ontology_id: str,
         spent: _TokenTally,
+        max_tokens: int = _MAX_OUTPUT_TOKENS,
     ) -> tuple[list[dict], list[str]]:
         """
         Ask the LLM for a stage's triples, asking again when it got no whole
@@ -1200,6 +1256,8 @@ class ExtractionService:
             stage: The stage key (identify_individuals or derive_relationships),
                 named in the failure
             spent: Counts the tokens of every response received, used or not
+            max_tokens: The most output tokens the response may hold; a model
+                that thinks first spends part of it before it answers
 
         Returns:
             Tuple of (parsed triples, parse warnings).
@@ -1215,7 +1273,7 @@ class ExtractionService:
             "user_prompt": user_prompt,
             "model": model,
             "temperature": temperature,
-            "max_tokens": 8000,
+            "max_tokens": max_tokens,
             "response_format": "json",
         }
         return complete_parsed(
@@ -1562,6 +1620,7 @@ class ExtractionService:
         spent: _TokenTally,
         prompts: Mapping[str, StagePrompt] | None = None,
         dataset_id: str | None = None,
+        max_tokens: int = _MAX_OUTPUT_TOKENS,
     ) -> tuple[list[dict], list[str]]:
         """
         NLP-grounded extraction: spaCy leading edge + retrieval + LLM confirmation (#1141).
@@ -1601,7 +1660,7 @@ class ExtractionService:
         )
         individuals = self._identified_individuals(individual_triples)
         relationship_triples, rel_warnings = self._derive_relationships(
-            text, ontology, individuals, ontology_id, model, temperature, spent, prompts
+            text, ontology, individuals, ontology_id, model, temperature, spent, prompts, max_tokens
         )
         all_relationship_triples, typing_warnings = self._type_concept_objects(
             relationship_triples, individual_triples, ontology

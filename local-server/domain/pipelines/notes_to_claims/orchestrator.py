@@ -28,7 +28,12 @@ from domain.ontology.entities import Taxonomy
 from domain.ontology.ports import OntologyRepository
 from domain.pipelines.entities import PipelineRunStatus
 from domain.pipelines.exceptions import PipelineExecutionError, PipelineInputError
-from domain.pipelines.orchestration.base import PipelineOrchestrator, PipelineState
+from domain.pipelines.orchestration.base import (
+    PipelineOrchestrator,
+    PipelineState,
+    implementation_settings,
+    llm_parameters,
+)
 from domain.pipelines.ports import LLMProvider, LLMResponse, PipelineRunStatusWriter
 from domain.pipelines.refinement.neighborhood import SchemaNeighborhoodTraversal
 from domain.pipelines.requested_via import ensure_may_propose_to
@@ -97,7 +102,10 @@ class NotesToClaimsOrchestrator(PipelineOrchestrator):
         self._repo = ontology_repo
         self._claims = claim_service
         self._proposals = proposal_service
-        self._config = {**get_default_config(), **(config or {})}
+        # The default categories and concurrency unless the configuration sets its
+        # own; the model is the run's (llm_parameters), never a default here
+        self._config = {**implementation_settings(get_default_config()), **(config or {})}
+        self._llm: dict[str, Any] = {}
 
     async def execute(self, state: PipelineState) -> PipelineState:
         self._write_running_status()
@@ -113,6 +121,7 @@ class NotesToClaimsOrchestrator(PipelineOrchestrator):
         categories = self._config.get("categories") or {}
         if not categories:
             raise PipelineInputError("The configuration lists no categories")
+        self._llm = llm_parameters(state.input_data, self._config, 4000)
         scope = state.input_data.get("scope")
         in_scope = self._notes(taxonomy_id, scope)
         written = [note for note in in_scope if note.text.strip()]
@@ -214,9 +223,7 @@ class NotesToClaimsOrchestrator(PipelineOrchestrator):
         response = await self._call_llm(
             system_prompt=system,
             user_prompt=user_prompt(renderer.heading(subject, taxonomy), note.text, context),
-            model=self._config["model"],
-            temperature=self._config.get("temperature", 0.0),
-            max_tokens=self._config.get("max_tokens", 4000),
+            **self._llm,
             response_format="json",
         )
         try:
@@ -320,7 +327,7 @@ class NotesToClaimsOrchestrator(PipelineOrchestrator):
         be used included (the provider reports no cost).
         """
         return {
-            "model": self._config["model"],
+            "model": self._llm["model"],
             "requests": requests,
             "tokens_in": sum(r.tokens_in for r in responses),
             "tokens_out": sum(r.tokens_out for r in responses),

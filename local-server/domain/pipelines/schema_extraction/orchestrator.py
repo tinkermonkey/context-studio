@@ -55,8 +55,10 @@ from domain.pipelines.entities import PipelineRunStatus
 from domain.pipelines.exceptions import PipelineExecutionError, PipelineInputError
 from domain.pipelines.llm_json import extract_json
 from domain.pipelines.orchestration.base import (
+    MODEL_REQUIRED,
     PipelineOrchestrator,
     PipelineState,
+    llm_parameters,
 )
 from domain.pipelines.ports import LLMProvider, PipelineRunStatusWriter
 from domain.pipelines.schema_extraction.apply_service import (
@@ -478,6 +480,9 @@ class SchemaExtractionOrchestrator(PipelineOrchestrator):
     # ``stage_prompts`` override them.
     STAGE_PROMPTS = SCHEMA_EXTRACTION_STAGES
 
+    # It reads a source's text and proposes its candidates to the taxonomy
+    EXTRACTS_SOURCES = True
+
     def __init__(
         self,
         llm_provider: LLMProvider,
@@ -502,9 +507,8 @@ class SchemaExtractionOrchestrator(PipelineOrchestrator):
         """
         super().__init__(llm_provider, run_id, status_writer)
         self._ontology_repo = ontology_repo
-        self._prompts = resolve_stage_prompts(
-            self.STAGE_PROMPTS, (config or {}).get("stage_prompts")
-        )
+        self._config = config or {}
+        self._prompts = resolve_stage_prompts(self.STAGE_PROMPTS, self._config.get("stage_prompts"))
         self._proposer = proposer
 
     async def execute(self, state: PipelineState) -> PipelineState:
@@ -531,6 +535,15 @@ class SchemaExtractionOrchestrator(PipelineOrchestrator):
             exc = PipelineInputError(
                 "documents is required and must contain at least one non-empty document"
             )
+            schema_state = replace(
+                schema_state,
+                current_status=PipelineRunStatus.FAILED,
+                result={"error": str(exc)},
+            )
+            raise exc
+
+        if not (schema_state.input_data.get("model") or self._config.get("model")):
+            exc = PipelineInputError(MODEL_REQUIRED)
             schema_state = replace(
                 schema_state,
                 current_status=PipelineRunStatus.FAILED,
@@ -742,8 +755,7 @@ class SchemaExtractionOrchestrator(PipelineOrchestrator):
             response = await self._call_llm(
                 system_prompt=prompt.system,
                 user_prompt=user_prompt,
-                model=state.input_data.get("model", "google/gemini-3-flash-preview"),
-                temperature=0.0,
+                **llm_parameters(state.input_data, self._config, 2000),
             )
 
             chunk_candidates: list[str] = []
@@ -822,9 +834,7 @@ class SchemaExtractionOrchestrator(PipelineOrchestrator):
         response = await self._call_llm(
             system_prompt=system_prompt,
             user_prompt=user_prompt,
-            model=state.input_data.get("model", "google/gemini-3-flash-preview"),
-            temperature=0.0,
-            max_tokens=3000,
+            **llm_parameters(state.input_data, self._config, 3000),
             response_format="json",
         )
 
@@ -934,9 +944,7 @@ class SchemaExtractionOrchestrator(PipelineOrchestrator):
         response = await self._call_llm(
             system_prompt=prompt.system,
             user_prompt=user_prompt,
-            model=state.input_data.get("model", "google/gemini-3-flash-preview"),
-            temperature=0.0,
-            max_tokens=4000,
+            **llm_parameters(state.input_data, self._config, 4000),
             response_format="json",
         )
         state = replace(state, existing_classes=existing)
@@ -1072,9 +1080,7 @@ class SchemaExtractionOrchestrator(PipelineOrchestrator):
         response = await self._call_llm(
             system_prompt=system_prompt,
             user_prompt=user_prompt,
-            model=state.input_data.get("model", "google/gemini-3-flash-preview"),
-            temperature=0.0,
-            max_tokens=4000,
+            **llm_parameters(state.input_data, self._config, 4000),
             response_format="json",
         )
         if response.finish_reason == "length":
@@ -1194,9 +1200,7 @@ class SchemaExtractionOrchestrator(PipelineOrchestrator):
         response = await self._call_llm(
             system_prompt=system_prompt,
             user_prompt=user_prompt,
-            model=state.input_data.get("model", "google/gemini-3-flash-preview"),
-            temperature=0.0,
-            max_tokens=2000,
+            **llm_parameters(state.input_data, self._config, 2000),
             response_format="json",
         )
 

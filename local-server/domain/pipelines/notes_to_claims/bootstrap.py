@@ -19,9 +19,9 @@ def register_notes_to_claims(
     """
     if impl_registry is not None:
         impl_registry.register_impl(
-            PipelineType.NOTES_TO_CLAIMS, "default", NotesToClaimsOrchestrator
+            PipelineType.NOTES_TO_CLAIMS, "default", NotesToClaimsOrchestrator, default=True
         )
     if config_registry is not None:
         config_registry.register(
-            PipelineType.NOTES_TO_CLAIMS, "default", "default", get_default_config()
+            PipelineType.NOTES_TO_CLAIMS, "default", "default", get_default_config(), default=True
         )

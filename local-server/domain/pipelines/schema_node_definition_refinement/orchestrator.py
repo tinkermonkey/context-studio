@@ -27,6 +27,7 @@ from domain.pipelines.exceptions import PipelineExecutionError, PipelineInputErr
 from domain.pipelines.orchestration.base import (
     PipelineOrchestrator,
     PipelineState,
+    llm_parameters,
 )
 from domain.pipelines.ports import LLMProvider, PipelineRunStatusWriter
 from domain.pipelines.refinement.neighborhood import (
@@ -163,15 +164,14 @@ class DefinitionRefinementOrchestrator(PipelineOrchestrator):
                 state = replace(state, node_type="Class", node_label=neighborhood.class_label)
 
             # Step 2-4: Generate and score candidates
-            model = state.input_data.get("model")
-            temperature = state.input_data.get("temperature")
             candidates = await self._generate_candidates(
                 neighborhood,
                 current_definition,
                 groundings,
                 extraction_usages,
-                model=model,
-                temperature=temperature,
+                model=state.input_data.get("model"),
+                temperature=state.input_data.get("temperature"),
+                max_tokens=state.input_data.get("max_tokens"),
             )
             state = replace(state, candidates=candidates)
 
@@ -228,21 +228,14 @@ class DefinitionRefinementOrchestrator(PipelineOrchestrator):
         if taxonomy is None:
             raise PipelineInputError(f"No taxonomy {taxonomy_id}")
         ensure_may_propose_to(taxonomy, state.input_data)
-        model = state.input_data.get("model") or self._config.get(
-            "model", "google/gemini-3-flash-preview"
-        )
-        temperature = state.input_data.get("temperature")
-        if temperature is None:
-            temperature = self._config.get("temperature", 0.0)
-        max_tokens = self._config.get("max_tokens", 2000)
+        parameters = llm_parameters(state.input_data, self._config, 2000)
+        model = parameters["model"]
 
         async def call_llm(system: str, user: str):
             return await self._call_llm(
                 system_prompt=system,
                 user_prompt=user,
-                model=model,
-                temperature=temperature,
-                max_tokens=max_tokens,
+                **parameters,
                 response_format="json",
             )
 
@@ -286,6 +279,7 @@ class DefinitionRefinementOrchestrator(PipelineOrchestrator):
         extraction_usages: list[dict[str, Any]],
         model: str | None = None,
         temperature: float | None = None,
+        max_tokens: int | None = None,
     ) -> list[dict[str, Any]]:
         """
         Generate up to 3 candidate refined definitions.
@@ -295,17 +289,22 @@ class DefinitionRefinementOrchestrator(PipelineOrchestrator):
             current_definition: Current definition to refine
             groundings: External groundings (optional)
             extraction_usages: Extraction usage examples (optional)
-            model: LLM model to use (overrides config)
-            temperature: Temperature for LLM (overrides config)
+            model, temperature, max_tokens: What the run's input names; what
+                it leaves out is the configuration's (llm_parameters)
 
         Returns:
             List of candidate definitions with rationale and confidence (0-3 candidates)
         """
-        if model is None:
-            model = self._config.get("model", "google/gemini-3-flash-preview")
-        if temperature is None:
-            temperature = self._config.get("temperature", 0.0)
-        max_tokens = self._config.get("max_tokens", 2000)
+        parameters = llm_parameters(
+            {"model": model, "temperature": temperature, "max_tokens": max_tokens},
+            self._config,
+            2000,
+        )
+        model, temperature, max_tokens = (
+            parameters["model"],
+            parameters["temperature"],
+            parameters["max_tokens"],
+        )
 
         # Build context prompt
         if isinstance(neighborhood, PropertyNeighborhood):

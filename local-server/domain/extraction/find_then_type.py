@@ -46,8 +46,10 @@ CONTEXT_WINDOW_CHARS = 1200
 # instead, what tells the class apart) is not offered
 _DEFINITION_CHARS = 260
 
-# The find answer lists every mention of a chunk with a quote each; models that
-# think before answering spend output tokens on that first
+# The most output tokens a call of each stage may produce when the caller names
+# no limit (a run's configuration names one for every call of the run). The find
+# answer lists every mention of a chunk with a quote each; models that think
+# before answering spend output tokens on that first
 _FIND_MAX_TOKENS = 16000
 _TYPE_MAX_TOKENS = 4000
 
@@ -110,6 +112,7 @@ def find_mentions(
     model: str,
     temperature: float,
     prompt: StagePrompt,
+    max_tokens: int | None = None,
 ) -> MentionsResult:
     """
     List what a text mentions (the find stage): one LLM call.
@@ -118,6 +121,7 @@ def find_mentions(
         text: The text (a chunk of a source, or a pasted text)
         grounding: What the prompt is told of the ontology (kinds_grounding)
         prompt: The stage's prompts
+        max_tokens: The most output tokens the call may produce; the stage's own when None
 
     Returns:
         The mentions, each with its passage placed in the text where it could
@@ -128,7 +132,7 @@ def find_mentions(
         "user_prompt": render(prompt.user, {"text": text, "grounding": grounding}),
         "model": model,
         "temperature": temperature,
-        "max_tokens": _FIND_MAX_TOKENS,
+        "max_tokens": max_tokens or _FIND_MAX_TOKENS,
         "response_format": "json",
     }
     spent = TokenTally()
@@ -160,6 +164,7 @@ def type_mention(
     mention: Mention,
     model: str,
     temperature: float,
+    max_tokens: int | None = None,
 ) -> TypingResult:
     """
     Type one mention against the run's class catalog (the type stage): one LLM
@@ -168,6 +173,7 @@ def type_mention(
     Args:
         prompt: The run's typing prompt (build_typing_prompt)
         context: The text around the mention (mention_context)
+        max_tokens: The most output tokens the call may produce; the stage's own when None
 
     Returns:
         The class reference, or None with no failure_reason when the mention
@@ -185,7 +191,7 @@ def type_mention(
         ),
         "model": model,
         "temperature": temperature,
-        "max_tokens": _TYPE_MAX_TOKENS,
+        "max_tokens": max_tokens or _TYPE_MAX_TOKENS,
         "response_format": "json",
     }
     spent = TokenTally()

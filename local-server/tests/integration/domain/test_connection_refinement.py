@@ -6,6 +6,7 @@ Tests the ConnectionRefinementOrchestrator with mock LLM provider.
 
 import asyncio
 import json
+from unittest.mock import Mock
 from uuid import uuid4
 
 import pytest
@@ -107,6 +108,7 @@ class TestConnectionRefinementOrchestrator:
         orchestrator = ConnectionRefinementOrchestrator(
             llm_provider=llm,
             traversal=traversal,
+            config={"model": "test-model"},
         )
 
         state = PipelineState(
@@ -127,6 +129,7 @@ class TestConnectionRefinementOrchestrator:
         orchestrator = ConnectionRefinementOrchestrator(
             llm_provider=llm,
             traversal=traversal,
+            config={"model": "test-model"},
         )
 
         state = PipelineState(
@@ -151,6 +154,7 @@ class TestConnectionRefinementOrchestrator:
         orchestrator = ConnectionRefinementOrchestrator(
             llm_provider=llm,
             traversal=traversal,
+            config={"model": "test-model"},
         )
 
         state = PipelineState(
@@ -193,6 +197,7 @@ class TestConnectionRefinementOrchestrator:
         orchestrator = ConnectionRefinementOrchestrator(
             llm_provider=llm,
             traversal=traversal,
+            config={"model": "test-model"},
         )
 
         state = PipelineState(
@@ -233,6 +238,7 @@ class TestConnectionRefinementOrchestrator:
         orchestrator = ConnectionRefinementOrchestrator(
             llm_provider=llm,
             traversal=traversal,
+            config={"model": "test-model"},
         )
 
         state = PipelineState(
@@ -259,6 +265,7 @@ class TestConnectionRefinementOrchestrator:
         orchestrator = ConnectionRefinementOrchestrator(
             llm_provider=llm,
             traversal=traversal,
+            config={"model": "test-model"},
         )
 
         state = PipelineState(
@@ -273,3 +280,59 @@ class TestConnectionRefinementOrchestrator:
 
         with pytest.raises(PipelineExecutionError, match="LLM response validation failed"):
             asyncio.run(orchestrator.execute(state))
+
+
+class _RecordingLLM:
+    """Answers '[]' and records the model, temperature and output limit of each call."""
+
+    def __init__(self):
+        self.calls = []
+
+    async def complete_async(self, system_prompt, user_prompt, model, **kwargs):
+        self.calls.append((model, kwargs["temperature"], kwargs["max_tokens"]))
+        return Mock(content="[]", tokens_in=1, tokens_out=1, duration_ms=1.0)
+
+
+class TestRunParameters:
+    """The refinement's model, temperature and output limit are the run's."""
+
+    @staticmethod
+    def _run(session_factory, scope_id, config, **named):
+        repo = SQLiteOntologyRepository(session_factory=session_factory)
+        llm = _RecordingLLM()
+        orchestrator = ConnectionRefinementOrchestrator(
+            llm_provider=llm,
+            traversal=SchemaNeighborhoodTraversal(ontology_repo=repo),
+            config=config,
+        )
+        state = PipelineState(
+            run_id=str(uuid4()),
+            pipeline_type=PipelineType.SCHEMA_NODE_CONNECTION_REFINEMENT,
+            input_data={"scope_id": scope_id, "current_connections": [], **named},
+            llm_provider=llm,
+        )
+        asyncio.run(orchestrator.execute(state))
+        return llm.calls
+
+    def test_what_the_runs_input_names_wins(self, sample_classes, session_factory):
+        calls = self._run(
+            session_factory,
+            sample_classes["class1"].id,
+            {"model": "configured", "max_tokens": 2500},
+            model="named",
+            temperature=0.3,
+            max_tokens=700,
+        )
+
+        assert calls == [("named", 0.3, 700)]
+
+    def test_what_the_input_leaves_out_is_the_configurations(
+        self, sample_classes, session_factory
+    ):
+        calls = self._run(
+            session_factory,
+            sample_classes["class1"].id,
+            {"model": "configured", "temperature": 0.1, "max_tokens": 2500},
+        )
+
+        assert calls == [("configured", 0.1, 2500)]

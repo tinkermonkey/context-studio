@@ -21,18 +21,23 @@ export interface ReviewScopeRef {
   label: string;
 }
 
+/** What one run is selected by; a part left out is the server's default. */
+export interface RunSelectionFields {
+  implementation_id?: string;
+  configuration_ref?: string;
+}
+
 /** Everything one "Run extraction" click needs; kept so a single tab can be re-run. */
 export interface ExtractionReviewRequest {
   text: string;
   taxonomy: ReviewScopeRef;
   /** The library example the text came from, while it is unedited. */
   exampleId?: string;
-  implementationId: string;
-  schemaConfigRef: string;
-  individualConfigRef: string;
-  /** Model from the chosen configuration; the pipelines read it from the run input. */
-  schemaModel?: string | null;
-  individualModel?: string | null;
+  /** The dataset individuals are extracted into, where the taxonomy has several. */
+  datasetId?: string;
+  /** Each run has its own implementation and configuration. */
+  schema: RunSelectionFields;
+  individual: RunSelectionFields;
 }
 
 const PIPELINE_TYPE: Record<ReviewKind, string> = {
@@ -47,27 +52,32 @@ export function reviewKindOf(pipelineType: string): ReviewKind | null {
   return null;
 }
 
+/**
+ * Both runs start in the background (`async`): the pending run comes back at
+ * once and is polled, so a run that takes longer than a request may (a long
+ * text, a slower implementation) is not cut off by the client's timeout while
+ * the server carries on.
+ */
 function buildRunRequest(kind: ReviewKind, req: ExtractionReviewRequest): PipelineRunRequest {
   if (kind === "schema") {
     return {
-      implementation_id: req.implementationId,
-      configuration_ref: req.schemaConfigRef,
+      ...req.schema,
+      async: true,
       documents: [req.text],
       scope: req.taxonomy.id,
       scope_name: req.taxonomy.label,
-      ...(req.schemaModel ? { model: req.schemaModel } : {}),
       ...(req.exampleId ? { example_id: req.exampleId } : {}),
-    } as PipelineRunRequest;
+    };
   }
   return {
-    implementation_id: req.implementationId,
-    configuration_ref: req.individualConfigRef,
+    ...req.individual,
+    async: true,
+    ...(req.datasetId ? { dataset_id: req.datasetId } : {}),
     text: req.text,
     ontology_id: req.taxonomy.id,
     ontology_name: req.taxonomy.label,
-    ...(req.individualModel ? { model: req.individualModel } : {}),
     ...(req.exampleId ? { example_id: req.exampleId } : {}),
-  } as PipelineRunRequest;
+  };
 }
 
 function slotFromRun(run: PipelineRunResponse): ReviewRunSlot {
@@ -174,8 +184,23 @@ export function useExtractionReviewRuns({
     setSlots((s) => ({ ...s, [kind]: slotFromRun(run) }));
   }, []);
 
+  /**
+   * Runs one type again on the text that was last run, with what the page
+   * shows now: the type's selection, and (for the individual run) the
+   * dataset. After a failure the form is free again, and what it shows is
+   * what must run.
+   */
   const rerun = useCallback(
-    (kind: ReviewKind) => (lastRequest ? runOne(kind, lastRequest) : Promise.resolve()),
+    (kind: ReviewKind, current: { selection: RunSelectionFields; datasetId?: string }) => {
+      if (!lastRequest) return Promise.resolve();
+      const next: ExtractionReviewRequest = {
+        ...lastRequest,
+        [kind]: current.selection,
+        ...(kind === "individual" ? { datasetId: current.datasetId } : {}),
+      };
+      setLastRequest(next);
+      return runOne(kind, next);
+    },
     [lastRequest, runOne],
   );
 
