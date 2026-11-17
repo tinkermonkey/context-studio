@@ -145,6 +145,11 @@ async def list_proposals(
             " taxonomy's source; with status=done, false lists decided-but-unlanded"
         ),
     ),
+    implementation_id: Optional[str] = Query(
+        None,
+        description="Only proposals a run of this pipeline implementation made (their "
+        'origin\'s implementation_id), e.g. "gold_check" for benchmark gold checks',
+    ),
     limit: int = Query(50, ge=1, le=500, description="Maximum number of results"),
     offset: int = Query(0, ge=0, description="Number of results to skip"),
     service: ProposalService = Depends(get_proposal_service),
@@ -153,12 +158,24 @@ async def list_proposals(
 
     def run() -> ListResponse[ChangeProposalResponse]:
         proposals = service.list_proposals(
-            taxonomy_id, proposal_status, source, limit, offset, landed=landed
+            taxonomy_id,
+            proposal_status,
+            source,
+            limit,
+            offset,
+            landed=landed,
+            implementation_id=implementation_id,
         )
         return ListResponse(
             # A list needs no type usage: only the review page's picks read it.
             items=[proposal_response(service, p, with_usage=False) for p in proposals],
-            total=service.count_proposals(taxonomy_id, proposal_status, source, landed=landed),
+            total=service.count_proposals(
+                taxonomy_id,
+                proposal_status,
+                source,
+                landed=landed,
+                implementation_id=implementation_id,
+            ),
             limit=limit,
             offset=offset,
         )

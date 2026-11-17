@@ -3271,13 +3271,22 @@ class ProposalService:
         limit: int = 50,
         offset: int = 0,
         landed: bool | None = None,
+        implementation_id: str | None = None,
     ) -> list[ChangeProposal]:
         """
         Proposals, newest first, optionally filtered. landed False with status
-        done lists the decided proposals their client hasn't landed yet.
+        done lists the decided proposals their client hasn't landed yet;
+        implementation_id lists those whose origin names that pipeline
+        implementation (e.g. "gold_check").
         """
         return self._proposals.list_proposals(
-            taxonomy_id, status, source, limit, offset, landed=landed
+            taxonomy_id,
+            status,
+            source,
+            limit,
+            offset,
+            landed=landed,
+            implementation_id=implementation_id,
         )
 
     def count_proposals(
@@ -3286,9 +3295,12 @@ class ProposalService:
         status: ProposalStatus | None = None,
         source: ProposalSource | None = None,
         landed: bool | None = None,
+        implementation_id: str | None = None,
     ) -> int:
         """How many proposals match the filters."""
-        return self._proposals.count_proposals(taxonomy_id, status, source, landed=landed)
+        return self._proposals.count_proposals(
+            taxonomy_id, status, source, landed=landed, implementation_id=implementation_id
+        )
 
     def stale_operation_ids(self, proposal: ChangeProposal) -> set[str]:
         """

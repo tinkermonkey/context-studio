@@ -127,6 +127,7 @@ class ChangeProposalRepository(Protocol):
         limit: int = 50,
         offset: int = 0,
         landed: Optional[bool] = None,
+        implementation_id: Optional[str] = None,
     ) -> list[ChangeProposal]:
         """Return proposals, newest first, optionally filtered (landed: landed or not)."""
         ...
@@ -137,6 +138,7 @@ class ChangeProposalRepository(Protocol):
         status: Optional[ProposalStatus] = None,
         source: Optional[ProposalSource] = None,
         landed: Optional[bool] = None,
+        implementation_id: Optional[str] = None,
     ) -> int:
         """Count proposals matching the filters."""
         ...

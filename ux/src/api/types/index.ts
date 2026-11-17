@@ -16145,6 +16145,8 @@ export interface operations {
         source?: components["schemas"]["ProposalSource"] | null;
         /** @description Only proposals the client has (true) or hasn't (false) landed in the taxonomy's source; with status=done, false lists decided-but-unlanded */
         landed?: boolean | null;
+        /** @description Only proposals a run of this pipeline implementation made (their origin's implementation_id), e.g. "gold_check" for benchmark gold checks */
+        implementation_id?: string | null;
         /** @description Maximum number of results */
         limit?: number;
         /** @description Number of results to skip */

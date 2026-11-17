@@ -7346,6 +7346,24 @@
             "description": "Only proposals the client has (true) or hasn't (false) landed in the taxonomy's source; with status=done, false lists decided-but-unlanded"
           },
           {
+            "name": "implementation_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Only proposals a run of this pipeline implementation made (their origin's implementation_id), e.g. \"gold_check\" for benchmark gold checks",
+              "title": "Implementation Id"
+            },
+            "description": "Only proposals a run of this pipeline implementation made (their origin's implementation_id), e.g. \"gold_check\" for benchmark gold checks"
+          },
+          {
             "name": "limit",
             "in": "query",
             "required": false,
