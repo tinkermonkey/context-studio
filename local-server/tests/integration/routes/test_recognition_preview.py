@@ -6,6 +6,7 @@ the full recognition preview flow without external dependencies.
 """
 
 import hashlib
+import logging
 import os
 import sys
 
@@ -138,17 +139,23 @@ def client(pipeline_repo, batch_repo, ontology_repo, extraction_service, schema_
     return TestClient(app)
 
 
-def _create_and_complete_individual_run(pipeline_repo, triples=None):
+def _create_and_complete_individual_run(
+    pipeline_repo,
+    triples=None,
+    implementation_id="default",
+    configuration="extraction-default",
+    configuration_version=1,
+):
     """Create a completed individual extraction run."""
     batch_id = str(uuid4())
     text_hash = hashlib.sha256(b"test text").hexdigest()
     run = pipeline_repo.create(
         batch_run_id=create_batch_row(pipeline_repo._session_factory, batch_id),
         pipeline_type=PipelineType.INDIVIDUAL_EXTRACTION,
-        implementation_id="default",
-        configuration_ref="extraction-default",
-        configuration_slug="extraction-default",
-        configuration_version=1,
+        implementation_id=implementation_id,
+        configuration_ref=configuration,
+        configuration_slug=configuration,
+        configuration_version=configuration_version,
         specific_data={
             "source_text_hash": text_hash,
             "source_document_uri": None,
@@ -615,6 +622,40 @@ def test_recognition_preview_asks_the_run_configurations_recognition_model(
 
     assert response.status_code == status.HTTP_200_OK
     assert [call["model"] for call in recognizer.calls] == ["google/gemini-3-flash-preview"]
+
+
+def test_a_run_whose_configuration_is_gone_asks_its_implementations_default(
+    client, pipeline_repo, recognizer
+):
+    """A configuration edited or removed since the run: the implementation's default's model."""
+    run_id = _create_and_complete_individual_run(
+        pipeline_repo,
+        triples=[_make_triple("Grace")],
+        configuration="my-removed-configuration",
+        configuration_version=3,
+    )
+
+    response = client.post(f"/api/pipelines/runs/{run_id}/recognition-preview")
+
+    assert response.status_code == status.HTTP_200_OK
+    assert [call["model"] for call in recognizer.calls] == ["google/gemini-3-flash-preview"]
+
+
+def test_a_run_with_no_recognition_model_to_find_says_so(client, pipeline_repo, recognizer, caplog):
+    """Neither the run's configuration nor an implementation default is registered."""
+    run_id = _create_and_complete_individual_run(
+        pipeline_repo,
+        triples=[_make_triple("Heidi")],
+        implementation_id="an-implementation-since-removed",
+        configuration="its-configuration",
+    )
+
+    with caplog.at_level(logging.WARNING):
+        response = client.post(f"/api/pipelines/runs/{run_id}/recognition-preview")
+
+    assert response.status_code == status.HTTP_200_OK
+    assert [call["model"] for call in recognizer.calls] == [None]
+    assert "names a recognition model" in caplog.text
 
 
 if __name__ == "__main__":
