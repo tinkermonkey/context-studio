@@ -250,8 +250,31 @@ class TestScore:
         result = score(_gold(), predicted, [PredictedRelationship("Redis", "serves", "Gitaly")])
         assert result.metrics["relationship_recall"] == 0.0
 
+    def test_relationship_precision_over_distinct_and_over_resolved_relationships(self):
+        predicted = [
+            Predicted("GitLab Runner", (COMPONENT,)),
+            Predicted("Gitaly", (COMPONENT,)),
+            Predicted("Redis", (SOFTWARE,)),
+            Predicted("Kubernetes", (SOFTWARE,)),  # matches nothing
+        ]
+        relationships = [
+            PredictedRelationship("GitLab Runner", "uses", "Gitaly"),  # in gold
+            PredictedRelationship("Runners", "uses", "Gitaly"),  # the same under an alias: once
+            PredictedRelationship("GitLab Runner", "uses", "Gitaly"),  # a repeat: not distinct
+            PredictedRelationship("Gitaly", "uses", "Redis"),  # found ends, not in gold
+            PredictedRelationship("Kubernetes", "serves", "Gitaly"),  # an unfound end
+        ]
+        result = score(_gold(), predicted, relationships)
+        assert result.counts["distinct_relationships"] == 3
+        assert result.counts["resolved_relationships"] == 2
+        assert result.counts["correct_relationships"] == 1
+        assert result.metrics["relationship_precision"] == round(1 / 3, 4)
+        assert result.metrics["relationship_precision_resolved"] == 0.5
+        assert result.metrics["relationship_recall"] == 0.5
+
     def test_an_empty_run_scores_zero_without_dividing_by_zero(self):
         result = score(_gold(), [])
+        assert result.metrics["relationship_precision"] == 0.0
         assert result.metrics["recall"] == 0.0
         assert result.metrics["precision"] == 0.0
         assert result.metrics["typed_f1"] == 0.0

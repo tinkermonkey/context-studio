@@ -1,0 +1,764 @@
+{
+ "arm": "R2-haiku-gold",
+ "model": "claude-haiku-5-5",
+ "document": "wikimedia_enterprise",
+ "take": 1,
+ "effort": "high",
+ "max_tokens": 64000,
+ "prompt_sha256": "4a3bbdabbb549a426aa7c31a6dcb94dacabaec3e37ffa539c28d590b34eee081",
+ "failed": false,
+ "attempts": [
+  {
+   "attempt": 1,
+   "problem": null,
+   "usage": {
+    "input": 8787,
+    "cache_write": 5426,
+    "cache_read": 0,
+    "output": 13453
+   },
+   "usd": 0.008283450000000001,
+   "latency_s": 49.3
+  }
+ ],
+ "relationships_validated": true,
+ "individuals_from": "gold",
+ "individuals": [
+  {
+   "title": "Wikimedia Enterprise",
+   "class": "business.product",
+   "quote": "**Wikimedia Enterprise** is a service of the Wikimedia Foundation available via enterprise.wikimedia.com."
+  },
+  {
+   "title": "Paid Enterprise API access",
+   "class": "business.businessservice",
+   "quote": "The *primary* use case of the suite of Enterprise APIs is paid access for large commercial organisations, with associated Service Level Agreements and dedicated customer support."
+  },
+  {
+   "title": "Free Enterprise API access",
+   "class": "business.businessservice",
+   "quote": "Creating a free account on the official website and using the Enterprise API access for free accounts."
+  },
+  {
+   "title": "Exceptional access",
+   "class": "business.businessservice",
+   "quote": "you may request free **exceptional access** to the higher rate of the Enterprise APIs"
+  },
+  {
+   "title": "Customer support",
+   "class": "business.businessservice",
+   "quote": "**PartnerHero** provide customer support services"
+  },
+  {
+   "title": "Service Level Agreement",
+   "class": "business.contract",
+   "quote": "Contracted accounts receive 99% SLA and support response-time guarantees."
+  },
+  {
+   "title": "Terms of Use",
+   "class": "business.contract",
+   "quote": "including the Terms of Use, the User-Agent Policy"
+  },
+  {
+   "title": "API Usage guidelines",
+   "class": "business.contract",
+   "quote": "Please also note the API Usage guidelines (in particular regarding sub-licensing)"
+  },
+  {
+   "title": "Wikimedia Foundation",
+   "class": "business.businessactor",
+   "quote": "primary decision making for it will rest with the Wikimedia Foundation"
+  },
+  {
+   "title": "Wikimedia Enterprise LLC",
+   "class": "business.businessactor",
+   "quote": "The board of the LLC overseeing the project are *Ex officio* from Wikimedia Foundation leadership"
+  },
+  {
+   "title": "Commercial Partnerships",
+   "class": "business.businessactor",
+   "quote": "The Wikimedia Enterprise project is helmed by the **Commercial Partnerships** division, which sits under the Advancement Department in the Wikimedia Foundation."
+  },
+  {
+   "title": "Advancement Department",
+   "class": "business.businessactor",
+   "quote": "which sits under the Advancement Department in the Wikimedia Foundation"
+  },
+  {
+   "title": "Technical Partnerships team",
+   "class": "business.businessactor",
+   "quote": "to reflect the inclusion of the Technical Partnerships team"
+  },
+  {
+   "title": "Wikimedia API team",
+   "class": "business.businessactor",
+   "quote": "allows the Wikimedia API team to focus on volunteers, teams, and organizations looking to access"
+  },
+  {
+   "title": "Wikimedia Deutschland",
+   "class": "business.businessactor",
+   "quote": "the request will be reviewed in coordination with staff from *Wikimedia Deutschland*"
+  },
+  {
+   "title": "Wikimedia Foundation Board of Trustees",
+   "class": "business.businessactor",
+   "quote": "The LLC is subject to the governance of the Wikimedia Foundation Board of Trustees"
+  },
+  {
+   "title": "LLC board",
+   "class": "business.businesscollaboration",
+   "quote": "The board of the LLC overseeing the project are *Ex officio* from Wikimedia Foundation leadership, representing their Wikimedia Foundation staff roles."
+  },
+  {
+   "title": "Chief Advancement Officer",
+   "class": "business.businessrole",
+   "quote": "the Chief Advancement Officer"
+  },
+  {
+   "title": "General Counsel",
+   "class": "business.businessrole",
+   "quote": "General Counsel"
+  },
+  {
+   "title": "Chief Product and Technology Officer",
+   "class": "business.businessrole",
+   "quote": "Chief Product and Technology Officer"
+  },
+  {
+   "title": "LLC president",
+   "class": "business.businessrole",
+   "quote": "who serves as the LLC's president"
+  },
+  {
+   "title": "PartnerHero",
+   "class": "business.businessactor",
+   "quote": "**PartnerHero** provide customer support services"
+  },
+  {
+   "title": "Vuurr",
+   "class": "business.businessactor",
+   "quote": "**Vuurr** are assisting our sales process"
+  },
+  {
+   "title": "Super Natural Design",
+   "class": "business.businessactor",
+   "quote": "**Super Natural Design** are the designers of the project website"
+  },
+  {
+   "title": "Speed & Function",
+   "class": "business.businessactor",
+   "quote": "Engineering support was provided in the first years by **Speed & Function**."
+  },
+  {
+   "title": "Commercial reuser",
+   "class": "business.businessrole",
+   "quote": "build services for high-volume commercial reusers of Wikimedia content"
+  },
+  {
+   "title": "Exceptional access requester",
+   "class": "business.businessrole",
+   "quote": "**1. Who** (individual or organisation) is requesting exceptional access?"
+  },
+  {
+   "title": "Wikimedia movement",
+   "class": "motivation.stakeholder",
+   "quote": "would feed back into the Wikimedia movement"
+  },
+  {
+   "title": "Wikimedia community",
+   "class": "motivation.stakeholder",
+   "quote": "We are seeking community input, in particular from the technical community and those who have been involved in the strategy process, throughout the lifetime of the service."
+  },
+  {
+   "title": "Researchers and archivists",
+   "class": "motivation.stakeholder",
+   "quote": "but also for universities and university researchers; archives and archivists; along with the wider Wikimedia movement"
+  },
+  {
+   "title": "Wikimedia readers",
+   "class": "motivation.stakeholder",
+   "quote": "improve the user experience of Wikimedia's readers beyond our own websites"
+  },
+  {
+   "title": "Exceptional access review",
+   "class": "business.businessprocess",
+   "quote": "Requests will be reviewed by *Wikimedia Foundation* staff in accordance with the following criteria, and granted at the Wikimedia Foundation's discretion."
+  },
+  {
+   "title": "Human rights assessment",
+   "class": "business.businessprocess",
+   "quote": "A human rights assessment is undertaken by the WMF for certain users of paid accounts for the Enterprise APIs"
+  },
+  {
+   "title": "Sales",
+   "class": "business.businessfunction",
+   "quote": "**Vuurr** are assisting our sales process"
+  },
+  {
+   "title": "Community consultation",
+   "class": "business.businessfunction",
+   "quote": "We will continue gathering input via research interviews and focus groups, as well feedback here on Meta as per our principles."
+  },
+  {
+   "title": "Wikimedia content",
+   "class": "business.businessobject",
+   "quote": "The focus is on organizations that want to repurpose Wikimedia content in other contexts"
+  },
+  {
+   "title": "Exceptional access request",
+   "class": "business.businessobject",
+   "quote": "please contact <techpartnershipswikimedia.org> with a response to the six criteria described below"
+  },
+  {
+   "title": "LLC reports and official documents",
+   "class": "business.businessobject",
+   "quote": "All reports and official documents of the LLC are published on a dedicated Wikimedia Enterprise page"
+  },
+  {
+   "title": "Snapshot API",
+   "class": "application.applicationservice",
+   "quote": "The Enterprise Snapshot API allows users to retrieve entire Wikimedia projects as a database dump file."
+  },
+  {
+   "title": "On-demand API",
+   "class": "application.applicationservice",
+   "quote": "The Wikimedia Enterprise On-demand API allows users to retrieve single articles from any supported Wikimedia project at anytime."
+  },
+  {
+   "title": "Realtime API",
+   "class": "application.applicationservice",
+   "quote": "The Enterprise Realtime API allows users to stream updates in real-time from any supported Wikimedia project."
+  },
+  {
+   "title": "Enterprise APIs",
+   "class": "application.applicationservice",
+   "quote": "Three APIs; same data with different retrieval methods:"
+  },
+  {
+   "title": "Realtime streaming",
+   "class": "product.feature",
+   "quote": "Streaming: Receive streaming (firehose) updates of every change as they occur in real-time"
+  },
+  {
+   "title": "Realtime batch",
+   "class": "product.feature",
+   "quote": "Batch: Download compressed files of all articles that were changed, generated hourly"
+  },
+  {
+   "title": "Event filtering",
+   "class": "product.feature",
+   "quote": "Filtering of events by Project or Revision Namespace"
+  },
+  {
+   "title": "Structured Contents (beta)",
+   "class": "product.feature",
+   "quote": "Downloading Structured Contents (beta) datasets hosted on third-party platforms."
+  },
+  {
+   "title": "Article response payload",
+   "class": "data-model.objectschema",
+   "quote": "All of our APIs return the same structured JSON (or ND-JSON) response format making it easy to augment one API with another."
+  },
+  {
+   "title": "Snapshot dump file",
+   "class": "technology.artifact",
+   "quote": "Download a compressed file containing everything in any supported project, in any language"
+  },
+  {
+   "title": "Free account thresholds",
+   "class": "api.ratelimit",
+   "quote": "Persistent need for access above the Enterprise API requests/second, or datasets/month, free thresholds"
+  },
+  {
+   "title": "Wikimedia Dumps",
+   "class": "application.applicationservice",
+   "quote": "For high-volume reusers that currently rely on the Wikimedia Dumps to access our information"
+  },
+  {
+   "title": "EventStream",
+   "class": "application.applicationservice",
+   "quote": "using EventStream APIs to access such changes"
+  },
+  {
+   "title": "RESTBase",
+   "class": "application.applicationcomponent",
+   "quote": "depend on services like RESTBase to pull HTML from page titles and current revisions to update their products"
+  },
+  {
+   "title": "enterprise.wikimedia.com",
+   "class": "business.businessinterface",
+   "quote": "available via enterprise.wikimedia.com"
+  },
+  {
+   "title": "API authorization header",
+   "class": "api.securityscheme",
+   "quote": "without passing an authorization header"
+  },
+  {
+   "title": "Wikimedia Cloud Services",
+   "class": "technology.technologyservice",
+   "quote": "Using Wikimedia Cloud Services. You get the same access as a paid account when making a call to any Enterprise API endpoint"
+  },
+  {
+   "title": "PAWS",
+   "class": "technology.technologyservice",
+   "quote": "from within PAWS, Wikimedia Cloud VPS, or Toolforge"
+  },
+  {
+   "title": "Wikimedia Cloud VPS",
+   "class": "technology.technologyservice",
+   "quote": "from within PAWS, Wikimedia Cloud VPS, or Toolforge"
+  },
+  {
+   "title": "Toolforge",
+   "class": "technology.technologyservice",
+   "quote": "from within PAWS, Wikimedia Cloud VPS, or Toolforge"
+  },
+  {
+   "title": "Launch (October 2021)",
+   "class": "product.milestone",
+   "quote": "and launched in October 2021"
+  },
+  {
+   "title": "Build services for high-volume commercial reusers",
+   "class": "motivation.goal",
+   "quote": "The goal of the service is to build services for high-volume commercial reusers of Wikimedia content."
+  },
+  {
+   "title": "Improve readers' experience beyond Wikimedia's own websites",
+   "class": "motivation.goal",
+   "quote": "improve the user experience of Wikimedia's readers beyond our own websites"
+  },
+  {
+   "title": "Increase the reach and discoverability of the content",
+   "class": "motivation.goal",
+   "quote": "increase the reach and discoverability of the content"
+  },
+  {
+   "title": "Improve awareness and ease of attribution and verifiability",
+   "class": "motivation.goal",
+   "quote": "improve awareness and ease of attribution and verifiability by the organizations that reuse Wikimedia project data the most"
+  },
+  {
+   "title": "Program goal: Content",
+   "class": "motivation.goal",
+   "quote": "**Content**: Make more of our movement's content available in consistent machine-readable formats, freely available for all researchers and re-users."
+  },
+  {
+   "title": "Program goal: Resource-load",
+   "class": "motivation.goal",
+   "quote": "**Resource-load**: Reduce the need for high-intensity site-scraping by the highest-frequency and highest-volume reusers, which currently target our production servers."
+  },
+  {
+   "title": "Program goal: Fundraising",
+   "class": "motivation.goal",
+   "quote": "**Fundraising**: Provide a clearer and more consistent way for the largest re-users to reinvest derived benefits back to the movement"
+  },
+  {
+   "title": "Democratize the data for organizations without the largest users' resources",
+   "class": "motivation.goal",
+   "quote": "there is a responsibility to democratize our data for organizations that do not possess the resources of these largest users"
+  },
+  {
+   "title": "Movement Strategy recommendations",
+   "class": "motivation.driver",
+   "quote": "In the Movement Strategy recommendations to *increase the sustainability of our movement* and *improve user experience*"
+  },
+  {
+   "title": "Large companies rely on Wikimedia content without reinvesting",
+   "class": "motivation.driver",
+   "quote": "It is well known that a few massive companies use our projects' data."
+  },
+  {
+   "title": "High barrier to entry for using Wikimedia data",
+   "class": "motivation.assessment",
+   "quote": "There is a very high barrier to entry for using Wikimedia data, outside of the common use cases of reading or editing."
+  },
+  {
+   "title": "High-intensity scraping of production servers",
+   "class": "motivation.driver",
+   "quote": "high-intensity site-scraping by the highest-frequency and highest-volume reusers, which currently target our production servers"
+  },
+  {
+   "title": "Access for all",
+   "class": "motivation.principle",
+   "quote": "in accordance with the project's principle of *access for all*"
+  },
+  {
+   "title": "Non-exclusivity",
+   "class": "motivation.principle",
+   "quote": "In accordance with the Wikimedia Enterprise operating principles regarding non-exclusivity, any newly developed software feature or dataset must be made available to all."
+  },
+  {
+   "title": "Wikimedia projects remain libre",
+   "class": "motivation.principle",
+   "quote": "Wikimedia projects are, have always been, and will always remain *libre*."
+  },
+  {
+   "title": "Wikimedia projects remain gratis",
+   "class": "motivation.principle",
+   "quote": "Equally, Wikimedia projects are, have always been, and will always remain *gratis*."
+  },
+  {
+   "title": "All Enterprise revenue supports the Wikimedia mission",
+   "class": "motivation.principle",
+   "quote": "All Enterprise API revenue will unequivocally be used to support the Wikimedia mission"
+  },
+  {
+   "title": "Avoid revenue dependencies and undue external influence",
+   "class": "motivation.principle",
+   "quote": "taking care to avoid revenue dependencies or other undue external influence in product design and development"
+  },
+  {
+   "title": "Self-funding service",
+   "class": "motivation.principle",
+   "quote": "through self-funding services"
+  },
+  {
+   "title": "Abide by the copyright licenses on Wikimedia content",
+   "class": "motivation.constraint",
+   "quote": "All users of Wikimedia Enterprise services must abide by the copyright licenses on Wikimedia content. They are inherent and cannot be waived."
+  },
+  {
+   "title": "Commercial Sales and Contracts Policy",
+   "class": "motivation.constraint",
+   "quote": "as described on the *Wikimedia Foundation Commercial Sales and Contracts Policy*"
+  },
+  {
+   "title": "Human Rights Policy",
+   "class": "motivation.constraint",
+   "quote": "in accordance with the Human Rights Policy and Commercial Sales and Contracts Policy"
+  },
+  {
+   "title": "User-Agent Policy",
+   "class": "business.contract",
+   "quote": "the User-Agent Policy"
+  },
+  {
+   "title": "Decision making rests with the Wikimedia Foundation",
+   "class": "motivation.constraint",
+   "quote": "Given the nature of the service, primary decision making for it will rest with the Wikimedia Foundation."
+  },
+  {
+   "title": "Community editing tools are out of scope",
+   "class": "motivation.constraint",
+   "quote": "This includes the majority of community editing tools, which will be out of scope for this service."
+  },
+  {
+   "title": "Faster, more comprehensive, reliable and secure data services",
+   "class": "motivation.value",
+   "quote": "providing data services at a large scale, so that they are faster and more comprehensive, reliable, and secure"
+  },
+  {
+   "title": "Frequency: regular current snapshots",
+   "class": "motivation.requirement",
+   "quote": "**Frequency**: Regular current snapshots of Wikimedia projects"
+  },
+  {
+   "title": "Reliability: dependable, accessible infrastructure",
+   "class": "motivation.requirement",
+   "quote": "**Reliability**: Dependable, accessible infrastructure"
+  },
+  {
+   "title": "Quality: a best last revision",
+   "class": "motivation.requirement",
+   "quote": "**Quality**: a \u201cbest last revision\u201d"
+  },
+  {
+   "title": "Filter the changes received",
+   "class": "motivation.requirement",
+   "quote": "a service that will allow them to filter the changes they receive to limit their processing"
+  },
+  {
+   "title": "Stable HTTP connections with no data loss",
+   "class": "motivation.requirement",
+   "quote": "guarantee stable HTTP connections to ensure no data loss"
+  },
+  {
+   "title": "A more useful schema to limit API calls per event",
+   "class": "motivation.requirement",
+   "quote": "supply a more useful schema to limit the number of API calls they need to make per event"
+  },
+  {
+   "title": "Reliable retrieval of article data in structures other than HTML",
+   "class": "motivation.requirement",
+   "quote": "High-volume reusers have requested a reliable means to gather this data, as well as structures other than HTML"
+  },
+  {
+   "title": "Exceptional access criteria",
+   "class": "motivation.requirement",
+   "quote": "**Exceptional access criteria**"
+  },
+  {
+   "title": "Criterion 1: Who",
+   "class": "motivation.requirement",
+   "quote": "**1. Who** (individual or organisation) is requesting exceptional access?"
+  },
+  {
+   "title": "Criterion 2: What",
+   "class": "motivation.requirement",
+   "quote": "**2. What** is the request for?"
+  },
+  {
+   "title": "Criterion 3: Need",
+   "class": "motivation.requirement",
+   "quote": "**3. Need**. Can the intended use-case be fulfilled via any of the existing free access methods?"
+  },
+  {
+   "title": "Criterion 4: Obligation",
+   "class": "motivation.requirement",
+   "quote": "**4. Obligation.** Would the intended use case require custom development to support or maintain?"
+  },
+  {
+   "title": "Criterion 5: Mission alignment",
+   "class": "motivation.requirement",
+   "quote": "**5. Mission alignment**. Is the intended use case aligned with any of the needs identified in the Movement Strategy Recommendations?"
+  },
+  {
+   "title": "Criterion 6: Values alignment",
+   "class": "motivation.requirement",
+   "quote": "**6. Values alignment**. Do the requester\u2019s professional practices or business model align with Wikimedia\u2019s values?"
+  }
+ ],
+ "relationships": [
+  {
+   "source": "LLC board",
+   "predicate": "aggregates",
+   "target": "Chief Advancement Officer",
+   "quote": "This includes the Chief Advancement Officer Sheetal Puri"
+  },
+  {
+   "source": "LLC board",
+   "predicate": "aggregates",
+   "target": "General Counsel",
+   "quote": "General Counsel Stephen LaPorte"
+  },
+  {
+   "source": "LLC board",
+   "predicate": "aggregates",
+   "target": "Chief Product and Technology Officer",
+   "quote": "Chief Product and Technology Officer Selena Deckelman"
+  },
+  {
+   "source": "LLC board",
+   "predicate": "aggregates",
+   "target": "LLC president",
+   "quote": "Lane Becker who serves as the LLC's president"
+  },
+  {
+   "source": "Paid Enterprise API access",
+   "predicate": "serves",
+   "target": "Commercial reuser",
+   "quote": "The primary use case of the suite of Enterprise APIs is paid access for large commercial organisations"
+  },
+  {
+   "source": "Exceptional access",
+   "predicate": "serves",
+   "target": "Exceptional access requester",
+   "quote": "If you have a Wikimedia mission-aligned use case and your requirements exceed what is offered at no cost, you may request free exceptional access to the higher rate of the Enterprise APIs."
+  },
+  {
+   "source": "Exceptional access review",
+   "predicate": "accesses",
+   "target": "Exceptional access request",
+   "quote": "Requests will be reviewed by Wikimedia Foundation staff in accordance with the following criteria"
+  },
+  {
+   "source": "Exceptional access criteria",
+   "predicate": "aggregates",
+   "target": "Criterion 1: Who",
+   "quote": "with a response to the six criteria described below"
+  },
+  {
+   "source": "Exceptional access criteria",
+   "predicate": "aggregates",
+   "target": "Criterion 2: What",
+   "quote": "with a response to the six criteria described below"
+  },
+  {
+   "source": "Exceptional access criteria",
+   "predicate": "aggregates",
+   "target": "Criterion 3: Need",
+   "quote": "with a response to the six criteria described below"
+  },
+  {
+   "source": "Exceptional access criteria",
+   "predicate": "aggregates",
+   "target": "Criterion 4: Obligation",
+   "quote": "with a response to the six criteria described below"
+  },
+  {
+   "source": "Exceptional access criteria",
+   "predicate": "aggregates",
+   "target": "Criterion 5: Mission alignment",
+   "quote": "with a response to the six criteria described below"
+  },
+  {
+   "source": "Exceptional access criteria",
+   "predicate": "aggregates",
+   "target": "Criterion 6: Values alignment",
+   "quote": "with a response to the six criteria described below"
+  },
+  {
+   "source": "Movement Strategy recommendations",
+   "predicate": "influence",
+   "target": "Increase the reach and discoverability of the content",
+   "quote": "increase the reach and discoverability of our content and the potential for data returns"
+  },
+  {
+   "source": "Movement Strategy recommendations",
+   "predicate": "influence",
+   "target": "Improve awareness and ease of attribution and verifiability",
+   "quote": "improve awareness of and ease of attribution and verifiability for content reusers"
+  },
+  {
+   "source": "High-intensity scraping of production servers",
+   "predicate": "influence",
+   "target": "Program goal: Resource-load",
+   "quote": "Reduce the need for high-intensity site-scraping by the highest-frequency and highest-volume reusers, which currently target our production servers."
+  },
+  {
+   "source": "Large companies rely on Wikimedia content without reinvesting",
+   "predicate": "influence",
+   "target": "Program goal: Fundraising",
+   "quote": "There has long been a feeling among community members that these companies should do more to reinvest in the Wikimedia communities"
+  },
+  {
+   "source": "Realtime API",
+   "predicate": "realizes",
+   "target": "Realtime streaming",
+   "quote": "Streaming: Receive streaming (firehose) updates of every change as they occur in real-time"
+  },
+  {
+   "source": "Realtime API",
+   "predicate": "realizes",
+   "target": "Realtime batch",
+   "quote": "Batch: Download compressed files of all articles that were changed, generated hourly"
+  },
+  {
+   "source": "Realtime API",
+   "predicate": "realizes",
+   "target": "Event filtering",
+   "quote": "Filtering of events by Project or Revision Namespace"
+  },
+  {
+   "source": "Realtime API",
+   "predicate": "satisfies",
+   "target": "Filter the changes received",
+   "quote": "allow them to filter the changes they receive to limit their processing"
+  },
+  {
+   "source": "Realtime API",
+   "predicate": "satisfies",
+   "target": "Stable HTTP connections with no data loss",
+   "quote": "guarantee stable HTTP connections to ensure no data loss"
+  },
+  {
+   "source": "Realtime API",
+   "predicate": "satisfies",
+   "target": "A more useful schema to limit API calls per event",
+   "quote": "supply a more useful schema to limit the number of API calls they need to make per event"
+  },
+  {
+   "source": "On-demand API",
+   "predicate": "satisfies",
+   "target": "Reliable retrieval of article data in structures other than HTML",
+   "quote": "High-volume reusers have requested a reliable means to gather this data, as well as structures other than HTML"
+  },
+  {
+   "source": "Snapshot API",
+   "predicate": "satisfies",
+   "target": "Frequency: regular current snapshots",
+   "quote": "Up to a daily snapshots cadence"
+  },
+  {
+   "source": "Wikimedia Cloud Services",
+   "predicate": "serves",
+   "target": "Enterprise APIs",
+   "quote": "Using Wikimedia Cloud Services. You get the same access as a paid account when making a call to any Enterprise API endpoint"
+  },
+  {
+   "source": "PAWS",
+   "predicate": "serves",
+   "target": "Enterprise APIs",
+   "quote": "from within PAWS, Wikimedia Cloud VPS, or Toolforge"
+  },
+  {
+   "source": "Wikimedia Cloud VPS",
+   "predicate": "serves",
+   "target": "Enterprise APIs",
+   "quote": "from within PAWS, Wikimedia Cloud VPS, or Toolforge"
+  },
+  {
+   "source": "Toolforge",
+   "predicate": "serves",
+   "target": "Enterprise APIs",
+   "quote": "from within PAWS, Wikimedia Cloud VPS, or Toolforge"
+  },
+  {
+   "source": "Snapshot API",
+   "predicate": "accesses",
+   "target": "Wikimedia content",
+   "quote": "The Enterprise Snapshot API allows users to retrieve entire Wikimedia projects as a database dump file."
+  },
+  {
+   "source": "On-demand API",
+   "predicate": "accesses",
+   "target": "Wikimedia content",
+   "quote": "The Wikimedia Enterprise On-demand API allows users to retrieve single articles from any supported Wikimedia project at anytime."
+  },
+  {
+   "source": "Realtime API",
+   "predicate": "accesses",
+   "target": "Wikimedia content",
+   "quote": "The Enterprise Realtime API allows users to stream updates in real-time from any supported Wikimedia project."
+  }
+ ],
+ "usage": {
+  "input": 8787,
+  "cache_write": 5426,
+  "cache_read": 0,
+  "output": 13453
+ },
+ "usd": 0.008283450000000001,
+ "latency_s": 49.3,
+ "raw_response": {
+  "id": "msg_011Ch8XPx2PKNhsL4MzsYr9J",
+  "container": null,
+  "content": [
+   {
+    "thinking": "",
+    "type": "thinking"
+   },
+   {
+    "citations": null,
+    "text": "{\"relationships\":[{\"source\":\"LLC board\",\"predicate\":\"aggregates\",\"target\":\"Chief Advancement Officer\",\"quote\":\"This includes the Chief Advancement Officer Sheetal Puri\"},{\"source\":\"LLC board\",\"predicate\":\"aggregates\",\"target\":\"General Counsel\",\"quote\":\"General Counsel Stephen LaPorte\"},{\"source\":\"LLC board\",\"predicate\":\"aggregates\",\"target\":\"Chief Product and Technology Officer\",\"quote\":\"Chief Product and Technology Officer Selena Deckelman\"},{\"source\":\"LLC board\",\"predicate\":\"aggregates\",\"target\":\"LLC president\",\"quote\":\"Lane Becker who serves as the LLC's president\"},{\"source\":\"Paid Enterprise API access\",\"predicate\":\"serves\",\"target\":\"Commercial reuser\",\"quote\":\"The primary use case of the suite of Enterprise APIs is paid access for large commercial organisations\"},{\"source\":\"Exceptional access\",\"predicate\":\"serves\",\"target\":\"Exceptional access requester\",\"quote\":\"If you have a Wikimedia mission-aligned use case and your requirements exceed what is offered at no cost, you may request free exceptional access to the higher rate of the Enterprise APIs.\"},{\"source\":\"Exceptional access review\",\"predicate\":\"accesses\",\"target\":\"Exceptional access request\",\"quote\":\"Requests will be reviewed by Wikimedia Foundation staff in accordance with the following criteria\"},{\"source\":\"Exceptional access criteria\",\"predicate\":\"aggregates\",\"target\":\"Criterion 1: Who\",\"quote\":\"with a response to the six criteria described below\"},{\"source\":\"Exceptional access criteria\",\"predicate\":\"aggregates\",\"target\":\"Criterion 2: What\",\"quote\":\"with a response to the six criteria described below\"},{\"source\":\"Exceptional access criteria\",\"predicate\":\"aggregates\",\"target\":\"Criterion 3: Need\",\"quote\":\"with a response to the six criteria described below\"},{\"source\":\"Exceptional access criteria\",\"predicate\":\"aggregates\",\"target\":\"Criterion 4: Obligation\",\"quote\":\"with a response to the six criteria described below\"},{\"source\":\"Exceptional access criteria\",\"predicate\":\"aggregates\",\"target\":\"Criterion 5: Mission alignment\",\"quote\":\"with a response to the six criteria described below\"},{\"source\":\"Exceptional access criteria\",\"predicate\":\"aggregates\",\"target\":\"Criterion 6: Values alignment\",\"quote\":\"with a response to the six criteria described below\"},{\"source\":\"Movement Strategy recommendations\",\"predicate\":\"influence\",\"target\":\"Increase the reach and discoverability of the content\",\"quote\":\"increase the reach and discoverability of our content and the potential for data returns\"},{\"source\":\"Movement Strategy recommendations\",\"predicate\":\"influence\",\"target\":\"Improve awareness and ease of attribution and verifiability\",\"quote\":\"improve awareness of and ease of attribution and verifiability for content reusers\"},{\"source\":\"High-intensity scraping of production servers\",\"predicate\":\"influence\",\"target\":\"Program goal: Resource-load\",\"quote\":\"Reduce the need for high-intensity site-scraping by the highest-frequency and highest-volume reusers, which currently target our production servers.\"},{\"source\":\"Large companies rely on Wikimedia content without reinvesting\",\"predicate\":\"influence\",\"target\":\"Program goal: Fundraising\",\"quote\":\"There has long been a feeling among community members that these companies should do more to reinvest in the Wikimedia communities\"},{\"source\":\"Realtime API\",\"predicate\":\"realizes\",\"target\":\"Realtime streaming\",\"quote\":\"Streaming: Receive streaming (firehose) updates of every change as they occur in real-time\"},{\"source\":\"Realtime API\",\"predicate\":\"realizes\",\"target\":\"Realtime batch\",\"quote\":\"Batch: Download compressed files of all articles that were changed, generated hourly\"},{\"source\":\"Realtime API\",\"predicate\":\"realizes\",\"target\":\"Event filtering\",\"quote\":\"Filtering of events by Project or Revision Namespace\"},{\"source\":\"Realtime API\",\"predicate\":\"satisfies\",\"target\":\"Filter the changes received\",\"quote\":\"allow them to filter the changes they receive to limit their processing\"},{\"source\":\"Realtime API\",\"predicate\":\"satisfies\",\"target\":\"Stable HTTP connections with no data loss\",\"quote\":\"guarantee stable HTTP connections to ensure no data loss\"},{\"source\":\"Realtime API\",\"predicate\":\"satisfies\",\"target\":\"A more useful schema to limit API calls per event\",\"quote\":\"supply a more useful schema to limit the number of API calls they need to make per event\"},{\"source\":\"On-demand API\",\"predicate\":\"satisfies\",\"target\":\"Reliable retrieval of article data in structures other than HTML\",\"quote\":\"High-volume reusers have requested a reliable means to gather this data, as well as structures other than HTML\"},{\"source\":\"Snapshot API\",\"predicate\":\"satisfies\",\"target\":\"Frequency: regular current snapshots\",\"quote\":\"Up to a daily snapshots cadence\"},{\"source\":\"Wikimedia Cloud Services\",\"predicate\":\"serves\",\"target\":\"Enterprise APIs\",\"quote\":\"Using Wikimedia Cloud Services. You get the same access as a paid account when making a call to any Enterprise API endpoint\"},{\"source\":\"PAWS\",\"predicate\":\"serves\",\"target\":\"Enterprise APIs\",\"quote\":\"from within PAWS, Wikimedia Cloud VPS, or Toolforge\"},{\"source\":\"Wikimedia Cloud VPS\",\"predicate\":\"serves\",\"target\":\"Enterprise APIs\",\"quote\":\"from within PAWS, Wikimedia Cloud VPS, or Toolforge\"},{\"source\":\"Toolforge\",\"predicate\":\"serves\",\"target\":\"Enterprise APIs\",\"quote\":\"from within PAWS, Wikimedia Cloud VPS, or Toolforge\"},{\"source\":\"Snapshot API\",\"predicate\":\"accesses\",\"target\":\"Wikimedia content\",\"quote\":\"The Enterprise Snapshot API allows users to retrieve entire Wikimedia projects as a database dump file.\"},{\"source\":\"On-demand API\",\"predicate\":\"accesses\",\"target\":\"Wikimedia content\",\"quote\":\"The Wikimedia Enterprise On-demand API allows users to retrieve single articles from any supported Wikimedia project at anytime.\"},{\"source\":\"Realtime API\",\"predicate\":\"accesses\",\"target\":\"Wikimedia content\",\"quote\":\"The Enterprise Realtime API allows users to stream updates in real-time from any supported Wikimedia project.\"}]}",
+    "type": "text"
+   }
+  ],
+  "model": "claude-haiku-5-5",
+  "role": "assistant",
+  "stop_details": null,
+  "stop_reason": "end_turn",
+  "stop_sequence": null,
+  "type": "message",
+  "usage": {
+   "cache_creation": {
+    "ephemeral_1h_input_tokens": 0,
+    "ephemeral_5m_input_tokens": 5426
+   },
+   "cache_creation_input_tokens": 5426,
+   "cache_read_input_tokens": 0,
+   "inference_geo": "global",
+   "input_tokens": 8787,
+   "output_tokens": 13453,
+   "output_tokens_details": {
+    "thinking_tokens": 11305
+   },
+   "server_tool_use": null,
+   "service_tier": "standard",
+   "speed": "standard"
+  },
+  "diagnostics": null
+ }
+}

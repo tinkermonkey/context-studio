@@ -1,0 +1,648 @@
+{
+ "arm": "R2-haiku",
+ "model": "claude-haiku-5-5",
+ "document": "edit_check",
+ "take": 3,
+ "effort": "high",
+ "max_tokens": 64000,
+ "prompt_sha256": "3da0e45afb57aa8dff17bf0b4566f3f3560bf4bbc9eae6d5e5d339e8401965b2",
+ "failed": false,
+ "attempts": [
+  {
+   "attempt": 1,
+   "problem": null,
+   "usage": {
+    "input": 13924,
+    "cache_write": 5176,
+    "cache_read": 0,
+    "output": 16896
+   },
+   "usd": 0.0104874,
+   "latency_s": 63.2
+  }
+ ],
+ "relationships_validated": true,
+ "individuals_from": "B take3",
+ "individuals": [
+  {
+   "title": "Edit Check",
+   "class": "product.feature",
+   "quote": "Offer people actionable feedback about Wikipedia policies while they are editing."
+  },
+  {
+   "title": "Editing Team",
+   "class": "business.businessactor",
+   "quote": "The Editing Team is working on a set of improvements for the visual editor to help new volunteers understand and follow some of the policies and guidelines necessary to make constructive changes to Wikipedia projects."
+  },
+  {
+   "title": "Wikimedia Foundation Product Department",
+   "class": "business.businessactor",
+   "quote": "why the Wikimedia Foundation's Product Department is prioritizing this work"
+  },
+  {
+   "title": "Visual editor",
+   "class": "application.applicationcomponent",
+   "quote": "the Editing Team will be introducing new functionality within the visual editor (desktop and mobile)"
+  },
+  {
+   "title": "Reference check",
+   "class": "product.feature",
+   "quote": "The first \"check\" the Editing Team will be introducing is one that will detect when people are attempting to add"
+  },
+  {
+   "title": "Link check and Reference reliability",
+   "class": "product.feature",
+   "quote": "Link check and Reference reliability"
+  },
+  {
+   "title": "Paste Check",
+   "class": "product.feature",
+   "quote": "Paste Check"
+  },
+  {
+   "title": "Tone check",
+   "class": "product.feature",
+   "quote": "Tone check"
+  },
+  {
+   "title": "Suggestion Mode",
+   "class": "product.feature",
+   "quote": "The feature has been available as a Beta Feature globally since early March and at English Wikipedia since early February."
+  },
+  {
+   "title": "TextMatch",
+   "class": "product.feature",
+   "quote": "Some communities have started to use the textMatch feature to create custom local types of Suggestion."
+  },
+  {
+   "title": "Add an image suggestion type",
+   "class": "product.feature",
+   "quote": "A new experimental suggestion type, \"Add an image\", has been created using the same functionality as the Growth team's version."
+  },
+  {
+   "title": "Add a link suggestion type",
+   "class": "product.feature",
+   "quote": "Work is also ongoing on improving the functionality of the \"Add a link\" suggestion type, so that it can become a default global suggestion type in the future."
+  },
+  {
+   "title": "addReference suggestions",
+   "class": "product.feature",
+   "quote": "Better detection of existing references for the `addReference` suggestions"
+  },
+  {
+   "title": "ignoreQuotedContent setting",
+   "class": "product.feature",
+   "quote": "Better detection of quotations for the `ignoreQuotedContent` setting"
+  },
+  {
+   "title": "Hide suggestions toggle-button",
+   "class": "ux.actioncomponent",
+   "quote": "Addition of a toggle-button to hide suggestions temporarily"
+  },
+  {
+   "title": "Special:EditChecks",
+   "class": "ux.view",
+   "quote": "Clearer and more accurate details in `Special:EditChecks` which shows the local configuration"
+  },
+  {
+   "title": "Multi-Check",
+   "class": "product.feature",
+   "quote": "To learn whether the Multi-Check was effective at causing, newcomers to publish new content edits that include references while lowering the likelihood those edits would be reverted"
+  },
+  {
+   "title": "Edit Check siderail design",
+   "class": "product.feature",
+   "quote": "In December 2024, we released a new design for the Edit Check desktop experience."
+  },
+  {
+   "title": "editcheck/init.js",
+   "class": "technology.artifact",
+   "quote": "The conditions above are implemented and maintained in code here: editcheck/init.js"
+  },
+  {
+   "title": "Newcomers feel safe and confident publishing useful changes",
+   "class": "motivation.goal",
+   "quote": "Newcomers and Junior Contributors from Sub-Saharan Africa will feel safe and confident enough while editing to publish changes they are proud of and that experienced volunteers consider useful."
+  },
+  {
+   "title": "Moderators notice quality improvements and configure Edit Check",
+   "class": "motivation.goal",
+   "quote": "Moderators at the English and French Wikipedias will notice improvements in the quality of edits newcomers are making and be motivated to configure how Edit Check presents policies to them."
+  },
+  {
+   "title": "Newcomers and Junior Contributors from Sub-Saharan Africa",
+   "class": "motivation.stakeholder",
+   "quote": "we are considering people who are still \"learning the basics\" to be people who have published <100 cumulative edits to a single, or multiple, Wikipedias."
+  },
+  {
+   "title": "Experienced volunteers/moderators",
+   "class": "motivation.stakeholder",
+   "quote": "need to do more work reverting low-quality edits and posting messages on inexperienced volunteers' talk pages"
+  },
+  {
+   "title": "Administrators at all Wikipedias",
+   "class": "motivation.stakeholder",
+   "quote": "Administrators at all Wikipedias can help to configure this tool so that it can recognize local standard heading-names"
+  },
+  {
+   "title": "Visual editor teaches technical skills successfully",
+   "class": "motivation.assessment",
+   "quote": "the editing experience has been reasonably successful at helping inexperienced volunteers learn the"
+  },
+  {
+   "title": "Editing interfaces do not surface policies",
+   "class": "motivation.assessment",
+   "quote": "The trouble is that the visual editor and other editing interfaces do not make people aware of the Wikipedia policies and guidelines they are expected to follow."
+  },
+  {
+   "title": "Newcomer changes often break best practices",
+   "class": "motivation.assessment",
+   "quote": "the changes inexperienced volunteers publish often break established best practices and lead to undesirable outcomes"
+  },
+  {
+   "title": "Newcomers demotivated when changes reverted",
+   "class": "motivation.driver",
+   "quote": "become disappointed and frustrated when the good-faith change(s) they arrived to the wiki seeking to make are undone"
+  },
+  {
+   "title": "Moderators burdened by reverting and educating newcomers",
+   "class": "motivation.driver",
+   "quote": "Continually needing to educate inexperienced volunteers and undo their changes can lead to experienced volunteers becoming skeptical of inexperienced volunteers and impatient with them."
+  },
+  {
+   "title": "Wikipedia projects struggle to grow and diversify",
+   "class": "motivation.driver",
+   "quote": "struggle to grow and diversify their volunteer populations and shrink the knowledge gaps present within Wikimedia wikis."
+  },
+  {
+   "title": "Offer actionable policy feedback during editing",
+   "class": "motivation.goal",
+   "quote": "Offering inexperienced volunteers relevant and actionable feedback about Wikipedia policies in the precious moments when they are in the midst of making a change using the visual editor."
+  },
+  {
+   "title": "Let moderators specify feedback newcomers see",
+   "class": "motivation.goal",
+   "quote": "Equipping moderators with a new ability to specify the feedback inexperienced volunteers are presented with while they are editing"
+  },
+  {
+   "title": "Surfacing guidance while editing yields valued changes",
+   "class": "motivation.principle",
+   "quote": "This project is built on the belief that by surfacing relevant guidance in the precious moments when inexperienced volunteers are in the midst of making a change to Wikipedia"
+  },
+  {
+   "title": "Newcomers feel safe when they can predict policy alignment",
+   "class": "motivation.goal",
+   "quote": "will feel safe and motivated making changes to Wikipedia if they can accurately predict whether the changes they are attempting to make are aligned with existing Wikipedia policies, guidelines, and/or cultural conventions."
+  },
+  {
+   "title": "Make norms legible and actionable while editing",
+   "class": "motivation.principle",
+   "quote": "we first need to make the norms and standards that are currently in place legible and actionable to people while they are editing."
+  },
+  {
+   "title": "Newcomers twice as likely in Africa or Asia",
+   "class": "motivation.assessment",
+   "quote": "Newcomers are two times more likely to live in Africa or Asia."
+  },
+  {
+   "title": "Movement struggles to retain non-European/NA editors",
+   "class": "motivation.assessment",
+   "quote": "The movement struggles to retain editors who live outside Europe and North America."
+  },
+  {
+   "title": "Sub-Saharan Africa underrepresented among editors",
+   "class": "motivation.assessment",
+   "quote": "people from Sub-Saharan Africa represent only 1% of active unique editors, despite representing 15% of the global population and 7% of the global internet population."
+  },
+  {
+   "title": "80% of SSA editors contribute to English or French Wikipedia",
+   "class": "motivation.assessment",
+   "quote": "80% of registered editors in Sub-Saharan Africa contribute to English or French Wikipedia."
+  },
+  {
+   "title": "Minimize false positives and let volunteers evolve heuristic",
+   "class": "motivation.principle",
+   "quote": "pursuing an approach with Edit Check that minimizes the likelihood of false positives and is implemented in ways that empower volunteers, on a per-project basis, to evolve the heuristic to become more robust over time."
+  },
+  {
+   "title": "Activate reference check for unreferenced new paragraphs in main namespace",
+   "class": "motivation.requirement",
+   "quote": "This strategy amounts to the initial reference Edit Check becoming activated if/when all of the following conditions are met:"
+  },
+  {
+   "title": "Guidance intuitive so newcomers return",
+   "class": "motivation.goal",
+   "quote": "Increase the likelihood that newcomers and Junior Contributors find the guidance Edit Check is presenting them with, and the editing experience more broadly, to be intuitive and straightforward"
+  },
+  {
+   "title": "Avoid extra work for experienced volunteers",
+   "class": "motivation.goal",
+   "quote": "Decrease the likelihood that Edit Check is creating more work for experienced volunteers by prompting newcomers and Junior Contributors to add sources when they are not needed"
+  },
+  {
+   "title": "Moderators configure when and for whom Edit Check activates",
+   "class": "motivation.requirement",
+   "quote": "The Editing Team thinks it is crucial that moderators be empowered to configure when, and for whom, Edit Check becomes activated."
+  },
+  {
+   "title": "Audit and edit reference check activation logic",
+   "class": "motivation.requirement",
+   "quote": "the logic that determines when the reference Edit Check becomes activated"
+  },
+  {
+   "title": "Review edits of people shown Edit Check",
+   "class": "motivation.requirement",
+   "quote": "the edits people who are shown Edit Check are making"
+  },
+  {
+   "title": "Mobile visual editor publishing workflow",
+   "class": "product.userworkflow",
+   "quote": "visual editor's publishing workflow that people will see if/when they add new content"
+  },
+  {
+   "title": "Mobile reference check publishing step",
+   "class": "product.workflowstep",
+   "quote": "The first version of Edit Check will introduce a new step within the"
+  },
+  {
+   "title": "Multi-Check (References) A/B Test",
+   "class": "business.businessprocess",
+   "quote": "we ran an A/B test with 12 Wikipedias."
+  },
+  {
+   "title": "Multi-Check increased referenced unreverted edits",
+   "class": "motivation.outcome",
+   "quote": "Multi-Check caused statistically significant increases in the proportion of edits that include a reference and are not reverted within 48 hours"
+  },
+  {
+   "title": "Multi-Check deployment June 25, 2025",
+   "class": "product.milestone",
+   "quote": "Multi-Check was deployed to all wikis where Reference Check is currently available on June 25, 2025."
+  },
+  {
+   "title": "Multiple checks 1.3x more likely to add reference",
+   "class": "motivation.outcome",
+   "quote": "more likely to include at least one new reference in the final published edit compared to sessions shown a single Reference Check."
+  },
+  {
+   "title": "Multiple checks cut revert rate 34.7%",
+   "class": "motivation.outcome",
+   "quote": "in revert rate when directly comparing edits presented multiple checks compared to edits presented a single reference check"
+  },
+  {
+   "title": "5.5% more users publish referenced edits",
+   "class": "motivation.outcome",
+   "quote": "in the proportion of distinct users who published a new content edit with a reference when multi-check was available."
+  },
+  {
+   "title": "No completion decrease up to 5 checks",
+   "class": "motivation.assessment",
+   "quote": "in edit completion rate for up to 5 reference checks being presented in a single session"
+  },
+  {
+   "title": "Multiple checks cause no significant disruption",
+   "class": "motivation.assessment",
+   "quote": "indicating that multiple checks are not causing significant disruption or confusion to the editors."
+  },
+  {
+   "title": "Multi-Check Phase 1 Impact Analysis",
+   "class": "business.businessprocess",
+   "quote": "we compared analyzed several key metrics shifted before and after this change."
+  },
+  {
+   "title": "Reference Check revert rate decreased 15.7% after siderail",
+   "class": "motivation.outcome",
+   "quote": "The revert rate of new content edits where Reference Check was activated decreased by"
+  },
+  {
+   "title": "Referenced new content edits increased 8% after siderail",
+   "class": "motivation.outcome",
+   "quote": "The proportion of new content edits that included a reference following the change increased"
+  },
+  {
+   "title": "Reference decline rate decreased 4.7%",
+   "class": "motivation.outcome",
+   "quote": "to add a reference when Edit Check prompted them decreased"
+  },
+  {
+   "title": "Siderail design net positive",
+   "class": "motivation.assessment",
+   "quote": "The findings above suggest this design change has been net positive."
+  },
+  {
+   "title": "Use siderail paradigm for new Edit Checks",
+   "class": "motivation.principle",
+   "quote": "we will continue depending on this new design paradigm as we introduce new types of Edit Checks"
+  },
+  {
+   "title": "Reference Check A/B Test",
+   "class": "business.businessprocess",
+   "quote": "we conducted an A/B test with 15 Wikipedias."
+  },
+  {
+   "title": "Reference Check increased edit quality",
+   "class": "motivation.assessment",
+   "quote": "increase in the quality of edits"
+  },
+  {
+   "title": "Reference Check default-on would be net positive",
+   "class": "motivation.assessment",
+   "quote": "offering Reference Check as a default-on feature would have a net positive impact on all wikis and the people who contribute to them."
+  },
+  {
+   "title": "2.2x more likely constructive referenced edit",
+   "class": "motivation.outcome",
+   "quote": "to publish a new content edit that includes a reference and is constructive (not reverted within 48 hours)."
+  },
+  {
+   "title": "Mobile 4.2x more likely constructive referenced edit",
+   "class": "motivation.outcome",
+   "quote": "to publish a constructive new content edit with a reference when Reference Check was shown to eligible edits."
+  },
+  {
+   "title": "Revert rate decreased 8.6%",
+   "class": "motivation.outcome",
+   "quote": "New content edit revert rate"
+  },
+  {
+   "title": "SSA edits 53% less likely reverted",
+   "class": "motivation.outcome",
+   "quote": "New content edits by contributors from Sub-Saharan Africa are"
+  },
+  {
+   "title": "Constructive retention 16% higher",
+   "class": "motivation.outcome",
+   "quote": "to return to make a non-reverted edit in their second month (31-60 days after)."
+  },
+  {
+   "title": "Edit completion decreased 10% with Reference Check",
+   "class": "motivation.assessment",
+   "quote": "in edit completion rate for edits where Reference Check was shown."
+  },
+  {
+   "title": "Low false negative rate",
+   "class": "motivation.assessment",
+   "quote": "There was a low false negative rate."
+  },
+  {
+   "title": "6.6% false positive dismissals",
+   "class": "motivation.assessment",
+   "quote": "of contributors dismissed adding a citation because they indicated the new content being added does not need a reference."
+  },
+  {
+   "title": "Suggestion Mode A/B experiment",
+   "class": "business.businessprocess",
+   "quote": "We are now preparing for an A/B experiment with newcomers at ~20 Wikipedias, to measure what kind of impact the tool has on the percentage of constructive (un-reverted) edits by newcomers"
+  },
+  {
+   "title": "LLMs effective at verifying source corroboration in English",
+   "class": "motivation.assessment",
+   "quote": "This research confirmed that in English LLMs are effective at evaluating whether web-based sources corroborate claims on Wikipedia."
+  },
+  {
+   "title": "Store Suggestions efficiently for reuse",
+   "class": "motivation.requirement",
+   "quote": "The team is building a way for Suggestions to be stored more efficiently, so that in the future the suggestions can be used by, or shown within, other software features"
+  },
+  {
+   "title": "Increase quality of SSA newcomer edits",
+   "class": "motivation.outcome",
+   "quote": "Increase the quality of edits newcomers and Junior Contributors editing from within Sub-Saharan Africa publish in the main namespace"
+  },
+  {
+   "title": "Increase SSA newcomers adding references",
+   "class": "motivation.outcome",
+   "quote": "Increase the likelihood that newcomers and Junior Contributors editing from within Sub-Saharan Africa will accompany the new content they are adding with a reference"
+  },
+  {
+   "title": "SSA newcomers report feeling safe and confident",
+   "class": "motivation.outcome",
+   "quote": "Newcomers and Junior Contributors editing from within Sub-Saharan Africa will report feeling safe and confident making changes to Wikipedia"
+  },
+  {
+   "title": "Experienced volunteers iterate Edit Check configurations",
+   "class": "motivation.outcome",
+   "quote": "Experienced volunteers will independently audit and iterate upon Edit Check's default configurations to ensure Edit Check is causing newcomers and Junior Contributors to make productive edits."
+  },
+  {
+   "title": "Newcomers more aware of need for references",
+   "class": "motivation.outcome",
+   "quote": "Newcomers and Junior Contributors will be more aware of the need to add a reference when contributing new content because the visual editor will prompt them to do so"
+  },
+  {
+   "title": "Risk: edit quality decreases",
+   "class": "motivation.assessment",
+   "quote": "Edit quality decreases"
+  },
+  {
+   "title": "Risk: unreliable citations harder to patrol",
+   "class": "motivation.assessment",
+   "quote": "Edits become more difficult to patrol because unreliable citations are difficult to detect"
+  },
+  {
+   "title": "Risk: edit completion rate drastically decreases",
+   "class": "motivation.assessment",
+   "quote": "Edit completion rate drastically decreases"
+  },
+  {
+   "title": "Risk: edit abandonment drastically increases",
+   "class": "motivation.assessment",
+   "quote": "Edit abandonment rate drastically increases"
+  },
+  {
+   "title": "Risk: blocks increase",
+   "class": "motivation.assessment",
+   "quote": "Blocks increase"
+  },
+  {
+   "title": "Risk: high false positive or negative rates",
+   "class": "motivation.assessment",
+   "quote": "High false positive or false negative rates"
+  },
+  {
+   "title": "Risk: Edit Check too resource intensive to scale",
+   "class": "motivation.assessment",
+   "quote": "Edit Check is too resource intensive to scale"
+  },
+  {
+   "title": "Edit Check project start 2022-10-01",
+   "class": "product.milestone",
+   "quote": "2022-10-01"
+  }
+ ],
+ "relationships": [
+  {
+   "source": "Mobile visual editor publishing workflow",
+   "predicate": "composes",
+   "target": "Mobile reference check publishing step",
+   "quote": "The first version of Edit Check will introduce a new step within the *mobile* visual editor's publishing workflow"
+  },
+  {
+   "source": "Multi-Check",
+   "predicate": "scheduled-for",
+   "target": "Multi-Check deployment June 25, 2025",
+   "quote": "Multi-Check was deployed to all wikis where Reference Check is currently available on June 25, 2025."
+  },
+  {
+   "source": "Reference check",
+   "predicate": "satisfies",
+   "target": "Activate reference check for unreferenced new paragraphs in main namespace",
+   "quote": "This strategy amounts to the initial reference Edit Check becoming activated if/when all of the following conditions are met:"
+  },
+  {
+   "source": "Edit Check",
+   "predicate": "satisfies",
+   "target": "Moderators configure when and for whom Edit Check activates",
+   "quote": "The Editing Team thinks it is crucial that moderators be empowered to configure when, and for whom, Edit Check becomes activated."
+  },
+  {
+   "source": "Edit Check",
+   "predicate": "satisfies",
+   "target": "Audit and edit reference check activation logic",
+   "quote": "Edit Check will enable volunteers, on a per project basis to:"
+  },
+  {
+   "source": "Edit Check",
+   "predicate": "satisfies",
+   "target": "Review edits of people shown Edit Check",
+   "quote": "Edit Check will enable volunteers, on a per project basis to:"
+  },
+  {
+   "source": "Edit Check",
+   "predicate": "scheduled-for",
+   "target": "Edit Check project start 2022-10-01",
+   "quote": "| Start: | 2022-10-01 |"
+  },
+  {
+   "source": "Editing interfaces do not surface policies",
+   "predicate": "influence",
+   "target": "Newcomer changes often break best practices",
+   "quote": "As a result, the changes inexperienced volunteers publish often break established best practices"
+  },
+  {
+   "source": "Newcomer changes often break best practices",
+   "predicate": "associated-with",
+   "target": "Newcomers demotivated when changes reverted",
+   "quote": "the changes inexperienced volunteers publish often break established best practices and lead to undesirable outcomes for inexperienced volunteers, experienced volunteers, and Wikipedia projects as a whole"
+  },
+  {
+   "source": "Newcomer changes often break best practices",
+   "predicate": "associated-with",
+   "target": "Moderators burdened by reverting and educating newcomers",
+   "quote": "the changes inexperienced volunteers publish often break established best practices and lead to undesirable outcomes for inexperienced volunteers, experienced volunteers, and Wikipedia projects as a whole"
+  },
+  {
+   "source": "Newcomer changes often break best practices",
+   "predicate": "associated-with",
+   "target": "Wikipedia projects struggle to grow and diversify",
+   "quote": "the changes inexperienced volunteers publish often break established best practices and lead to undesirable outcomes for inexperienced volunteers, experienced volunteers, and Wikipedia projects as a whole"
+  },
+  {
+   "source": "Experienced volunteers/moderators",
+   "predicate": "associated-with",
+   "target": "Moderators burdened by reverting and educating newcomers",
+   "quote": "Experienced volunteers/moderators \u2013 need to do more work reverting low-quality edits"
+  },
+  {
+   "source": "Moderators burdened by reverting and educating newcomers",
+   "predicate": "influence",
+   "target": "Let moderators specify feedback newcomers see",
+   "quote": "Equipping moderators with a new ability to specify the feedback inexperienced volunteers are presented with while they are editing"
+  },
+  {
+   "source": "Newcomers demotivated when changes reverted",
+   "predicate": "influence",
+   "target": "Offer actionable policy feedback during editing",
+   "quote": "Offering inexperienced volunteers relevant and actionable feedback about Wikipedia policies in the precious moments when they are in the midst of making a change using the visual editor."
+  },
+  {
+   "source": "Surfacing guidance while editing yields valued changes",
+   "predicate": "influence",
+   "target": "Newcomers feel safe and confident publishing useful changes",
+   "quote": "by surfacing relevant guidance in the precious moments when inexperienced volunteers are in the midst of making a change to Wikipedia and equipping them with the know-how and tools necessary to apply this guidance, they will make changes they are proud of and that experienced volunteers value."
+  },
+  {
+   "source": "Make norms legible and actionable while editing",
+   "predicate": "influence",
+   "target": "Newcomers feel safe when they can predict policy alignment",
+   "quote": "people who are new, particularly people who have historically been excluded from and harmed by established power structures, will feel safe and motivated making changes to Wikipedia if they can accurately predict whether the changes they are attempting to make are aligned with existing Wikipedia policies"
+  },
+  {
+   "source": "Experienced volunteers/moderators",
+   "predicate": "associated-with",
+   "target": "Experienced volunteers iterate Edit Check configurations",
+   "quote": "Experienced volunteers will independently audit and iterate upon Edit Check's default configurations"
+  },
+  {
+   "source": "Newcomers and Junior Contributors from Sub-Saharan Africa",
+   "predicate": "associated-with",
+   "target": "Increase quality of SSA newcomer edits",
+   "quote": "Increase the quality of edits newcomers and Junior Contributors editing from within Sub-Saharan Africa publish in the main namespace"
+  },
+  {
+   "source": "Newcomers and Junior Contributors from Sub-Saharan Africa",
+   "predicate": "associated-with",
+   "target": "Increase SSA newcomers adding references",
+   "quote": "Increase the likelihood that newcomers and Junior Contributors editing from within Sub-Saharan Africa will accompany the new content they are adding with a reference"
+  },
+  {
+   "source": "Newcomers and Junior Contributors from Sub-Saharan Africa",
+   "predicate": "associated-with",
+   "target": "SSA newcomers report feeling safe and confident",
+   "quote": "Newcomers and Junior Contributors editing from within Sub-Saharan Africa will report feeling safe and confident making changes to Wikipedia"
+  },
+  {
+   "source": "Experienced volunteers/moderators",
+   "predicate": "associated-with",
+   "target": "Moderators configure when and for whom Edit Check activates",
+   "quote": "The Editing Team thinks it is crucial that moderators be empowered to configure when, and for whom, Edit Check becomes activated."
+  }
+ ],
+ "usage": {
+  "input": 13924,
+  "cache_write": 5176,
+  "cache_read": 0,
+  "output": 16896
+ },
+ "usd": 0.0104874,
+ "latency_s": 63.2,
+ "raw_response": {
+  "id": "msg_011Ch8X2DbehqTfzbWaUkFJk",
+  "container": null,
+  "content": [
+   {
+    "thinking": "",
+    "type": "thinking"
+   },
+   {
+    "citations": null,
+    "text": "{\"relationships\":[{\"source\":\"Mobile visual editor publishing workflow\",\"predicate\":\"composes\",\"target\":\"Mobile reference check publishing step\",\"quote\":\"The first version of Edit Check will introduce a new step within the *mobile* visual editor's publishing workflow\"},{\"source\":\"Multi-Check\",\"predicate\":\"scheduled-for\",\"target\":\"Multi-Check deployment June 25, 2025\",\"quote\":\"Multi-Check was deployed to all wikis where Reference Check is currently available on June 25, 2025.\"},{\"source\":\"Reference check\",\"predicate\":\"satisfies\",\"target\":\"Activate reference check for unreferenced new paragraphs in main namespace\",\"quote\":\"This strategy amounts to the initial reference Edit Check becoming activated if/when all of the following conditions are met:\"},{\"source\":\"Edit Check\",\"predicate\":\"satisfies\",\"target\":\"Moderators configure when and for whom Edit Check activates\",\"quote\":\"The Editing Team thinks it is crucial that moderators be empowered to configure when, and for whom, Edit Check becomes activated.\"},{\"source\":\"Edit Check\",\"predicate\":\"satisfies\",\"target\":\"Audit and edit reference check activation logic\",\"quote\":\"Edit Check will enable volunteers, on a per project basis to:\"},{\"source\":\"Edit Check\",\"predicate\":\"satisfies\",\"target\":\"Review edits of people shown Edit Check\",\"quote\":\"Edit Check will enable volunteers, on a per project basis to:\"},{\"source\":\"Edit Check\",\"predicate\":\"scheduled-for\",\"target\":\"Edit Check project start 2022-10-01\",\"quote\":\"| Start: | 2022-10-01 |\"},{\"source\":\"Editing interfaces do not surface policies\",\"predicate\":\"influence\",\"target\":\"Newcomer changes often break best practices\",\"quote\":\"As a result, the changes inexperienced volunteers publish often break established best practices\"},{\"source\":\"Newcomer changes often break best practices\",\"predicate\":\"associated-with\",\"target\":\"Newcomers demotivated when changes reverted\",\"quote\":\"the changes inexperienced volunteers publish often break established best practices and lead to undesirable outcomes for inexperienced volunteers, experienced volunteers, and Wikipedia projects as a whole\"},{\"source\":\"Newcomer changes often break best practices\",\"predicate\":\"associated-with\",\"target\":\"Moderators burdened by reverting and educating newcomers\",\"quote\":\"the changes inexperienced volunteers publish often break established best practices and lead to undesirable outcomes for inexperienced volunteers, experienced volunteers, and Wikipedia projects as a whole\"},{\"source\":\"Newcomer changes often break best practices\",\"predicate\":\"associated-with\",\"target\":\"Wikipedia projects struggle to grow and diversify\",\"quote\":\"the changes inexperienced volunteers publish often break established best practices and lead to undesirable outcomes for inexperienced volunteers, experienced volunteers, and Wikipedia projects as a whole\"},{\"source\":\"Experienced volunteers/moderators\",\"predicate\":\"associated-with\",\"target\":\"Moderators burdened by reverting and educating newcomers\",\"quote\":\"Experienced volunteers/moderators \u2013 need to do more work reverting low-quality edits\"},{\"source\":\"Moderators burdened by reverting and educating newcomers\",\"predicate\":\"influence\",\"target\":\"Let moderators specify feedback newcomers see\",\"quote\":\"Equipping moderators with a new ability to specify the feedback inexperienced volunteers are presented with while they are editing\"},{\"source\":\"Newcomers demotivated when changes reverted\",\"predicate\":\"influence\",\"target\":\"Offer actionable policy feedback during editing\",\"quote\":\"Offering inexperienced volunteers relevant and actionable feedback about Wikipedia policies in the precious moments when they are in the midst of making a change using the visual editor.\"},{\"source\":\"Surfacing guidance while editing yields valued changes\",\"predicate\":\"influence\",\"target\":\"Newcomers feel safe and confident publishing useful changes\",\"quote\":\"by surfacing relevant guidance in the precious moments when inexperienced volunteers are in the midst of making a change to Wikipedia and equipping them with the know-how and tools necessary to apply this guidance, they will make changes they are proud of and that experienced volunteers value.\"},{\"source\":\"Make norms legible and actionable while editing\",\"predicate\":\"influence\",\"target\":\"Newcomers feel safe when they can predict policy alignment\",\"quote\":\"people who are new, particularly people who have historically been excluded from and harmed by established power structures, will feel safe and motivated making changes to Wikipedia if they can accurately predict whether the changes they are attempting to make are aligned with existing Wikipedia policies\"},{\"source\":\"Experienced volunteers/moderators\",\"predicate\":\"associated-with\",\"target\":\"Experienced volunteers iterate Edit Check configurations\",\"quote\":\"Experienced volunteers will independently audit and iterate upon Edit Check's default configurations\"},{\"source\":\"Newcomers and Junior Contributors from Sub-Saharan Africa\",\"predicate\":\"associated-with\",\"target\":\"Increase quality of SSA newcomer edits\",\"quote\":\"Increase the quality of edits newcomers and Junior Contributors editing from within Sub-Saharan Africa publish in the main namespace\"},{\"source\":\"Newcomers and Junior Contributors from Sub-Saharan Africa\",\"predicate\":\"associated-with\",\"target\":\"Increase SSA newcomers adding references\",\"quote\":\"Increase the likelihood that newcomers and Junior Contributors editing from within Sub-Saharan Africa will accompany the new content they are adding with a reference\"},{\"source\":\"Newcomers and Junior Contributors from Sub-Saharan Africa\",\"predicate\":\"associated-with\",\"target\":\"SSA newcomers report feeling safe and confident\",\"quote\":\"Newcomers and Junior Contributors editing from within Sub-Saharan Africa will report feeling safe and confident making changes to Wikipedia\"},{\"source\":\"Experienced volunteers/moderators\",\"predicate\":\"associated-with\",\"target\":\"Moderators configure when and for whom Edit Check activates\",\"quote\":\"The Editing Team thinks it is crucial that moderators be empowered to configure when, and for whom, Edit Check becomes activated.\"}]}",
+    "type": "text"
+   }
+  ],
+  "model": "claude-haiku-5-5",
+  "role": "assistant",
+  "stop_details": null,
+  "stop_reason": "end_turn",
+  "stop_sequence": null,
+  "type": "message",
+  "usage": {
+   "cache_creation": {
+    "ephemeral_1h_input_tokens": 0,
+    "ephemeral_5m_input_tokens": 5176
+   },
+   "cache_creation_input_tokens": 5176,
+   "cache_read_input_tokens": 0,
+   "inference_geo": "global",
+   "input_tokens": 13924,
+   "output_tokens": 16896,
+   "output_tokens_details": {
+    "thinking_tokens": 14825
+   },
+   "server_tool_use": null,
+   "service_tier": "standard",
+   "speed": "standard"
+  },
+  "diagnostics": null
+ }
+}

@@ -16,8 +16,8 @@ Scoring answers four questions about a run:
 - Did it type them correctly? (the gold type, or one of the types gold lists as
   acceptable where the schema leaves a judgment call)
 - Did it state the relationships? (recall over the gold relationships, and
-  over those whose two ends it found; gold relationships are the plainly stated
-  ones, not all the correct ones, so there is no relationship precision)
+  over those whose two ends it found; precision is a lower bound, because gold
+  relationships are the plainly stated ones, not all the correct ones)
 
 A predicted individual matches a gold individual by name (title or alias,
 ignoring case, markdown and a plural ending; deliberately not the pipeline's
@@ -657,8 +657,22 @@ def score(
     reachable = {t for t in gold_triples if t[0] in found and t[2] in found}
     metrics["relationship_recall"] = _ratio(len(stated & gold_triples), len(gold_triples))
     metrics["relationship_recall_reachable"] = _ratio(len(stated & reachable), len(reachable))
-    # No relationship precision: gold holds the relationships the text states most
-    # plainly, not every one a run could correctly derive (see the fixtures' README).
+    # Relationship precision is a lower bound: gold holds the relationships the
+    # text states most plainly, not every one a run could correctly derive (see
+    # the fixtures' README), so a correct relationship gold lacks counts against
+    # it. Over the run's distinct relationships: those whose two ends are found
+    # gold individuals are one per gold triple they resolve to (one relationship
+    # stated under two names of an individual counts once, as for individual
+    # precision), the rest one per end names and predicate. `_resolved` is over
+    # the first kind only, so it is not lowered by relationships between
+    # spurious individuals.
+    named = {(name_key(r.source), r.predicate, name_key(r.target)) for r in relationships}
+    resolved = {(end_key[s], p, end_key[o]) for s, p, o in named if s in end_key and o in end_key}
+    unresolved = {(s, p, o) for s, p, o in named if s not in end_key or o not in end_key}
+    distinct = len(resolved) + len(unresolved)
+    correct = len(resolved & gold_triples)
+    metrics["relationship_precision"] = _ratio(correct, distinct)
+    metrics["relationship_precision_resolved"] = _ratio(correct, len(resolved))
 
     by_layer: dict[str, dict[str, float]] = {}
     for layer in sorted({g.layer for g in gold.individuals}):
@@ -683,6 +697,9 @@ def score(
             "gold_relationships": len(gold_triples),
             "predicted_relationships": len(relationships),
             "matched_relationships": len(stated & gold_triples),
+            "distinct_relationships": distinct,
+            "resolved_relationships": len(resolved),
+            "correct_relationships": correct,
         },
         by_layer=by_layer,
         missed=[
