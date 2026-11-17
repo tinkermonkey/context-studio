@@ -20,6 +20,7 @@ experiments/
 ├── ledger.jsonl                 # append-only experiment record (accepted + rejected)
 ├── campaign.py                  # Loop C's record step: ledger → campaign page → current state
 ├── page_metadata.py             # experiment page headers: `list` the catalogue, `check` every page
+├── scratch/                     # throwaway prototypes and raw outputs, git-ignored (pages mark them "scratch")
 └── README.md                    # this file
 ```
 
