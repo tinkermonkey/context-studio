@@ -1773,6 +1773,7 @@ class ProposalDecisionRecord(Base):  # type: ignore[valid-type,misc]
         model: The decision model that produced the probability, if any
         superseded_at, superseded_by: Set when a revert undid the decision
         added: The operation was added by the reviewer, not proposed
+        annotations: JSON {tier?, also_defensible?} the reviewer noted for gold; null if none
     """
 
     __tablename__ = "proposal_decisions"
@@ -1810,6 +1811,7 @@ class ProposalDecisionRecord(Base):  # type: ignore[valid-type,misc]
     superseded_at = Column(UtcDateTime(), nullable=True)
     superseded_by = Column(String(50), nullable=True)
     added = Column(Boolean, nullable=False, default=False, server_default=text("0"))
+    annotations = Column(JSON, nullable=True)
 
     def __repr__(self) -> str:
         return f"<ProposalDecisionRecord(operation={self.operation_id}, decision={self.decision})>"

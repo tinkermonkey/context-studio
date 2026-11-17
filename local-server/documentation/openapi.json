@@ -9520,6 +9520,17 @@
             ],
             "title": "Review Ms",
             "description": "The milliseconds the reviewer spent on it, recorded in its decision"
+          },
+          "annotation": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ReviewAnnotationRequest"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "What the reviewer notes for gold (its tier), recorded in its decision"
           }
         },
         "type": "object",
@@ -10959,6 +10970,14 @@
             "type": "object",
             "title": "Review Ms",
             "description": "Operation id -> the milliseconds the reviewer spent on it, for ops in operation_ids; recorded in its decision (gold's review_ms)"
+          },
+          "annotations": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/ReviewAnnotationRequest"
+            },
+            "type": "object",
+            "title": "Annotations",
+            "description": "Operation id -> what the reviewer notes for gold (tier, also_defensible classes of the taxonomy), for ops in operation_ids; recorded in its decision"
           }
         },
         "type": "object",
@@ -11040,6 +11059,19 @@
             ],
             "title": "Dataset Id",
             "description": "The dataset its individual and relationship operations are in; may be omitted while the taxonomy has at most one dataset"
+          },
+          "client_metadata": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Client Metadata",
+            "description": "Kept on the proposal for the proposing client (JSON values). A source_id names the source it was extracted from (a source of the taxonomy), and an origin the pipeline that made it ({pipeline_type, implementation_id, configuration_ref, configuration_version, digest}); either is checked when given (422 otherwise). The keys an extraction run records (run_id, pipeline, pages, extraction_id, extraction_started_at, partial) can't be set here"
           }
         },
         "type": "object",
@@ -11143,6 +11175,14 @@
             "type": "object",
             "title": "Review Ms",
             "description": "Operation id -> the milliseconds the reviewer spent on it, for operations being rejected; recorded in its decision (gold's review_ms)"
+          },
+          "annotations": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/ReviewAnnotationRequest"
+            },
+            "type": "object",
+            "title": "Annotations",
+            "description": "Operation id -> what the reviewer notes for gold, for operations being rejected; recorded in its decision"
           }
         },
         "type": "object",
@@ -14425,6 +14465,19 @@
               }
             ],
             "title": "Superseded By"
+          },
+          "annotations": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Annotations",
+            "description": "What the reviewer noted for gold: {tier?, also_defensible?: [class id]}; null when nothing was noted"
           },
           "added": {
             "type": "boolean",
@@ -20006,6 +20059,45 @@
         ],
         "title": "RevertRunResponse",
         "description": "Response from reverting a pipeline run."
+      },
+      "ReviewAnnotationRequest": {
+        "properties": {
+          "tier": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "core",
+                  "supporting"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tier",
+            "description": "How central the element is (the extraction benchmark's tier)"
+          },
+          "also_defensible": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Also Defensible",
+            "description": "Classes of the taxonomy that would also be right for it, by id"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "ReviewAnnotationRequest",
+        "description": "What a reviewer notes for gold beside a decision."
       },
       "RunCountsResponse": {
         "properties": {

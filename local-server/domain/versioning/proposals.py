@@ -39,6 +39,14 @@ INDIVIDUAL_EXTRACTION = "individual_extraction"
 # The client_metadata key a pipeline run's proposal records its origin under
 ORIGIN = "origin"
 
+# The client_metadata keys an extraction run records on its proposal
+# (domain.pipelines.source_proposals) and decides by (which proposals one
+# supersedes, which are partial): a client creating a proposal can't set them.
+# A client may name its source_id and origin; both are checked.
+RUN_METADATA_KEYS = frozenset(
+    {"run_id", "pipeline", "pages", "extraction_id", "extraction_started_at", "partial"}
+)
+
 # The reason a newer extraction of the same source gives the operations of an
 # older proposal it rejects (domain.pipelines.source_proposals), followed by
 # the newer proposal's id

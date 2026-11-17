@@ -34,6 +34,12 @@ DECIDED_BY_BUNDLE = "bundle"
 DECIDED_BY_UNKNOWN = "unknown"
 
 
+# The tiers a review annotation can give an element (the extraction benchmark's)
+ANNOTATION_TIERS = ("core", "supporting")
+# The keys a review annotation may have
+ANNOTATION_KEYS = frozenset({"tier", "also_defensible"})
+
+
 class DecisionKind(str, Enum):
     """What was decided."""
 
@@ -71,6 +77,9 @@ class ProposalDecision:
         superseded_at, superseded_by: Set when a revert undid the (applied) decision
         added: The operation was added by the reviewer (an element the
             extraction missed), not proposed
+        annotations: What the reviewer noted for gold beside the decision:
+            {tier?: "core" | "supporting", also_defensible?: [class id, ...]}
+            (classes that would also be right); None when nothing was noted
         id: Unique id
     """
 
@@ -96,6 +105,7 @@ class ProposalDecision:
     superseded_at: datetime | None = None
     superseded_by: str | None = None
     added: bool = False
+    annotations: dict[str, Any] | None = None
     id: str = field(default_factory=lambda: str(uuid4()))
 
     def __post_init__(self) -> None:
@@ -139,6 +149,7 @@ def decision_of(
     proposed: dict[str, Any] | None = None,
     chosen_alternative: dict[str, Any] | None = None,
     review_ms: int | None = None,
+    annotations: dict[str, Any] | None = None,
 ) -> ProposalDecision:
     """
     The decision an applied or rejected operation records.
@@ -148,6 +159,7 @@ def decision_of(
             rewrites its base); defaults to a snapshot of it as it is now
         chosen_alternative: The alternative the reviewer chose, when there is one
         review_ms: Milliseconds the reviewer spent on it, when measured
+        annotations: What the reviewer noted for gold, if anything
 
     Raises:
         ValueError: If the operation is neither applied nor rejected
@@ -186,6 +198,7 @@ def decision_of(
         chosen_alternative=dict(chosen_alternative) if chosen_alternative is not None else None,
         probability=operation.probability,
         added=operation.added_by_reviewer,
+        annotations=dict(annotations) if annotations else None,
     )
 
 

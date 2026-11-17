@@ -53,6 +53,8 @@ How much to trust it:
 - **It is small:** three documents, 297 gold individuals, 51 of the 193 classes represented. The holdout document has been used in earlier prompt work.
 - **Noise threshold: 0.08 typed F1.** A smaller difference between two approaches is not a result. `find_then_type` typed F1 ranges 0.426-0.465 on dev and 0.393-0.481 on the holdout over three takes, and the independent review put the threshold for a real difference at about 0.08. This is the one place the threshold is stated; the [rules for recording an experiment](experiments/README.md#recording-an-experiment) refer to it.
 
+To have a person check a gold file and write the verdicts back (`extraction_benchmark.py check`, review, `write-gold`, re-score), see "Checking the gold" in the [benchmark README](../../local-server/tests/integration/fixtures/pipelines/extraction_benchmark/README.md).
+
 An older corpus of short test passages (`fixtures/pipelines/individual_extraction/`) is still used as a guard for the two-pass implementation; it does not represent real documents (see [Before the benchmark](experiments/2026-05-to-09-before-the-benchmark.md)).
 
 ## Best current numbers

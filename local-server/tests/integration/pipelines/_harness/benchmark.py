@@ -46,6 +46,9 @@ BENCHMARK_DIR = (
 SCHEMA_BUNDLE = "dr_spec.bundle.json.xz"
 
 TIERS = ("core", "supporting")
+# Which documents a refinement loop optimises on, and which only vetoes (never selects).
+DEV_DOCUMENTS = ("edit_check", "gitlab_architecture")
+HOLDOUT_DOCUMENTS = ("wikimedia_enterprise",)
 # The layer whose individuals are statements rather than named things.
 STATEMENT_LAYER = "motivation"
 # Share of the shorter passage two passages must have in common to be the same passage.
@@ -282,6 +285,20 @@ def validate_gold(document_id: str, directory: Path = BENCHMARK_DIR) -> list[str
             elif source[start:end] != quote:
                 problems.append(f"{owner}: quote is not at {start}..{end}")
 
+    def check_checked(owner: str, item: Mapping[str, Any]) -> None:
+        """A person's check, when there is one: {by, at}."""
+        if "checked" not in item:
+            return
+        checked = item["checked"]
+        if (
+            not isinstance(checked, Mapping)
+            or not isinstance(checked.get("by"), str)
+            or not isinstance(checked.get("at"), str)
+            or not checked["by"]
+            or not checked["at"]
+        ):
+            problems.append(f"{owner}: checked needs by and at")
+
     class_of: dict[str, str] = {}
     for item in data["individuals"]:
         key = item["key"]
@@ -301,6 +318,7 @@ def validate_gold(document_id: str, directory: Path = BENCHMARK_DIR) -> list[str
             elif allowed and value not in allowed:
                 problems.append(f"{key}: {name}={value!r} is not one of {allowed}")
         check_evidence(key, item.get("evidence", ()))
+        check_checked(key, item)
     titles = Counter(name_key(item["title"]) for item in data["individuals"])
     problems += [f"duplicate title {title!r}" for title, count in titles.items() if count > 1]
     # A name two individuals share can only ever find the first of them
@@ -327,6 +345,7 @@ def validate_gold(document_id: str, directory: Path = BENCHMARK_DIR) -> list[str
         elif (class_of[rel["source"]], rel["predicate"], class_of[rel["target"]]) not in types:
             problems.append(f"{label}: not a relationship type of the schema")
         check_evidence(label, rel.get("evidence", ()))
+        check_checked(label, rel)
     return problems
 
 

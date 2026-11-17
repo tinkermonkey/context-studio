@@ -4361,6 +4361,8 @@ export interface components {
        * @description The milliseconds the reviewer spent on it, recorded in its decision
        */
       review_ms?: number | null;
+      /** @description What the reviewer notes for gold (its tier), recorded in its decision */
+      annotation?: components["schemas"]["ReviewAnnotationRequest"] | null;
     };
     /**
      * AddedPassageRequest
@@ -5270,6 +5272,13 @@ export interface components {
       review_ms?: {
         [key: string]: number;
       };
+      /**
+       * Annotations
+       * @description Operation id -> what the reviewer notes for gold (tier, also_defensible classes of the taxonomy), for ops in operation_ids; recorded in its decision
+       */
+      annotations?: {
+        [key: string]: components["schemas"]["ReviewAnnotationRequest"];
+      };
     };
     /**
      * ChangeProposalCreateRequest
@@ -5313,6 +5322,13 @@ export interface components {
        * @description The dataset its individual and relationship operations are in; may be omitted while the taxonomy has at most one dataset
        */
       dataset_id?: string | null;
+      /**
+       * Client Metadata
+       * @description Kept on the proposal for the proposing client (JSON values). A source_id names the source it was extracted from (a source of the taxonomy), and an origin the pipeline that made it ({pipeline_type, implementation_id, configuration_ref, configuration_version, digest}); either is checked when given (422 otherwise). The keys an extraction run records (run_id, pipeline, pages, extraction_id, extraction_started_at, partial) can't be set here
+       */
+      client_metadata?: {
+        [key: string]: unknown;
+      } | null;
     };
     /**
      * ChangeProposalLandedRequest
@@ -5358,6 +5374,13 @@ export interface components {
        */
       review_ms?: {
         [key: string]: number;
+      };
+      /**
+       * Annotations
+       * @description Operation id -> what the reviewer notes for gold, for operations being rejected; recorded in its decision
+       */
+      annotations?: {
+        [key: string]: components["schemas"]["ReviewAnnotationRequest"];
       };
     };
     /**
@@ -7158,6 +7181,13 @@ export interface components {
       superseded_at?: string | null;
       /** Superseded By */
       superseded_by?: string | null;
+      /**
+       * Annotations
+       * @description What the reviewer noted for gold: {tier?, also_defensible?: [class id]}; null when nothing was noted
+       */
+      annotations?: {
+        [key: string]: unknown;
+      } | null;
       /**
        * Added
        * @description The operation was added by the reviewer (an element the extraction missed), not proposed
@@ -10387,6 +10417,22 @@ export interface components {
        * @default 0
        */
       entities_restored: number;
+    };
+    /**
+     * ReviewAnnotationRequest
+     * @description What a reviewer notes for gold beside a decision.
+     */
+    ReviewAnnotationRequest: {
+      /**
+       * Tier
+       * @description How central the element is (the extraction benchmark's tier)
+       */
+      tier?: ("core" | "supporting") | null;
+      /**
+       * Also Defensible
+       * @description Classes of the taxonomy that would also be right for it, by id
+       */
+      also_defensible?: string[] | null;
     };
     /**
      * RunCountsResponse

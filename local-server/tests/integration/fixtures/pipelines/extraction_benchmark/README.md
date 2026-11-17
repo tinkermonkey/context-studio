@@ -61,7 +61,11 @@ scores (a renamed or split class changes what "correct" means).
   - `description`: one sentence, in our words
   - `data`: values for the class's attributes, only where the text gives them
   - `evidence[]`: verbatim passages, with character offsets into `source.md`
-- `relationships[]`: `source`, `predicate`, `target` (keys), `tier`, `evidence[]`. Only
+  - `checked`: `{"by", "at", "proposal"}` once a person has confirmed it in a gold check (see
+    "Checking the gold" below; `proposal` is the check's proposal); absent while only models
+    have looked at it. Scoring ignores it.
+- `relationships[]`: `source`, `predicate`, `target` (keys), `tier`, `evidence[]`, and `checked`
+  as for individuals. Only
   relationships the text states, each a valid type in the schema. They are the plainly stated
   ones, not every relationship a run could correctly derive (GitLab's diagrams alone have about a
   hundred edges), so relationships are scored on recall only.
@@ -151,3 +155,49 @@ implementation, with `extraction-single-call` (Claude Opus 5.5,
 tournament ends with the same pass for the target it is given, and
 `tests/integration/pipelines/test_extraction_benchmark_replay.py` replays every set in CI, so a
 change that makes one stale fails until it is recorded again. See `experiments/README.md`.
+
+## Checking the gold
+
+A person checks a gold file in the app's Review page, and the verdicts are written back to it:
+
+```bash
+python scripts/extraction_benchmark.py check --document edit_check
+# review the proposal it prints at /app/proposals/<id>/review
+python scripts/extraction_benchmark.py write-gold --document edit_check --proposal <id>
+python scripts/extraction_benchmark.py validate --document edit_check
+python scripts/benchmark_replay.py --all          # re-score the recorded runs, free
+python scripts/benchmark_external.py replay       # re-score the head-to-head's saved takes
+```
+
+`check` loads the gold file as one unapplied proposal in a new dataset `gold-check-<document>`
+(it refuses if that dataset exists), with `source.md` as its source: an individual create per
+individual (named by its gold key) and a relationship create per relationship, each with its
+passages. Every operation must come back pending; if the taxonomy's approval policy applied
+some, `check` stops and says so (revert that proposal, delete the dataset, change the policy).
+In review:
+
+- **Accept** an element that is right: `write-gold` marks it `checked`.
+- **Accept with a different class** when another is better: `class` is replaced; the old class
+  goes to `acceptable_classes` only if it is marked also defensible, and `data` values the new
+  class has no attribute for are dropped (each is reported). Gold gives an element one class: a
+  second class is reported and not written. A corrected title replaces `title` and the old one
+  becomes an alias.
+- **Tier** and **also defensible** classes, noted on any decision, set `tier` and join
+  `acceptable_classes`.
+- **Reject** what is not an element: it moves to `excluded` with the note (or the reason code),
+  and the relationships that use it go too. To merge two elements, reject one as a duplicate
+  with a note.
+- **Add** what the text says and gold lacks: a new individual with the selected passage as its
+  evidence and the tier noted (supporting when none is), marked checked.
+- Relationships: accepted ones are marked checked (and take a tier noted on them), rejected ones
+  removed.
+
+Only a person's decision is a verdict: anything left undecided stays as it was, so a check can be
+written back in parts, and running `write-gold` again writes nothing twice. A reverted check is
+refused (its revert rejects what was undecided, which is no verdict). If `gold.json` changed since
+`check` loaded it, `write-gold` warns and writes onto the file as it is. `write-gold`
+rewrites `gold.json` in place, keeping its formatting and key order, then validates it; if the
+result is invalid (a new class with no relationship type for a relationship that uses it, say)
+it leaves the file as it was and lists the problems, each with the operation behind it to reject
+or change. Re-score after writing: the recorded runs'
+scores move with the gold, not with any new LLM call.
