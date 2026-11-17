@@ -51,7 +51,7 @@ import sys
 from dataclasses import dataclass
 from functools import cache
 from pathlib import Path
-from typing import Any, Mapping, cast
+from typing import Any, Callable, Mapping, cast
 from uuid import uuid4
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -360,6 +360,7 @@ async def extract_document(
     provider: LLMProvider,
     document_id: str,
     target: BenchmarkTarget | None = None,
+    service_class: Callable[..., ExtractionService] = ExtractionService,
 ) -> tuple[list[Predicted], list[PredictedRelationship]]:
     """
     Extract one benchmark document as a source and return what a proposal
@@ -370,11 +371,13 @@ async def extract_document(
     the input the resolver gives a run of it (the configuration's model,
     temperature and output-token limit). Another model is another
     configuration, so another target with recordings of its own.
+    `service_class` makes the extraction service; an experiment may give one
+    that answers some stages itself (scripts/benchmark_relationships.py).
     """
     target = target or resolve_target()
     data = (BENCHMARK_DIR / document_id / "source.md").read_bytes()
     source = MarkdownReader().read(data)
-    service = ExtractionService(
+    service = service_class(
         ontology_repo=ontology.repo,
         embedding_service=ontology.embedding,
         llm=provider,

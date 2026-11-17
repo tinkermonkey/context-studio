@@ -37,6 +37,7 @@ import sys
 import threading
 import time
 from concurrent.futures import ThreadPoolExecutor
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
@@ -115,8 +116,9 @@ class BudgetExceeded(RuntimeError):
 class Ledger:
     """Paid calls, one JSON line each; calls reserve their worst case before they are made."""
 
-    def __init__(self, path: Path) -> None:
+    def __init__(self, path: Path, budget_usd: float = BUDGET_USD) -> None:
         self.path = path
+        self.budget_usd = budget_usd
         self.lock = threading.Lock()
         self.reserved = 0.0
 
@@ -127,10 +129,10 @@ class Ledger:
 
     def reserve(self, usd: float) -> None:
         with self.lock:
-            if self.spent() + self.reserved + usd > BUDGET_USD:
+            if self.spent() + self.reserved + usd > self.budget_usd:
                 raise BudgetExceeded(
                     f"spent {self.spent():.2f} + in flight {self.reserved:.2f} + this call's worst"
-                    f" case {usd:.2f} would pass ${BUDGET_USD:.2f}"
+                    f" case {usd:.2f} would pass ${self.budget_usd:.2f}"
                 )
             self.reserved += usd
 
@@ -301,12 +303,36 @@ def take_path(arm: str, document_id: str, take: int) -> Path:
     return EXTERNAL_DIR / arm / document_id / f"take{take}.json"
 
 
+@dataclass(frozen=True)
+class CallPrompt:
+    """What one call is sent: a system text (cached), a user text, the JSON schema it answers."""
+
+    system: str
+    user: str
+    schema: dict[str, Any]
+
+    @property
+    def sha256(self) -> str:
+        return hashlib.sha256((self.system + self.user).encode()).hexdigest()
+
+
+def b_prompt(document_id: str) -> CallPrompt:
+    """Arm B's call for a document."""
+    source = (BENCHMARK_DIR / document_id / "source.md").read_text()
+    return CallPrompt(system_prompt(), USER_PROMPT.format(source=source), output_schema())
+
+
 def one_call(
-    client: Any, ledger: Ledger, model: str, document_id: str, started: threading.Event
+    client: Any,
+    ledger: Ledger,
+    model: str,
+    document_id: str,
+    started: threading.Event,
+    prompt: CallPrompt | None = None,
 ) -> dict[str, Any]:
     """One streamed call for a document; `started` is set once the prompt is read (cached)."""
-    system, source = system_prompt(), (BENCHMARK_DIR / document_id / "source.md").read_text()
-    prompt_tokens = (len(system) + len(source)) // 3  # generous: about 4 characters a token
+    prompt = prompt or b_prompt(document_id)
+    prompt_tokens = (len(prompt.system) + len(prompt.user)) // 3  # generous: 4 chars a token
     worst = cost_usd(
         model, {"input": 0, "cache_write": prompt_tokens, "cache_read": 0, "output": MAX_TOKENS}
     )
@@ -316,12 +342,14 @@ def one_call(
         with client.messages.stream(
             model=model,
             max_tokens=MAX_TOKENS,
-            system=[{"type": "text", "text": system, "cache_control": {"type": "ephemeral"}}],
-            messages=[{"role": "user", "content": USER_PROMPT.format(source=source)}],
+            system=[
+                {"type": "text", "text": prompt.system, "cache_control": {"type": "ephemeral"}}
+            ],
+            messages=[{"role": "user", "content": prompt.user}],
             thinking={"type": "adaptive"},
             output_config={
                 "effort": EFFORT,
-                "format": {"type": "json_schema", "schema": output_schema()},
+                "format": {"type": "json_schema", "schema": prompt.schema},
             },
         ) as stream:
             for _ in stream:
@@ -350,13 +378,33 @@ def one_call(
 
 
 def run_take(
-    client: Any, ledger: Ledger, arm: str, document_id: str, take: int, started: threading.Event
+    client: Any,
+    ledger: Ledger,
+    arm: str,
+    document_id: str,
+    take: int,
+    started: threading.Event,
+    model: str | None = None,
+    prompt: CallPrompt | None = None,
+    lists: tuple[str, ...] = ("individuals", "relationships"),
+    extra: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
-    """One take: a call, retried once when it is cut off, refused or not valid JSON."""
-    model, attempts = MODELS[arm], []
+    """
+    One take: a call, retried once when it is cut off, refused or not valid JSON.
+    By default arm B's call with the arm's model; another arm gives its model,
+    its prompt, the lists its answer must hold, and what else its take records
+    (`extra`, which may give the individuals of an answer that lists none).
+    """
+    model, attempts = model or MODELS[arm], []
+    prompt = prompt or b_prompt(document_id)
     for attempt in (1, 2):
         result = one_call(
-            client, ledger, model, document_id, started if attempt == 1 else threading.Event()
+            client,
+            ledger,
+            model,
+            document_id,
+            started if attempt == 1 else threading.Event(),
+            prompt,
         )
         problem = (
             None if result["stop_reason"] == "end_turn" else f"stop_reason {result['stop_reason']}"
@@ -365,10 +413,8 @@ def run_take(
         if problem is None:
             try:
                 parsed = json.loads(result["text"])
-                if not isinstance(parsed.get("individuals"), list) or not isinstance(
-                    parsed.get("relationships"), list
-                ):
-                    problem = "JSON without individuals and relationships lists"
+                if not all(isinstance(parsed.get(name), list) for name in lists):
+                    problem = f"JSON without {' and '.join(lists)} lists"
             except (ValueError, AttributeError) as exc:
                 problem = f"invalid JSON: {exc}"
         attempts.append(
@@ -389,11 +435,15 @@ def run_take(
         "take": take,
         "effort": EFFORT,
         "max_tokens": MAX_TOKENS,
-        "prompt_sha256": hashlib.sha256((system_prompt() + USER_PROMPT).encode()).hexdigest(),
+        "prompt_sha256": (
+            hashlib.sha256((system_prompt() + USER_PROMPT).encode()).hexdigest()
+            if arm in MODELS
+            else prompt.sha256
+        ),
         "failed": problem is not None,
         "attempts": attempts,
-        "individuals": (parsed or {}).get("individuals", []),
-        "relationships": (parsed or {}).get("relationships", []),
+        **(extra or {}),
+        **{name: (parsed or {}).get(name, []) for name in lists},
         "usage": {k: sum(a["usage"][k] for a in attempts) for k in attempts[0]["usage"]},
         "usd": sum(a["usd"] for a in attempts),
         "latency_s": result["latency_s"],
@@ -440,10 +490,12 @@ def a_take_record(
     take: int,
     individuals: list[Predicted],
     relationships: list[PredictedRelationship],
+    arm: str = "A",
     **extra: Any,
 ) -> dict[str, Any]:
+    """A take of the pipeline (arm A, or another arm run through it), saved."""
     record = {
-        "arm": "A",
+        "arm": arm,
         "model": A_MODEL,
         "document": document_id,
         "take": take,
@@ -463,7 +515,7 @@ def a_take_record(
         ],
         **extra,
     }
-    path = take_path("A", document_id, take)
+    path = take_path(arm, document_id, take)
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(record, indent=1))
     return record
@@ -636,7 +688,10 @@ def predictions(
     merge makes them; references outside the catalog are kept as given (so they
     score as errors) and counted. A relationship end is the individual whose
     name key it has; a relationship with an end that names none is dropped and
-    counted.
+    counted. A relationship that is not a relationship type of the schema for
+    the classes of its ends is counted; a take marked `relationships_validated`
+    (an arm restricted to the allowed types by validation) has such
+    relationships dropped, as the pipeline's planning drops them.
     """
     normalized = _normalized(source)
     diag = {
@@ -647,6 +702,8 @@ def predictions(
         "relationships_listed": 0,
         "invalid_predicate": 0,
         "dangling_relationships": 0,
+        "schema_invalid_listed": 0,
+        "invalid_dropped": 0,
     }
     groups: dict[tuple[str, tuple[str, ...]], dict[str, Any]] = {}
     for item in take["individuals"]:
@@ -667,8 +724,11 @@ def predictions(
             groups[key] = {"title": item["title"], "refs": refs, "evidence": passages}
     individuals = [Predicted(g["title"], g["refs"], tuple(g["evidence"])) for g in groups.values()]
     title_of: dict[str, str] = {}
+    classes_of: dict[str, set[str]] = {}
     for p in individuals:
         title_of.setdefault(name_key(p.title), p.title)
+        classes_of.setdefault(name_key(p.title), set()).update(p.class_refs)
+    validated = bool(take.get("relationships_validated"))
     relationships = []
     for item in take["relationships"]:
         diag["relationships_listed"] += 1
@@ -680,8 +740,24 @@ def predictions(
         if source_title is None or target_title is None:
             diag["dangling_relationships"] += 1
             continue
-        relationships.append(PredictedRelationship(source_title, item["predicate"], target_title))
+        relationship = PredictedRelationship(source_title, item["predicate"], target_title)
+        if not schema_valid(relationship, classes_of):
+            diag["schema_invalid_listed"] += 1
+            if validated:
+                diag["invalid_dropped"] += 1
+                continue
+        relationships.append(relationship)
     return individuals, relationships, diag
+
+
+def schema_valid(relationship: PredictedRelationship, classes_of: dict[str, set[str]]) -> bool:
+    """Whether a relationship is a relationship type of the schema for some classes of its ends."""
+    types = _schema_types()
+    return any(
+        (s, relationship.predicate, t) in types
+        for s in classes_of.get(name_key(relationship.source), ())
+        for t in classes_of.get(name_key(relationship.target), ())
+    )
 
 
 def score_take(take: dict[str, Any]) -> dict[str, Any]:
@@ -721,19 +797,10 @@ def relationship_diagnostics(
         if name_key(r.source) in end_key and name_key(r.target) in end_key
     }
     gold_pairs = [frozenset((r.source, r.target)) for r in gold.relationships]
-    types = _schema_types()
     classes_of: dict[str, set[str]] = {}
     for p in individuals:
         classes_of.setdefault(name_key(p.title), set()).update(p.class_refs)
-    invalid = sum(
-        1
-        for r in relationships
-        if not any(
-            (s, r.predicate, t) in types
-            for s in classes_of.get(name_key(r.source), ())
-            for t in classes_of.get(name_key(r.target), ())
-        )
-    )
+    invalid = sum(1 for r in relationships if not schema_valid(r, classes_of))
     return {
         "relationship_pair_recall": round(sum(p in pairs for p in gold_pairs) / len(gold_pairs), 4)
         if gold_pairs
@@ -828,6 +895,8 @@ METRICS = (
     "precision",
     "type_accuracy",
     "relationship_recall",
+    "relationship_precision",
+    "relationship_precision_resolved",
 )
 
 
