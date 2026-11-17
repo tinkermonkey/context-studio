@@ -27,6 +27,7 @@ attribute.
 
 from __future__ import annotations
 
+import copy
 import json
 import logging
 import re
@@ -39,10 +40,9 @@ from typing import TYPE_CHECKING, Any, Callable, Iterable, Mapping, Sequence
 from uuid import uuid4
 
 from domain.interchange.services import get_current_batch_run_id, set_batch_run_context
+from domain.ontology.datasets import resolve_dataset_id
 from domain.ontology.entities import Class, PropertyDefinition, validate_relationship_attributes
 from domain.ontology.events import GraphInvalidated
-from domain.ontology.relationship_fit import RelationshipFit
-from domain.ontology.datasets import resolve_dataset_id
 from domain.ontology.exceptions import (
     DatasetMismatchError,
     DatasetRequiredError,
@@ -50,6 +50,7 @@ from domain.ontology.exceptions import (
     EntityNotFoundError,
     OntologyError,
 )
+from domain.ontology.relationship_fit import RelationshipFit
 from domain.ontology.services import STRUCTURE_FIELDS
 from domain.ontology.snapshots import decode_field, entity_snapshot
 from domain.ontology.value_objects import (
@@ -74,14 +75,6 @@ from domain.versioning.gold import (
     by_operation,
     decision_of,
     proposed_snapshot,
-)
-from domain.versioning.yielding import (
-    DatasetImpact,
-    YieldPlan,
-    apply_yield,
-    plan_attribute_delete,
-    plan_class_delete,
-    plan_type_delete,
 )
 from domain.versioning.in_use import (
     ChainLink,
@@ -115,6 +108,14 @@ from domain.versioning.proposals import (
     classify_scope,
 )
 from domain.versioning.provenance import EntitySource, entity_sources, evidence_problem
+from domain.versioning.yielding import (
+    DatasetImpact,
+    YieldPlan,
+    apply_yield,
+    plan_attribute_delete,
+    plan_class_delete,
+    plan_type_delete,
+)
 
 if TYPE_CHECKING:
     from domain.ontology.entities import AttributeDefinition
@@ -583,6 +584,21 @@ class ProposalService:
         # deciding on the same proposal are serialized here.
         self._locks: dict[str, threading.Lock] = {}
         self._locks_guard = threading.Lock()
+        # What every proposal this service makes records in its client_metadata
+        self._recorded_metadata: dict[str, Any] = {}
+
+    def recording(self, metadata: Mapping[str, Any]) -> ProposalService:
+        """
+        This service as one proposer sees it: every proposal it makes records
+        `metadata` in its client_metadata, over any entry of the same name the
+        proposer gives. A pipeline run's proposals record their origin this way
+        (`ChangeProposal.origin`), whichever implementation makes them.
+        Everything else is shared with this service: its stores, policies and
+        per-proposal locks.
+        """
+        view = copy.copy(self)
+        view._recorded_metadata = {**self._recorded_metadata, **metadata}
+        return view
 
     # ------------------------------------------------------------------ propose
 
@@ -706,7 +722,7 @@ class ProposalService:
                 created_at=datetime.now(timezone.utc),
                 operations=built,
                 source_revision=source_revision,
-                client_metadata=dict(client_metadata or {}),
+                client_metadata={**(client_metadata or {}), **self._recorded_metadata},
                 dataset_id=dataset_id,
             )
         except ValueError as exc:

@@ -31,7 +31,7 @@ from domain.pipelines.source_extraction import normalized_pages
 from domain.pipelines.source_operations import passage_evidence
 from domain.pipelines.source_proposals import SourceProposer
 from domain.versioning.proposal_service import ProposalService
-from domain.versioning.proposals import OperationStatus, ProposalStatus
+from domain.versioning.proposals import ORIGIN, OperationStatus, ProposalOrigin, ProposalStatus
 from domain.versioning.provenance import evidence_problem
 from tests.fakes.fake_llm_provider import FakeLLMProvider
 from tests.unit.domain.versioning.test_proposal_service import (  # noqa: F401 - fixtures
@@ -49,6 +49,15 @@ PAGE_STARTS = [0, 100, 200]
 @pytest.fixture()
 def service(proposals, ontology, repo, reverter):
     return ProposalService(proposals, ontology, repo, reverter)
+
+
+def origin(implementation="default", pipeline="individual_extraction"):
+    return ProposalOrigin(pipeline, implementation, f"{implementation}-config", 1, "0123456789ab")
+
+
+def run_proposals(service, implementation="default", pipeline="individual_extraction"):
+    """The proposal service as a run of the implementation gets it (create_selected_run)."""
+    return service.recording({ORIGIN: origin(implementation, pipeline).to_json()})
 
 
 @pytest.fixture()
@@ -453,7 +462,7 @@ class TestIndividualOperations:
 
 class TestProposeIndividuals:
     def test_a_run_becomes_one_pipeline_proposal_in_the_dataset(self, service, repo, house):
-        outcome = SourceProposer(service, repo).propose_individuals(
+        outcome = SourceProposer(run_proposals(service), repo).propose_individuals(
             "run-1",
             run_input(house, pages="2-3", extraction_id="x-1", **started(5)),
             [
@@ -476,7 +485,9 @@ class TestProposeIndividuals:
             "extraction_id": "x-1",
             "extraction_started_at": "2026-11-11T10:05:00+00:00",
             "partial": False,
+            "origin": origin().to_json(),
         }
+        assert proposal.origin == origin()
         assert [(o.kind.value, o.ref) for o in proposal.operations] == [
             ("individual", "i1"),
             ("individual", "i2"),
@@ -505,7 +516,9 @@ class TestProposeIndividuals:
             return real(**kwargs)
 
         monkeypatch.setattr(service, "propose", refusing)
-        outcome = SourceProposer(service, repo).propose_individuals("r", run_input(house), triples)
+        outcome = SourceProposer(run_proposals(service), repo).propose_individuals(
+            "r", run_input(house), triples
+        )
 
         proposal = service.get(outcome.proposal_id)
         titles = [
@@ -519,7 +532,7 @@ class TestProposeIndividuals:
         assert any(w.startswith("Refused Acme") for w in outcome.warnings)
 
     def test_nothing_to_propose_makes_no_proposal_and_says_why(self, service, repo, house):
-        outcome = SourceProposer(service, repo).propose_individuals(
+        outcome = SourceProposer(run_proposals(service), repo).propose_individuals(
             "r",
             run_input(house),
             [
@@ -540,12 +553,14 @@ class TestProposeIndividuals:
         assert service.list_proposals() == []
 
     def test_a_run_that_found_nothing_says_so(self, service, repo, house):
-        outcome = SourceProposer(service, repo).propose_individuals("r", run_input(house), [])
+        outcome = SourceProposer(run_proposals(service), repo).propose_individuals(
+            "r", run_input(house), []
+        )
         assert outcome.to_json()["no_proposal_reason"] == "The run found no candidates in the text."
         assert outcome.to_json()["skipped_by_reason"] == {}
 
     def test_a_proposal_gives_no_reason_and_an_individual_rationale(self, service, repo, house):
-        outcome = SourceProposer(service, repo).propose_individuals(
+        outcome = SourceProposer(run_proposals(service), repo).propose_individuals(
             "r", run_input(house), [typing("WRF555", "house_appliance")]
         )
         assert outcome.to_json()["no_proposal_reason"] is None
@@ -556,7 +571,7 @@ class TestProposeIndividuals:
 
     def test_the_rationale_says_what_the_run_could_not_read(self, service, repo, house):
         note = "Extraction failed for 1 of 3 chunks (chunk 2), so what they hold is missing."
-        outcome = SourceProposer(service, repo).propose_individuals(
+        outcome = SourceProposer(run_proposals(service), repo).propose_individuals(
             "r", run_input(house), [typing("WRF555", "house_appliance")], note
         )
         rationale = service.get(outcome.proposal_id).rationale
@@ -569,7 +584,7 @@ class TestProposeIndividuals:
     async def test_a_run_with_failed_chunks_leaves_the_earlier_proposal_open(
         self, service, repo, house
     ):
-        proposer = SourceProposer(service, repo)
+        proposer = SourceProposer(run_proposals(service), repo)
         whole = await extract_source(
             proposer, house, "r1", 1, [typing("A", "Business")], [typing("B", "Business")], []
         )
@@ -603,7 +618,7 @@ class TestProposeIndividuals:
     async def test_a_whole_run_finishing_after_a_newer_partial_one_is_not_rejected_for_it(
         self, service, repo, house
     ):
-        proposer = SourceProposer(service, repo)
+        proposer = SourceProposer(run_proposals(service), repo)
         oldest = await extract_source(proposer, house, "rA", 1, [typing("A", "Business")], [], [])
         partial = await extract_source(
             proposer, house, "rB", 3, CUT_OFF, CUT_OFF, [typing("B", "Business")]
@@ -623,7 +638,7 @@ class TestProposeIndividuals:
     async def test_a_partial_run_finishing_after_a_newer_whole_one_is_superseded_by_it(
         self, service, repo, house
     ):
-        proposer = SourceProposer(service, repo)
+        proposer = SourceProposer(run_proposals(service), repo)
         newer = await extract_source(proposer, house, "rN", 3, [typing("N", "Business")], [], [])
         # Started before the whole run, finished after it
         late = await extract_source(
@@ -640,7 +655,13 @@ class TestProposeIndividuals:
     async def test_the_rationale_does_not_quote_an_internal_error(self, service, repo, house):
         sql = "(sqlite3.OperationalError) database is locked [SQL: SELECT * FROM runs]"
         run = await extract_source(
-            SourceProposer(service, repo), house, "r1", 1, sql, [typing("A", "Business")], []
+            SourceProposer(run_proposals(service), repo),
+            house,
+            "r1",
+            1,
+            sql,
+            [typing("A", "Business")],
+            [],
         )
 
         rationale = service.get(run.result["proposal_id"]).rationale
@@ -654,7 +675,7 @@ class TestProposeIndividuals:
     async def test_failed_chunks_and_nothing_found_elsewhere_is_not_an_empty_text(
         self, service, repo, house
     ):
-        proposer = SourceProposer(service, repo)
+        proposer = SourceProposer(run_proposals(service), repo)
         whole = await extract_source(proposer, house, "r1", 1, [typing("A", "Business")], [], [])
         partial = await extract_source(proposer, house, "r2", 2, CUT_OFF, CUT_OFF, [])
 
@@ -669,7 +690,7 @@ class TestProposeIndividuals:
         assert service.get(whole.result["proposal_id"]).status is ProposalStatus.OPEN
 
     def test_re_extracting_supersedes_the_earlier_open_proposal(self, service, repo, house):
-        proposer = SourceProposer(service, repo)
+        proposer = SourceProposer(run_proposals(service), repo)
         first = proposer.propose_individuals("r1", run_input(house), [typing("A", "Business")])
         other_dataset = proposer.propose_individuals(
             "r0", run_input(house, dataset="cabin"), [typing("C", "Business")]
@@ -686,7 +707,7 @@ class TestProposeIndividuals:
         assert service.get(other_dataset.proposal_id).status is ProposalStatus.OPEN
 
     def test_another_page_selection_is_left_open(self, service, repo, house):
-        proposer = SourceProposer(service, repo)
+        proposer = SourceProposer(run_proposals(service), repo)
         first = proposer.propose_individuals(
             "r1", run_input(house, pages="1-10", **started(1)), [typing("A", "Business")]
         )
@@ -705,7 +726,7 @@ class TestProposeIndividuals:
     def test_an_older_extraction_finishing_late_never_supersedes_a_newer_one(
         self, service, repo, house
     ):
-        proposer = SourceProposer(service, repo)
+        proposer = SourceProposer(run_proposals(service), repo)
         newer = proposer.propose_individuals(
             "r2", run_input(house, **started(2)), [typing("B", "Business")]
         )
@@ -724,7 +745,8 @@ class TestProposeIndividuals:
     def test_a_failure_to_supersede_is_a_warning_and_the_proposal_stands(
         self, service, repo, house, monkeypatch
     ):
-        proposer = SourceProposer(service, repo)
+        proposals = run_proposals(service)
+        proposer = SourceProposer(proposals, repo)
         first = proposer.propose_individuals(
             "r1", run_input(house, **started(1)), [typing("A", "Business")]
         )
@@ -732,7 +754,7 @@ class TestProposeIndividuals:
         def broken(*args, **kwargs):
             raise RuntimeError("database is locked")
 
-        monkeypatch.setattr(service, "reject", broken)
+        monkeypatch.setattr(proposals, "reject", broken)
         second = proposer.propose_individuals(
             "r2", run_input(house, **started(2)), [typing("B", "Business")]
         )
@@ -743,6 +765,67 @@ class TestProposeIndividuals:
         assert second.warnings == [
             f"Could not supersede proposal {first.proposal_id}: database is locked"
         ]
+
+    def test_another_implementations_proposal_is_left_open_for_comparison(
+        self, service, repo, house
+    ):
+        two_pass = SourceProposer(run_proposals(service, "default"), repo)
+        find_then_type = SourceProposer(run_proposals(service, "find_then_type"), repo)
+        first = two_pass.propose_individuals(
+            "r1", run_input(house, **started(1)), [typing("A", "Business")]
+        )
+        other = find_then_type.propose_individuals(
+            "r2", run_input(house, **started(2)), [typing("B", "Business")]
+        )
+
+        # Both stand side by side, each saying which implementation made it
+        assert service.get(first.proposal_id).status is ProposalStatus.OPEN
+        assert service.get(other.proposal_id).status is ProposalStatus.OPEN
+        assert service.get(first.proposal_id).origin.implementation_id == "default"
+        assert service.get(other.proposal_id).origin.implementation_id == "find_then_type"
+
+        # A newer two-pass run supersedes only the two-pass proposal
+        again = two_pass.propose_individuals(
+            "r3", run_input(house, **started(3)), [typing("C", "Business")]
+        )
+        assert service.get(first.proposal_id).operations[0].reason == (
+            f"superseded by extraction proposal {again.proposal_id}"
+        )
+        assert service.get(other.proposal_id).status is ProposalStatus.OPEN
+
+    def test_a_proposal_from_before_origins_takes_its_runs_implementation(
+        self, service, repo, house
+    ):
+        runs = {
+            "old-two-pass": SimpleNamespace(implementation_id="default"),
+            "old-find": SimpleNamespace(implementation_id="find_then_type"),
+        }
+        runs_repo = SimpleNamespace(get=runs.get)
+        # Made before proposals recorded their origin: no origin, only the run id
+        legacy = SourceProposer(service, repo)
+        old_two_pass = legacy.propose_individuals(
+            "old-two-pass", run_input(house, **started(1)), [typing("A", "Business")]
+        )
+        old_find = legacy.propose_individuals(
+            "old-find", run_input(house, **started(2)), [typing("B", "Business")]
+        )
+        gone = legacy.propose_individuals(
+            "deleted-run", run_input(house, **started(3)), [typing("C", "Business")]
+        )
+        assert service.get(old_two_pass.proposal_id).origin is None
+
+        new = SourceProposer(run_proposals(service, "find_then_type"), repo, runs_repo)
+        newer = new.propose_individuals(
+            "r4", run_input(house, **started(4)), [typing("D", "Business")]
+        )
+
+        # The find_then_type run's earlier proposal is superseded; the two-pass
+        # one, and the one whose run is gone, are left alone
+        assert service.get(old_find.proposal_id).operations[0].reason == (
+            f"superseded by extraction proposal {newer.proposal_id}"
+        )
+        assert service.get(old_two_pass.proposal_id).status is ProposalStatus.OPEN
+        assert service.get(gone.proposal_id).status is ProposalStatus.OPEN
 
     def test_a_derived_class_sharing_a_title_does_not_hide_the_real_one(
         self, ontology, repo, house
@@ -768,7 +851,7 @@ class TestMirroredTaxonomy:
             llm_provider=llm,
             ontology_repo=repo,
             run_id="run-s",
-            proposer=SourceProposer(service, repo),
+            proposer=SourceProposer(run_proposals(service), repo),
         )
         state = SchemaExtractionState(
             run_id="run-s",
@@ -789,7 +872,9 @@ class TestMirroredTaxonomy:
 
     def test_its_client_over_mcp_may_propose(self, ontology, service, repo, house):
         ontology.set_taxonomy_mirrored(house["taxonomy"], True)
-        SourceProposer(service, repo).check_may_propose(house["taxonomy"], {"requested_via": "mcp"})
+        SourceProposer(run_proposals(service), repo).check_may_propose(
+            house["taxonomy"], {"requested_via": "mcp"}
+        )
 
 
 class TestProposeSchema:
@@ -812,9 +897,9 @@ class TestProposeSchema:
                 "provenance": [],
             },
         ]
-        outcome = SourceProposer(service, repo).propose_schema(
-            "run-s", {"source_id": SOURCE, "scope": house["taxonomy"]}, candidates
-        )
+        outcome = SourceProposer(
+            run_proposals(service, pipeline="schema_extraction"), repo
+        ).propose_schema("run-s", {"source_id": SOURCE, "scope": house["taxonomy"]}, candidates)
 
         proposal = service.get(outcome.proposal_id)
         assert proposal.dataset_id is None
@@ -1014,9 +1099,9 @@ class TestSchemaPlacement:
             {"kind": "class", "label": "Window Unit", "proposed_parent": "Air Conditioner"},
             {"kind": "attribute", "label": "Voltage", "of": "Window Unit", "value_type": "number"},
         ]
-        outcome = SourceProposer(service, repo).propose_schema(
-            "run-p", {"source_id": SOURCE, "scope": house["taxonomy"]}, candidates
-        )
+        outcome = SourceProposer(
+            run_proposals(service, pipeline="schema_extraction"), repo
+        ).propose_schema("run-p", {"source_id": SOURCE, "scope": house["taxonomy"]}, candidates)
 
         assert outcome.refused == []
         ops = service.get(outcome.proposal_id).operations

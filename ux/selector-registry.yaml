@@ -2935,6 +2935,9 @@ selectors:
   - selector: proposal-link-*
     component: src/components/proposals/ProposalsListPage.tsx
     description: "Proposal title link in a list row, by proposal id"
+  - selector: proposal-origin-*
+    component: src/components/proposals/ProposalsListPage.tsx
+    description: "Chip under a pipeline proposal's title: the implementation and configuration version that produced it, with the digest's first characters (\"find_then_type v1 · 3f2a9c\"); absent when no run recorded one"
   - selector: proposal-pending-*
     component: src/components/proposals/ProposalsListPage.tsx
     description: "Needs-decision \"N of M\" label (failed operations included) and decided ProgressBar in a list row, by proposal id"
@@ -3062,6 +3065,9 @@ selectors:
   - selector: proposal-status
     component: src/components/proposals/ProposalDetailPage.tsx
     description: "Proposal status chip (open / done / reverted)"
+  - selector: proposal-origin
+    component: src/components/proposals/ProposalOrigin.tsx
+    description: "Chip beside the status: the pipeline implementation and configuration version that produced the proposal, with the digest's first characters; its title names the whole origin. Absent when no run recorded one"
   - selector: proposal-tally
     component: src/components/proposals/ProposalDetailPage.tsx
     description: "Banner headline: \"X of N need a decision\" (pending or failed), or \"All N decided\""
@@ -3691,6 +3697,12 @@ selectors:
   - selector: extract-done-panel
     component: src/components/sources/ExtractRunPanel.tsx
     description: 'Extract page: "Proposal ready" panel after the run completes'
+  - selector: extract-proposal-origin-line
+    component: src/components/sources/ExtractRunPanel.tsx
+    description: 'Proposal ready: "Produced by" line, shown when the proposal records its origin'
+  - selector: extract-proposal-origin
+    component: src/components/sources/ExtractRunPanel.tsx
+    description: 'Proposal ready: chip naming the implementation and configuration version that produced the proposal'
   - selector: extract-count-operations
     component: src/components/sources/ExtractRunPanel.tsx
     description: 'Proposal ready: operations count tile'

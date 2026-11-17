@@ -75,6 +75,7 @@ import {
   type ReflectionOption,
 } from "./tieredModel";
 import { nearMatchHeldIds, nearMatchHeldNote, noPassageHeldIds } from "./sourceModel";
+import { ProposalOriginChip } from "./ProposalOrigin";
 import { useOperationContext } from "./useOperationContext";
 import { pendingLabel, useProposalActions } from "./useProposalActions";
 import "./proposals.css";
@@ -396,6 +397,7 @@ export function ProposalDetailPage({
           <Chip variant={PROPOSAL_STATUS_VARIANT[proposal.status]} data-testid="proposal-status">
             {proposal.status}
           </Chip>
+          <ProposalOriginChip origin={proposal.origin} />
           <div className="proposal-summary__progress">
             <span className="proposal-summary__tally" data-testid="proposal-tally">
               {decisionHeadline(progress)}

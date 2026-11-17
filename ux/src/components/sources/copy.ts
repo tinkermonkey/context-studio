@@ -162,6 +162,8 @@ export const sourcesCopy = {
     cancelRun: "Cancel run",
     cancelFailed: "Could not cancel the run.",
     schemaRun: "Schema suggestions",
+    /** Before the chip naming the implementation and version that produced the proposal. */
+    producedBy: "Produced by",
     doneTitle: "Proposal ready",
     /** Some chunks failed, so the proposal lacks what they hold, or part of it. */
     partialDoneTitle: "Partial proposal ready",

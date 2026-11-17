@@ -11078,6 +11078,17 @@
             "type": "object",
             "title": "Client Metadata",
             "description": "What the proposing client keeps on the proposal for itself (e.g. a DR reflection plan's predicate_retirements: [{from, to, note}]); Context Studio acts on none of it"
+          },
+          "origin": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ProposalOriginResponse"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The pipeline run configuration that produced it (pipeline type, implementation, configuration and version). Null for a proposal no pipeline run made, and for one made before runs recorded their origin. A new whole extraction of a source supersedes only the open proposals of the same implementation"
           }
         },
         "type": "object",
@@ -18048,6 +18059,45 @@
         "type": "object",
         "title": "PropertyDefinitionUpdateRequest",
         "description": "Request to update a property definition."
+      },
+      "ProposalOriginResponse": {
+        "properties": {
+          "pipeline_type": {
+            "type": "string",
+            "title": "Pipeline Type",
+            "description": "The pipeline type, e.g. individual_extraction"
+          },
+          "implementation_id": {
+            "type": "string",
+            "title": "Implementation Id",
+            "description": "The implementation of the pipeline that ran, e.g. find_then_type"
+          },
+          "configuration_ref": {
+            "type": "string",
+            "title": "Configuration Ref",
+            "description": "The configuration the run was pinned to"
+          },
+          "configuration_version": {
+            "type": "integer",
+            "title": "Configuration Version",
+            "description": "That configuration's version: a stored configuration's goes up with every edit, its stage prompts' included; a built-in one is version 1"
+          },
+          "digest": {
+            "type": "string",
+            "title": "Digest",
+            "description": "A short hash of what that configuration version made the run do: its settings, the stage prompts the implementation resolved (defaults included) and the model, temperature and output-token limit the run executed with. It does not cover the implementation's own code, prompts that live in code included"
+          }
+        },
+        "type": "object",
+        "required": [
+          "pipeline_type",
+          "implementation_id",
+          "configuration_ref",
+          "configuration_version",
+          "digest"
+        ],
+        "title": "ProposalOriginResponse",
+        "description": "The pipeline and version that produced a proposal."
       },
       "ProposalSource": {
         "type": "string",

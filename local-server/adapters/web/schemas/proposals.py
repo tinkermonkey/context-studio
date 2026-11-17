@@ -18,7 +18,6 @@ from domain.pipelines.schema_relationship_reflection.drafts import (
 from domain.versioning.approval_policy import ApprovalPolicy
 from domain.versioning.gold import DecisionKind, ProposalDecision
 from domain.versioning.in_use import DeleteBlockers, PairMatch, ReplacementCheck
-from domain.versioning.yielding import DatasetImpact
 from domain.versioning.proposals import (
     ChangeProposal,
     ChangeScope,
@@ -26,11 +25,13 @@ from domain.versioning.proposals import (
     OperationKind,
     OperationStatus,
     OperationType,
+    ProposalOrigin,
     ProposalSource,
     ProposalStatus,
     ProposedOperation,
     ResolutionStrategy,
 )
+from domain.versioning.yielding import DatasetImpact
 
 logger = logging.getLogger(__name__)
 
@@ -609,6 +610,35 @@ class ProposedOperationResponse(BaseModel):
     )
 
 
+class ProposalOriginResponse(BaseModel):
+    """The pipeline and version that produced a proposal."""
+
+    pipeline_type: str = Field(..., description="The pipeline type, e.g. individual_extraction")
+    implementation_id: str = Field(
+        ..., description="The implementation of the pipeline that ran, e.g. find_then_type"
+    )
+    configuration_ref: str = Field(..., description="The configuration the run was pinned to")
+    configuration_version: int = Field(
+        ...,
+        description="That configuration's version: a stored configuration's goes up with every "
+        "edit, its stage prompts' included; a built-in one is version 1",
+    )
+    digest: str = Field(
+        ...,
+        description="A short hash of what that configuration version made the run do: its "
+        "settings, the stage prompts the implementation resolved (defaults included) and the "
+        "model, temperature and output-token limit the run executed with. It does not cover "
+        "the implementation's own code, prompts that live in code included",
+    )
+
+    @classmethod
+    def from_domain(cls, origin: Optional[ProposalOrigin]) -> Optional["ProposalOriginResponse"]:
+        """The response for an origin; None for none."""
+        if origin is None:
+            return None
+        return cls(**origin.to_json())
+
+
 class ChangeProposalResponse(BaseModel):
     """A change proposal with its operations in seq order."""
 
@@ -644,6 +674,13 @@ class ChangeProposalResponse(BaseModel):
         description="What the proposing client keeps on the proposal for itself (e.g. a DR "
         "reflection plan's predicate_retirements: [{from, to, note}]); Context Studio acts "
         "on none of it",
+    )
+    origin: Optional[ProposalOriginResponse] = Field(
+        None,
+        description="The pipeline run configuration that produced it (pipeline type, "
+        "implementation, configuration and version). Null for a proposal no pipeline run made, "
+        "and for one made before runs recorded their origin. A new whole extraction of a source "
+        "supersedes only the open proposals of the same implementation",
     )
 
     @classmethod
@@ -685,6 +722,7 @@ class ChangeProposalResponse(BaseModel):
             source_revision=SourceRevisionSchema.from_domain(proposal.source_revision),
             landed=LandingResponse.from_domain(proposal.landed),
             client_metadata=proposal.client_metadata,
+            origin=ProposalOriginResponse.from_domain(proposal.origin),
             dataset_id=proposal.dataset_id,
             operations=[
                 _operation(

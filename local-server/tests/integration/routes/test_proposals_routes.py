@@ -33,6 +33,7 @@ from domain.ontology.exceptions import EntityNotFoundError
 from domain.ontology.services import OntologyService
 from domain.versioning.exceptions import RevertRefusedError
 from domain.versioning.proposal_service import ProposalService
+from domain.versioning.proposals import OperationDraft, ProposalSource
 from domain.versioning.revert_service import RevertService
 from tests.fakes.fake_embedding_service import FakeEmbeddingService
 from tests.utils.change_recording import wire_change_recorder
@@ -123,6 +124,35 @@ def _propose(client, graph, *operations, **extra):
 def _op_ids(proposal, *seqs):
     by_seq = {o["seq"]: o["id"] for o in proposal["operations"]}
     return [by_seq[s] for s in seqs]
+
+
+class TestOrigin:
+    def test_a_pipeline_runs_proposal_says_which_pipeline_and_version_made_it(self, client, graph):
+        origin = {
+            "pipeline_type": "individual_extraction",
+            "implementation_id": "find_then_type",
+            "configuration_ref": "extraction-find-then-type",
+            "configuration_version": 2,
+            "digest": "0123456789ab",
+        }
+        run = client.app.state.proposal_service.recording({"origin": origin})
+        made = run.propose(
+            graph["taxonomy"],
+            "Extraction: manual",
+            [OperationDraft(seq=1, op="delete", kind="individual", target_id=graph["den"])],
+            ProposalSource.PIPELINE,
+        )
+
+        proposal = client.get(f"/api/proposals/{made.id}").json()
+        listed = client.get("/api/proposals").json()["items"]
+
+        assert proposal["origin"] == origin
+        assert [p["origin"] for p in listed] == [origin]
+
+    def test_a_proposal_no_run_made_has_none(self, client, graph):
+        proposal = _propose(client, graph, _describe_room(graph), source="mcp")
+
+        assert proposal["origin"] is None
 
 
 class TestPropose:

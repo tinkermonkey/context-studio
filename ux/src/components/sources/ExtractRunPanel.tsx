@@ -11,6 +11,7 @@ import { useChangeProposal } from "@/api/hooks/proposals";
 import { hasRunStatus } from "@/api/hooks/pipeline/runStatus";
 import { ApiError } from "@/api/client/interceptors";
 import { isRunActive } from "@/api/hooks/sources/useExtractionRun";
+import { ProposalOriginChip } from "@/components/proposals/ProposalOrigin";
 import { sourcesCopy } from "./copy";
 import {
   emptyChunksWarning,
@@ -281,6 +282,12 @@ function DonePanel({
               data-testid="extract-count-near-matches"
             />
           </StatGrid>
+        )}
+        {proposal?.origin && (
+          <div className="extract-run__origin" data-testid="extract-proposal-origin-line">
+            <span className="extract-run__origin-label">{copy.producedBy}</span>
+            <ProposalOriginChip origin={proposal.origin} data-testid="extract-proposal-origin" />
+          </div>
         )}
         {warning && (
           <FormCallout variant="warn" icon="alert" role="note" data-testid="extract-empty-chunks">

@@ -195,6 +195,13 @@ function serve({
           id: "prop-1",
           // Extracted into cabin, though the source belongs to home.
           dataset_id: "ds-cabin",
+          origin: {
+            pipeline_type: "individual_extraction",
+            implementation_id: "find_then_type",
+            configuration_ref: "extraction-find-then-type",
+            configuration_version: 1,
+            digest: "3f2a9c1b2d4e",
+          },
           operations: [
             createProposedOperation({ id: "a", op: "create", kind: "individual" }),
             createProposedOperation({
@@ -718,6 +725,12 @@ describe("ExtractSourcePage — progress and result", () => {
     expect(screen.getByTestId("extract-count-relationships")).toHaveTextContent("1");
     expect(screen.getByTestId("extract-count-near-matches")).toHaveTextContent("1");
     expect(screen.getByTestId("extract-count-individuals")).toHaveClass("stat-tile--emerald");
+    // Which implementation and version produced the proposal
+    const origin = screen.getByTestId("extract-proposal-origin");
+    expect(origin).toHaveTextContent("find_then_type v1 · 3f2a9c");
+    expect(origin).toHaveClass("chip--version");
+    expect(screen.getByTestId("extract-proposal-origin-line")).toHaveClass("extract-run__origin");
+    expect(screen.getByTestId("extract-proposal-origin-line")).toHaveTextContent("Produced by");
 
     const warning = screen.getByTestId("extract-empty-chunks");
     expect(warning).toHaveClass("form-callout--warn");

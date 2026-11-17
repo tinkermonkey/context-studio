@@ -16,10 +16,17 @@ configuration's model, temperature and output-token limit filled in wherever
 the input names none. A run that waits to execute is stored with that input,
 so it executes with the parameters it was accepted with whatever happens to
 the configuration meanwhile.
+
+Every proposal a run makes records the run's origin (PipelineSelection.origin):
+the pipeline type, implementation, configuration and configuration version,
+with a digest of what that version made the run do. create_selected_run gives
+the run a proposal service that records it, so no implementation does.
 """
 
 from __future__ import annotations
 
+import hashlib
+import json
 from collections.abc import Mapping
 from dataclasses import dataclass, field
 from typing import Any
@@ -36,6 +43,8 @@ from domain.pipelines.registry import (
     PipelineConfigurationRegistry,
     PipelineImplementationRegistry,
 )
+from domain.pipelines.stage_prompts import resolve_stage_prompts
+from domain.versioning.proposals import ProposalOrigin
 
 # What a configuration sets for every model call of a run, under the same keys
 # in the configuration and in the run's input. `max_tokens` is the most output
@@ -47,6 +56,10 @@ RUN_PARAMETERS = ("model", "temperature", "max_tokens")
 # stream above about 21,000 (it would expect the response to take over ten
 # minutes), before sending anything.
 MAX_OUTPUT_TOKENS = 20000
+
+# Configuration entries that name or describe it without changing what a run does
+_NOT_BEHAVIOUR = ("name", "description", "enabled")
+DIGEST_CHARS = 12
 
 
 @dataclass(frozen=True)
@@ -113,6 +126,33 @@ class PipelineSelection:
                 + ("" if named else "; edit the configuration, or name a limit in the run's input")
             )
         return filled
+
+    def origin(self, run_input: Mapping[str, Any]) -> ProposalOrigin:
+        """
+        What a run of this selection records on every proposal it makes: the
+        pipeline type, implementation, configuration and its version, and a
+        digest of what they make the run do (see ProposalOrigin.digest).
+
+        Args:
+            run_input: The input the run executes with (run_input()), whose
+                model, temperature and output-token limit may be its own
+        """
+        settings = {k: v for k, v in self.config.items() if k not in _NOT_BEHAVIOUR}
+        stages = getattr(self.implementation, "STAGE_PROMPTS", ())
+        prompts = resolve_stage_prompts(stages, self.config.get("stage_prompts"))
+        executed = {
+            "settings": settings,
+            "stage_prompts": {key: [p.system, p.user] for key, p in prompts.items()},
+            "parameters": _executed_parameters(run_input),
+        }
+        text = json.dumps(executed, sort_keys=True, default=str)
+        return ProposalOrigin(
+            pipeline_type=self.pipeline_type.value,
+            implementation_id=self.implementation_id,
+            configuration_ref=self.configuration_ref,
+            configuration_version=self.configuration.version,
+            digest=hashlib.sha256(text.encode()).hexdigest()[:DIGEST_CHARS],
+        )
 
 
 class PipelineResolver:
@@ -330,6 +370,21 @@ class PipelineResolver:
                     )
         if missing:
             raise ValueError("Pipeline registration is incomplete: " + "; ".join(missing))
+
+
+def _executed_parameters(run_input: Mapping[str, Any]) -> dict[str, Any]:
+    """
+    The model, temperature and output-token limit a run executes with, each
+    written one way however its input spelled it (a temperature of 0 is 0.0, a
+    limit of 8000.0 is 8000), so equal runs hash alike.
+    """
+    parameters = {key: run_input.get(key) for key in RUN_PARAMETERS}
+    temperature, limit = parameters["temperature"], parameters["max_tokens"]
+    if isinstance(temperature, (int, float)) and not isinstance(temperature, bool):
+        parameters["temperature"] = float(temperature)
+    if isinstance(limit, float) and limit.is_integer():
+        parameters["max_tokens"] = int(limit)
+    return parameters
 
 
 def _is_output_limit(value: Any) -> bool:

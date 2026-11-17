@@ -5298,6 +5298,8 @@ export interface components {
       client_metadata?: {
         [key: string]: unknown;
       };
+      /** @description The pipeline run configuration that produced it (pipeline type, implementation, configuration and version). Null for a proposal no pipeline run made, and for one made before runs recorded their origin. A new whole extraction of a source supersedes only the open proposals of the same implementation */
+      origin?: components["schemas"]["ProposalOriginResponse"] | null;
     };
     /**
      * ChangeProposalRevertConflictDetail
@@ -9248,6 +9250,37 @@ export interface components {
        * @description New symmetric flag
        */
       symmetric?: boolean | null;
+    };
+    /**
+     * ProposalOriginResponse
+     * @description The pipeline and version that produced a proposal.
+     */
+    ProposalOriginResponse: {
+      /**
+       * Pipeline Type
+       * @description The pipeline type, e.g. individual_extraction
+       */
+      pipeline_type: string;
+      /**
+       * Implementation Id
+       * @description The implementation of the pipeline that ran, e.g. find_then_type
+       */
+      implementation_id: string;
+      /**
+       * Configuration Ref
+       * @description The configuration the run was pinned to
+       */
+      configuration_ref: string;
+      /**
+       * Configuration Version
+       * @description That configuration's version: a stored configuration's goes up with every edit, its stage prompts' included; a built-in one is version 1
+       */
+      configuration_version: number;
+      /**
+       * Digest
+       * @description A short hash of what that configuration version made the run do: its settings, the stage prompts the implementation resolved (defaults included) and the model, temperature and output-token limit the run executed with. It does not cover the implementation's own code, prompts that live in code included
+       */
+      digest: string;
     };
     /**
      * ProposalSource

@@ -65,6 +65,7 @@ from domain.pipelines.schema_relationship_reflection.orchestrator import (
 )
 from domain.pipelines.selection import PipelineSelection
 from domain.pipelines.source_proposals import SourceProposer
+from domain.versioning.proposals import ORIGIN
 from utils.logger import get_logger
 
 _logger = get_logger(__name__)
@@ -84,7 +85,7 @@ def _source_proposer(services: dict[str, Any]) -> SourceProposer | None:
     ontology_repo = services.get("ontology_repo")
     if proposal_service is None or ontology_repo is None:
         return None
-    return SourceProposer(proposal_service, ontology_repo)
+    return SourceProposer(proposal_service, ontology_repo, services.get("pipeline_run_repo"))
 
 
 def _individual_extraction_builder(
@@ -375,6 +376,8 @@ def build_orchestrator_services(
         "ontology_repo": getattr(app_state, "ontology_repo", None),
         "decision_models": getattr(app_state, "decision_models", None),
         "proposal_service": getattr(app_state, "proposal_service", None),
+        # Finds the implementation of a proposal made before proposals recorded it
+        "pipeline_run_repo": getattr(app_state, "pipeline_run_repo", None),
         "claim_service": getattr(app_state, "claim_service", None),
         "extraction_repo": getattr(app_state, "extraction_repo", None),
         "grounding_adapter": getattr(app_state, "grounding_adapter", None),
@@ -468,7 +471,9 @@ def create_selected_run(
     scripts) builds it here, so the model, temperature and output-token limit
     are the configuration's wherever the run's input names none
     (PipelineSelection.run_input). A run stored to execute later already
-    carries them in its input, as it was accepted.
+    carries them in its input, as it was accepted. And every proposal the run
+    makes records its origin (PipelineSelection.origin): its orchestrator gets
+    a proposal service that records it, whatever the implementation.
 
     Args:
         selection: The run's implementation and pinned configuration
@@ -481,14 +486,14 @@ def create_selected_run(
     Raises:
         ValueError: If the orchestrator class is unknown or required dependencies are missing
     """
-    orchestrator = create_orchestrator(
-        selection.implementation,
-        llm_provider,
-        {**services, "configuration_ref": selection.configuration_ref},
-    )
-    state = create_pipeline_state(
-        run_id, selection.pipeline_type, selection.run_input(input_data), llm_provider
-    )
+    run_input = selection.run_input(input_data)
+    selected = {**services, "configuration_ref": selection.configuration_ref}
+    proposal_service = services.get("proposal_service")
+    if proposal_service is not None:
+        origin = selection.origin(run_input).to_json()
+        selected["proposal_service"] = proposal_service.recording({ORIGIN: origin})
+    orchestrator = create_orchestrator(selection.implementation, llm_provider, selected)
+    state = create_pipeline_state(run_id, selection.pipeline_type, run_input, llm_provider)
     return orchestrator, state
 
 
