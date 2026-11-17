@@ -28,6 +28,7 @@ from domain.pipelines.individual_extraction.orchestrator import (
     IndividualExtractionOrchestrator,
     IndividualExtractionState,
 )
+from domain.pipelines.individual_extraction.single_call import SingleCallOrchestrator
 from domain.pipelines.notes_to_claims.orchestrator import (
     NotesToClaimsOrchestrator,
     NotesToClaimsState,
@@ -313,6 +314,7 @@ _ORCHESTRATOR_BUILDERS: dict[
         IndividualExtractionOrchestrator
     ),
     FindThenTypeOrchestrator: _individual_extraction_builder(FindThenTypeOrchestrator),
+    SingleCallOrchestrator: _individual_extraction_builder(SingleCallOrchestrator),
     OpenIndividualExtractionOrchestrator: _build_open_individual_extraction,
     SchemaExtractionOrchestrator: _build_schema_extraction,
     OpenSchemaExtractionOrchestrator: _build_open_schema_extraction,

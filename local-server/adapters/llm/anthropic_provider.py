@@ -50,6 +50,13 @@ def _system_blocks(system_prompt: str) -> Any:
     return [{"type": "text", "text": system_prompt, "cache_control": {"type": "ephemeral"}}]
 
 
+# The most output tokens a request is sent for without streaming. The SDK
+# refuses, before sending anything, a request that does not stream and asks for
+# more than about 21,000 (it would expect the response to take over ten
+# minutes); a request asking for more is streamed and read when it is whole.
+_UNSTREAMED_MAX_TOKENS = 20000
+
+
 def _input_tokens(usage: Any) -> tuple[int, int]:
     """
     (every input token of a response, those read from the cache).
@@ -123,6 +130,7 @@ class AnthropicProvider:
         response_format: Literal["json", "text"] | None = None,
         timeout: float | None = None,
         seed: int | None = None,
+        effort: str | None = None,
     ) -> LLMResponse:
         """
         Request a completion from Anthropic Claude.
@@ -138,6 +146,12 @@ class AnthropicProvider:
             response_format: Optional JSON schema for structured output (not used by Anthropic)
             timeout: Request timeout in seconds (passed to Anthropic client)
             seed: Ignored — the Anthropic Messages API has no seed parameter
+            effort: How much the model thinks and writes ("low" to "max"), sent
+                as ``output_config.effort``; None leaves the model's default.
+                The Claude 5.5 models think adaptively whatever it is.
+
+        A request for more than _UNSTREAMED_MAX_TOKENS output tokens is
+        streamed, and its response read once the stream ends.
 
         Returns:
             LLMResponse with generated content and metadata
@@ -166,13 +180,24 @@ class AnthropicProvider:
                 if model not in self.MODELS_WITHOUT_TEMPERATURE:
                     kwargs["extra_body"] = {"temperature": temperature}
 
+                if effort is not None:
+                    kwargs["output_config"] = {"effort": effort}
+
                 # `seed` is not sent: the Anthropic Messages API has no seed parameter.
 
                 if timeout is not None:
                     kwargs["timeout"] = timeout
 
                 start_time = time.perf_counter()
-                response = self._client.messages.create(**kwargs)  # type: ignore[union-attr]
+                if max_tokens > _UNSTREAMED_MAX_TOKENS:
+                    # An error event part-way through the stream (an overloaded
+                    # API, say) raises an APIStatusError with status 200, not
+                    # the 5xx the same failure would bring unstreamed; the
+                    # router maps both to LLMProviderError (_completion_error)
+                    with self._client.messages.stream(**kwargs) as stream:  # type: ignore[union-attr]
+                        response = stream.get_final_message()
+                else:
+                    response = self._client.messages.create(**kwargs)  # type: ignore[union-attr]
                 elapsed_time = time.perf_counter() - start_time
                 duration_ms = elapsed_time * 1000
 

@@ -5,7 +5,7 @@ implementations: [find_then_type]
 models: [claude-haiku-5-5, claude-opus-5-5, claude-sonnet-5-5]
 takes: 3
 cost_usd: 6.01
-verdict: open
+verdict: adopted
 reproducible: yes
 ---
 
@@ -14,6 +14,8 @@ reproducible: yes
 Question: keep the multi-stage individual-extraction pipeline (`find_then_type`, the app's default) or replace it with one call per document? Measured on the extraction benchmark (`edit_check` and `gitlab_architecture` dev, `wikimedia_enterprise` holdout), three takes per arm per document, scored by `tests/integration/pipelines/_harness/benchmark.py` unchanged, judged by a decision rule fixed before any run. Paths below are under `local-server/`. Merged as PR #1601. Harness: `scripts/benchmark_external.py`; saved takes: `tests/integration/fixtures/pipelines/extraction_benchmark_external/` (`python scripts/benchmark_external.py replay` re-scores them free). Total spend $6.01 (Anthropic only).
 
 ## Verdict
+
+**Decided 2026-11-17:** the user adopted one Opus 5.5 call for finding and typing individuals as the default implementation (`single_call`), on this evidence, keeping the pipeline's schema-constrained relate step for relationships. See [the single-call implementation](2026-11-17-single-call-implementation.md). The gold is still model-made, not human-checked.
 
 - **Individuals: one Opus 5.5 call beats the pipeline by more than the 0.08 bar on both splits.** Paired typed F1 +0.17 dev and +0.22 holdout; every one of six paired takes ahead by at least +0.155. It wins on precision (dev 0.70 vs 0.50), recall (0.63 vs 0.58) and type accuracy (0.94 vs 0.86) at once. By the rule: replace the pipeline core for finding and typing individuals.
 - **Relationships: do not replace.** The single call's relationship recall is lower (dev 0.038 vs 0.164; both near zero on the holdout) and 92% of its relationships are not valid relationship types for the classes of their ends, because it was given the predicate list but not the allowed (domain, predicate, range) types that the pipeline's relate stage gets. It does relate the right pairs more often (pair recall 0.30 vs 0.18 dev), so a single call given the allowed types, or a constrained relate step after it, needs its own measurement.

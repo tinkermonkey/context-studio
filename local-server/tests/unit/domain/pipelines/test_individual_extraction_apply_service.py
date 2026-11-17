@@ -317,6 +317,23 @@ class TestConfidenceThreshold:
         individuals = repo.list_individuals(class_id=CLASS_ID, limit=None)
         assert individuals[0].title == "Alice"
 
+    @pytest.mark.parametrize("threshold", [0.0, 0.5, 1.0])
+    def test_a_triple_that_gives_no_confidence_is_not_held_to_the_threshold(
+        self, svc, repo, threshold
+    ):
+        # single_call's typing triples carry confidence None: no score, not a score of 0
+        unrated = _make_triple("Carol", confidence=None)
+        missing = _make_triple("Dave")
+        del missing["confidence"]
+        run = _make_run(triples=[unrated, missing, _make_triple("Bob", confidence=0.2)])
+
+        result = svc.apply(run, confidence_threshold=threshold)
+
+        titles = {i.title for i in repo.list_individuals(class_id=CLASS_ID, limit=None)}
+        assert {"Carol", "Dave"} <= titles
+        assert ("Bob" in titles) is (threshold <= 0.2)
+        assert "triple-0" not in result.skip_reasons and "triple-1" not in result.skip_reasons
+
 
 # ---------------------------------------------------------------------------
 # Relationship creation

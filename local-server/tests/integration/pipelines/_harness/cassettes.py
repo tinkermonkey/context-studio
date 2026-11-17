@@ -233,8 +233,12 @@ class RecordingLLMProvider:
         response_format: Literal["json", "text"] | None = None,
         timeout: float | None = None,
         seed: int | None = None,
+        effort: str | None = None,
     ) -> LLMResponse:
-        """Request a completion and record the response."""
+        """
+        Request a completion and record the response. ``effort`` is passed on
+        when given; like ``max_tokens``, it is not part of the recording's key.
+        """
         key = _compute_prompt_hash(system_prompt, user_prompt, model, temperature, seed)
         try:
             response = self._delegate.complete(
@@ -246,6 +250,7 @@ class RecordingLLMProvider:
                 response_format=response_format,
                 timeout=timeout,
                 seed=seed,
+                **({"effort": effort} if effort is not None else {}),
             )
         except Exception:
             self._unanswered.add(key)
@@ -407,8 +412,9 @@ class CassetteLLMProvider:
         response_format: Literal["json", "text"] | None = None,
         timeout: float | None = None,
         seed: int | None = None,
+        effort: str | None = None,
     ) -> LLMResponse:
-        """Replay a response from the cassette."""
+        """Replay a response from the cassette (``effort`` is not part of its key)."""
         key = _compute_prompt_hash(system_prompt, user_prompt, model, temperature, seed)
         with self._counting:
             self.calls += 1

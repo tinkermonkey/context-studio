@@ -233,10 +233,11 @@ def mention_context(text: str, mention: Mention) -> str:
     return text[max(0, start - CONTEXT_WINDOW_CHARS) : end + CONTEXT_WINDOW_CHARS]
 
 
-def typing_triple(mention: Mention, class_ref: str, confidence: float) -> dict[str, Any]:
+def typing_triple(mention: Mention, class_ref: str, confidence: float | None) -> dict[str, Any]:
     """
     A typed mention as the typing triple the two-pass shape would have given:
     the individual ``is_a`` the class, with the mention's passage as provenance.
+    A confidence of None says the typing gave none.
     """
     return {
         "subject": {"kind": "individual", "id": "", "label": mention.name, "class_ids": []},

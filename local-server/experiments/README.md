@@ -74,17 +74,20 @@ and the model, temperature, output-token limit and stage prompts from the config
 `domain/pipelines/individual_extraction/bootstrap.py` registers them; the script names no model.
 A configuration's stage prompts are the ones sent, so a prompt-only variant is a configuration.
 
-**`default` is a name.** Since PR #1598 the type's default implementation is `find_then_type`; the
-two-pass implementation keeps the id `default`, which says nothing about being the default. With
-no flags the target is the type's default implementation, with the configuration its recordings
-were made with, so `python scripts/benchmark_replay.py` replays `find_then_type` and prints
-`dev typed F1 0.465, found F1 0.534`. To replay two-pass, name it: `--implementation default`
-(prints `dev typed F1 0.114, found F1 0.411`).
+**`default` is a name.** Since 2026-11-17 the type's default implementation is `single_call`
+(before that, from PR #1598, `find_then_type`); the two-pass implementation keeps the id
+`default`, which says nothing about being the default. With no flags the target is the type's
+default implementation, with the configuration its recordings were made with, so
+`python scripts/benchmark_replay.py` replays `single_call`. To replay another, name it:
+`--implementation find_then_type` (prints `dev typed F1 0.465, found F1 0.534`) or
+`--implementation default` for two-pass (prints `dev typed F1 0.114, found F1 0.411`). The
+refinement loop has no backlog for `single_call`: name `find_then_type` to run it.
 
 | target | recordings | recorded with |
 |---|---|---|
 | `default` + `extraction-openrouter-default` | `cassettes/extraction_benchmark/` | `google/gemini-3-flash-preview`, 2026-11-12 |
 | `find_then_type` + `extraction-find-then-type` | `cassettes/extraction_benchmark_find_then_type/` | `claude-haiku-5-5`, 2026-11-13 |
+| `single_call` + `extraction-single-call` | `cassettes/extraction_benchmark_single_call/` | `claude-opus-5-5`, 2026-11-17 (one take; see `documentation/extraction/experiments/2026-11-17-single-call-implementation.md`) |
 
 Each recorded implementation's benchmark is pinned by name to the configuration it was recorded
 with (`RECORDED_WITH` in the script), not to the implementation's default configuration. For
@@ -101,7 +104,8 @@ the registries; the script asks the resolver), so nothing here spells one.
 The run's input is the resolver's (`PipelineSelection.run_input`): the configuration's model,
 temperature and output-token limit. The output-token limit comes from the configuration since
 PR #1598 (two-pass `extraction-default` 20,000, `extraction-openrouter-default` 8,000,
-`find_then_type` 16,000 on every stage; 20,000 at most anywhere). It is not part of a cassette's
+`find_then_type` 16,000 on every stage, `single_call` 64,000; 64,000 at most anywhere since
+2026-11-17, when the Anthropic provider began streaming requests for more than 20,000). It is not part of a cassette's
 key, so the committed recordings replay unchanged; a change of limit is still a change of what a
 live recording would get back.
 

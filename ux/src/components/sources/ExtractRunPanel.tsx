@@ -96,15 +96,24 @@ const STEP_TONE: Record<StageStepState, ChipTone> = {
   waiting: "neutral",
 };
 
-/** The stages of a run that reports them: which are done, which it is in, which wait. */
-function StageSteps({ current }: { current: RunStage }) {
+/**
+ * The stages of a run that reports them, as its implementation runs them:
+ * which are done, which it is in, which wait.
+ */
+function StageSteps({
+  current,
+  implementationId,
+}: {
+  current: RunStage;
+  implementationId?: string;
+}) {
   return (
     <ol
       className="extract-run__stages"
       aria-label={copy.stagesLabel}
       data-testid="extract-stage-steps"
     >
-      {stageSteps(current).map(({ stage, state }, i) => (
+      {stageSteps(current, implementationId).map(({ stage, state }, i) => (
         <li
           key={stage}
           className={`extract-run__stage extract-run__stage--${state}`}
@@ -158,7 +167,7 @@ function RunningPanel({
             {copy.cancelRun}
           </Button>
         </div>
-        {stage && <StageSteps current={stage} />}
+        {stage && <StageSteps current={stage} implementationId={run?.implementation_id} />}
         <ProgressBar
           percent={percent}
           color="amber"

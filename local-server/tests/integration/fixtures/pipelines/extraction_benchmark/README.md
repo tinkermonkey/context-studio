@@ -142,10 +142,12 @@ behind them (missed, mistyped, spurious, duplicates, known distractors). The rul
 
 Offline, `scripts/benchmark_replay.py` scores one target on these documents from recorded LLM
 responses: an implementation of individual extraction with one of its configurations
-(`--implementation`, `--configuration`, each defaulting through the pipeline registry). Two
+(`--implementation`, `--configuration`, each defaulting through the pipeline registry). Three
 targets are recorded: `default` with `extraction-openrouter-default` (Gemini 3 Flash,
-`cassettes/extraction_benchmark/`) and `find_then_type` with `extraction-find-then-type` (Claude
-Haiku 5.5, `cassettes/extraction_benchmark_find_then_type/`); `--all` replays both. The variant
+`cassettes/extraction_benchmark/`), `find_then_type` with `extraction-find-then-type` (Claude
+Haiku 5.5, `cassettes/extraction_benchmark_find_then_type/`) and `single_call`, the type's default
+implementation, with `extraction-single-call` (Claude Opus 5.5,
+`cassettes/extraction_benchmark_single_call/`); `--all` replays all three. The variant
 tournament ends with the same pass for the target it is given, and
-`tests/integration/pipelines/test_extraction_benchmark_replay.py` replays both sets in CI, so a
-change that makes either stale fails until it is recorded again. See `experiments/README.md`.
+`tests/integration/pipelines/test_extraction_benchmark_replay.py` replays every set in CI, so a
+change that makes one stale fails until it is recorded again. See `experiments/README.md`.

@@ -220,7 +220,7 @@ class TestPipelineImplementationEndpoints:
             {
                 "id": "find_then_type",
                 "pipeline_type": "individual_extraction",
-                "is_default": True,
+                "is_default": False,
                 "default_configuration": "extraction-find-then-type",
                 "extracts_sources": True,
                 "source_configuration": "extraction-find-then-type",
@@ -233,6 +233,14 @@ class TestPipelineImplementationEndpoints:
                 "extracts_sources": False,
                 # Kept for the Extract page: null where no source can be extracted
                 "source_configuration": None,
+            },
+            {
+                "id": "single_call",
+                "pipeline_type": "individual_extraction",
+                "is_default": True,
+                "default_configuration": "extraction-single-call",
+                "extracts_sources": True,
+                "source_configuration": "extraction-single-call",
             },
         ]
 

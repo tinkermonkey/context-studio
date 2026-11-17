@@ -111,6 +111,7 @@ class OpenRouterProvider:
         response_format: Literal["json", "text"] | None = None,
         timeout: float | None = None,
         seed: int | None = None,
+        effort: str | None = None,
     ) -> LLMResponse:
         """
         Request a completion from OpenRouter.
@@ -128,6 +129,7 @@ class OpenRouterProvider:
             response_format: Optional response format ("json" for JSON output)
             timeout: Request timeout in seconds
             seed: Optional random seed for reproducible generation
+            effort: Not sent: this provider's requests have no effort setting
 
         Returns:
             LLMResponse with generated content and metadata

@@ -188,13 +188,38 @@ export function formatUsd(usd: number): string {
 }
 
 /**
- * The stages a find-then-type run reports, in the order it runs them: it finds
- * what each chunk mentions, types each distinct mention of the source, then
- * reads each chunk's relationships. Other implementations report none.
+ * The stages a staged run reports, by implementation, in the order it runs
+ * them. A single-call run finds and types the individuals of the whole text
+ * (in sections, for a text too long for one call), then reads each chunk's
+ * relationships. A find-then-type run finds what each chunk mentions, types
+ * each distinct mention of the source, then reads each chunk's relationships.
+ * Other implementations report none.
  */
-export const RUN_STAGES = ["find_mentions", "type_mention", "derive_relationships"] as const;
+export const STAGE_SEQUENCES = {
+  find_then_type: ["find_mentions", "type_mention", "derive_relationships"],
+  single_call: ["find_individuals", "derive_relationships"],
+} as const;
+
+/** Every stage this page knows, whichever implementation reports it. */
+export const RUN_STAGES = [
+  "find_individuals",
+  "find_mentions",
+  "type_mention",
+  "derive_relationships",
+] as const;
 
 export type RunStage = (typeof RUN_STAGES)[number];
+
+/**
+ * The stages of a run in the stage it is in: its implementation's, when that
+ * reports the stage, else those of the first implementation that does.
+ */
+export function stageSequence(current: RunStage, implementationId?: string): readonly RunStage[] {
+  const sequences: Record<string, readonly RunStage[]> = STAGE_SEQUENCES;
+  const own = implementationId ? sequences[implementationId] : undefined;
+  if (own?.includes(current)) return own;
+  return Object.values(sequences).find((sequence) => sequence.includes(current)) ?? [current];
+}
 
 /** What a run says of its progress: on a run, and on a source's last extraction. */
 export interface RunProgressFields {
@@ -209,9 +234,10 @@ export interface RunProgress {
   /** The stage the run is in; undefined for a run that reports chunks only. */
   stage?: RunStage;
   /**
-   * How far through it the run is: chunks searched (find_mentions), distinct
-   * mentions typed (type_mention), chunks read (derive_relationships, and a
-   * run with no stage).
+   * How far through it the run is: sections of the text read
+   * (find_individuals), chunks searched (find_mentions), distinct mentions
+   * typed (type_mention), chunks read (derive_relationships, and a run with
+   * no stage).
    */
   done: number;
   total: number;
@@ -239,9 +265,13 @@ export function runProgress(run?: RunProgressFields): RunProgress {
 export type StageStepState = "done" | "current" | "waiting";
 
 /** Each stage of a staged run, as passed, under way or still to come. */
-export function stageSteps(current: RunStage): { stage: RunStage; state: StageStepState }[] {
-  const at = RUN_STAGES.indexOf(current);
-  return RUN_STAGES.map((stage, i) => ({
+export function stageSteps(
+  current: RunStage,
+  implementationId?: string,
+): { stage: RunStage; state: StageStepState }[] {
+  const sequence = stageSequence(current, implementationId);
+  const at = sequence.indexOf(current);
+  return sequence.map((stage, i) => ({
     stage,
     state: i < at ? "done" : i === at ? "current" : "waiting",
   }));
@@ -251,14 +281,17 @@ export type ChunkState = "waiting" | "finding" | "searched" | "reading" | "read"
 
 /**
  * What each chunk of a running run is at. A run with no stage reads its chunks
- * one after another. A staged run searches every chunk for mentions first,
- * types the mentions of the whole source (no chunk moves meanwhile), then
- * reads each chunk's relationships. A chunk whose search failed is "searched"
- * like the others: which chunks failed is known only once the run ends.
+ * one after another. A find-then-type run searches every chunk for mentions
+ * first, types the mentions of the whole source (no chunk moves meanwhile),
+ * then reads each chunk's relationships. A single-call run reads the whole
+ * text at once (every chunk is being searched), then reads each chunk's
+ * relationships. A chunk whose search failed is "searched" like the others:
+ * which chunks failed is known only once the run ends.
  */
 export function chunkStates(progress: RunProgress, running: boolean): ChunkState[] {
   const { stage, done, chunks, chunksRead } = progress;
   return Array.from({ length: chunks }, (_, i): ChunkState => {
+    if (stage === "find_individuals") return running ? "finding" : "waiting";
     if (stage === "find_mentions") {
       return i < done ? "searched" : running && i === done ? "finding" : "waiting";
     }

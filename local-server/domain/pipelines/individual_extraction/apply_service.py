@@ -24,6 +24,7 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING
 
+from domain.extraction.services import is_below_confidence
 from domain.ontology.datasets import resolve_dataset_id
 from domain.ontology.exceptions import (
     DatasetMismatchError,
@@ -154,7 +155,9 @@ class IndividualExtractionApplyService:
         Args:
             run: Completed PipelineRun with output_summary containing triples
             confidence_threshold: Minimum confidence to include a triple (0.0–1.0).
-                Ignored when ``accepted_candidate_ids`` is given.
+                Ignored when ``accepted_candidate_ids`` is given. A triple that
+                gives no confidence (single_call's typing triples) is not held
+                to it (is_below_confidence).
             recognition_threshold: Minimum similarity (0.0-1.0) the recognizer
                 requires to resolve a mention to an existing individual.
                 Defaults to the recognizer's own configured value when omitted.
@@ -211,7 +214,6 @@ class IndividualExtractionApplyService:
             subject = triple.get("subject", {})
             predicate = triple.get("predicate", {})
             obj = triple.get("object", {})
-            confidence = triple.get("confidence", 0.0)
 
             # Unselected triples are reported in skip_reasons only; individuals_skipped
             # counts selected triples that could not be applied.
@@ -219,7 +221,7 @@ class IndividualExtractionApplyService:
                 if candidate_id not in selected:
                     result.skip(candidate_id, "not_selected")
                     continue
-            elif confidence < confidence_threshold:
+            elif is_below_confidence(triple, confidence_threshold):
                 result.skip(candidate_id, "below_threshold")
                 continue
 

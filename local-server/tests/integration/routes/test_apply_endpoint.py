@@ -222,6 +222,33 @@ class TestApplyEndpointHappyPath:
         response = client.post(f"/api/pipelines/runs/{run_id}/apply")
         assert response.status_code == status.HTTP_200_OK
 
+    def test_an_individual_with_no_confidence_is_applied_with_no_selection(
+        self, client, pipeline_repo, ontology_repo
+    ):
+        """single_call's typing triples carry confidence None: applied, not a 500."""
+        class_id = "cls-gateway"
+        ontology_repo.save_class(
+            Class(id=class_id, concept_scheme_id=SCHEME_ID, taxonomy_id=TAXONOMY_ID, title="Svc")
+        )
+        run_id = _create_and_complete_individual_run(
+            pipeline_repo,
+            triples=[
+                {
+                    "subject": {"kind": "individual", "label": "Gateway", "class_ids": [class_id]},
+                    "predicate": {"label": "is_a"},
+                    "object": {"kind": "class", "id": class_id, "label": "Svc"},
+                    "confidence": None,
+                }
+            ],
+        )
+
+        response = client.post(
+            f"/api/pipelines/runs/{run_id}/apply", params={"confidence_threshold": 0.5}
+        )
+
+        assert response.status_code == status.HTTP_200_OK, response.text
+        assert response.json()["individuals_created"] == 1
+
     def test_apply_individual_extraction_populates_recognition_index(
         self, client, pipeline_repo, ontology_repo
     ):
