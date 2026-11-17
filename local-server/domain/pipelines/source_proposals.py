@@ -60,12 +60,17 @@ from domain.pipelines.schema_extraction.source_operations import plan_schema_ope
 from domain.pipelines.source_operations import OperationPlan, PlannedOperation
 from domain.versioning.exceptions import ProposalValidationError
 from domain.versioning.proposal_service import ProposalService
-from domain.versioning.proposals import ChangeProposal, ProposalSource, ProposalStatus
+from domain.versioning.proposals import (
+    EXTRACTION_SUPERSEDED_PREFIX,
+    ChangeProposal,
+    ProposalSource,
+    ProposalStatus,
+)
 
 _logger = logging.getLogger(__name__)
 
 # Why a newer extraction of the same source rejects an older proposal's pending operations
-SUPERSEDED_REASON = "superseded by extraction proposal {}"
+SUPERSEDED_REASON = EXTRACTION_SUPERSEDED_PREFIX + "{}"
 MAX_TITLE_SOURCE_CHARS = 400
 MAX_LISTED = 5
 _PAGE = 200

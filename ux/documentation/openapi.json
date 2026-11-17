@@ -7566,7 +7566,7 @@
           "proposals"
         ],
         "summary": "Add Individual",
-        "description": "Add an individual the extraction missed, as the reviewer found it in the\nproposal's source, and apply it.\n\nThe proposal must be an extraction from a source with a dataset, neither\nreverted nor landed; a done one reopens until the added operation applies.\nThe operation gets the next seq, is marked added_by_reviewer, has the passage\nas its evidence (its quote must be the source's text at [start, end)), and\nis checked as a proposed individual create is, its classes being classes\nof the proposal's taxonomy that are not derived. It is applied at once,\ninto the proposal's dataset: its passage is recorded as the individual's\nprovenance and its decision is applied, flagged added, with review_ms. If\nthe apply fails (e.g. the title is already in the dataset) the operation\nstays, failed, like any.",
+        "description": "Add an individual the extraction missed, as the reviewer found it in the\nproposal's source, and apply it.\n\nThe proposal must be an extraction from a source with a dataset, neither\nreverted, landed, nor superseded by a newer extraction of its source; a\ndone one reopens until the added operation applies.\nThe operation gets the next seq, is marked added_by_reviewer, has the passage\nas its evidence (its quote must be the source's text at [start, end)), and\nis checked as a proposed individual create is, its classes being classes\nof the proposal's taxonomy that are not derived, none of which already has\nan individual of its title in the dataset. It is applied at once,\ninto the proposal's dataset: its passage is recorded as the individual's\nprovenance and its decision is applied, flagged added, with review_ms. If\nthe apply still fails (an unforeseen failure) the operation stays, failed,\nlike any.",
         "operationId": "add_individual_api_proposals__proposal_id__operations_post",
         "parameters": [
           {
@@ -7604,10 +7604,10 @@
             "description": "Change proposal not found"
           },
           "409": {
-            "description": "The proposal is reverted or landed, or is not an extraction of individuals from a source"
+            "description": "The proposal is reverted, landed or superseded by a newer extraction of its source, or is not an extraction of individuals from a source"
           },
           "422": {
-            "description": "The title, a class or the passage is invalid (detail.errors, by the seq it would have had); nothing was added",
+            "description": "The title, a class or the passage is invalid, or an individual of one of the classes already has the title in the dataset (duplicate_title); detail.errors, by the seq it would have had. Nothing was added",
             "content": {
               "application/json": {
                 "schema": {

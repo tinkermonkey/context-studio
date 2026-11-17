@@ -3841,15 +3841,17 @@ export interface paths {
      *     proposal's source, and apply it.
      *
      *     The proposal must be an extraction from a source with a dataset, neither
-     *     reverted nor landed; a done one reopens until the added operation applies.
+     *     reverted, landed, nor superseded by a newer extraction of its source; a
+     *     done one reopens until the added operation applies.
      *     The operation gets the next seq, is marked added_by_reviewer, has the passage
      *     as its evidence (its quote must be the source's text at [start, end)), and
      *     is checked as a proposed individual create is, its classes being classes
-     *     of the proposal's taxonomy that are not derived. It is applied at once,
+     *     of the proposal's taxonomy that are not derived, none of which already has
+     *     an individual of its title in the dataset. It is applied at once,
      *     into the proposal's dataset: its passage is recorded as the individual's
      *     provenance and its decision is applied, flagged added, with review_ms. If
-     *     the apply fails (e.g. the title is already in the dataset) the operation
-     *     stays, failed, like any.
+     *     the apply still fails (an unforeseen failure) the operation stays, failed,
+     *     like any.
      */
     post: operations["add_individual_api_proposals__proposal_id__operations_post"];
     delete?: never;
@@ -16287,14 +16289,14 @@ export interface operations {
         };
         content?: never;
       };
-      /** @description The proposal is reverted or landed, or is not an extraction of individuals from a source */
+      /** @description The proposal is reverted, landed or superseded by a newer extraction of its source, or is not an extraction of individuals from a source */
       409: {
         headers: {
           [name: string]: unknown;
         };
         content?: never;
       };
-      /** @description The title, a class or the passage is invalid (detail.errors, by the seq it would have had); nothing was added */
+      /** @description The title, a class or the passage is invalid, or an individual of one of the classes already has the title in the dataset (duplicate_title); detail.errors, by the seq it would have had. Nothing was added */
       422: {
         headers: {
           [name: string]: unknown;

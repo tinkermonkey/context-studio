@@ -20,6 +20,7 @@ from adapters.events.in_process import InProcessEventPublisher
 from adapters.persistence.sqlite.approval_policy_repo import SQLiteApprovalPolicyRepository
 from adapters.persistence.sqlite.change_repo import SQLiteChangeRepository
 from adapters.persistence.sqlite.connection import create_local_db_engine
+from adapters.persistence.sqlite.entity_source_repo import SQLiteEntitySourceRepository
 from adapters.persistence.sqlite.models import Base, ProposalDecisionRecord
 from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
 from adapters.persistence.sqlite.proposal_repo import SQLiteChangeProposalRepository
@@ -419,3 +420,51 @@ def test_an_added_element_round_trips_as_added(parts, house):
     # a seq the proposal has is refused
     with pytest.raises(ValueError, match="already has seq"):
         proposals.add_operations(proposal.id, [stored[1]])
+
+
+def test_reverting_undoes_an_added_element_and_its_provenance(parts, house):
+    """#1610: a revert removes the added individual and its passage; its decision is superseded."""
+    session_factory = parts[4]
+    # Wired as `parts` is, with entity sources, on one shared session factory
+    shared = SharedSessionFactory(session_factory)
+    ontology_repo = SQLiteOntologyRepository(session_factory=shared)
+    change_repo = SQLiteChangeRepository(session_factory=shared)
+    publisher = InProcessEventPublisher()
+    wire_change_recorder(publisher, change_repo)
+    ontology = OntologyService(ontology_repo, FakeEmbeddingService(), publisher)
+    entity_sources = SQLiteEntitySourceRepository(shared)
+    service = ProposalService(
+        SQLiteChangeProposalRepository(shared),
+        ontology,
+        ontology_repo,
+        RevertService(
+            change_repo=change_repo,
+            ontology_repo=ontology_repo,
+            transaction_scope=SqliteTransactionScope(shared),
+        ),
+        transaction_scope=SqliteTransactionScope(shared),
+        entity_sources=entity_sources,
+    )
+    proposal = service.propose(
+        house["taxonomy"],
+        "Extracted",
+        [
+            OperationDraft(
+                1, T.CREATE, K.INDIVIDUAL, fields={"class_ids": [house["room"]], "title": "Study"}
+            )
+        ],
+        ProposalSource.PIPELINE,
+        client_metadata={"source_id": "src-1", "pipeline": "individual_extraction"},
+    )
+    passage = {"source_id": "src-1", "start": 4, "end": 10, "quote": "Pantry"}
+    added = service.add_individual(proposal.id, "Pantry", [house["room"]], passage)
+    individual_id = added.operations[-1].result_entity_id
+    assert len(entity_sources.list_for_entity(individual_id)) == 1
+
+    service.revert(proposal.id)
+
+    with pytest.raises(EntityNotFoundError):
+        ontology.get_individual(individual_id)
+    assert entity_sources.list_for_entity(individual_id) == []
+    [decision] = gold(service, house, include_superseded=True)
+    assert decision.added and decision.superseded_at is not None

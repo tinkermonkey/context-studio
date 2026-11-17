@@ -1854,19 +1854,21 @@ class ProposalService:
         reviewer found it in the proposal's source, and apply it.
 
         The proposal must be an extraction from a source with a dataset, and
-        neither reverted nor landed. A done proposal takes the addition too: it
-        reopens until the added operation applies. The addition is an
+        neither reverted, landed, nor superseded by a newer extraction of its
+        source. A done proposal takes the addition too: it reopens until the
+        added operation applies. The addition is an
         individual create with the next seq, the title and classes given, and
         the passage as its evidence ({source_id, page, start, end, quote}, the
         shape an extraction stores). It is checked as a proposed individual
         create is, its classes also being classes of the proposal's taxonomy
-        that are not derived; the passage is in the proposal's source and, when
+        that are not derived, none of which has an individual of its title in
+        the dataset (duplicate_title); the passage is in the proposal's source and, when
         the source's text can be read, its quote is the text at [start, end).
         It is marked added_by_reviewer, then applied as `apply` applies any
         operation: into the proposal's dataset, recording its passage as
         provenance and an applied decision flagged as added (with review_ms).
-        A failed apply (e.g. a title already in the dataset) leaves it failed,
-        like any operation.
+        A failed apply (an unforeseen failure: the checks catch the
+        predictable ones) leaves it failed, like any operation.
 
         Args:
             passage: {source_id, start, end, quote}: offsets into the source's text
@@ -1878,8 +1880,8 @@ class ProposalService:
 
         Raises:
             ChangeProposalNotFoundError: If the proposal does not exist
-            ChangeProposalStateError: If the proposal is reverted or landed, is
-                not an extraction from a source, or has no dataset
+            ChangeProposalStateError: If the proposal is reverted, landed or
+                superseded, is not an extraction from a source, or has no dataset
             ProposalValidationError: If the title, a class or the passage is
                 invalid; nothing is added
             ValueError: If review_ms isn't a non-negative integer; nothing is added
@@ -1904,6 +1906,7 @@ class ProposalService:
                 operation = self._validated(draft, {})
                 self._check_dataset(operation, proposal.dataset_id)
                 self._check_added_classes(operation, proposal.taxonomy_id)
+                self._check_added_title(operation, proposal.dataset_id)
             except _Invalid as exc:
                 raise ProposalValidationError([OperationError(seq, exc.code, exc.message)]) from exc
             operation.added_by_reviewer = True
@@ -1930,6 +1933,28 @@ class ProposalService:
                 f"Change proposal {proposal.id} is not an extraction of individuals from a"
                 " source; only one takes an added element"
             )
+        if proposal.superseded_by_extraction:
+            raise ChangeProposalStateError(
+                f"Change proposal {proposal.id} was superseded by a newer extraction of its"
+                " source; add the element to that one"
+            )
+
+    def _check_added_title(self, operation: ProposedOperation, dataset_id: str | None) -> None:
+        """
+        No individual of the added one's classes has its title in the dataset:
+        the clash creating it would fail on (see OntologyService.create_individual).
+        """
+        title = operation.fields["title"]
+        for class_id in operation.fields["class_ids"]:
+            existing = self._repo.list_individuals(
+                class_id=class_id, limit=None, dataset_id=dataset_id
+            )
+            if any(individual.title == title for individual in existing):
+                raise _Invalid(
+                    "duplicate_title",
+                    f"An individual titled '{title}' is already in class {class_id} in the"
+                    " proposal's dataset",
+                )
 
     def _added_passage(
         self, proposal: ChangeProposal, passage: Mapping[str, Any]

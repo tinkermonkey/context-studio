@@ -33,6 +33,8 @@ from adapters.web.proposals_routes import router
 from domain.extraction.sources import Source
 from domain.ontology.exceptions import EntityNotFoundError
 from domain.ontology.services import OntologyService
+from domain.ontology.value_objects import SourceRevision
+from domain.pipelines.source_proposals import SUPERSEDED_REASON
 from domain.versioning.exceptions import RevertRefusedError
 from domain.versioning.proposal_service import ProposalService
 from domain.versioning.proposals import OperationDraft, ProposalSource
@@ -1162,6 +1164,48 @@ class TestAddIndividual:
         )
 
         assert response.status_code == 409
+
+    def test_a_landed_proposal_is_409(self, client, graph, source):
+        proposal = self._extracted(client, graph, source)
+        service = client.app.state.proposal_service
+        service.apply(proposal.id, [proposal.operations[0].id])
+        service.mark_landed(proposal.id, SourceRevision(commit="abc123"))
+
+        response = client.post(
+            f"/api/proposals/{proposal.id}/operations", json=self._body(graph, source)
+        )
+
+        assert response.status_code == 409
+        assert len(client.get(f"/api/proposals/{proposal.id}").json()["operations"]) == 1
+
+    def test_a_superseded_proposal_is_409(self, client, graph, source):
+        proposal = self._extracted(client, graph, source)
+        client.app.state.proposal_service.reject(
+            proposal.id,
+            [proposal.operations[0].id],
+            note=SUPERSEDED_REASON.format("newer"),
+            decided_by=None,
+        )
+
+        response = client.post(
+            f"/api/proposals/{proposal.id}/operations", json=self._body(graph, source)
+        )
+
+        assert response.status_code == 409
+        assert "superseded" in response.json()["detail"]
+
+    def test_adding_the_same_title_again_is_422(self, client, graph, source):
+        proposal = self._extracted(client, graph, source)
+        url = f"/api/proposals/{proposal.id}/operations"
+        assert client.post(url, json=self._body(graph, source)).status_code == 201
+
+        again = client.post(url, json=self._body(graph, source))
+
+        assert again.status_code == 422
+        [error] = again.json()["detail"]["errors"]
+        assert error["code"] == "duplicate_title"
+        body = client.get(f"/api/proposals/{proposal.id}").json()
+        assert len(body["operations"]) == 2 and body["status"] == "open"
 
     @pytest.mark.parametrize(
         "change",

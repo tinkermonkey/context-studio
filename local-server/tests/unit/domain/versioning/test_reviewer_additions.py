@@ -7,6 +7,8 @@ decision is flagged as added.
 import pytest
 
 from domain.extraction.sources import Source
+from domain.ontology.value_objects import SourceRevision
+from domain.pipelines.source_proposals import SUPERSEDED_REASON
 from domain.versioning.exceptions import (
     ChangeProposalNotFoundError,
     ChangeProposalStateError,
@@ -151,21 +153,81 @@ class TestAddIndividual:
         assert added.operations[-1].status is OperationStatus.APPLIED
         assert added.status is ProposalStatus.DONE
 
-    def test_a_failed_apply_stays_failed_and_reopens_a_done_proposal(
-        self, service, graph, source, proposals
+    def test_a_title_already_in_the_dataset_adds_nothing(self, service, graph, source, proposals):
+        proposal = extracted(service, graph, source)
+        service.apply(proposal.id, [proposal.operations[0].id])
+
+        # "Den" is already a Room in the dataset
+        with pytest.raises(ProposalValidationError) as raised:
+            service.add_individual(proposal.id, "Den", [graph["room"]], passage_of("Den", source))
+
+        assert [e.code for e in raised.value.errors] == ["duplicate_title"]
+        stored = proposals.get(proposal.id)
+        assert len(stored.operations) == 1 and stored.status is ProposalStatus.DONE
+
+    def test_the_same_title_in_another_class_is_added(self, service, graph, source):
+        proposal = extracted(service, graph, source)
+
+        added = service.add_individual(
+            proposal.id, "Den", [graph["place"]], passage_of("Den", source)
+        )
+
+        assert added.operations[-1].status is OperationStatus.APPLIED
+
+    def test_an_unforeseen_apply_failure_stays_failed_and_reopens_a_done_proposal(
+        self, service, graph, source, proposals, ontology, monkeypatch
     ):
         proposal = extracted(service, graph, source)
         service.apply(proposal.id, [proposal.operations[0].id])
 
-        # "Den" is already in the dataset
-        added = service.add_individual(
-            proposal.id, "Den", [graph["room"]], passage_of("Den", source)
-        )
+        def refuse(*args, **kwargs):
+            raise ValueError("the store is unavailable")
+
+        monkeypatch.setattr(ontology, "create_individual", refuse)
+        added = add_pantry(service, proposal, graph, source)
 
         failed = added.operations[-1]
         assert failed.status is OperationStatus.FAILED and failed.added_by_reviewer
         assert added.status is ProposalStatus.OPEN
         assert [d.added for d in proposals.decisions] == [False]
+
+    def test_the_passage_page_comes_from_the_source(
+        self, service, graph, source_repo, ontology, proposals
+    ):
+        [dataset] = ontology.list_datasets(graph["taxonomy"])
+        page_two = TEXT.index("A Pantry")
+        two_pages = source_repo.save(
+            Source(
+                taxonomy_id=graph["taxonomy"],
+                dataset_id=dataset.id,
+                kind="pdf",
+                title="Two pages",
+                text=TEXT,
+                chars=len(TEXT),
+                pages=2,
+                page_starts=[0, page_two],
+            )
+        )
+        proposal = extracted(service, graph, two_pages)
+
+        added = add_pantry(service, proposal, graph, two_pages)
+
+        assert added.operations[-1].evidence[0]["page"] == 2
+
+    def test_a_revert_undoes_the_addition_and_its_provenance(
+        self, service, graph, source, reverter, proposals, entity_sources
+    ):
+        """The individual itself is undone with the run (see the integration test)."""
+        proposal = extracted(service, graph, source)
+        added = add_pantry(service, proposal, graph, source).operations[-1]
+        assert entity_sources.list_for_entity(added.result_entity_id)
+
+        service.revert(proposal.id)
+
+        assert reverter.reverted == [proposal.id]
+        assert entity_sources.list_for_entity(added.result_entity_id) == []
+        [decision] = proposals.decisions
+        assert decision.added and decision.superseded_at is not None
 
     def test_seq_follows_the_highest_even_after_an_addition(self, service, graph, source):
         proposal = extracted(service, graph, source, seq=7)
@@ -276,6 +338,28 @@ class TestRefused:
         service.revert(proposal.id)
 
         with pytest.raises(ChangeProposalStateError, match="reverted"):
+            add_pantry(service, proposal, graph, source)
+        assert len(proposals.get(proposal.id).operations) == 1
+
+    def test_a_landed_proposal(self, service, graph, source, proposals):
+        proposal = extracted(service, graph, source)
+        service.apply(proposal.id, [proposal.operations[0].id])
+        service.mark_landed(proposal.id, SourceRevision(commit="abc123"))
+
+        with pytest.raises(ChangeProposalStateError, match="landed"):
+            add_pantry(service, proposal, graph, source)
+        assert len(proposals.get(proposal.id).operations) == 1
+
+    def test_a_proposal_a_newer_extraction_superseded(self, service, graph, source, proposals):
+        proposal = extracted(service, graph, source)
+        service.reject(
+            proposal.id,
+            [proposal.operations[0].id],
+            note=SUPERSEDED_REASON.format("newer-proposal"),
+            decided_by=None,
+        )
+
+        with pytest.raises(ChangeProposalStateError, match="superseded"):
             add_pantry(service, proposal, graph, source)
         assert len(proposals.get(proposal.id).operations) == 1
 

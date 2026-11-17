@@ -39,6 +39,11 @@ INDIVIDUAL_EXTRACTION = "individual_extraction"
 # The client_metadata key a pipeline run's proposal records its origin under
 ORIGIN = "origin"
 
+# The reason a newer extraction of the same source gives the operations of an
+# older proposal it rejects (domain.pipelines.source_proposals), followed by
+# the newer proposal's id
+EXTRACTION_SUPERSEDED_PREFIX = "superseded by extraction proposal "
+
 
 @dataclass(frozen=True)
 class ProposalOrigin:
@@ -764,6 +769,18 @@ class ChangeProposal:
         if self.source is not ProposalSource.PIPELINE:
             return None
         return ProposalOrigin.from_json((self.client_metadata or {}).get(ORIGIN))
+
+    @property
+    def superseded_by_extraction(self) -> bool:
+        """
+        A newer extraction of the same source superseded it: it rejected
+        what this proposal still awaited (see EXTRACTION_SUPERSEDED_PREFIX).
+        """
+        return any(
+            o.status is OperationStatus.REJECTED
+            and (o.reason or "").startswith(EXTRACTION_SUPERSEDED_PREFIX)
+            for o in self.operations
+        )
 
     def lacks_passage(self, operation: ProposedOperation) -> bool:
         """
