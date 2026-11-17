@@ -3,6 +3,7 @@ import { describe, it, expect, vi, afterEach } from "vitest";
 import { QueryClient, QueryClientProvider, type QueryKey } from "@tanstack/react-query";
 import { renderHook, waitFor } from "@testing-library/react";
 import { QUERY_KEYS } from "@/api/config";
+import { ApiError } from "@/api/client/interceptors";
 import { proposalsService } from "@/api/services/proposals";
 import { createChangeProposal } from "@/api/services/__tests__/fixtures/proposals.fixtures";
 import {
@@ -128,6 +129,33 @@ describe("change proposal mutation invalidation", () => {
     }
     for (const queryKey of UNRELATED_QUERIES) {
       expect(invalidated(queryKey), JSON.stringify(queryKey)).toBe(false);
+    }
+  });
+
+  it("a timed-out addition marks the proposal and the ontology stale; a refused one doesn't", async () => {
+    const add = vi.spyOn(proposalsService, "addIndividual");
+    const data = {
+      title: "TextMatch",
+      class_ids: ["class-1"],
+      passage: { source_id: "src-1", start: 10, end: 19, quote: "TextMatch" },
+    };
+
+    add.mockRejectedValueOnce(new ApiError("Invalid", 422, "Invalid", { errors: [] }));
+    const refused = setup();
+    const first = renderHook(() => useAddProposalIndividual(), { wrapper: refused.wrapper });
+    first.result.current.mutate({ id: "proposal-1", data });
+    await waitFor(() => expect(first.result.current.isError).toBe(true));
+    expect(refused.invalidated(QUERY_KEYS.changeProposal("proposal-1"))).toBe(false);
+
+    add.mockRejectedValueOnce(
+      new ApiError("timeout", 0, "timeout of 30000ms exceeded", undefined, "ECONNABORTED"),
+    );
+    const { wrapper, invalidated } = setup();
+    const { result } = renderHook(() => useAddProposalIndividual(), { wrapper });
+    result.current.mutate({ id: "proposal-1", data });
+    await waitFor(() => expect(result.current.isError).toBe(true));
+    for (const queryKey of [...PROPOSAL_QUERIES, ...ONTOLOGY_QUERIES]) {
+      expect(invalidated(queryKey), JSON.stringify(queryKey)).toBe(true);
     }
   });
 

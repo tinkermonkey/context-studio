@@ -11,6 +11,8 @@ import {
   proposalSourceId,
   rangeOffsets,
   selectedPassage,
+  titleFromQuote,
+  toSourcePassage,
   trimPassage,
 } from "../addFromText";
 
@@ -81,14 +83,27 @@ describe("selection offsets", () => {
     expect(trimPassage(TEXT, 27, 29)).toBeUndefined();
   });
 
-  it("adds where the shown text starts in the whole text", () => {
-    const container = render();
-    const r = range([text(container, 2), 0], [text(container, 2), 8]);
-    expect(selectedPassage(container, r, TEXT, 1000)).toEqual({
+  it("gives the server code-point offsets, where the shown text starts", () => {
+    const passage = { start: 18, end: 26, quote: "feedback" };
+    expect(toSourcePassage(passage, TEXT, 1000)).toEqual({
       start: 1018,
       end: 1026,
       quote: "feedback",
     });
+    // An emoji is two UTF-16 units but one code point.
+    const withEmoji = `😀 ${TEXT}`;
+    const at = withEmoji.indexOf("feedback");
+    expect(at).toBe(21);
+    expect(toSourcePassage({ start: at, end: at + 8, quote: "feedback" }, withEmoji)).toEqual({
+      start: 20,
+      end: 28,
+      quote: "feedback",
+    });
+  });
+
+  it("starts the title as the selection on one line", () => {
+    expect(titleFromQuote("Reference\n  check")).toBe("Reference check");
+    expect(titleFromQuote(" Tone\tcheck ")).toBe("Tone check");
   });
 
   it("ignores an empty selection, or one reaching outside the source text", () => {
@@ -157,5 +172,13 @@ describe("additions", () => {
     const superseded = new ApiError("x", 409, "Change proposal p was superseded");
     expect(addErrorMessage(superseded, names)).toBe("Change proposal p was superseded");
     expect(addErrorMessage(new Error("Network Error"), names)).toBe("Network Error");
+    const timeout = new ApiError(
+      "timeout",
+      0,
+      "timeout of 30000ms exceeded",
+      undefined,
+      "ECONNABORTED",
+    );
+    expect(addErrorMessage(timeout, names)).toMatch(/^The server is taking longer than expected/);
   });
 });

@@ -3290,7 +3290,7 @@ selectors:
   # Review page: add a missed element from selected text (#1612)
   - selector: review-source-selectable
     component: src/components/proposals/review/ReviewSourcePane.tsx
-    description: "The source text wrapper whose text selection (mouse up, or Shift key up) opens the add form; offsets are counted across highlight marks"
+    description: "The source text wrapper (tabindex -1: focus returns here when the add form closes) whose text selection (mouse up, or a Shift key up outside fields with the selection in the source) opens the add form; offsets are counted across highlight marks and sent as code points"
   - selector: review-source-hint
     component: src/components/proposals/review/ReviewSourcePane.tsx
     description: "Hint under the source: \"Select any text to add an element the pipeline missed. Click a highlight to open it.\" when the proposal takes additions, else \"Click a highlight to open it.\""

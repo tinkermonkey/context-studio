@@ -1,4 +1,4 @@
-import { useEffect, useRef, type ReactNode } from "react";
+import { useEffect, useRef, type ReactNode, type RefObject } from "react";
 import { Panel } from "@tinkermonkey/heimdall-ui";
 import { SourceText } from "@/components/pipeline/extraction-review/SourceText";
 import type { KeyedSpan } from "@/components/pipeline/extraction-review/reviewUtils";
@@ -27,8 +27,8 @@ interface ReviewSourcePaneProps {
   titleOf: (operationId: string) => string;
   selectedId?: string;
   onSelect: (operationId: string) => void;
-  /** Where the shown text starts in the source's whole text. */
-  textStart?: number;
+  /** The source text's box: focusable, so focus can come back to it when the add form closes. */
+  textRef?: RefObject<HTMLDivElement | null>;
   /** Selected text can be added as an element: called with the passage it picks out. */
   onSelectText?: (passage: SelectedPassage, anchor: PopoverAnchor) => void;
   /** Why selected text can't be added, when it can't. */
@@ -36,6 +36,19 @@ interface ReviewSourcePaneProps {
   /** The add form, shown at `popoverAnchor`. */
   popover?: ReactNode;
   popoverAnchor?: PopoverAnchor;
+  /** A mouse press outside the add form (and outside the source text) closes it. */
+  onDismissPopover?: () => void;
+}
+
+/** Keys pressed in a field or a dialog never start an add. */
+function inFieldOrDialog(target: EventTarget | null): boolean {
+  return (
+    target instanceof HTMLElement &&
+    (target.tagName === "INPUT" ||
+      target.tagName === "TEXTAREA" ||
+      target.isContentEditable ||
+      !!target.closest('[role="dialog"]'))
+  );
 }
 
 /**
@@ -67,13 +80,19 @@ export function ReviewSourcePane({
   titleOf,
   selectedId,
   onSelect,
-  textStart = 0,
+  textRef: givenTextRef,
   onSelectText,
   addBlocked,
   popover,
   popoverAnchor,
+  onDismissPopover,
 }: ReviewSourcePaneProps) {
-  const textRef = useRef<HTMLDivElement>(null);
+  const ownTextRef = useRef<HTMLDivElement>(null);
+  const textRef = givenTextRef ?? ownTextRef;
+  const anchorRef = useRef<HTMLDivElement>(null);
+  const open = !!popover;
+  const openRef = useRef(open);
+  openRef.current = open;
 
   /** Offer the current selection for adding, if it lies inside the source text. */
   const readSelection = () => {
@@ -82,7 +101,7 @@ export function ReviewSourcePane({
     if (!onSelectText || text === undefined || !container) return;
     if (!selection || selection.rangeCount === 0) return;
     const range = selection.getRangeAt(0);
-    const passage = selectedPassage(container, range, text, textStart);
+    const passage = selectedPassage(container, range, text);
     if (passage) onSelectText(passage, anchorFor(range));
   };
   const readSelectionRef = useRef(readSelection);
@@ -90,12 +109,33 @@ export function ReviewSourcePane({
 
   // A selection made from the keyboard (Shift with the arrows) ends on a key up.
   useEffect(() => {
+    // Only for a selection in the source text, made outside any field, while no form is open.
     const onKeyUp = (event: KeyboardEvent) => {
-      if (event.shiftKey || event.key === "Shift") readSelectionRef.current();
+      if (!(event.shiftKey || event.key === "Shift")) return;
+      if (openRef.current || inFieldOrDialog(event.target)) return;
+      const anchor = window.getSelection()?.anchorNode;
+      if (!anchor || !textRef.current?.contains(anchor)) return;
+      readSelectionRef.current();
     };
     document.addEventListener("keyup", onKeyUp);
     return () => document.removeEventListener("keyup", onKeyUp);
-  }, []);
+  }, [textRef]);
+
+  // A press outside the open form closes it; one in the source text may start a new selection,
+  // which its mouse up opens the form for.
+  const dismissRef = useRef(onDismissPopover);
+  dismissRef.current = onDismissPopover;
+  useEffect(() => {
+    if (!open) return;
+    const onMouseDown = (event: MouseEvent) => {
+      const target = event.target as Node | null;
+      if (target && (anchorRef.current?.contains(target) || textRef.current?.contains(target)))
+        return;
+      dismissRef.current?.();
+    };
+    document.addEventListener("mousedown", onMouseDown);
+    return () => document.removeEventListener("mousedown", onMouseDown);
+  }, [open, textRef]);
 
   // The selected element's verdict colours an overlap it is part of; else the first one's.
   const shownKey = (keys: string[]) =>
@@ -143,6 +183,8 @@ export function ReviewSourcePane({
             <div
               ref={textRef}
               className="review-source__selectable"
+              // Focus comes back here when the add form closes.
+              tabIndex={-1}
               onMouseUp={readSelection}
               data-testid="review-source-selectable"
             >
@@ -160,6 +202,7 @@ export function ReviewSourcePane({
             </div>
             {popover && (
               <div
+                ref={anchorRef}
                 className="review-add__anchor"
                 // At the selection on screen: worked out at run time.
                 style={popoverAnchor}

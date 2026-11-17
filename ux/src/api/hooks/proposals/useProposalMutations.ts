@@ -90,6 +90,10 @@ export function useAddProposalIndividual() {
       queryClient.setQueryData(QUERY_KEYS.changeProposal(proposal.id), proposal);
       invalidateOntology(queryClient);
     },
+    // A timed-out addition may still be running, or have finished, on the server: show where it got.
+    onError: (error) => {
+      if (isTimeout(error)) invalidateOntology(queryClient);
+    },
   });
 }
 

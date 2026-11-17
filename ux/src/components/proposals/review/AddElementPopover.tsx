@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type KeyboardEvent } from "react";
 import { Button, Field, TextInput } from "@tinkermonkey/heimdall-ui";
 import type { components } from "@/api/types";
-import type { SelectedPassage } from "./addFromText";
+import { titleFromQuote, type SelectedPassage } from "./addFromText";
 import { ClassChip } from "./ReviewInspector";
 import { ReviewClassPicker } from "./ReviewClassPicker";
 
@@ -41,7 +41,7 @@ export function AddElementPopover({
   onAdd,
   onCancel,
 }: AddElementPopoverProps) {
-  const [title, setTitle] = useState(passage.quote);
+  const [title, setTitle] = useState(() => titleFromQuote(passage.quote));
   const [titleError, setTitleError] = useState<string>();
   const [classId, setClassId] = useState(initialClassId);
   const [classError, setClassError] = useState<string>();

@@ -179,6 +179,11 @@
     min-height: 0;
   }
 
+  /* Focusable only so focus returns here when the add form closes; never a tab stop. */
+  .review-source__selectable:focus {
+    outline: none;
+  }
+
   /* The add form floats over the panes, at the selection (fixed: no pane clips it). */
   .review-add__anchor {
     position: fixed;

@@ -808,9 +808,9 @@ describe("review time", () => {
 });
 
 /** Select `quote` (its first occurrence) in the source text, as a reader's drag would. */
-function selectText(quote: string, from = 0) {
+function selectText(quote: string, from = 0, text = TEXT) {
   const container = screen.getByTestId("review-source-text");
-  const start = TEXT.indexOf(quote, from);
+  const start = text.indexOf(quote, from);
   const end = start + quote.length;
   const walker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT);
   const range = document.createRange();
@@ -980,6 +980,118 @@ describe("adding an element from selected text", () => {
     selectText("feel safe");
     fireEvent.mouseUp(screen.getByTestId("review-source-selectable"));
     expect(popover()).not.toBeInTheDocument();
+  });
+
+  it("sends code-point offsets after an emoji, and a selection over lines as a one-line title", async () => {
+    const emojiText = `😀 ${TEXT}\nMore notes here.`;
+    server.use(
+      http.get("*/api/sources/:id/text", () =>
+        HttpResponse.json({
+          source_id: "src-1",
+          page: null,
+          pages: null,
+          start: 0,
+          end: [...emojiText].length,
+          text: emojiText,
+        }),
+      ),
+    );
+    // The stored passages count the emoji as one code point (and its space as one).
+    for (const op of proposal.operations) {
+      op.evidence = (op.evidence ?? []).map((e) => ({
+        ...e,
+        start: (e.start as number) + 2,
+        end: (e.end as number) + 2,
+      }));
+    }
+    const user = await renderPage();
+    // Placed in the browser's units: one more than the code points.
+    expect(markFor("op-region")).toHaveTextContent("Sub-Saharan Africa");
+    const { start, end } = selectText("safe.\nMore", 0, emojiText);
+    fireEvent.mouseUp(screen.getByTestId("review-source-selectable"));
+    expect(screen.getByTestId("review-add-title")).toHaveValue("safe. More");
+    const picker = within(screen.getByTestId("review-add-class-picker"));
+    await user.type(picker.getByRole("combobox"), "goal");
+    await user.click(await picker.findByRole("option", { name: "motivation.goal" }));
+    await user.click(screen.getByTestId("review-add-submit"));
+    await waitFor(() => expect(additions).toHaveLength(1));
+    // The emoji is two UTF-16 units but one code point: the server's offsets are one less.
+    expect(additions[0].passage).toEqual({
+      source_id: "src-1",
+      start: start - 1,
+      end: end - 1,
+      quote: "safe.\nMore",
+    });
+    expect(additions[0].title).toBe("safe. More");
+  });
+
+  it("keeps review keys off while the form is open, and Escape closes it from anywhere", async () => {
+    const user = await renderPage();
+    selectText("feel safe");
+    fireEvent.mouseUp(screen.getByTestId("review-source-selectable"));
+    expect(popover()).toBeInTheDocument();
+    (document.activeElement as HTMLElement).blur();
+    expect(document.activeElement).toBe(document.body);
+    await user.keyboard("a");
+    await user.keyboard("j");
+    expect(applies).toHaveLength(0);
+    expect(inspectorTitle()).toHaveTextContent("Edit Check");
+    await user.keyboard("{Escape}");
+    expect(popover()).not.toBeInTheDocument();
+    // Focus comes back to the source text.
+    expect(screen.getByTestId("review-source-selectable")).toHaveFocus();
+    expect(screen.getByTestId("review-source-selectable")).toHaveAttribute("tabindex", "-1");
+  });
+
+  it("returns focus to the source text after Cancel and after adding", async () => {
+    const user = await renderPage();
+    selectText("feel safe");
+    fireEvent.mouseUp(screen.getByTestId("review-source-selectable"));
+    await user.click(screen.getByTestId("review-add-cancel"));
+    expect(screen.getByTestId("review-source-selectable")).toHaveFocus();
+
+    selectText("feel safe");
+    fireEvent.mouseUp(screen.getByTestId("review-source-selectable"));
+    const picker = within(screen.getByTestId("review-add-class-picker"));
+    await user.type(picker.getByRole("combobox"), "goal");
+    await user.click(await picker.findByRole("option", { name: "motivation.goal" }));
+    await user.click(screen.getByTestId("review-add-submit"));
+    await waitFor(() => expect(popover()).not.toBeInTheDocument());
+    expect(screen.getByTestId("review-source-selectable")).toHaveFocus();
+  });
+
+  it("closes on a press outside the form, but not on one in the source text", async () => {
+    await renderPage();
+    selectText("feel safe");
+    fireEvent.mouseUp(screen.getByTestId("review-source-selectable"));
+    fireEvent.mouseDown(screen.getByTestId("review-add-title"));
+    fireEvent.mouseDown(screen.getByTestId("review-source-text"));
+    expect(popover()).toBeInTheDocument();
+    fireEvent.mouseDown(screen.getByTestId("review-progress"));
+    expect(popover()).not.toBeInTheDocument();
+  });
+
+  it("opens from Shift only for a selection in the source text, made outside fields", async () => {
+    const user = await renderPage();
+    // A selection outside the source text.
+    const header = screen.getByTestId("review-header");
+    const range = document.createRange();
+    range.selectNodeContents(header);
+    window.getSelection()!.removeAllRanges();
+    window.getSelection()!.addRange(range);
+    fireEvent.keyUp(document, { key: "Shift", shiftKey: true });
+    expect(popover()).not.toBeInTheDocument();
+    // Shift typed into the note, even with source text selected.
+    await user.click(screen.getByTestId("review-note"));
+    selectText("feel safe");
+    fireEvent.keyUp(screen.getByTestId("review-note"), { key: "Shift", shiftKey: true });
+    expect(popover()).not.toBeInTheDocument();
+    // In the source text: it opens; a further Shift while it is open changes nothing.
+    fireEvent.keyUp(document, { key: "ArrowRight", shiftKey: true });
+    expect(screen.getByTestId("review-add-title")).toHaveValue("feel safe");
+    selectText("Newcomers");
+    fireEvent.keyUp(document, { key: "Shift", shiftKey: true });
+    expect(screen.getByTestId("review-add-title")).toHaveValue("feel safe");
   });
 
   it("sends the active time from opening the form to adding", async () => {

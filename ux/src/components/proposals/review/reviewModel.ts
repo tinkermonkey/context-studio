@@ -10,6 +10,7 @@ import type { KeyedSpan } from "@/components/pipeline/extraction-review/reviewUt
 import { DR_SOURCE } from "../decisionModel";
 import { isAwaiting, type ChipVariant } from "../proposalModel";
 import { relationshipEnds, sourcePassagesOf, type RelationshipEnd } from "../sourceModel";
+import { offsetMap } from "./textOffsets";
 
 type ClassResponse = components["schemas"]["ClassResponse"];
 
@@ -143,8 +144,10 @@ export function reviewSourceId(operations: ProposedOperation[]): string | undefi
 
 /**
  * Every element's passages in the source's text, keyed by operation id, at
- * offsets into `text` (which starts at `textStart` in the whole text). A
- * passage whose text there isn't its quote is left out, as placePassage does.
+ * offsets into `text` (which starts at `textStart` in the whole text). The
+ * passages' offsets count code points, as the server does; the spans' count
+ * UTF-16 units, as the browser does. A passage whose text there isn't its
+ * quote is left out, as placePassage does.
  */
 export function reviewSpans(
   elements: ProposedOperation[],
@@ -152,12 +155,13 @@ export function reviewSpans(
   text: string,
   textStart = 0,
 ): KeyedSpan[] {
+  const offsets = offsetMap(text);
   return elements.flatMap((operation) =>
     sourcePassagesOf(operation).flatMap((passage) => {
       if (passage.sourceId !== sourceId) return [];
-      const start = passage.start - textStart;
-      const end = passage.end - textStart;
-      if (start < 0 || end > text.length || end <= start) return [];
+      const start = offsets.toUtf16(passage.start - textStart);
+      const end = offsets.toUtf16(passage.end - textStart);
+      if (start === undefined || end === undefined || end <= start) return [];
       const found = text.slice(start, end);
       if (passage.quote && found !== passage.quote) return [];
       return [{ key: operation.id, quote: found, start, end }];

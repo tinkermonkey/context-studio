@@ -3,10 +3,11 @@
  * the source (#1612): the selection as offsets into the source's whole text,
  * whether the proposal takes additions, and what a refusal says.
  */
-import { ApiError } from "@/api/client/interceptors";
+import { ApiError, isTimeout } from "@/api/client/interceptors";
 import type { ChangeProposal, ProposedOperation } from "@/api/services/proposals";
+import { offsetMap } from "./textOffsets";
 
-/** A passage of the source: offsets into its whole text (end exclusive) and the text there. */
+/** A passage of the source: offsets (end exclusive) and the text there. */
 export interface SelectedPassage {
   start: number;
   end: number;
@@ -58,18 +59,39 @@ export function trimPassage(text: string, start: number, end: number): SelectedP
 }
 
 /**
- * The passage a selection in `container` picks out of `text`, which starts
- * at `textStart` in the source's whole text: whole-text offsets and the quote.
+ * The passage a selection in `container` picks out of `text`, at UTF-16
+ * offsets into `text` (see toSourcePassage for the server's offsets).
  */
 export function selectedPassage(
   container: Node,
   range: RangeBounds,
   text: string,
-  textStart = 0,
 ): SelectedPassage | undefined {
   const offsets = rangeOffsets(container, range);
-  const passage = offsets && trimPassage(text, offsets.start, offsets.end);
-  return passage && { ...passage, start: passage.start + textStart, end: passage.end + textStart };
+  return offsets && trimPassage(text, offsets.start, offsets.end);
+}
+
+/**
+ * A selected passage as the server reads it: code-point offsets into the
+ * source's whole text, given the shown `text` and where it starts there
+ * (`textStart`, in code points).
+ */
+export function toSourcePassage(
+  passage: SelectedPassage,
+  text: string,
+  textStart = 0,
+): SelectedPassage {
+  const offsets = offsetMap(text);
+  return {
+    start: textStart + offsets.toCodePoint(passage.start),
+    end: textStart + offsets.toCodePoint(passage.end),
+    quote: passage.quote,
+  };
+}
+
+/** The title an added element starts with: the selection on one line. */
+export function titleFromQuote(quote: string): string {
+  return quote.replace(/\s+/g, " ").trim();
 }
 
 /** The source a proposal was extracted from, as it records it. */
@@ -113,6 +135,9 @@ export function addErrorMessage(
   error: unknown,
   { title, classLabel }: { title: string; classLabel: string },
 ): string {
+  if (isTimeout(error)) {
+    return "The server is taking longer than expected. The proposal was refreshed: check whether the element was added before adding it again.";
+  }
   if (error instanceof ApiError) {
     const errors = (error.body as { errors?: ValidationError[] } | undefined)?.errors ?? [];
     const first = errors[0];

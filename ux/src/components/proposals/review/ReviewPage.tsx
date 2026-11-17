@@ -41,6 +41,7 @@ import {
   addedOperation,
   additionsBlocked,
   proposalSourceId,
+  toSourcePassage,
   type SelectedPassage,
 } from "./addFromText";
 import {
@@ -293,13 +294,17 @@ export function ReviewPage({ id, onFinish }: ReviewPageProps) {
     setAddError(undefined);
     clock.startAdding();
   };
-  const closeAdding = () => {
+  const sourceTextRef = useRef<HTMLDivElement>(null);
+  /** Close the add form; focus goes back to the source text unless the reviewer clicked away. */
+  const closeAdding = ({ refocus = true } = {}) => {
     setAdding(undefined);
     setAddError(undefined);
+    if (refocus) sourceTextRef.current?.focus({ preventScroll: true });
   };
   const addElement = async (title: string, classId: string) => {
-    if (!adding || !recordedSourceId || addIndividual.isPending) return;
-    const { passage } = adding;
+    if (!adding || !recordedSourceId || !sourceText || addIndividual.isPending) return;
+    // The server counts offsets in code points, the browser in UTF-16 units.
+    const passage = toSourcePassage(adding.passage, sourceText.text, sourceText.start);
     const before = new Set(operations.map((o) => o.id));
     try {
       const after = await addIndividual.mutateAsync({
@@ -400,6 +405,11 @@ export function ReviewPage({ id, onFinish }: ReviewPageProps) {
   // Keys: A correct, 1-3 a suggested class, X the reasons, J / K next and previous.
   const onKey = useRef<(event: KeyboardEvent) => void>(() => {});
   onKey.current = (event) => {
+    // While the add form is open, keys are its own; Escape closes it wherever focus went.
+    if (adding) {
+      if (event.key === "Escape" && !event.defaultPrevented) closeAdding();
+      return;
+    }
     if (event.defaultPrevented || event.metaKey || event.ctrlKey || event.altKey) return;
     if (actions.forceRequest || ignoresKeys(event.target)) return;
     const key = event.key.toLowerCase();
@@ -559,7 +569,8 @@ export function ReviewPage({ id, onFinish }: ReviewPageProps) {
           }}
           selectedId={selectedId}
           onSelect={setSelectedId}
-          textStart={sourceText?.start ?? 0}
+          textRef={sourceTextRef}
+          onDismissPopover={() => closeAdding({ refocus: false })}
           onSelectText={canAdd ? openAdding : undefined}
           addBlocked={addBlocked}
           popoverAnchor={adding?.anchor}
@@ -576,7 +587,7 @@ export function ReviewPage({ id, onFinish }: ReviewPageProps) {
                 error={addError}
                 onEdit={() => setAddError(undefined)}
                 onAdd={(title, classId) => void addElement(title, classId)}
-                onCancel={closeAdding}
+                onCancel={() => closeAdding()}
               />
             )
           }
