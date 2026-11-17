@@ -61,6 +61,10 @@ export const sourcesCopy = {
     runProgress: (done: number, total: number) => `chunk ${Math.min(done + 1, total)} of ${total}`,
     /** A run that says which stage it is in; `done` and `total` are the stage's own count. */
     stageProgress: {
+      find_individuals: (done: number, total: number) =>
+        total > 1
+          ? `finding individuals, section ${Math.min(done + 1, total)} of ${total}`
+          : "finding individuals",
       find_mentions: (done: number, total: number) =>
         `finding mentions, chunk ${Math.min(done + 1, total)} of ${total}`,
       type_mention: (done: number, total: number) => `typing mentions, ${done} of ${total}`,
@@ -135,10 +139,19 @@ export const sourcesCopy = {
       `Chunk ${Math.min(done + 1, total)} of ${total}`,
     percentLabel: (percent: number) => `${percent}% of chunks read`,
     /**
-     * A run that says which stage it is in (find-then-type): what it is doing
-     * and how far through that it is. A chunk is read once its relationships are.
+     * A run that says which stage it is in (single-call, find-then-type): what
+     * it is doing and how far through that it is. A chunk is read once its
+     * relationships are.
      */
     stages: {
+      find_individuals: {
+        label: "Find individuals",
+        headline: (done: number, total: number) =>
+          total > 1
+            ? `Finding individuals: section ${Math.min(done + 1, total)} of ${total}`
+            : "Finding individuals in the whole text",
+        percentLabel: (percent: number) => `${percent}% of the text read for individuals`,
+      },
       find_mentions: {
         label: "Find mentions",
         headline: (done: number, total: number) =>
@@ -208,11 +221,14 @@ export const sourcesCopy = {
     reading: "reading",
     read: "read",
     /**
-     * A staged run (find-then-type): the chunk is being searched, or has been.
+     * A staged run (find-then-type, single-call): the chunk is being searched, or has been.
      * "Searched" says nothing of what was found: the run tells only at its end
      * which chunks gave candidates and which failed.
      */
     finding: "finding mentions",
+    /** A single-call run: the whole text, every chunk with it, is being read for individuals. */
+    findingIndividuals: "finding individuals",
+    searchedForIndividuals: "searched for individuals",
     searched: "searched for mentions",
     readingRelationships: "reading relationships",
     found: (n: number) => `${n} found`,

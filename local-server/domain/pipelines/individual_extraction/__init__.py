@@ -1,9 +1,9 @@
 """
 Individual Extraction pipeline implementation.
 
-The individual extraction implementations: find-then-type (the type's default),
-two-pass (registered under the id "default", which is a name only) and the
-open spaCy-based open_v1.
+The individual extraction implementations: single-call (the type's default),
+find-then-type, two-pass (registered under the id "default", which is a name
+only) and the open spaCy-based open_v1.
 """
 
 from domain.pipelines.individual_extraction.bootstrap import (

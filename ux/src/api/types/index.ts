@@ -7847,7 +7847,7 @@ export interface components {
       items_total?: number | null;
       /**
        * Stage
-       * @description The stage the run last reported being in (find_then_type: find_mentions, type_mention, derive_relationships); null when its implementation reports none
+       * @description The stage the run last reported being in (single_call: find_individuals, derive_relationships; find_then_type: find_mentions, type_mention, derive_relationships); null when its implementation reports none
        */
       stage?: string | null;
       /**
@@ -8582,7 +8582,7 @@ export interface components {
       temperature?: number | null;
       /**
        * Max Tokens
-       * @description The most output tokens one model call of a run may produce. A model that thinks before it answers spends part of it thinking, so it needs well above what the answer takes (the system configurations of Claude 5.5 models use 16000-20000). At most 20000: what every provider can send in one request. The implementation's default configuration's when omitted
+       * @description The most output tokens one model call of a run may produce. A model that thinks before it answers spends part of it thinking, so it needs well above what the answer takes (the system configurations of Claude 5.5 models use 16000-64000). At most 64000; a model that produces less refuses a larger limit. The implementation's default configuration's when omitted
        */
       max_tokens?: number | null;
       /**
@@ -8781,7 +8781,7 @@ export interface components {
       implementation_id?: string | null;
       /**
        * Configuration Ref
-       * @description One of the implementation's configurations; its default configuration when omitted. Its model, temperature and output-token limit are the run's unless the body names its own (model, temperature, max_tokens; max_tokens at most 20000, above which the run is refused with a 422)
+       * @description One of the implementation's configurations; its default configuration when omitted. Its model, temperature and output-token limit are the run's unless the body names its own (model, temperature, max_tokens; max_tokens at most 64000, above which the run is refused with a 422)
        */
       configuration_ref?: string | null;
       /**
@@ -8895,12 +8895,12 @@ export interface components {
       items_total?: number | null;
       /**
        * Stage
-       * @description The stage the run last reported being in: the key of one of its implementation's stages (find_then_type: find_mentions, type_mention, derive_relationships). Null when the implementation reports no stages
+       * @description The stage the run last reported being in: the key of one of its implementation's stages (single_call: find_individuals, derive_relationships; find_then_type: find_mentions, type_mention, derive_relationships). Null when the implementation reports no stages
        */
       stage?: string | null;
       /**
        * Stage Done
-       * @description How far through that stage the run is, in what the stage counts (find_mentions and derive_relationships: chunks; type_mention: distinct mentions)
+       * @description How far through that stage the run is, in what the stage counts (find_mentions and derive_relationships: chunks; type_mention: distinct mentions; find_individuals: sections of the text, one for most)
        */
       stage_done?: number | null;
       /**

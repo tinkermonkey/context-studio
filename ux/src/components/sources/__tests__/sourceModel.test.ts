@@ -27,6 +27,8 @@ import {
   skippedText,
   skipReasonLabel,
   sourceDetail,
+  STAGE_SEQUENCES,
+  stageSequence,
   stageSteps,
   statusNote,
 } from "../sourceModel";
@@ -441,6 +443,41 @@ describe("sourceModel — a run's progress", () => {
       "done",
       "current",
     ]);
+  });
+
+  it("gives a single-call run its own two stages", () => {
+    expect(stageSteps("find_individuals")).toEqual([
+      { stage: "find_individuals", state: "current" },
+      { stage: "derive_relationships", state: "waiting" },
+    ]);
+    // derive_relationships is both implementations' last stage: the run's implementation says whose
+    expect(stageSteps("derive_relationships", "single_call")).toEqual([
+      { stage: "find_individuals", state: "done" },
+      { stage: "derive_relationships", state: "current" },
+    ]);
+    expect(stageSteps("derive_relationships", "find_then_type")).toHaveLength(3);
+    expect(stageSequence("find_mentions", "single_call")).toEqual(STAGE_SEQUENCES.find_then_type);
+  });
+
+  it("counts a single-call run's first stage in sections of the text", () => {
+    const finding = runProgress({
+      items_done: 0,
+      items_total: 6,
+      stage: "find_individuals",
+      stage_done: 0,
+      stage_total: 1,
+    });
+    expect(finding).toEqual({
+      stage: "find_individuals",
+      done: 0,
+      total: 1,
+      percent: 0,
+      chunksRead: 0,
+      chunks: 6,
+    });
+    // The whole text is read at once: every chunk is being searched
+    expect(chunkStates(finding, true)).toEqual(Array(6).fill("finding"));
+    expect(chunkStates(finding, false)).toEqual(Array(6).fill("waiting"));
   });
 
   it("says what each chunk is at, by stage", () => {

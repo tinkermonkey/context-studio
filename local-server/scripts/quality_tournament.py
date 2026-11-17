@@ -227,7 +227,7 @@ def scenario_input(scenario: str) -> dict[str, Any]:
 def triple_corpus_target() -> benchmark_replay.BenchmarkTarget:
     """
     What the `default*` variants run: the two-pass implementation (its id is
-    `default`, a name: the type's default implementation is find_then_type),
+    `default`, a name: the type's default implementation is single_call),
     named explicitly, with the configuration its recordings were made with
     (benchmark_replay.RECORDED_WITH).
 

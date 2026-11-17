@@ -23,7 +23,13 @@ from .entities import (
 )
 
 if TYPE_CHECKING:
-    from domain.extraction.entities import Mention, MentionsResult, TypingPrompt, TypingResult
+    from domain.extraction.entities import (
+        FoundIndividualsResult,
+        Mention,
+        MentionsResult,
+        TypingPrompt,
+        TypingResult,
+    )
 
 # ============================================================================
 # LLM provider value types and port
@@ -65,9 +71,15 @@ class LLMProvider(Protocol):
         response_format: Literal["json", "text"] | None = None,
         timeout: float | None = None,
         seed: int | None = None,
+        effort: str | None = None,
     ) -> LLMResponse:
         """
         Request a completion from an LLM.
+
+        ``effort`` asks a model that thinks before it answers how much to think
+        ("low", "medium", "high", "xhigh" or "max"); None leaves the model's
+        default, and a provider whose requests have no such setting ignores
+        it. A caller that names none need not pass it.
 
         A provider may cache the system prompt, so a caller that makes many
         calls with one long system prompt should keep it the same, byte for
@@ -224,6 +236,24 @@ class ExtractionPort(Protocol):
         Type one mention: one LLM call that reads nothing but its arguments,
         so calls can be made from several threads at once. A class_ref of None
         with no failure_reason means the mention is not something to record.
+        """
+        ...
+
+    def find_individuals(
+        self,
+        text: str,
+        ontology_id: str,
+        model: str,
+        temperature: float,
+        stage_prompts: Mapping[str, Any] | None = None,
+        max_tokens: int | None = None,
+        effort: str | None = None,
+    ) -> "FoundIndividualsResult":
+        """
+        Find and type every individual of a text in one call against the
+        whole class catalog (SingleCallOrchestrator). effort is how much the
+        model thinks; None leaves its default. A failure_reason on the result
+        means the text was not read.
         """
         ...
 

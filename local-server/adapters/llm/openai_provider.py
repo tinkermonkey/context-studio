@@ -60,6 +60,7 @@ class OpenAIProvider:
         response_format: Literal["json", "text"] | None = None,
         timeout: float | None = None,
         seed: int | None = None,
+        effort: str | None = None,
     ) -> LLMResponse:
         """
         Request a completion from OpenAI.
@@ -74,6 +75,7 @@ class OpenAIProvider:
             timeout: Request timeout in seconds (passed to OpenAI client)
             seed: Optional random seed for reproducible generation (passed to OpenAI API if
             supported)
+            effort: Not sent: this provider's requests have no effort setting
 
         Returns:
             LLMResponse with generated content and metadata

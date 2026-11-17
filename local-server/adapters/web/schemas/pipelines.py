@@ -109,8 +109,8 @@ class ConfigurationResponse(BaseModel):
 MAX_TOKENS_DESCRIPTION = (
     "The most output tokens one model call of a run may produce. A model that thinks"
     " before it answers spends part of it thinking, so it needs well above what the"
-    " answer takes (the system configurations of Claude 5.5 models use 16000-20000)."
-    f" At most {MAX_OUTPUT_TOKENS}: what every provider can send in one request"
+    " answer takes (the system configurations of Claude 5.5 models use 16000-64000)."
+    f" At most {MAX_OUTPUT_TOKENS}; a model that produces less refuses a larger limit"
 )
 
 
@@ -466,15 +466,17 @@ class PipelineRunResponse(BaseModel):
         None,
         description=(
             "The stage the run last reported being in: the key of one of its "
-            "implementation's stages (find_then_type: find_mentions, type_mention, "
-            "derive_relationships). Null when the implementation reports no stages"
+            "implementation's stages (single_call: find_individuals, derive_relationships; "
+            "find_then_type: find_mentions, type_mention, derive_relationships). Null when "
+            "the implementation reports no stages"
         ),
     )
     stage_done: Optional[int] = Field(
         None,
         description=(
             "How far through that stage the run is, in what the stage counts (find_mentions "
-            "and derive_relationships: chunks; type_mention: distinct mentions)"
+            "and derive_relationships: chunks; type_mention: distinct mentions; "
+            "find_individuals: sections of the text, one for most)"
         ),
     )
     stage_total: Optional[int] = Field(None, description="What the stage counts, in all")

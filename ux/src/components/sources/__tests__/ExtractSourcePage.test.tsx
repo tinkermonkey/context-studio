@@ -62,9 +62,10 @@ const findThenTypeConfig = createConfiguration({
   model: "claude-haiku",
   is_default: true,
 });
-// As on the server: find_then_type is the default implementation, and the
-// two-pass one is merely called "default". The default is listed last among
-// those offered, so the page can rely on neither the name nor the order.
+// Here find_then_type is the default implementation (on the server it is
+// single_call), and the two-pass one is merely called "default". The default
+// is listed last among those offered, so the page can rely on neither the
+// name nor the order: it follows is_default.
 const IMPLEMENTATIONS = [
   {
     id: "open_v1",
@@ -657,6 +658,73 @@ describe("ExtractSourcePage — progress and result", () => {
       expect(chip("extract-chunk-1", "read")).toHaveClass("chip--emerald");
       expect(chip("extract-chunk-2", "reading relationships")).toHaveClass("chip--amber");
       expect(chip("extract-chunk-3", "searched for mentions")).toHaveClass("chip--cyan");
+    });
+
+    const singleCall = (stage: string, stage_done: number, stage_total: number, items_done = 0) =>
+      createRun({
+        implementation_id: "single_call",
+        configuration_ref: "extraction-single-call",
+        items_done,
+        items_total: 4,
+        stage,
+        stage_done,
+        stage_total,
+      });
+
+    it("shows a single-call run reading the whole text for individuals", async () => {
+      serve({ runs: { "run-1234abcd": singleCall("find_individuals", 0, 1) } });
+      renderPage({ runId: "run-1234abcd" });
+
+      const headline = await screen.findByTestId("extract-progress-headline");
+      await waitFor(() =>
+        expect(headline).toHaveTextContent("Finding individuals in the whole text"),
+      );
+      const bar = screen.getByTestId("extract-progress-bar");
+      expect(bar).toHaveAttribute("aria-label", "0% of the text read for individuals");
+
+      const steps = screen.getByTestId("extract-stage-steps");
+      expect(within(steps).getAllByRole("listitem")).toHaveLength(2);
+      expect(step("find_individuals")).toHaveAttribute("aria-current", "step");
+      expect(step("find_individuals")).toHaveTextContent("Find individuals");
+      expect(chip("extract-stage-step-find_individuals", "in progress")).toHaveClass("chip--amber");
+      expect(chip("extract-stage-step-derive_relationships", "waiting")).toHaveClass(
+        "chip--neutral",
+      );
+      expect(screen.queryByTestId("extract-stage-step-find_mentions")).not.toBeInTheDocument();
+
+      for (const n of [1, 2, 3, 4]) {
+        expect(chip(`extract-chunk-${n}`, "finding individuals")).toHaveClass("chip--amber");
+      }
+    });
+
+    it("counts sections when a long text is read for individuals in several", async () => {
+      serve({ runs: { "run-1234abcd": singleCall("find_individuals", 1, 2) } });
+      renderPage({ runId: "run-1234abcd" });
+
+      const headline = await screen.findByTestId("extract-progress-headline");
+      await waitFor(() =>
+        expect(headline).toHaveTextContent("Finding individuals: section 2 of 2"),
+      );
+    });
+
+    it("shows a single-call run's relationships as its second and last stage", async () => {
+      serve({ runs: { "run-1234abcd": singleCall("derive_relationships", 1, 4, 1) } });
+      renderPage({ runId: "run-1234abcd" });
+
+      const headline = await screen.findByTestId("extract-progress-headline");
+      await waitFor(() =>
+        expect(headline).toHaveTextContent("Reading relationships: chunk 2 of 4"),
+      );
+      expect(
+        within(screen.getByTestId("extract-stage-steps")).getAllByRole("listitem"),
+      ).toHaveLength(2);
+      expect(chip("extract-stage-step-find_individuals", "done")).toHaveClass("chip--emerald");
+      expect(step("derive_relationships")).toHaveAttribute("aria-current", "step");
+      expect(screen.queryByTestId("extract-stage-step-type_mention")).not.toBeInTheDocument();
+
+      expect(chip("extract-chunk-1", "read")).toHaveClass("chip--emerald");
+      expect(chip("extract-chunk-2", "reading relationships")).toHaveClass("chip--amber");
+      expect(chip("extract-chunk-3", "searched for individuals")).toHaveClass("chip--cyan");
     });
   });
 

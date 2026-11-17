@@ -43,9 +43,9 @@ from scripts import run_pipeline
 EXTRACTION = PipelineType.INDIVIDUAL_EXTRACTION
 RUN = "/api/pipelines/individual_extraction/run"
 BODY = {"text": "Ada Lovelace wrote the first program.", "ontology_id": "tax-1"}
-# Individual extraction's default implementation is find-then-type; what its
-# default configuration (extraction-find-then-type) sets
-DEFAULT_PARAMETERS = {"model": "claude-haiku-5-5", "temperature": 0.0, "max_tokens": 16000}
+# Individual extraction's default implementation is single-call; what its
+# default configuration (extraction-single-call) sets
+DEFAULT_PARAMETERS = {"model": "claude-opus-5-5", "temperature": 0.0, "max_tokens": 64000}
 # The two-pass implementation is registered under the id "default": a name, not
 # the type's default. What its default configuration (extraction-default) sets
 TWO_PASS = {"implementation_id": "default"}
@@ -61,7 +61,7 @@ class RecordingExtraction:
     def __init__(self) -> None:
         self.calls: list[dict] = []
         # Which of the service's calls were made: extract_triples is two-pass's,
-        # find_mentions find-then-type's
+        # find_mentions find-then-type's, find_individuals single-call's
         self.made: list[str] = []
 
     def _nothing(self, call: str, kwargs: dict, **result):
@@ -82,6 +82,9 @@ class RecordingExtraction:
 
     def find_mentions(self, **kwargs):
         return self._nothing("find_mentions", kwargs, mentions=[])
+
+    def find_individuals(self, **kwargs):
+        return self._nothing("find_individuals", kwargs, individuals=[])
 
     def recognize(self, triples, ontology_id, dataset_id=None):
         return triples
@@ -156,19 +159,18 @@ def finished(app, run_id, timeout=10.0):
 
 
 class TestRunApi:
-    def test_nothing_named_runs_find_then_type_with_its_configurations_model(
-        self, client, extraction
-    ):
+    def test_nothing_named_runs_single_call_with_its_configurations_model(self, client, extraction):
         # No implementation, no configuration and no model in the body
         response = client.post(RUN, json=BODY)
 
         assert response.status_code == status.HTTP_201_CREATED, response.text
         run = response.json()
-        assert run["implementation_id"] == "find_then_type"
-        assert run["configuration_ref"] == "extraction-find-then-type"
+        assert run["implementation_id"] == "single_call"
+        assert run["configuration_ref"] == "extraction-single-call"
         assert run["status"] == "completed"
-        assert extraction.made == ["find_mentions"]
+        assert extraction.made == ["find_individuals"]
         assert extraction.parameters() == DEFAULT_PARAMETERS
+        assert extraction.calls[0]["effort"] == "high"
         # The run records the model it used
         assert run["llm_metadata"]["model"] == DEFAULT_PARAMETERS["model"]
 
@@ -242,7 +244,7 @@ class TestRunApi:
         assert response.status_code == status.HTTP_404_NOT_FOUND
         assert response.json()["detail"] == (
             "'no_such' is not an implementation of individual_extraction"
-            " (one of: default, find_then_type, open_v1)"
+            " (one of: default, find_then_type, open_v1, single_call)"
         )
 
     @pytest.mark.parametrize("run_async", [False, True])
@@ -296,34 +298,32 @@ class TestRunApi:
 
         assert response.status_code == status.HTTP_202_ACCEPTED, response.text
         pending = response.json()
-        assert pending["implementation_id"] == "find_then_type"
-        assert pending["configuration_ref"] == "extraction-find-then-type"
+        assert pending["implementation_id"] == "single_call"
+        assert pending["configuration_ref"] == "extraction-single-call"
         run = finished(app, pending["id"])
         assert run.status == PipelineRunStatus.COMPLETED, run.failure_reason
-        assert extraction.made == ["find_mentions"]
+        assert extraction.made == ["find_individuals"]
         assert extraction.parameters() == DEFAULT_PARAMETERS
 
     @pytest.mark.parametrize("run_async", [False, True])
     def test_a_limit_in_the_body_above_what_a_provider_can_send_is_refused(
         self, client, app, extraction, run_async
     ):
-        # The Anthropic client refuses a request that does not stream above ~21,000
-        response = client.post(RUN, json={**BODY, "max_tokens": 30000, "async": run_async})
+        response = client.post(RUN, json={**BODY, "max_tokens": 70000, "async": run_async})
 
         assert response.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
         assert response.json()["detail"] == (
-            "The run's input names max_tokens 30000: the output-token limit of a run is a"
-            " whole number from 1 to 20000, the most every provider can be asked for in one"
-            " request"
+            "The run's input names max_tokens 70000: the output-token limit of a run is a"
+            " whole number from 1 to 64000, the most a run may ask one call for"
         )
         assert app.state.pipeline_run_repo.list() == []
         assert extraction.calls == []
 
     def test_a_limit_in_the_body_within_the_bound_is_the_runs(self, client, extraction):
-        response = client.post(RUN, json={**BODY, "max_tokens": 20000})
+        response = client.post(RUN, json={**BODY, "max_tokens": 30000})
 
         assert response.status_code == status.HTTP_201_CREATED, response.text
-        assert extraction.parameters()["max_tokens"] == 20000
+        assert extraction.parameters()["max_tokens"] == 30000
 
     @pytest.mark.parametrize("run_async", [False, True])
     def test_a_configuration_whose_stored_limit_is_above_the_bound_starts_no_run(
@@ -332,7 +332,7 @@ class TestRunApi:
         # Only a row written under an earlier bound, or by hand, can hold one
         _, configurations = registries
         configurations.register(
-            EXTRACTION, "default", "too-much", {"model": "m", "max_tokens": 64000}
+            EXTRACTION, "default", "too-much", {"model": "m", "max_tokens": 100000}
         )
 
         response = client.post(
@@ -341,9 +341,9 @@ class TestRunApi:
 
         assert response.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
         assert response.json()["detail"] == (
-            "The 'too-much' configuration sets max_tokens 64000: the output-token limit of a"
-            " run is a whole number from 1 to 20000, the most every provider can be asked for"
-            " in one request; edit the configuration, or name a limit in the run's input"
+            "The 'too-much' configuration sets max_tokens 100000: the output-token limit of a"
+            " run is a whole number from 1 to 64000, the most a run may ask one call for;"
+            " edit the configuration, or name a limit in the run's input"
         )
         assert app.state.pipeline_run_repo.list() == []
         assert extraction.calls == []
@@ -353,7 +353,7 @@ class TestRunApi:
     ):
         _, configurations = registries
         configurations.register(
-            EXTRACTION, "default", "too-much", {"model": "m", "max_tokens": 64000}
+            EXTRACTION, "default", "too-much", {"model": "m", "max_tokens": 100000}
         )
 
         response = client.post(
@@ -412,8 +412,8 @@ class TestBatchRoute:
         run = finished(app, run_id)
         assert run.status == PipelineRunStatus.COMPLETED, run.failure_reason
         assert (run.implementation_id, run.configuration_ref) == (
-            "find_then_type",
-            "extraction-find-then-type",
+            "single_call",
+            "extraction-single-call",
         )
         assert extraction.parameters() == DEFAULT_PARAMETERS
 
@@ -459,14 +459,14 @@ class TestBatchRoute:
                 "runs": [
                     {
                         "pipeline_type": "individual_extraction",
-                        "input_data": {**BODY, "max_tokens": 30000},
+                        "input_data": {**BODY, "max_tokens": 70000},
                     }
                 ]
             },
         )
 
         assert response.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
-        assert "from 1 to 20000" in response.json()["detail"]
+        assert "from 1 to 64000" in response.json()["detail"]
         assert app.state.pipeline_run_repo.list() == []
 
     def test_a_configuration_of_another_implementation_is_refused(self, client, app, batch_id):
@@ -616,7 +616,7 @@ class TestFailedRunRecordsItsModel:
         [
             ("schema_extraction", "google/gemini-3-flash-preview"),
             ("schema_node_definition_refinement", "google/gemini-3-flash-preview"),
-            ("individual_extraction", "claude-haiku-5-5"),
+            ("individual_extraction", "claude-opus-5-5"),
         ],
     )
     def test_a_synchronous_run(self, client, app, pipeline, model):

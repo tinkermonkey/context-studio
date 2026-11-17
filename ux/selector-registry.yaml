@@ -3690,7 +3690,7 @@ selectors:
     description: 'Extract page: progress bar (role=progressbar) of chunks read, or of the stage a run reports'
   - selector: extract-stage-steps
     component: src/components/sources/ExtractRunPanel.tsx
-    description: 'Extract page: stages of a run that reports them (find-then-type): done, in progress, waiting'
+    description: 'Extract page: stages of a run that reports them (single-call, find-then-type): done, in progress, waiting'
   - selector: extract-run-tally
     component: src/components/sources/ExtractRunPanel.tsx
     description: 'Extract page: run id, pipeline and configuration under the progress bar'

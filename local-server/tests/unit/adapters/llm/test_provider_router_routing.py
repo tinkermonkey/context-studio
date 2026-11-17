@@ -120,6 +120,21 @@ class TestLLMProviderRouter:
                 response_format="json",
             )
 
+    def test_effort_is_passed_on_only_when_given(self):
+        """A provider that takes no effort is never handed one a caller did not name."""
+        router = self.create_test_router()
+        anthropic = Mock()
+        anthropic.is_model_available.return_value = True
+        router._providers["anthropic"] = anthropic
+
+        router.complete("sys", "user", "claude-opus-5-5")
+        router.complete("sys", "user", "claude-opus-5-5", max_tokens=64000, effort="high")
+
+        first, second = anthropic.complete.call_args_list
+        assert "effort" not in first.kwargs
+        assert second.kwargs["effort"] == "high"
+        assert second.kwargs["max_tokens"] == 64000
+
     def test_router_init_with_no_keys(self):
         """Router raises ValueError when initialized with no API keys."""
         with pytest.raises(ValueError) as exc_info:

@@ -341,6 +341,39 @@ class MentionsResult:
 
 
 @dataclass(frozen=True)
+class FoundIndividual:
+    """
+    An individual found and typed in one call (single-call extraction).
+
+    Attributes:
+        mention: What the text calls it and the passage that says what it is,
+            placed in the text the call read (kind is "thing")
+        class_ref: The reference of its class, as the ontology writes it
+    """
+
+    mention: Mention
+    class_ref: str
+
+
+@dataclass
+class FoundIndividualsResult:
+    """
+    The individuals one call found and typed in a text.
+
+    ``metadata`` and the failure fields read as on TripleExtractionResult: a
+    failure_reason means the text was not read, never that it holds nothing.
+    """
+
+    individuals: list[FoundIndividual]
+    warnings: list[str]
+    metadata: dict[str, int | str]
+    failure_reason: str | None = None
+    incomplete_response: bool = False
+    provider_failed: bool = False
+    provider_refused: bool = False
+
+
+@dataclass(frozen=True)
 class TypingPrompt:
     """
     The prompt that types one mention against a taxonomy's whole class catalog,

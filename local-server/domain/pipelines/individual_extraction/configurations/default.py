@@ -1,6 +1,6 @@
 """
-Configurations of the two-pass and find-then-type Individual Extraction
-implementations, loaded from the JSON files in configs/.
+Configurations of the two-pass, find-then-type and single-call Individual
+Extraction implementations, loaded from the JSON files in configs/.
 
 Each file's max_tokens is the most output tokens one model call of a run may
 produce. Claude 5.5 models think before they answer and the thinking counts
@@ -65,5 +65,28 @@ def get_find_then_type_config() -> dict:
     config["description"] = (
         "Find-then-type individual extraction with Claude Haiku 5.5: finds what the "
         "text mentions, then types each mention against the whole class catalog"
+    )
+    return config
+
+
+def get_single_call_config() -> dict:
+    """
+    Return the configuration of the single-call implementation.
+
+    Loads extraction-single-call.json: Claude Opus 5.5 through the Anthropic
+    provider, the model of the head-to-head's one call. ``effort`` ("high") is
+    what the call that finds the individuals asks for; the relate calls ask
+    for the model's default. ``max_tokens`` (64,000) is for that call, which
+    thinks and then lists every individual of a whole document: the
+    Anthropic provider streams a request asking for more than 20,000.
+
+    Returns:
+        Configuration dict with LLM settings (Anthropic provider)
+    """
+    config = _load_config_from_file("extraction-single-call.json")
+    config["description"] = (
+        "Single-call individual extraction with Claude Opus 5.5: one call finds and types "
+        "every individual of the text against the whole class catalog, then relationships "
+        "are read chunk by chunk with the predicates each class allows"
     )
     return config

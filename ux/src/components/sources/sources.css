@@ -247,7 +247,7 @@
     color: rgb(var(--canvas-fg-1));
   }
 
-  /* Stages of a run that reports them (find-then-type) */
+  /* Stages of a run that reports them (single-call, find-then-type) */
   .extract-run__stages {
     display: flex;
     flex-wrap: wrap;

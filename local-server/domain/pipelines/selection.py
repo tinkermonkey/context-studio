@@ -60,11 +60,14 @@ RUN_PARAMETERS = ("model", "temperature", "max_tokens")
 # implementation's default configuration's.
 RECOGNITION_MODEL = "recognition_model"
 
-# The largest output-token limit a configuration may set: what every provider
-# can send in one request. The Anthropic client refuses a request that does not
-# stream above about 21,000 (it would expect the response to take over ten
-# minutes), before sending anything.
-MAX_OUTPUT_TOKENS = 20000
+# The largest output-token limit a run may ask one call for. It was 20,000
+# while the Anthropic provider sent every request without streaming, which its
+# client refuses above about 21,000; the provider now streams a request asking
+# for more. 64,000 is what one call that reads a whole document with thinking
+# may need (single_call), and within what the current Claude models (128,000)
+# and Gemini 3 Flash (65,536) produce. A model that produces less refuses a
+# larger limit, and the call fails saying so.
+MAX_OUTPUT_TOKENS = 64000
 
 # Configuration entries that name or describe it without changing what a run does
 _NOT_BEHAVIOUR = ("name", "description", "enabled")
@@ -134,8 +137,7 @@ class PipelineSelection:
             )
             raise RunParameterError(
                 f"{whose} max_tokens {limit!r}: the output-token limit of a run is a whole"
-                f" number from 1 to {MAX_OUTPUT_TOKENS}, the most every provider can be asked"
-                " for in one request"
+                f" number from 1 to {MAX_OUTPUT_TOKENS}, the most a run may ask one call for"
                 + ("" if named else "; edit the configuration, or name a limit in the run's input")
             )
         return filled

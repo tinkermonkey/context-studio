@@ -312,3 +312,114 @@ class TestAnthropicProviderPromptCaching:
         )
 
         assert response.tokens_in == 3
+
+
+def _sse(model: str, text: str) -> str:
+    """A streamed Messages API response holding one text block."""
+    message = {
+        "id": "msg_test",
+        "type": "message",
+        "role": "assistant",
+        "model": model,
+        "content": [],
+        "stop_reason": None,
+        "stop_sequence": None,
+        "usage": {
+            "input_tokens": 10,
+            "cache_creation_input_tokens": 900,
+            "cache_read_input_tokens": 0,
+            "output_tokens": 1,
+        },
+    }
+    events = [
+        ("message_start", {"type": "message_start", "message": message}),
+        (
+            "content_block_start",
+            {
+                "type": "content_block_start",
+                "index": 0,
+                "content_block": {"type": "text", "text": ""},
+            },
+        ),
+        (
+            "content_block_delta",
+            {
+                "type": "content_block_delta",
+                "index": 0,
+                "delta": {"type": "text_delta", "text": text},
+            },
+        ),
+        ("content_block_stop", {"type": "content_block_stop", "index": 0}),
+        (
+            "message_delta",
+            {
+                "type": "message_delta",
+                "delta": {"stop_reason": "end_turn", "stop_sequence": None},
+                "usage": {"output_tokens": 30000},
+            },
+        ),
+        ("message_stop", {"type": "message_stop"}),
+    ]
+    return "".join(f"event: {name}\ndata: {json.dumps(data)}\n\n" for name, data in events)
+
+
+@pytest.mark.llm
+class TestLargeOutputsAndEffort:
+    """A request for more than 20,000 output tokens is streamed; effort is sent when asked."""
+
+    def test_a_large_limit_is_streamed_and_read_whole_with_the_effort(self):
+        anthropic = pytest.importorskip("anthropic")
+        httpx2 = pytest.importorskip("httpx2")
+        bodies: list[dict] = []
+
+        def handler(request):
+            bodies.append(json.loads(request.content))
+            return httpx2.Response(
+                200,
+                headers={"content-type": "text/event-stream"},
+                content=_sse("claude-opus-5-5", '{"individuals": []}').encode(),
+            )
+
+        provider = AnthropicProvider("test-key")
+        provider._client = anthropic.Anthropic(
+            api_key="test-key",
+            http_client=httpx2.Client(transport=httpx2.MockTransport(handler)),
+            max_retries=0,
+        )
+
+        response = provider.complete(
+            system_prompt="sys",
+            user_prompt="hi",
+            model="claude-opus-5-5",
+            max_tokens=64000,
+            effort="high",
+        )
+
+        body = bodies[0]
+        assert body["stream"] is True
+        assert body["max_tokens"] == 64000
+        assert body["output_config"] == {"effort": "high"}
+        assert response.content == '{"individuals": []}'
+        assert response.tokens_in == 910
+        assert response.tokens_out == 30000
+        assert response.finish_reason == "end_turn"
+
+    def test_a_limit_up_to_20000_is_not_streamed(self):
+        provider, messages = _provider_with_fake_client()
+
+        provider.complete(
+            system_prompt="sys", user_prompt="hi", model="claude-opus-5-5", max_tokens=20000
+        )
+
+        assert messages.calls[0]["max_tokens"] == 20000
+
+    def test_effort_is_sent_only_when_asked(self):
+        provider, messages = _provider_with_fake_client()
+
+        provider.complete(system_prompt="sys", user_prompt="hi", model="claude-haiku-5-5")
+        provider.complete(
+            system_prompt="sys", user_prompt="hi", model="claude-haiku-5-5", effort="low"
+        )
+
+        assert "output_config" not in messages.calls[0]
+        assert messages.calls[1]["output_config"] == {"effort": "low"}

@@ -154,7 +154,9 @@ const EXPERIMENT_PAGE = /^documentation\/extraction\/experiments\/\d{4}-\d{2}-\d
 // acceptances by implementation, so the same id in two backlogs is two
 // hypotheses.
 // `default` is the two-pass implementation's id, a name only: the type's
-// default implementation is `find_then_type` (bootstrap.py).
+// default implementation is `single_call` (bootstrap.py, since 2026-11-17),
+// which has no backlog here, so a call that names no implementation stops
+// saying so; pass `{implementation: "find_then_type"}` to refine that one.
 //
 // `default` (the two-pass shape: domain/extraction/services.py,
 // domain/pipelines/individual_extraction/orchestrator.py). Hypotheses from the
@@ -305,7 +307,7 @@ const FIND_THEN_TYPE_BACKLOG = [
     kinds: ['relationship_missed'],
     blocked: true,
     summary:
-      'Keep the relate stage inside its output limit. It is asked for every relationship among all of a chunk\u2019s typed individuals in one answer capped by the configuration\u2019s output-token limit (`max_tokens` in configs/extraction-find-then-type.json, 16,000 since PR #1598; it was a fixed 8,000 when the cuts were seen, and the limit cannot exceed 20,000); find-then-type types far more individuals per chunk than the two-pass shape, so the answer can be cut on dense chunks. First check, from a recording, whether the cuts still happen at 16,000. Ask for the relationships of a bounded number of subjects per call. The relate stage is shared with the `default` implementation (`derive_relationships` in domain/extraction/prompts.py): a change to it makes both implementations\u2019 recordings stale.',
+      'Keep the relate stage inside its output limit. It is asked for every relationship among all of a chunk\u2019s typed individuals in one answer capped by the configuration\u2019s output-token limit (`max_tokens` in configs/extraction-find-then-type.json, 16,000 since PR #1598; it was a fixed 8,000 when the cuts were seen, and the limit cannot exceed 64,000); find-then-type types far more individuals per chunk than the two-pass shape, so the answer can be cut on dense chunks. First check, from a recording, whether the cuts still happen at 16,000. Ask for the relationships of a bounded number of subjects per call. The relate stage is shared with the `default` implementation (`derive_relationships` in domain/extraction/prompts.py): a change to it makes both implementations\u2019 recordings stale.',
   },
   {
     id: 'cross_chunk_relationships',

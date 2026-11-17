@@ -58,9 +58,10 @@ DOCUMENT = "wikimedia_enterprise"
 ACTOR = "business.businessactor"
 # The implementations with committed recordings, by their registry ids. The
 # two-pass implementation's id is `default`, a name only: the type's default
-# implementation is find_then_type.
+# implementation is single_call.
 TWO_PASS = "default"
 FIND_THEN_TYPE = "find_then_type"
+SINGLE_CALL = "single_call"
 ALL_DOCUMENTS = sorted([*DEV_DOCUMENTS, *HOLDOUT_DOCUMENTS])
 _OFFERED = re.compile(r"^- ([a-z\-]+\.[a-z]+) \(", re.MULTILINE)
 
@@ -278,6 +279,61 @@ async def test_find_then_type_types_a_mention_once_against_the_whole_catalog(ont
     assert relationships == []
 
 
+class SingleCallStub:
+    """
+    Answers the find_individuals call with one individual whenever its name
+    is in the text, typed with a class of the catalog, and relate with nothing.
+    """
+
+    def __init__(self, name: str, class_ref: str) -> None:
+        self._name = name
+        self._class_ref = class_ref
+        self.reads: list[str] = []
+        self.catalogs: set[str] = set()
+        self.efforts: list[object] = []
+        self.limits: list[object] = []
+
+    def complete(self, system_prompt, user_prompt, model, **kwargs: object) -> LLMResponse:
+        content = json.dumps({"triples": []})
+        if "<document>" in user_prompt:
+            self.reads.append(user_prompt)
+            self.catalogs.add(system_prompt)
+            self.efforts.append(kwargs.get("effort"))
+            self.limits.append(kwargs.get("max_tokens"))
+            assert f"- {self._class_ref} (" in system_prompt, "the catalog lists the class"
+            found = []
+            if self._name in user_prompt:
+                found = [{"title": self._name, "class": self._class_ref, "quote": self._name}]
+            content = json.dumps({"individuals": found})
+        return LLMResponse(
+            content=content,
+            tokens_in=1,
+            tokens_out=1,
+            duration_ms=0.0,
+            finish_reason="stop",
+            model=model,
+        )
+
+    def forget(self, **_: object) -> None:
+        pass
+
+
+async def test_single_call_reads_the_whole_document_in_one_call(ontology):
+    provider = SingleCallStub("Wikimedia Foundation", ACTOR)
+    individuals, relationships = await extract_document(
+        ontology, provider, DOCUMENT, resolve_target(SINGLE_CALL)
+    )
+
+    assert len(provider.reads) == 1, "one call for the whole document"
+    assert provider.efforts == ["high"] and provider.limits == [64000]
+    (catalog,) = provider.catalogs
+    offered = set(re.findall(r"^- ([a-z\-]+\.[a-z]+) \(", catalog, re.MULTILINE))
+    assert offered == set(ontology.class_refs.values()), "every class of the taxonomy is offered"
+    assert [(i.title, i.class_refs) for i in individuals] == [("Wikimedia Foundation", (ACTOR,))]
+    assert len(individuals[0].evidence) > 1, "a passage from each chunk that names it"
+    assert relationships == []
+
+
 async def test_a_document_without_a_find_then_type_cassette_is_not_scored(tmp_path, monkeypatch):
     monkeypatch.setattr("scripts.benchmark_replay.CASSETTE_DIR", tmp_path / "extraction_benchmark")
     result = await replay_document(DOCUMENT, resolve_target(FIND_THEN_TYPE))
@@ -293,7 +349,7 @@ def test_with_nothing_asked_for_the_target_is_the_registrys_default_implementati
 
     assert target.implementation == default_implementation()
     assert target.implementation == implementations.default_implementation(PIPELINE_TYPE)
-    assert target.implementation == FIND_THEN_TYPE, "find_then_type is the type's default"
+    assert target.implementation == SINGLE_CALL, "single_call is the type's default"
     assert TWO_PASS != default_implementation(), "the two-pass id `default` is only a name"
     assert target.orchestrator is implementations.get(PIPELINE_TYPE, target.implementation)
     registered = configurations.get_latest(
@@ -425,15 +481,18 @@ def test_each_committed_recording_belongs_to_a_registered_target():
     assert recorded == {
         (TWO_PASS, "extraction-openrouter-default"),
         (FIND_THEN_TYPE, "extraction-find-then-type"),
+        (SINGLE_CALL, "extraction-single-call"),
     }
-    two_pass, find_then_type = (
+    two_pass, find_then_type, single_call = (
         cassette_path(DOCUMENT, resolve_target(TWO_PASS)),
+        cassette_path(DOCUMENT, resolve_target(FIND_THEN_TYPE)),
         cassette_path(DOCUMENT),
     )
     assert two_pass.parent.name == "extraction_benchmark"
     assert find_then_type.parent.name == "extraction_benchmark_find_then_type"
-    assert two_pass.parent.parent == find_then_type.parent.parent
-    assert two_pass.exists() and find_then_type.exists()
+    assert single_call.parent.name == "extraction_benchmark_single_call"
+    assert two_pass.parent.parent == find_then_type.parent.parent == single_call.parent.parent
+    assert two_pass.exists() and find_then_type.exists() and single_call.exists()
 
 
 async def test_the_run_uses_its_configurations_model_temperature_and_stage_prompts(
@@ -493,6 +552,9 @@ def test_a_summary_says_what_was_run():
 COMMITTED_SCORES = {
     TWO_PASS: {"dev": {"typed_f1": 0.1138, "f1": 0.4112}, "holdout": {"typed_f1": 0.156}},
     FIND_THEN_TYPE: {"dev": {"typed_f1": 0.4648, "f1": 0.5343}, "holdout": {"typed_f1": 0.4813}},
+    # One take (2026-11-17), stated on its experiment page; the loop has no
+    # backlog for it, so no ledger baseline
+    SINGLE_CALL: {"dev": {"typed_f1": 0.5762, "f1": 0.6107}, "holdout": {"typed_f1": 0.625}},
 }
 _REPLAYED: dict[tuple[str, str], DocumentResult] = {}
 
@@ -534,6 +596,19 @@ async def test_find_then_type_recordings_replay_and_keep_their_gain(ontology, do
     assert result.misses == 0
     assert result.score.metrics["typed_f1"] > 0.3
     assert result.score.metrics["type_accuracy"] > 0.6
+
+
+@pytest.mark.parametrize("document", ALL_DOCUMENTS)
+async def test_single_call_recordings_replay(ontology, document):
+    """
+    The recorded single-call runs (one take, Claude Opus 5.5) answer today's
+    prompts: one find_individuals call per document and the relate calls.
+    """
+    result = await replayed(SINGLE_CALL, document)
+
+    assert result.status == "scored", result
+    assert result.misses == 0
+    assert result.score.metrics["typed_f1"] > 0.3
 
 
 @pytest.mark.parametrize("implementation", sorted(COMMITTED_SCORES))
@@ -592,8 +667,8 @@ def test_main_with_no_flags_replays_the_registrys_default_target(monkeypatch, ca
     out = capsys.readouterr().out
 
     assert exit_code == 0
-    assert seen == [(FIND_THEN_TYPE, "extraction-find-then-type", tuple(benchmark_documents()))]
-    assert "target: implementation find_then_type, configuration extraction-find-then-type" in out
+    assert seen == [(SINGLE_CALL, "extraction-single-call", tuple(benchmark_documents()))]
+    assert "target: implementation single_call, configuration extraction-single-call" in out
     assert "status: scored" in out
     assert "dev typed F1 0.000, found F1 0.000" in out
 
@@ -616,7 +691,7 @@ def test_main_runs_the_target_its_flags_name(monkeypatch, capsys):
 
 @pytest.mark.parametrize("status", ["stale", "not_recorded", "failed"])
 def test_main_exits_non_zero_when_the_target_was_not_scored(monkeypatch, capsys, status):
-    exit_code, _ = _run_main(monkeypatch, [], {FIND_THEN_TYPE: status})
+    exit_code, _ = _run_main(monkeypatch, [], {SINGLE_CALL: status})
     assert exit_code == 2
     assert f"status: {status}" in capsys.readouterr().out
 
@@ -647,16 +722,18 @@ def test_main_all_replays_every_recorded_target(monkeypatch, capsys):
     targets = json.loads(captured.out)["targets"]
 
     assert exit_code == 0
-    # In registration order: find_then_type, the type's default, first
+    # In registration order: single_call, the type's default, first
     assert [(i, c) for i, c, _ in seen] == [
+        (SINGLE_CALL, "extraction-single-call"),
         (FIND_THEN_TYPE, "extraction-find-then-type"),
         (TWO_PASS, "extraction-openrouter-default"),
     ]
     assert [(t["implementation"], t["status"]) for t in targets] == [
+        (SINGLE_CALL, "scored"),
         (FIND_THEN_TYPE, "scored"),
         (TWO_PASS, "scored"),
     ]
-    assert captured.err.count("target: implementation") == 2
+    assert captured.err.count("target: implementation") == 3
 
 
 def test_main_all_exits_non_zero_when_any_target_is_not_scored(monkeypatch, capsys):

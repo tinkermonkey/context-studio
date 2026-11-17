@@ -187,27 +187,67 @@ class FindThenTypeOrchestrator(IndividualExtractionOrchestrator):
         list[Any],
     ]:
         """
-        The whole flow over the given chunks. ``report`` is False for a pasted
-        text, which is one chunk: no progress or stage is reported, and no
-        message speaks of chunks.
+        The whole flow over the given chunks: their typed individuals
+        (_individuals), then their relationships, recognized and merged
+        (_relate_and_merge). ``report`` is False for a pasted text, which is
+        one chunk: no progress or stage is reported, and no message speaks of
+        chunks.
 
         Returns:
             (merged triples, warnings, metadata, the failed chunks with why,
             every call's result for what the run cost)
         """
+        texts = [state.source_text[chunk.start : chunk.end] for chunk in chunks]
+        spent: list[Any] = []  # every call's result: what the run cost
+        warnings: list[str] = []
+        # Per chunk, why it is a failed chunk: (reason, the result that failed)
+        problems: list[list[tuple[str, Any]]] = [[] for _ in chunks]
+        chunk_triples, counts = await self._individuals(
+            state, chunks, texts, report, spent, warnings, problems
+        )
+        return await self._relate_and_merge(
+            state,
+            chunks,
+            page_starts,
+            texts,
+            chunk_triples,
+            counts,
+            report,
+            spent,
+            warnings,
+            problems,
+        )
+
+    async def _individuals(
+        self,
+        state: IndividualExtractionState,
+        chunks: list[Chunk],
+        texts: list[str],
+        report: bool,
+        spent: list[Any],
+        warnings: list[str],
+        problems: list[list[tuple[str, Any]]],
+    ) -> tuple[list[list[dict[str, Any]]], dict[str, Any]]:
+        """
+        Find the chunks' mentions and type each distinct one once. Every call
+        made is added to ``spent``, its warnings to ``warnings``, and why a
+        chunk is a failed chunk to its entry of ``problems``.
+
+        Returns:
+            (each chunk's typing triples: one per place a typed mention was
+            found in it; what the run's metadata says of them: ``mentions``)
+
+        Raises:
+            ExtractionFailedError, PipelineExecutionError: As _extract_by_chunk
+        """
         service = self._extraction_service
         total = len(chunks)
-        texts = [state.source_text[chunk.start : chunk.end] for chunk in chunks]
 
         def where(index: int) -> str:
             return f"Chunk {index + 1} of {total}: " if report else ""
 
         if report:
             self._report_progress(0, total, StageProgress(FIND_MENTIONS, 0, total))
-        spent: list[Any] = []  # every call's result: what the run cost
-        warnings: list[str] = []
-        # Per chunk, why it is a failed chunk: (reason, the result that failed)
-        problems: list[list[tuple[str, Any]]] = [[] for _ in chunks]
 
         # 1. Find
         found: list[list[Mention]] = []
@@ -302,6 +342,53 @@ class FindThenTypeOrchestrator(IndividualExtractionOrchestrator):
                 chunk_triples[index].append(
                     typing_triple(mention, typing.class_ref, typing.confidence)
                 )
+        counts = {
+            "mentions": {
+                "found": sum(len(mentions) for mentions in found),
+                "distinct": len(candidates),
+                "typed": sum(1 for c in asked if c.typing.class_ref),
+                "not_recorded": sum(
+                    1 for c in asked if not c.typing.failure_reason and not c.typing.class_ref
+                ),
+                "untyped": len(untyped),
+            }
+        }
+        return chunk_triples, counts
+
+    async def _relate_and_merge(
+        self,
+        state: IndividualExtractionState,
+        chunks: list[Chunk],
+        page_starts: list[int],
+        texts: list[str],
+        chunk_triples: list[list[dict[str, Any]]],
+        counts: dict[str, Any],
+        report: bool,
+        spent: list[Any],
+        warnings: list[str],
+        problems: list[list[tuple[str, Any]]],
+    ) -> tuple[
+        list[dict[str, Any]],
+        list[str],
+        dict[str, Any],
+        list[tuple[Chunk, _ChunkFailure]],
+        list[Any],
+    ]:
+        """
+        Relate the typed individuals of each chunk in turn (the
+        derive_relationships stage, with the predicates each subject class
+        allows), then recognize every triple's individuals and merge the
+        triples over the text. ``counts`` goes into the run's metadata as
+        the individuals' step gives it.
+
+        Returns:
+            As _find_type_relate
+        """
+        service = self._extraction_service
+        total = len(chunks)
+
+        def where(index: int) -> str:
+            return f"Chunk {index + 1} of {total}: " if report else ""
 
         # 3. Relate, per chunk
         if report:
@@ -368,15 +455,7 @@ class FindThenTypeOrchestrator(IndividualExtractionOrchestrator):
             **_spent(state.model, spent),
             "source_id": state.input_data.get("source_id"),
             "pages": state.input_data.get("pages"),
-            "mentions": {
-                "found": sum(len(mentions) for mentions in found),
-                "distinct": len(candidates),
-                "typed": sum(1 for c in asked if c.typing.class_ref),
-                "not_recorded": sum(
-                    1 for c in asked if not c.typing.failure_reason and not c.typing.class_ref
-                ),
-                "untyped": len(untyped),
-            },
+            **counts,
             "chunks": [
                 {
                     "index": chunk.index,

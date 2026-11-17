@@ -7,6 +7,7 @@ import {
   pageRangeLabel,
   runChunks,
   runProgress,
+  stageSequence,
   type ChipTone,
   type ChunkState,
 } from "./sourceModel";
@@ -58,11 +59,22 @@ function chunkRows(run: PipelineRun): ChunkRow[] {
   const running = hasRunStatus(run.status, "pending", "running");
   // A staged run reads a chunk in two parts: only its relationships are left.
   const reading = progress.stage ? copy.readingRelationships : copy.reading;
+  // A single-call run reads the whole text for individuals, not each chunk for mentions.
+  const singleCall =
+    !!progress.stage &&
+    stageSequence(progress.stage, run.implementation_id).includes("find_individuals");
+  const words: Record<ChunkState, string> = {
+    waiting: copy.waiting,
+    finding: singleCall ? copy.findingIndividuals : copy.finding,
+    searched: singleCall ? copy.searchedForIndividuals : copy.searched,
+    reading,
+    read: copy.read,
+  };
   return chunkStates(progress, running).map((state, i) => ({
     n: i + 1,
     title: copy.chunk(i + 1),
     pages: "",
-    state: state === "reading" ? reading : copy[state],
+    state: words[state],
     tone: STATE_TONE[state],
   }));
 }

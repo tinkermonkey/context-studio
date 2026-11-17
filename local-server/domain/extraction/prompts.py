@@ -10,6 +10,11 @@ its own for pass 1: one finds what a text mentions without typing it, one
 types each mention against the ontology's whole class catalog. Its
 relationships are pass 2, unchanged.
 
+The single-call shape (domain/extraction/single_call.py) has one stage of its
+own for pass 1: one call finds and types every individual of a whole text
+against the whole class catalog with full definitions. Its relationships are
+pass 2 too.
+
 The defaults render byte-identical to the prompts recorded in the quality-test
 cassettes, so changing a default invalidates those recordings. That includes
 the indentation inside the user templates.
@@ -235,6 +240,73 @@ FIND_THEN_TYPE_STAGES: tuple[StageDefinition, ...] = (
             "quote": "The passage the mention was found in",
         },
         default=StagePrompt(system=_TYPE_SYSTEM, user=_TYPE_USER),
+    ),
+    next(stage for stage in INDIVIDUAL_EXTRACTION_STAGES if stage.key == DERIVE_RELATIONSHIPS),
+)
+
+FIND_INDIVIDUALS = "find_individuals"
+
+# The prompt of the one call that finds and types a whole document's
+# individuals (domain/extraction/single_call.py), from the head-to-head's arm B
+# (documentation/extraction/experiments/2026-11-15-head-to-head.md) without its
+# relationships: those are pass 2, as for find-then-type.
+_FIND_INDIVIDUALS_SYSTEM = """You are an expert knowledge graph extraction assistant.
+Your task is to read one document and list, for a model of its subject in the ontology
+below, every individual the document states.
+
+An individual is an instance of exactly one class of the ontology. The classes are listed
+below by kind, each as: class reference (title): definition.
+
+{catalog}
+
+# What to extract
+
+List two kinds of individual:
+- things the document names: use the name the document gives them;
+- statements the document asserts about its subject or the people behind it: a goal, a
+  requirement, a principle, a constraint, a reason, a finding or an outcome. Title a
+  statement with a paraphrase of at most ten words.
+Be exhaustive: include what is named only once, in a table, a list or a diagram.
+Leave out what the document only refers to and does not describe as part of its subject:
+other works it cites or compares itself with, press coverage, link lists, navigation,
+passing examples, generic terms, and repeats of headings.
+List each individual once. For each give:
+- title: as above;
+- class: the one class reference from the list above that best fits what the individual
+  is, as the document describes it. Judge by the class definitions, not by the class
+  names;
+- quote: the exact words of the document, at most 300 characters, that say what the
+  individual is or that state it. Copy the quote verbatim; never paraphrase it.
+
+Return only valid JSON in this format:
+{"individuals": [
+  {"title": "...", "class": "<a class reference from the list, copied exactly>", "quote": "..."}
+]}
+If the document states no individual to record, return {"individuals": []}."""
+
+_FIND_INDIVIDUALS_USER = """Extract every individual the following document states.
+
+<document>
+{text}
+</document>"""
+
+SINGLE_CALL_STAGES: tuple[StageDefinition, ...] = (
+    StageDefinition(
+        key=FIND_INDIVIDUALS,
+        label="Find individuals",
+        description=(
+            "Finds and types every individual of the whole text in one call, against the "
+            "ontology's whole class catalog with full definitions (a text too long for one "
+            "call is read in as few sections as fit, one call each)."
+        ),
+        placeholders={
+            "catalog": (
+                "(system prompt) The ontology title and every class by kind: reference, "
+                "title and definition"
+            ),
+            "text": "The text, or one section of a text too long for one call",
+        },
+        default=StagePrompt(system=_FIND_INDIVIDUALS_SYSTEM, user=_FIND_INDIVIDUALS_USER),
     ),
     next(stage for stage in INDIVIDUAL_EXTRACTION_STAGES if stage.key == DERIVE_RELATIONSHIPS),
 )

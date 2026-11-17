@@ -74,8 +74,9 @@ class LastExtractionRunSchema(BaseModel):
     stage: Optional[str] = Field(
         None,
         description=(
-            "The stage the run last reported being in (find_then_type: find_mentions, "
-            "type_mention, derive_relationships); null when its implementation reports none"
+            "The stage the run last reported being in (single_call: find_individuals, "
+            "derive_relationships; find_then_type: find_mentions, type_mention, "
+            "derive_relationships); null when its implementation reports none"
         ),
     )
     stage_done: Optional[int] = Field(

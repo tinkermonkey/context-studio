@@ -42,7 +42,8 @@ def merge_chunk_triples(
       found in, in the order found, offsets into the whole text
     - ``provenance``: ``{quote, start, end}`` of the first passage placed in
       the text, else of the first passage (whose offsets are then null)
-    - ``confidence``: the highest of the merged triples
+    - ``confidence``: the highest of the merged triples that give one (None
+      when none does)
     - subject and object ``id``: taken from a later triple when the first had
       none (recognition found the existing node in another chunk)
     - ``near_matches``: the union of the merged triples' recognition near
@@ -83,9 +84,10 @@ def merge_chunk_triples(
                 item["passages"] = []
                 merged[key] = item
             else:
-                item["confidence"] = max(
-                    item.get("confidence") or 0.0, triple.get("confidence") or 0.0
-                )
+                # A triple that gives no confidence (single-call extraction's
+                # typing triples) leaves the merged one's as it is
+                if triple.get("confidence") is not None:
+                    item["confidence"] = max(item.get("confidence") or 0.0, triple["confidence"])
                 if triple.get("near_matches"):
                     item["near_matches"] = _merge_near_matches(
                         item.get("near_matches") or [], triple["near_matches"]

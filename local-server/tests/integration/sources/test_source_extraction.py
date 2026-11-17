@@ -38,7 +38,7 @@ from adapters.pipelines.run_executor import BackgroundRunExecutor
 from adapters.sources.file_store import LocalSourceFileStore
 from adapters.sources.readers import source_readers
 from adapters.web.sources_routes import router
-from domain.extraction.entities import Mention
+from domain.extraction.entities import FoundIndividual, Mention
 from domain.extraction.services import ExtractionService
 from domain.extraction.sources import SourceService
 from domain.ontology.services import OntologyService
@@ -280,7 +280,7 @@ def extract(client, source_id, **body):
 
 
 class TestDefaultImplementation:
-    def test_nothing_named_extracts_with_find_then_type(self, client, app, house):
+    def test_nothing_named_extracts_with_single_call(self, client, app, house):
         source = add_pdf(client, house)
 
         response = client.post(f"/api/sources/{source['id']}/extract", json={"dataset": "home"})
@@ -289,8 +289,8 @@ class TestDefaultImplementation:
         [run] = response.json()["runs"]
         stored = app.state.runs.get(run["run_id"])
         # Individual extraction's default implementation and its default configuration
-        assert stored.implementation_id == "find_then_type"
-        assert stored.configuration_ref == "extraction-find-then-type"
+        assert stored.implementation_id == "single_call"
+        assert stored.configuration_ref == "extraction-single-call"
 
     def test_naming_default_extracts_with_two_pass(self, client, app, house):
         source = add_pdf(client, house)
@@ -432,7 +432,7 @@ class TestExtractRoute:
             (
                 {"implementation_id": "no_such", "configuration_ref": "extraction-default"},
                 "'no_such' is not an individual-extraction implementation that can extract a"
-                " source (one of: default, find_then_type)",
+                " source (one of: default, find_then_type, single_call)",
             ),
             (
                 {"implementation_id": "find_then_type", "configuration_ref": "extraction-default"},
@@ -684,6 +684,30 @@ class HeldTypingExtraction:
         ]
         return self._result(mentions=mentions)
 
+    def find_individuals(
+        self,
+        text,
+        ontology_id,
+        model,
+        temperature,
+        stage_prompts=None,
+        max_tokens=None,
+        effort=None,
+    ):
+        """The single call: held, like the typing, until ``release`` is set."""
+        self.typing.set()
+        assert self.release.wait(10), "the test never let the call go on"
+        classes = {"WRF555SDFZ": "house_appliance", "Acme": "Business"}
+        individuals = [
+            FoundIndividual(
+                Mention(name, "thing", name, text.index(name), text.index(name) + len(name)),
+                classes[name],
+            )
+            for name in self.NAMES
+            if name in text
+        ]
+        return self._result(individuals=individuals)
+
     def typing_prompt(self, ontology_id, stage_prompts=None):
         return SimpleNamespace(system="the catalog")
 
@@ -717,10 +741,10 @@ class HeldTypingExtraction:
         return triples
 
 
-class TestFindThenTypeStage:
+class TestSingleCallStage:
     """
-    A find-then-type run on a source says which stage it is in while it runs.
-    The extract call names no implementation: find-then-type is the type's
+    A single-call run on a source says which stage it is in while it runs.
+    The extract call names no implementation: single-call is the type's
     default, selected by the resolver and executed by the background executor.
     """
 
@@ -735,6 +759,52 @@ class TestFindThenTypeStage:
     ):
         source = add_pdf(client, house)
         response = client.post(f"/api/sources/{source['id']}/extract", json={"dataset": "home"})
+        assert response.status_code == 202, response.text
+        [run] = response.json()["runs"]
+        assert app.state.runs.get(run["run_id"]).implementation_id == "single_call"
+        app.state.executor.start()
+        assert extraction.typing.wait(10)
+
+        def last_run():
+            last = client.get(f"/api/sources/{source['id']}").json()["last_extraction"]
+            return last["runs"][0]
+
+        # The single call is held: the whole text is being read, no chunk is done
+        finding = wait_for(lambda: last_run()["stage"] == "find_individuals" and last_run())
+        assert finding["status"] == "running"
+        assert (finding["items_done"], finding["items_total"]) == (0, 1)
+        assert (finding["stage_done"], finding["stage_total"]) == (0, 1)
+
+        extraction.release.set()
+        done = wait_for(lambda: finished(app, run["run_id"]))
+
+        assert done.status is PipelineRunStatus.COMPLETED, done.failure_reason
+        assert (done.items_done, done.items_total) == (1, 1)
+        assert (done.stage, done.stage_done, done.stage_total) == ("derive_relationships", 1, 1)
+        assert done.proposal_id
+
+
+class TestFindThenTypeStage:
+    """
+    A find-then-type run on a source says which stage it is in while it runs.
+    The extract call names find-then-type; it is selected by the resolver and
+    executed by the background executor.
+    """
+
+    @pytest.fixture()
+    def extraction(self, house):
+        held = HeldTypingExtraction(house)
+        yield held
+        held.release.set()
+
+    def test_a_running_run_exposes_its_stage_beside_the_chunk_count(
+        self, client, app, house, extraction
+    ):
+        source = add_pdf(client, house)
+        response = client.post(
+            f"/api/sources/{source['id']}/extract",
+            json={"dataset": "home", "implementation_id": "find_then_type"},
+        )
         assert response.status_code == 202, response.text
         [run] = response.json()["runs"]
         assert app.state.runs.get(run["run_id"]).implementation_id == "find_then_type"

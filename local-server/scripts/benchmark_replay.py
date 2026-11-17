@@ -10,7 +10,7 @@ implementation registry and the model, temperature, output-token limit and
 stage prompts from the configuration, as
 `domain/pipelines/individual_extraction/bootstrap.py` registers them; nothing
 here names a model. With no flags the target is the type's default
-implementation (`find_then_type`) with the configuration its recordings were
+implementation (`single_call`) with the configuration its recordings were
 made with (`RECORDED_WITH`, else the implementation's default configuration).
 The two-pass implementation's id is `default`: a name, not the type's default.
 
@@ -137,6 +137,7 @@ UNSUFFIXED_IMPLEMENTATION = "default"
 RECORDED_WITH: dict[str, str] = {
     "default": "extraction-openrouter-default",
     "find_then_type": "extraction-find-then-type",
+    "single_call": "extraction-single-call",
 }
 
 
@@ -238,7 +239,7 @@ def resolve_target(
     """
     The benchmark target for an implementation and a configuration, selected
     through the pipeline resolver: the implementation defaults to the type's
-    default (registration declares it: `find_then_type` since PR #1598), the
+    default (registration declares it: `single_call` since 2026-11-17), the
     configuration to the one the implementation's recordings were made with
     (RECORDED_WITH), else to its default.
 

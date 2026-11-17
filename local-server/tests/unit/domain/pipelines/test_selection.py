@@ -22,6 +22,7 @@ from domain.pipelines.exceptions import (
 )
 from domain.pipelines.individual_extraction.find_then_type import FindThenTypeOrchestrator
 from domain.pipelines.individual_extraction.orchestrator import IndividualExtractionOrchestrator
+from domain.pipelines.individual_extraction.single_call import SingleCallOrchestrator
 from domain.pipelines.registry import (
     PipelineConfigurationRegistry,
     PipelineImplementationRegistry,
@@ -466,14 +467,13 @@ class TestOutputLimit:
             resolver.resolve(EXTRACTION).run_input({"max_tokens": MAX_OUTPUT_TOKENS + 1})
 
         assert str(error.value) == (
-            "The run's input names max_tokens 20001: the output-token limit of a run is a"
-            " whole number from 1 to 20000, the most every provider can be asked for in one"
-            " request"
+            "The run's input names max_tokens 64001: the output-token limit of a run is a"
+            " whole number from 1 to 64000, the most a run may ask one call for"
         )
 
     @pytest.mark.parametrize("limit", [0, -5, "many", 1.5, True])
     def test_a_limit_that_is_not_a_positive_whole_number_is_refused(self, resolver, limit):
-        with pytest.raises(RunParameterError, match="whole number from 1 to 20000"):
+        with pytest.raises(RunParameterError, match="whole number from 1 to 64000"):
             resolver.resolve(EXTRACTION).run_input({"max_tokens": limit})
 
     def test_the_bound_itself_is_accepted(self, resolver):
@@ -484,7 +484,7 @@ class TestOutputLimit:
     def test_a_configuration_that_sets_one_above_the_bound_cannot_run(self, resolver, registries):
         _, configurations = registries
         configurations.register(
-            EXTRACTION, "default", "too-much", {"model": "m", "max_tokens": 64000}
+            EXTRACTION, "default", "too-much", {"model": "m", "max_tokens": 64001}
         )
         selection = resolver.resolve(EXTRACTION, None, "too-much")
 
@@ -526,7 +526,7 @@ class TestRegisteredPipelines:
             if latest.config.get("max_tokens") is not None
         ]
 
-        assert limits and max(limits) <= MAX_OUTPUT_TOKENS == 20000
+        assert limits and max(limits) <= MAX_OUTPUT_TOKENS == 64000
 
     @pytest.fixture(scope="class")
     def registered(self):
@@ -545,19 +545,29 @@ class TestRegisteredPipelines:
             selection = resolver.resolve(pipeline_type)
             assert selection.config.get("enabled") is not False
 
-    def test_individual_extraction_defaults_to_find_then_type(self, registered):
+    def test_individual_extraction_defaults_to_single_call(self, registered):
         implementations, _, resolver = registered
 
         selection = resolver.resolve(EXTRACTION)
 
-        assert implementations.default_implementation(EXTRACTION) == "find_then_type"
+        assert implementations.default_implementation(EXTRACTION) == "single_call"
+        assert selection.implementation is SingleCallOrchestrator
+        assert selection.configuration_ref == "extraction-single-call"
+        assert selection.parameters == {
+            "model": "claude-opus-5-5",
+            "temperature": 0.0,
+            "max_tokens": 64000,
+        }
+        # The call that finds the individuals thinks at effort high, as in the head-to-head
+        assert selection.config["effort"] == "high"
+
+    def test_find_then_type_stays_selectable(self, registered):
+        _, _, resolver = registered
+
+        selection = resolver.resolve(EXTRACTION, "find_then_type")
+
         assert selection.implementation is FindThenTypeOrchestrator
         assert selection.configuration_ref == "extraction-find-then-type"
-        assert selection.parameters == {
-            "model": "claude-haiku-5-5",
-            "temperature": 0.0,
-            "max_tokens": 16000,
-        }
 
     def test_every_individual_extraction_configuration_names_its_recognition_model(
         self, registered
@@ -608,6 +618,7 @@ class TestRegisteredPipelines:
             "default": "extraction-default",
             "open_v1": "extraction-open-v1",
             "find_then_type": "extraction-find-then-type",
+            "single_call": "extraction-single-call",
         }
 
     @pytest.mark.parametrize("implementation_id", ["find_then_type", "default"])
@@ -655,6 +666,7 @@ class TestRegisteredPipelines:
         assert able == {
             ("individual_extraction", "default"),
             ("individual_extraction", "find_then_type"),
+            ("individual_extraction", "single_call"),
             ("schema_extraction", "default"),
         }
 

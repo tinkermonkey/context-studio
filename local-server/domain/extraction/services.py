@@ -33,12 +33,13 @@ from domain.ports import EventPublisher
 if TYPE_CHECKING:
     from domain.extraction.ports import IndividualRecognizer
 
-from . import find_then_type, layers
+from . import find_then_type, layers, single_call
 from .entities import (
     ExtractedEntity,
     ExtractionResult,
     ExtractionRun,
     ExtractionRunStatus,
+    FoundIndividualsResult,
     Mention,
     MentionsResult,
     RecognitionPreviewHit,
@@ -59,10 +60,12 @@ from .ports import (
 )
 from .prompts import (
     DERIVE_RELATIONSHIPS,
+    FIND_INDIVIDUALS,
     FIND_MENTIONS,
     FIND_THEN_TYPE_STAGES,
     IDENTIFY_INDIVIDUALS,
     INDIVIDUAL_EXTRACTION_STAGES,
+    SINGLE_CALL_STAGES,
     TYPE_MENTION,
 )
 from .span_resolution import resolve_span
@@ -820,6 +823,16 @@ class ExtractionService:
         """
         ontology = self._taxonomy(ontology_id)
         prompts = resolve_stage_prompts(FIND_THEN_TYPE_STAGES, stage_prompts)
+        return find_then_type.build_typing_prompt(
+            ontology.title, self._catalog_classes(ontology), prompts[TYPE_MENTION]
+        )
+
+    def _catalog_classes(self, ontology) -> list[find_then_type.CatalogClass]:
+        """
+        Every class of the ontology an individual may be typed with, with its
+        kind (its concept scheme's title) and whole definition: the derived
+        ones left out, each reference once.
+        """
         classes: dict[str, find_then_type.CatalogClass] = {}
         for scheme in self._ontology_repo.list_concept_schemes(
             taxonomy_id=str(ontology.id), limit=None
@@ -832,8 +845,63 @@ class ExtractionService:
                     classes[reference] = find_then_type.CatalogClass(
                         reference, cls.title or reference, scheme.title, cls.description or ""
                     )
-        return find_then_type.build_typing_prompt(
-            ontology.title, list(classes.values()), prompts[TYPE_MENTION]
+        return list(classes.values())
+
+    # Single-call extraction (domain/extraction/single_call.py): the call
+    # SingleCallOrchestrator makes in place of the find and type stages.
+
+    def find_individuals(
+        self,
+        text: str,
+        ontology_id: str,
+        model: str,
+        temperature: float,
+        stage_prompts: Mapping[str, Any] | None = None,
+        max_tokens: int | None = None,
+        effort: str | None = None,
+    ) -> FoundIndividualsResult:
+        """
+        Find and type every individual of a text in one LLM call, against the
+        ontology's whole class catalog with full definitions.
+
+        Args:
+            text: The text (a source, a section of one, or a pasted text)
+            ontology_id: ID of the target ontology
+            stage_prompts: A configuration's prompt overrides for the
+                single-call stages; None uses the defaults
+            max_tokens: The most output tokens the call may produce; the
+                stage's own when None
+            effort: How much the model thinks; its default when None
+
+        Returns:
+            The individuals with their classes and passages; a failure_reason
+            when the text could not be read (it then lists none)
+
+        Raises:
+            ExtractionError: If the text is empty
+            InvalidInputError: If no ontology has ontology_id
+            ValueError: If temperature is out of range
+        """
+        if not text or not text.strip():
+            raise ExtractionError("Text cannot be empty")
+        if not 0.0 <= temperature <= 2.0:
+            raise ValueError(f"temperature must be 0.0–2.0, got {temperature}")
+        ontology = self._taxonomy(ontology_id)
+        prompts = resolve_stage_prompts(SINGLE_CALL_STAGES, stage_prompts)
+        catalog, class_refs = single_call.build_catalog(
+            ontology.title, self._catalog_classes(ontology)
+        )
+        return single_call.find_individuals(
+            self._llm,
+            self._sleep,
+            text,
+            catalog,
+            class_refs,
+            model,
+            temperature,
+            prompts[FIND_INDIVIDUALS],
+            max_tokens,
+            effort,
         )
 
     def type_mention(

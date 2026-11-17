@@ -211,6 +211,7 @@ class LLMProviderRouter:
         response_format: Literal["json", "text"] | None = None,
         timeout: float | None = None,
         seed: int | None = None,
+        effort: str | None = None,
     ) -> LLMResponse:
         """
         Request a completion from an LLM provider.
@@ -226,6 +227,8 @@ class LLMProviderRouter:
             response_format: Optional response format specification
             timeout: Request timeout in seconds (provider-specific behavior)
             seed: Optional random seed for reproducible generation
+            effort: How much the model thinks ("low" to "max"); passed on only
+                when given, and only the Anthropic provider sends it
 
         Returns:
             LLMResponse with the completion
@@ -251,6 +254,7 @@ class LLMProviderRouter:
                     response_format=response_format,
                     timeout=timeout,
                     seed=seed,
+                    **({"effort": effort} if effort is not None else {}),
                 )
             except Exception as e:
                 if not _is_auth_failure(e):

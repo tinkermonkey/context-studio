@@ -43,7 +43,7 @@ EXTRACTION = PipelineType.INDIVIDUAL_EXTRACTION
 CONFIGURATIONS = "/api/pipelines/types/individual_extraction/implementations/default/configurations"
 RUN = "/api/pipelines/individual_extraction/run"
 # The configurations here are of the two-pass implementation, whose id is "default"
-# (a name: individual extraction's default implementation is find-then-type)
+# (a name: individual extraction's default implementation is single-call)
 BODY = {
     "text": "Ada Lovelace wrote the first program.",
     "ontology_id": "tax-1",
@@ -239,9 +239,9 @@ class TestUnsetParameters:
 
         assert extraction.parameters() == [("old-model", 0.4, 800)]
 
-    @pytest.mark.parametrize("max_tokens", [20001, 64000])
+    @pytest.mark.parametrize("max_tokens", [64001, 100000])
     def test_a_limit_no_provider_can_send_is_refused(self, server, max_tokens):
-        # The Anthropic client refuses a request that does not stream above ~21,000
+        # The most a run may ask one call for is 64,000 (selection.MAX_OUTPUT_TOKENS)
         response = server().post(
             CONFIGURATIONS,
             json={
@@ -461,7 +461,7 @@ class TestListingStoredValues:
             name="Too much",
             provider="anthropic",
             model="m",
-            max_tokens=64000,
+            max_tokens=100000,
         )
         client = server()
 
@@ -470,12 +470,12 @@ class TestListingStoredValues:
 
         assert listed.status_code == status.HTTP_200_OK, listed.text
         stored = next(c for c in listed.json() if c["config_ref"] == "cfg_too_much")
-        assert stored["parameters"]["max_tokens"] == 64000
-        assert stored["parameter_settings"]["max_tokens"] == 64000
+        assert stored["parameters"]["max_tokens"] == 100000
+        assert stored["parameter_settings"]["max_tokens"] == 100000
         assert client.get(f"/api/pipeline_configurations/{stored['id']}").status_code == 200
         # The run, not the listing, is what the bound refuses
         assert run.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
-        assert "The 'cfg_too_much' configuration sets max_tokens 64000" in run.json()["detail"]
+        assert "The 'cfg_too_much' configuration sets max_tokens 100000" in run.json()["detail"]
         assert extraction.calls == []
 
     def test_a_value_nothing_sets_is_null_not_a_placeholder(self, server):

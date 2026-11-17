@@ -106,14 +106,14 @@ def service(registries, submitter, source, repo):
 
 
 class TestImplementationChoice:
-    def test_find_then_type_reads_a_source_when_none_is_named(self, service, submitter, source):
+    def test_single_call_reads_a_source_when_none_is_named(self, service, submitter, source):
         service.extract(source.id, "home")
 
         [run] = submitter.submitted
         assert run.pipeline_type is PipelineType.INDIVIDUAL_EXTRACTION
         # The type's default implementation and that implementation's default configuration
-        assert run.implementation_id == "find_then_type"
-        assert run.configuration_ref == "extraction-find-then-type"
+        assert run.implementation_id == "single_call"
+        assert run.configuration_ref == "extraction-single-call"
 
     def test_the_implementation_named_default_is_two_pass_and_still_reads_a_source(
         self, service, submitter, source
@@ -211,7 +211,7 @@ class TestImplementationChoice:
         with pytest.raises(
             ValueError,
             match=f"'{implementation_id}' is not an individual-extraction implementation that"
-            r" can extract a source \(one of: default, find_then_type\)",
+            r" can extract a source \(one of: default, find_then_type, single_call\)",
         ):
             service.extract(
                 source.id,
@@ -227,7 +227,7 @@ class TestImplementationChoice:
         [
             ("find_then_type", "extraction-default"),
             ("default", "extraction-find-then-type"),
-            # Nothing named is find-then-type, so two-pass's configuration is another's
+            # Nothing named is single-call, so two-pass's configuration is another's
             (None, "extraction-default"),
             ("find_then_type", "no-such-configuration"),
         ],
