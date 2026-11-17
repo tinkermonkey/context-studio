@@ -23,6 +23,7 @@ from domain.versioning.proposals import (
     OperationStatus,
     OperationType,
     ProposedOperation,
+    RejectionReason,
 )
 
 DECIDED_BY_USER = "user"
@@ -59,6 +60,9 @@ class ProposalDecision:
             individual (it applied nothing)
         result_entity_id: The entity created or changed, when applied
         reason: Why (a reject note)
+        reason_code: Why a reviewer rejected it, as a code; None otherwise
+        review_ms: Milliseconds the reviewer spent on the operation, when the
+            client measured it
         resolution: How an applied relationship-type delete resolved the
             relationships still using the type, if it did
         chosen_alternative: The alternative the reviewer chose, when there is one
@@ -81,6 +85,8 @@ class ProposalDecision:
     applied_fields: dict[str, Any] | None = None
     result_entity_id: str | None = None
     reason: str | None = None
+    reason_code: RejectionReason | None = None
+    review_ms: int | None = None
     resolution: dict[str, Any] | None = None
     chosen_alternative: dict[str, Any] | None = None
     probability: float | None = None
@@ -92,6 +98,12 @@ class ProposalDecision:
     def __post_init__(self) -> None:
         if self.decided_at.tzinfo is None:
             raise ValueError("decided_at must be timezone-aware")
+        if self.review_ms is not None and (
+            isinstance(self.review_ms, bool)
+            or not isinstance(self.review_ms, int)
+            or self.review_ms < 0
+        ):
+            raise ValueError("review_ms must be a non-negative integer")
         if not self.decided_by:
             raise ValueError("A decision needs decided_by")
 
@@ -123,6 +135,7 @@ def decision_of(
     decided_at: datetime,
     proposed: dict[str, Any] | None = None,
     chosen_alternative: dict[str, Any] | None = None,
+    review_ms: int | None = None,
 ) -> ProposalDecision:
     """
     The decision an applied or rejected operation records.
@@ -131,6 +144,7 @@ def decision_of(
         proposed: The operation as proposed, taken before applying it (an edit
             rewrites its base); defaults to a snapshot of it as it is now
         chosen_alternative: The alternative the reviewer chose, when there is one
+        review_ms: Milliseconds the reviewer spent on it, when measured
 
     Raises:
         ValueError: If the operation is neither applied nor rejected
@@ -161,6 +175,10 @@ def decision_of(
             operation.result_entity_id if operation.status is OperationStatus.APPLIED else None
         ),
         reason=operation.reason,
+        reason_code=(
+            operation.reason_code if operation.status is OperationStatus.REJECTED else None
+        ),
+        review_ms=review_ms,
         resolution=operation.resolution.to_json() if operation.resolution else None,
         chosen_alternative=dict(chosen_alternative) if chosen_alternative is not None else None,
         probability=operation.probability,

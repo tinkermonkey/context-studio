@@ -1690,8 +1690,11 @@ class ProposalOperation(Base):  # type: ignore[valid-type,misc]
         status: pending, applied, rejected or failed
         result_entity_id: Entity created or changed, once applied
         reason: Why it failed or was rejected
+        reason_code: Why a reviewer rejected it, as a code (not_in_text, too_generic,
+            mentioned_only, out_of_scope, duplicate, other); null otherwise
         applied_fields: JSON of the fields actually applied when a reviewer edited the
-            operation (always as an update); null when applied as proposed or not applied
+            operation (as an update, or an individual create's merged fields); null when
+            applied as proposed or not applied
         resolution: JSON {strategy, replacement_property_id, replacement_identifier,
             edges} when a relationship-type delete was applied with the relationships
             using it moved or deleted; null otherwise
@@ -1729,6 +1732,7 @@ class ProposalOperation(Base):  # type: ignore[valid-type,misc]
     status = Column(String(10), nullable=False, default="pending", index=True)
     result_entity_id = Column(String(36), nullable=True)
     reason = Column(Text, nullable=True)
+    reason_code = Column(String(20), nullable=True)
     applied_fields = Column(JSON, nullable=True)
     resolution = Column(JSON, nullable=True)
     proposed_replacement_id = Column(String(101), nullable=True)
@@ -1758,6 +1762,8 @@ class ProposalDecisionRecord(Base):  # type: ignore[valid-type,misc]
         applied_fields: JSON of the fields finally applied; null when rejected
         result_entity_id: Entity created or changed, when applied
         reason: Why (a reject note)
+        reason_code: Why a reviewer rejected it, as a code; null otherwise
+        review_ms: Milliseconds the reviewer spent on the operation, when measured
         resolution: JSON of an applied relationship-type delete's in-use resolution
         chosen_alternative: JSON of the alternative the reviewer chose, if any
         probability: The operation's probability, if any
@@ -1791,6 +1797,8 @@ class ProposalDecisionRecord(Base):  # type: ignore[valid-type,misc]
     applied_fields = Column(JSON, nullable=True)
     result_entity_id = Column(String(36), nullable=True)
     reason = Column(Text, nullable=True)
+    reason_code = Column(String(20), nullable=True)
+    review_ms = Column(Integer, nullable=True)
     resolution = Column(JSON, nullable=True)
     chosen_alternative = Column(JSON, nullable=True)
     probability = Column(Float, nullable=True)

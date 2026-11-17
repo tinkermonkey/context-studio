@@ -322,7 +322,9 @@ async def create_proposal(
         422: {
             "description": (
                 "An operation id is not in the proposal, or an edit is misplaced "
-                "(not in operation_ids, not a property update/delete, empty, or uses a $ref), "
+                "(not in operation_ids, not a property update/delete or individual create, "
+                "empty, uses a $ref, or an individual create's sets more than a non-empty title "
+                "and class_ids), or review_ms names an operation not in operation_ids, "
                 "or a resolution is (not in operation_ids, not a property delete or update, "
                 "an edited delete, a move without replacement_property_id, or a move to a type the "
                 "proposal deletes); nothing was applied"
@@ -369,6 +371,16 @@ async def apply_proposal(
     the ends of every relationship using it in place (each keeps its id), and
     a rename keeps them, in one transaction with the update; Revert undoes both.
 
+    edits also corrects an individual create's title and/or class_ids: the
+    individual is created with the proposed fields overridden by the edit
+    (recorded as applied_fields, decided applied_with_edits). A class that
+    doesn't exist or isn't in the proposal's taxonomy, or proposed
+    data_properties the edited classes don't define, fails only that operation
+    with "invalid_edit: ...".
+
+    review_ms records, in each applied operation's decision, the milliseconds
+    the reviewer spent on it.
+
     chosen_alternatives records, in each applied operation's decision, the
     alternative the reviewer chose over the proposal's pick (gold's
     chosen_alternative), e.g. a reflection's answers when accepted with an edit.
@@ -393,6 +405,7 @@ async def apply_proposal(
             request.edits,
             resolutions,
             chosen_alternatives=request.chosen_alternatives,
+            review_ms=request.review_ms,
         )
         return proposal_response(service, proposal)
 
@@ -408,7 +421,12 @@ async def apply_proposal(
     responses={
         **_NOT_FOUND,
         **_STATE_CONFLICT,
-        422: {"description": "An operation id is not in the proposal"},
+        422: {
+            "description": (
+                "An operation id is not in the proposal, the reason_code is "
+                "unknown, or review_ms names an operation not being rejected"
+            )
+        },
     },
 )
 async def reject_proposal(
@@ -416,13 +434,24 @@ async def reject_proposal(
     request: ChangeProposalRejectRequest,
     service: ProposalService = Depends(get_proposal_service),
 ) -> ChangeProposalResponse:
-    """Reject operations, or without operation_ids every pending or failed one."""
+    """
+    Reject operations, or without operation_ids every pending or failed one.
+
+    The note and reason_code are stored on each operation and its decision;
+    review_ms records the milliseconds the reviewer spent on each in its decision.
+    """
 
     def run() -> ChangeProposalResponse:
         operation_ids = request.operation_ids
         if operation_ids is None:
             operation_ids = [o.id for o in service.get(proposal_id).pending]
-        proposal = service.reject(proposal_id, operation_ids, request.note)
+        proposal = service.reject(
+            proposal_id,
+            operation_ids,
+            request.note,
+            reason_code=request.reason_code,
+            review_ms=request.review_ms,
+        )
         return proposal_response(service, proposal)
 
     try:

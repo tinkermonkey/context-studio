@@ -14,7 +14,12 @@ from typing import Any, Mapping
 
 from adapters.interchange.dr_relationships import Triple, dr_relationship_id
 from domain.versioning.gold import ProposalDecision
-from domain.versioning.proposals import ChangeProposal, OperationStatus, ProposalStatus
+from domain.versioning.proposals import (
+    ChangeProposal,
+    OperationKind,
+    OperationStatus,
+    ProposalStatus,
+)
 
 
 def decisions_for(
@@ -50,7 +55,13 @@ def decisions_for(
             "op_id": operation.id,
             "status": operation.status.value,
         }
-        if operation.status is OperationStatus.APPLIED and operation.applied_fields is not None:
+        if (
+            operation.status is OperationStatus.APPLIED
+            and operation.applied_fields is not None
+            and operation.kind is OperationKind.PROPERTY
+        ):
+            # Only an edited relationship type maps to a DR triple; an edited
+            # individual create has no DR fields to carry.
             decision["fields"] = _applied_triple(operation.seq, operation.applied_fields).fields()
         if operation.status is OperationStatus.APPLIED and operation.resolution is not None:
             decision["resolution"] = operation.resolution.to_json()

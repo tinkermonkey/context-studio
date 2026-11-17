@@ -732,6 +732,29 @@ class TestDecisions:
             },
         ]
 
+    def test_an_edited_individual_create_still_exports(self, client, graph, ontology):
+        hall = ontology.create_class(graph["vocab"], "Hall", parent_class_id=graph["room"]).id
+        study = {
+            "seq": 1,
+            "op": "create",
+            "kind": "individual",
+            "fields": {"class_ids": [graph["room"]], "title": "Study"},
+        }
+        proposal = _propose(client, graph, study, _describe_room(graph))
+        study_id, describe_id = _op_ids(proposal, 1, 2)
+        client.post(
+            f"/api/proposals/{proposal['id']}/apply",
+            json={"operation_ids": [study_id], "edits": {study_id: {"class_ids": [hall]}}},
+        )
+
+        response = client.get(f"/api/proposals/{proposal['id']}/decisions")
+
+        assert response.status_code == 200, response.text
+        decisions = response.json()
+        assert [(d["seq"], d["status"]) for d in decisions] == [(1, "applied"), (2, "pending")]
+        # No DR triple to carry: an edited individual create exports as applied
+        assert "fields" not in decisions[0]
+
     def test_reverted_proposal_is_409(self, client, graph):
         proposal = _propose(client, graph, _create_kit(seq=1, graph=graph))
         client.post(
@@ -925,3 +948,113 @@ class TestRevertErrors:
         assert response.json()["detail"] == detail
         assert str(error) in caplog.text
         assert client.get(f"/api/proposals/{proposal['id']}").json()["status"] == "open"
+
+
+class TestReviewDecisions:
+    """#1609: an edited individual create, a rejection reason code and review time."""
+
+    def _study(self, graph):
+        return {
+            "seq": 1,
+            "op": "create",
+            "kind": "individual",
+            "fields": {"class_ids": [graph["room"]], "title": "Study"},
+        }
+
+    def test_an_individual_create_applies_with_an_edited_class_and_title(
+        self, client, graph, ontology
+    ):
+        hall = ontology.create_class(graph["vocab"], "Hall", parent_class_id=graph["room"]).id
+        proposal = _propose(client, graph, self._study(graph))
+        [op_id] = _op_ids(proposal, 1)
+
+        response = client.post(
+            f"/api/proposals/{proposal['id']}/apply",
+            json={
+                "operation_ids": [op_id],
+                "edits": {op_id: {"class_ids": [hall], "title": "Library"}},
+                "review_ms": {op_id: 2500},
+            },
+        )
+
+        assert response.status_code == 200, response.text
+        [op] = response.json()["operations"]
+        assert op["status"] == "applied"
+        assert op["applied_fields"] == {"class_ids": [hall], "title": "Library"}
+        assert op["reason_code"] is None
+        [decision] = client.get(f"/api/taxonomies/{graph['taxonomy']}/gold").json()["items"]
+        assert decision["decision"] == "applied_with_edits"
+        assert decision["proposed"]["fields"]["class_ids"] == [graph["room"]]
+        assert decision["applied_fields"]["class_ids"] == [hall]
+        assert (decision["review_ms"], decision["reason_code"]) == (2500, None)
+
+    def test_an_individual_create_edit_of_another_field_is_422(self, client, graph):
+        proposal = _propose(client, graph, self._study(graph))
+        [op_id] = _op_ids(proposal, 1)
+
+        response = client.post(
+            f"/api/proposals/{proposal['id']}/apply",
+            json={"operation_ids": [op_id], "edits": {op_id: {"description": "Quiet"}}},
+        )
+
+        assert response.status_code == 422
+        assert "title and class_ids" in response.text
+
+    def test_reject_with_a_reason_code_and_review_time(self, client, graph):
+        proposal = _propose(client, graph, self._study(graph), _describe_room(graph))
+        study_id, describe_id = _op_ids(proposal, 1, 2)
+
+        response = client.post(
+            f"/api/proposals/{proposal['id']}/reject",
+            json={
+                "operation_ids": [study_id, describe_id],
+                "note": "a passing mention",
+                "reason_code": "mentioned_only",
+                "review_ms": {study_id: 800},
+            },
+        )
+
+        assert response.status_code == 200, response.text
+        operations = response.json()["operations"]
+        assert [o["reason_code"] for o in operations] == ["mentioned_only"] * 2
+        assert [o["reason"] for o in operations] == ["a passing mention"] * 2
+        url = f"/api/taxonomies/{graph['taxonomy']}/gold"
+        items = client.get(url).json()["items"]
+        assert [(d["seq"], d["reason_code"], d["review_ms"]) for d in items] == [
+            (1, "mentioned_only", 800),
+            (2, "mentioned_only", None),
+        ]
+        lines = client.get(f"{url}/export").text.splitlines()
+        assert [json.loads(line)["reason_code"] for line in lines] == ["mentioned_only"] * 2
+        assert [json.loads(line)["review_ms"] for line in lines] == [800, None]
+
+    def test_an_unknown_reason_code_is_422(self, client, graph):
+        proposal = _propose(client, graph, self._study(graph))
+
+        response = client.post(
+            f"/api/proposals/{proposal['id']}/reject",
+            json={"operation_ids": _op_ids(proposal, 1), "reason_code": "boring"},
+        )
+
+        assert response.status_code == 422
+        [op] = client.get(f"/api/proposals/{proposal['id']}").json()["operations"]
+        assert op["status"] == "pending"
+
+    @pytest.mark.parametrize("action", ["apply", "reject"])
+    def test_a_bad_review_time_is_422(self, client, graph, ontology, action):
+        proposal = _propose(client, graph, self._study(graph), _describe_room(graph))
+        study_id, describe_id = _op_ids(proposal, 1, 2)
+        url = f"/api/proposals/{proposal['id']}/{action}"
+
+        negative = client.post(url, json={"operation_ids": [study_id], "review_ms": {study_id: -1}})
+        oversized = client.post(
+            url, json={"operation_ids": [study_id], "review_ms": {study_id: 2**63}}
+        )
+        elsewhere = client.post(
+            url, json={"operation_ids": [study_id], "review_ms": {describe_id: 10}}
+        )
+
+        assert [r.status_code for r in (negative, oversized, elsewhere)] == [422, 422, 422]
+        assert [i.title for i in ontology.list_individuals(limit=None)] == ["Den"]
+        operations = client.get(f"/api/proposals/{proposal['id']}").json()["operations"]
+        assert all(o["status"] == "pending" for o in operations)

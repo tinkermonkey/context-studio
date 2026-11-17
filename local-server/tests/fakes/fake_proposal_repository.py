@@ -87,6 +87,7 @@ class FakeChangeProposalRepository:
             target.status = operation.status
             target.result_entity_id = operation.result_entity_id
             target.reason = operation.reason
+            target.reason_code = operation.reason_code
             target.scope = operation.scope
             target.applied_fields = copy.deepcopy(operation.applied_fields)
             target.resolution = copy.deepcopy(operation.resolution)

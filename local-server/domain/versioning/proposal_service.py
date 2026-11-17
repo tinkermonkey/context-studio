@@ -101,6 +101,7 @@ from domain.versioning.proposals import (
     ProposalSource,
     ProposalStatus,
     ProposedOperation,
+    RejectionReason,
     ResolutionStrategy,
     ResolvedEdge,
     SchemaChangeAction,
@@ -144,6 +145,10 @@ UNRESOLVABLE = "unresolvable"
 DOMAIN_RANGE_MISMATCH = "domain_range_mismatch"
 
 REVERTED_REASON = "proposal reverted"
+# The largest review time a decision stores (a 32-bit signed integer, ~24 days)
+MAX_REVIEW_MS = 2**31 - 1
+# What a reviewer's edit of an individual create may set
+_INDIVIDUAL_EDIT_FIELDS = frozenset({"title", "class_ids"})
 
 _REF_PREFIX = "$"
 # A relationship's end fields
@@ -1606,6 +1611,7 @@ class ProposalService:
         resolutions: Mapping[str, InUseResolution] | None = None,
         decided_by: str = DECIDED_BY_USER,
         chosen_alternatives: Mapping[str, dict[str, Any]] | None = None,
+        review_ms: Mapping[str, int] | None = None,
     ) -> ChangeProposal:
         """
         Apply the chosen operations, in seq order, under the proposal's run id.
@@ -1633,6 +1639,19 @@ class ProposalService:
         is recorded as the operation's applied_fields, and its scope is
         recomputed from them; a failed one records nothing, so applying the
         operation again without an edit applies it as proposed.
+
+        A reviewer can also correct an individual create before applying it:
+        its edit sets only title (non-empty text) and/or class_ids (a non-empty
+        list of class ids), each replacing the proposed value. The individual
+        is created with the proposed fields overridden by the edit, which are
+        checked as a proposed individual create is (the classes exist and are
+        in the proposal's taxonomy, the proposed data_properties fit them); a
+        problem fails only that operation (invalid_edit). Its applied_fields
+        are the merged fields, so its decision reads the proposed class and
+        title before and the applied ones after. Its evidence passages are
+        recorded as for an unedited create, and later operations' "$ref" to it
+        point at the individual it created (a relationship's ends are checked
+        against its type's domain and range as usual).
 
         A relationship-type (property) delete that relationships still use fails
         as proposed (in use). A resolution lets it apply: move those
@@ -1676,6 +1695,8 @@ class ProposalService:
                 individual: nothing is created, and later operations' "$ref"
                 to it point at the existing individual (any other alternative
                 needs the edit that applies it)
+            review_ms: Operation id -> the milliseconds the reviewer spent on
+                it, recorded in its decision
 
         An applied individual, relationship or class operation whose evidence
         locates passages in a source records each as an EntitySource of the
@@ -1691,12 +1712,16 @@ class ProposalService:
                 is already applied or rejected; nothing is applied
             ValueError: If an operation id is not in the proposal, or an edit is
                 misplaced (its operation isn't being applied or isn't a property
-                update or delete, it is empty, or it points at a "$ref"), or a
+                update or delete or an individual create, it is empty, it points
+                at a "$ref", or an individual create's sets anything but a
+                non-empty title or class_ids), or a
                 resolution is (its operation isn't being applied, isn't a
                 property delete or update), or a chosen alternative is (its
                 operation isn't being applied, it is empty, it is an
-                "existing" one the operation doesn't list, or another kind
-                without an edit); nothing is applied
+                "existing" one the operation doesn't list, an "existing" one
+                with an edit, or another kind without an edit), or review_ms
+                names an operation not being applied or isn't a non-negative
+                integer; nothing is applied
         """
         with self._lock(proposal_id):
             proposal = self._get(proposal_id)
@@ -1709,6 +1734,7 @@ class ProposalService:
             self._check_resolutions_placed(proposal, chosen, edits, resolutions)
             alternatives = dict(chosen_alternatives or {})
             self._check_alternatives_placed(chosen, edits, alternatives)
+            times = _checked_review_ms(chosen, review_ms, "applied")
             force = set(force_stale)
             refs = {o.ref: o for o in proposal.operations if o.ref}
 
@@ -1736,6 +1762,8 @@ class ProposalService:
                         # Gold keeps the near match as proposed, similarity and all.
                         alternatives[operation.id] = dict(match or alternative)
                         self._apply_match(operation, alternative["entity_id"], proposal)
+                    elif operation.id in edits and operation.kind is K.INDIVIDUAL:
+                        self._apply_edited_create(proposal, operation, edits[operation.id], refs)
                     elif operation.id in edits:
                         others = {i: e for i, e in edits.items() if i != operation.id}
                         edit = edits[operation.id]
@@ -1758,6 +1786,7 @@ class ProposalService:
                                 datetime.now(timezone.utc),
                                 proposed[operation.id],
                                 chosen_alternative=alternatives.get(operation.id),
+                                review_ms=times.get(operation.id),
                             )
                         )
                     sources = []
@@ -1783,7 +1812,11 @@ class ProposalService:
     def _check_edits_placed(
         chosen: list[ProposedOperation], edits: dict[str, dict[str, Any]]
     ) -> None:
-        """Each edit is a non-empty object for a property update or delete being applied."""
+        """
+        Each edit is a non-empty object for a property update or delete, or an
+        individual create, being applied. An individual create's sets only a
+        non-empty title and/or a non-empty list of class ids.
+        """
         by_id = {o.id: o for o in chosen}
         misplaced = sorted(i for i in edits if i not in by_id)
         if misplaced:
@@ -1791,16 +1824,21 @@ class ProposalService:
         for operation_id, fields in edits.items():
             operation = by_id[operation_id]
             label = f"seq {operation.seq}"
-            if operation.kind is not K.PROPERTY or operation.op not in (
-                OperationType.UPDATE,
-                OperationType.DELETE,
+            individual_create = (
+                operation.kind is K.INDIVIDUAL and operation.op is OperationType.CREATE
+            )
+            if not individual_create and (
+                operation.kind is not K.PROPERTY
+                or operation.op not in (OperationType.UPDATE, OperationType.DELETE)
             ):
                 raise ValueError(
                     f"{label} is a {operation.kind.value} {operation.op.value}; only a "
-                    "property update or delete can be edited"
+                    "property update or delete, or an individual create, can be edited"
                 )
             if not isinstance(fields, dict) or not fields:
                 raise ValueError(f"{label}: an edit needs at least one field")
+            if individual_create:
+                _check_individual_edit(label, fields)
             refs = sorted(
                 name for name, value in fields.items() if name in ID_FIELDS and _is_ref(value)
             )
@@ -1935,6 +1973,73 @@ class ProposalService:
             return result
 
         self._record_outcome(operation, proposal.id, run)
+
+    def _apply_edited_create(
+        self,
+        proposal: ChangeProposal,
+        operation: ProposedOperation,
+        edit: dict[str, Any],
+        refs: dict[str, ProposedOperation],
+    ) -> None:
+        """
+        Apply a reviewer's edit of an individual create: create it with the
+        proposed fields overridden by the edit, recorded as applied_fields.
+        """
+
+        def run() -> str:
+            fields = {**operation.fields, **edit}
+            self._check_individual_create_edit(operation, fields, set(edit), proposal, refs)
+            values = {
+                name: self._resolved(value, refs) if name in ID_FIELDS else value
+                for name, value in fields.items()
+            }
+            result = self._dispatch(operation, values, proposal, OperationType.CREATE)
+            operation.applied_fields = fields
+            return result
+
+        self._record_outcome(operation, proposal.id, run)
+
+    def _check_individual_create_edit(
+        self,
+        operation: ProposedOperation,
+        fields: dict[str, Any],
+        edited: set[str],
+        proposal: ChangeProposal,
+        refs: dict[str, ProposedOperation],
+    ) -> None:
+        """
+        An edited individual create, checked as a proposed one is: its fields
+        and values, its classes exist (and, edited, are in the proposal's
+        taxonomy), and its data_properties fit the edited classes.
+
+        Raises:
+            _ApplyFailed: invalid_edit, naming the first problem
+        """
+        try:
+            as_create = ProposedOperation(
+                seq=operation.seq, op=OperationType.CREATE, kind=K.INDIVIDUAL, fields=fields
+            )
+            self._check_field_names(as_create)
+            self._check_values(as_create)
+            self._check_id_fields(as_create, {name: o.kind for name, o in refs.items()})
+            if "class_ids" in edited:
+                outside = [
+                    class_id
+                    for class_id in fields["class_ids"]
+                    if self._taxonomies((K.CLASS,), class_id) != {proposal.taxonomy_id}
+                ]
+                if outside:
+                    raise _Invalid(
+                        "endpoint_not_found",
+                        f"class_ids {outside} are not classes of the proposal's taxonomy",
+                    )
+                if DATA_FIELD in fields:
+                    attributes = self._attributes_of(fields["class_ids"])
+                    self._check_data(fields[DATA_FIELD], attributes, {})
+        except _Invalid as exc:
+            raise _ApplyFailed(INVALID_EDIT, exc.message) from exc
+        except (TypeError, ValueError) as exc:
+            raise _ApplyFailed(INVALID_EDIT, str(exc)) from exc
 
     def _apply_match(
         self, operation: ProposedOperation, entity_id: str, proposal: ChangeProposal
@@ -2622,6 +2727,8 @@ class ProposalService:
         operation_ids: Iterable[str],
         note: str | None = None,
         decided_by: str | None = DECIDED_BY_USER,
+        reason_code: RejectionReason | None = None,
+        review_ms: Mapping[str, int] | None = None,
     ) -> ChangeProposal:
         """
         Reject pending or failed operations, with an optional note as the reason.
@@ -2629,21 +2736,36 @@ class ProposalService:
         Each records a rejected decision by decided_by; None records none, for
         a closing nobody judged (a bundle import superseding an older plan).
 
+        Args:
+            reason_code: Why, as a code, for every operation rejected; kept on
+                each operation and its decision beside the note
+            review_ms: Operation id -> the milliseconds the reviewer spent on
+                it, recorded in its decision
+
         Raises:
             ChangeProposalNotFoundError: If the proposal does not exist
             ChangeProposalStateError: If an operation is already applied or rejected
-            ValueError: If an operation id is not in the proposal
+            ValueError: If an operation id is not in the proposal, or review_ms
+                names an operation not being rejected or isn't a non-negative
+                integer; nothing is rejected
         """
+        if reason_code is not None:
+            reason_code = RejectionReason(reason_code)
         with self._lock(proposal_id):
             proposal = self._get(proposal_id)
             chosen = self._chosen(proposal, operation_ids, "reject")
+            times = _checked_review_ms(chosen, review_ms, "rejected")
             for operation in chosen:
                 operation.status = OperationStatus.REJECTED
                 operation.reason = note
+                operation.reason_code = reason_code
             decisions = []
             if decided_by is not None:
                 now = datetime.now(timezone.utc)
-                decisions = [decision_of(proposal, o, decided_by, now) for o in chosen]
+                decisions = [
+                    decision_of(proposal, o, decided_by, now, review_ms=times.get(o.id))
+                    for o in chosen
+                ]
             self._proposals.save_operations(proposal.id, chosen, decisions)
             proposal.settle_status()
             self._proposals.set_status(proposal.id, proposal.status)
@@ -3413,6 +3535,51 @@ class ProposalService:
                 ) from exc
             return target
         return svc.move_class(target, v["parent_class_id"]).id
+
+
+def _check_individual_edit(label: str, fields: Mapping[str, Any]) -> None:
+    """An individual create's edit sets only a non-empty title and/or class_ids."""
+    unknown = sorted(set(fields) - _INDIVIDUAL_EDIT_FIELDS)
+    if unknown:
+        raise ValueError(
+            f"{label}: an individual create's edit sets only title and class_ids, not {unknown}"
+        )
+    title = fields.get("title", "-")
+    if not isinstance(title, str) or not title.strip():
+        raise ValueError(f"{label}: an edited title must be non-empty text")
+    class_ids = fields.get("class_ids", ["-"])
+    if (
+        not isinstance(class_ids, list)
+        or not class_ids
+        or not all(isinstance(c, str) and c for c in class_ids)
+    ):
+        raise ValueError(f"{label}: edited class_ids must be a non-empty list of class ids")
+    refs = sorted(c for c in fields.get("class_ids", []) if _is_ref(c))
+    if refs:
+        raise ValueError(f"{label}: an edit can't point at a $ref ({refs})")
+
+
+def _checked_review_ms(
+    chosen: list[ProposedOperation], review_ms: Mapping[str, int] | None, action: str
+) -> dict[str, int]:
+    """
+    Review times for operations in this call, each a non-negative integer.
+
+    Raises:
+        ValueError: Naming the first misplaced or invalid one
+    """
+    times = dict(review_ms or {})
+    ids = {o.id for o in chosen}
+    misplaced = sorted(i for i in times if i not in ids)
+    if misplaced:
+        raise ValueError(f"review_ms for operations not being {action}: {misplaced}")
+    for operation_id, value in times.items():
+        if isinstance(value, bool) or not isinstance(value, int) or not 0 <= value <= MAX_REVIEW_MS:
+            raise ValueError(
+                f"review_ms for {operation_id} must be a non-negative integer of at most"
+                f" {MAX_REVIEW_MS}, not {value!r}"
+            )
+    return times
 
 
 def _check_uncovered(
