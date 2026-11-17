@@ -47,6 +47,9 @@ experiments/reports/*.json
 experiments/reports/*.md
 !experiments/reports/.gitkeep
 
+# Throwaway experiment prototypes and their raw outputs (scratch; their pages say so)
+experiments/scratch/
+
 # NOTE: experiments/ledger.jsonl is intentionally NOT ignored. Unlike the
 # per-run reports/telemetry above, the ledger is the loop's durable, append-only
 # memory — Loop C reads it to skip already-rejected hypotheses and records the
