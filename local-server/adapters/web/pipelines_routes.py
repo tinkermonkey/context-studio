@@ -165,6 +165,41 @@ def _resolver(request: Request) -> PipelineResolver:
     )
 
 
+def _recognition_model(request: Request, run: Any) -> str | None:
+    """
+    The model that settles the recognition ties of a run's results: the
+    recognition_model of the configuration version the run was pinned to
+    (PipelineSelection.recognition_model). When that version is no longer
+    registered (a user configuration edited or removed since the run), the
+    implementation's default configuration's. None, with a warning, when
+    neither names one: recognition then makes no tiebreak call and a tie goes
+    to the top-scoring candidate.
+    """
+    resolver = _resolver(request)
+    selection = resolver.pinned(
+        run.pipeline_type,
+        run.implementation_id,
+        run.configuration_slug,
+        run.configuration_version,
+    )
+    if selection is None:
+        try:
+            selection = resolver.resolve(run.pipeline_type, run.implementation_id)
+        except PipelineSelectionError:
+            selection = None
+    model = selection.recognition_model if selection is not None else None
+    if model is None:
+        _logger.warning(
+            "Run %s: neither its configuration %s v%s nor its implementation %r's default"
+            " names a recognition model; recognition ties go to the top-scoring candidate",
+            run.id,
+            run.configuration_slug,
+            run.configuration_version,
+            run.implementation_id,
+        )
+    return model
+
+
 def _selection_http_error(exc: PipelineSelectionError) -> HTTPException:
     """
     404 for an implementation or configuration that isn't there (or is another
@@ -2033,6 +2068,7 @@ async def apply_pipeline_run(
                     recognition_threshold=recognition_threshold,
                     accepted_candidate_ids=accepted_candidate_ids,
                     recognition_decisions=recognition_decisions,
+                    recognition_model=_recognition_model(request, run),
                 )
                 # Recognition sync (#1142): apply writes individuals directly via
                 # the repo (bypassing OntologyService), so index the newly created
@@ -2224,6 +2260,7 @@ async def preview_recognition(
                 confidence_threshold=request_body.confidence_threshold,
                 recognition_threshold=request_body.recognition_threshold,
                 dataset_id=(run.input_summary or {}).get("dataset_id"),
+                recognition_model=_recognition_model(request, run),
             )
             hits = result.hits
             skipped_count = result.skipped_count

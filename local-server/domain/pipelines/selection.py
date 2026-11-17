@@ -51,6 +51,15 @@ from domain.versioning.proposals import ProposalOrigin
 # tokens one call may produce.
 RUN_PARAMETERS = ("model", "temperature", "max_tokens")
 
+# The model that settles a recognition tie: when an extracted individual is
+# about as close to several existing individuals as to one, it is asked which
+# (if any) is the same. A setting of an individual extraction configuration,
+# not a run parameter: recognition asks it when the run's results are
+# previewed or applied, not while the run executes, so it is never filled into
+# a run's input. A configuration that leaves it unset takes its
+# implementation's default configuration's.
+RECOGNITION_MODEL = "recognition_model"
+
 # The largest output-token limit a configuration may set: what every provider
 # can send in one request. The Anthropic client refuses a request that does not
 # stream above about 21,000 (it would expect the response to take over ten
@@ -76,6 +85,9 @@ class PipelineSelection:
             configuration gives a run (RUN_PARAMETERS). One the configuration
             leaves unset is the implementation's default configuration's; one
             neither sets is absent.
+        recognition_model: The model that settles the recognition ties of the
+            run's results (RECOGNITION_MODEL), inherited the same way; None
+            when neither configuration names one
     """
 
     pipeline_type: PipelineType
@@ -83,6 +95,7 @@ class PipelineSelection:
     implementation: type[Any]
     configuration: ConfigurationVersion
     parameters: Mapping[str, Any] = field(default_factory=dict)
+    recognition_model: str | None = None
 
     @property
     def configuration_ref(self) -> str:
@@ -258,6 +271,19 @@ class PipelineResolver:
         user-created configuration need not set a temperature or an output
         limit) the implementation's default configuration's.
         """
+        return self._inherited(pipeline_type, implementation_id, config, RUN_PARAMETERS)
+
+    def _inherited(
+        self,
+        pipeline_type: PipelineType,
+        implementation_id: str,
+        config: Mapping[str, Any],
+        keys: tuple[str, ...],
+    ) -> dict[str, Any]:
+        """
+        The configuration's values of `keys`, each it leaves unset taken from
+        the implementation's default configuration; a key neither sets is absent.
+        """
         default_ref = self._configurations.default_configuration(pipeline_type, implementation_id)
         default = (
             self._configurations.get_latest(pipeline_type, implementation_id, default_ref)
@@ -266,7 +292,7 @@ class PipelineResolver:
         )
         inherited = default.config if default else {}
         resolved = {}
-        for key in RUN_PARAMETERS:
+        for key in keys:
             value = config.get(key)
             if value is None:
                 value = inherited.get(key)
@@ -281,12 +307,16 @@ class PipelineResolver:
         implementation: type[Any],
         configuration: ConfigurationVersion,
     ) -> PipelineSelection:
+        recognition_model = self._inherited(
+            pipeline_type, implementation_id, configuration.config, (RECOGNITION_MODEL,)
+        ).get(RECOGNITION_MODEL)
         return PipelineSelection(
             pipeline_type,
             implementation_id,
             implementation,
             configuration,
             self.parameters(pipeline_type, implementation_id, configuration.config),
+            recognition_model if isinstance(recognition_model, str) and recognition_model else None,
         )
 
     def implementation(

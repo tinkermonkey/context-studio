@@ -2810,6 +2810,7 @@ class ExtractionService:
         confidence_threshold: float = 0.5,
         recognition_threshold: float = 0.90,
         dataset_id: str | None = None,
+        recognition_model: str | None = None,
     ) -> RecognitionPreviewResult:
         """
         Preview which extracted individuals would match existing graph nodes.
@@ -2826,6 +2827,10 @@ class ExtractionService:
                                   Mentions below this threshold are skipped.
             recognition_threshold: Minimum confidence for recognition matches (0.0–1.0).
                                   Matches below this threshold are not reported.
+            dataset_id: Match only individuals of this dataset (None: any).
+            recognition_model: The model that settles a recognition tie: the
+                recognition_model of the run's configuration. None: no tiebreak
+                call is made and a tie goes to the top-scoring candidate.
 
         Returns:
             RecognitionPreviewResult with hits and skipped_count.
@@ -2880,6 +2885,7 @@ class ExtractionService:
                 taxonomy_id=None,
                 threshold=recognition_threshold,
                 dataset_id=dataset_id,
+                model=recognition_model,
             )
 
             if match is not None:

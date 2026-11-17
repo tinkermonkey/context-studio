@@ -31,6 +31,7 @@ class FakeIndividualRecognizer:
         taxonomy_id: str | None = None,
         threshold: float | None = None,
         dataset_id: str | None = None,
+        model: str | None = None,
     ) -> RecognitionMatch | None:
         self.calls.append(
             {
@@ -40,6 +41,7 @@ class FakeIndividualRecognizer:
                 "taxonomy_id": taxonomy_id,
                 "threshold": threshold,
                 "dataset_id": dataset_id,
+                "model": model,
             }
         )
         return self._matches.get(label)

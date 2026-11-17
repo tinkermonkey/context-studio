@@ -16,6 +16,7 @@ from tests.fakes.fake_llm_provider import FakeLLMProvider
 
 CLASS_SW = "cls-systemsoftware"
 CLASS_DB = "cls-datastore"
+TIE_MODEL = "tie-model"
 
 # Deterministic text->vector map shared by the query mention and the index's
 # stored titles, so cosine similarity between any pair is known ahead of time.
@@ -138,28 +139,46 @@ class TestLLMTiebreak:
         llm = FakeLLMProvider(response_content=json.dumps({"individual_id": "swarm-id"}))
         recognizer = _recognizer(_index_with_ambiguous_candidates(), llm=llm)
         match = recognizer.recognize(
-            "Ambiguous Mention", context="a container platform", class_ids=[CLASS_SW]
+            "Ambiguous Mention",
+            context="a container platform",
+            class_ids=[CLASS_SW],
+            model=TIE_MODEL,
         )
         assert match.individual_id == "swarm-id"
         assert match.method == "llm"
         assert llm.call_count == 1
+        assert llm.last_call_args["model"] == TIE_MODEL
+
+    def test_with_no_model_named_no_call_is_made_and_the_top_candidate_wins(self):
+        llm = FakeLLMProvider(response_content=json.dumps({"individual_id": "openshift-id"}))
+        recognizer = _recognizer(_index_with_ambiguous_candidates(), llm=llm)
+        match = recognizer.recognize("Ambiguous Mention", context="", class_ids=[CLASS_SW])
+        assert match.individual_id == "swarm-id"
+        assert match.method == "vector"
+        assert llm.call_count == 0
 
     def test_llm_may_decide_neither_candidate_matches(self):
         llm = FakeLLMProvider(response_content=json.dumps({"individual_id": "none"}))
         recognizer = _recognizer(_index_with_ambiguous_candidates(), llm=llm)
-        match = recognizer.recognize("Ambiguous Mention", context="", class_ids=[CLASS_SW])
+        match = recognizer.recognize(
+            "Ambiguous Mention", context="", class_ids=[CLASS_SW], model=TIE_MODEL
+        )
         assert match is None
 
     def test_ambiguous_match_with_no_llm_available_falls_back_to_top_candidate(self):
         recognizer = _recognizer(_index_with_ambiguous_candidates(), llm=None)
-        match = recognizer.recognize("Ambiguous Mention", context="", class_ids=[CLASS_SW])
+        match = recognizer.recognize(
+            "Ambiguous Mention", context="", class_ids=[CLASS_SW], model=TIE_MODEL
+        )
         assert match.individual_id == "swarm-id"  # highest-scoring of the tied pair
         assert match.method == "vector"
 
     def test_unparseable_llm_response_falls_back_to_top_candidate(self):
         llm = FakeLLMProvider(response_content="not valid json")
         recognizer = _recognizer(_index_with_ambiguous_candidates(), llm=llm)
-        match = recognizer.recognize("Ambiguous Mention", context="", class_ids=[CLASS_SW])
+        match = recognizer.recognize(
+            "Ambiguous Mention", context="", class_ids=[CLASS_SW], model=TIE_MODEL
+        )
         assert match.individual_id == "swarm-id"
         # The LLM didn't confirm this pick — a malformed response must not be
         # tagged "llm" in the provenance audit trail.
@@ -168,14 +187,18 @@ class TestLLMTiebreak:
     def test_llm_choosing_an_id_outside_the_tied_set_falls_back_to_top_candidate(self):
         llm = FakeLLMProvider(response_content=json.dumps({"individual_id": "not-a-candidate"}))
         recognizer = _recognizer(_index_with_ambiguous_candidates(), llm=llm)
-        match = recognizer.recognize("Ambiguous Mention", context="", class_ids=[CLASS_SW])
+        match = recognizer.recognize(
+            "Ambiguous Mention", context="", class_ids=[CLASS_SW], model=TIE_MODEL
+        )
         assert match.individual_id == "swarm-id"
         assert match.method == "vector"
 
     def test_llm_call_failure_falls_back_to_top_candidate_instead_of_propagating(self):
         llm = FakeLLMProvider(should_fail=True)
         recognizer = _recognizer(_index_with_ambiguous_candidates(), llm=llm)
-        match = recognizer.recognize("Ambiguous Mention", context="", class_ids=[CLASS_SW])
+        match = recognizer.recognize(
+            "Ambiguous Mention", context="", class_ids=[CLASS_SW], model=TIE_MODEL
+        )
         assert match.individual_id == "swarm-id"
         assert match.method == "vector"
 
@@ -186,7 +209,9 @@ class TestLLMTiebreak:
 
         recognizer = _recognizer(_index_with_ambiguous_candidates(), llm=_BrokenLLMProvider())
         with pytest.raises(TypeError):
-            recognizer.recognize("Ambiguous Mention", context="", class_ids=[CLASS_SW])
+            recognizer.recognize(
+                "Ambiguous Mention", context="", class_ids=[CLASS_SW], model=TIE_MODEL
+            )
 
     def test_tiebreak_prompt_includes_description_and_class_membership(self):
         llm = FakeLLMProvider(response_content=json.dumps({"individual_id": "swarm-id"}))
@@ -205,7 +230,10 @@ class TestLLMTiebreak:
         )
         recognizer = _recognizer(idx, llm=llm)
         recognizer.recognize(
-            "Ambiguous Mention", context="a container platform", class_ids=[CLASS_SW]
+            "Ambiguous Mention",
+            context="a container platform",
+            class_ids=[CLASS_SW],
+            model=TIE_MODEL,
         )
 
         prompt = llm.last_call_args["user_prompt"]

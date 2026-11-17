@@ -339,6 +339,46 @@ class TestInheritedParameters:
         assert pinned.parameters["max_tokens"] == 20000
 
 
+class TestRecognitionModel:
+    """
+    The model that settles recognition ties is a configuration's setting, kept
+    out of a run's parameters and input (recognition runs at preview and apply).
+    """
+
+    def test_it_is_the_configurations_own(self, resolver, registries):
+        _, configurations = registries
+        configurations.register(
+            EXTRACTION, "default", "mine", {"model": "m", "recognition_model": "tie-model"}
+        )
+
+        selection = resolver.resolve(EXTRACTION, None, "mine")
+
+        assert selection.recognition_model == "tie-model"
+        assert "recognition_model" not in selection.parameters
+        assert "recognition_model" not in selection.run_input({"text": "t"})
+
+    def test_one_left_unset_is_the_implementations_default_configurations(
+        self, resolver, registries
+    ):
+        _, configurations = registries
+        configurations.register(
+            EXTRACTION,
+            "default",
+            "two-pass-haiku",
+            {"model": "haiku", "recognition_model": "default-tie-model"},
+        )
+        configurations.register(EXTRACTION, "default", "mine", {"model": "my-model"})
+
+        resolved = resolver.resolve(EXTRACTION, None, "mine")
+        pinned = resolver.pinned(EXTRACTION, "default", "mine", 1)
+
+        assert resolved.recognition_model == "default-tie-model"
+        assert pinned.recognition_model == "default-tie-model"
+
+    def test_none_when_no_configuration_names_one(self, resolver):
+        assert resolver.resolve(EXTRACTION, "find_then_type").recognition_model is None
+
+
 class TestStoredVersions:
     """A stored configuration is registered under the version its record holds."""
 
@@ -518,6 +558,17 @@ class TestRegisteredPipelines:
             "temperature": 0.0,
             "max_tokens": 16000,
         }
+
+    def test_every_individual_extraction_configuration_names_its_recognition_model(
+        self, registered
+    ):
+        # What recognition asked before the model was a configuration's
+        _, configurations, resolver = registered
+
+        for implementation_id in resolver.implementations(EXTRACTION):
+            for ref, _ in configurations.list_configs(EXTRACTION, implementation_id):
+                selection = resolver.resolve(EXTRACTION, implementation_id, ref)
+                assert selection.recognition_model == "google/gemini-3-flash-preview", ref
 
     def test_the_implementation_named_default_is_two_pass_not_the_default(self, registered):
         # The id is a name only: two-pass runs when a run names it

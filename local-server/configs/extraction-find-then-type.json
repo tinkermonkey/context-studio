@@ -3,5 +3,6 @@
   "model": "claude-haiku-5-5",
   "temperature": 0.0,
   "max_tokens": 16000,
-  "seed": null
+  "seed": null,
+  "recognition_model": "google/gemini-3-flash-preview"
 }

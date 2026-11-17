@@ -526,6 +526,14 @@ class TestRecognitionStageMatch:
 
         assert recognizer.calls[0]["threshold"] == 0.75
 
+    def test_the_recognition_model_is_forwarded_to_recognizer(
+        self, svc_with_recognizer, repo, recognizer
+    ):
+        run = _make_run(triples=[_make_triple("K8s")])
+        svc_with_recognizer.apply(run, recognition_model="tie-model")
+
+        assert recognizer.calls[0]["model"] == "tie-model"
+
 
 class TestRecognitionStageNoMatch:
     """No match found -> falls through to minting a new individual, unchanged."""

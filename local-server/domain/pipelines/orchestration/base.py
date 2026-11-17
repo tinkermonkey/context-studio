@@ -18,7 +18,7 @@ from typing import Any, Literal
 from domain.pipelines.entities import PipelineRunStatus, PipelineType, StageProgress
 from domain.pipelines.exceptions import PipelineInputError
 from domain.pipelines.ports import LLMProvider, LLMResponse, PipelineRunStatusWriter
-from domain.pipelines.selection import RUN_PARAMETERS
+from domain.pipelines.selection import RECOGNITION_MODEL, RUN_PARAMETERS
 from domain.pipelines.stage_prompts import StageDefinition
 
 _logger = logging.getLogger(__name__)
@@ -109,11 +109,16 @@ def llm_parameters(
 def implementation_settings(config: Mapping[str, Any]) -> dict[str, Any]:
     """
     A configuration's settings other than the run parameters (model,
-    temperature, output-token limit): what an orchestrator built with no
-    configuration may take from its implementation's default one. Never a
-    model: a run's model is its configuration's or its input's.
+    temperature, output-token limit) and the recognition model: what an
+    orchestrator built with no configuration may take from its
+    implementation's default one. Never a model: a run's model is its
+    configuration's or its input's.
     """
-    return {key: value for key, value in config.items() if key not in RUN_PARAMETERS}
+    return {
+        key: value
+        for key, value in config.items()
+        if key not in RUN_PARAMETERS and key != RECOGNITION_MODEL
+    }
 
 
 class PipelineOrchestrator(ABC):

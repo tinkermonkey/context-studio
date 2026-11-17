@@ -195,5 +195,8 @@ def get_open_v1_config() -> dict:
         "model": "google/gemini-3-flash-preview",
         "temperature": 0.0,
         "max_tokens": 1500,
+        # --- recognition (when the run's results are previewed or applied) ---
+        # The model that chooses between near-equal existing individuals
+        "recognition_model": "google/gemini-3-flash-preview",
         "description": "Open spaCy extraction + dependency-triple individual extraction",
     }

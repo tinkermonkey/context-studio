@@ -27,9 +27,14 @@ from adapters.persistence.sqlite.pipeline_run_repo import PipelineRepository
 from adapters.web.pipelines_routes import router
 from domain.ontology.entities import Class, ConceptScheme, Taxonomy
 from domain.ontology.services import OntologyService
+from domain.pipelines.bootstrap import register_pipelines
 from domain.pipelines.entities import PipelineRunStatus, PipelineType
 from domain.pipelines.individual_extraction.apply_service import (
     IndividualExtractionApplyService,
+)
+from domain.pipelines.registry import (
+    PipelineConfigurationRegistry,
+    PipelineImplementationRegistry,
 )
 from domain.pipelines.schema_extraction.apply_service import (
     SchemaExtractionApplyService,
@@ -301,6 +306,48 @@ class TestApplyEndpointHappyPath:
 
         assert response.status_code == status.HTTP_200_OK
         assert recognizer.calls[0]["threshold"] == 0.6
+
+    def test_apply_individual_extraction_asks_the_run_configurations_recognition_model(
+        self, client, pipeline_repo, ontology_repo, ontology_service
+    ):
+        """The tiebreak model is the recognition_model of the run's configuration."""
+        from tests.fakes.fake_individual_recognizer import FakeIndividualRecognizer
+
+        recognizer = FakeIndividualRecognizer()
+        client.app.state.individual_extraction_apply_svc = IndividualExtractionApplyService(
+            ontology_service, ontology_repo, individual_recognizer=recognizer
+        )
+        client.app.state.implementation_registry = PipelineImplementationRegistry()
+        client.app.state.config_registry = PipelineConfigurationRegistry()
+        register_pipelines(
+            client.app.state.implementation_registry, client.app.state.config_registry
+        )
+        class_id = "cls-service"
+        ontology_repo.save_class(
+            Class(
+                id=class_id, concept_scheme_id=SCHEME_ID, taxonomy_id=TAXONOMY_ID, title="Service"
+            )
+        )
+        run_id = _create_and_complete_individual_run(
+            pipeline_repo,
+            triples=[
+                {
+                    "subject": {
+                        "kind": "individual",
+                        "label": "Payments API",
+                        "class_ids": [class_id],
+                    },
+                    "predicate": {},
+                    "object": {},
+                    "confidence": 0.9,
+                }
+            ],
+        )
+
+        response = client.post(f"/api/pipelines/runs/{run_id}/apply")
+
+        assert response.status_code == status.HTTP_200_OK
+        assert recognizer.calls[0]["model"] == "google/gemini-3-flash-preview"
 
 
 # ---------------------------------------------------------------------------

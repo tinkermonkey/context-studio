@@ -540,7 +540,7 @@ test.describe("Extraction review", () => {
     await expect(page.getByTestId("extraction-review-schema-confirm")).toBeVisible();
     const orphan = page.getByTestId("extraction-review-schema-orphan-warning");
     await expect(orphan).toContainText(
-      "1 accepted connection points at a proposed class you did not accept",
+      "1 accepted candidate points at a proposed class you did not accept",
     );
     await expect(orphan).toContainText("Billing System → publishes → Event Stream");
 
