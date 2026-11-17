@@ -288,9 +288,11 @@ def call_job(
         print(f"{arm} {document_id} take{take}: ERROR {type(exc).__name__}: {exc}", flush=True)
 
 
-def run_calls(arm: str, jobs: list[tuple[str, int]], ledger: Ledger) -> None:
+def run_calls(
+    arm: str, jobs: list[tuple[str, int]], ledger: Ledger, concurrency: int = CONCURRENCY
+) -> None:
     """
-    The jobs not yet saved, CONCURRENCY at a time; the first alone until its
+    The jobs not yet saved, `concurrency` at a time; the first alone until its
     prompt is read, so the others read R1's system text from the cache.
     """
     import anthropic
@@ -300,7 +302,7 @@ def run_calls(arm: str, jobs: list[tuple[str, int]], ledger: Ledger) -> None:
     if not jobs:
         return
     first = threading.Event()
-    with ThreadPoolExecutor(max_workers=CONCURRENCY) as pool:
+    with ThreadPoolExecutor(max_workers=concurrency) as pool:
         futures = [pool.submit(call_job, client, ledger, arm, *jobs[0], first)]
         first.wait()
         futures += [
@@ -526,15 +528,18 @@ def scored(arm: str, document_id: str, take: int) -> dict[str, Any] | None:
 
 
 def split_values(arm: str, documents: tuple[str, ...], takes: range) -> dict[int, dict[str, float]]:
-    """Per take, the mean over the split's documents of each number (takes with every document)."""
+    """
+    Per take, the mean over the split's documents of each number (takes with
+    every document); a number some document lacks (arm A take 1's cost) is left out.
+    """
     values: dict[int, dict[str, float]] = {}
     for take in takes:
         rows = [scored(arm, d, take) for d in documents]
         if all(rows):
             values[take] = {
-                k: mean(float(r[k] or 0) for r in rows)  # type: ignore[index]
+                k: mean(float(r[k]) for r in rows)  # type: ignore[index]
                 for k in rows[0]  # type: ignore[union-attr]
-                if k != "failed"
+                if k != "failed" and all(r[k] is not None for r in rows)  # type: ignore[index]
             }
     return values
 
@@ -548,6 +553,7 @@ def report() -> dict[str, Any]:
             values = split_values(arm, documents, takes)
             if not values:
                 continue
+            keys = set.intersection(*(set(v) for v in values.values()))
             out["arms"].setdefault(arm, {})[split] = {
                 "takes": sorted(values),
                 **{
@@ -556,7 +562,7 @@ def report() -> dict[str, Any]:
                         "min": round(min(v[k] for v in values.values()), 4),
                         "max": round(max(v[k] for v in values.values()), 4),
                     }
-                    for k in next(iter(values.values()))
+                    for k in sorted(keys)
                 },
             }
         for document_id in DEV + HOLDOUT:
@@ -597,7 +603,7 @@ def print_report(result: dict[str, Any]) -> None:
         for split, s in splits.items():
             invalid = s["schema_invalid_listed"]["mean"]
             listed = s["relationships_listed"]["mean"]
-            usd = s["usd"]["mean"]
+            usd = s.get("usd", {}).get("mean", float("nan"))
             print(
                 f"| {arm} | {split} | {len(s['takes'])} | {cell(s['relationship_recall'])} |"
                 f" {cell(s['relationship_precision'])} |"
@@ -674,6 +680,7 @@ def main() -> int:
     parser.add_argument("--spend", action="store_true", help="Confirm paid calls")
     parser.add_argument("--cassettes", type=Path, help="Folder for R0's recordings")
     parser.add_argument("--json", action="store_true")
+    parser.add_argument("--concurrency", type=int, choices=[1, 2], default=CONCURRENCY)
     args = parser.parse_args()
     documents = args.document or benchmark_documents()
     if args.command in ("run", "record-r0") and not args.spend:
@@ -696,7 +703,8 @@ def main() -> int:
     elif args.command == "run":
         if not args.arm:
             raise SystemExit("--arm is required")
-        run_calls(args.arm, [(d, t) for t in args.take or [1] for d in documents], ledger)
+        jobs = [(d, t) for t in args.take or [1] for d in documents]
+        run_calls(args.arm, jobs, ledger, args.concurrency)
         print(f"ledger: ${ledger.spent():.2f} of ${BUDGET_USD:.2f}")
     elif args.command == "record-r0":
         if not args.cassettes:

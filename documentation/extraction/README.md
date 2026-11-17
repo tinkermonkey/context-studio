@@ -35,7 +35,7 @@ One method everywhere (PRs #1596 to #1599, #1597):
 
 ## How quality is measured
 
-**The extraction benchmark** (`local-server/tests/integration/fixtures/pipelines/extraction_benchmark/`): three real documents of 3,000 to 6,000 words with gold extractions. `edit_check` and `gitlab_architecture` are dev, `wikimedia_enterprise` is the holdout. A run goes through the path a user's source takes and is scored on what would reach the review queue (`local-server/tests/integration/pipelines/_harness/benchmark.py`): found F1 (individual found, any class), typed F1 (found with an accepted class), core recall, precision, type accuracy, relationship recall.
+**The extraction benchmark** (`local-server/tests/integration/fixtures/pipelines/extraction_benchmark/`): three real documents of 3,000 to 6,000 words with gold extractions. `edit_check` and `gitlab_architecture` are dev, `wikimedia_enterprise` is the holdout. A run goes through the path a user's source takes and is scored on what would reach the review queue (`local-server/tests/integration/pipelines/_harness/benchmark.py`): found F1 (individual found, any class), typed F1 (found with an accepted class), core recall, precision, type accuracy, relationship recall, and (since 2026-11-17) relationship precision, a lower bound because gold holds only the plainly stated relationships. The external harness also counts relationships that are not an allowed relationship type for the classes of their ends.
 
 ```bash
 # from local-server/, offline and free: replay recorded LLM calls
@@ -44,6 +44,7 @@ python scripts/benchmark_replay.py --implementation find_then_type
 python scripts/benchmark_replay.py --implementation default      # two-pass, Gemini recordings
 python scripts/benchmark_replay.py --all
 python scripts/benchmark_external.py replay                      # the head-to-head's saved takes
+python scripts/benchmark_relationships.py report                 # the relationship experiment's
 ```
 
 How much to trust it:
@@ -69,12 +70,24 @@ Three takes per arm, mean typed F1, from the [head-to-head](experiments/2026-11-
 
 In user terms, in its one take `single_call` finds about 65% of what the gold holds (88% of core items on dev), about 40% of what it proposes on dev matches nothing in gold, and it finds about a third of the gold relationships on dev and a sixth on the holdout. `find_then_type` finds about 56-58% (81-84% of core items on dev), about half of what it proposes matches nothing in gold, and it proposes almost no correct relationships on the holdout.
 
+**Relationships**, from the [relationship experiment](experiments/2026-11-17-relationships.md) (three takes, every arm limited to the allowed relationship types; precision against gold is a lower bound):
+
+| approach | rel. recall dev / holdout | rel. precision dev / holdout | invalid types listed | cost per document |
+|---|---|---|---|---|
+| `find_then_type` as shipped (relate per chunk over its own individuals) | 0.164 / 0.018 | 0.32 / 0.05 | 0% | $0.08-0.12 |
+| Opus single call for individuals, then the per-chunk relate stage (the planned default; R0) | 0.159 / **0.149** | 0.33 / 0.30 | 0% | $0.33-0.60 |
+| One Opus call for individuals and relationships, given the allowed types (R1) | **0.315** / 0.113 | 0.37 / 0.20 | 0% (0 of 466) | $0.29-0.60 |
+| Opus single call for individuals, then one Opus relate call over the whole document (R2-opus) | 0.300 / 0.131 | 0.28 / 0.28 | 0% | $0.48-0.90 |
+| The same with Haiku as the relate call (R2-haiku) | 0.045 / 0.107 | 0.31 / 0.34 | 0% | $0.33-0.59 |
+| One Opus call given the predicates only ([head-to-head](experiments/2026-11-15-head-to-head.md) arm B) | 0.038 / 0.012 | 0.03 / 0.01 | 92-95% | $0.32-0.58 |
+
 ## What we know
 
 - **The pipeline's shape mattered more than the model.** A stronger model in the two-pass shape did not help (typed F1 0.09-0.18); finding first and then typing against the whole catalog did (0.47). Embedding shortlists hold the right class for only about half of gold individuals.
 - **For individuals, one strong-model call beats our pipeline.** Opus 5.5 in one call leads `find_then_type` by +0.17 (dev) and +0.22 (holdout) typed F1, every take ahead by at least 0.155, at 5-8 times the cost. Sonnet and Haiku in one call do not beat it; decomposition is what gives Haiku its recall.
 - **As an implementation, the single call holds up** (one take): through the app's path it scored within noise of the head-to-head's single call and above every `find_then_type` take. It listed more individuals than the head-to-head's call did, trading precision for recall; why is not established.
-- **Relationships are unsolved, but the relate step after the single call is the best yet.** A single call proposes 92% schema-invalid relationships when it is not told which class pairs each predicate allows, though it links the right pairs more often than the pipeline. The schema-constrained relate step on Opus after the single call reached relationship recall 0.32 dev and 0.16 holdout in one take, against near zero for every approach before; how much of that is Opus in the relate step is not separated.
+- **Relationships are unsolved, but the relate step after the single call is the best yet.** A single call proposes 92% schema-invalid relationships when it is not told which class pairs each predicate allows, though it links the right pairs more often than the pipeline. The schema-constrained relate step on Opus after the single call reached relationship recall 0.32 dev and 0.16 holdout in one take, against near zero for every approach before; how much of that is Opus in the relate step is not separated. The [relationship experiment](experiments/2026-11-17-relationships.md) separates part of it: the same per-chunk step on Haiku over Opus's individuals scored 0.159 dev (three takes), so Opus in the relate step roughly doubles dev recall.
+- **Relationships follow the individuals, and a model given the allowed types keeps to them.** The per-chunk relate stage scores holdout recall 0.018 over `find_then_type`'s individuals and 0.149 over Opus's. A single call given only the predicates proposes 92% invalid relationships; given the allowed (source class, predicate, target class) types it proposed none in 466, and dev recall rose from 0.04 to 0.32. Given the gold individuals, a whole-document Opus call recovers 0.65-0.77 of gold relationships, the per-chunk Haiku stage 0.31-0.61: what limits relationships now is mostly the individuals.
 - **Typing says "none" too often** for about a quarter of gold-named mentions, partly because each mention is typed from its first occurrence only. Rewording the rule trades misses for mistypes. Whole definitions did not help.
 - **Decision models (Clef)** type worse than Haiku against the full catalog and did not help as a final chooser. Agreement between two models identifies a subset (63-70% of mentions) that is about 90% right; this gating has not been built.
 - **Local NLP mention finding** (spaCy, GLiNER2) finds many candidates at low precision and cannot type; [parse, shortlist, pick](experiments/2026-11-14-parse-shortlist-pick.md) scored 0.13.
@@ -94,15 +107,15 @@ None yet.
 ## Open decisions
 
 1. **Decided 2026-11-17: one Opus 5.5 call finds and types individuals.** The user adopted it as the default (`single_call`) on the head-to-head's evidence (it won by the rule set in advance), at about $0.7-1.5 a document with its relate step against about $0.10 for `find_then_type`. The review's caution stands as a check on the decision, not a block: the gold is model-made and may favour single calls, and human-checked gold (next step 1) is what would confirm it.
-2. **Relationships:** the default keeps the pipeline's schema-constrained relate step, now after the single call. Still open: measure a single call that is given the allowed class pairs per predicate, or a relationship stage over the whole document, against it.
+2. **Relationships:** decided by the user (2026-11-17): the pipeline keeps a step that limits relationships to the allowed relationship types, and `single_call` runs it on Opus 5.5 (cost accepted), because a Haiku relate step roughly halved relationship recall in the [relationship experiment](experiments/2026-11-17-relationships.md). That experiment also found that one Opus call extracting individuals and relationships together, given the allowed types (R1), keeps to them completely and doubles dev recall over the Haiku relate step (0.315 against 0.159, every take), but does not beat it on the holdout (0.113 against 0.149). Still open: whether R1 beats the Opus relate step that `single_call` ships with; `single_call`'s one take (0.321 / 0.161) is close to R1 on dev and above it on the holdout.
 3. **Proposals across implementations:** decided 2026-11-17, each implementation is its own pipeline. Every proposal a pipeline run makes (source extraction, schema extraction and refinement runs alike) records its origin: pipeline type, implementation, configuration, configuration version, and a digest of what that version made the run do (settings, the stage prompts the implementation resolved, defaults included, and the model, temperature and output limit it ran with). The digest exists because a built-in configuration stays at version 1 when its JSON file or a default prompt changes in code. It does not cover the implementation's own code, prompts that live in code included (all of the refinements' prompts). The origin is kept in the proposal's `client_metadata.origin`, returned as `origin` by the proposals API, and shown as a chip in the review queue, on the proposal page and on the source's Extract page. A whole run on a source supersedes only the open proposals of the same implementation, so proposals of different implementations stay open side by side for comparison. A proposal from before this change is treated as its run's implementation, and is left alone when its run is gone. Code: `PipelineSelection.origin` (`selection.py`), recorded for every implementation by `create_selected_run` through `ProposalService.recording`; the supersession rule is in `source_proposals.py`.
 
 ## Recommended next steps
 
-From the [direction review](experiments/2026-11-14-direction-review.md) and the [head-to-head](experiments/2026-11-15-head-to-head.md), in order. Only the core's adoption (step 3, in part) is done.
+From the [direction review](experiments/2026-11-14-direction-review.md), the [head-to-head](experiments/2026-11-15-head-to-head.md) and the [relationship experiment](experiments/2026-11-17-relationships.md), in order. The core's adoption (step 3, in part) and a first relationship measurement are done.
 
-1. **Human-check the gold:** a person adjudicates the holdout gold and the "spurious" items, then the benchmark grows to 10 or more documents with human-confirmed gold and a real holdout nobody prompts against.
-2. **Measure relationships properly:** a single call given the allowed (domain, predicate, range) types, and a document-level relationship stage, against `single_call`'s relate step.
+1. **Human-check the gold:** a person adjudicates the holdout gold and the "spurious" items, then the benchmark grows to 10 or more documents with human-confirmed gold and a real holdout nobody prompts against. Relationship gold needs it most: the measured gain is on dev only.
+2. **Relationships in `single_call`:** measure R1 (one call given the allowed types, its relationships validated) against `single_call`'s Opus relate step, three takes each; R1 has only beaten a Haiku relate step. Switch only if R1 wins by the noise threshold, since it would also save the relate step's cost. A whole-document Opus relate call (R2-opus) is the other candidate; a whole-document Haiku call is not.
 3. **The extraction core:** `single_call` was adopted on 2026-11-17 (decision 1). Still to do: confirm it on human-checked gold, measure its whole-take noise (three takes), and delete what loses, including `open_v1`.
 4. **Measure value to a reviewer**, not only F1: time and acceptance when reviewing a proposal against modelling from scratch.
 
@@ -121,7 +134,7 @@ None known.
 | Selection | `local-server/domain/pipelines/selection.py`, `registry.py` |
 | Benchmark and scorer | `local-server/tests/integration/fixtures/pipelines/extraction_benchmark/`, `local-server/tests/integration/pipelines/_harness/benchmark.py` |
 | Recordings | `local-server/tests/integration/fixtures/cassettes/extraction_benchmark*/`, `local-server/tests/integration/fixtures/pipelines/extraction_benchmark_external/` |
-| Benchmark scripts | `local-server/scripts/benchmark_replay.py`, `benchmark_external.py`, `quality_tournament.py` |
+| Benchmark scripts | `local-server/scripts/benchmark_replay.py`, `benchmark_external.py`, `benchmark_relationships.py`, `quality_tournament.py` |
 | Refinement loop | `.claude/workflows/karpathy-loop.js`, `documentation/karpathy_loop_design.md`, `local-server/experiments/` |
 | Experiments | [experiments/](experiments/README.md) |
 
