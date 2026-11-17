@@ -17,6 +17,9 @@ export function ProposalPage({ proposalId, op }: { proposalId: string; op?: stri
       key={proposalId}
       id={proposalId}
       selectedOperationId={op}
+      onReviewAgainstSource={() =>
+        navigate({ to: "/app/proposals/$proposalId/review", params: { proposalId } })
+      }
       onSelectOperation={(operationId) =>
         navigate({
           to: "/app/proposals/$proposalId",

@@ -37,6 +37,7 @@ import { Route as AppSchemaSchemesIndexRouteImport } from './routes/app/schema/s
 import { Route as AppSchemaTaxonomiesIdRouteImport } from './routes/app/schema/taxonomies_.$id'
 import { Route as AppSchemaSchemesIdRouteImport } from './routes/app/schema/schemes_.$id'
 import { Route as AppSchemaClassesIdRouteImport } from './routes/app/schema/classes_.$id'
+import { Route as AppProposalsProposalIdReviewRouteImport } from './routes/app/proposals_.$proposalId_.review'
 import { Route as AppPipelinesBatchesBatchIdRouteImport } from './routes/app/pipelines/batches/$batchId'
 import { Route as AppDataIndividualsIdRouteImport } from './routes/app/data/individuals_.$id'
 import { Route as AppPipelinesTypesTypeRunRouteImport } from './routes/app/pipelines/types/$type/run'
@@ -182,6 +183,12 @@ const AppSchemaClassesIdRoute = AppSchemaClassesIdRouteImport.update({
   path: '/schema/classes/$id',
   getParentRoute: () => AppRoute,
 } as any)
+const AppProposalsProposalIdReviewRoute =
+  AppProposalsProposalIdReviewRouteImport.update({
+    id: '/proposals_/$proposalId_/review',
+    path: '/proposals/$proposalId/review',
+    getParentRoute: () => AppRoute,
+  } as any)
 const AppPipelinesBatchesBatchIdRoute =
   AppPipelinesBatchesBatchIdRouteImport.update({
     id: '/pipelines/batches/$batchId',
@@ -233,6 +240,7 @@ export interface FileRoutesByFullPath {
   '/app/pipelines/': typeof AppPipelinesIndexRoute
   '/app/data/individuals/$id': typeof AppDataIndividualsIdRoute
   '/app/pipelines/batches/$batchId': typeof AppPipelinesBatchesBatchIdRoute
+  '/app/proposals/$proposalId/review': typeof AppProposalsProposalIdReviewRoute
   '/app/schema/classes/$id': typeof AppSchemaClassesIdRoute
   '/app/schema/schemes/$id': typeof AppSchemaSchemesIdRoute
   '/app/schema/taxonomies/$id': typeof AppSchemaTaxonomiesIdRoute
@@ -265,6 +273,7 @@ export interface FileRoutesByTo {
   '/app/pipelines': typeof AppPipelinesIndexRoute
   '/app/data/individuals/$id': typeof AppDataIndividualsIdRoute
   '/app/pipelines/batches/$batchId': typeof AppPipelinesBatchesBatchIdRoute
+  '/app/proposals/$proposalId/review': typeof AppProposalsProposalIdReviewRoute
   '/app/schema/classes/$id': typeof AppSchemaClassesIdRoute
   '/app/schema/schemes/$id': typeof AppSchemaSchemesIdRoute
   '/app/schema/taxonomies/$id': typeof AppSchemaTaxonomiesIdRoute
@@ -300,6 +309,7 @@ export interface FileRoutesById {
   '/app/pipelines/': typeof AppPipelinesIndexRoute
   '/app/data/individuals_/$id': typeof AppDataIndividualsIdRoute
   '/app/pipelines/batches/$batchId': typeof AppPipelinesBatchesBatchIdRoute
+  '/app/proposals_/$proposalId_/review': typeof AppProposalsProposalIdReviewRoute
   '/app/schema/classes_/$id': typeof AppSchemaClassesIdRoute
   '/app/schema/schemes_/$id': typeof AppSchemaSchemesIdRoute
   '/app/schema/taxonomies_/$id': typeof AppSchemaTaxonomiesIdRoute
@@ -336,6 +346,7 @@ export interface FileRouteTypes {
     | '/app/pipelines/'
     | '/app/data/individuals/$id'
     | '/app/pipelines/batches/$batchId'
+    | '/app/proposals/$proposalId/review'
     | '/app/schema/classes/$id'
     | '/app/schema/schemes/$id'
     | '/app/schema/taxonomies/$id'
@@ -368,6 +379,7 @@ export interface FileRouteTypes {
     | '/app/pipelines'
     | '/app/data/individuals/$id'
     | '/app/pipelines/batches/$batchId'
+    | '/app/proposals/$proposalId/review'
     | '/app/schema/classes/$id'
     | '/app/schema/schemes/$id'
     | '/app/schema/taxonomies/$id'
@@ -402,6 +414,7 @@ export interface FileRouteTypes {
     | '/app/pipelines/'
     | '/app/data/individuals_/$id'
     | '/app/pipelines/batches/$batchId'
+    | '/app/proposals_/$proposalId_/review'
     | '/app/schema/classes_/$id'
     | '/app/schema/schemes_/$id'
     | '/app/schema/taxonomies_/$id'
@@ -614,6 +627,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppSchemaClassesIdRouteImport
       parentRoute: typeof AppRoute
     }
+    '/app/proposals_/$proposalId_/review': {
+      id: '/app/proposals_/$proposalId_/review'
+      path: '/proposals/$proposalId/review'
+      fullPath: '/app/proposals/$proposalId/review'
+      preLoaderRoute: typeof AppProposalsProposalIdReviewRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/app/pipelines/batches/$batchId': {
       id: '/app/pipelines/batches/$batchId'
       path: '/pipelines/batches/$batchId'
@@ -680,6 +700,7 @@ interface AppRouteChildren {
   AppPipelinesIndexRoute: typeof AppPipelinesIndexRoute
   AppDataIndividualsIdRoute: typeof AppDataIndividualsIdRoute
   AppPipelinesBatchesBatchIdRoute: typeof AppPipelinesBatchesBatchIdRoute
+  AppProposalsProposalIdReviewRoute: typeof AppProposalsProposalIdReviewRoute
   AppSchemaClassesIdRoute: typeof AppSchemaClassesIdRoute
   AppSchemaSchemesIdRoute: typeof AppSchemaSchemesIdRoute
   AppSchemaTaxonomiesIdRoute: typeof AppSchemaTaxonomiesIdRoute
@@ -711,6 +732,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppPipelinesIndexRoute: AppPipelinesIndexRoute,
   AppDataIndividualsIdRoute: AppDataIndividualsIdRoute,
   AppPipelinesBatchesBatchIdRoute: AppPipelinesBatchesBatchIdRoute,
+  AppProposalsProposalIdReviewRoute: AppProposalsProposalIdReviewRoute,
   AppSchemaClassesIdRoute: AppSchemaClassesIdRoute,
   AppSchemaSchemesIdRoute: AppSchemaSchemesIdRoute,
   AppSchemaTaxonomiesIdRoute: AppSchemaTaxonomiesIdRoute,

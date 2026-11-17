@@ -75,4 +75,28 @@ describe("SourceText", () => {
     await userEvent.keyboard("{Enter}");
     expect(onSelect).toHaveBeenCalledWith("b");
   });
+
+  it("takes its container class, highlight classes, labels and test id from the caller", () => {
+    render(
+      <SourceText
+        text={TEXT}
+        spans={SPANS}
+        activeKey="a"
+        onSelectKey={vi.fn()}
+        className="review-source__text"
+        markClassName={(keys, active) => `mark-${keys.join("-")}${active ? " mark--on" : ""}`}
+        markLabel={(keys, chunk) => `${chunk}: ${keys.join(", ")}`}
+        markTestId="review-mark"
+        data-testid="review-source-text"
+      />,
+    );
+    expect(screen.getByTestId("review-source-text")).toHaveClass("review-source__text");
+    expect(screen.getByTestId("review-source-text")).not.toHaveClass("xr-source-text");
+    const marks = screen.getAllByTestId("review-mark");
+    expect(marks[0]).toHaveClass("mark-a", "mark--on");
+    expect(marks[0]).not.toHaveClass("xr-span");
+    expect(marks[1]).toHaveClass("mark-a-b");
+    expect(marks[1]).toHaveAttribute("aria-label", "gamma: a, b");
+    expect(screen.queryByTestId("extraction-review-span")).not.toBeInTheDocument();
+  });
 });

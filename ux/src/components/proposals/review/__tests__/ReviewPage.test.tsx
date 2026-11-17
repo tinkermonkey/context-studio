@@ -1,0 +1,774 @@
+/**
+ * The Review page (#1611): an extraction proposal reviewed against its whole
+ * source. The source's highlights carry each element's verdict, elements are
+ * grouped by layer with an Awaiting / All filter, and the inspector decides
+ * the selected one (Correct, a better class, or not an element with a reason)
+ * by button or key, sending the time spent on it.
+ */
+import { describe, it, expect, beforeAll, beforeEach, afterEach, afterAll, vi } from "vitest";
+import { fireEvent, screen, waitFor, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { http, HttpResponse } from "msw";
+import { setupServer } from "msw/node";
+import { render } from "@/test/test-utils";
+import { entityPageHandlers } from "@/test/entityPageHandlers";
+import {
+  createClass,
+  createConceptScheme,
+  createDataset,
+} from "@/api/services/__tests__/fixtures/ontology.fixtures";
+import {
+  createChangeProposal,
+  createProposedOperation,
+} from "@/api/services/__tests__/fixtures/proposals.fixtures";
+import type {
+  ChangeProposal,
+  ChangeProposalApplyRequest,
+  ChangeProposalRejectRequest,
+  ProposedOperation,
+} from "@/api/services/proposals";
+import type { Source, SourceText } from "@/api/services/sources";
+import { useToasts } from "@/components/ui/Toast";
+import { ReviewPage } from "../ReviewPage";
+
+const TEXT =
+  "Edit Check offers feedback while editing. Reference check realizes Edit Check. " +
+  "Newcomers from Sub-Saharan Africa will feel safe.";
+
+const source: Source = {
+  id: "src-1",
+  taxonomy_id: "tax-1",
+  dataset_id: "ds-1",
+  kind: "text",
+  title: "Edit check",
+  origin: "edit_check.md",
+  content_type: "text/plain",
+  bytes: TEXT.length,
+  pages: null,
+  chars: TEXT.length,
+  page_starts: [],
+  headings: [],
+  status: "ready",
+  failure: null,
+  failure_detail: null,
+  created_at: "2026-11-10T12:00:00Z",
+  updated_at: "2026-11-10T12:00:00Z",
+  removed_at: null,
+} as unknown as Source;
+
+const product = createConceptScheme({ id: "scheme-p", taxonomy_id: "tax-1", title: "Product" });
+const motivation = createConceptScheme({
+  id: "scheme-m",
+  taxonomy_id: "tax-1",
+  title: "Motivation",
+});
+// A DR-length definition: clamped to a few lines until Show more.
+const STAKEHOLDER_DEFINITION =
+  "A person, group or organization whose interests or concerns about the architecture " +
+  "drivers, goals and requirements trace back to. Stakeholders are named by role, not by " +
+  "person, and each states the concerns that make them care about the architecture and " +
+  "how its outcomes are assessed.";
+const feature = createClass({
+  id: "cls-feature",
+  concept_scheme_id: "scheme-p",
+  taxonomy_id: "tax-1",
+  identifier: "product.feature",
+  title: "Feature",
+  description: "A unit of product functionality a persona can perceive.",
+  external_references: [{ source: "documentation_robotics", identifier: "product.feature" }],
+});
+const capability = createClass({
+  id: "cls-capability",
+  concept_scheme_id: "scheme-p",
+  taxonomy_id: "tax-1",
+  identifier: "product.softwarecapability",
+  title: "Software capability",
+  description: "An ability of the software platform.",
+});
+const derivedClass = createClass({
+  id: "cls-derived",
+  concept_scheme_id: "scheme-p",
+  taxonomy_id: "tax-1",
+  identifier: "product.featureset",
+  title: "Feature set",
+  derived: true,
+});
+const stakeholder = createClass({
+  id: "cls-stakeholder",
+  concept_scheme_id: "scheme-m",
+  taxonomy_id: "tax-1",
+  identifier: "motivation.stakeholder",
+  title: "Stakeholder",
+  description: STAKEHOLDER_DEFINITION,
+  external_references: [{ source: "documentation_robotics", identifier: "motivation.stakeholder" }],
+});
+const goal = createClass({
+  id: "cls-goal",
+  concept_scheme_id: "scheme-m",
+  taxonomy_id: "tax-1",
+  identifier: "motivation_goal",
+  title: "Goal",
+  description: "A high-level statement of intent.",
+  external_references: [{ source: "documentation_robotics", identifier: "motivation.goal" }],
+});
+const classes = [feature, capability, derivedClass, stakeholder, goal];
+const dataset = createDataset({
+  id: "ds-1",
+  taxonomy_id: "tax-1",
+  identifier: "bench-edit-check",
+  title: "Bench edit check",
+});
+
+function passage(quote: string, from = 0) {
+  const start = TEXT.indexOf(quote, from);
+  return { source_id: "src-1", page: null, start, end: start + quote.length, quote };
+}
+
+function individual(
+  id: string,
+  title: string,
+  classId: string,
+  quote: string,
+  overrides: Partial<ProposedOperation> = {},
+): ProposedOperation {
+  return createProposedOperation({
+    id,
+    seq: 0,
+    op: "create",
+    kind: "individual",
+    target_id: null,
+    ref: id.replace("op-", ""),
+    fields: { title, class_ids: [classId] },
+    evidence: [passage(quote)],
+    scope: "additive",
+    ...overrides,
+  });
+}
+
+const edit = individual("op-edit", "Edit Check", "cls-capability", "Edit Check", {
+  seq: 1,
+  probability: 0.97,
+});
+const reference = individual("op-ref", "Reference check", "cls-feature", "Reference check", {
+  seq: 2,
+  probability: 0.95,
+});
+const region = individual(
+  "op-region",
+  "Sub-Saharan Africa",
+  "cls-stakeholder",
+  "Sub-Saharan Africa",
+  {
+    seq: 3,
+    probability: 0.41,
+  },
+);
+const added = individual("op-added", "Feedback", "cls-feature", "feedback", {
+  seq: 4,
+  status: "applied",
+  added_by_reviewer: true,
+  result_entity_id: "ind-77",
+});
+const realizes = createProposedOperation({
+  id: "op-rel",
+  seq: 5,
+  op: "create",
+  kind: "relationship",
+  target_id: null,
+  fields: { property_definition_id: "prop-1", source_id: "$ref", target_id: "$edit" },
+  evidence: [],
+  probability: 0.9,
+  scope: "additive",
+});
+
+const server = setupServer(...entityPageHandlers);
+
+let proposal: ChangeProposal;
+let applies: ChangeProposalApplyRequest[];
+let rejects: ChangeProposalRejectRequest[];
+let failApply: string | undefined;
+
+beforeAll(() => server.listen({ onUnhandledRequest: "error" }));
+beforeEach(() => {
+  proposal = createChangeProposal({
+    id: "proposal-1",
+    taxonomy_id: "tax-1",
+    dataset_id: "ds-1",
+    title: "Extraction: Edit check",
+    source: "pipeline",
+    status: "open",
+    origin: {
+      pipeline_type: "individual_extraction",
+      implementation_id: "single_call",
+      configuration_ref: "extraction-single-call",
+      configuration_version: 2,
+      digest: "3f2a9c11",
+    },
+    operations: structuredClone([edit, reference, region, added, realizes]),
+  });
+  applies = [];
+  rejects = [];
+  failApply = undefined;
+  const list = <T,>(items: T[]) =>
+    HttpResponse.json({ items, total: items.length, limit: 500, offset: 0 });
+  server.use(
+    http.get("*/api/proposals/:id", () => HttpResponse.json(proposal)),
+    http.get("*/api/sources/:id/text", () => {
+      const body: SourceText = {
+        source_id: "src-1",
+        page: null,
+        pages: null,
+        start: 0,
+        end: TEXT.length,
+        text: TEXT,
+      } as unknown as SourceText;
+      return HttpResponse.json(body);
+    }),
+    http.get("*/api/sources/:id", () => HttpResponse.json(source)),
+    http.get("*/api/datasets", () => HttpResponse.json([dataset])),
+    http.get("*/api/schemes", () => list([product, motivation])),
+    http.get("*/api/classes", ({ request }) => {
+      const url = new URL(request.url);
+      const scheme = url.searchParams.get("concept_scheme_id");
+      const ids = url.searchParams.getAll("ids");
+      return list(
+        classes.filter(
+          (c) => (!scheme || c.concept_scheme_id === scheme) && (!ids.length || ids.includes(c.id)),
+        ),
+      );
+    }),
+    http.post("*/api/proposals/:id/apply", async ({ request }) => {
+      const body = (await request.json()) as ChangeProposalApplyRequest;
+      applies.push(body);
+      for (const op of proposal.operations) {
+        if (!body.operation_ids.includes(op.id)) continue;
+        if (failApply) {
+          Object.assign(op, { status: "failed", reason: failApply });
+        } else {
+          const edit = body.edits?.[op.id];
+          Object.assign(op, {
+            status: "applied",
+            applied_fields: edit ? { ...op.fields, ...edit } : null,
+          });
+        }
+      }
+      return HttpResponse.json(proposal);
+    }),
+    http.post("*/api/proposals/:id/reject", async ({ request }) => {
+      const body = (await request.json()) as ChangeProposalRejectRequest;
+      rejects.push(body);
+      for (const op of proposal.operations) {
+        if (body.operation_ids?.includes(op.id)) {
+          Object.assign(op, {
+            status: "rejected",
+            reason: body.note ?? null,
+            reason_code: body.reason_code ?? null,
+          });
+        }
+      }
+      return HttpResponse.json(proposal);
+    }),
+  );
+});
+afterEach(() => server.resetHandlers());
+afterAll(() => server.close());
+
+function ToastProbe() {
+  const { toasts } = useToasts();
+  return (
+    <ul>
+      {toasts.map((t) => (
+        <li key={t.id} data-testid={`toast-${t.type}`}>
+          {t.title}
+          {t.sub ? ` | ${t.sub}` : ""}
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+const onFinish = vi.fn();
+
+async function renderPage() {
+  const user = userEvent.setup();
+  render(
+    <>
+      <ReviewPage id="proposal-1" onFinish={onFinish} />
+      <ToastProbe />
+    </>,
+  );
+  await screen.findAllByTestId("review-mark", {}, { timeout: 10000 });
+  // The layers are known once the classes and schemes load.
+  await screen.findByTestId("review-group-scheme-p", {}, { timeout: 10000 });
+  return user;
+}
+
+const inspectorTitle = () => screen.getByTestId("review-inspector-title");
+const markFor = (opId: string) =>
+  screen.getAllByTestId("review-mark").find((m) => m.dataset.spanKeys === opId)!;
+
+describe("the review page", () => {
+  it("shows the header, origin and progress", async () => {
+    const user = await renderPage();
+    expect(screen.getByTestId("review-page")).toHaveClass("review-page");
+    const header = screen.getByTestId("review-header");
+    expect(header).toHaveTextContent("PROPOSAL · SOURCE Edit check · DATASET bench-edit-check");
+    expect(within(header).getByRole("heading", { level: 1 })).toHaveTextContent(
+      "Review extraction: Edit check",
+    );
+    expect(screen.getByTestId("review-origin-line")).toHaveTextContent("Proposed by");
+    expect(screen.getByTestId("proposal-origin")).toHaveTextContent("single_call v2 · 3f2a9c");
+    expect(screen.getByTestId("review-progress")).toHaveAttribute(
+      "aria-label",
+      "Decision progress",
+    );
+    expect(screen.getByTestId("review-progress-decided")).toHaveTextContent("1 / 5");
+    expect(screen.getByTestId("review-progress-counts")).toHaveTextContent(
+      "0 correct · 0 class changed · 0 not elements · 1 added",
+    );
+    expect(screen.getByRole("progressbar")).toHaveAttribute("aria-valuenow", "20");
+    expect(screen.getByTestId("review-time")).toHaveTextContent(/^\d+:\d\d on this review$/);
+
+    await user.click(screen.getByTestId("review-finish"));
+    expect(onFinish).toHaveBeenCalled();
+  });
+
+  it("highlights every element's passages with its verdict, the selected one outlined", async () => {
+    await renderPage();
+    expect(screen.getByTestId("review-source-text")).toHaveClass("review-source__text");
+    expect(screen.getByTestId("review-legend")).toHaveTextContent(
+      "AwaitingCorrectClass changedNot an elementAdded by you",
+    );
+    const swatches = screen.getByTestId("review-legend").querySelectorAll(".review-legend__swatch");
+    expect([...swatches].map((s) => s.classList[1])).toEqual([
+      "review-legend__swatch--awaiting",
+      "review-legend__swatch--correct",
+      "review-legend__swatch--changed",
+      "review-legend__swatch--rejected",
+      "review-legend__swatch--added",
+    ]);
+    const editMark = markFor("op-edit");
+    expect(editMark.tagName).toBe("MARK");
+    expect(editMark).toHaveTextContent("Edit Check");
+    expect(editMark).toHaveAttribute("role", "button");
+    expect(editMark).toHaveClass("review-mark", "review-mark--awaiting", "review-mark--selected");
+    expect(editMark).toHaveAttribute("aria-current", "true");
+    expect(editMark).toHaveAttribute("aria-label", "Edit Check (Edit Check, awaiting)");
+    expect(markFor("op-region")).toHaveAttribute(
+      "aria-label",
+      "Sub-Saharan Africa (Sub-Saharan Africa, awaiting)",
+    );
+    const addedMark = markFor("op-added");
+    expect(addedMark).toHaveClass("review-mark--added");
+    expect(addedMark).not.toHaveClass("review-mark--selected");
+    expect(markFor("op-region")).toHaveClass("review-mark--awaiting");
+    // The extraction review's own classes aren't used here.
+    expect(editMark).not.toHaveClass("xr-span");
+  });
+
+  it("opens an element from its highlight", async () => {
+    const user = await renderPage();
+    expect(inspectorTitle()).toHaveTextContent("Edit Check");
+    await user.click(markFor("op-region"));
+    expect(inspectorTitle()).toHaveTextContent("Sub-Saharan Africa");
+    expect(markFor("op-region")).toHaveClass("review-mark--selected");
+    expect(screen.getByTestId("review-row-op-region")).toHaveAttribute("aria-selected", "true");
+  });
+
+  it("groups the elements by layer, then the relationships", async () => {
+    await renderPage();
+    const list = screen.getByRole("listbox", { name: "Elements to review" });
+    const groups = within(list).getAllByRole("group");
+    expect(groups.map((g) => g.getAttribute("aria-label"))).toEqual([
+      "Product",
+      "Motivation",
+      "Relationships",
+    ]);
+    const productRows = within(groups[0]).getAllByRole("option");
+    expect(productRows.map((r) => r.dataset.rowId)).toEqual(["op-edit", "op-ref", "op-added"]);
+    const row = screen.getByTestId("review-row-op-edit");
+    expect(row).toHaveClass("review-row", "review-row--selected");
+    expect(row).toHaveAttribute("aria-selected", "true");
+    expect(row).toHaveAttribute("aria-controls", "review-inspector");
+    expect(row).toHaveTextContent("Edit Check");
+    // A class without a DR reference shows as its title.
+    expect(row).toHaveTextContent("Software capability");
+    expect(within(row).getByTitle("Software capability")).toHaveClass("review-row__class");
+    expect(row).toHaveTextContent("0.97");
+    expect(row).toHaveTextContent("awaiting");
+    expect(screen.getByTestId("review-row-op-added")).toHaveTextContent("added");
+    await waitFor(() =>
+      expect(screen.getByTestId("review-row-op-rel")).toHaveTextContent(
+        "Reference check → Edit Check",
+      ),
+    );
+    expect(screen.getByTestId("review-row-op-rel")).toHaveTextContent("realizes");
+  });
+
+  it("filters to awaiting elements, keeping the selected one", async () => {
+    const user = await renderPage();
+    await user.click(screen.getByTestId("review-row-op-added"));
+    await user.click(
+      within(screen.getByTestId("review-filter")).getByRole("radio", { name: /Awaiting/ }),
+    );
+    // Decided, but selected: it stays.
+    expect(screen.getByTestId("review-row-op-added")).toBeInTheDocument();
+    await user.click(screen.getByTestId("review-row-op-edit"));
+    expect(screen.queryByTestId("review-row-op-added")).not.toBeInTheDocument();
+    await user.click(
+      within(screen.getByTestId("review-filter")).getByRole("radio", { name: /All/ }),
+    );
+    expect(screen.getByTestId("review-row-op-added")).toBeInTheDocument();
+  });
+
+  it("shows the evidence, the class's definition and the relationships", async () => {
+    await renderPage();
+    expect(screen.getByTestId("review-inspector")).toHaveAttribute("role", "region");
+    expect(screen.getByTestId("review-inspector-eyebrow")).toHaveTextContent("Individual · p 0.97");
+    const classChip = screen.getByTestId("review-inspector-class");
+    expect(classChip).toHaveTextContent("Software capability");
+    expect(classChip).toHaveClass("review-class-chip");
+    expect(classChip).toHaveAttribute("title", "Software capability");
+    expect(screen.getByTestId("review-inspector-status")).toHaveTextContent("awaiting");
+    expect(screen.getByTestId("review-evidence")).toHaveTextContent("Edit Check");
+    expect(screen.getByTestId("review-definition")).toHaveTextContent(
+      "What Software capability means",
+    );
+    expect(screen.getByTestId("review-definition")).toHaveTextContent(
+      "An ability of the software platform.",
+    );
+    await waitFor(() =>
+      expect(screen.getByTestId("review-relationship-op-rel")).toHaveTextContent(
+        "Reference checkrealizesEdit Check",
+      ),
+    );
+    expect(screen.getByTestId("review-relationships")).toHaveTextContent("Its relationships · 1");
+  });
+
+  it("accepts as correct with the review time, then opens the next awaiting element", async () => {
+    const user = await renderPage();
+    await user.click(screen.getByTestId("review-correct"));
+    await waitFor(() => expect(applies).toHaveLength(1));
+    expect(applies[0]).toEqual({
+      operation_ids: ["op-edit"],
+      force_stale: [],
+      edits: {},
+      review_ms: { "op-edit": expect.any(Number) },
+    });
+    expect(applies[0].review_ms!["op-edit"]).toBeGreaterThanOrEqual(0);
+    await waitFor(() => expect(inspectorTitle()).toHaveTextContent("Reference check"));
+    await waitFor(() => expect(markFor("op-edit")).toHaveClass("review-mark--correct"));
+    expect(screen.getByTestId("review-progress-counts")).toHaveTextContent("1 correct");
+  });
+
+  it("accepts with a better class from the picker, then offers it on key 1", async () => {
+    const user = await renderPage();
+    const picker = within(screen.getByTestId("review-class-picker"));
+    expect(picker.getByText("Search all 4 classes")).toBeInTheDocument();
+    await user.type(picker.getByRole("combobox"), "product.");
+    const options = await picker.findAllByRole("option");
+    // The element's own class and derived classes aren't offered.
+    expect(options.map((o) => o.textContent)).toEqual(["product.feature"]);
+    await user.click(options[0]);
+    await waitFor(() => expect(applies).toHaveLength(1));
+    expect(applies[0].edits).toEqual({ "op-edit": { class_ids: ["cls-feature"] } });
+    expect(applies[0].review_ms).toEqual({ "op-edit": expect.any(Number) });
+    await waitFor(() => expect(markFor("op-edit")).toHaveClass("review-mark--changed"));
+    expect(screen.getByTestId("review-progress-counts")).toHaveTextContent("1 class changed");
+
+    // Next: Reference check, already a product.feature, so feature isn't suggested.
+    await waitFor(() => expect(inspectorTitle()).toHaveTextContent("Reference check"));
+    expect(screen.queryByTestId("review-suggestion-1")).not.toBeInTheDocument();
+    await user.click(screen.getByTestId("review-row-op-region"));
+    const suggestion = screen.getByTestId("review-suggestion-1");
+    expect(suggestion).toHaveClass("review-alt");
+    expect(suggestion).toHaveAttribute("aria-keyshortcuts", "1");
+    expect(suggestion).toHaveTextContent("1 product.feature");
+    expect(suggestion).toHaveTextContent("A unit of product functionality");
+    await user.keyboard("1");
+    await waitFor(() => expect(applies).toHaveLength(2));
+    expect(applies[1].edits).toEqual({ "op-region": { class_ids: ["cls-feature"] } });
+  });
+
+  it("lists the current class's layer-mates first in the picker", async () => {
+    const user = await renderPage();
+    await user.click(screen.getByTestId("review-row-op-region"));
+    const picker = within(screen.getByTestId("review-class-picker"));
+    await user.type(picker.getByRole("combobox"), "o");
+    const options = await picker.findAllByRole("option");
+    expect(options.map((o) => o.textContent)).toEqual([
+      "motivation.goal",
+      "product.feature",
+      "Software capability",
+    ]);
+  });
+
+  it("clamps a long definition, with Show more and Show less", async () => {
+    const user = await renderPage();
+    await user.click(screen.getByTestId("review-row-op-region"));
+    const definition = within(screen.getByTestId("review-definition"));
+    const text = definition.getByText(STAKEHOLDER_DEFINITION);
+    expect(text).toHaveClass("review-definition", "review-definition--clamped");
+    const toggle = screen.getByTestId("review-definition-toggle");
+    expect(toggle).toHaveAttribute("aria-expanded", "false");
+    expect(toggle).toHaveAttribute("aria-controls", text.id);
+    await user.click(toggle);
+    expect(toggle).toHaveAttribute("aria-expanded", "true");
+    expect(toggle).toHaveTextContent("Show less");
+    expect(text).not.toHaveClass("review-definition--clamped");
+    // A short definition has nothing to show more of.
+    await user.click(screen.getByTestId("review-row-op-edit"));
+    expect(screen.queryByTestId("review-definition-toggle")).not.toBeInTheDocument();
+  });
+
+  it("rejects with a reason code and a note", async () => {
+    const user = await renderPage();
+    await user.click(screen.getByTestId("review-row-op-region"));
+    const reasons = screen.getByRole("group", { name: "Not an element, because" });
+    expect(
+      within(reasons)
+        .getAllByRole("button")
+        .map((b) => b.textContent),
+    ).toEqual([
+      "Not in this text",
+      "Too generic",
+      "Mentioned only",
+      "Out of scope",
+      "Duplicate",
+      "Other",
+    ]);
+    expect(screen.getByTestId("review-reason-out_of_scope")).toHaveClass("review-reason");
+    await user.type(screen.getByTestId("review-note"), "a region, not a party");
+    await user.click(screen.getByTestId("review-reason-out_of_scope"));
+    await waitFor(() => expect(rejects).toHaveLength(1));
+    expect(rejects[0]).toEqual({
+      operation_ids: ["op-region"],
+      note: "a region, not a party",
+      reason_code: "out_of_scope",
+      review_ms: { "op-region": expect.any(Number) },
+    });
+    await waitFor(() => expect(markFor("op-region")).toHaveClass("review-mark--rejected"));
+    // The rejected element shows its decision once reopened.
+    await user.click(screen.getByTestId("review-row-op-region"));
+    expect(screen.getByTestId("review-decided")).toHaveTextContent("Not an element: Out of scope.");
+    expect(screen.getByTestId("review-decided-note")).toHaveTextContent("a region, not a party");
+    expect(screen.queryByTestId("review-correct")).not.toBeInTheDocument();
+  });
+
+  it("decides by key: J / K move, A accepts, X focuses the reasons", async () => {
+    const user = await renderPage();
+    await user.keyboard("j");
+    expect(inspectorTitle()).toHaveTextContent("Reference check");
+    await user.keyboard("j");
+    expect(inspectorTitle()).toHaveTextContent("Feedback");
+    await user.keyboard("k");
+    expect(inspectorTitle()).toHaveTextContent("Reference check");
+    await user.keyboard("x");
+    expect(screen.getByTestId("review-reason-not_in_text")).toHaveFocus();
+    // Typing in the note is text, not a command.
+    await user.click(screen.getByTestId("review-note"));
+    await user.keyboard("a");
+    expect(applies).toHaveLength(0);
+    expect(screen.getByTestId("review-note")).toHaveValue("a");
+    await user.click(screen.getByTestId("review-inspector-title"));
+    await user.keyboard("a");
+    await waitFor(() => expect(applies).toHaveLength(1));
+    expect(applies[0].operation_ids).toEqual(["op-ref"]);
+  });
+
+  it("decides a relationship only after its ends, with no class to change", async () => {
+    const user = await renderPage();
+    await user.click(screen.getByTestId("review-row-op-rel"));
+    expect(screen.getByTestId("review-inspector-eyebrow")).toHaveTextContent(
+      "Relationship · p 0.90",
+    );
+    expect(screen.queryByTestId("review-better-class")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("review-inspector-class")).not.toBeInTheDocument();
+    // Its ends, Reference check (#2) and Edit Check (#1), are undecided.
+    expect(screen.getByTestId("review-ends-callout")).toHaveTextContent(
+      "Decide #2 and #1 first: this relationship follows their choices.",
+    );
+    expect(screen.getByTestId("review-correct")).toBeDisabled();
+    await user.click(screen.getByTestId("review-inspector-title"));
+    await user.keyboard("a");
+    expect(applies).toHaveLength(0);
+
+    // Accept both ends; the relationship can be accepted then.
+    await user.click(screen.getByTestId("review-row-op-edit"));
+    await user.click(screen.getByTestId("review-correct"));
+    await waitFor(() => expect(applies).toHaveLength(1));
+    await user.click(screen.getByTestId("review-row-op-ref"));
+    await user.click(screen.getByTestId("review-correct"));
+    await waitFor(() => expect(applies).toHaveLength(2));
+    await user.click(screen.getByTestId("review-row-op-rel"));
+    await waitFor(() => expect(screen.getByTestId("review-correct")).toBeEnabled());
+    expect(screen.queryByTestId("review-ends-callout")).not.toBeInTheDocument();
+    await user.click(screen.getByTestId("review-correct"));
+    await waitFor(() => expect(applies).toHaveLength(3));
+    expect(applies[2].operation_ids).toEqual(["op-rel"]);
+  });
+
+  it("offers only rejecting a relationship whose end was rejected", async () => {
+    proposal.operations.find((o) => o.id === "op-edit")!.status = "rejected";
+    const user = await renderPage();
+    await user.click(screen.getByTestId("review-row-op-rel"));
+    expect(screen.getByTestId("review-ends-callout")).toHaveTextContent(
+      "#1 was rejected, so this relationship can't apply. Reject it.",
+    );
+    expect(screen.queryByTestId("review-correct")).not.toBeInTheDocument();
+    await user.click(screen.getByTestId("review-inspector-title"));
+    await user.keyboard("a");
+    expect(applies).toHaveLength(0);
+    await user.click(screen.getByTestId("review-reason-not_in_text"));
+    await waitFor(() => expect(rejects).toHaveLength(1));
+    expect(rejects[0].operation_ids).toEqual(["op-rel"]);
+  });
+
+  it("uses an existing individual for a near match, with no class change", async () => {
+    Object.assign(proposal.operations.find((o) => o.id === "op-region")!, {
+      alternatives: [
+        { kind: "existing", entity_id: "ind-1", similarity: 0.93, title: "LLM Provider Router" },
+      ],
+    });
+    const user = await renderPage();
+    // Pick a class for Edit Check, so it is suggested afterwards.
+    const picker = within(screen.getByTestId("review-class-picker"));
+    await user.type(picker.getByRole("combobox"), "product.");
+    await user.click((await picker.findAllByRole("option"))[0]);
+    await waitFor(() => expect(applies).toHaveLength(1));
+
+    await user.click(screen.getByTestId("review-row-op-region"));
+    // The existing individual is chosen by default: no class can be picked with it.
+    expect(screen.getByTestId("operation-near-match")).toBeInTheDocument();
+    expect(screen.getByTestId("review-correct")).toHaveTextContent("Correct: use existing");
+    expect(screen.getByTestId("review-class-locked")).toBeInTheDocument();
+    expect(screen.getByTestId("review-suggestion-1")).toBeDisabled();
+    expect(within(screen.getByTestId("review-class-picker")).getByRole("combobox")).toBeDisabled();
+    await user.click(screen.getByTestId("review-inspector-title"));
+    await user.keyboard("1");
+    expect(applies).toHaveLength(1);
+    await user.keyboard("a");
+    await waitFor(() => expect(applies).toHaveLength(2));
+    expect(applies[1]).toMatchObject({
+      operation_ids: ["op-region"],
+      chosen_alternatives: { "op-region": { kind: "existing", entity_id: "ind-1" } },
+      edits: {},
+    });
+  });
+
+  it("creates a near match as new when chosen, with a class change", async () => {
+    Object.assign(proposal.operations.find((o) => o.id === "op-edit")!, {
+      alternatives: [
+        { kind: "existing", entity_id: "ind-1", similarity: 0.9, title: "LLM Provider Router" },
+      ],
+    });
+    const user = await renderPage();
+    await user.click(
+      within(screen.getByTestId("operation-near-match-option-new")).getByRole("radio"),
+    );
+    expect(screen.getByTestId("review-correct")).toHaveTextContent(/^Correct$/);
+    const picker = within(screen.getByTestId("review-class-picker"));
+    await user.type(picker.getByRole("combobox"), "product.");
+    await user.click((await picker.findAllByRole("option"))[0]);
+    await waitFor(() => expect(applies).toHaveLength(1));
+    expect(applies[0].edits).toEqual({ "op-edit": { class_ids: ["cls-feature"] } });
+    expect(applies[0].chosen_alternatives).toBeUndefined();
+  });
+
+  it("decides once while a key is held down", async () => {
+    await renderPage();
+    fireEvent.keyDown(document.body, { key: "a", repeat: true });
+    fireEvent.keyDown(document.body, { key: "x", repeat: true });
+    expect(screen.getByTestId("review-reason-not_in_text")).not.toHaveFocus();
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    expect(applies).toHaveLength(0);
+    fireEvent.keyDown(document.body, { key: "a" });
+    await waitFor(() => expect(applies).toHaveLength(1));
+  });
+
+  it("ignores review keys while a dialog is open", async () => {
+    proposal.operations.find((o) => o.id === "op-edit")!.stale = true;
+    const user = await renderPage();
+    await user.click(screen.getByTestId("review-correct"));
+    expect(await screen.findByTestId("review-force-message")).toBeInTheDocument();
+    fireEvent.keyDown(document.body, { key: "j" });
+    fireEvent.keyDown(screen.getByTestId("review-force-message"), { key: "k" });
+    expect(inspectorTitle()).toHaveTextContent("Edit Check");
+    await user.click(screen.getByRole("button", { name: "Apply anyway" }));
+    await waitFor(() => expect(applies).toHaveLength(1));
+    expect(applies[0]).toMatchObject({ operation_ids: ["op-edit"], force_stale: ["op-edit"] });
+  });
+
+  it("says why an apply failed and stays on the element", async () => {
+    failApply = "domain_range_mismatch: target is Place, not Room";
+    const user = await renderPage();
+    await user.click(screen.getByTestId("review-correct"));
+    await waitFor(() =>
+      expect(screen.getByTestId("toast-error")).toHaveTextContent(
+        "Apply failed | domain_range_mismatch: target is Place, not Room",
+      ),
+    );
+    expect(inspectorTitle()).toHaveTextContent("Edit Check");
+    await waitFor(() =>
+      expect(screen.getByTestId("review-failed")).toHaveTextContent(
+        "The last apply failed: domain_range_mismatch: target is Place, not Room",
+      ),
+    );
+    expect(screen.getByTestId("review-failed")).toHaveAttribute("role", "alert");
+  });
+
+  it("shows an added element's decision read-only", async () => {
+    const user = await renderPage();
+    await user.click(screen.getByTestId("review-row-op-added"));
+    expect(screen.getByTestId("review-decided")).toHaveTextContent(
+      "Added by you as product.feature.",
+    );
+    expect(screen.queryByTestId("review-reasons")).not.toBeInTheDocument();
+  });
+
+  it("says when the source can't be shown", async () => {
+    server.use(
+      http.get("*/api/sources/:id", () =>
+        HttpResponse.json({ ...source, removed_at: "2026-11-11T00:00:00Z" }),
+      ),
+    );
+    render(<ReviewPage id="proposal-1" onFinish={onFinish} />);
+    expect(
+      await screen.findByText(/The source was removed/, {}, { timeout: 10000 }),
+    ).toHaveAttribute("data-testid", "review-source-unavailable");
+    expect(screen.queryByTestId("review-mark")).not.toBeInTheDocument();
+    // The elements can still be decided.
+    expect(await screen.findByTestId("review-correct")).toBeInTheDocument();
+  });
+});
+
+describe("review time", () => {
+  const START = new Date("2026-11-17T10:00:00Z").getTime();
+  afterEach(() => vi.useRealTimers());
+
+  it("shows the active time on this review", async () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(START);
+    await renderPage();
+    vi.setSystemTime(START + 65_000);
+    await waitFor(
+      () => expect(screen.getByTestId("review-time")).toHaveTextContent("1:05 on this review"),
+      { timeout: 3000 },
+    );
+  });
+
+  it("sends the active time on the element, leaving out an idle gap", async () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(START);
+    const user = await renderPage();
+    vi.setSystemTime(START + 4_000);
+    fireEvent.pointerMove(window);
+    // Away for three minutes: not counted.
+    vi.setSystemTime(START + 4_000 + 180_000);
+    fireEvent.pointerMove(window);
+    vi.setSystemTime(START + 4_000 + 180_000 + 2_500);
+    await user.click(screen.getByTestId("review-correct"));
+    await waitFor(() => expect(applies).toHaveLength(1));
+    expect(applies[0].review_ms).toEqual({ "op-edit": 6_500 });
+  });
+});

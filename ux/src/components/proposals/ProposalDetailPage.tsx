@@ -76,6 +76,7 @@ import {
 } from "./tieredModel";
 import { nearMatchHeldIds, nearMatchHeldNote, noPassageHeldIds } from "./sourceModel";
 import { ProposalOriginChip } from "./ProposalOrigin";
+import { extractedFromSource } from "./review/reviewModel";
 import { useOperationContext } from "./useOperationContext";
 import { pendingLabel, useProposalActions } from "./useProposalActions";
 import "./proposals.css";
@@ -114,6 +115,8 @@ interface ProposalDetailPageProps {
   /** The operation shown in the inspector. */
   selectedOperationId?: string;
   onSelectOperation: (operationId: string | undefined) => void;
+  /** Open the review against the source; the button shows only for an extraction from one. */
+  onReviewAgainstSource?: () => void;
 }
 
 /**
@@ -127,6 +130,7 @@ export function ProposalDetailPage({
   id,
   selectedOperationId,
   onSelectOperation,
+  onReviewAgainstSource,
 }: ProposalDetailPageProps) {
   const { data: proposal, error, refetch } = useChangeProposal(id);
   const { data: taxonomy } = useTaxonomy(proposal?.taxonomy_id ?? "");
@@ -409,6 +413,16 @@ export function ProposalDetailPage({
           <span className="proposal-summary__mix" data-testid="proposal-op-mix">
             {opMixLabel(operations)} · {scopeMixLabel(operations)}
           </span>
+          {onReviewAgainstSource && extractedFromSource(proposal) && (
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={onReviewAgainstSource}
+              data-testid="proposal-review-against-source"
+            >
+              <Icon name="file" size={13} /> Review against source
+            </Button>
+          )}
           {deciding && (
             <span className="proposal-summary__actions" data-testid="proposal-actions">
               {isDr && (

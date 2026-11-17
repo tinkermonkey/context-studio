@@ -8,6 +8,24 @@ export interface SourceTextProps {
   activeKey?: string | null;
   onSelectKey: (key: string) => void;
   "data-testid"?: string;
+  /** The container's class; defaults to the extraction review's. */
+  className?: string;
+  /** A highlight's classes, from the keys it covers; defaults to the extraction review's. */
+  markClassName?: (keys: string[], active: boolean) => string;
+  /** A highlight's accessible name; defaults to naming how many items an overlap links to. */
+  markLabel?: (keys: string[], chunk: string) => string | undefined;
+  /** Each highlight's data-testid. */
+  markTestId?: string;
+}
+
+function defaultMarkClassName(keys: string[], active: boolean): string {
+  return ["xr-span", active ? "xr-span--active" : "", keys.length > 1 ? "xr-span--overlap" : ""]
+    .filter(Boolean)
+    .join(" ");
+}
+
+function defaultMarkLabel(keys: string[], chunk: string): string | undefined {
+  return keys.length > 1 ? `${chunk} (linked to ${keys.length} items)` : undefined;
 }
 
 /**
@@ -22,6 +40,10 @@ export function SourceText({
   activeKey,
   onSelectKey,
   "data-testid": testId,
+  className = "xr-source-text",
+  markClassName = defaultMarkClassName,
+  markLabel = defaultMarkLabel,
+  markTestId = "extraction-review-span",
 }: SourceTextProps) {
   const segments = segmentText(text, spans);
   const containerRef = useRef<HTMLParagraphElement>(null);
@@ -39,7 +61,7 @@ export function SourceText({
   }, [activeKey, text]);
 
   return (
-    <p className="xr-source-text" data-testid={testId} ref={containerRef}>
+    <p className={className} data-testid={testId} ref={containerRef}>
       {segments.map(({ start, end, covering }) => {
         const chunk = text.slice(start, end);
         if (covering.length === 0) return <span key={start}>{chunk}</span>;
@@ -54,21 +76,14 @@ export function SourceText({
             select();
           }
         };
-        const className = [
-          "xr-span",
-          active ? "xr-span--active" : "",
-          keys.length > 1 ? "xr-span--overlap" : "",
-        ]
-          .filter(Boolean)
-          .join(" ");
         return (
           <mark
             key={start}
-            className={className}
-            data-testid="extraction-review-span"
+            className={markClassName(keys, active)}
+            data-testid={markTestId}
             data-span-keys={keys.join(" ")}
             aria-current={active ? "true" : undefined}
-            aria-label={keys.length > 1 ? `${chunk} (linked to ${keys.length} items)` : undefined}
+            aria-label={markLabel(keys, chunk)}
             role="button"
             tabIndex={0}
             onClick={select}
