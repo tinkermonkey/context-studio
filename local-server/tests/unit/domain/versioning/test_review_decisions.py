@@ -7,7 +7,12 @@ note, and the time the reviewer spent on each operation.
 import pytest
 
 from domain.versioning.gold import DecisionKind
-from domain.versioning.proposal_service import REVERTED_REASON, OperationDraft, ProposalService
+from domain.versioning.proposal_service import (
+    MAX_REVIEW_MS,
+    REVERTED_REASON,
+    OperationDraft,
+    ProposalService,
+)
 from domain.versioning.proposals import OperationStatus, ProposalSource, RejectionReason
 from tests.fakes.fake_entity_source_repository import FakeEntitySourceRepository
 from tests.unit.domain.versioning.test_proposal_service import (  # noqa: F401 - fixtures
@@ -220,6 +225,47 @@ class TestEditedIndividualCreate:
         assert applied[2].status is OperationStatus.FAILED
         assert applied[2].reason.startswith("domain_range_mismatch:")
 
+    def _study_on_floor(self, service, graph, ontology):
+        """A Room individual proposed with a value of Room's "floor" attribute."""
+        ontology.create_attribute_definition(graph["room"], "floor", "Floor", "integer")
+        draft = create_study(graph)
+        draft.fields["data_properties"] = {"floor": 2}
+        return propose(service, graph, draft)
+
+    def test_an_edited_class_lacking_a_proposed_attribute_fails_invalid_edit(
+        self, service, graph, ontology, repo, proposals
+    ):
+        proposal = self._study_on_floor(service, graph, ontology)
+        op = proposal.operations[0]
+        before = len(repo.list_individuals(limit=None))
+
+        [outcome] = service.apply(
+            proposal.id, [op.id], edits={op.id: {"class_ids": [graph["place"]]}}
+        ).operations
+
+        assert outcome.status is OperationStatus.FAILED
+        assert outcome.reason.startswith("invalid_edit:") and "floor" in outcome.reason
+        assert outcome.result_entity_id is None and outcome.applied_fields is None
+        assert len(repo.list_individuals(limit=None)) == before
+        assert proposals.decisions == []
+
+    def test_an_edited_class_with_the_proposed_attribute_stores_its_value(
+        self, service, graph, ontology, repo
+    ):
+        proposal = self._study_on_floor(service, graph, ontology)
+        ontology.create_attribute_definition(graph["place"], "floor", "Floor", "integer")
+        op = proposal.operations[0]
+
+        [outcome] = service.apply(
+            proposal.id, [op.id], edits={op.id: {"class_ids": [graph["place"]]}}
+        ).operations
+
+        assert outcome.status is OperationStatus.APPLIED
+        individual = repo.get_individual(outcome.result_entity_id)
+        assert individual.class_ids == [graph["place"]]
+        assert {v.property_identifier: v.value for v in individual.data_properties} == {"floor": 2}
+        assert outcome.applied_fields["data_properties"] == {"floor": 2}
+
 
 # ------------------------------------------------------- reason code
 
@@ -295,6 +341,14 @@ class TestReviewTime:
         times = {d.seq: d.review_ms for d in proposals.decisions}
         assert times == {1: 4200, 2: None}
 
+    def test_the_largest_one_is_kept(self, service, graph, proposals):
+        proposal = propose(service, graph, create_study(graph))
+        op = proposal.operations[0]
+
+        service.reject(proposal.id, [op.id], review_ms={op.id: MAX_REVIEW_MS})
+
+        assert proposals.decisions[0].review_ms == MAX_REVIEW_MS
+
     def test_reject_records_it_on_each_decision(self, service, graph, proposals):
         proposal = propose(service, graph, create_study(graph), near_den(graph))
         ops = ops_of(proposal)
@@ -331,7 +385,7 @@ class TestReviewTime:
         assert all(o.status is OperationStatus.PENDING for o in stored.values())
         assert proposals.decisions == []
 
-    @pytest.mark.parametrize("value", [-1, 1.5, True, "10"])
+    @pytest.mark.parametrize("value", [-1, 1.5, True, "10", MAX_REVIEW_MS + 1, 10**20])
     @pytest.mark.parametrize("action", ["apply", "reject"])
     def test_a_negative_or_non_integer_one_changes_nothing(
         self, service, graph, proposals, action, value

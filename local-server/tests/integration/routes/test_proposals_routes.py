@@ -732,6 +732,29 @@ class TestDecisions:
             },
         ]
 
+    def test_an_edited_individual_create_still_exports(self, client, graph, ontology):
+        hall = ontology.create_class(graph["vocab"], "Hall", parent_class_id=graph["room"]).id
+        study = {
+            "seq": 1,
+            "op": "create",
+            "kind": "individual",
+            "fields": {"class_ids": [graph["room"]], "title": "Study"},
+        }
+        proposal = _propose(client, graph, study, _describe_room(graph))
+        study_id, describe_id = _op_ids(proposal, 1, 2)
+        client.post(
+            f"/api/proposals/{proposal['id']}/apply",
+            json={"operation_ids": [study_id], "edits": {study_id: {"class_ids": [hall]}}},
+        )
+
+        response = client.get(f"/api/proposals/{proposal['id']}/decisions")
+
+        assert response.status_code == 200, response.text
+        decisions = response.json()
+        assert [(d["seq"], d["status"]) for d in decisions] == [(1, "applied"), (2, "pending")]
+        # No DR triple to carry: an edited individual create exports as applied
+        assert "fields" not in decisions[0]
+
     def test_reverted_proposal_is_409(self, client, graph):
         proposal = _propose(client, graph, _create_kit(seq=1, graph=graph))
         client.post(
@@ -1018,16 +1041,20 @@ class TestReviewDecisions:
         assert op["status"] == "pending"
 
     @pytest.mark.parametrize("action", ["apply", "reject"])
-    def test_a_bad_review_time_is_422(self, client, graph, action):
+    def test_a_bad_review_time_is_422(self, client, graph, ontology, action):
         proposal = _propose(client, graph, self._study(graph), _describe_room(graph))
         study_id, describe_id = _op_ids(proposal, 1, 2)
         url = f"/api/proposals/{proposal['id']}/{action}"
 
         negative = client.post(url, json={"operation_ids": [study_id], "review_ms": {study_id: -1}})
+        oversized = client.post(
+            url, json={"operation_ids": [study_id], "review_ms": {study_id: 2**63}}
+        )
         elsewhere = client.post(
             url, json={"operation_ids": [study_id], "review_ms": {describe_id: 10}}
         )
 
-        assert (negative.status_code, elsewhere.status_code) == (422, 422)
+        assert [r.status_code for r in (negative, oversized, elsewhere)] == [422, 422, 422]
+        assert [i.title for i in ontology.list_individuals(limit=None)] == ["Den"]
         operations = client.get(f"/api/proposals/{proposal['id']}").json()["operations"]
         assert all(o["status"] == "pending" for o in operations)

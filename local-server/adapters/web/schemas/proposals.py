@@ -18,6 +18,7 @@ from domain.pipelines.schema_relationship_reflection.drafts import (
 from domain.versioning.approval_policy import ApprovalPolicy
 from domain.versioning.gold import DecisionKind, ProposalDecision
 from domain.versioning.in_use import DeleteBlockers, PairMatch, ReplacementCheck
+from domain.versioning.proposal_service import MAX_REVIEW_MS
 from domain.versioning.proposals import (
     ChangeProposal,
     ChangeScope,
@@ -230,7 +231,7 @@ class ChangeProposalApplyRequest(BaseModel):
         "create is not performed, the operation applies as that existing individual "
         '(result_entity_id), and later operations\' "$ref" to it point there',
     )
-    review_ms: dict[str, Annotated[int, Field(ge=0)]] = Field(
+    review_ms: dict[str, Annotated[int, Field(ge=0, le=MAX_REVIEW_MS)]] = Field(
         default_factory=dict,
         description="Operation id -> the milliseconds the reviewer spent on it, for ops in "
         "operation_ids; recorded in its decision (gold's review_ms)",
@@ -247,7 +248,7 @@ class ChangeProposalRejectRequest(BaseModel):
         description="Why, as a code, for every operation rejected; stored on each operation "
         "and its decision beside the note",
     )
-    review_ms: dict[str, Annotated[int, Field(ge=0)]] = Field(
+    review_ms: dict[str, Annotated[int, Field(ge=0, le=MAX_REVIEW_MS)]] = Field(
         default_factory=dict,
         description="Operation id -> the milliseconds the reviewer spent on it, for "
         "operations being rejected; recorded in its decision (gold's review_ms)",

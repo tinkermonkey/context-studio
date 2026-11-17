@@ -145,6 +145,8 @@ UNRESOLVABLE = "unresolvable"
 DOMAIN_RANGE_MISMATCH = "domain_range_mismatch"
 
 REVERTED_REASON = "proposal reverted"
+# The largest review time a decision stores (a 32-bit signed integer, ~24 days)
+MAX_REVIEW_MS = 2**31 - 1
 # What a reviewer's edit of an individual create may set
 _INDIVIDUAL_EDIT_FIELDS = frozenset({"title", "class_ids"})
 
@@ -3572,9 +3574,10 @@ def _checked_review_ms(
     if misplaced:
         raise ValueError(f"review_ms for operations not being {action}: {misplaced}")
     for operation_id, value in times.items():
-        if isinstance(value, bool) or not isinstance(value, int) or value < 0:
+        if isinstance(value, bool) or not isinstance(value, int) or not 0 <= value <= MAX_REVIEW_MS:
             raise ValueError(
-                f"review_ms for {operation_id} must be a non-negative integer, not {value!r}"
+                f"review_ms for {operation_id} must be a non-negative integer of at most"
+                f" {MAX_REVIEW_MS}, not {value!r}"
             )
     return times
 

@@ -10813,6 +10813,7 @@
           "review_ms": {
             "additionalProperties": {
               "type": "integer",
+              "maximum": 2147483647.0,
               "minimum": 0.0
             },
             "type": "object",
@@ -10996,6 +10997,7 @@
           "review_ms": {
             "additionalProperties": {
               "type": "integer",
+              "maximum": 2147483647.0,
               "minimum": 0.0
             },
             "type": "object",
