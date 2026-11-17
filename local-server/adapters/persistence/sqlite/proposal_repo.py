@@ -141,6 +141,27 @@ class SQLiteChangeProposalRepository:
             proposal.landed = landed.to_dict() if landed else None  # type: ignore[assignment]
             session.commit()
 
+    def add_operations(self, proposal_id: str, operations: Sequence[ProposedOperation]) -> None:
+        with self._session_factory() as session:
+            if session.get(ChangeProposalRun, proposal_id) is None:
+                raise ValueError(f"No proposal {proposal_id}")
+            seqs = [o.seq for o in operations]
+            taken = (
+                session.query(ProposalOperation.seq)
+                .filter(
+                    ProposalOperation.proposal_id == proposal_id,
+                    ProposalOperation.seq.in_(seqs),
+                )
+                .all()
+            )
+            if taken:
+                raise ValueError(
+                    f"Proposal {proposal_id} already has seq {sorted(s for (s,) in taken)}"
+                )
+            for operation in operations:
+                session.add(_operation_to_orm(proposal_id, operation))
+            session.commit()
+
     def save_operations(
         self,
         proposal_id: str,
@@ -381,6 +402,7 @@ def _decision_to_orm(decision: ProposalDecision) -> ProposalDecisionRecord:
         model=decision.model,
         superseded_at=_stored(decision.superseded_at) if decision.superseded_at else None,
         superseded_by=decision.superseded_by,
+        added=decision.added,
     )
 
 
@@ -412,6 +434,7 @@ def _decision_to_domain(row: ProposalDecisionRecord) -> ProposalDecision:
         model=row.model,  # type: ignore[arg-type]
         superseded_at=_utc(row.superseded_at),  # type: ignore[arg-type]
         superseded_by=row.superseded_by,  # type: ignore[arg-type]
+        added=bool(row.added),
     )
 
 
@@ -474,6 +497,7 @@ def _operation_to_orm(proposal_id: str, operation: ProposedOperation) -> Proposa
         proposed_replacement_id=operation.proposed_replacement_id,
         type_change=_type_change_json(operation),
         alternatives=[dict(a) for a in operation.alternatives],
+        added_by_reviewer=operation.added_by_reviewer,
     )
 
 
@@ -521,6 +545,7 @@ def _operation_to_domain(row: ProposalOperation) -> ProposedOperation:
             else None
         ),
         alternatives=[dict(a) for a in row.alternatives or []],  # type: ignore[union-attr]
+        added_by_reviewer=bool(row.added_by_reviewer),
     )
 
 

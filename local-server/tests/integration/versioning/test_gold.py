@@ -20,6 +20,7 @@ from adapters.events.in_process import InProcessEventPublisher
 from adapters.persistence.sqlite.approval_policy_repo import SQLiteApprovalPolicyRepository
 from adapters.persistence.sqlite.change_repo import SQLiteChangeRepository
 from adapters.persistence.sqlite.connection import create_local_db_engine
+from adapters.persistence.sqlite.entity_source_repo import SQLiteEntitySourceRepository
 from adapters.persistence.sqlite.models import Base, ProposalDecisionRecord
 from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
 from adapters.persistence.sqlite.proposal_repo import SQLiteChangeProposalRepository
@@ -386,3 +387,84 @@ def test_an_edited_individual_create_records_both_classes(parts, house):
     assert decision.applied_fields == {"class_ids": [hall.id], "title": "Entry hall"}
     individual = ontology.get_individual(applied.result_entity_id)
     assert individual.class_ids == [hall.id] and individual.title == "Entry hall"
+
+
+def test_an_added_element_round_trips_as_added(parts, house):
+    """#1610: the reviewer's addition is stored, flagged, on its operation and decision."""
+    _, proposals, _, service, session_factory = parts
+    proposal = service.propose(
+        house["taxonomy"],
+        "Extracted",
+        [
+            OperationDraft(
+                1, T.CREATE, K.INDIVIDUAL, fields={"class_ids": [house["room"]], "title": "Study"}
+            )
+        ],
+        ProposalSource.PIPELINE,
+        client_metadata={"source_id": "src-1", "pipeline": "individual_extraction"},
+    )
+    passage = {"source_id": "src-1", "start": 4, "end": 10, "quote": "Pantry"}
+
+    added = service.add_individual(proposal.id, "Pantry", [house["room"]], passage, review_ms=700)
+
+    stored = {o.seq: o for o in proposals.get(proposal.id).operations}
+    assert stored[2].added_by_reviewer and not stored[1].added_by_reviewer
+    assert stored[2].status is OperationStatus.APPLIED
+    assert stored[2].evidence == [{**passage, "page": None}]
+    [decision] = gold(service, house)
+    assert (decision.seq, decision.added, decision.review_ms) == (2, True, 700)
+    with session_factory() as session:
+        row = session.query(ProposalDecisionRecord).filter_by(operation_id=stored[2].id).one()
+        assert row.added is True
+    assert added.operations[-1].id == stored[2].id
+    # a seq the proposal has is refused
+    with pytest.raises(ValueError, match="already has seq"):
+        proposals.add_operations(proposal.id, [stored[1]])
+
+
+def test_reverting_undoes_an_added_element_and_its_provenance(parts, house):
+    """#1610: a revert removes the added individual and its passage; its decision is superseded."""
+    session_factory = parts[4]
+    # Wired as `parts` is, with entity sources, on one shared session factory
+    shared = SharedSessionFactory(session_factory)
+    ontology_repo = SQLiteOntologyRepository(session_factory=shared)
+    change_repo = SQLiteChangeRepository(session_factory=shared)
+    publisher = InProcessEventPublisher()
+    wire_change_recorder(publisher, change_repo)
+    ontology = OntologyService(ontology_repo, FakeEmbeddingService(), publisher)
+    entity_sources = SQLiteEntitySourceRepository(shared)
+    service = ProposalService(
+        SQLiteChangeProposalRepository(shared),
+        ontology,
+        ontology_repo,
+        RevertService(
+            change_repo=change_repo,
+            ontology_repo=ontology_repo,
+            transaction_scope=SqliteTransactionScope(shared),
+        ),
+        transaction_scope=SqliteTransactionScope(shared),
+        entity_sources=entity_sources,
+    )
+    proposal = service.propose(
+        house["taxonomy"],
+        "Extracted",
+        [
+            OperationDraft(
+                1, T.CREATE, K.INDIVIDUAL, fields={"class_ids": [house["room"]], "title": "Study"}
+            )
+        ],
+        ProposalSource.PIPELINE,
+        client_metadata={"source_id": "src-1", "pipeline": "individual_extraction"},
+    )
+    passage = {"source_id": "src-1", "start": 4, "end": 10, "quote": "Pantry"}
+    added = service.add_individual(proposal.id, "Pantry", [house["room"]], passage)
+    individual_id = added.operations[-1].result_entity_id
+    assert len(entity_sources.list_for_entity(individual_id)) == 1
+
+    service.revert(proposal.id)
+
+    with pytest.raises(EntityNotFoundError):
+        ontology.get_individual(individual_id)
+    assert entity_sources.list_for_entity(individual_id) == []
+    [decision] = gold(service, house, include_superseded=True)
+    assert decision.added and decision.superseded_at is not None

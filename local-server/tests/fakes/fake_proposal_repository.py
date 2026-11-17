@@ -70,6 +70,16 @@ class FakeChangeProposalRepository:
             raise ValueError(f"No proposal {proposal_id}")
         self._proposals[proposal_id].landed = landed
 
+    def add_operations(self, proposal_id: str, operations: Sequence[ProposedOperation]) -> None:
+        if proposal_id not in self._proposals:
+            raise ValueError(f"No proposal {proposal_id}")
+        stored = self._proposals[proposal_id].operations
+        taken = {o.seq for o in stored} & {o.seq for o in operations}
+        if taken:
+            raise ValueError(f"Proposal {proposal_id} already has seq {sorted(taken)}")
+        stored.extend(copy.deepcopy(o) for o in operations)
+        stored.sort(key=lambda o: o.seq)
+
     def save_operations(
         self,
         proposal_id: str,

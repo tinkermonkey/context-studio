@@ -22,6 +22,7 @@ export function createProposedOperation(overrides?: Partial<ProposedOperation>):
     matched: false,
     stale: false,
     no_passage: false,
+    added_by_reviewer: false,
     ...overrides,
   };
 }

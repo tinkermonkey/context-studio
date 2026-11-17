@@ -149,6 +149,14 @@ class ChangeProposalRepository(Protocol):
         """Record where the proposal landed, or clear it (None)."""
         ...
 
+    def add_operations(self, proposal_id: str, operations: Sequence[ProposedOperation]) -> None:
+        """
+        Append operations to a stored proposal, as they are.
+
+        Raises ValueError for an unknown proposal or a seq the proposal already has.
+        """
+        ...
+
     def save_operations(
         self,
         proposal_id: str,

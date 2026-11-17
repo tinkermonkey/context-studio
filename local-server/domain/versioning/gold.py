@@ -69,6 +69,8 @@ class ProposalDecision:
         probability: The operation's probability, if it had one
         model: The decision model that produced the probability, if one did
         superseded_at, superseded_by: Set when a revert undid the (applied) decision
+        added: The operation was added by the reviewer (an element the
+            extraction missed), not proposed
         id: Unique id
     """
 
@@ -93,6 +95,7 @@ class ProposalDecision:
     model: str | None = None
     superseded_at: datetime | None = None
     superseded_by: str | None = None
+    added: bool = False
     id: str = field(default_factory=lambda: str(uuid4()))
 
     def __post_init__(self) -> None:
@@ -182,6 +185,7 @@ def decision_of(
         resolution=operation.resolution.to_json() if operation.resolution else None,
         chosen_alternative=dict(chosen_alternative) if chosen_alternative is not None else None,
         probability=operation.probability,
+        added=operation.added_by_reviewer,
     )
 
 

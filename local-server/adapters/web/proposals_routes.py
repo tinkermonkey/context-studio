@@ -20,6 +20,7 @@ from adapters.serialization.views import proposal_response
 from adapters.web.dependencies import get_approval_policy_service, get_proposal_service
 from adapters.web.schemas.ontology import ListResponse
 from adapters.web.schemas.proposals import (
+    AddIndividualRequest,
     ApprovalPolicyRequest,
     ApprovalPolicyResponse,
     ChangeProposalApplyRequest,
@@ -308,6 +309,68 @@ async def create_proposal(
         return await run_sync_in_executor(run)
     except Exception as exc:
         raise _http_error(exc) from exc
+
+
+@router.post(
+    "/proposals/{proposal_id}/operations",
+    response_model=ChangeProposalResponse,
+    status_code=status.HTTP_201_CREATED,
+    responses={
+        **_NOT_FOUND,
+        409: {
+            "description": (
+                "The proposal is reverted, landed or superseded by a newer extraction "
+                "of its source, or is not an extraction of individuals from a source"
+            )
+        },
+        422: {
+            "model": ChangeProposalValidationErrorResponse,
+            "description": (
+                "The title, a class or the passage is invalid, or an individual of "
+                "one of the classes already has the title in the dataset "
+                "(duplicate_title); detail.errors, by the seq it would have had. "
+                "Nothing was added"
+            ),
+        },
+    },
+)
+async def add_individual(
+    proposal_id: str,
+    request: AddIndividualRequest,
+    service: ProposalService = Depends(get_proposal_service),
+) -> ChangeProposalResponse:
+    """
+    Add an individual the extraction missed, as the reviewer found it in the
+    proposal's source, and apply it.
+
+    The proposal must be an extraction from a source with a dataset, neither
+    reverted, landed, nor superseded by a newer extraction of its source; a
+    done one reopens until the added operation applies.
+    The operation gets the next seq, is marked added_by_reviewer, has the passage
+    as its evidence (its quote must be the source's text at [start, end)), and
+    is checked as a proposed individual create is, its classes being classes
+    of the proposal's taxonomy that are not derived, none of which already has
+    an individual of its title in the dataset. It is applied at once,
+    into the proposal's dataset: its passage is recorded as the individual's
+    provenance and its decision is applied, flagged added, with review_ms. If
+    the apply still fails (an unforeseen failure) the operation stays, failed,
+    like any.
+    """
+
+    def run() -> ChangeProposalResponse:
+        proposal = service.add_individual(
+            proposal_id,
+            request.title,
+            request.class_ids,
+            request.passage.model_dump(),
+            review_ms=request.review_ms,
+        )
+        return proposal_response(service, proposal)
+
+    try:
+        return await run_sync_in_executor(run)
+    except Exception as exc:
+        raise _http_error(exc, unknown_ids_are_invalid=True) from exc
 
 
 # ==================== Decide ====================

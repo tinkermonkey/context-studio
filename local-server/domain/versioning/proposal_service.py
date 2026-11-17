@@ -108,7 +108,12 @@ from domain.versioning.proposals import (
     TypeChange,
     classify_scope,
 )
-from domain.versioning.provenance import EntitySource, entity_sources, evidence_problem
+from domain.versioning.provenance import (
+    SOURCE_ID,
+    EntitySource,
+    entity_sources,
+    evidence_problem,
+)
 from domain.versioning.yielding import (
     DatasetImpact,
     YieldPlan,
@@ -119,6 +124,7 @@ from domain.versioning.yielding import (
 )
 
 if TYPE_CHECKING:
+    from domain.extraction.ports import SourceRepository
     from domain.ontology.entities import AttributeDefinition
     from domain.ontology.ports import OntologyRepository
     from domain.ontology.services import OntologyService
@@ -554,6 +560,7 @@ class ProposalService:
         transaction_scope: TransactionScope | None = None,
         event_publisher: EventPublisher | None = None,
         entity_sources: EntitySourceRepository | None = None,
+        source_repo: SourceRepository | None = None,
     ) -> None:
         """
         Args:
@@ -575,6 +582,9 @@ class ProposalService:
             entity_sources: Where applied operations record their source
                 passages (see `domain.versioning.provenance`); without it none
                 are recorded
+            source_repo: Reads a source's text, to check that a passage a
+                reviewer adds quotes it at its offsets; without it only the
+                passage's shape is checked
         """
         self._proposals = proposals
         self._ontology = ontology_service
@@ -585,6 +595,7 @@ class ProposalService:
         self._transaction_scope = transaction_scope
         self._event_publisher = event_publisher
         self._sources = entity_sources
+        self._source_repo = source_repo
         # One lock per proposal: a desktop app runs one process, so two requests
         # deciding on the same proposal are serialized here.
         self._locks: dict[str, threading.Lock] = {}
@@ -1724,89 +1735,287 @@ class ProposalService:
                 integer; nothing is applied
         """
         with self._lock(proposal_id):
-            proposal = self._get(proposal_id)
-            if proposal.status is ProposalStatus.REVERTED:
-                raise ChangeProposalStateError(f"Change proposal {proposal_id} is reverted")
-            chosen = self._chosen(proposal, operation_ids, "apply")
-            edits = dict(edits or {})
-            self._check_edits_placed(chosen, edits)
-            resolutions = dict(resolutions or {})
-            self._check_resolutions_placed(proposal, chosen, edits, resolutions)
-            alternatives = dict(chosen_alternatives or {})
-            self._check_alternatives_placed(chosen, edits, alternatives)
-            times = _checked_review_ms(chosen, review_ms, "applied")
-            force = set(force_stale)
-            refs = {o.ref: o for o in proposal.operations if o.ref}
+            return self._apply_unlocked(
+                proposal_id,
+                operation_ids,
+                force_stale,
+                edits,
+                resolutions,
+                decided_by,
+                chosen_alternatives,
+                review_ms,
+            )
 
-            proposed = {o.id: proposed_snapshot(o) for o in chosen}
-            previous_run = get_current_batch_run_id()
-            set_batch_run_context(proposal.id)
-            try:
-                for operation in chosen:
-                    forced = operation.id in force
-                    resolution = resolutions.get(operation.id)
-                    # Per operation: relationship deletes applied earlier in this call are gone.
-                    covered = self._covered(proposal)
-                    alternative = alternatives.get(operation.id)
-                    # Built before anything is written, so a passage that can't be
-                    # stored fails the operation instead of failing after its change.
-                    try:
-                        passages = self._passages(proposal.id, operation)
-                        invalid = None
-                    except ValueError as exc:
-                        passages, invalid = [], _ApplyFailed(INVALID_EVIDENCE, str(exc))
-                    if invalid is not None:
-                        self._record_outcome(operation, proposal.id, _raising(invalid))
-                    elif alternative is not None and _is_existing(alternative):
-                        match = operation.alternative(alternative.get("entity_id"))
-                        # Gold keeps the near match as proposed, similarity and all.
-                        alternatives[operation.id] = dict(match or alternative)
-                        self._apply_match(operation, alternative["entity_id"], proposal)
-                    elif operation.id in edits and operation.kind is K.INDIVIDUAL:
-                        self._apply_edited_create(proposal, operation, edits[operation.id], refs)
-                    elif operation.id in edits:
-                        others = {i: e for i, e in edits.items() if i != operation.id}
-                        edit = edits[operation.id]
-                        self._apply_edited(
-                            proposal, operation, edit, others, forced, resolution, covered
+    def _apply_unlocked(
+        self,
+        proposal_id: str,
+        operation_ids: Iterable[str],
+        force_stale: Iterable[str],
+        edits: Mapping[str, dict[str, Any]] | None,
+        resolutions: Mapping[str, InUseResolution] | None,
+        decided_by: str,
+        chosen_alternatives: Mapping[str, dict[str, Any]] | None,
+        review_ms: Mapping[str, int] | None,
+    ) -> ChangeProposal:
+        """`apply`, under the proposal's lock, which the caller holds."""
+        proposal = self._get(proposal_id)
+        if proposal.status is ProposalStatus.REVERTED:
+            raise ChangeProposalStateError(f"Change proposal {proposal_id} is reverted")
+        chosen = self._chosen(proposal, operation_ids, "apply")
+        edits = dict(edits or {})
+        self._check_edits_placed(chosen, edits)
+        resolutions = dict(resolutions or {})
+        self._check_resolutions_placed(proposal, chosen, edits, resolutions)
+        alternatives = dict(chosen_alternatives or {})
+        self._check_alternatives_placed(chosen, edits, alternatives)
+        times = _checked_review_ms(chosen, review_ms, "applied")
+        force = set(force_stale)
+        refs = {o.ref: o for o in proposal.operations if o.ref}
+
+        proposed = {o.id: proposed_snapshot(o) for o in chosen}
+        previous_run = get_current_batch_run_id()
+        set_batch_run_context(proposal.id)
+        try:
+            for operation in chosen:
+                forced = operation.id in force
+                resolution = resolutions.get(operation.id)
+                # Per operation: relationship deletes applied earlier in this call are gone.
+                covered = self._covered(proposal)
+                alternative = alternatives.get(operation.id)
+                # Built before anything is written, so a passage that can't be
+                # stored fails the operation instead of failing after its change.
+                try:
+                    passages = self._passages(proposal.id, operation)
+                    invalid = None
+                except ValueError as exc:
+                    passages, invalid = [], _ApplyFailed(INVALID_EVIDENCE, str(exc))
+                if invalid is not None:
+                    self._record_outcome(operation, proposal.id, _raising(invalid))
+                elif alternative is not None and _is_existing(alternative):
+                    match = operation.alternative(alternative.get("entity_id"))
+                    # Gold keeps the near match as proposed, similarity and all.
+                    alternatives[operation.id] = dict(match or alternative)
+                    self._apply_match(operation, alternative["entity_id"], proposal)
+                elif operation.id in edits and operation.kind is K.INDIVIDUAL:
+                    self._apply_edited_create(proposal, operation, edits[operation.id], refs)
+                elif operation.id in edits:
+                    others = {i: e for i, e in edits.items() if i != operation.id}
+                    edit = edits[operation.id]
+                    self._apply_edited(
+                        proposal, operation, edit, others, forced, resolution, covered
+                    )
+                elif resolution is not None and operation.op is OperationType.DELETE:
+                    self._apply_resolved(operation, resolution, refs, proposal.id, forced, covered)
+                else:
+                    self._apply_one(operation, refs, proposal, forced, resolution, covered)
+                decisions = []
+                if operation.status is OperationStatus.APPLIED:
+                    decisions.append(
+                        decision_of(
+                            proposal,
+                            operation,
+                            decided_by,
+                            datetime.now(timezone.utc),
+                            proposed[operation.id],
+                            chosen_alternative=alternatives.get(operation.id),
+                            review_ms=times.get(operation.id),
                         )
-                    elif resolution is not None and operation.op is OperationType.DELETE:
-                        self._apply_resolved(
-                            operation, resolution, refs, proposal.id, forced, covered
-                        )
-                    else:
-                        self._apply_one(operation, refs, proposal, forced, resolution, covered)
-                    decisions = []
-                    if operation.status is OperationStatus.APPLIED:
-                        decisions.append(
-                            decision_of(
-                                proposal,
-                                operation,
-                                decided_by,
-                                datetime.now(timezone.utc),
-                                proposed[operation.id],
-                                chosen_alternative=alternatives.get(operation.id),
-                                review_ms=times.get(operation.id),
-                            )
-                        )
-                    sources = []
-                    if operation.status is OperationStatus.APPLIED and operation.result_entity_id:
-                        sources = [
-                            replace(p, entity_id=operation.result_entity_id) for p in passages
-                        ]
-                    if sources and self._sources is not None:
-                        # The outcome and the provenance it records commit together.
-                        with self._atomic():
-                            self._proposals.save_operations(proposal.id, [operation], decisions)
-                            self._sources.add(sources)
-                    else:
+                    )
+                sources = []
+                if operation.status is OperationStatus.APPLIED and operation.result_entity_id:
+                    sources = [replace(p, entity_id=operation.result_entity_id) for p in passages]
+                if sources and self._sources is not None:
+                    # The outcome and the provenance it records commit together.
+                    with self._atomic():
                         self._proposals.save_operations(proposal.id, [operation], decisions)
-            finally:
-                set_batch_run_context(previous_run)
+                        self._sources.add(sources)
+                else:
+                    self._proposals.save_operations(proposal.id, [operation], decisions)
+        finally:
+            set_batch_run_context(previous_run)
 
-            proposal.settle_status()
-            self._proposals.set_status(proposal.id, proposal.status)
-            return self._get(proposal_id)
+        proposal.settle_status()
+        self._proposals.set_status(proposal.id, proposal.status)
+        return self._get(proposal_id)
+
+    # ------------------------------------------------------- reviewer additions
+
+    def add_individual(
+        self,
+        proposal_id: str,
+        title: str,
+        class_ids: Sequence[str],
+        passage: Mapping[str, Any],
+        decided_by: str = DECIDED_BY_USER,
+        review_ms: int | None = None,
+    ) -> ChangeProposal:
+        """
+        Add an individual the extraction missed to its proposal, as the
+        reviewer found it in the proposal's source, and apply it.
+
+        The proposal must be an extraction from a source with a dataset, and
+        neither reverted, landed, nor superseded by a newer extraction of its
+        source. A done proposal takes the addition too: it reopens until the
+        added operation applies. The addition is an
+        individual create with the next seq, the title and classes given, and
+        the passage as its evidence ({source_id, page, start, end, quote}, the
+        shape an extraction stores). It is checked as a proposed individual
+        create is, its classes also being classes of the proposal's taxonomy
+        that are not derived, none of which has an individual of its title in
+        the dataset (duplicate_title); the passage is in the proposal's source and, when
+        the source's text can be read, its quote is the text at [start, end).
+        It is marked added_by_reviewer, then applied as `apply` applies any
+        operation: into the proposal's dataset, recording its passage as
+        provenance and an applied decision flagged as added (with review_ms).
+        A failed apply (an unforeseen failure: the checks catch the
+        predictable ones) leaves it failed, like any operation.
+
+        Args:
+            passage: {source_id, start, end, quote}: offsets into the source's text
+            decided_by: Who decided
+            review_ms: The milliseconds the reviewer spent on it
+
+        Returns:
+            The proposal, with the added operation and its outcome
+
+        Raises:
+            ChangeProposalNotFoundError: If the proposal does not exist
+            ChangeProposalStateError: If the proposal is reverted, landed or
+                superseded, is not an extraction from a source, or has no dataset
+            ProposalValidationError: If the title, a class or the passage is
+                invalid; nothing is added
+            ValueError: If review_ms isn't a non-negative integer; nothing is added
+        """
+        with self._lock(proposal_id):
+            proposal = self._get(proposal_id)
+            self._check_takes_additions(proposal)
+            seq = max((o.seq for o in proposal.operations), default=0) + 1
+            if seq > MAX_SEQ:
+                raise ChangeProposalStateError(f"Change proposal {proposal_id} is full")
+            try:
+                if not isinstance(title, str) or not title.strip():
+                    raise _Invalid("missing_field", "An added individual needs a title")
+                evidence = self._added_passage(proposal, passage)
+                draft = OperationDraft(
+                    seq=seq,
+                    op=OperationType.CREATE,
+                    kind=K.INDIVIDUAL,
+                    fields={"title": title, "class_ids": list(class_ids)},
+                    evidence=[evidence],
+                )
+                operation = self._validated(draft, {})
+                self._check_dataset(operation, proposal.dataset_id)
+                self._check_added_classes(operation, proposal.taxonomy_id)
+                self._check_added_title(operation, proposal.dataset_id)
+            except _Invalid as exc:
+                raise ProposalValidationError([OperationError(seq, exc.code, exc.message)]) from exc
+            operation.added_by_reviewer = True
+            times = _checked_review_ms(
+                [operation], {operation.id: review_ms} if review_ms is not None else None, "added"
+            )
+            self._proposals.add_operations(proposal.id, [operation])
+            if proposal.status is ProposalStatus.DONE:
+                # Undecided again until the added operation applies (see settle_status).
+                self._proposals.set_status(proposal.id, ProposalStatus.OPEN)
+            return self._apply_unlocked(
+                proposal.id, [operation.id], (), None, None, decided_by, None, times
+            )
+
+    @staticmethod
+    def _check_takes_additions(proposal: ChangeProposal) -> None:
+        """A reviewer adds only to an extraction from a source, still standing."""
+        if proposal.status is ProposalStatus.REVERTED:
+            raise ChangeProposalStateError(f"Change proposal {proposal.id} is reverted")
+        if proposal.landed is not None:
+            raise ChangeProposalStateError(f"Change proposal {proposal.id} is landed")
+        if not proposal.extracted_from_source or proposal.dataset_id is None:
+            raise ChangeProposalStateError(
+                f"Change proposal {proposal.id} is not an extraction of individuals from a"
+                " source; only one takes an added element"
+            )
+        if proposal.superseded_by_extraction:
+            raise ChangeProposalStateError(
+                f"Change proposal {proposal.id} was superseded by a newer extraction of its"
+                " source; add the element to that one"
+            )
+
+    def _check_added_title(self, operation: ProposedOperation, dataset_id: str | None) -> None:
+        """
+        No individual of the added one's classes has its title in the dataset:
+        the clash creating it would fail on (see OntologyService.create_individual).
+        """
+        title = operation.fields["title"]
+        for class_id in operation.fields["class_ids"]:
+            existing = self._repo.list_individuals(
+                class_id=class_id, limit=None, dataset_id=dataset_id
+            )
+            if any(individual.title == title for individual in existing):
+                raise _Invalid(
+                    "duplicate_title",
+                    f"An individual titled '{title}' is already in class {class_id} in the"
+                    " proposal's dataset",
+                )
+
+    def _added_passage(
+        self, proposal: ChangeProposal, passage: Mapping[str, Any]
+    ) -> dict[str, Any]:
+        """
+        The evidence item for a passage a reviewer adds: in the proposal's
+        source, quoting its text at [start, end) when the text can be read.
+        """
+        if not isinstance(passage, Mapping):
+            raise _Invalid("invalid_passage", "The passage must be an object")
+        item = {
+            SOURCE_ID: passage.get(SOURCE_ID),
+            "start": passage.get("start"),
+            "end": passage.get("end"),
+            "quote": passage.get("quote"),
+        }
+        problem = evidence_problem(item)
+        if problem is None and (not isinstance(item["quote"], str) or not item["quote"].strip()):
+            problem = "The passage needs a quote"
+        if problem is None and item["end"] <= item["start"]:
+            problem = "The passage's end must come after its start"
+        if problem is not None:
+            raise _Invalid("invalid_passage", problem)
+        source_id = (proposal.client_metadata or {}).get(SOURCE_ID)
+        if item[SOURCE_ID] != source_id:
+            raise _Invalid(
+                "invalid_passage", f"The passage must be in the proposal's source ({source_id})"
+            )
+        page = None
+        if self._source_repo is not None:
+            source = self._source_repo.get(source_id)
+            if source is None:
+                raise _Invalid("invalid_passage", f"No source {source_id}")
+            if source.text[item["start"] : item["end"]] != item["quote"]:
+                raise _Invalid(
+                    "quote_mismatch",
+                    f"The source's text at [{item['start']}, {item['end']}) is not the quote",
+                )
+            if source.page_starts:
+                page = source.page_at(item["start"])
+        return {
+            SOURCE_ID: source_id,
+            "page": page,
+            "start": item["start"],
+            "end": item["end"],
+            "quote": item["quote"],
+        }
+
+    def _check_added_classes(self, operation: ProposedOperation, taxonomy_id: str) -> None:
+        """An added individual's classes are classes of the taxonomy, none derived."""
+        for class_id in operation.fields["class_ids"]:
+            cls = self._repo.get_class(class_id)
+            if cls is None or self._taxonomies((K.CLASS,), class_id) != {taxonomy_id}:
+                raise _Invalid(
+                    "endpoint_not_found", f"class_ids {class_id} is not a class of the taxonomy"
+                )
+            if cls.derived:
+                raise _Invalid(
+                    "derived_class",
+                    f"Class '{cls.title}' is derived: its individuals are computed, not added",
+                )
 
     @staticmethod
     def _check_edits_placed(

@@ -39,6 +39,11 @@ INDIVIDUAL_EXTRACTION = "individual_extraction"
 # The client_metadata key a pipeline run's proposal records its origin under
 ORIGIN = "origin"
 
+# The reason a newer extraction of the same source gives the operations of an
+# older proposal it rejects (domain.pipelines.source_proposals), followed by
+# the newer proposal's id
+EXTRACTION_SUPERSEDED_PREFIX = "superseded by extraction proposal "
+
 
 @dataclass(frozen=True)
 class ProposalOrigin:
@@ -547,6 +552,8 @@ class ProposedOperation:
             "existing", "entity_id", "similarity"}. Applying it with one of them
             chosen creates nothing: the operation resolves to that individual,
             so "$ref" uses of it point there (see `matched`)
+        added_by_reviewer: Added to the proposal by its reviewer (an element
+            the extraction missed, found in its source), not by the proposer
         id: Unique id
     """
 
@@ -571,6 +578,7 @@ class ProposedOperation:
     proposed_replacement_id: str | None = None
     type_change: TypeChange | None = None
     alternatives: list[dict[str, Any]] = field(default_factory=list)
+    added_by_reviewer: bool = False
     id: str = field(default_factory=lambda: str(uuid4()))
 
     def __post_init__(self) -> None:
@@ -761,6 +769,18 @@ class ChangeProposal:
         if self.source is not ProposalSource.PIPELINE:
             return None
         return ProposalOrigin.from_json((self.client_metadata or {}).get(ORIGIN))
+
+    @property
+    def superseded_by_extraction(self) -> bool:
+        """
+        A newer extraction of the same source superseded it: it rejected
+        what this proposal still awaited (see EXTRACTION_SUPERSEDED_PREFIX).
+        """
+        return any(
+            o.status is OperationStatus.REJECTED
+            and (o.reason or "").startswith(EXTRACTION_SUPERSEDED_PREFIX)
+            for o in self.operations
+        )
 
     def lacks_passage(self, operation: ProposedOperation) -> bool:
         """

@@ -255,6 +255,33 @@ class ChangeProposalRejectRequest(BaseModel):
     )
 
 
+class AddedPassageRequest(BaseModel):
+    """Where in the proposal's source the reviewer found the element."""
+
+    source_id: str = Field(..., min_length=1, description="The proposal's source")
+    start: int = Field(..., ge=0, description="Offset of the passage's first character")
+    end: int = Field(..., ge=0, description="Offset just past its last character")
+    quote: str = Field(
+        ..., min_length=1, description="The passage: exactly the source's text at [start, end)"
+    )
+
+
+class AddIndividualRequest(BaseModel):
+    """An individual the extraction missed, as the reviewer found it in the source."""
+
+    title: str = Field(..., min_length=1, description="The individual's title")
+    class_ids: list[str] = Field(
+        ..., min_length=1, description="Its classes: classes of the proposal's taxonomy"
+    )
+    passage: AddedPassageRequest
+    review_ms: Optional[int] = Field(
+        None,
+        ge=0,
+        le=MAX_REVIEW_MS,
+        description="The milliseconds the reviewer spent on it, recorded in its decision",
+    )
+
+
 # ==================== Responses ====================
 
 
@@ -629,6 +656,11 @@ class ProposedOperationResponse(BaseModel):
         "policy would apply it as soon as proposed and no in-use blockers stop it (applying "
         "can still fail). Null otherwise",
     )
+    added_by_reviewer: bool = Field(
+        False,
+        description="Added to the proposal by its reviewer (an element the extraction "
+        "missed, found in its source), not proposed",
+    )
     reflection: Optional[ReflectionResponse] = Field(
         None,
         description="A schema relationship reflection operation's plan row: kind, p, the "
@@ -983,6 +1015,11 @@ class GoldDecisionResponse(BaseModel):
     )
     superseded_at: Optional[datetime] = None
     superseded_by: Optional[str] = None
+    added: bool = Field(
+        False,
+        description="The operation was added by the reviewer (an element the extraction "
+        "missed), not proposed",
+    )
 
     @classmethod
     def from_domain(cls, decision: ProposalDecision) -> "GoldDecisionResponse":

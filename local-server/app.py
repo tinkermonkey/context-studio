@@ -585,6 +585,7 @@ async def lifespan(app: FastAPI):
             transaction_scope=SqliteTransactionScope(shared_session_factory),
             event_publisher=event_publisher,
             entity_sources=SQLiteEntitySourceRepository(shared_session_factory),
+            source_repo=SQLiteSourceRepository(local_session_factory),
         )
         approval_policy_service = ApprovalPolicyService(
             approval_policy_repo, cast(OntologyRepository, ontology_repo)
