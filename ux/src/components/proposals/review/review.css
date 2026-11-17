@@ -121,6 +121,8 @@
       flex-direction: column;
     }
 
+    .review-pane .review-source__frame,
+    .review-pane .review-source__selectable,
     .review-pane .review-source__text,
     .review-pane .review-scroll,
     .review-pane .review-inspector__body {
@@ -168,6 +170,49 @@
     overflow-y: auto;
     overscroll-behavior: contain;
     position: relative; /* offset parent for scrolling a highlight into view */
+  }
+
+  .review-source__frame,
+  .review-source__selectable {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+  }
+
+  /* The add form floats over the panes, at the selection (fixed: no pane clips it). */
+  .review-add__anchor {
+    position: fixed;
+    z-index: 30;
+    width: 340px;
+    max-width: calc(100vw - 16px);
+  }
+
+  .review-add {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 12px 14px;
+    border: 1px solid rgb(var(--canvas-border-strong));
+    border-radius: 8px;
+    background: rgb(var(--canvas-card));
+    color: rgb(var(--canvas-fg-1));
+    box-shadow: 0 14px 40px -16px rgb(0 0 0 / 0.35);
+  }
+
+  .review-add__quote {
+    font-weight: 600;
+    overflow-wrap: anywhere;
+  }
+
+  .review-add__form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .review-add__error {
+    font-size: 12px;
+    color: rgb(var(--status-rose));
   }
 
   .review-source__hint {

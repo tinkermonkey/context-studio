@@ -22,6 +22,7 @@ import {
   createProposedOperation,
 } from "@/api/services/__tests__/fixtures/proposals.fixtures";
 import type {
+  AddIndividualRequest,
   ChangeProposal,
   ChangeProposalApplyRequest,
   ChangeProposalRejectRequest,
@@ -187,6 +188,9 @@ let proposal: ChangeProposal;
 let applies: ChangeProposalApplyRequest[];
 let rejects: ChangeProposalRejectRequest[];
 let failApply: string | undefined;
+let additions: AddIndividualRequest[];
+/** A 422 the next addition answers with. */
+let refuseAddition: { code: string; message: string } | undefined;
 
 beforeAll(() => server.listen({ onUnhandledRequest: "error" }));
 beforeEach(() => {
@@ -205,10 +209,14 @@ beforeEach(() => {
       digest: "3f2a9c11",
     },
     operations: structuredClone([edit, reference, region, added, realizes]),
+    // Extracted from src-1 into ds-1: it takes elements the reviewer adds.
+    client_metadata: { source_id: "src-1" },
   });
   applies = [];
   rejects = [];
   failApply = undefined;
+  additions = [];
+  refuseAddition = undefined;
   const list = <T,>(items: T[]) =>
     HttpResponse.json({ items, total: items.length, limit: 500, offset: 0 });
   server.use(
@@ -253,6 +261,32 @@ beforeEach(() => {
         }
       }
       return HttpResponse.json(proposal);
+    }),
+    http.post("*/api/proposals/:id/operations", async ({ request }) => {
+      const body = (await request.json()) as AddIndividualRequest;
+      additions.push(body);
+      if (refuseAddition) {
+        return HttpResponse.json(
+          { detail: { message: "Invalid", errors: [{ seq: 6, ...refuseAddition }] } },
+          { status: 422 },
+        );
+      }
+      proposal.operations.push(
+        createProposedOperation({
+          id: "op-new",
+          seq: 6,
+          op: "create",
+          kind: "individual",
+          target_id: null,
+          fields: { title: body.title, class_ids: body.class_ids },
+          evidence: [{ ...body.passage, page: null }],
+          status: "applied",
+          added_by_reviewer: true,
+          result_entity_id: "ind-new",
+          scope: "additive",
+        }),
+      );
+      return HttpResponse.json(proposal, { status: 201 });
     }),
     http.post("*/api/proposals/:id/reject", async ({ request }) => {
       const body = (await request.json()) as ChangeProposalRejectRequest;
@@ -770,5 +804,203 @@ describe("review time", () => {
     await user.click(screen.getByTestId("review-correct"));
     await waitFor(() => expect(applies).toHaveLength(1));
     expect(applies[0].review_ms).toEqual({ "op-edit": 6_500 });
+  });
+});
+
+/** Select `quote` (its first occurrence) in the source text, as a reader's drag would. */
+function selectText(quote: string, from = 0) {
+  const container = screen.getByTestId("review-source-text");
+  const start = TEXT.indexOf(quote, from);
+  const end = start + quote.length;
+  const walker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT);
+  const range = document.createRange();
+  let offset = 0;
+  while (walker.nextNode()) {
+    const node = walker.currentNode as Text;
+    const length = node.data.length;
+    if (start >= offset && start <= offset + length) range.setStart(node, start - offset);
+    if (end >= offset && end <= offset + length) {
+      range.setEnd(node, end - offset);
+      break;
+    }
+    offset += length;
+  }
+  const selection = window.getSelection()!;
+  selection.removeAllRanges();
+  selection.addRange(range);
+  return { start, end };
+}
+
+describe("adding an element from selected text", () => {
+  const popover = () =>
+    screen.queryByRole("dialog", { name: "Selected text · not in the proposal" });
+
+  it("opens the add form on a selection, and closes it with Escape or Cancel", async () => {
+    const user = await renderPage();
+    expect(screen.getByTestId("review-source-hint")).toHaveTextContent(
+      "Select any text to add an element the pipeline missed. Click a highlight to open it.",
+    );
+    expect(screen.queryByTestId("review-add-unavailable")).not.toBeInTheDocument();
+    selectText("feel safe");
+    fireEvent.mouseUp(screen.getByTestId("review-source-selectable"));
+    const dialog = popover()!;
+    expect(dialog).toHaveAttribute("data-testid", "review-add-popover");
+    expect(dialog).toHaveClass("review-add");
+    expect(within(dialog).getByTestId("review-add-quote")).toHaveTextContent("feel safe");
+    const title = within(dialog).getByLabelText(/Title/);
+    expect(title).toHaveValue("feel safe");
+    expect(title).toHaveFocus();
+    expect(within(dialog).getByRole("combobox")).toHaveAccessibleName("Search the classes");
+    await user.keyboard("{Escape}");
+    expect(popover()).not.toBeInTheDocument();
+
+    selectText("feel safe");
+    fireEvent.mouseUp(screen.getByTestId("review-source-selectable"));
+    await user.click(screen.getByTestId("review-add-cancel"));
+    expect(popover()).not.toBeInTheDocument();
+  });
+
+  it("opens on a selection made from the keyboard", async () => {
+    await renderPage();
+    selectText("Newcomers");
+    fireEvent.keyUp(document, { key: "ArrowRight", shiftKey: true });
+    expect(popover()).toBeInTheDocument();
+    expect(screen.getByTestId("review-add-title")).toHaveValue("Newcomers");
+  });
+
+  it("ignores a click that selects nothing", async () => {
+    const user = await renderPage();
+    window.getSelection()!.removeAllRanges();
+    await user.click(screen.getByTestId("review-source-selectable"));
+    expect(popover()).not.toBeInTheDocument();
+  });
+
+  it("asks for a title and a class, clearing each error as it is fixed", async () => {
+    const user = await renderPage();
+    selectText("feel safe");
+    fireEvent.mouseUp(screen.getByTestId("review-source-selectable"));
+    await user.clear(screen.getByTestId("review-add-title"));
+    await user.click(screen.getByTestId("review-add-submit"));
+    expect(screen.getByText("Give the element a title.")).toBeInTheDocument();
+    expect(screen.getByTestId("review-add-title")).toHaveAttribute("aria-invalid", "true");
+    expect(screen.getByText("Choose its class.")).toBeInTheDocument();
+    await user.type(screen.getByTestId("review-add-title"), "S");
+    expect(screen.queryByText("Give the element a title.")).not.toBeInTheDocument();
+    const picker = within(screen.getByTestId("review-add-class-picker"));
+    await user.type(picker.getByRole("combobox"), "goal");
+    await user.click(await picker.findByRole("option", { name: "motivation.goal" }));
+    expect(screen.queryByText("Choose its class.")).not.toBeInTheDocument();
+    expect(additions).toHaveLength(0);
+  });
+
+  it("adds the selection as an element, shown as added and opened in the inspector", async () => {
+    const user = await renderPage();
+    const { start, end } = selectText("feel safe");
+    fireEvent.mouseUp(screen.getByTestId("review-source-selectable"));
+    await user.clear(screen.getByTestId("review-add-title"));
+    await user.type(screen.getByTestId("review-add-title"), "Feeling safe");
+    const picker = within(screen.getByTestId("review-add-class-picker"));
+    await user.type(picker.getByRole("combobox"), "goal");
+    await user.click(await picker.findByRole("option", { name: "motivation.goal" }));
+    expect(screen.getByTestId("review-add-class-chosen")).toHaveTextContent("motivation.goal");
+    await user.click(screen.getByTestId("review-add-submit"));
+
+    await waitFor(() => expect(additions).toHaveLength(1));
+    expect(additions[0]).toEqual({
+      title: "Feeling safe",
+      class_ids: ["cls-goal"],
+      passage: { source_id: "src-1", start, end, quote: "feel safe" },
+      review_ms: expect.any(Number),
+    });
+    await waitFor(() => expect(popover()).not.toBeInTheDocument());
+    expect(screen.getByTestId("toast-success")).toHaveTextContent(
+      "Added Feeling safe | As motivation.goal",
+    );
+    await waitFor(() => expect(inspectorTitle()).toHaveTextContent("Feeling safe"));
+    expect(markFor("op-new")).toHaveClass("review-mark--added", "review-mark--selected");
+    expect(screen.getByTestId("review-row-op-new")).toHaveTextContent("added");
+    expect(screen.getByTestId("review-progress-counts")).toHaveTextContent("2 added");
+    expect(screen.getByTestId("review-decided")).toHaveTextContent(
+      "Added by you as motivation.goal.",
+    );
+  });
+
+  it("starts with the class picked most recently", async () => {
+    const user = await renderPage();
+    const picker = within(screen.getByTestId("review-class-picker"));
+    await user.type(picker.getByRole("combobox"), "product.");
+    await user.click((await picker.findAllByRole("option"))[0]);
+    await waitFor(() => expect(applies).toHaveLength(1));
+    selectText("feel safe");
+    fireEvent.mouseUp(screen.getByTestId("review-source-selectable"));
+    expect(screen.getByTestId("review-add-class-chosen")).toHaveTextContent("product.feature");
+    await user.click(screen.getByTestId("review-add-submit"));
+    await waitFor(() => expect(additions).toHaveLength(1));
+    expect(additions[0].class_ids).toEqual(["cls-feature"]);
+  });
+
+  it("shows a refusal in the form, cleared on change", async () => {
+    refuseAddition = { code: "duplicate_title", message: "An individual titled 'feel safe' …" };
+    const user = await renderPage();
+    selectText("feel safe");
+    fireEvent.mouseUp(screen.getByTestId("review-source-selectable"));
+    const picker = within(screen.getByTestId("review-add-class-picker"));
+    await user.type(picker.getByRole("combobox"), "product.");
+    await user.click((await picker.findAllByRole("option"))[0]);
+    await user.click(screen.getByTestId("review-add-submit"));
+    const error = await screen.findByTestId("review-add-error");
+    expect(error).toHaveAttribute("role", "alert");
+    expect(error).toHaveTextContent("feel safe already exists in this dataset as product.feature.");
+    expect(popover()).toBeInTheDocument();
+    expect(screen.queryByTestId("toast-error")).not.toBeInTheDocument();
+    await user.type(screen.getByTestId("review-add-title"), "!");
+    expect(screen.queryByTestId("review-add-error")).not.toBeInTheDocument();
+  });
+
+  it("isn't offered when the proposal doesn't record its source", async () => {
+    proposal.client_metadata = {};
+    await renderPage();
+    expect(screen.getByTestId("review-source-hint")).toHaveTextContent(
+      /^Click a highlight to open it\.$/,
+    );
+    expect(screen.getByTestId("review-add-unavailable")).toHaveTextContent(
+      "No element can be added here: the proposal doesn't record the source",
+    );
+    selectText("feel safe");
+    fireEvent.mouseUp(screen.getByTestId("review-source-selectable"));
+    expect(popover()).not.toBeInTheDocument();
+  });
+
+  it("isn't offered on a reverted proposal", async () => {
+    proposal.status = "reverted";
+    await renderPage();
+    expect(screen.getByTestId("review-add-unavailable")).toHaveTextContent(
+      "the proposal was reverted.",
+    );
+    selectText("feel safe");
+    fireEvent.mouseUp(screen.getByTestId("review-source-selectable"));
+    expect(popover()).not.toBeInTheDocument();
+  });
+
+  it("sends the active time from opening the form to adding", async () => {
+    const START = new Date("2026-11-17T10:00:00Z").getTime();
+    vi.useFakeTimers({ toFake: ["Date"] });
+    try {
+      vi.setSystemTime(START);
+      const user = await renderPage();
+      selectText("feel safe");
+      fireEvent.mouseUp(screen.getByTestId("review-source-selectable"));
+      const picker = within(screen.getByTestId("review-add-class-picker"));
+      await user.type(picker.getByRole("combobox"), "goal");
+      await user.click(await picker.findByRole("option", { name: "motivation.goal" }));
+      vi.setSystemTime(START + 3_000);
+      fireEvent.pointerMove(window);
+      vi.setSystemTime(START + 5_000);
+      await user.click(screen.getByTestId("review-add-submit"));
+      await waitFor(() => expect(additions).toHaveLength(1));
+      expect(additions[0].review_ms).toBe(5_000);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });

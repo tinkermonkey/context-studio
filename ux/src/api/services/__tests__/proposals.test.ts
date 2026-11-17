@@ -229,6 +229,60 @@ describe("ProposalsService", () => {
     expect(result.operations[0].reason_code).toBe("out_of_scope");
   });
 
+  it("adds an individual found in the source", async () => {
+    let body: unknown;
+    server.use(
+      http.post("*/api/proposals/proposal-1/operations", async ({ request }) => {
+        body = await request.json();
+        return HttpResponse.json(
+          createChangeProposal({
+            operations: [
+              createProposedOperation({
+                id: "op-9",
+                op: "create",
+                kind: "individual",
+                status: "applied",
+                added_by_reviewer: true,
+              }),
+            ],
+          }),
+          { status: 201 },
+        );
+      }),
+    );
+    const data = {
+      title: "TextMatch",
+      class_ids: ["class-1"],
+      passage: { source_id: "src-1", start: 10, end: 19, quote: "TextMatch" },
+      review_ms: 4000,
+    };
+
+    const result = await proposalsService.addIndividual("proposal-1", data);
+
+    expect(body).toEqual(data);
+    expect(result.operations[0]).toMatchObject({ added_by_reviewer: true, status: "applied" });
+  });
+
+  it("keeps an addition's validation errors on the ApiError", async () => {
+    const errors = [{ seq: 6, code: "duplicate_title", message: "An individual titled 'X'…" }];
+    server.use(
+      http.post("*/api/proposals/proposal-1/operations", () =>
+        HttpResponse.json({ detail: { message: "Invalid", errors } }, { status: 422 }),
+      ),
+    );
+
+    const error = await proposalsService
+      .addIndividual("proposal-1", {
+        title: "X",
+        class_ids: ["class-1"],
+        passage: { source_id: "src-1", start: 0, end: 1, quote: "X" },
+      })
+      .catch((e: unknown) => e);
+
+    expect(error).toBeInstanceOf(ApiError);
+    expect(error).toMatchObject({ status: 422, detail: "Invalid", body: { errors } });
+  });
+
   it("keeps a refused revert's blockers on the ApiError", async () => {
     const blocking = [{ kind: "individual", dependent_id: "ind-1", referenced_id: "class-9" }];
     server.use(

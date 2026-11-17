@@ -6,6 +6,7 @@ import { QUERY_KEYS } from "@/api/config";
 import { proposalsService } from "@/api/services/proposals";
 import { createChangeProposal } from "@/api/services/__tests__/fixtures/proposals.fixtures";
 import {
+  useAddProposalIndividual,
   useApplyChangeProposal,
   useCreateChangeProposal,
   useRejectChangeProposal,
@@ -98,6 +99,30 @@ describe("change proposal mutation invalidation", () => {
     result.current.mutate({ taxonomy_id: "tax-1", title: "Chores", source: "mcp", operations: [] });
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    for (const queryKey of [...PROPOSAL_QUERIES, ...ONTOLOGY_QUERIES]) {
+      expect(invalidated(queryKey), JSON.stringify(queryKey)).toBe(true);
+    }
+    for (const queryKey of UNRELATED_QUERIES) {
+      expect(invalidated(queryKey), JSON.stringify(queryKey)).toBe(false);
+    }
+  });
+
+  it("adding an individual sends it, shows the proposal at once and marks the ontology stale", async () => {
+    const add = vi.spyOn(proposalsService, "addIndividual").mockResolvedValue(after);
+    const { wrapper, invalidated, queryClient } = setup();
+    const { result } = renderHook(() => useAddProposalIndividual(), { wrapper });
+    const data = {
+      title: "TextMatch",
+      class_ids: ["class-1"],
+      passage: { source_id: "src-1", start: 10, end: 19, quote: "TextMatch" },
+      review_ms: 4000,
+    };
+
+    result.current.mutate({ id: "proposal-1", data });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(add).toHaveBeenCalledWith("proposal-1", data);
+    expect(queryClient.getQueryData(QUERY_KEYS.changeProposal("proposal-1"))).toEqual(after);
     for (const queryKey of [...PROPOSAL_QUERIES, ...ONTOLOGY_QUERIES]) {
       expect(invalidated(queryKey), JSON.stringify(queryKey)).toBe(true);
     }
