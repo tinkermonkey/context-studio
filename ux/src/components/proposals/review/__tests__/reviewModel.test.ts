@@ -3,16 +3,20 @@ import {
   createChangeProposal,
   createProposedOperation,
 } from "@/api/services/__tests__/fixtures/proposals.fixtures";
+import { createClass } from "@/api/services/__tests__/fixtures/ontology.fixtures";
 import type { ProposedOperation } from "@/api/services/proposals";
 import {
   RELATIONSHIPS_GROUP,
   REJECTION_REASONS,
   VERDICT_CHIP,
   VERDICT_LABEL,
+  classLabel,
+  endsToDecide,
   extractedFromSource,
   filterGroups,
   formatDuration,
   groupForReview,
+  layerMatesFirst,
   nextAwaiting,
   orderOf,
   reasonLabel,
@@ -21,6 +25,7 @@ import {
   reviewProgress,
   reviewSourceId,
   reviewSpans,
+  seqList,
   shownClassId,
   step,
   suggestedClasses,
@@ -118,6 +123,14 @@ describe("the source", () => {
       ),
     ).toBe(true);
     expect(extractedFromSource(undefined)).toBe(false);
+    // A schema extraction's class operations carry passages too: not reviewed here.
+    const classOp = createProposedOperation({
+      op: "create",
+      kind: "class",
+      target_id: null,
+      evidence: [passage("feedback")],
+    });
+    expect(extractedFromSource(createChangeProposal({ operations: [classOp] }))).toBe(false);
   });
 
   it("keys each element's passages in the source's text, leaving out misplaced ones", () => {
@@ -197,6 +210,20 @@ describe("groups and selection", () => {
     expect(nextAwaiting(order, new Set(), "c")).toBeUndefined();
   });
 
+  it("finds a relationship's new ends still to decide, or rejected", () => {
+    const ops = [element("a", { seq: 1 }), element("c", { seq: 3, status: "rejected" }), rel];
+    expect(endsToDecide(rel, ops).undecided.map((e) => e.seq)).toEqual([1]);
+    expect(endsToDecide(rel, ops).rejected).toEqual([]);
+    const toRejected = { ...rel, fields: { ...rel.fields, target_id: "$c" } };
+    const ends = endsToDecide(toRejected, ops);
+    expect(seqList(ends.undecided)).toBe("#1");
+    expect(seqList(ends.rejected)).toBe("#3");
+    expect(endsToDecide(rel, [element("a", { seq: 1, status: "applied" }), rel])).toEqual({
+      undecided: [],
+      rejected: [],
+    });
+  });
+
   it("finds an element's relationships by $ref or result id", () => {
     expect(relationshipsOf(a, [a, b, rel]).map((o) => o.id)).toEqual(["rel"]);
     const made = element("z", { ref: null, result_entity_id: "ind-9", status: "applied" });
@@ -206,6 +233,28 @@ describe("groups and selection", () => {
 });
 
 describe("classes and reasons", () => {
+  it("names a class by its DR reference, else its title, else its identifier", () => {
+    const dr = createClass({
+      identifier: "product_feature",
+      title: "Feature",
+      external_references: [
+        { source: "wikidata", identifier: "Q1" },
+        { source: "documentation_robotics", identifier: "product.feature" },
+      ],
+    });
+    expect(classLabel(dr)).toBe("product.feature");
+    expect(classLabel(createClass({ identifier: "cls_x", title: "Room" }))).toBe("Room");
+    expect(classLabel(createClass({ identifier: "cls_x", title: "" }))).toBe("cls_x");
+  });
+
+  it("lists a layer's classes first", () => {
+    const a = createClass({ id: "a", concept_scheme_id: "p" });
+    const b = createClass({ id: "b", concept_scheme_id: "m" });
+    const c = createClass({ id: "c", concept_scheme_id: "p" });
+    expect(layerMatesFirst([a, b, c], "m").map((x) => x.id)).toEqual(["b", "a", "c"]);
+    expect(layerMatesFirst([a, b, c], undefined).map((x) => x.id)).toEqual(["a", "b", "c"]);
+  });
+
   it("suggests up to three classes picked earlier, most recent first, not the current one", () => {
     let recent: string[] = [];
     for (const id of ["c1", "c2", "c3", "c4", "c2"]) recent = rememberPick(recent, id);

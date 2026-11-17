@@ -3244,9 +3244,18 @@ selectors:
   - selector: review-definition
     component: src/components/proposals/review/ReviewInspector.tsx
     description: '"WHAT <class> MEANS" with the class description'
+  - selector: review-definition-toggle
+    component: src/components/proposals/review/ReviewInspector.tsx
+    description: "Show more / Show less (aria-expanded) for a class definition longer than 240 characters, clamped to 4 lines"
+  - selector: review-ends-callout
+    component: src/components/proposals/review/ReviewInspector.tsx
+    description: "A relationship whose new ends are undecided (\"Decide #n first\", Correct disabled) or rejected (\"#n was rejected … Reject it.\", no Correct)"
+  - selector: review-class-locked
+    component: src/components/proposals/review/ReviewInspector.tsx
+    description: "Note that the existing individual a near match uses keeps its classes; suggestions, picker and keys 1-3 are disabled while it is chosen"
   - selector: review-correct
     component: src/components/proposals/review/ReviewInspector.tsx
-    description: "Correct button (key A); applies the operation as proposed with review_ms"
+    description: "Correct button (key A); applies the operation as proposed with review_ms, or as the chosen existing individual (chosen_alternatives) for a near match (\"Correct: use existing\")"
   - selector: review-better-class
     component: src/components/proposals/review/ReviewInspector.tsx
     description: "OR A BETTER CLASS: suggestions and the class picker"

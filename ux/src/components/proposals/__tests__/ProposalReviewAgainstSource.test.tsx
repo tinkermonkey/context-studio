@@ -64,6 +64,27 @@ describe("Review against source", () => {
     expect(onReview).toHaveBeenCalledTimes(1);
   });
 
+  it("isn't offered for a schema extraction, whose class operations cite passages", async () => {
+    const classOp = createProposedOperation({
+      op: "create",
+      kind: "class",
+      target_id: null,
+      fields: { identifier: "cls_room", title: "Room", concept_scheme_id: "scheme-1" },
+      evidence: [{ source_id: "src-1", page: null, start: 0, end: 4, quote: "Room" }],
+      scope: "additive",
+    });
+    serve(createChangeProposal({ source: "pipeline", operations: [classOp] }));
+    render(
+      <ProposalDetailPage
+        id="proposal-1"
+        onSelectOperation={vi.fn()}
+        onReviewAgainstSource={vi.fn()}
+      />,
+    );
+    await screen.findByTestId("proposal-summary", {}, { timeout: 10000 });
+    expect(screen.queryByTestId("proposal-review-against-source")).not.toBeInTheDocument();
+  });
+
   it("isn't offered for a proposal no source backs", async () => {
     serve(createChangeProposal());
     render(

@@ -1,4 +1,12 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+  type CSSProperties,
+} from "react";
 import { Button, ConfirmDialog, PageHeader, ProgressBar } from "@tinkermonkey/heimdall-ui";
 import { SMALL_SET_LIMIT } from "@/api/config";
 import { ApiError } from "@/api/client/interceptors";
@@ -16,12 +24,20 @@ import { linkPath } from "@/lib/entityPaths";
 import { takesDecisions } from "../decisionModel";
 import { formatProbability, isAwaiting, refsByOperation } from "../proposalModel";
 import { ProposalOriginChip } from "../ProposalOrigin";
+import {
+  chosenAlternative,
+  defaultNearMatchChoice,
+  isNearMatch,
+  type NearMatchChoice,
+} from "../sourceModel";
 import { useOperationContext } from "../useOperationContext";
 import { useProposalActions, type ApplyOutcome } from "../useProposalActions";
 import { ReviewElementsPane, type ElementRow } from "./ReviewElementsPane";
 import { ReviewInspector, type ReviewNames } from "./ReviewInspector";
 import { ReviewSourcePane } from "./ReviewSourcePane";
 import {
+  classLabel,
+  endsToDecide,
   filterGroups,
   formatDuration,
   groupForReview,
@@ -59,15 +75,51 @@ function ReviewElapsed({ pageMs }: { pageMs: () => number }) {
   );
 }
 
-/** Keys typed into a field are text, not review commands. */
-function isTyping(target: EventTarget | null): boolean {
+/** Keys typed into a field, or pressed in a dialog, are not review commands. */
+function ignoresKeys(target: EventTarget | null): boolean {
   if (!(target instanceof HTMLElement)) return false;
   return (
     target.isContentEditable ||
     target.tagName === "INPUT" ||
     target.tagName === "TEXTAREA" ||
-    target.tagName === "SELECT"
+    target.tagName === "SELECT" ||
+    !!target.closest('[role="dialog"]')
   );
+}
+
+/** Space left under the panes at the bottom of the window. */
+const PANES_BOTTOM_GAP = 24;
+/** The panes never get shorter than this, however little of the window is left. */
+const PANES_MIN_HEIGHT = 480;
+
+/**
+ * The height that makes the panes fill the window below where they start,
+ * worked out when the page lays out and whenever the window resizes.
+ */
+function usePanesHeight(ready: boolean) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [height, setHeight] = useState<number>();
+  useLayoutEffect(() => {
+    const measure = () => {
+      const top = ref.current?.getBoundingClientRect().top;
+      if (top === undefined) return;
+      setHeight(
+        Math.max(PANES_MIN_HEIGHT, Math.round(window.innerHeight - top - PANES_BOTTOM_GAP)),
+      );
+    };
+    measure();
+    window.addEventListener("resize", measure);
+    // The header above can grow (a long source title wraps once it loads).
+    const page = ref.current?.parentElement;
+    const observer =
+      page && typeof ResizeObserver !== "undefined" ? new ResizeObserver(measure) : undefined;
+    if (page) observer?.observe(page);
+    return () => {
+      window.removeEventListener("resize", measure);
+      observer?.disconnect();
+    };
+  }, [ready]);
+  return { ref, height };
 }
 
 type Decision =
@@ -142,10 +194,10 @@ export function ReviewPage({ id, onFinish }: ReviewPageProps) {
   );
 
   const names: ReviewNames = useMemo(() => {
-    const classLabel = (classId: string | undefined) => {
+    const labelOf = (classId: string | undefined) => {
       if (!classId) return "no class";
       const found = classById.get(classId);
-      return found?.identifier || found?.title || classId;
+      return found ? classLabel(found) : classId;
     };
     const endTitle = (value: unknown, operation: ProposedOperation) =>
       typeof value === "string" ? (context.nameOf(value, operation) ?? value) : "?";
@@ -156,7 +208,7 @@ export function ReviewPage({ id, onFinish }: ReviewPageProps) {
       to: endTitle(operation.fields?.target_id, operation),
     });
     return {
-      classLabel,
+      classLabel: labelOf,
       classOf: (classId) => (classId ? classById.get(classId) : undefined),
       relationshipParts,
       titleOf: (operation) => {
@@ -220,6 +272,21 @@ export function ReviewPage({ id, onFinish }: ReviewPageProps) {
   const deciding = !!proposal && takesDecisions(proposal);
   const reasonsRef = useRef<HTMLDivElement>(null);
 
+  // A near match's choice, by operation: an existing individual, or create new.
+  const [nearChoices, setNearChoices] = useState<Record<string, NearMatchChoice>>({});
+  const nearChoiceOf = (operation: ProposedOperation) =>
+    nearChoices[operation.id] ?? defaultNearMatchChoice(operation);
+  /** The existing individual a near match is accepted as; undefined to create it. */
+  const existingOf = (operation: ProposedOperation) =>
+    isElement(operation) && isNearMatch(operation)
+      ? chosenAlternative(nearChoiceOf(operation))
+      : undefined;
+  /** A relationship can't be accepted before its new ends are, nor after one is rejected. */
+  const acceptBlocked = (operation: ProposedOperation) => {
+    const ends = endsToDecide(operation, operations);
+    return ends.undecided.length > 0 || ends.rejected.length > 0;
+  };
+
   /** After deciding `decidedId`, select the next element still awaiting a decision. */
   const advance = (decidedId: string, after: ProposedOperation[]) => {
     const awaiting = new Set(after.filter(isAwaiting).map((o) => o.id));
@@ -250,12 +317,17 @@ export function ReviewPage({ id, onFinish }: ReviewPageProps) {
       if (rejected) advance(operation.id, operations);
       return;
     }
+    if (acceptBlocked(operation)) return;
+    const existing = existingOf(operation);
+    // The server takes an existing individual or a class edit, never both.
+    if (decision.kind === "class" && existing) return;
     const outcome = await actions.accept([operation.id], {
       reviewMs,
       edits:
         decision.kind === "class"
           ? { [operation.id]: { class_ids: [decision.classId] } }
           : undefined,
+      chosenAlternatives: existing ? { [operation.id]: existing } : undefined,
     });
     const after = appliedOutcome(operation, outcome);
     if (!after) return;
@@ -269,7 +341,7 @@ export function ReviewPage({ id, onFinish }: ReviewPageProps) {
   const onKey = useRef<(event: KeyboardEvent) => void>(() => {});
   onKey.current = (event) => {
     if (event.defaultPrevented || event.metaKey || event.ctrlKey || event.altKey) return;
-    if (isTyping(event.target)) return;
+    if (actions.forceRequest || ignoresKeys(event.target)) return;
     const key = event.key.toLowerCase();
     if (key === "j" || key === "k") {
       const next = step(shownOrder, selectedId, key === "j" ? 1 : -1);
@@ -277,14 +349,15 @@ export function ReviewPage({ id, onFinish }: ReviewPageProps) {
       event.preventDefault();
       return;
     }
-    if (!selected || !deciding || !isAwaiting(selected)) return;
+    // Holding a key down decides once.
+    if (event.repeat || !selected || !deciding || !isAwaiting(selected)) return;
     if (key === "a") {
       event.preventDefault();
       void decide(selected, { kind: "correct" });
     } else if (key === "x") {
       event.preventDefault();
       reasonsRef.current?.querySelector<HTMLButtonElement>("button")?.focus();
-    } else if (["1", "2", "3"].includes(key) && isElement(selected)) {
+    } else if (["1", "2", "3"].includes(key) && isElement(selected) && !existingOf(selected)) {
       const suggestion = suggestions[Number(key) - 1];
       if (!suggestion) return;
       event.preventDefault();
@@ -296,6 +369,8 @@ export function ReviewPage({ id, onFinish }: ReviewPageProps) {
     window.addEventListener("keydown", listener);
     return () => window.removeEventListener("keydown", listener);
   }, []);
+
+  const panes = usePanesHeight(!!proposal);
 
   usePageBreadcrumbs(
     `${linkPath("proposal", id)}/review`,
@@ -398,7 +473,17 @@ export function ReviewPage({ id, onFinish }: ReviewPageProps) {
         <ReviewElapsed pageMs={clock.pageMs} />
       </section>
 
-      <div className="review-panes" data-testid="review-panes">
+      <div
+        ref={panes.ref}
+        className="review-panes"
+        // The window height left below the panes' top: worked out at run time.
+        style={
+          panes.height
+            ? ({ "--review-panes-height": `${panes.height}px` } as CSSProperties)
+            : undefined
+        }
+        data-testid="review-panes"
+      >
         <ReviewSourcePane
           title={source?.title}
           text={sourceText?.text}
@@ -431,6 +516,10 @@ export function ReviewPage({ id, onFinish }: ReviewPageProps) {
             operation={selected}
             operations={operations}
             names={names}
+            taxonomyId={proposal.taxonomy_id}
+            datasetId={proposal.dataset_id}
+            nearChoice={nearChoiceOf(selected)}
+            onNearChoice={(choice) => setNearChoices((all) => ({ ...all, [selected.id]: choice }))}
             pickable={pickable}
             suggestions={suggestions}
             deciding={deciding}

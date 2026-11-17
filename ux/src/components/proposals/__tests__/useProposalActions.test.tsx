@@ -116,7 +116,7 @@ describe("useProposalActions", () => {
     });
   });
 
-  it("rejects with only a note as before", async () => {
+  it("rejects with only a note, sending no reason code or review time", async () => {
     let body: ChangeProposalRejectRequest | undefined;
     server.use(
       http.post("*/api/proposals/proposal-1/reject", async ({ request }) => {
@@ -127,9 +127,9 @@ describe("useProposalActions", () => {
     const { result } = renderHook(() => useProposalActions(proposal), { wrapper });
 
     await act(async () => {
-      await result.current.rejectOperations(["op-1"], "");
+      await result.current.rejectOperations(["op-1"], "duplicate of op-2");
     });
 
-    expect(body).toEqual({ operation_ids: ["op-1"], note: null });
+    expect(body).toEqual({ operation_ids: ["op-1"], note: "duplicate of op-2" });
   });
 });

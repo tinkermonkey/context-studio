@@ -38,10 +38,11 @@ export function ReviewSourcePane({
     ]
       .filter(Boolean)
       .join(" ");
-  const markLabel = (keys: string[]) => {
+  // The passage's own text first, then which element it is and its verdict.
+  const markLabel = (keys: string[], chunk: string) => {
     const key = shownKey(keys);
     const more = keys.length > 1 ? `, and ${keys.length - 1} more` : "";
-    return `${titleOf(key)}, ${VERDICT_LABEL[verdictOf(key)]}${more}`;
+    return `${chunk} (${titleOf(key)}, ${VERDICT_LABEL[verdictOf(key)]}${more})`;
   };
 
   return (

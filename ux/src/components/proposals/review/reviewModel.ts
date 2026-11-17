@@ -5,9 +5,13 @@
  * the selection moves after a decision.
  */
 import type { ChangeProposal, ProposedOperation, RejectionReason } from "@/api/services/proposals";
+import type { components } from "@/api/types";
 import type { KeyedSpan } from "@/components/pipeline/extraction-review/reviewUtils";
+import { DR_SOURCE } from "../decisionModel";
 import { isAwaiting, type ChipVariant } from "../proposalModel";
-import { sourcePassagesOf } from "../sourceModel";
+import { relationshipEnds, sourcePassagesOf, type RelationshipEnd } from "../sourceModel";
+
+type ClassResponse = components["schemas"]["ClassResponse"];
 
 // ==================== Verdicts ====================
 
@@ -119,7 +123,9 @@ export function formatDuration(ms: number): string {
 
 /** Whether any operation cites a passage in a source: the proposal can be reviewed against it. */
 export function extractedFromSource(proposal: ChangeProposal | undefined): boolean {
-  return (proposal?.operations ?? []).some((o) => sourcePassagesOf(o).length > 0);
+  return (proposal?.operations ?? []).some(
+    (o) => (isElement(o) || isRelationship(o)) && sourcePassagesOf(o).length > 0,
+  );
 }
 
 /** The source most of the elements' passages are in. */
@@ -243,6 +249,24 @@ export function nextAwaiting(
 
 // ==================== Classes ====================
 
+/**
+ * A class as the reviewer reads it: its DR reference ("product.feature") when
+ * it mirrors a DR spec class, else its title, else its identifier.
+ */
+export function classLabel(cls: ClassResponse): string {
+  const reference = cls.external_references?.find((r) => r.source === DR_SOURCE)?.identifier;
+  return reference || cls.title || cls.identifier;
+}
+
+/** Classes with the given layer's (concept scheme's) first, each part in its own order. */
+export function layerMatesFirst(classes: ClassResponse[], schemeId: string | undefined) {
+  if (!schemeId) return classes;
+  return [
+    ...classes.filter((c) => c.concept_scheme_id === schemeId),
+    ...classes.filter((c) => c.concept_scheme_id !== schemeId),
+  ];
+}
+
 /** How many classes picked earlier in the review are offered as one-key suggestions. */
 export const SUGGESTIONS = 3;
 
@@ -275,6 +299,27 @@ export function relationshipsOf(
       isRelationship(o) &&
       (names(o.fields?.source_id, element) || names(o.fields?.target_id, element)),
   );
+}
+
+/**
+ * A relationship create's ends that are creates of this proposal still
+ * awaiting a decision (it applies once they have), and those rejected (it
+ * can't apply).
+ */
+export function endsToDecide(
+  operation: ProposedOperation,
+  operations: ProposedOperation[],
+): { undecided: RelationshipEnd[]; rejected: RelationshipEnd[] } {
+  const ends = relationshipEnds(operation, operations).filter((e) => e.kind !== "existing");
+  return {
+    undecided: ends.filter((e) => e.status === "pending" || e.status === "failed"),
+    rejected: ends.filter((e) => e.status === "rejected"),
+  };
+}
+
+/** "#2 and #1" */
+export function seqList(ends: RelationshipEnd[]): string {
+  return [...new Set(ends.map((e) => `#${e.seq}`))].join(" and ");
 }
 
 // ==================== Not an element ====================

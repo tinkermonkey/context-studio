@@ -112,7 +112,9 @@ export function ReviewElementsPane({
                 >
                   <span className="review-row__text">
                     <span className="review-row__title">{row.title}</span>
-                    <span className="review-row__class">{row.detail}</span>
+                    <span className="review-row__class" title={row.detail}>
+                      {row.detail}
+                    </span>
                   </span>
                   <span className="review-row__meta">
                     <span className="review-row__p">{row.probability}</span>
