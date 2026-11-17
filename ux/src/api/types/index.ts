@@ -3870,6 +3870,16 @@ export interface paths {
      *     the ends of every relationship using it in place (each keeps its id), and
      *     a rename keeps them, in one transaction with the update; Revert undoes both.
      *
+     *     edits also corrects an individual create's title and/or class_ids: the
+     *     individual is created with the proposed fields overridden by the edit
+     *     (recorded as applied_fields, decided applied_with_edits). A class that
+     *     doesn't exist or isn't in the proposal's taxonomy, or proposed
+     *     data_properties the edited classes don't define, fails only that operation
+     *     with "invalid_edit: ...".
+     *
+     *     review_ms records, in each applied operation's decision, the milliseconds
+     *     the reviewer spent on it.
+     *
      *     chosen_alternatives records, in each applied operation's decision, the
      *     alternative the reviewer chose over the proposal's pick (gold's
      *     chosen_alternative), e.g. a reflection's answers when accepted with an edit.
@@ -3896,6 +3906,9 @@ export interface paths {
     /**
      * Reject Proposal
      * @description Reject operations, or without operation_ids every pending or failed one.
+     *
+     *     The note and reason_code are stored on each operation and its decision;
+     *     review_ms records the milliseconds the reviewer spent on each in its decision.
      */
     post: operations["reject_proposal_api_proposals__proposal_id__reject_post"];
     delete?: never;
@@ -5145,7 +5158,7 @@ export interface components {
       force_stale?: string[];
       /**
        * Edits
-       * @description Operation id -> the complete Context Studio fields to apply as a property-definition update instead of the proposed ones; only for property update/delete ops in operation_ids (an edited delete applies as an update). For a dr_spec proposal the identifier and DR external reference follow from the triple (canonical_predicate, domain_class_id, range_class_id)
+       * @description Operation id -> the reviewer's corrections, for ops in operation_ids. A property update/delete's edit is the complete Context Studio fields to apply as a property-definition update instead of the proposed ones (an edited delete applies as an update); for a dr_spec proposal the identifier and DR external reference follow from the triple (canonical_predicate, domain_class_id, range_class_id). An individual create's edit sets only title (non-empty) and/or class_ids (a non-empty list of class ids of the proposal's taxonomy), overriding the proposed values; the individual is created with the merged fields, recorded as applied_fields. An individual create applied as an existing near match (chosen_alternatives {"kind": "existing"}) takes no edit
        */
       edits?: {
         [key: string]: {
@@ -5167,6 +5180,13 @@ export interface components {
         [key: string]: {
           [key: string]: unknown;
         };
+      };
+      /**
+       * Review Ms
+       * @description Operation id -> the milliseconds the reviewer spent on it, for ops in operation_ids; recorded in its decision (gold's review_ms)
+       */
+      review_ms?: {
+        [key: string]: number;
       };
     };
     /**
@@ -5248,6 +5268,15 @@ export interface components {
        * @description Why; stored as each operation's reason
        */
       note?: string | null;
+      /** @description Why, as a code, for every operation rejected; stored on each operation and its decision beside the note */
+      reason_code?: components["schemas"]["RejectionReason"] | null;
+      /**
+       * Review Ms
+       * @description Operation id -> the milliseconds the reviewer spent on it, for operations being rejected; recorded in its decision (gold's review_ms)
+       */
+      review_ms?: {
+        [key: string]: number;
+      };
     };
     /**
      * ChangeProposalResponse
@@ -7015,6 +7044,13 @@ export interface components {
        * @description Why (a reject note)
        */
       reason?: string | null;
+      /** @description Why a reviewer rejected it, as a code; null otherwise */
+      reason_code?: components["schemas"]["RejectionReason"] | null;
+      /**
+       * Review Ms
+       * @description Milliseconds the reviewer spent on it, when the client measured it
+       */
+      review_ms?: number | null;
       /**
        * Resolution
        * @description An applied relationship-type delete's or retarget's in-use resolution
@@ -9425,9 +9461,11 @@ export interface components {
        * @description Why it failed ("<code>: <detail>") or was rejected
        */
       reason?: string | null;
+      /** @description Why a reviewer rejected it, as a code; null otherwise */
+      reason_code?: components["schemas"]["RejectionReason"] | null;
       /**
        * Applied Fields
-       * @description Set when a reviewer edited the operation: the fields actually applied, always as an update (an edited delete applies as an update). Null = applied as proposed, or not applied
+       * @description Set when a reviewer edited the operation: the fields actually applied, as an update for a property operation (an edited delete applies as an update), or an individual create's fields merged with the edit. Null = applied as proposed, or not applied
        */
       applied_fields?: {
         [key: string]: unknown;
@@ -9966,6 +10004,18 @@ export interface components {
       /** Target */
       target: string;
     };
+    /**
+     * RejectionReason
+     * @description Why a reviewer rejected an operation, as a code (beside the free-text note).
+     * @enum {string}
+     */
+    RejectionReason:
+      | "not_in_text"
+      | "too_generic"
+      | "mentioned_only"
+      | "out_of_scope"
+      | "duplicate"
+      | "other";
     /**
      * RelationshipCreateRequest
      * @description Request to create a new relationship.
@@ -16152,7 +16202,7 @@ export interface operations {
         };
         content?: never;
       };
-      /** @description An operation id is not in the proposal, or an edit is misplaced (not in operation_ids, not a property update/delete, empty, or uses a $ref), or a resolution is (not in operation_ids, not a property delete or update, an edited delete, a move without replacement_property_id, or a move to a type the proposal deletes); nothing was applied */
+      /** @description An operation id is not in the proposal, or an edit is misplaced (not in operation_ids, not a property update/delete or individual create, empty, uses a $ref, or an individual create's sets more than a non-empty title and class_ids), or review_ms names an operation not in operation_ids, or a resolution is (not in operation_ids, not a property delete or update, an edited delete, a move without replacement_property_id, or a move to a type the proposal deletes); nothing was applied */
       422: {
         headers: {
           [name: string]: unknown;
@@ -16199,7 +16249,7 @@ export interface operations {
         };
         content?: never;
       };
-      /** @description An operation id is not in the proposal */
+      /** @description An operation id is not in the proposal, the reason_code is unknown, or review_ms names an operation not being rejected */
       422: {
         headers: {
           [name: string]: unknown;

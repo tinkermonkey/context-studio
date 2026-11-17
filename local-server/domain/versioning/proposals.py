@@ -159,6 +159,22 @@ class AlternativeKind(str, Enum):
     EXISTING = "existing"
 
 
+class RejectionReason(str, Enum):
+    """Why a reviewer rejected an operation, as a code (beside the free-text note)."""
+
+    # What it proposes is not in the source text
+    NOT_IN_TEXT = "not_in_text"
+    # Too generic to be worth keeping (e.g. "the system")
+    TOO_GENERIC = "too_generic"
+    # The text only mentions it in passing
+    MENTIONED_ONLY = "mentioned_only"
+    # Outside what the taxonomy or dataset models
+    OUT_OF_SCOPE = "out_of_scope"
+    # Already there, or proposed twice
+    DUPLICATE = "duplicate"
+    OTHER = "other"
+
+
 class ChangeScope(str, Enum):
     """How much a change can break, in increasing order."""
 
@@ -507,11 +523,14 @@ class ProposedOperation:
         scope: How much the change can break (see classify_scope)
         status: Pending, applied, rejected or failed
         result_entity_id: The entity created or changed, once applied
-        reason: Why it failed or was rejected
+        reason: Why it failed or was rejected (a reject's free-text note)
+        reason_code: Why a reviewer rejected it, as a code; None otherwise
         applied_fields: Set when a reviewer edited the operation before applying
-            it: the fields actually applied, always as an update (an edited
-            delete applies as an update). None when applied as proposed or not
-            applied. `fields` keeps what was proposed.
+            it: the fields actually applied. A property update or delete's edit
+            applies as an update (an edited delete applies as an update); an
+            individual create's edit is merged into the proposed fields, and
+            applied_fields is the merged create. None when applied as proposed
+            or not applied. `fields` keeps what was proposed.
         resolution: How an applied relationship-type delete resolved the
             relationships still using the type, if they were moved or deleted
         proposed_replacement_id: A property or class delete only: the
@@ -546,6 +565,7 @@ class ProposedOperation:
     status: OperationStatus = OperationStatus.PENDING
     result_entity_id: str | None = None
     reason: str | None = None
+    reason_code: RejectionReason | None = None
     applied_fields: dict[str, Any] | None = None
     resolution: InUseResolution | None = None
     proposed_replacement_id: str | None = None

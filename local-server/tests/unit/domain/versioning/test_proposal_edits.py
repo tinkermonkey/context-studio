@@ -256,8 +256,11 @@ def test_an_edited_stale_target_fails_unless_forced(service, graph, ontology):
     "case, message",
     [
         ("not_applied", "not being applied"),
-        ("class_update", "only a property update or delete can be edited"),
-        ("create", "only a property update or delete can be edited"),
+        (
+            "class_update",
+            "only a property update or delete, or an individual create, can be edited",
+        ),
+        ("create", "only a property update or delete, or an individual create, can be edited"),
         ("empty", "an edit needs at least one field"),
         ("ref", "can't point at a $ref"),
     ],

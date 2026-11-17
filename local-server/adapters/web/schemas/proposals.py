@@ -6,7 +6,7 @@ Names carry the ChangeProposal prefix, the domain's name for a proposal.
 
 import logging
 from datetime import datetime
-from typing import Any, Collection, Literal, Optional
+from typing import Annotated, Any, Collection, Literal, Optional
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -29,6 +29,7 @@ from domain.versioning.proposals import (
     ProposalSource,
     ProposalStatus,
     ProposedOperation,
+    RejectionReason,
     ResolutionStrategy,
 )
 from domain.versioning.yielding import DatasetImpact
@@ -196,11 +197,16 @@ class ChangeProposalApplyRequest(BaseModel):
     )
     edits: dict[str, dict[str, Any]] = Field(
         default_factory=dict,
-        description="Operation id -> the complete Context Studio fields to apply as a "
-        "property-definition update instead of the proposed ones; only for property "
-        "update/delete ops in operation_ids (an edited delete applies as an update). For a "
-        "dr_spec proposal the identifier and DR external reference follow from the triple "
-        "(canonical_predicate, domain_class_id, range_class_id)",
+        description="Operation id -> the reviewer's corrections, for ops in operation_ids. "
+        "A property update/delete's edit is the complete Context Studio fields to apply as a "
+        "property-definition update instead of the proposed ones (an edited delete applies as "
+        "an update); for a dr_spec proposal the identifier and DR external reference follow "
+        "from the triple (canonical_predicate, domain_class_id, range_class_id). An individual "
+        "create's edit sets only title (non-empty) and/or class_ids (a non-empty list of class "
+        "ids of the proposal's taxonomy), overriding the proposed values; the individual is "
+        "created with the merged fields, recorded as applied_fields. An individual create "
+        'applied as an existing near match (chosen_alternatives {"kind": "existing"}) takes '
+        "no edit",
     )
     resolutions: dict[str, InUseResolutionRequest] = Field(
         default_factory=dict,
@@ -224,6 +230,11 @@ class ChangeProposalApplyRequest(BaseModel):
         "create is not performed, the operation applies as that existing individual "
         '(result_entity_id), and later operations\' "$ref" to it point there',
     )
+    review_ms: dict[str, Annotated[int, Field(ge=0)]] = Field(
+        default_factory=dict,
+        description="Operation id -> the milliseconds the reviewer spent on it, for ops in "
+        "operation_ids; recorded in its decision (gold's review_ms)",
+    )
 
 
 class ChangeProposalRejectRequest(BaseModel):
@@ -231,6 +242,16 @@ class ChangeProposalRejectRequest(BaseModel):
 
     operation_ids: Optional[list[str]] = Field(None, description="Operations to reject")
     note: Optional[str] = Field(None, description="Why; stored as each operation's reason")
+    reason_code: Optional[RejectionReason] = Field(
+        None,
+        description="Why, as a code, for every operation rejected; stored on each operation "
+        "and its decision beside the note",
+    )
+    review_ms: dict[str, Annotated[int, Field(ge=0)]] = Field(
+        default_factory=dict,
+        description="Operation id -> the milliseconds the reviewer spent on it, for "
+        "operations being rejected; recorded in its decision (gold's review_ms)",
+    )
 
 
 # ==================== Responses ====================
@@ -535,11 +556,15 @@ class ProposedOperationResponse(BaseModel):
     reason: Optional[str] = Field(
         None, description='Why it failed ("<code>: <detail>") or was rejected'
     )
+    reason_code: Optional[RejectionReason] = Field(
+        None, description="Why a reviewer rejected it, as a code; null otherwise"
+    )
     applied_fields: Optional[dict[str, Any]] = Field(
         None,
         description="Set when a reviewer edited the operation: the fields actually applied, "
-        "always as an update (an edited delete applies as an update). Null = applied as "
-        "proposed, or not applied",
+        "as an update for a property operation (an edited delete applies as an update), or an "
+        "individual create's fields merged with the edit. Null = applied as proposed, or not "
+        "applied",
     )
     resolution: Optional[InUseResolutionResponse] = Field(
         None,
@@ -939,6 +964,12 @@ class GoldDecisionResponse(BaseModel):
     )
     result_entity_id: Optional[str] = None
     reason: Optional[str] = Field(None, description="Why (a reject note)")
+    reason_code: Optional[RejectionReason] = Field(
+        None, description="Why a reviewer rejected it, as a code; null otherwise"
+    )
+    review_ms: Optional[int] = Field(
+        None, description="Milliseconds the reviewer spent on it, when the client measured it"
+    )
     resolution: Optional[dict[str, Any]] = Field(
         None, description="An applied relationship-type delete's or retarget's in-use resolution"
     )

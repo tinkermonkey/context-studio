@@ -31,7 +31,7 @@ from domain.versioning.bundle_import import SUPERSEDED_REASON
 from domain.versioning.gold import DecisionFilter, DecisionKind
 from domain.versioning.proposal_service import OperationDraft, ProposalService
 from domain.versioning.proposals import OperationKind as K
-from domain.versioning.proposals import OperationStatus, ProposalSource
+from domain.versioning.proposals import OperationStatus, ProposalSource, RejectionReason
 from domain.versioning.proposals import OperationType as T
 from domain.versioning.revert_service import RevertService
 from tests.fakes.fake_embedding_service import FakeEmbeddingService
@@ -332,3 +332,57 @@ def test_backfill_records_earlier_decisions_once(parts, house):
     assert not {o.id for o in bundle.operations} & set(decisions)
     standing = {d.operation_id for d in gold(service, house)}
     assert standing == {ops[1].id, ops[2].id, reverted.operations[3].id}
+
+
+def test_a_reason_code_and_review_time_round_trip(parts, house):
+    """#1609: stored on SQLite and read back on the operation and its decision."""
+    _, proposals, _, service, session_factory = parts
+    proposal = propose(service, house)
+    ops = {o.seq: o for o in proposal.operations}
+
+    service.apply(proposal.id, [ops[1].id], review_ms={ops[1].id: 3100})
+    service.reject(
+        proposal.id,
+        [ops[2].id],
+        note="the text says nothing of it",
+        reason_code=RejectionReason.NOT_IN_TEXT,
+        review_ms={ops[2].id: 0},
+    )
+
+    decisions = {d.seq: d for d in gold(service, house)}
+    assert (decisions[1].reason_code, decisions[1].review_ms) == (None, 3100)
+    assert (decisions[2].reason_code, decisions[2].review_ms) == (RejectionReason.NOT_IN_TEXT, 0)
+    stored = {o.seq: o for o in proposals.get(proposal.id).operations}
+    assert stored[2].reason_code is RejectionReason.NOT_IN_TEXT
+    assert stored[1].reason_code is None
+    with session_factory() as session:
+        row = session.query(ProposalDecisionRecord).filter_by(operation_id=ops[2].id).one()
+        assert (row.reason_code, row.review_ms) == ("not_in_text", 0)
+
+
+def test_an_edited_individual_create_records_both_classes(parts, house):
+    """#1609: an individual create accepted with another class and title."""
+    ontology, _, _, service, _ = parts
+    hall = ontology.create_class(house["vocab"], "Hall", parent_class_id=house["room"])
+    proposal = service.propose(
+        house["taxonomy"],
+        "Extracted",
+        [
+            OperationDraft(
+                1, T.CREATE, K.INDIVIDUAL, fields={"class_ids": [house["room"]], "title": "Foyer"}
+            )
+        ],
+        ProposalSource.PIPELINE,
+    )
+    op = proposal.operations[0]
+
+    applied = service.apply(
+        proposal.id, [op.id], edits={op.id: {"class_ids": [hall.id], "title": "Entry hall"}}
+    ).operations[0]
+
+    [decision] = gold(service, house)
+    assert decision.decision is DecisionKind.APPLIED_WITH_EDITS
+    assert decision.proposed["fields"] == {"class_ids": [house["room"]], "title": "Foyer"}
+    assert decision.applied_fields == {"class_ids": [hall.id], "title": "Entry hall"}
+    individual = ontology.get_individual(applied.result_entity_id)
+    assert individual.class_ids == [hall.id] and individual.title == "Entry hall"

@@ -43,6 +43,7 @@ from domain.versioning.proposals import (
     ProposalSource,
     ProposalStatus,
     ProposedOperation,
+    RejectionReason,
     TypeChange,
 )
 
@@ -164,6 +165,7 @@ class SQLiteChangeProposalRepository:
                 row.status = operation.status.value  # type: ignore[assignment]
                 row.result_entity_id = operation.result_entity_id  # type: ignore[assignment]
                 row.reason = operation.reason  # type: ignore[assignment]
+                row.reason_code = _reason_code(operation.reason_code)  # type: ignore[assignment]
                 row.scope = operation.scope.value  # type: ignore[assignment]
                 row.applied_fields = operation.applied_fields  # type: ignore[assignment]
                 row.resolution = _resolution_json(operation)  # type: ignore[assignment]
@@ -369,6 +371,8 @@ def _decision_to_orm(decision: ProposalDecision) -> ProposalDecisionRecord:
         ),
         result_entity_id=decision.result_entity_id,
         reason=decision.reason,
+        reason_code=_reason_code(decision.reason_code),
+        review_ms=decision.review_ms,
         resolution=dict(decision.resolution) if decision.resolution is not None else None,
         chosen_alternative=(
             dict(decision.chosen_alternative) if decision.chosen_alternative is not None else None
@@ -396,6 +400,8 @@ def _decision_to_domain(row: ProposalDecisionRecord) -> ProposalDecision:
         applied_fields=dict(row.applied_fields) if row.applied_fields is not None else None,  # type: ignore[arg-type]
         result_entity_id=row.result_entity_id,  # type: ignore[arg-type]
         reason=row.reason,  # type: ignore[arg-type]
+        reason_code=RejectionReason(row.reason_code) if row.reason_code else None,
+        review_ms=row.review_ms,  # type: ignore[arg-type]
         resolution=dict(row.resolution) if row.resolution is not None else None,  # type: ignore[arg-type]
         chosen_alternative=(
             dict(row.chosen_alternative)  # type: ignore[arg-type]
@@ -462,12 +468,17 @@ def _operation_to_orm(proposal_id: str, operation: ProposedOperation) -> Proposa
         status=operation.status.value,
         result_entity_id=operation.result_entity_id,
         reason=operation.reason,
+        reason_code=_reason_code(operation.reason_code),
         applied_fields=operation.applied_fields,
         resolution=_resolution_json(operation),
         proposed_replacement_id=operation.proposed_replacement_id,
         type_change=_type_change_json(operation),
         alternatives=[dict(a) for a in operation.alternatives],
     )
+
+
+def _reason_code(code: Optional[RejectionReason]) -> Optional[str]:
+    return code.value if code is not None else None
 
 
 def _resolution_json(operation: ProposedOperation) -> Optional[dict]:
@@ -496,6 +507,7 @@ def _operation_to_domain(row: ProposalOperation) -> ProposedOperation:
         status=OperationStatus(row.status),
         result_entity_id=row.result_entity_id,  # type: ignore[arg-type]
         reason=row.reason,  # type: ignore[arg-type]
+        reason_code=RejectionReason(row.reason_code) if row.reason_code else None,
         applied_fields=dict(row.applied_fields) if row.applied_fields is not None else None,
         resolution=(
             InUseResolution.from_json(dict(row.resolution))  # type: ignore[arg-type]

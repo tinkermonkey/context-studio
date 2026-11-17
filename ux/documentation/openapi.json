@@ -7566,7 +7566,7 @@
           "proposals"
         ],
         "summary": "Apply Proposal",
-        "description": "Apply the chosen operations in seq order under the proposal's run.\n\nEach operation records its own outcome; one that fails (e.g. \"target_changed\")\ndoes not undo the others. Pass a stale operation in force_stale to apply it\nanyway (edited ones too).\n\nedits corrects property-definition updates and deletes before they apply:\neach replaces the operation's proposed fields, applied as an update. A field\nproblem, or a breach of the taxonomy's rules (for dr_spec: both classes are\nDR spec classes, the predicate is in its predicate catalog, and no other\nrelationship type or operation has the triple), fails only that operation\nwith \"invalid_edit: ...\"; it stays open, to apply again with a corrected\nedit or reject. For dr_spec the identifier and DR external reference follow\nfrom the triple. What was applied is returned as the operation's\napplied_fields.\n\nresolutions lets a relationship-type delete apply although relationships\nstill use the type (its blockers list them): \"move\" gives each the\nreplacement type instead (all must fit its domain and range, inheritance-\naware, and allow their attributes, or nothing moves), \"delete\" deletes them\ntoo. The relationships and the type change in one transaction tagged with\nthe proposal's run, so Revert restores them together; a failure fails only\nthat operation (\"unresolvable: ...\" for a misfit) and changes nothing.\nWithout a resolution such a delete fails as in use. A property update that\nretargets a type relationships use (another domain and range pair) needs\none the same way (its blockers list them); a retarget of an unused type\nneeds none. What was moved or deleted is returned as the operation's\nresolution.\n\nA property update that reverses the type (domain and range swapped) swaps\nthe ends of every relationship using it in place (each keeps its id), and\na rename keeps them, in one transaction with the update; Revert undoes both.\n\nchosen_alternatives records, in each applied operation's decision, the\nalternative the reviewer chose over the proposal's pick (gold's\nchosen_alternative), e.g. a reflection's answers when accepted with an edit.\nFor an individual create with near matches, {\"kind\": \"existing\",\n\"entity_id\"} applies it as that existing individual: nothing is created,\nand relationships that name it by \"$ref\" point at the existing one.",
+        "description": "Apply the chosen operations in seq order under the proposal's run.\n\nEach operation records its own outcome; one that fails (e.g. \"target_changed\")\ndoes not undo the others. Pass a stale operation in force_stale to apply it\nanyway (edited ones too).\n\nedits corrects property-definition updates and deletes before they apply:\neach replaces the operation's proposed fields, applied as an update. A field\nproblem, or a breach of the taxonomy's rules (for dr_spec: both classes are\nDR spec classes, the predicate is in its predicate catalog, and no other\nrelationship type or operation has the triple), fails only that operation\nwith \"invalid_edit: ...\"; it stays open, to apply again with a corrected\nedit or reject. For dr_spec the identifier and DR external reference follow\nfrom the triple. What was applied is returned as the operation's\napplied_fields.\n\nresolutions lets a relationship-type delete apply although relationships\nstill use the type (its blockers list them): \"move\" gives each the\nreplacement type instead (all must fit its domain and range, inheritance-\naware, and allow their attributes, or nothing moves), \"delete\" deletes them\ntoo. The relationships and the type change in one transaction tagged with\nthe proposal's run, so Revert restores them together; a failure fails only\nthat operation (\"unresolvable: ...\" for a misfit) and changes nothing.\nWithout a resolution such a delete fails as in use. A property update that\nretargets a type relationships use (another domain and range pair) needs\none the same way (its blockers list them); a retarget of an unused type\nneeds none. What was moved or deleted is returned as the operation's\nresolution.\n\nA property update that reverses the type (domain and range swapped) swaps\nthe ends of every relationship using it in place (each keeps its id), and\na rename keeps them, in one transaction with the update; Revert undoes both.\n\nedits also corrects an individual create's title and/or class_ids: the\nindividual is created with the proposed fields overridden by the edit\n(recorded as applied_fields, decided applied_with_edits). A class that\ndoesn't exist or isn't in the proposal's taxonomy, or proposed\ndata_properties the edited classes don't define, fails only that operation\nwith \"invalid_edit: ...\".\n\nreview_ms records, in each applied operation's decision, the milliseconds\nthe reviewer spent on it.\n\nchosen_alternatives records, in each applied operation's decision, the\nalternative the reviewer chose over the proposal's pick (gold's\nchosen_alternative), e.g. a reflection's answers when accepted with an edit.\nFor an individual create with near matches, {\"kind\": \"existing\",\n\"entity_id\"} applies it as that existing individual: nothing is created,\nand relationships that name it by \"$ref\" point at the existing one.",
         "operationId": "apply_proposal_api_proposals__proposal_id__apply_post",
         "parameters": [
           {
@@ -7607,7 +7607,7 @@
             "description": "The proposal is reverted, or an operation is already decided"
           },
           "422": {
-            "description": "An operation id is not in the proposal, or an edit is misplaced (not in operation_ids, not a property update/delete, empty, or uses a $ref), or a resolution is (not in operation_ids, not a property delete or update, an edited delete, a move without replacement_property_id, or a move to a type the proposal deletes); nothing was applied"
+            "description": "An operation id is not in the proposal, or an edit is misplaced (not in operation_ids, not a property update/delete or individual create, empty, uses a $ref, or an individual create's sets more than a non-empty title and class_ids), or review_ms names an operation not in operation_ids, or a resolution is (not in operation_ids, not a property delete or update, an edited delete, a move without replacement_property_id, or a move to a type the proposal deletes); nothing was applied"
           }
         }
       }
@@ -7618,7 +7618,7 @@
           "proposals"
         ],
         "summary": "Reject Proposal",
-        "description": "Reject operations, or without operation_ids every pending or failed one.",
+        "description": "Reject operations, or without operation_ids every pending or failed one.\n\nThe note and reason_code are stored on each operation and its decision;\nreview_ms records the milliseconds the reviewer spent on each in its decision.",
         "operationId": "reject_proposal_api_proposals__proposal_id__reject_post",
         "parameters": [
           {
@@ -7659,7 +7659,7 @@
             "description": "An operation is already applied or rejected"
           },
           "422": {
-            "description": "An operation id is not in the proposal"
+            "description": "An operation id is not in the proposal, the reason_code is unknown, or review_ms names an operation not being rejected"
           }
         }
       }
@@ -10791,7 +10791,7 @@
             },
             "type": "object",
             "title": "Edits",
-            "description": "Operation id -> the complete Context Studio fields to apply as a property-definition update instead of the proposed ones; only for property update/delete ops in operation_ids (an edited delete applies as an update). For a dr_spec proposal the identifier and DR external reference follow from the triple (canonical_predicate, domain_class_id, range_class_id)"
+            "description": "Operation id -> the reviewer's corrections, for ops in operation_ids. A property update/delete's edit is the complete Context Studio fields to apply as a property-definition update instead of the proposed ones (an edited delete applies as an update); for a dr_spec proposal the identifier and DR external reference follow from the triple (canonical_predicate, domain_class_id, range_class_id). An individual create's edit sets only title (non-empty) and/or class_ids (a non-empty list of class ids of the proposal's taxonomy), overriding the proposed values; the individual is created with the merged fields, recorded as applied_fields. An individual create applied as an existing near match (chosen_alternatives {\"kind\": \"existing\"}) takes no edit"
           },
           "resolutions": {
             "additionalProperties": {
@@ -10809,6 +10809,15 @@
             "type": "object",
             "title": "Chosen Alternatives",
             "description": "Operation id -> the alternative the reviewer chose over the proposal's pick (e.g. a reflection's answers per question): a non-empty object, for an operation in operation_ids that edits also has (the edit applies it); recorded in its decision as chosen_alternative. For an individual create, {\"kind\": \"existing\", \"entity_id\"} naming one of its alternatives (near matches) needs no edit: the create is not performed, the operation applies as that existing individual (result_entity_id), and later operations' \"$ref\" to it point there"
+          },
+          "review_ms": {
+            "additionalProperties": {
+              "type": "integer",
+              "minimum": 0.0
+            },
+            "type": "object",
+            "title": "Review Ms",
+            "description": "Operation id -> the milliseconds the reviewer spent on it, for ops in operation_ids; recorded in its decision (gold's review_ms)"
           }
         },
         "type": "object",
@@ -10972,6 +10981,26 @@
             ],
             "title": "Note",
             "description": "Why; stored as each operation's reason"
+          },
+          "reason_code": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/RejectionReason"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Why, as a code, for every operation rejected; stored on each operation and its decision beside the note"
+          },
+          "review_ms": {
+            "additionalProperties": {
+              "type": "integer",
+              "minimum": 0.0
+            },
+            "type": "object",
+            "title": "Review Ms",
+            "description": "Operation id -> the milliseconds the reviewer spent on it, for operations being rejected; recorded in its decision (gold's review_ms)"
           }
         },
         "type": "object",
@@ -14159,6 +14188,29 @@
             ],
             "title": "Reason",
             "description": "Why (a reject note)"
+          },
+          "reason_code": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/RejectionReason"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Why a reviewer rejected it, as a code; null otherwise"
+          },
+          "review_ms": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Review Ms",
+            "description": "Milliseconds the reviewer spent on it, when the client measured it"
           },
           "resolution": {
             "anyOf": [
@@ -18390,6 +18442,17 @@
             "title": "Reason",
             "description": "Why it failed (\"<code>: <detail>\") or was rejected"
           },
+          "reason_code": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/RejectionReason"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Why a reviewer rejected it, as a code; null otherwise"
+          },
           "applied_fields": {
             "anyOf": [
               {
@@ -18401,7 +18464,7 @@
               }
             ],
             "title": "Applied Fields",
-            "description": "Set when a reviewer edited the operation: the fields actually applied, always as an update (an edited delete applies as an update). Null = applied as proposed, or not applied"
+            "description": "Set when a reviewer edited the operation: the fields actually applied, as an update for a property operation (an edited delete applies as an update), or an individual create's fields merged with the edit. Null = applied as proposed, or not applied"
           },
           "resolution": {
             "anyOf": [
@@ -19298,6 +19361,19 @@
         ],
         "title": "ReflectionTripleResponse",
         "description": "A relationship type as the decision model read it: class labels and predicate."
+      },
+      "RejectionReason": {
+        "type": "string",
+        "enum": [
+          "not_in_text",
+          "too_generic",
+          "mentioned_only",
+          "out_of_scope",
+          "duplicate",
+          "other"
+        ],
+        "title": "RejectionReason",
+        "description": "Why a reviewer rejected an operation, as a code (beside the free-text note)."
       },
       "RelationshipCreateRequest": {
         "properties": {
