@@ -153,5 +153,5 @@ Re-recording (paid; `--spend` required): `run --arm <R1|R2-haiku|R2-opus|R2-*-go
 
 ## Links
 
-- Pull requests: pending
+- Pull requests: #1608
 - Ledger entries: `tests/integration/fixtures/pipelines/extraction_benchmark_external/ledger-relationships.jsonl`
