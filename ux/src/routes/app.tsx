@@ -334,6 +334,7 @@ function AppShell() {
                   { id: "pipelines-types", label: "Pipeline types" },
                   { id: "pipelines-review", label: "Extraction review" },
                   { id: "pipelines-runs", label: "Runs" },
+                  { id: "pipelines-gold", label: "Benchmark gold" },
                 ],
               },
               { id: "graph", label: "Graph view", icon: "graph" },

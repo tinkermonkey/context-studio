@@ -55,6 +55,8 @@ interface ProposedOperation {
   id: string;
   seq: number;
   status: string;
+  added_by_reviewer?: boolean;
+  fields?: Record<string, unknown>;
   result_entity_id?: string | null;
   reason?: string | null;
   reason_code?: string | null;
@@ -64,6 +66,45 @@ interface ProposedOperation {
 interface ChangeProposal {
   id: string;
   operations: ProposedOperation[];
+}
+
+interface GoldDecision {
+  operation_id: string;
+  decision: string;
+  added: boolean;
+  annotations?: Record<string, unknown> | null;
+}
+
+interface GoldPage {
+  items: GoldDecision[];
+  total: number;
+}
+
+/** A gold check's origin and mapping, as extraction_benchmark.py check records them. */
+const GOLD_DOCUMENT = "e2e_gold_doc";
+function goldCheckMetadata() {
+  const origin = {
+    pipeline_type: "individual_extraction",
+    implementation_id: "gold_check",
+    configuration_ref: "gold",
+    configuration_version: 1,
+    digest: "e2e0gold0001",
+  };
+  return {
+    origin,
+    gold_check: {
+      document: GOLD_DOCUMENT,
+      split: "dev",
+      elements: {
+        billing: { key: "billing", tier: "core", acceptable_classes: [], aliases: ["Billing"] },
+        gateway: { key: "gateway", tier: "supporting", acceptable_classes: [], aliases: [] },
+        customers: { key: "customers", tier: "core", acceptable_classes: [], aliases: [] },
+      },
+      relationships: {
+        "4": { source: "gateway", predicate: "serves", target: "customers", tier: "core" },
+      },
+    },
+  };
 }
 
 interface EntitySource {
@@ -88,7 +129,10 @@ interface ReviewSeed {
 }
 
 /** Seed a pending extraction proposal whose elements cite passages in a pasted source. */
-async function seedReviewProposal(page: Page): Promise<ReviewSeed> {
+async function seedReviewProposal(
+  page: Page,
+  { goldCheck = false }: { goldCheck?: boolean } = {},
+): Promise<ReviewSeed> {
   const taxonomy = await createTaxonomy(page, { title: "E2E Review Taxonomy" });
   const scheme = await createConceptScheme(page, taxonomy.id, { title: "E2E Review Layer" });
   const appService = await createClass(page, scheme.id, {
@@ -134,6 +178,11 @@ async function seedReviewProposal(page: Page): Promise<ReviewSeed> {
       title: "E2E review extraction",
       source: "pipeline",
       source_detail: "e2e seed: individual_extraction",
+      // The source it was extracted from: the Review page offers adding a missed element.
+      client_metadata: {
+        source_id: source.id,
+        ...(goldCheck ? goldCheckMetadata() : {}),
+      },
       operations: [
         {
           seq: 1,
@@ -501,5 +550,110 @@ test.describe("Proposal review page", () => {
     await expect(page).toHaveURL(new RegExp(`/app/proposals/${proposal.id}$`));
     await expect(page.getByTestId("proposal-tally")).toHaveText("1 of 4 need a decision");
     await expect(page.getByTestId("proposal-decided-counts")).toHaveText("2 applied · 1 rejected");
+  });
+
+  test("adds a missed element from text selected in the source", async ({ page }) => {
+    const seed = await seedReviewProposal(page);
+    const { proposal, techNode, taxonomy } = seed;
+
+    await page.goto(`/app/proposals/${proposal.id}/review`);
+    await page.waitForLoadState("networkidle");
+    await expect(page.getByTestId("review-source-hint")).toHaveText(
+      "Select any text to add an element the pipeline missed. Click a highlight to open it.",
+    );
+
+    // 1. Select "invoices" in the source text (no highlight covers it).
+    await page.getByTestId("review-source-text").evaluate((container, quote) => {
+      const walker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT);
+      while (walker.nextNode()) {
+        const node = walker.currentNode as Text;
+        const at = node.data.indexOf(quote);
+        if (at < 0) continue;
+        const range = document.createRange();
+        range.setStart(node, at);
+        range.setEnd(node, at + quote.length);
+        const selection = window.getSelection()!;
+        selection.removeAllRanges();
+        selection.addRange(range);
+        return;
+      }
+      throw new Error(`"${quote}" is not in the source text`);
+    }, "invoices");
+    await page.getByTestId("review-source-selectable").dispatchEvent("mouseup");
+
+    // 2. The form: the selection as the title, a class, Add element.
+    const dialog = page.getByRole("dialog", { name: "Selected text · not in the proposal" });
+    await expect(dialog).toBeVisible();
+    await expect(dialog.getByTestId("review-add-quote")).toHaveText("invoices");
+    const titleInput = dialog.getByLabel("Title");
+    await expect(titleInput).toHaveValue("invoices");
+    await titleInput.fill("Invoices");
+    const picker = dialog.getByTestId("review-add-class-picker");
+    await picker.getByRole("combobox").fill("Technology");
+    await picker.getByRole("option", { name: "E2E Review Technology Node" }).click();
+    await expect(dialog.getByTestId("review-add-class-chosen")).toHaveText(
+      "E2E Review Technology Node",
+    );
+    await dialog.getByRole("button", { name: "Add element" }).click();
+
+    // 3. Added: closed, highlighted, listed, counted and open in the inspector.
+    await expect(dialog).toHaveCount(0);
+    await expect(page.getByTestId("review-inspector-title")).toHaveText("Invoices");
+    await expect(page.getByTestId("review-inspector-status")).toHaveText("added");
+    await expect(page.getByTestId("review-progress-counts")).toContainText("1 added");
+    await expect(page.getByTestId("review-progress-decided")).toHaveText("1 / 5");
+
+    const after = await apiRequest<ChangeProposal>(page, `/api/proposals/${proposal.id}`);
+    const added = after.operations.find((o) => o.added_by_reviewer);
+    expect(added, "the added operation is in the proposal").toBeDefined();
+    expect(added!.status).toBe("applied");
+    expect(added!.fields).toMatchObject({ title: "Invoices", class_ids: [techNode.id] });
+    const mark = await markOf(page, "invoices", added!.id);
+    await expect(mark).toHaveClass(/\breview-mark--added\b/);
+    await expect(row(page, added!.id)).toHaveAttribute("data-verdict", "added");
+
+    const gold = await apiRequest<GoldPage>(
+      page,
+      `/api/taxonomies/${taxonomy.id}/gold?proposal_id=${proposal.id}`,
+    );
+    const decision = gold.items.find((d) => d.operation_id === added!.id);
+    expect(decision).toMatchObject({ decision: "applied", added: true });
+  });
+
+  test("gold mode: flips a tier and records it with the decision", async ({ page }) => {
+    const seed = await seedReviewProposal(page, { goldCheck: true });
+    const { proposal, ops, taxonomy } = seed;
+
+    await page.goto(`/app/proposals/${proposal.id}/review`);
+    await page.waitForLoadState("networkidle");
+    await expect(page.getByTestId("review-header")).toContainText(`Gold check: ${GOLD_DOCUMENT}`);
+    await expect(page.getByTestId("review-gold-split")).toHaveText("dev");
+    await expect(page.getByTestId("review-gold-aliases")).toHaveText("Also called Billing");
+
+    // Billing Service is core in gold: flip it to supporting, then accept it.
+    const tier = page.getByTestId("review-tier");
+    await expect(tier.getByRole("radio", { name: "Core" })).toHaveAttribute("aria-checked", "true");
+    await tier.getByRole("radio", { name: "Supporting" }).click();
+    await expect(tier.getByRole("radio", { name: "Supporting" })).toHaveAttribute(
+      "aria-checked",
+      "true",
+    );
+    await page.getByTestId("review-correct").click();
+    await expect(row(page, ops.billing)).toHaveAttribute("data-verdict", "correct");
+
+    // Rejecting needs a note in gold mode.
+    await expect(row(page, ops.gateway)).toHaveAttribute("aria-selected", "true");
+    await expect(page.getByTestId("review-reason-too_generic")).toBeDisabled();
+    await expect(page.getByTestId("review-note-required")).toBeVisible();
+    await page.getByTestId("review-note").fill("A channel, not a component");
+    await expect(page.getByTestId("review-note-required")).toHaveCount(0);
+    await expect(page.getByTestId("review-reason-too_generic")).toBeEnabled();
+
+    const gold = await apiRequest<GoldPage>(
+      page,
+      `/api/taxonomies/${taxonomy.id}/gold?proposal_id=${proposal.id}`,
+    );
+    const decision = gold.items.find((d) => d.operation_id === ops.billing);
+    expect(decision).toMatchObject({ decision: "applied", annotations: { tier: "supporting" } });
   });
 });

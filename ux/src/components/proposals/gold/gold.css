@@ -1,0 +1,115 @@
+@layer app {
+  /* ============= Benchmark gold (/app/pipelines/gold, #1614) ============= */
+  .gold-page {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    color: rgb(var(--canvas-fg-1));
+  }
+
+  .gold-mono {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    font-weight: 600;
+  }
+
+  .gold-number {
+    font-family: var(--font-mono);
+  }
+
+  .gold-muted {
+    margin: 0;
+    font-size: 12.5px;
+    color: rgb(var(--canvas-fg-3));
+  }
+
+  .gold-text {
+    margin: 0;
+  }
+
+  .gold-progress {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .gold-progress__count {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: rgb(var(--canvas-fg-2));
+  }
+
+  .gold-empty {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .gold-panels {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 14px;
+    align-items: start;
+  }
+
+  .gold-writes,
+  .gold-list {
+    margin: 0 0 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .gold-writes {
+    padding: 0;
+    list-style: none;
+  }
+
+  .gold-list {
+    padding-left: 18px;
+  }
+
+  .gold-writes__item {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding-bottom: 8px;
+    border-bottom: 1px dashed rgb(var(--canvas-border));
+  }
+
+  .gold-writes__verdict {
+    font-weight: 600;
+  }
+
+  .gold-writes__effect {
+    color: rgb(var(--canvas-fg-2));
+  }
+
+  .gold-commands__document {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin: 8px 0;
+  }
+
+  .gold-command {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+    margin: 4px 0;
+  }
+
+  .gold-command__text {
+    flex: 1;
+    min-width: 0;
+    padding: 4px 8px;
+    border: 1px solid rgb(var(--canvas-border));
+    border-radius: 4px;
+    background: rgb(var(--canvas-bg));
+    font-family: var(--font-mono);
+    font-size: 12px;
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+}

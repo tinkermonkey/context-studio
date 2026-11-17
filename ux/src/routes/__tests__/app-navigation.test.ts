@@ -68,6 +68,14 @@ describe("app navigation — pipelines", () => {
     expect(getBreadcrumbLabels(path)).toEqual(labels);
   });
 
+  it("wires the benchmark gold route into sidebar, palette and breadcrumbs", () => {
+    expect(SIDEBAR_PATH_MAP["pipelines-gold"]).toBe("/app/pipelines/gold");
+    expect(getActiveItemId("/app/pipelines/gold")).toBe("pipelines-gold");
+    expect(getBreadcrumbLabels("/app/pipelines/gold")).toEqual(["Pipelines", "Benchmark gold"]);
+    const action = NAV_ACTIONS.find((a) => a.id === "nav-benchmark-gold");
+    expect(action).toMatchObject({ label: "Benchmark gold", to: "/app/pipelines/gold" });
+  });
+
   it("wires the extraction review route into sidebar, palette and breadcrumbs", () => {
     expect(SIDEBAR_PATH_MAP["pipelines-review"]).toBe("/app/pipelines/review");
     expect(getActiveItemId("/app/pipelines/review")).toBe("pipelines-review");

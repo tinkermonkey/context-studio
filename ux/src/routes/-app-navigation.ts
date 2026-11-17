@@ -22,6 +22,7 @@ export const ROUTE_LABELS: Record<string, string[]> = {
   "/app/pipelines": ["Pipelines", "Pipeline Types"],
   "/app/pipelines/review": ["Pipelines", "Extraction review"],
   "/app/pipelines/runs": ["Pipelines", "Runs"],
+  "/app/pipelines/gold": ["Pipelines", "Benchmark gold"],
   "/app/versioning": ["Versioning"],
   "/app/settings": ["Settings"],
   "/app/contact-sheet": ["Developer", "Contact Sheet"],
@@ -44,6 +45,7 @@ export const ROUTE_TO_SIDEBAR_ID: Array<{ prefix: string; id: string }> = [
   { prefix: "/app/pipelines/review", id: "pipelines-review" },
   { prefix: "/app/pipelines/runs", id: "pipelines-runs" },
   { prefix: "/app/pipelines/batches", id: "pipelines-runs" },
+  { prefix: "/app/pipelines/gold", id: "pipelines-gold" },
   { prefix: "/app/pipelines", id: "pipelines-types" },
   { prefix: "/app/graph", id: "graph" },
   { prefix: "/app/settings", id: "settings" },
@@ -137,6 +139,13 @@ export const NAV_ACTIONS = [
     to: "/app/pipelines/runs",
   },
   {
+    id: "nav-benchmark-gold",
+    label: "Benchmark gold",
+    description:
+      "Pipelines → Benchmark gold: check the gold files every pipeline is scored against",
+    to: "/app/pipelines/gold",
+  },
+  {
     id: "nav-settings",
     label: "Configuration",
     description: "Go to settings",
@@ -163,6 +172,7 @@ export const SIDEBAR_PATH_MAP: Record<string, string> = {
   "pipelines-types": "/app/pipelines",
   "pipelines-review": "/app/pipelines/review",
   "pipelines-runs": "/app/pipelines/runs",
+  "pipelines-gold": "/app/pipelines/gold",
   graph: "/app/graph",
   settings: "/app/settings",
 };

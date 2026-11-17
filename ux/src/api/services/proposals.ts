@@ -8,6 +8,8 @@ export type ChangeProposalApplyRequest = components["schemas"]["ChangeProposalAp
 export type ChangeProposalRejectRequest = components["schemas"]["ChangeProposalRejectRequest"];
 /** An individual the extraction missed, as the reviewer found it in the proposal's source. */
 export type AddIndividualRequest = components["schemas"]["AddIndividualRequest"];
+/** What a reviewer notes for benchmark gold on a decision: the tier, and also defensible classes. */
+export type ReviewAnnotation = components["schemas"]["ReviewAnnotationRequest"];
 /** Why a reviewer rejected an operation, as a code (sent with a reject, kept on the operation). */
 export type RejectionReason = components["schemas"]["RejectionReason"];
 export type ChangeProposalRevertResponse = components["schemas"]["ChangeProposalRevertResponse"];

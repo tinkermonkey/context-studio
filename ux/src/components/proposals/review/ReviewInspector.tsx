@@ -1,5 +1,12 @@
 import { useState, type RefObject } from "react";
-import { Button, Chip, FormCallout, Panel, TextArea } from "@tinkermonkey/heimdall-ui";
+import {
+  Button,
+  Chip,
+  FormCallout,
+  Panel,
+  SegmentedControl,
+  TextArea,
+} from "@tinkermonkey/heimdall-ui";
 import type { ProposedOperation, RejectionReason } from "@/api/services/proposals";
 import type { components } from "@/api/types";
 import { formatProbability } from "../proposalModel";
@@ -11,6 +18,7 @@ import {
   type NearMatchChoice as Choice,
 } from "../sourceModel";
 import { ReviewClassPicker } from "./ReviewClassPicker";
+import type { GoldDraft, Tier } from "./goldModel";
 import {
   REJECTION_REASONS,
   VERDICT_CHIP,
@@ -68,6 +76,46 @@ interface ReviewInspectorProps {
   onPickClass: (classId: string) => void;
   onReject: (reasonCode: RejectionReason, note: string) => void;
   onSelect: (operationId: string) => void;
+  /** Gold mode: the operation's gold tier and aliases, and what the reviewer has noted. */
+  gold?: GoldInspector;
+}
+
+/** What gold mode adds to the inspector for one operation. */
+export interface GoldInspector {
+  /** The tier gold gives it, when it is in gold. */
+  goldTier?: Tier;
+  aliases: string[];
+  draft: GoldDraft;
+  onDraft: (draft: GoldDraft) => void;
+}
+
+/** The tier control: core or supporting, starting from gold's. */
+function TierControl({
+  tier,
+  onChange,
+  disabled,
+}: {
+  tier: Tier;
+  onChange: (tier: Tier) => void;
+  disabled: boolean;
+}) {
+  return (
+    <div className="review-tier" data-testid="review-tier">
+      <span className="review-muted" id="review-tier-label">
+        Tier
+      </span>
+      <SegmentedControl
+        value={tier}
+        onChange={(value) => onChange(value as Tier)}
+        aria-labelledby="review-tier-label"
+        disabled={disabled}
+        options={[
+          { value: "core", label: "Core" },
+          { value: "supporting", label: "Supporting" },
+        ]}
+      />
+    </div>
+  );
 }
 
 function Eyebrow({ children }: { children: string }) {
@@ -176,8 +224,13 @@ export function ReviewInspector({
   onPickClass,
   onReject,
   onSelect,
+  gold,
 }: ReviewInspectorProps) {
   const [note, setNote] = useState("");
+  // In gold mode a rejection needs a note: it becomes the excluded entry's reason.
+  const noteMissing = !!gold && !note.trim();
+  const draft = gold?.draft;
+  const tier = draft?.tier ?? gold?.goldTier ?? "core";
   const element = isElement(operation);
   const verdict = verdictOf(operation);
   const awaiting = verdict === "awaiting";
@@ -212,6 +265,11 @@ export function ReviewInspector({
         <span className="review-inspector__title" data-testid="review-inspector-title">
           {names.titleOf(operation)}
         </span>
+        {gold && gold.aliases.length > 0 && (
+          <span className="review-muted" data-testid="review-gold-aliases">
+            Also called {gold.aliases.join(", ")}
+          </span>
+        )}
         <div className="review-chips">
           {element && (
             <ClassChip label={names.classLabel(classId)} data-testid="review-inspector-class" />
@@ -274,6 +332,13 @@ export function ReviewInspector({
                   disabled={busy}
                 />
               )}
+              {gold && draft && (
+                <TierControl
+                  tier={tier}
+                  disabled={busy}
+                  onChange={(next) => gold.onDraft({ ...draft, tier: next })}
+                />
+              )}
               {ends.rejected.length === 0 && (
                 <div className="review-chips">
                   <Button
@@ -304,25 +369,65 @@ export function ReviewInspector({
                     another class.
                   </span>
                 )}
-                {suggestions.map((suggestion, i) => (
-                  <button
-                    key={suggestion.id}
-                    type="button"
-                    className="review-alt"
-                    disabled={busy || usingExisting}
-                    aria-keyshortcuts={String(i + 1)}
-                    title={names.classLabel(suggestion.id)}
-                    onClick={() => onPickClass(suggestion.id)}
-                    data-testid={`review-suggestion-${i + 1}`}
-                  >
-                    <span className="review-alt__class">
-                      {i + 1} {names.classLabel(suggestion.id)}
-                    </span>
-                    {suggestion.description && (
-                      <span className="review-alt__definition">{suggestion.description}</span>
-                    )}
-                  </button>
-                ))}
+                {suggestions.map((suggestion, i) => {
+                  const defensible = !!draft?.alsoDefensible.includes(suggestion.id);
+                  const pick = (
+                    <button
+                      key={suggestion.id}
+                      type="button"
+                      className="review-alt"
+                      disabled={busy || usingExisting}
+                      aria-keyshortcuts={String(i + 1)}
+                      title={names.classLabel(suggestion.id)}
+                      onClick={() => onPickClass(suggestion.id)}
+                      data-testid={`review-suggestion-${i + 1}`}
+                    >
+                      <span className="review-alt__class">
+                        {i + 1} {names.classLabel(suggestion.id)}
+                      </span>
+                      {suggestion.description && (
+                        <span className="review-alt__definition">{suggestion.description}</span>
+                      )}
+                    </button>
+                  );
+                  if (!gold || !draft) return pick;
+                  return (
+                    <div key={suggestion.id} className="review-alt-row">
+                      {pick}
+                      <button
+                        type="button"
+                        className={["review-defensible", defensible && "review-defensible--on"]
+                          .filter(Boolean)
+                          .join(" ")}
+                        aria-pressed={defensible}
+                        aria-label={`${names.classLabel(suggestion.id)} is also defensible`}
+                        disabled={busy}
+                        onClick={() =>
+                          gold.onDraft({
+                            ...draft,
+                            alsoDefensible: defensible
+                              ? draft.alsoDefensible.filter((id) => id !== suggestion.id)
+                              : [...draft.alsoDefensible, suggestion.id],
+                          })
+                        }
+                        data-testid={`review-defensible-${i + 1}`}
+                      >
+                        Also defensible
+                      </button>
+                    </div>
+                  );
+                })}
+                {gold && draft && classId && (
+                  <label className="review-check" data-testid="review-keep-old">
+                    <input
+                      type="checkbox"
+                      checked={draft.keepOld}
+                      disabled={busy}
+                      onChange={(e) => gold.onDraft({ ...draft, keepOld: e.target.checked })}
+                    />
+                    Keep {names.classLabel(classId)} as also defensible
+                  </label>
+                )}
                 <ReviewClassPicker
                   classes={pickable}
                   current={cls}
@@ -347,7 +452,7 @@ export function ReviewInspector({
                     key={reason.code}
                     type="button"
                     className="review-reason"
-                    disabled={busy}
+                    disabled={busy || noteMissing}
                     onClick={() => onReject(reason.code, note)}
                     data-testid={`review-reason-${reason.code}`}
                   >
@@ -356,16 +461,28 @@ export function ReviewInspector({
                 ))}
               </div>
               <label htmlFor="review-note" className="review-muted">
-                Note, optional · kept with the decision
+                {gold
+                  ? "Note, needed · the excluded entry's reason"
+                  : "Note, optional · kept with the decision"}
               </label>
               <TextArea
                 id="review-note"
                 rows={2}
                 value={note}
+                aria-describedby={noteMissing ? "review-note-required" : undefined}
                 placeholder="e.g. a region the team targets, not a party with concerns"
                 onChange={(e) => setNote(e.target.value)}
                 data-testid="review-note"
               />
+              {noteMissing && (
+                <span
+                  id="review-note-required"
+                  className="review-add__error"
+                  data-testid="review-note-required"
+                >
+                  Write why it is not an element to reject it: the note becomes its excluded entry.
+                </span>
+              )}
             </div>
           </>
         ) : (

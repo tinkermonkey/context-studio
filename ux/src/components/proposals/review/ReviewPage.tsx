@@ -7,7 +7,7 @@ import {
   useState,
   type CSSProperties,
 } from "react";
-import { Button, ConfirmDialog, PageHeader, ProgressBar } from "@tinkermonkey/heimdall-ui";
+import { Button, Chip, ConfirmDialog, PageHeader, ProgressBar } from "@tinkermonkey/heimdall-ui";
 import { SMALL_SET_LIMIT } from "@/api/config";
 import { ApiError } from "@/api/client/interceptors";
 import { useAddProposalIndividual, useChangeProposal } from "@/api/hooks/proposals";
@@ -67,6 +67,18 @@ import {
   type Layer,
 } from "./reviewModel";
 import { useReviewClock } from "./useReviewClock";
+import {
+  EMPTY_DRAFT,
+  HOLDOUT_NOTE,
+  SPLIT_CHIP,
+  annotationOf,
+  classesByRef,
+  goldCheckOf,
+  goldElementOf,
+  goldTierOf,
+  type GoldDraft,
+  type Tier,
+} from "./goldModel";
 import "../proposals.css";
 import "./review.css";
 
@@ -269,17 +281,40 @@ export function ReviewPage({ id, onFinish }: ReviewPageProps) {
   const selected = reviewed.find((o) => o.id === selectedId);
   useEffect(() => clock.startElement(selectedId), [clock, selectedId]);
 
-  // Classes picked earlier in this review, most recent first.
+  // Gold mode: a benchmark gold file loaded for a person to check.
+  const gold = useMemo(() => goldCheckOf(proposal), [proposal]);
+  // What the reviewer has noted for gold, by operation (tier, also defensible, keep old class).
+  const [goldDrafts, setGoldDrafts] = useState<Record<string, GoldDraft>>({});
+  const draftOf = (operation: ProposedOperation) => goldDrafts[operation.id] ?? EMPTY_DRAFT;
+  /** The gold annotation a decision on `operation` sends, if anything was noted. */
+  const goldAnnotations = (operation: ProposedOperation, newClassId?: string) => {
+    if (!gold) return undefined;
+    const annotation = annotationOf(draftOf(operation), {
+      goldTier: goldTierOf(gold, operation),
+      oldClassId: shownClassId(operation),
+      newClassId,
+    });
+    return annotation ? { [operation.id]: annotation } : undefined;
+  };
+
+  // Classes picked earlier in this review, most recent first; in gold mode the
+  // element's acceptable classes come first.
   const [recentClasses, setRecentClasses] = useState<string[]>([]);
-  const suggestions = useMemo(
-    () =>
-      selected && isElement(selected)
-        ? suggestedClasses(recentClasses, shownClassId(selected)).flatMap(
-            (classId) => classById.get(classId) ?? [],
-          )
-        : [],
-    [recentClasses, selected, classById],
-  );
+  const suggestions = useMemo(() => {
+    if (!selected || !isElement(selected)) return [];
+    const current = shownClassId(selected);
+    const goldEntry = gold ? goldElementOf(gold, selected) : undefined;
+    const acceptable = goldEntry
+      ? classesByRef(goldEntry.acceptableClasses, classes ?? []).filter((c) => c.id !== current)
+      : [];
+    const recent = suggestedClasses(recentClasses, current).flatMap(
+      (classId) => classById.get(classId) ?? [],
+    );
+    const all = [...acceptable, ...recent].filter(
+      (c, i, list) => list.findIndex((x) => x.id === c.id) === i,
+    );
+    return all.slice(0, Math.max(3, acceptable.length));
+  }, [recentClasses, selected, classById, classes, gold]);
 
   const deciding = !!proposal && takesDecisions(proposal);
 
@@ -301,7 +336,7 @@ export function ReviewPage({ id, onFinish }: ReviewPageProps) {
     setAddError(undefined);
     if (refocus) sourceTextRef.current?.focus({ preventScroll: true });
   };
-  const addElement = async (title: string, classId: string) => {
+  const addElement = async (title: string, classId: string, tier?: Tier) => {
     if (!adding || !recordedSourceId || !sourceText || addIndividual.isPending) return;
     // The server counts offsets in code points, the browser in UTF-16 units.
     const passage = toSourcePassage(adding.passage, sourceText.text, sourceText.start);
@@ -319,6 +354,7 @@ export function ReviewPage({ id, onFinish }: ReviewPageProps) {
             quote: passage.quote,
           },
           review_ms: clock.spentAdding(),
+          ...(tier ? { annotation: { tier } } : {}),
         },
       });
       closeAdding();
@@ -378,6 +414,7 @@ export function ReviewPage({ id, onFinish }: ReviewPageProps) {
       const rejected = await actions.rejectOperations([operation.id], decision.note, {
         reasonCode: decision.reasonCode,
         reviewMs,
+        annotations: goldAnnotations(operation),
       });
       if (rejected) advance(operation.id, operations);
       return;
@@ -393,6 +430,10 @@ export function ReviewPage({ id, onFinish }: ReviewPageProps) {
           ? { [operation.id]: { class_ids: [decision.classId] } }
           : undefined,
       chosenAlternatives: existing ? { [operation.id]: existing } : undefined,
+      annotations: goldAnnotations(
+        operation,
+        decision.kind === "class" ? decision.classId : undefined,
+      ),
     });
     const after = appliedOutcome(operation, outcome);
     if (!after) return;
@@ -426,7 +467,9 @@ export function ReviewPage({ id, onFinish }: ReviewPageProps) {
       void decide(selected, { kind: "correct" });
     } else if (key === "x") {
       event.preventDefault();
-      reasonsRef.current?.querySelector<HTMLButtonElement>("button")?.focus();
+      // A reason, or (in gold mode, before a note is written) the note it needs.
+      const reason = reasonsRef.current?.querySelector<HTMLButtonElement>("button:not(:disabled)");
+      (reason ?? document.getElementById("review-note"))?.focus();
     } else if (["1", "2", "3"].includes(key) && isElement(selected) && !existingOf(selected)) {
       const suggestion = suggestions[Number(key) - 1];
       if (!suggestion) return;
@@ -500,7 +543,7 @@ export function ReviewPage({ id, onFinish }: ReviewPageProps) {
     <div className="review-page" data-testid="review-page">
       <PageHeader
         eyebrow={eyebrow}
-        title={`Review extraction: ${sourceTitle}`}
+        title={gold ? `Gold check: ${gold.document}` : `Review extraction: ${sourceTitle}`}
         actions={
           <Button variant="primary" size="sm" onClick={onFinish} data-testid="review-finish">
             Finish review
@@ -509,6 +552,11 @@ export function ReviewPage({ id, onFinish }: ReviewPageProps) {
         data-testid="review-header"
       />
       <div className="review-origin" data-testid="review-origin-line">
+        {gold && (
+          <Chip variant={SPLIT_CHIP[gold.split]} data-testid="review-gold-split">
+            {gold.split}
+          </Chip>
+        )}
         <span>Proposed by</span>
         {proposal.origin ? (
           <ProposalOriginChip origin={proposal.origin} />
@@ -516,6 +564,12 @@ export function ReviewPage({ id, onFinish }: ReviewPageProps) {
           <span className="review-mono">{proposal.source_detail || proposal.source}</span>
         )}
       </div>
+
+      {gold?.split === "holdout" && (
+        <p className="review-gold-note" data-testid="review-gold-holdout">
+          {HOLDOUT_NOTE}
+        </p>
+      )}
 
       <section
         className="review-progress"
@@ -586,7 +640,8 @@ export function ReviewPage({ id, onFinish }: ReviewPageProps) {
                 busy={addIndividual.isPending}
                 error={addError}
                 onEdit={() => setAddError(undefined)}
-                onAdd={(title, classId) => void addElement(title, classId)}
+                askTier={!!gold}
+                onAdd={(title, classId, tier) => void addElement(title, classId, tier)}
                 onCancel={() => closeAdding()}
               />
             )
@@ -623,6 +678,16 @@ export function ReviewPage({ id, onFinish }: ReviewPageProps) {
               void decide(selected, { kind: "reject", reasonCode, note })
             }
             onSelect={setSelectedId}
+            gold={
+              gold
+                ? {
+                    goldTier: goldTierOf(gold, selected),
+                    aliases: goldElementOf(gold, selected)?.aliases ?? [],
+                    draft: draftOf(selected),
+                    onDraft: (draft) => setGoldDrafts((all) => ({ ...all, [selected.id]: draft })),
+                  }
+                : undefined
+            }
           />
         ) : (
           <p className="review-pane review-pane--inspector review-muted">
