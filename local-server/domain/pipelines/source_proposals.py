@@ -15,9 +15,17 @@ proposal, and its output_summary says why (`no_proposal_reason`, with
 `skipped_by_reason` counting the candidates skipped for each reason).
 
 A new proposal supersedes the open proposal of an older extraction of the
-same source by the same pipeline into the same dataset from the same pages:
-what it still awaits is rejected (no decision is recorded), since the new run
-repeats what still applies. A run that could not read all of its text (chunks
+same source by the same pipeline and implementation into the same dataset from
+the same pages: what it still awaits is rejected (no decision is recorded),
+since the new run repeats what still applies. Proposals of different
+implementations of the pipeline (two-pass `default` and `find_then_type`, say)
+never supersede each other: they stay open side by side, so a reviewer can
+compare them. A proposal's implementation is the one its origin records
+(`ChangeProposal.origin`); one made before proposals recorded their origin
+takes its run's implementation, and when its run is no longer found it is left
+alone, superseding nothing and superseded by nothing.
+
+A run that could not read all of its text (chunks
 whose extraction failed) repeats only part of it, so its proposal is partial
 (client_metadata `partial`): it supersedes no other proposal, older or newer,
 and its rationale says what it lacks. A newer whole proposal still supersedes
@@ -26,7 +34,8 @@ when they finished: a run that finishes after a newer extraction of the same
 pages has proposed is superseded by it instead. Superseding is best effort; a
 failure is a warning on the run. The proposal's client_metadata records
 `{source_id, run_id, pipeline, pages, extraction_id, extraction_started_at,
-partial}`, which is how other extractions are found and ordered.
+partial}`, and the run's `origin`, which is how other extractions are found
+and ordered.
 
 Proposing to a taxonomy that mirrors an external source is refused for
 schema extraction unless its client asked over MCP (`check_may_propose`), as
@@ -45,6 +54,7 @@ from domain.ontology.ports import OntologyRepository
 from domain.pipelines.entities import PipelineType
 from domain.pipelines.exceptions import PipelineInputError
 from domain.pipelines.individual_extraction.source_operations import plan_individual_operations
+from domain.pipelines.ports import PipelineRunRepository
 from domain.pipelines.requested_via import ensure_may_propose_to
 from domain.pipelines.schema_extraction.source_operations import plan_schema_operations
 from domain.pipelines.source_operations import OperationPlan, PlannedOperation
@@ -98,9 +108,24 @@ class ProposalOutcome:
 class SourceProposer:
     """Proposes an extraction run's candidates on a source as one proposal."""
 
-    def __init__(self, proposals: ProposalService, ontology_repo: OntologyRepository) -> None:
+    def __init__(
+        self,
+        proposals: ProposalService,
+        ontology_repo: OntologyRepository,
+        runs: PipelineRunRepository | None = None,
+    ) -> None:
+        """
+        Args:
+            proposals: Makes the proposal; a run's records its origin
+                (ProposalService.recording)
+            ontology_repo: Reads the taxonomy the operations are planned against
+            runs: Finds the implementation of a proposal made before proposals
+                recorded their origin, by its run; without it such a proposal
+                is left alone
+        """
         self._proposals = proposals
         self._repo = ontology_repo
+        self._runs = runs
 
     def check_may_propose(self, taxonomy_id: str, input_data: Mapping[str, Any]) -> None:
         """
@@ -234,7 +259,7 @@ class SourceProposer:
     def _supersede(self, proposal: ChangeProposal) -> list[str]:
         """
         Settle the new proposal against the other extractions of the same
-        source, pipeline, dataset and page selection: what an older
+        source, pipeline, implementation, dataset and page selection: what an older
         extraction's open proposal still awaits is rejected; and when a newer
         extraction already proposed (this run finished late), what this one
         awaits is rejected instead. Only a whole proposal supersedes: a
@@ -247,10 +272,15 @@ class SourceProposer:
         """
         warnings: list[str] = []
         try:
+            implementation = self._implementation(proposal)
+            if implementation is None:
+                return warnings
             others = [
                 other
                 for other in self._pipeline_proposals(proposal.taxonomy_id)
-                if other.id != proposal.id and _same_extraction_scope(other, proposal)
+                if other.id != proposal.id
+                and _same_extraction_scope(other, proposal)
+                and self._implementation(other) == implementation
             ]
         except Exception as exc:  # noqa: BLE001 - the new proposal stands regardless
             _logger.exception("Could not list earlier extractions of proposal %s", proposal.id)
@@ -282,6 +312,21 @@ class SourceProposer:
                 _logger.exception("Could not supersede proposal %s", other.id)
                 warnings.append(f"Could not supersede proposal {other.id}: {exc}")
         return warnings
+
+    def _implementation(self, proposal: ChangeProposal) -> str | None:
+        """
+        The implementation that produced a proposal: the one its origin
+        records, else its run's (a proposal made before proposals recorded
+        their origin); None when neither is known.
+        """
+        origin = proposal.origin
+        if origin is not None:
+            return origin.implementation_id
+        run_id = (proposal.client_metadata or {}).get("run_id")
+        if self._runs is None or not isinstance(run_id, str) or not run_id:
+            return None
+        run = self._runs.get(run_id)
+        return run.implementation_id if run is not None and run.implementation_id else None
 
     def _pipeline_proposals(self, taxonomy_id: str) -> list[ChangeProposal]:
         """Every pipeline proposal of the taxonomy, whatever its status."""

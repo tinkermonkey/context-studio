@@ -53,6 +53,39 @@ describe("ProposalDetailPage", () => {
     });
   });
 
+  it("says which implementation and version produced it beside the status", async () => {
+    server.use(
+      http.get("*/api/proposals/:id", () =>
+        HttpResponse.json({
+          ...openProposal,
+          origin: {
+            pipeline_type: "schema_relationship_reflection",
+            implementation_id: "default",
+            configuration_ref: "reflection-default",
+            configuration_version: 4,
+            digest: "a1b2c3d4e5f6",
+          },
+        }),
+      ),
+    );
+    renderPage();
+
+    const origin = await screen.findByTestId("proposal-origin");
+    expect(origin).toHaveTextContent("default v4 · a1b2c3");
+    expect(origin).toHaveClass("chip--version");
+    expect(origin.getAttribute("title")).toContain("configuration reflection-default version 4");
+    expect(within(screen.getByTestId("proposal-summary")).getByTestId("proposal-origin")).toBe(
+      origin,
+    );
+  });
+
+  it("shows no origin for a proposal no run recorded one for", async () => {
+    renderPage();
+
+    await screen.findByTestId("proposal-status");
+    expect(screen.queryByTestId("proposal-origin")).not.toBeInTheDocument();
+  });
+
   it("renders each operation's change as a triple diff or field change", async () => {
     const user = userEvent.setup();
     renderPage();

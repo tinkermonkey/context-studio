@@ -27,6 +27,7 @@ from domain.pipelines.registry import (
     PipelineImplementationRegistry,
 )
 from domain.pipelines.selection import MAX_OUTPUT_TOKENS, PipelineResolver
+from domain.pipelines.stage_prompts import StageDefinition, StagePrompt
 
 EXTRACTION = PipelineType.INDIVIDUAL_EXTRACTION
 
@@ -605,3 +606,82 @@ class TestRegisteredPipelines:
             ("individual_extraction", "find_then_type"),
             ("schema_extraction", "default"),
         }
+
+
+class TestARunRecordsItsOrigin:
+    """What every proposal a run makes records: which pipeline produced it, and which version."""
+
+    def test_the_origin_names_type_implementation_configuration_and_version(self, resolver):
+        selection = resolver.resolve(EXTRACTION, "find_then_type")
+
+        origin = selection.origin(selection.run_input({"text": "t"}))
+
+        assert (
+            origin.pipeline_type,
+            origin.implementation_id,
+            origin.configuration_ref,
+            origin.configuration_version,
+        ) == ("individual_extraction", "find_then_type", "find-then-type", 1)
+        assert len(origin.digest) == 12
+
+    def test_the_same_selection_and_parameters_give_the_same_origin(self, resolver):
+        one = resolver.resolve(EXTRACTION, "find_then_type")
+        two = resolver.resolve(EXTRACTION, "find_then_type")
+
+        assert one.origin(one.run_input({"text": "a"})) == two.origin(two.run_input({"text": "b"}))
+
+    def test_a_run_naming_its_own_model_has_another_digest(self, resolver):
+        selection = resolver.resolve(EXTRACTION, "find_then_type")
+
+        configured = selection.origin(selection.run_input({}))
+        own_model = selection.origin(selection.run_input({"model": "opus"}))
+
+        assert own_model.configuration_version == configured.configuration_version
+        assert own_model.digest != configured.digest
+
+    def test_a_changed_configuration_is_a_new_version_and_digest(self, registries, resolver):
+        _, configurations = registries
+        before = resolver.resolve(EXTRACTION, "find_then_type")
+        configurations.register(
+            EXTRACTION,
+            "find_then_type",
+            "find-then-type",
+            {"model": "haiku", "stage_prompts": {"find": {"system": "Find more."}}},
+        )
+        after = resolver.resolve(EXTRACTION, "find_then_type")
+
+        old, new = before.origin(before.run_input({})), after.origin(after.run_input({}))
+        assert (old.configuration_version, new.configuration_version) == (1, 2)
+        assert old.digest != new.digest
+
+    def test_a_default_stage_prompt_changed_in_code_changes_the_digest(self):
+        # A built-in configuration stays at version 1 when the code's default
+        # prompts change; the digest tells the two apart
+        resolvers = []
+        for prompt in ("Find mentions.", "Find every mention."):
+            stage = StageDefinition(
+                "find", "Find", "Finds mentions", {}, StagePrompt(system=prompt, user="{text}")
+            )
+            implementation = type("Impl", (), {"STAGE_PROMPTS": (stage,)})
+            implementations = PipelineImplementationRegistry()
+            configurations = PipelineConfigurationRegistry()
+            implementations.register_impl(EXTRACTION, "impl", implementation, default=True)
+            configurations.register(EXTRACTION, "impl", "cfg", {"model": "m"}, default=True)
+            resolvers.append(PipelineResolver(implementations, configurations))
+
+        old, new = (r.resolve(EXTRACTION).origin({"model": "m"}) for r in resolvers)
+        assert old.configuration_version == new.configuration_version == 1
+        assert old.digest != new.digest
+
+    def test_a_configurations_description_does_not_change_the_digest(self, registries, resolver):
+        _, configurations = registries
+        before = resolver.resolve(EXTRACTION, "find_then_type")
+        configurations.register(
+            EXTRACTION,
+            "find_then_type",
+            "find-then-type",
+            {"model": "haiku", "description": "Reworded"},
+        )
+        after = resolver.resolve(EXTRACTION, "find_then_type")
+
+        assert before.origin({}).digest == after.origin({}).digest

@@ -98,6 +98,45 @@ describe("ProposalsListPage", () => {
     expect(within(pending).getByRole("progressbar")).toHaveAttribute("aria-valuenow", "33");
   });
 
+  it("says which implementation and version produced a pipeline proposal", async () => {
+    server.use(
+      http.get("*/api/proposals", () =>
+        HttpResponse.json({
+          items: [
+            {
+              ...openProposal,
+              origin: {
+                pipeline_type: "individual_extraction",
+                implementation_id: "find_then_type",
+                configuration_ref: "extraction-find-then-type",
+                configuration_version: 2,
+                digest: "3f2a9c1b2d4e",
+              },
+            },
+            { ...openProposal, id: "proposal-3", origin: null },
+          ],
+          total: 2,
+          limit: 500,
+          offset: 0,
+        }),
+      ),
+    );
+    render(<ProposalsListPage status="open" onFiltersChange={vi.fn()} />);
+
+    const origin = await screen.findByTestId("proposal-origin-proposal-1");
+    expect(origin).toHaveTextContent("find_then_type v2 · 3f2a9c");
+    expect(origin).toHaveClass("chip--version");
+    expect(origin).toHaveAttribute(
+      "title",
+      "Produced by the find_then_type implementation of individual_extraction, configuration" +
+        " extraction-find-then-type version 2 (digest 3f2a9c1b2d4e)",
+    );
+    expect(origin.parentElement).toHaveClass("proposal-cell__origin");
+    // A proposal no run recorded an origin for shows none
+    expect(screen.getByTestId("proposal-link-proposal-3")).toBeInTheDocument();
+    expect(screen.queryByTestId("proposal-origin-proposal-3")).not.toBeInTheDocument();
+  });
+
   it("opens a proposal when its row is clicked", async () => {
     const user = userEvent.setup();
     render(<ProposalsListPage status="open" onFiltersChange={vi.fn()} />);

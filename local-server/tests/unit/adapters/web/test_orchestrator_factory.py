@@ -13,7 +13,9 @@ from adapters.factories.orchestrator_factory import (
     build_run_specific_data,
     create_orchestrator,
     create_pipeline_state,
+    create_selected_run,
 )
+from domain.pipelines.bootstrap import register_pipelines
 from domain.pipelines.entities import PipelineRunStatus, PipelineType
 from domain.pipelines.individual_extraction.orchestrator import (
     IndividualExtractionOrchestrator,
@@ -24,6 +26,7 @@ from domain.pipelines.orchestration.noop import (
     NoOpPipelineState,
 )
 from domain.pipelines.ports import LLMProvider, PipelineRunStatusWriter
+from domain.pipelines.registry import PipelineConfigurationRegistry, PipelineImplementationRegistry
 from domain.pipelines.schema_extraction.orchestrator import (
     SchemaExtractionOrchestrator,
     SchemaExtractionState,
@@ -40,6 +43,7 @@ from domain.pipelines.schema_node_grounding.orchestrator import (
     SchemaGroundingOrchestrator,
     SchemaGroundingState,
 )
+from domain.versioning.proposals import ORIGIN
 
 
 @pytest.fixture
@@ -937,3 +941,46 @@ class TestBuildRunSpecificDataSourceText:
         data = build_run_specific_data(PipelineType.NO_OP, {"text": "ignored"})
 
         assert "source_text" not in data
+
+
+class TestASelectedRunRecordsItsOrigin:
+    """Every proposal a run makes records its origin, whatever the implementation."""
+
+    @pytest.fixture
+    def resolver(self):
+        return register_pipelines(PipelineImplementationRegistry(), PipelineConfigurationRegistry())
+
+    @pytest.mark.parametrize("implementation_id", ["default", "find_then_type"])
+    def test_an_extraction_proposes_through_a_service_recording_the_origin(
+        self, resolver, implementation_id, mock_llm_provider
+    ):
+        selection = resolver.resolve(PipelineType.INDIVIDUAL_EXTRACTION, implementation_id)
+        proposal_service = Mock()
+        services = {
+            "extraction_service": Mock(),
+            "ontology_repo": Mock(),
+            "proposal_service": proposal_service,
+        }
+
+        orchestrator, state = create_selected_run(
+            selection, mock_llm_provider, services, "run-1", {"text": "t"}
+        )
+
+        origin = selection.origin(state.input_data)
+        assert origin.implementation_id == implementation_id
+        proposal_service.recording.assert_called_once_with({ORIGIN: origin.to_json()})
+        assert orchestrator._proposer._proposals is proposal_service.recording.return_value
+
+    def test_a_refinement_proposes_through_a_service_recording_the_origin(
+        self, resolver, mock_llm_provider
+    ):
+        selection = resolver.resolve(PipelineType.SCHEMA_NODE_DEFINITION_REFINEMENT)
+        proposal_service = Mock()
+        services = {"ontology_repo": Mock(), "proposal_service": proposal_service}
+
+        orchestrator, _ = create_selected_run(selection, mock_llm_provider, services, "run-1", {})
+
+        recorded = proposal_service.recording.call_args.args[0][ORIGIN]
+        assert recorded["pipeline_type"] == "schema_node_definition_refinement"
+        assert recorded["configuration_version"] == selection.configuration.version
+        assert orchestrator._proposals is proposal_service.recording.return_value

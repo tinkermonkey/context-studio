@@ -1,6 +1,6 @@
 # Extraction pipelines: current state
 
-**As of 2026-11-16.** This is the single place that says what the extraction pipelines are, how good they are, and what is undecided. Experiments and their results are in [experiments/](experiments/README.md). When something here changes, update this page in the same pull request.
+**As of 2026-11-17.** This is the single place that says what the extraction pipelines are, how good they are, and what is undecided. Experiments and their results are in [experiments/](experiments/README.md). When something here changes, update this page in the same pull request.
 
 ## The task
 
@@ -16,7 +16,7 @@ Individual extraction has three registered implementations (`local-server/domain
 | `default` | The older two-pass shape: pass 1 finds and types individuals against a shortlist of 50 class names retrieved by embedding similarity; pass 2 derives relationships. The id is only a name: it is not the default | `extraction-default`: Claude Haiku 5.5, 20,000 output tokens. Also `extraction-openrouter-default`: Gemini 3 Flash (the configuration its benchmark recordings were made with) | Kept selectable; scores far below `find_then_type` |
 | `open_v1` | spaCy parses, clustering and vector retrieval, with optional LLM synthesis | `extraction-open-v1`: Gemini 3 Flash | Research stage, below floors, recordings stale; recommended for deletion |
 
-All implementations share what follows extraction: recognition of extracted individuals against existing ones (exact label, then a conservative vector match; its tie-break call is hard-coded to Gemini 3 Flash), the chunk merge, and the source proposer. A run on a source with failed chunks produces a partial proposal that supersedes no other.
+All implementations share what follows extraction: recognition of extracted individuals against existing ones (exact label, then a conservative vector match; its tie-break call is hard-coded to Gemini 3 Flash), the chunk merge, and the source proposer. A run on a source with failed chunks produces a partial proposal that supersedes no other; a whole run supersedes only earlier open proposals of the same implementation (decision 3).
 
 A run on a source counts its progress in chunks (`items_done` of `items_total`). A `find_then_type` run counts a chunk as done only once its relationships are read, so it also reports the stage it is in and how far through it: `find_mentions` (chunks searched), `type_mention` (distinct mentions typed), `derive_relationships` (chunks read), as `stage`, `stage_done` and `stage_total` on the run. The Extract page, the sources list and the MCP `get_run` tool show it. The two-pass shape reports chunks only.
 
@@ -91,7 +91,7 @@ None yet.
 
 1. **Adopt one Opus 5.5 call for finding and typing individuals?** It wins by the rule set in advance, at $0.64-0.90 a document against about $0.10. The review advised confirming on human-checked gold first, because the gold may favour single calls.
 2. **Relationships:** keep the pipeline's schema-constrained relate step, or measure a single call that is given the allowed class pairs per predicate, or a relationship stage over the whole document.
-3. **Proposals across implementations:** a whole `find_then_type` run on a source supersedes an earlier two-pass proposal of the same source, and a proposal does not record which implementation produced it.
+3. **Proposals across implementations:** decided 2026-11-17, each implementation is its own pipeline. Every proposal a pipeline run makes (source extraction, schema extraction and refinement runs alike) records its origin: pipeline type, implementation, configuration, configuration version, and a digest of what that version made the run do (settings, the stage prompts the implementation resolved, defaults included, and the model, temperature and output limit it ran with). The digest exists because a built-in configuration stays at version 1 when its JSON file or a default prompt changes in code. The origin is kept in the proposal's `client_metadata.origin`, returned as `origin` by the proposals API, and shown as a chip in the review queue, on the proposal page and on the source's Extract page. A whole run on a source supersedes only the open proposals of the same implementation, so proposals of different implementations stay open side by side for comparison. A proposal from before this change is treated as its run's implementation, and is left alone when its run is gone. Code: `PipelineSelection.origin` (`selection.py`), recorded for every implementation by `create_selected_run` through `ProposalService.recording`; the supersession rule is in `source_proposals.py`.
 
 ## Recommended next steps
 

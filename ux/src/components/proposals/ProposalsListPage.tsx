@@ -14,6 +14,7 @@ import { SMALL_SET_LIMIT } from "@/api/config";
 import type { ChangeProposal } from "@/api/services/proposals";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
 import { ProposalLink } from "./ProposalLink";
+import { ProposalOriginChip, type ProposalOrigin } from "./ProposalOrigin";
 import {
   PROPOSAL_STATUS_VARIANT,
   SCOPE_VARIANT,
@@ -48,6 +49,8 @@ interface ProposalRow {
   id: string;
   title: string;
   sourceDetail: string;
+  /** The pipeline implementation and version that produced it, if a run did. */
+  origin?: ProposalOrigin | null;
   taxonomy: string;
   source: ChangeProposal["source"];
   status: ChangeProposal["status"];
@@ -71,6 +74,11 @@ const columns: Column<ProposalRow>[] = [
           {row.title}
         </ProposalLink>
         {row.sourceDetail && <span className="proposal-cell__detail">{row.sourceDetail}</span>}
+        {row.origin && (
+          <span className="proposal-cell__origin">
+            <ProposalOriginChip origin={row.origin} data-testid={`proposal-origin-${row.id}`} />
+          </span>
+        )}
       </div>
     ),
   },
@@ -179,6 +187,7 @@ export function ProposalsListPage({ status, taxonomyId, onFiltersChange }: Propo
       id: p.id,
       title: p.title,
       sourceDetail: p.source_detail ?? "",
+      origin: p.origin,
       taxonomy: taxonomyName(p.taxonomy_id),
       source: p.source,
       status: p.status,

@@ -27,6 +27,7 @@ attribute.
 
 from __future__ import annotations
 
+import copy
 import json
 import logging
 import re
@@ -583,6 +584,21 @@ class ProposalService:
         # deciding on the same proposal are serialized here.
         self._locks: dict[str, threading.Lock] = {}
         self._locks_guard = threading.Lock()
+        # What every proposal this service makes records in its client_metadata
+        self._recorded_metadata: dict[str, Any] = {}
+
+    def recording(self, metadata: Mapping[str, Any]) -> ProposalService:
+        """
+        This service as one proposer sees it: every proposal it makes records
+        `metadata` in its client_metadata, over any entry of the same name the
+        proposer gives. A pipeline run's proposals record their origin this way
+        (`ChangeProposal.origin`), whichever implementation makes them.
+        Everything else is shared with this service: its stores, policies and
+        per-proposal locks.
+        """
+        view = copy.copy(self)
+        view._recorded_metadata = {**self._recorded_metadata, **metadata}
+        return view
 
     # ------------------------------------------------------------------ propose
 
@@ -706,7 +722,7 @@ class ProposalService:
                 created_at=datetime.now(timezone.utc),
                 operations=built,
                 source_revision=source_revision,
-                client_metadata=dict(client_metadata or {}),
+                client_metadata={**(client_metadata or {}), **self._recorded_metadata},
                 dataset_id=dataset_id,
             )
         except ValueError as exc:

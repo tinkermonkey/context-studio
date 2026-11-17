@@ -176,6 +176,55 @@ class TestPropose:
         assert ops[4].base == {"domain_class_id": graph["room"]}
         assert ops[4].scope is ChangeScope.BREAKING
 
+    def test_a_recording_service_records_its_metadata_on_every_proposal(
+        self, service, proposals, graph
+    ):
+        origin = {
+            "pipeline_type": "individual_extraction",
+            "implementation_id": "find_then_type",
+            "configuration_ref": "extraction-find-then-type",
+            "configuration_version": 3,
+            "digest": "0123456789ab",
+        }
+        run = service.recording({"origin": origin})
+
+        proposal = run.propose(
+            graph["taxonomy"],
+            "Test",
+            [draft(1, T.UPDATE, K.CLASS, graph["room"], description="Any room")],
+            ProposalSource.PIPELINE,
+            client_metadata={"run_id": "r1", "origin": "the proposer's own"},
+        )
+
+        stored = proposals.get(proposal.id)
+        assert stored.client_metadata == {"run_id": "r1", "origin": origin}
+        assert stored.origin.implementation_id == "find_then_type"
+        assert stored.origin.configuration_version == 3
+        # The service it came from records nothing, and shares its store
+        assert (
+            propose(service, graph, draft(1, T.DELETE, K.INDIVIDUAL, graph["den"])).origin is None
+        )
+        assert service.get(proposal.id).id == proposal.id
+
+    def test_only_a_pipeline_proposal_has_an_origin(self, service, graph):
+        origin = {
+            "pipeline_type": "individual_extraction",
+            "implementation_id": "default",
+            "configuration_ref": "c",
+            "configuration_version": 1,
+            "digest": "d",
+        }
+        proposal = service.propose(
+            graph["taxonomy"],
+            "Test",
+            [draft(1, T.DELETE, K.INDIVIDUAL, graph["den"])],
+            ProposalSource.MCP,
+            client_metadata={"origin": origin},
+        )
+
+        assert proposal.client_metadata["origin"] == origin
+        assert proposal.origin is None
+
     def test_claimed_scope_only_makes_it_stricter(self, service, graph):
         proposal = propose(
             service,

@@ -36,6 +36,69 @@ from domain.versioning.provenance import SOURCE_ID, source_passages
 # (domain.pipelines.source_proposals writes PipelineType.INDIVIDUAL_EXTRACTION).
 INDIVIDUAL_EXTRACTION = "individual_extraction"
 
+# The client_metadata key a pipeline run's proposal records its origin under
+ORIGIN = "origin"
+
+
+@dataclass(frozen=True)
+class ProposalOrigin:
+    """
+    The pipeline that produced a proposal, and which version of it: two
+    proposals with the same origin were produced the same way.
+
+    Attributes:
+        pipeline_type: The pipeline type (e.g. "individual_extraction")
+        implementation_id: The implementation of it that ran (e.g. "find_then_type")
+        configuration_ref: The configuration the run was pinned to
+        configuration_version: That configuration's version. A stored
+            configuration's version goes up with every edit, its stage prompts'
+            included; a built-in one is registered from code at version 1
+        digest: A short hash of what that configuration version made the run
+            do: its settings, the stage prompts the implementation resolved from
+            them (its default prompts included) and the model, temperature and
+            output-token limit the run executed with. It changes when any of
+            these does without a new configuration version: a built-in
+            configuration or a default prompt changed in code, or a run that
+            named its own model
+    """
+
+    pipeline_type: str
+    implementation_id: str
+    configuration_ref: str
+    configuration_version: int
+    digest: str
+
+    def to_json(self) -> dict[str, Any]:
+        """The origin as client_metadata keeps it."""
+        return {
+            "pipeline_type": self.pipeline_type,
+            "implementation_id": self.implementation_id,
+            "configuration_ref": self.configuration_ref,
+            "configuration_version": self.configuration_version,
+            "digest": self.digest,
+        }
+
+    @classmethod
+    def from_json(cls, data: Any) -> "ProposalOrigin | None":
+        """The origin client_metadata keeps; None when it keeps none, or not in this shape."""
+        if not isinstance(data, dict):
+            return None
+        pipeline_type = data.get("pipeline_type")
+        implementation_id = data.get("implementation_id")
+        configuration_ref = data.get("configuration_ref")
+        version = data.get("configuration_version")
+        digest = data.get("digest")
+        if not (
+            isinstance(pipeline_type, str)
+            and isinstance(implementation_id, str)
+            and isinstance(configuration_ref, str)
+            and isinstance(digest, str)
+            and isinstance(version, int)
+            and not isinstance(version, bool)
+        ):
+            return None
+        return cls(pipeline_type, implementation_id, configuration_ref, version, digest)
+
 
 class ProposalSource(str, Enum):
     """Who or what made the proposal."""
@@ -663,6 +726,17 @@ class ChangeProposal:
         return self.source is ProposalSource.PIPELINE and bool(
             (self.client_metadata or {}).get(SOURCE_ID)
         )
+
+    @property
+    def origin(self) -> ProposalOrigin | None:
+        """
+        The pipeline run configuration that produced it, as its client_metadata
+        records it (ProposalService.recording). None for a proposal no pipeline
+        run made, and for one made before runs recorded their origin.
+        """
+        if self.source is not ProposalSource.PIPELINE:
+            return None
+        return ProposalOrigin.from_json((self.client_metadata or {}).get(ORIGIN))
 
     def lacks_passage(self, operation: ProposedOperation) -> bool:
         """

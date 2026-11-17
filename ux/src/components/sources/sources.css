@@ -292,14 +292,16 @@
     color: rgb(var(--canvas-fg-1));
   }
 
-  .extract-run__schema {
+  .extract-run__schema,
+  .extract-run__origin {
     display: flex;
     flex-wrap: wrap;
     gap: 10px;
     align-items: center;
   }
 
-  .extract-run__schema-label {
+  .extract-run__schema-label,
+  .extract-run__origin-label {
     font-size: 13px;
     font-weight: 600;
     color: rgb(var(--canvas-fg-1));
