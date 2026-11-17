@@ -38,8 +38,9 @@ export function useCreateChangeProposal() {
 
 /**
  * Apply operations. `data.edits` maps an operation id to the fields a reviewer corrected it to
- * (property updates and deletes only; an edited delete applies as an update). Each applied
- * operation's `applied_fields` reports what was applied.
+ * (property updates and deletes, where an edited delete applies as an update; and an individual
+ * create's `title` and `class_ids`). Each applied operation's `applied_fields` reports what was
+ * applied. `data.review_ms` records the time the reviewer spent on each operation.
  */
 export function useApplyChangeProposal() {
   const queryClient = useQueryClient();
@@ -60,6 +61,7 @@ export function useApplyChangeProposal() {
   });
 }
 
+/** Reject operations; `data.reason_code`, `note` and `review_ms` are kept with each decision. */
 export function useRejectChangeProposal() {
   const queryClient = useQueryClient();
   return useMutation({

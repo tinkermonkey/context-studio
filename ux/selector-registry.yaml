@@ -3150,6 +3150,134 @@ selectors:
     component: src/components/proposals/OperationInspector.tsx
     description: "Entities a Change field names by id (class_ids, concept_scheme_id, source_id, ...), by field: each by name with its raw id as the tooltip; a $ref as \"#seq title (new in this proposal)\""
 
+  # Review an extraction against its source (/app/proposals/$proposalId/review, #1611)
+  - selector: proposal-review-against-source
+    component: src/components/proposals/ProposalDetailPage.tsx
+    description: '"Review against source" button beside the status; opens /app/proposals/$proposalId/review. Shown only for a proposal whose operations cite passages in a source'
+  - selector: review-page
+    component: src/components/proposals/review/ReviewPage.tsx
+    description: "Root of the Review page: an extraction proposal reviewed against its whole source"
+  - selector: review-header
+    component: src/components/proposals/review/ReviewPage.tsx
+    description: 'PageHeader: eyebrow "PROPOSAL · SOURCE <title> · DATASET <identifier>", title "Review extraction: <source title>", Finish review action'
+  - selector: review-finish
+    component: src/components/proposals/review/ReviewPage.tsx
+    description: '"Finish review" button; back to the proposal page'
+  - selector: review-origin-line
+    component: src/components/proposals/review/ReviewPage.tsx
+    description: '"Proposed by" line with the origin chip (proposal-origin), else the proposal source'
+  - selector: review-progress
+    component: src/components/proposals/review/ReviewPage.tsx
+    description: 'Progress strip (region "Decision progress"): decided / total, ProgressBar, counts by verdict, review time'
+  - selector: review-progress-decided
+    component: src/components/proposals/review/ReviewPage.tsx
+    description: '"<decided> / <total>" over individual and relationship operations'
+  - selector: review-progress-bar
+    component: src/components/proposals/review/ReviewPage.tsx
+    description: "Decided ProgressBar; amber while anything awaits, emerald once all decided"
+  - selector: review-progress-counts
+    component: src/components/proposals/review/ReviewPage.tsx
+    description: '"N correct · N class changed · N not elements · N added" (added = added_by_reviewer)'
+  - selector: review-time
+    component: src/components/proposals/review/ReviewPage.tsx
+    description: '"m:ss on this review": active time on the page (idle gaps over 2 minutes left out), ticking each second'
+  - selector: review-panes
+    component: src/components/proposals/review/ReviewPage.tsx
+    description: "The three panes, Source | Elements | Inspector; they wrap to a stack at narrow widths"
+  - selector: review-force-message
+    component: src/components/proposals/review/ReviewPage.tsx
+    description: "Apply anyway ConfirmDialog message for a stale operation"
+  - selector: review-source
+    component: src/components/proposals/review/ReviewSourcePane.tsx
+    description: 'Source pane (region "Source text"): the legend and the whole source text'
+  - selector: review-legend
+    component: src/components/proposals/review/ReviewSourcePane.tsx
+    description: "Verdict legend: Awaiting, Correct, Class changed, Not an element, Added by you"
+  - selector: review-source-text
+    component: src/components/proposals/review/ReviewSourcePane.tsx
+    description: "The whole source text (.review-source__text) with every element passage highlighted"
+  - selector: review-mark
+    component: src/components/proposals/review/ReviewSourcePane.tsx
+    description: "A highlighted passage (<mark role=button>), data-span-keys = its operation ids; .review-mark--awaiting|correct|changed|rejected|added by verdict, .review-mark--selected and aria-current on the selected element. Click opens the element"
+  - selector: review-source-unavailable
+    component: src/components/proposals/review/ReviewSourcePane.tsx
+    description: "Why no source text shows (loading, removed, not ready, failed, no passages)"
+  - selector: review-elements
+    component: src/components/proposals/review/ReviewElementsPane.tsx
+    description: 'Elements pane (region "Proposed elements") with the Awaiting / All filter'
+  - selector: review-filter
+    component: src/components/proposals/review/ReviewElementsPane.tsx
+    description: "SegmentedControl: Awaiting · N / All · N; Awaiting keeps the selected element"
+  - selector: review-element-list
+    component: src/components/proposals/review/ReviewElementsPane.tsx
+    description: "Listbox of the elements, grouped by layer then Relationships"
+  - selector: review-elements-empty
+    component: src/components/proposals/review/ReviewElementsPane.tsx
+    description: "Empty message when the filter shows nothing"
+  - selector: review-group-*
+    component: src/components/proposals/review/ReviewElementsPane.tsx
+    description: 'A group of rows (role=group), by concept scheme id, "other", or "relationships"'
+  - selector: review-row-*
+    component: src/components/proposals/review/ReviewElementsPane.tsx
+    description: "An element row (role=option, aria-selected), by operation id: title, class or predicate, probability, status chip; .review-row--selected when selected"
+  - selector: review-inspector
+    component: src/components/proposals/review/ReviewInspector.tsx
+    description: 'Inspector (region "Selected element") for the selected element or relationship'
+  - selector: review-inspector-eyebrow
+    component: src/components/proposals/review/ReviewInspector.tsx
+    description: '"INDIVIDUAL · p 0.97" or "RELATIONSHIP · p 0.90"'
+  - selector: review-inspector-title
+    component: src/components/proposals/review/ReviewInspector.tsx
+    description: 'The element title, or a relationship''s "from predicate to"'
+  - selector: review-inspector-class
+    component: src/components/proposals/review/ReviewInspector.tsx
+    description: "Class chip (the applied class once changed); elements only"
+  - selector: review-inspector-status
+    component: src/components/proposals/review/ReviewInspector.tsx
+    description: "Verdict chip: awaiting (amber), correct (emerald), class changed (violet), not an element (rose), added (cyan)"
+  - selector: review-failed
+    component: src/components/proposals/review/ReviewInspector.tsx
+    description: "Alert with the reason the last apply failed"
+  - selector: review-evidence
+    component: src/components/proposals/review/ReviewInspector.tsx
+    description: "EVIDENCE: the passages' quotes"
+  - selector: review-definition
+    component: src/components/proposals/review/ReviewInspector.tsx
+    description: '"WHAT <class> MEANS" with the class description'
+  - selector: review-correct
+    component: src/components/proposals/review/ReviewInspector.tsx
+    description: "Correct button (key A); applies the operation as proposed with review_ms"
+  - selector: review-better-class
+    component: src/components/proposals/review/ReviewInspector.tsx
+    description: "OR A BETTER CLASS: suggestions and the class picker"
+  - selector: review-suggestion-*
+    component: src/components/proposals/review/ReviewInspector.tsx
+    description: "Suggested class 1-3 (keys 1-3): classes picked earlier in the review, most recent first, with definitions; applies with edits class_ids"
+  - selector: review-class-picker
+    component: src/components/proposals/review/ReviewClassPicker.tsx
+    description: 'EntityPicker over the taxonomy''s non-derived classes ("Search all N classes")'
+  - selector: review-reasons
+    component: src/components/proposals/review/ReviewInspector.tsx
+    description: "OR NOT AN ELEMENT, BECAUSE: reason buttons (role=group); X focuses the first"
+  - selector: review-reason-*
+    component: src/components/proposals/review/ReviewInspector.tsx
+    description: "A reason button by code (not_in_text, too_generic, mentioned_only, out_of_scope, duplicate, other); rejects with reason_code, note and review_ms"
+  - selector: review-note
+    component: src/components/proposals/review/ReviewInspector.tsx
+    description: "Optional note TextArea sent with a reject"
+  - selector: review-decided
+    component: src/components/proposals/review/ReviewInspector.tsx
+    description: "A decided operation's decision, read-only"
+  - selector: review-decided-note
+    component: src/components/proposals/review/ReviewInspector.tsx
+    description: "A rejected operation's note"
+  - selector: review-relationships
+    component: src/components/proposals/review/ReviewInspector.tsx
+    description: "ITS RELATIONSHIPS · N: relationship operations with this element at either end"
+  - selector: review-relationship-*
+    component: src/components/proposals/review/ReviewInspector.tsx
+    description: "One of the element's relationships, by operation id: from, predicate, to and status; click selects it"
+
   # Review queue: decisions (#1361)
   - selector: proposal-actions
     component: src/components/proposals/ProposalDetailPage.tsx

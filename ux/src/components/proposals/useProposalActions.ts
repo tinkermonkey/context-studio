@@ -11,6 +11,7 @@ import type {
   ChangeProposal,
   ChangeProposalRevertConflict,
   ProposedOperation,
+  RejectionReason,
 } from "@/api/services/proposals";
 import { useToasts } from "@/components/ui/Toast";
 import { downloadJson } from "@/lib/download";
@@ -32,6 +33,14 @@ import { keptNote } from "./tieredModel";
 export type Edits = Record<string, Record<string, unknown>>;
 /** Operation id -> the alternative the reviewer chose over the plan's (recorded in gold). */
 export type ChosenAlternatives = Record<string, Record<string, unknown>>;
+/** Operation id -> the milliseconds the reviewer spent on it (recorded in its decision). */
+export type ReviewMs = Record<string, number>;
+
+/** What a reject records beside the operations: why, as a code, and the time spent on each. */
+export interface RejectOptions {
+  reasonCode?: RejectionReason;
+  reviewMs?: ReviewMs;
+}
 
 /** How an apply ended: the server's error, or the reviewer cancelled the Apply anyway. */
 export interface ApplyOutcome {
@@ -46,6 +55,8 @@ interface ApplyOptions {
   chosenAlternatives?: ChosenAlternatives;
   /** How blocked relationship-type deletes resolve the relationships still using the type. */
   resolutions?: Resolutions;
+  /** The time the reviewer spent on each operation sent. */
+  reviewMs?: ReviewMs;
   /** Add these outcomes to the results view instead of replacing it (a retry from it). */
   merge?: boolean;
 }
@@ -167,7 +178,13 @@ export function useProposalActions(proposal: ChangeProposal | undefined) {
   const sendNow = async (
     operationIds: string[],
     forceStale: string[],
-    { edits = {}, chosenAlternatives = {}, resolutions = {}, merge = false }: ApplyOptions,
+    {
+      edits = {},
+      chosenAlternatives = {},
+      resolutions = {},
+      reviewMs = {},
+      merge = false,
+    }: ApplyOptions,
   ): Promise<ApplyOutcome> => {
     const remember = <T>(previous: Record<string, T>, sent: Record<string, T>) => {
       const next = { ...previous };
@@ -191,6 +208,7 @@ export function useProposalActions(proposal: ChangeProposal | undefined) {
             ? { chosen_alternatives: chosenAlternatives }
             : {}),
           ...(Object.keys(resolutions).length > 0 ? { resolutions } : {}),
+          ...(Object.keys(reviewMs).length > 0 ? { review_ms: reviewMs } : {}),
         },
       });
       setLastApplied((previous) =>
@@ -311,19 +329,33 @@ export function useProposalActions(proposal: ChangeProposal | undefined) {
     setForceRequest(null);
   };
 
-  const rejectOperations = async (operationIds: string[], note?: string) => {
+  /** Reject operations, with an optional note, reason code and review time. */
+  const rejectOperations = async (
+    operationIds: string[],
+    note?: string,
+    options: RejectOptions = {},
+  ) => {
     if (operationIds.length === 0) return false;
     const rejected = await exclusive({ action: "reject", count: operationIds.length }, () =>
-      rejectNow(operationIds, note),
+      rejectNow(operationIds, note, options),
     );
     return rejected ?? false;
   };
 
-  const rejectNow = async (operationIds: string[], note?: string) => {
+  const rejectNow = async (
+    operationIds: string[],
+    note: string | undefined,
+    { reasonCode, reviewMs = {} }: RejectOptions,
+  ) => {
     try {
       await reject.mutateAsync({
         id,
-        data: { operation_ids: operationIds, note: note?.trim() || null },
+        data: {
+          operation_ids: operationIds,
+          note: note?.trim() || null,
+          ...(reasonCode ? { reason_code: reasonCode } : {}),
+          ...(Object.keys(reviewMs).length > 0 ? { review_ms: reviewMs } : {}),
+        },
       });
       toast(
         "info",

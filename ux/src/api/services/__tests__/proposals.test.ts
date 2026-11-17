@@ -157,6 +157,78 @@ describe("ProposalsService", () => {
     expect(revert.proposal.status).toBe("reverted");
   });
 
+  it("sends an individual create's class edit and the review time with an apply", async () => {
+    let body: unknown;
+    server.use(
+      http.post("*/api/proposals/proposal-1/apply", async ({ request }) => {
+        body = await request.json();
+        return HttpResponse.json(
+          createChangeProposal({
+            operations: [
+              createProposedOperation({
+                op: "create",
+                kind: "individual",
+                status: "applied",
+                applied_fields: { title: "Edit Check", class_ids: ["class-2"] },
+              }),
+            ],
+          }),
+        );
+      }),
+    );
+
+    const result = await proposalsService.applyProposal("proposal-1", {
+      operation_ids: ["op-1"],
+      edits: { "op-1": { class_ids: ["class-2"] } },
+      review_ms: { "op-1": 4200 },
+    });
+
+    expect(body).toEqual({
+      operation_ids: ["op-1"],
+      edits: { "op-1": { class_ids: ["class-2"] } },
+      review_ms: { "op-1": 4200 },
+    });
+    expect(result.operations[0].applied_fields).toEqual({
+      title: "Edit Check",
+      class_ids: ["class-2"],
+    });
+  });
+
+  it("sends a reject's reason code, note and review time, and reads the code back", async () => {
+    let body: unknown;
+    server.use(
+      http.post("*/api/proposals/proposal-1/reject", async ({ request }) => {
+        body = await request.json();
+        return HttpResponse.json(
+          createChangeProposal({
+            operations: [
+              createProposedOperation({
+                status: "rejected",
+                reason: "a region",
+                reason_code: "out_of_scope",
+              }),
+            ],
+          }),
+        );
+      }),
+    );
+
+    const result = await proposalsService.rejectProposal("proposal-1", {
+      operation_ids: ["op-1"],
+      note: "a region",
+      reason_code: "out_of_scope",
+      review_ms: { "op-1": 900 },
+    });
+
+    expect(body).toEqual({
+      operation_ids: ["op-1"],
+      note: "a region",
+      reason_code: "out_of_scope",
+      review_ms: { "op-1": 900 },
+    });
+    expect(result.operations[0].reason_code).toBe("out_of_scope");
+  });
+
   it("keeps a refused revert's blockers on the ApiError", async () => {
     const blocking = [{ kind: "individual", dependent_id: "ind-1", referenced_id: "class-9" }];
     server.use(

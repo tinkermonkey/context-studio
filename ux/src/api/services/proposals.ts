@@ -6,6 +6,8 @@ export type ProposedOperation = components["schemas"]["ProposedOperationResponse
 export type ChangeProposalCreateRequest = components["schemas"]["ChangeProposalCreateRequest"];
 export type ChangeProposalApplyRequest = components["schemas"]["ChangeProposalApplyRequest"];
 export type ChangeProposalRejectRequest = components["schemas"]["ChangeProposalRejectRequest"];
+/** Why a reviewer rejected an operation, as a code (sent with a reject, kept on the operation). */
+export type RejectionReason = components["schemas"]["RejectionReason"];
 export type ChangeProposalRevertResponse = components["schemas"]["ChangeProposalRevertResponse"];
 export type ChangeProposalRevertConflict =
   components["schemas"]["ChangeProposalRevertConflictDetail"];
