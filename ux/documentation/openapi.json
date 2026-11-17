@@ -7560,6 +7560,65 @@
         }
       }
     },
+    "/api/proposals/{proposal_id}/operations": {
+      "post": {
+        "tags": [
+          "proposals"
+        ],
+        "summary": "Add Individual",
+        "description": "Add an individual the extraction missed, as the reviewer found it in the\nproposal's source, and apply it.\n\nThe proposal must be an extraction from a source with a dataset, neither\nreverted nor landed; a done one reopens until the added operation applies.\nThe operation gets the next seq, is marked added_by_reviewer, has the passage\nas its evidence (its quote must be the source's text at [start, end)), and\nis checked as a proposed individual create is, its classes being classes\nof the proposal's taxonomy that are not derived. It is applied at once,\ninto the proposal's dataset: its passage is recorded as the individual's\nprovenance and its decision is applied, flagged added, with review_ms. If\nthe apply fails (e.g. the title is already in the dataset) the operation\nstays, failed, like any.",
+        "operationId": "add_individual_api_proposals__proposal_id__operations_post",
+        "parameters": [
+          {
+            "name": "proposal_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Proposal Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AddIndividualRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChangeProposalResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Change proposal not found"
+          },
+          "409": {
+            "description": "The proposal is reverted or landed, or is not an extraction of individuals from a source"
+          },
+          "422": {
+            "description": "The title, a class or the passage is invalid (detail.errors, by the seq it would have had); nothing was added",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChangeProposalValidationErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/proposals/{proposal_id}/apply": {
       "post": {
         "tags": [
@@ -9428,6 +9487,87 @@
   },
   "components": {
     "schemas": {
+      "AddIndividualRequest": {
+        "properties": {
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Title",
+            "description": "The individual's title"
+          },
+          "class_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "minItems": 1,
+            "title": "Class Ids",
+            "description": "Its classes: classes of the proposal's taxonomy"
+          },
+          "passage": {
+            "$ref": "#/components/schemas/AddedPassageRequest"
+          },
+          "review_ms": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 2147483647.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Review Ms",
+            "description": "The milliseconds the reviewer spent on it, recorded in its decision"
+          }
+        },
+        "type": "object",
+        "required": [
+          "title",
+          "class_ids",
+          "passage"
+        ],
+        "title": "AddIndividualRequest",
+        "description": "An individual the extraction missed, as the reviewer found it in the source."
+      },
+      "AddedPassageRequest": {
+        "properties": {
+          "source_id": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Source Id",
+            "description": "The proposal's source"
+          },
+          "start": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Start",
+            "description": "Offset of the passage's first character"
+          },
+          "end": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "End",
+            "description": "Offset just past its last character"
+          },
+          "quote": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Quote",
+            "description": "The passage: exactly the source's text at [start, end)"
+          }
+        },
+        "type": "object",
+        "required": [
+          "source_id",
+          "start",
+          "end",
+          "quote"
+        ],
+        "title": "AddedPassageRequest",
+        "description": "Where in the proposal's source the reviewer found the element."
+      },
       "AlternativeRequest": {
         "properties": {
           "kind": {
@@ -14285,6 +14425,12 @@
               }
             ],
             "title": "Superseded By"
+          },
+          "added": {
+            "type": "boolean",
+            "title": "Added",
+            "description": "The operation was added by the reviewer (an element the extraction missed), not proposed",
+            "default": false
           }
         },
         "type": "object",
@@ -18567,6 +18713,12 @@
             ],
             "title": "Auto Apply",
             "description": "A dry run only: eligible to auto-apply, i.e. the taxonomy's approval policy would apply it as soon as proposed and no in-use blockers stop it (applying can still fail). Null otherwise"
+          },
+          "added_by_reviewer": {
+            "type": "boolean",
+            "title": "Added By Reviewer",
+            "description": "Added to the proposal by its reviewer (an element the extraction missed, found in its source), not proposed",
+            "default": false
           },
           "reflection": {
             "anyOf": [

@@ -27,8 +27,10 @@ from adapters.persistence.sqlite.connection import create_local_db_engine
 from adapters.persistence.sqlite.models import Base
 from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
 from adapters.persistence.sqlite.proposal_repo import SQLiteChangeProposalRepository
+from adapters.persistence.sqlite.source_repo import SQLiteSourceRepository
 from adapters.persistence.sqlite.transaction import TransactionAbortedError
 from adapters.web.proposals_routes import router
+from domain.extraction.sources import Source
 from domain.ontology.exceptions import EntityNotFoundError
 from domain.ontology.services import OntologyService
 from domain.versioning.exceptions import RevertRefusedError
@@ -69,6 +71,7 @@ def client(session_factory, ontology):
         ontology,
         repo,
         RevertService(change_repo=ontology.change_repo, ontology_repo=repo),
+        source_repo=SQLiteSourceRepository(session_factory),
     )
     return TestClient(app)
 
@@ -1058,3 +1061,135 @@ class TestReviewDecisions:
         assert [i.title for i in ontology.list_individuals(limit=None)] == ["Den"]
         operations = client.get(f"/api/proposals/{proposal['id']}").json()["operations"]
         assert all(o["status"] == "pending" for o in operations)
+
+
+class TestAddIndividual:
+    """#1610: POST /api/proposals/{id}/operations adds an element the extraction missed."""
+
+    TEXT = "The Study faces the hall. A Pantry sits off the Den."
+
+    @pytest.fixture()
+    def source(self, session_factory, ontology, graph):
+        [dataset] = ontology.list_datasets(graph["taxonomy"])
+        return SQLiteSourceRepository(session_factory).save(
+            Source(
+                taxonomy_id=graph["taxonomy"],
+                dataset_id=dataset.id,
+                kind="text",
+                title="Notes",
+                text=self.TEXT,
+                chars=len(self.TEXT),
+                pages=1,
+                page_starts=[0],
+            )
+        )
+
+    def _extracted(self, client, graph, source):
+        service = client.app.state.proposal_service
+        return service.propose(
+            graph["taxonomy"],
+            "Extracted",
+            [
+                OperationDraft(
+                    seq=1,
+                    op="create",
+                    kind="individual",
+                    fields={"class_ids": [graph["room"]], "title": "Study"},
+                )
+            ],
+            ProposalSource.PIPELINE,
+            client_metadata={"source_id": source.id, "pipeline": "individual_extraction"},
+        )
+
+    def _body(self, graph, source, quote="Pantry", **extra):
+        start = self.TEXT.index(quote)
+        return {
+            "title": quote,
+            "class_ids": [graph["room"]],
+            "passage": {
+                "source_id": source.id,
+                "start": start,
+                "end": start + len(quote),
+                "quote": quote,
+            },
+            **extra,
+        }
+
+    def test_adds_and_applies_it(self, client, graph, source):
+        proposal = self._extracted(client, graph, source)
+
+        response = client.post(
+            f"/api/proposals/{proposal.id}/operations",
+            json=self._body(graph, source, review_ms=1200),
+        )
+
+        assert response.status_code == 201, response.text
+        study, pantry = response.json()["operations"]
+        assert (pantry["seq"], pantry["status"]) == (2, "applied")
+        assert pantry["added_by_reviewer"] is True and study["added_by_reviewer"] is False
+        assert pantry["evidence"][0]["quote"] == "Pantry"
+        url = f"/api/taxonomies/{graph['taxonomy']}/gold"
+        [decision] = client.get(url).json()["items"]
+        assert (decision["seq"], decision["added"], decision["review_ms"]) == (2, True, 1200)
+        [line] = client.get(f"{url}/export").text.splitlines()
+        assert json.loads(line)["added"] is True
+        shown = client.get(f"/api/proposals/{proposal.id}").json()["operations"]
+        assert [o["added_by_reviewer"] for o in shown] == [False, True]
+
+    def test_unknown_proposal_is_404(self, client, graph, source):
+        response = client.post("/api/proposals/nope/operations", json=self._body(graph, source))
+        assert response.status_code == 404
+
+    def test_a_proposal_not_from_a_source_is_409(self, client, graph, source):
+        proposal = _propose(client, graph, _describe_room(graph, seq=1))
+
+        response = client.post(
+            f"/api/proposals/{proposal['id']}/operations", json=self._body(graph, source)
+        )
+
+        assert response.status_code == 409
+
+    def test_a_reverted_proposal_is_409(self, client, graph, source):
+        proposal = self._extracted(client, graph, source)
+        client.post(
+            f"/api/proposals/{proposal.id}/apply",
+            json={"operation_ids": [proposal.operations[0].id]},
+        )
+        assert client.post(f"/api/proposals/{proposal.id}/revert").status_code == 200
+
+        response = client.post(
+            f"/api/proposals/{proposal.id}/operations", json=self._body(graph, source)
+        )
+
+        assert response.status_code == 409
+
+    @pytest.mark.parametrize(
+        "change",
+        [
+            {"class_ids": ["nope"]},
+            {"class_ids": []},
+            {"title": ""},
+            {"review_ms": -1},
+            {"review_ms": 2**31},
+        ],
+    )
+    def test_a_bad_request_is_422(self, client, graph, source, change):
+        proposal = self._extracted(client, graph, source)
+
+        response = client.post(
+            f"/api/proposals/{proposal.id}/operations", json={**self._body(graph, source), **change}
+        )
+
+        assert response.status_code == 422
+        assert len(client.get(f"/api/proposals/{proposal.id}").json()["operations"]) == 1
+
+    def test_a_quote_not_at_its_offsets_is_422(self, client, graph, source):
+        proposal = self._extracted(client, graph, source)
+        body = self._body(graph, source)
+        body["passage"]["quote"] = "Larder"
+
+        response = client.post(f"/api/proposals/{proposal.id}/operations", json=body)
+
+        assert response.status_code == 422
+        [error] = response.json()["detail"]["errors"]
+        assert (error["seq"], error["code"]) == (2, "quote_mismatch")

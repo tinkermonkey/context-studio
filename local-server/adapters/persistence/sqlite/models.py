@@ -1706,6 +1706,8 @@ class ProposalOperation(Base):  # type: ignore[valid-type,misc]
             domain's TypeChange); null otherwise
         alternatives: JSON list of an individual create's near matches,
             {kind: "existing", entity_id, similarity}; [] otherwise
+        added_by_reviewer: Added by the proposal's reviewer (an element the
+            extraction missed), not proposed
     """
 
     __tablename__ = "proposal_operations"
@@ -1738,6 +1740,7 @@ class ProposalOperation(Base):  # type: ignore[valid-type,misc]
     proposed_replacement_id = Column(String(101), nullable=True)
     type_change = Column(JSON, nullable=True)
     alternatives = Column(JSON, nullable=False, default=list, server_default="[]")
+    added_by_reviewer = Column(Boolean, nullable=False, default=False, server_default=text("0"))
 
     __table_args__ = (UniqueConstraint("proposal_id", "seq", name="uq_proposal_operation_seq"),)
 
@@ -1769,6 +1772,7 @@ class ProposalDecisionRecord(Base):  # type: ignore[valid-type,misc]
         probability: The operation's probability, if any
         model: The decision model that produced the probability, if any
         superseded_at, superseded_by: Set when a revert undid the decision
+        added: The operation was added by the reviewer, not proposed
     """
 
     __tablename__ = "proposal_decisions"
@@ -1805,6 +1809,7 @@ class ProposalDecisionRecord(Base):  # type: ignore[valid-type,misc]
     model = Column(String(100), nullable=True)
     superseded_at = Column(UtcDateTime(), nullable=True)
     superseded_by = Column(String(50), nullable=True)
+    added = Column(Boolean, nullable=False, default=False, server_default=text("0"))
 
     def __repr__(self) -> str:
         return f"<ProposalDecisionRecord(operation={self.operation_id}, decision={self.decision})>"

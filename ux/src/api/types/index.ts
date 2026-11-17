@@ -3826,6 +3826,38 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/proposals/{proposal_id}/operations": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Add Individual
+     * @description Add an individual the extraction missed, as the reviewer found it in the
+     *     proposal's source, and apply it.
+     *
+     *     The proposal must be an extraction from a source with a dataset, neither
+     *     reverted nor landed; a done one reopens until the added operation applies.
+     *     The operation gets the next seq, is marked added_by_reviewer, has the passage
+     *     as its evidence (its quote must be the source's text at [start, end)), and
+     *     is checked as a proposed individual create is, its classes being classes
+     *     of the proposal's taxonomy that are not derived. It is applied at once,
+     *     into the proposal's dataset: its passage is recorded as the individual's
+     *     provenance and its decision is applied, flagged added, with review_ms. If
+     *     the apply fails (e.g. the title is already in the dataset) the operation
+     *     stays, failed, like any.
+     */
+    post: operations["add_individual_api_proposals__proposal_id__operations_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/proposals/{proposal_id}/apply": {
     parameters: {
       query?: never;
@@ -4306,6 +4338,54 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
   schemas: {
+    /**
+     * AddIndividualRequest
+     * @description An individual the extraction missed, as the reviewer found it in the source.
+     */
+    AddIndividualRequest: {
+      /**
+       * Title
+       * @description The individual's title
+       */
+      title: string;
+      /**
+       * Class Ids
+       * @description Its classes: classes of the proposal's taxonomy
+       */
+      class_ids: string[];
+      passage: components["schemas"]["AddedPassageRequest"];
+      /**
+       * Review Ms
+       * @description The milliseconds the reviewer spent on it, recorded in its decision
+       */
+      review_ms?: number | null;
+    };
+    /**
+     * AddedPassageRequest
+     * @description Where in the proposal's source the reviewer found the element.
+     */
+    AddedPassageRequest: {
+      /**
+       * Source Id
+       * @description The proposal's source
+       */
+      source_id: string;
+      /**
+       * Start
+       * @description Offset of the passage's first character
+       */
+      start: number;
+      /**
+       * End
+       * @description Offset just past its last character
+       */
+      end: number;
+      /**
+       * Quote
+       * @description The passage: exactly the source's text at [start, end)
+       */
+      quote: string;
+    };
     /**
      * AlternativeRequest
      * @description A near match an individual create may be instead: an individual already in the dataset.
@@ -7076,6 +7156,12 @@ export interface components {
       superseded_at?: string | null;
       /** Superseded By */
       superseded_by?: string | null;
+      /**
+       * Added
+       * @description The operation was added by the reviewer (an element the extraction missed), not proposed
+       * @default false
+       */
+      added: boolean;
     };
     /**
      * GraphMetricsResponse
@@ -9510,6 +9596,12 @@ export interface components {
        * @description A dry run only: eligible to auto-apply, i.e. the taxonomy's approval policy would apply it as soon as proposed and no in-use blockers stop it (applying can still fail). Null otherwise
        */
       auto_apply?: boolean | null;
+      /**
+       * Added By Reviewer
+       * @description Added to the proposal by its reviewer (an element the extraction missed, found in its source), not proposed
+       * @default false
+       */
+      added_by_reviewer: boolean;
       /** @description A schema relationship reflection operation's plan row: kind, p, the ranked answers to its sorting questions and the evidence pack. Null otherwise */
       reflection?: components["schemas"]["ReflectionResponse"] | null;
     };
@@ -16160,6 +16252,55 @@ export interface operations {
         };
         content: {
           "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  add_individual_api_proposals__proposal_id__operations_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        proposal_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["AddIndividualRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ChangeProposalResponse"];
+        };
+      };
+      /** @description Change proposal not found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description The proposal is reverted or landed, or is not an extraction of individuals from a source */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description The title, a class or the passage is invalid (detail.errors, by the seq it would have had); nothing was added */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ChangeProposalValidationErrorResponse"];
         };
       };
     };

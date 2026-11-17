@@ -386,3 +386,36 @@ def test_an_edited_individual_create_records_both_classes(parts, house):
     assert decision.applied_fields == {"class_ids": [hall.id], "title": "Entry hall"}
     individual = ontology.get_individual(applied.result_entity_id)
     assert individual.class_ids == [hall.id] and individual.title == "Entry hall"
+
+
+def test_an_added_element_round_trips_as_added(parts, house):
+    """#1610: the reviewer's addition is stored, flagged, on its operation and decision."""
+    _, proposals, _, service, session_factory = parts
+    proposal = service.propose(
+        house["taxonomy"],
+        "Extracted",
+        [
+            OperationDraft(
+                1, T.CREATE, K.INDIVIDUAL, fields={"class_ids": [house["room"]], "title": "Study"}
+            )
+        ],
+        ProposalSource.PIPELINE,
+        client_metadata={"source_id": "src-1", "pipeline": "individual_extraction"},
+    )
+    passage = {"source_id": "src-1", "start": 4, "end": 10, "quote": "Pantry"}
+
+    added = service.add_individual(proposal.id, "Pantry", [house["room"]], passage, review_ms=700)
+
+    stored = {o.seq: o for o in proposals.get(proposal.id).operations}
+    assert stored[2].added_by_reviewer and not stored[1].added_by_reviewer
+    assert stored[2].status is OperationStatus.APPLIED
+    assert stored[2].evidence == [{**passage, "page": None}]
+    [decision] = gold(service, house)
+    assert (decision.seq, decision.added, decision.review_ms) == (2, True, 700)
+    with session_factory() as session:
+        row = session.query(ProposalDecisionRecord).filter_by(operation_id=stored[2].id).one()
+        assert row.added is True
+    assert added.operations[-1].id == stored[2].id
+    # a seq the proposal has is refused
+    with pytest.raises(ValueError, match="already has seq"):
+        proposals.add_operations(proposal.id, [stored[1]])

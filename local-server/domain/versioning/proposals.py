@@ -547,6 +547,8 @@ class ProposedOperation:
             "existing", "entity_id", "similarity"}. Applying it with one of them
             chosen creates nothing: the operation resolves to that individual,
             so "$ref" uses of it point there (see `matched`)
+        added_by_reviewer: Added to the proposal by its reviewer (an element
+            the extraction missed, found in its source), not by the proposer
         id: Unique id
     """
 
@@ -571,6 +573,7 @@ class ProposedOperation:
     proposed_replacement_id: str | None = None
     type_change: TypeChange | None = None
     alternatives: list[dict[str, Any]] = field(default_factory=list)
+    added_by_reviewer: bool = False
     id: str = field(default_factory=lambda: str(uuid4()))
 
     def __post_init__(self) -> None:
