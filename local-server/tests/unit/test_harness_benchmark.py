@@ -259,17 +259,17 @@ class TestScore:
         ]
         relationships = [
             PredictedRelationship("GitLab Runner", "uses", "Gitaly"),  # in gold
-            PredictedRelationship("Runners", "uses", "Gitaly"),  # the same, under an alias
+            PredictedRelationship("Runners", "uses", "Gitaly"),  # the same under an alias: once
             PredictedRelationship("GitLab Runner", "uses", "Gitaly"),  # a repeat: not distinct
             PredictedRelationship("Gitaly", "uses", "Redis"),  # found ends, not in gold
             PredictedRelationship("Kubernetes", "serves", "Gitaly"),  # an unfound end
         ]
         result = score(_gold(), predicted, relationships)
-        assert result.counts["distinct_relationships"] == 4
-        assert result.counts["resolved_relationships"] == 3
-        assert result.counts["correct_relationships"] == 2
-        assert result.metrics["relationship_precision"] == 0.5
-        assert result.metrics["relationship_precision_resolved"] == round(2 / 3, 4)
+        assert result.counts["distinct_relationships"] == 3
+        assert result.counts["resolved_relationships"] == 2
+        assert result.counts["correct_relationships"] == 1
+        assert result.metrics["relationship_precision"] == round(1 / 3, 4)
+        assert result.metrics["relationship_precision_resolved"] == 0.5
         assert result.metrics["relationship_recall"] == 0.5
 
     def test_an_empty_run_scores_zero_without_dividing_by_zero(self):

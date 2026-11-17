@@ -74,7 +74,7 @@ In user terms, in its one take `single_call` finds about 65% of what the gold ho
 
 | approach | rel. recall dev / holdout | rel. precision dev / holdout | invalid types listed | cost per document |
 |---|---|---|---|---|
-| `find_then_type` as shipped (relate per chunk over its own individuals) | 0.164 / 0.018 | 0.32 / 0.05 | 0% | $0.08-0.12 |
+| `find_then_type` as shipped (relate per chunk over its own individuals) | 0.164 / 0.018 | 0.31 / 0.05 | 0% | $0.08-0.12 |
 | Opus single call for individuals, then the per-chunk relate stage (the planned default; R0) | 0.159 / **0.149** | 0.33 / 0.30 | 0% | $0.33-0.60 |
 | One Opus call for individuals and relationships, given the allowed types (R1) | **0.315** / 0.113 | 0.37 / 0.20 | 0% (0 of 466) | $0.29-0.60 |
 | Opus single call for individuals, then one Opus relate call over the whole document (R2-opus) | 0.300 / 0.131 | 0.28 / 0.28 | 0% | $0.48-0.90 |

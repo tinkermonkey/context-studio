@@ -329,8 +329,12 @@ def one_call(
     document_id: str,
     started: threading.Event,
     prompt: CallPrompt | None = None,
+    take: tuple[str, int] | None = None,
 ) -> dict[str, Any]:
-    """One streamed call for a document; `started` is set once the prompt is read (cached)."""
+    """
+    One streamed call for a document; `started` is set once the prompt is read
+    (cached). `take` (arm, take number) is recorded on the call's ledger row.
+    """
     prompt = prompt or b_prompt(document_id)
     prompt_tokens = (len(prompt.system) + len(prompt.user)) // 3  # generous: 4 chars a token
     worst = cost_usd(
@@ -362,7 +366,10 @@ def one_call(
     latency = time.perf_counter() - began
     usage = usage_of(message.usage)
     usd = cost_usd(model, usage)
-    ledger.record({"arm_model": model, "document": document_id, "usage": usage, "usd": usd}, worst)
+    where = {"arm": take[0], "take": take[1]} if take else {}
+    ledger.record(
+        {"arm_model": model, **where, "document": document_id, "usage": usage, "usd": usd}, worst
+    )
     raw = message.model_dump(mode="json")
     for block in raw.get("content", []):
         block.pop("signature", None)  # thinking signatures: opaque and large
@@ -405,6 +412,7 @@ def run_take(
             document_id,
             started if attempt == 1 else threading.Event(),
             prompt,
+            (arm, take),
         )
         problem = (
             None if result["stop_reason"] == "end_turn" else f"stop_reason {result['stop_reason']}"

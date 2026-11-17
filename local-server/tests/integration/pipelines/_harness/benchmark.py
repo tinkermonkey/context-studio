@@ -660,15 +660,18 @@ def score(
     # Relationship precision is a lower bound: gold holds the relationships the
     # text states most plainly, not every one a run could correctly derive (see
     # the fixtures' README), so a correct relationship gold lacks counts against
-    # it. Over the run's distinct relationships (by end names and predicate);
-    # `_resolved` only over those whose two ends are found gold individuals, so
-    # it is not lowered by relationships between spurious individuals.
-    distinct = {(name_key(r.source), r.predicate, name_key(r.target)) for r in relationships}
-    resolved = [
-        (end_key[s], p, end_key[o]) for s, p, o in distinct if s in end_key and o in end_key
-    ]
-    correct = sum(1 for triple in resolved if triple in gold_triples)
-    metrics["relationship_precision"] = _ratio(correct, len(distinct))
+    # it. Over the run's distinct relationships: those whose two ends are found
+    # gold individuals are one per gold triple they resolve to (one relationship
+    # stated under two names of an individual counts once, as for individual
+    # precision), the rest one per end names and predicate. `_resolved` is over
+    # the first kind only, so it is not lowered by relationships between
+    # spurious individuals.
+    named = {(name_key(r.source), r.predicate, name_key(r.target)) for r in relationships}
+    resolved = {(end_key[s], p, end_key[o]) for s, p, o in named if s in end_key and o in end_key}
+    unresolved = {(s, p, o) for s, p, o in named if s not in end_key or o not in end_key}
+    distinct = len(resolved) + len(unresolved)
+    correct = len(resolved & gold_triples)
+    metrics["relationship_precision"] = _ratio(correct, distinct)
     metrics["relationship_precision_resolved"] = _ratio(correct, len(resolved))
 
     by_layer: dict[str, dict[str, float]] = {}
@@ -694,7 +697,7 @@ def score(
             "gold_relationships": len(gold_triples),
             "predicted_relationships": len(relationships),
             "matched_relationships": len(stated & gold_triples),
-            "distinct_relationships": len(distinct),
+            "distinct_relationships": distinct,
             "resolved_relationships": len(resolved),
             "correct_relationships": correct,
         },

@@ -46,7 +46,7 @@ Written and committed before any paid run.
 | R2-haiku, R2-opus | one call per document over the whole source, given the individuals of arm B's take of the same index (title and class), the definitions of the predicates in play, and only the allowed types whose two classes are among those individuals; structured output with the titles and predicates as enums; adaptive thinking at effort high | `claude-haiku-5-5`, `claude-opus-5-5` |
 | R0-gold, R2-haiku-gold, R2-opus-gold | diagnostics: R0 and R2 given the gold individuals; one take | as above |
 
-R1 and R2 restrict their output to the allowed types by validation: a relationship whose (source class, predicate, target class) is not a relationship type of the schema is dropped when scored, and counted. R0 and R2 are paired by take with the same Opus individuals, so they differ only in how relationships are produced. Reference rows, free from the saved takes: arm A (`find_then_type` as shipped), arm B as recorded, and arm B with its invalid relationships dropped.
+R1 and R2 restrict their output to the allowed types by validation: a relationship whose (source class, predicate, target class) is not a relationship type of the schema is dropped when scored, and counted. R0 and R2 are paired by take and given the same Opus individuals, so they differ almost only in how relationships are produced: R0's pipeline lost one individual (`PostgreSQL` on `gitlab_architecture` take 3, 89 given and 88 out; see Limits). Reference rows, free from the saved takes: arm A (`find_then_type` as shipped), arm B as recorded, and arm B with its invalid relationships dropped.
 
 - Documents: `edit_check`, `gitlab_architecture` (dev), `wikimedia_enterprise` (holdout).
 - Takes per arm: three (diagnostics one).
@@ -78,7 +78,7 @@ Reference rows, free from the head-to-head's saved takes:
 
 | arm | split | rel. recall | rel. precision | pair recall | typed F1 | kept | invalid | $ per doc |
 |---|---|---|---|---|---|---|---|---|
-| A (`find_then_type` as shipped) | dev | 0.164 [0.127-0.186] | 0.322 | 0.176 | 0.452 | 38 | 0 | 0.110-0.124 |
+| A (`find_then_type` as shipped) | dev | 0.164 [0.127-0.186] | 0.315 | 0.176 | 0.452 | 38 | 0 | 0.110-0.124 |
 | A | holdout | 0.018 [0.000-0.036] | 0.048 | 0.018 | 0.442 | 22 | 0 | 0.078 |
 | B (Opus single call, predicates only) | dev | 0.038 [0.034-0.040] | 0.026 | 0.296 | 0.624 | 98 | 90 of 98 (92%) | 0.573 |
 | B | holdout | 0.012 [0.000-0.018] | 0.010 | 0.066 | 0.659 | 61 | 58 of 61 (95%) | 0.321 |
@@ -93,10 +93,10 @@ Per document, relationship recall [min-max over takes]: R0 `edit_check` 0.00-0.0
 |---|---|---|---|---|
 | R1 − R0 | dev | **+0.156** [+0.142, +0.177, +0.149] | +0.049 [+0.003, +0.033, +0.110] | +0.037 |
 | R1 − R0 | holdout | −0.036 [−0.036, +0.018, −0.089] | −0.103 [+0.028, −0.074, −0.262] | −0.031 |
-| R2-opus − R0 | dev | **+0.141** [+0.132, +0.173, +0.119] | −0.043 [−0.113, −0.040, +0.022] | 0 (same individuals) |
-| R2-opus − R0 | holdout | −0.018 [−0.054, 0.000, 0.000] | −0.026 [−0.087, +0.069, −0.060] | 0 |
-| R2-haiku − R0 | dev | −0.114 [−0.139, −0.108, −0.093] | −0.012 [−0.098, +0.014, +0.048] | 0 |
-| R2-haiku − R0 | holdout | −0.042 [0.000, −0.071, −0.054] | +0.033 [+0.115, +0.095, −0.110] | 0 |
+| R2-opus − R0 | dev | **+0.141** [+0.132, +0.173, +0.119] | −0.043 [−0.113, −0.040, +0.022] | +0.001 [0, 0, +0.003] |
+| R2-opus − R0 | holdout | −0.018 [−0.054, 0.000, 0.000] | −0.026 [−0.087, +0.069, −0.060] | 0 [0, 0, 0] |
+| R2-haiku − R0 | dev | −0.114 [−0.139, −0.108, −0.093] | −0.012 [−0.098, +0.014, +0.048] | +0.001 [0, 0, +0.003] |
+| R2-haiku − R0 | holdout | −0.042 [0.000, −0.071, −0.054] | +0.033 [+0.115, +0.095, −0.110] | 0 [0, 0, 0] |
 | R1 − B (R1's typed F1 guard) | dev | +0.277 | +0.349 | +0.036 [+0.050, +0.047, +0.011] |
 | R1 − B | holdout | +0.101 | +0.190 | −0.031 [−0.017, −0.048, −0.029] |
 | R2-opus − R2-haiku | dev | +0.255 [+0.272, +0.281, +0.212] | −0.031 | 0 |
@@ -106,7 +106,7 @@ Applying the rule:
 | challenger | dev Δ recall ≥ +0.08, all takes positive | dev Δ precision ≥ −0.05 | holdout Δ recall ≥ −0.08 | typed F1 within 0.08 of B | outcome |
 |---|---|---|---|---|---|
 | R1 | +0.156, yes | +0.049, yes | −0.036, yes | +0.036 / −0.031, yes | **passes** |
-| R2-opus | +0.141, yes | −0.043, yes | −0.018, yes | (same individuals) | passes |
+| R2-opus | +0.141, yes | −0.043, yes | −0.018, yes | (R0's individuals; Δ +0.001) | passes |
 | R2-haiku | −0.114: R0 ahead by more than 0.08 | | | | keep R0 over it |
 
 Among those that pass, R1 is preferred unless an R2 arm beats it on dev relationship recall by 0.08 or more: R2-opus is 0.015 behind it. **R1 is the arm the rule recommends.**
@@ -126,7 +126,8 @@ Among those that pass, R1 is preferred unless an R2 arm beats it on dev relation
 - The gain is on dev only. On the holdout no challenger beats R0, and R1's holdout precision is 0.10 below R0's; the rule lets the holdout veto only a loss of more than 0.08 in recall. One holdout document with 56 gold relationships cannot carry more.
 - The 0.08 threshold is borrowed from typed F1; the take-to-take range of relationship recall here is up to 0.09 (R1 dev 0.263-0.353), close to it. Every paired dev take agreeing in sign is what makes R1's and R2-opus's gains more than noise.
 - R0 places the Opus individuals in chunks by quote and by title; `single_call` may place them differently.
-- R1 changes the individuals call too (its typed F1 differs from B's by +0.036 dev and −0.031 holdout, both under the noise threshold); R0 and R2 relate arm B's individuals unchanged.
+- R0's pipeline lost one of its given individuals: `PostgreSQL` on `gitlab_architecture` take 3 (89 given, 88 out), hence its typed F1 differs from R2's by +0.003 on that take. R0's take-3 dev recall dip is partly this lost individual: 4 of the 83 `gitlab_architecture` gold relationships involve `postgresql`, so it accounts for at most about 0.024 of the take-3 dev delta of R1 or R2-opus against R0 (+0.149 and +0.119). Every take stays ahead by more than 0.08 without it, and the verdict holds.
+- R1 changes the individuals call too (its typed F1 differs from B's by +0.036 dev and −0.031 holdout, both under the noise threshold); R0 and R2 relate arm B's individuals (R0 lost one of them, above).
 - The relationship prompts were written once before any result and not tuned.
 
 ## What went wrong

@@ -426,7 +426,14 @@ def record_r0(take: int, documents: list[str], gold: bool, cassettes: Path, ledg
         usage = usage_of(response.usage)
         usd = cost_usd(A_MODEL, usage)
         ledger.record(
-            {"arm_model": f"{arm}:{A_MODEL}", "document": current[0], "usage": usage, "usd": usd},
+            {
+                "arm_model": f"{arm}:{A_MODEL}",
+                "arm": arm,
+                "take": take,
+                "document": current[0],
+                "usage": usage,
+                "usd": usd,
+            },
             worst,
         )
         with ledger.lock:
