@@ -8,6 +8,7 @@ so nothing touches the real pages or the tracked `experiments/ledger.jsonl`.
 import io
 import json
 import os
+import re
 import shutil
 import sys
 from pathlib import Path
@@ -302,7 +303,8 @@ class TestRecord:
                 text.split("<!-- loop:leads:start -->")[0]
                 + text.split("<!-- loop:leads:end -->")[1]
             )
-            return text.replace("**As of 2026-11-18.**", "**As of 2026-11-16.**")
+            # The page's own date is whatever it was last updated on
+            return re.sub(r"\*\*As of \d{4}-\d{2}-\d{2}\.\*\*", "**As of DATE.**", text)
 
         assert strip(after) == strip(before)
 
