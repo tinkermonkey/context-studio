@@ -956,6 +956,7 @@ class TestRender:
             ledger_path=ledger_path,
             implementation="find_then_type",
             configuration="extraction-find-then-type",
+            today="2026-11-16",
         )
         append_entry(
             self._measured(
