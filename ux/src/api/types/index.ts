@@ -5324,7 +5324,7 @@ export interface components {
       dataset_id?: string | null;
       /**
        * Client Metadata
-       * @description Kept on the proposal for the proposing client (JSON values). A source_id names the source it was extracted from (a source of the taxonomy), and an origin the pipeline that made it ({pipeline_type, implementation_id, configuration_ref, configuration_version, digest}); either is checked when given (422 otherwise)
+       * @description Kept on the proposal for the proposing client (JSON values). A source_id names the source it was extracted from (a source of the taxonomy), and an origin the pipeline that made it ({pipeline_type, implementation_id, configuration_ref, configuration_version, digest}); either is checked when given (422 otherwise). The keys an extraction run records (run_id, pipeline, pages, extraction_id, extraction_started_at, partial) can't be set here
        */
       client_metadata?: {
         [key: string]: unknown;

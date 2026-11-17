@@ -1343,3 +1343,17 @@ class TestGoldCheckReview(_ExtractedFromSource):
             assert response.status_code == 422, (action, response.text)
         [op] = client.get(f"/api/proposals/{proposal['id']}").json()["operations"]
         assert op["status"] == "pending"
+
+    @pytest.mark.parametrize(
+        "key", ["run_id", "pipeline", "pages", "extraction_id", "extraction_started_at", "partial"]
+    )
+    def test_create_cant_set_what_an_extraction_run_records(self, client, graph, source, key):
+        metadata = {"source_id": source.id, key: "individual_extraction"}
+
+        response = client.post(
+            "/api/proposals", json=self._study_body(graph, client_metadata=metadata)
+        )
+
+        assert response.status_code == 422
+        assert key in response.text
+        assert client.get("/api/proposals").json()["total"] == 0

@@ -8,7 +8,7 @@ import logging
 from datetime import datetime
 from typing import Annotated, Any, Collection, Literal, Optional
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from adapters.web.schemas.ontology import SourceRevisionSchema
 from domain.pipelines.schema_relationship_reflection.drafts import (
@@ -20,6 +20,7 @@ from domain.versioning.gold import DecisionKind, ProposalDecision
 from domain.versioning.in_use import DeleteBlockers, PairMatch, ReplacementCheck
 from domain.versioning.proposal_service import MAX_REVIEW_MS
 from domain.versioning.proposals import (
+    RUN_METADATA_KEYS,
     ChangeProposal,
     ChangeScope,
     Landing,
@@ -170,8 +171,19 @@ class ChangeProposalCreateRequest(BaseModel):
         description="Kept on the proposal for the proposing client (JSON values). A source_id "
         "names the source it was extracted from (a source of the taxonomy), and an origin the "
         "pipeline that made it ({pipeline_type, implementation_id, configuration_ref, "
-        "configuration_version, digest}); either is checked when given (422 otherwise)",
+        "configuration_version, digest}); either is checked when given (422 otherwise). The "
+        "keys an extraction run records (run_id, pipeline, pages, extraction_id, "
+        "extraction_started_at, partial) can't be set here",
     )
+
+    @field_validator("client_metadata")
+    @classmethod
+    def _no_run_keys(cls, value: Optional[dict[str, Any]]) -> Optional[dict[str, Any]]:
+        """Only an extraction run records what it decides supersession by."""
+        owned = sorted(RUN_METADATA_KEYS & set(value or {}))
+        if owned:
+            raise ValueError(f"client_metadata can't set {owned}: an extraction run records them")
+        return value
 
 
 class InUseResolutionRequest(BaseModel):
