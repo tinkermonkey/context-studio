@@ -9,6 +9,10 @@ The gold extractions live in tests/integration/fixtures/pipelines/extraction_ben
     load       Put a gold extraction into the workspace as a dataset of the DR taxonomy:
                the source document, then one proposal of individual and relationship
                creates, each with its passages, applied.
+    check      Load a gold extraction for a person to check: one unapplied proposal of
+               its individuals and relationships, in a new dataset gold-check-<document>,
+               to review on its Review page.
+    write-gold Write the decisions taken on a gold check's proposal back to gold.json.
     score      Score a proposal an extraction run produced against the gold extraction.
     run        Extract a benchmark document with a pipeline configuration, in a fresh
                dataset, and score the proposal. This calls the configured LLM (it costs
@@ -17,13 +21,18 @@ The gold extractions live in tests/integration/fixtures/pipelines/extraction_ben
 Usage (from local-server/, venv active; the server on http://127.0.0.1:8000):
     python scripts/extraction_benchmark.py validate
     python scripts/extraction_benchmark.py load [--document ID] [--replace]
+    python scripts/extraction_benchmark.py check --document ID
+    python scripts/extraction_benchmark.py write-gold --document ID --proposal PROPOSAL_ID
     python scripts/extraction_benchmark.py score --document ID --proposal PROPOSAL_ID
     python scripts/extraction_benchmark.py run --document ID [--configuration REF] --spend
 """
 
 import argparse
+import copy
+import hashlib
 import json
 import os
+import re
 import sys
 import time
 import urllib.error
@@ -38,6 +47,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from tests.integration.pipelines._harness.benchmark import (
     BENCHMARK_DIR,
+    HOLDOUT_DOCUMENTS,
     BenchmarkScore,
     Passage,
     Predicted,
@@ -49,6 +59,8 @@ from tests.integration.pipelines._harness.benchmark import (
 )
 
 DEFAULT_BASE_URL = "http://127.0.0.1:8000"
+# The external reference that names a class's DR type (a bundle import adds one of its own)
+DR_REFERENCE_SOURCE = "documentation_robotics"
 REPORTS_DIR = Path(__file__).resolve().parents[1] / "experiments" / "reports"
 FINISHED = {"completed", "failed", "cancelled"}
 POLL_SECONDS = 5
@@ -165,8 +177,10 @@ class Schema:
 
     @staticmethod
     def _ref(cls: dict[str, Any]) -> str:
+        """The class's DR reference: its documentation_robotics one, else its first."""
         references = cls.get("external_references") or []
-        return references[0]["identifier"] if references else cls["identifier"]
+        dr = [r for r in references if r.get("source") == DR_REFERENCE_SOURCE]
+        return (dr or references)[0]["identifier"] if references else cls["identifier"]
 
 
 def _documents(selected: list[str] | None) -> list[str]:
@@ -364,6 +378,385 @@ def cmd_load(args: argparse.Namespace) -> int:
         if problems:
             raise SystemExit(f"{document_id}: gold file has problems; run validate")
         load_document(api, schema, document_id, args.replace)
+    return 0
+
+
+# ---------------------------------------------------------------- check / write-gold
+
+# The implementation a gold check's proposal names in its origin, and the client_metadata
+# key that holds what write-gold needs to map its decisions back to the gold file
+GOLD_CHECK_IMPLEMENTATION = "gold_check"
+GOLD_CHECK_KEY = "gold_check"
+# How a gold file is formatted: one-space indent, non-ASCII kept, no final newline
+GOLD_INDENT = 1
+# The tier of an element a reviewer added without giving one
+ADDED_TIER = "supporting"
+# What a rejection's reason code says in `excluded`, when the reviewer left no note
+REASON_LABELS = {
+    "not_in_text": "Not in the text.",
+    "too_generic": "Too generic to be an element.",
+    "mentioned_only": "Only mentioned in passing.",
+    "out_of_scope": "Out of the document's scope.",
+    "duplicate": "A duplicate of another element.",
+    "other": "Rejected in review.",
+}
+
+
+def gold_text(gold: dict[str, Any]) -> str:
+    """A gold file's text, formatted as the files are."""
+    return json.dumps(gold, indent=GOLD_INDENT, ensure_ascii=False)
+
+
+def gold_digest(document_id: str) -> str:
+    """A short hash of a document's gold file: the version a gold check reviews."""
+    return hashlib.sha256((BENCHMARK_DIR / document_id / "gold.json").read_bytes()).hexdigest()[:12]
+
+
+def split_of(document_id: str) -> str:
+    """Whether a document is in the dev set or the holdout."""
+    return "holdout" if document_id in HOLDOUT_DOCUMENTS else "dev"
+
+
+def check_operations(
+    gold: dict[str, Any],
+    class_id: dict[str, str],
+    property_id: dict[tuple[str, str, str], str],
+    source_id: str,
+) -> tuple[list[dict[str, Any]], dict[str, Any]]:
+    """
+    A gold extraction as the operations of a proposal to review, and what
+    write-gold needs to map the decisions on them back: each individual create
+    is named (ref) by its gold key, and each relationship create's seq names
+    its gold relationship.
+
+    Returns:
+        The operations, and {elements: {ref: {key, tier, acceptable_classes,
+        aliases}}, relationships: {seq: {source, predicate, target, tier}}}
+    """
+    operations: list[dict[str, Any]] = []
+    elements: dict[str, Any] = {}
+    relationships: dict[str, Any] = {}
+    class_of: dict[str, str] = {}
+    for item in gold["individuals"]:
+        class_of[item["key"]] = item["class"]
+        elements[item["key"]] = {
+            "key": item["key"],
+            "tier": item["tier"],
+            "acceptable_classes": list(item.get("acceptable_classes", ())),
+            "aliases": list(item.get("aliases", ())),
+        }
+        operations.append(
+            {
+                "seq": len(operations) + 1,
+                "op": "create",
+                "kind": "individual",
+                "ref": item["key"],
+                "fields": {"title": item["title"], "class_ids": [class_id[item["class"]]]},
+                "notes": f"benchmark tier: {item['tier']}",
+                "evidence": _evidence(item["evidence"], source_id),
+            }
+        )
+    for rel in gold["relationships"]:
+        triple = (class_of[rel["source"]], rel["predicate"], class_of[rel["target"]])
+        seq = len(operations) + 1
+        relationships[str(seq)] = {
+            "source": rel["source"],
+            "predicate": rel["predicate"],
+            "target": rel["target"],
+            "tier": rel.get("tier", "core"),
+        }
+        operations.append(
+            {
+                "seq": seq,
+                "op": "create",
+                "kind": "relationship",
+                "fields": {
+                    "source_id": f"${rel['source']}",
+                    "target_id": f"${rel['target']}",
+                    "property_definition_id": property_id[triple],
+                },
+                "evidence": _evidence(rel["evidence"], source_id),
+            }
+        )
+    return operations, {"elements": elements, "relationships": relationships}
+
+
+def _checked(decision: dict[str, Any]) -> dict[str, str]:
+    return {"by": decision["decided_by"], "at": decision["decided_at"]}
+
+
+def _slug(title: str, taken: set[str]) -> str:
+    """A key for a new gold individual: its title as a slug, unique among the file's keys."""
+    base = re.sub(r"[^a-z0-9]+", "-", title.lower()).strip("-") or "element"
+    key, n = base, 2
+    while key in taken:
+        key, n = f"{base}-{n}", n + 1
+    return key
+
+
+def _excluded_reason(operation: dict[str, Any], decision: dict[str, Any] | None) -> str:
+    note = (decision or {}).get("reason") or operation.get("reason")
+    if note:
+        return str(note)
+    code = (decision or {}).get("reason_code") or operation.get("reason_code")
+    return REASON_LABELS.get(str(code), REASON_LABELS["other"])
+
+
+def _extend(item: dict[str, Any], name: str, values: list[str], leave_out: set[str]) -> None:
+    """Append values to a list field of a gold individual, once each; only if any are new."""
+    current = list(item.get(name, ()))
+    new = [v for v in dict.fromkeys(values) if v not in current and v not in leave_out]
+    if new:
+        item[name] = current + new
+
+
+def _apply_verdict(
+    item: dict[str, Any], decision: dict[str, Any], class_ref: dict[str, str]
+) -> None:
+    """What an applied decision writes to its gold individual."""
+    annotations = decision.get("annotations") or {}
+    defensible = [class_ref[c] for c in annotations.get("also_defensible") or () if c in class_ref]
+    if decision["decision"] == "applied_with_edits":
+        applied = decision.get("applied_fields") or {}
+        classes = [class_ref[c] for c in applied.get("class_ids") or () if c in class_ref]
+        if classes and classes[0] != item["class"]:
+            item["class"] = classes[0]
+            if classes[0] in item.get("acceptable_classes", ()):
+                item["acceptable_classes"] = [
+                    c for c in item["acceptable_classes"] if c != classes[0]
+                ]
+        title = applied.get("title")
+        if isinstance(title, str) and title and title != item["title"]:
+            old = item["title"]
+            item["title"] = title
+            if title in item.get("aliases", ()):
+                item["aliases"] = [a for a in item["aliases"] if a != title]
+            _extend(item, "aliases", [old], set())
+    # The old class (an edit's) goes to acceptable_classes only when marked defensible.
+    _extend(item, "acceptable_classes", defensible, {item["class"]})
+    if annotations.get("tier"):
+        item["tier"] = annotations["tier"]
+    item["checked"] = _checked(decision)
+
+
+def _added_individual(
+    operation: dict[str, Any],
+    decision: dict[str, Any],
+    class_ref: dict[str, str],
+    taken: set[str],
+) -> dict[str, Any]:
+    """A gold individual for an element a reviewer added from the text."""
+    fields = operation.get("applied_fields") or operation["fields"]
+    title = fields["title"]
+    first = (fields.get("class_ids") or [None])[0]
+    if first not in class_ref:
+        raise ValueError(f"seq {operation['seq']} ({title!r}): class {first} is not in the schema")
+    annotations = decision.get("annotations") or {}
+    item: dict[str, Any] = {
+        "key": _slug(title, taken),
+        "title": title,
+        "class": class_ref[first],
+        "tier": annotations.get("tier") or ADDED_TIER,
+        "description": "",
+    }
+    defensible = [class_ref[c] for c in annotations.get("also_defensible") or () if c in class_ref]
+    _extend(item, "acceptable_classes", defensible, {item["class"]})
+    item["evidence"] = [
+        {"quote": e["quote"], "start": e["start"], "end": e["end"]}
+        for e in operation.get("evidence", ())
+        if isinstance(e.get("start"), int) and isinstance(e.get("end"), int)
+    ]
+    item["checked"] = _checked(decision)
+    return item
+
+
+def rewrite_gold(
+    gold: dict[str, Any],
+    proposal: dict[str, Any],
+    decisions: list[dict[str, Any]],
+    class_ref: dict[str, str],
+) -> dict[str, Any]:
+    """
+    A gold file with a gold check's review written back; the input is left as it is.
+
+    Individuals: applied as proposed is marked checked (by, at); applied with a
+    class edit takes the new class, the old one going to acceptable_classes only
+    if the decision marks it also defensible; a title edit replaces the title,
+    the old one becoming an alias; a tier annotation sets the tier, also
+    defensible classes join acceptable_classes. Rejected ones move to
+    `excluded` with the note (else the reason code's label), with every
+    relationship touching them. Ones the reviewer added become new individuals
+    (tier from the annotation, else "supporting"). Relationships: applied are
+    marked checked, rejected removed. Pending and failed operations change
+    nothing, so a proposal nobody reviewed gives the gold back unchanged.
+
+    Args:
+        gold: The gold file, as parsed
+        proposal: The gold check's proposal, as GET /api/proposals/{id} returns it
+        decisions: Its standing decisions, as GET /api/taxonomies/{id}/gold lists them
+        class_ref: Class id -> the class's reference in gold ("product.feature")
+    """
+    result = copy.deepcopy(gold)
+    meta = (proposal.get("client_metadata") or {}).get(GOLD_CHECK_KEY) or {}
+    elements, gold_relationships = meta.get("elements", {}), meta.get("relationships", {})
+    by_operation = {d["operation_id"]: d for d in decisions if not d.get("superseded_at")}
+    items = {item["key"]: item for item in result["individuals"]}
+    taken = set(items)
+    removed: set[str] = set()
+    removed_relationships: set[tuple[str, str, str]] = set()
+    checked_relationships: dict[tuple[str, str, str], dict[str, str]] = {}
+    added: list[dict[str, Any]] = []
+    for operation in sorted(proposal["operations"], key=lambda o: o["seq"]):
+        decision = by_operation.get(operation["id"])
+        status = operation["status"]
+        if operation["op"] != "create":
+            continue
+        if operation["kind"] == "individual":
+            if operation.get("added_by_reviewer"):
+                if status == "applied" and decision is not None:
+                    item = _added_individual(operation, decision, class_ref, taken)
+                    taken.add(item["key"])
+                    added.append(item)
+                continue
+            element = elements.get(operation.get("ref"))
+            item = items.get(element["key"]) if element else None
+            if item is None:
+                continue
+            if status == "rejected":
+                removed.add(item["key"])
+                result.setdefault("excluded", []).append(
+                    {"label": item["title"], "reason": _excluded_reason(operation, decision)}
+                )
+            elif status == "applied" and decision is not None:
+                _apply_verdict(item, decision, class_ref)
+        elif operation["kind"] == "relationship":
+            rel = gold_relationships.get(str(operation["seq"]))
+            if rel is None:
+                continue
+            triple = (rel["source"], rel["predicate"], rel["target"])
+            if status == "rejected":
+                removed_relationships.add(triple)
+            elif status == "applied" and decision is not None:
+                checked_relationships[triple] = _checked(decision)
+    result["individuals"] = [i for i in result["individuals"] if i["key"] not in removed] + added
+    relationships = []
+    for rel in result["relationships"]:
+        triple = (rel["source"], rel["predicate"], rel["target"])
+        if rel["source"] in removed or rel["target"] in removed or triple in removed_relationships:
+            continue
+        if triple in checked_relationships:
+            rel["checked"] = checked_relationships[triple]
+        relationships.append(rel)
+    result["relationships"] = relationships
+    return result
+
+
+def cmd_check(args: argparse.Namespace) -> int:
+    document_id = _documents([args.document])[0]
+    if validate_gold(document_id):
+        raise SystemExit(f"{document_id}: gold file has problems; run validate")
+    api = Api(args.base_url)
+    schema = Schema(api, args.taxonomy)
+    gold = _gold_json(document_id)
+    missing = sorted({i["class"] for i in gold["individuals"]} - set(schema.class_id))
+    if missing:
+        raise ApiError(f"The workspace schema lacks classes gold uses: {missing}")
+    identifier = f"gold-check-{document_id}"
+    if _dataset(api, schema.taxonomy_id, identifier) is not None:
+        raise SystemExit(
+            f"Dataset {identifier!r} already exists: a gold check of {document_id} is loaded. "
+            "Finish it (write-gold), or delete the dataset to start again"
+        )
+    dataset = api.post(
+        "/api/datasets",
+        {
+            "taxonomy_id": schema.taxonomy_id,
+            "identifier": identifier,
+            "title": f"Gold check: {gold['document']['title']}",
+        },
+    )
+    source = _add_source(api, schema, identifier, document_id, gold["document"]["title"])
+    operations, mapping = check_operations(gold, schema.class_id, schema.property_id, source["id"])
+    body = {
+        "taxonomy_id": schema.taxonomy_id,
+        "title": f"Gold check: {gold['document']['title']}",
+        "rationale": (
+            f"The gold extraction of {document_id} "
+            f"(tests/integration/fixtures/pipelines/extraction_benchmark/{document_id}/gold.json), "
+            "loaded for a person to check. Nothing is applied until it is reviewed; "
+            "scripts/extraction_benchmark.py write-gold writes the verdicts back."
+        ),
+        "source": "pipeline",
+        "source_detail": f"extraction-benchmark:{document_id}",
+        "dataset_id": dataset["id"],
+        "operations": operations,
+        "client_metadata": {
+            "source_id": source["id"],
+            "origin": {
+                "pipeline_type": "individual_extraction",
+                "implementation_id": GOLD_CHECK_IMPLEMENTATION,
+                "configuration_ref": "gold",
+                "configuration_version": 1,
+                "digest": gold_digest(document_id),
+            },
+            GOLD_CHECK_KEY: {"document": document_id, "split": split_of(document_id), **mapping},
+        },
+    }
+    api.post("/api/proposals", body, dry_run="true")
+    proposal = api.post("/api/proposals", body)
+    print(
+        f"{document_id}: gold check proposal {proposal['id']} with "
+        f"{len(proposal['operations'])} operations in dataset {identifier!r}"
+    )
+    print(f"Review it at /app/proposals/{proposal['id']}/review")
+    return 0
+
+
+def _decisions(api: Api, taxonomy_id: str, proposal_id: str) -> list[dict[str, Any]]:
+    """A proposal's standing decisions, every page."""
+    found: list[dict[str, Any]] = []
+    while True:
+        page = api.get(
+            f"/api/taxonomies/{taxonomy_id}/gold",
+            proposal_id=proposal_id,
+            limit=500,
+            offset=len(found),
+        )
+        found += page["items"]
+        if not page["items"] or len(found) >= page["total"]:
+            return found
+
+
+def cmd_write_gold(args: argparse.Namespace) -> int:
+    document_id = _documents([args.document])[0]
+    api = Api(args.base_url)
+    proposal = api.get(f"/api/proposals/{args.proposal}")
+    meta = (proposal.get("client_metadata") or {}).get(GOLD_CHECK_KEY) or {}
+    if meta.get("document") != document_id:
+        raise SystemExit(f"Proposal {args.proposal} is not a gold check of {document_id}")
+    schema = Schema(api, args.taxonomy)
+    decisions = _decisions(api, proposal["taxonomy_id"], proposal["id"])
+    path = BENCHMARK_DIR / document_id / "gold.json"
+    original = path.read_text(encoding="utf-8")
+    gold = json.loads(original)
+    rewritten = rewrite_gold(gold, proposal, decisions, schema.class_ref)
+    if rewritten == gold:
+        print(f"{document_id}: no decisions to write")
+        return 0
+    path.write_text(gold_text(rewritten), encoding="utf-8")
+    problems = validate_gold(document_id)
+    if problems:
+        path.write_text(original, encoding="utf-8")
+        listed = "\n".join(f"  ! {p}" for p in problems)
+        raise SystemExit(
+            f"{document_id}: the rewritten gold file is invalid, so it was left as it was:\n"
+            f"{listed}"
+        )
+    pending = sum(1 for o in proposal["operations"] if o["status"] in ("pending", "failed"))
+    print(
+        f"{document_id}: wrote {len(decisions)} decisions to {path} "
+        f"({pending} operations still unchecked)"
+    )
     return 0
 
 
@@ -595,6 +988,21 @@ def main() -> int:
         "--replace", action="store_true", help="Load again into a dataset emptied by a revert"
     )
     load.set_defaults(func=cmd_load)
+
+    check = commands.add_parser(
+        "check", help="Load a gold extraction as an unapplied proposal for a person to check"
+    )
+    common(check)
+    check.add_argument("--document", required=True)
+    check.set_defaults(func=cmd_check)
+
+    write_gold = commands.add_parser(
+        "write-gold", help="Write a gold check's decisions back to the gold file"
+    )
+    common(write_gold)
+    write_gold.add_argument("--document", required=True)
+    write_gold.add_argument("--proposal", required=True, help="The gold check's proposal")
+    write_gold.set_defaults(func=cmd_write_gold)
 
     score_cmd = commands.add_parser("score", help="Score a proposal against a gold extraction")
     common(score_cmd)

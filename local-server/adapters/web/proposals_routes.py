@@ -9,7 +9,7 @@ service calls touch SQLite, so they run in the thread pool.
 """
 
 from datetime import datetime
-from typing import Optional
+from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
 from fastapi.responses import JSONResponse, StreamingResponse
@@ -33,6 +33,7 @@ from adapters.web.schemas.proposals import (
     ChangeProposalValidationErrorResponse,
     DrDecisionResponse,
     GoldDecisionResponse,
+    ReviewAnnotationRequest,
 )
 from domain.ontology.exceptions import EntityNotFoundError
 from domain.ontology.value_objects import SourceRevision
@@ -62,6 +63,15 @@ _logger = get_logger(__name__)
 
 _NOT_FOUND = {404: {"description": "Change proposal not found"}}
 _STATE_CONFLICT = {409: {"description": "An operation is already applied or rejected"}}
+
+
+def _annotation(annotation: Optional[ReviewAnnotationRequest]) -> Optional[dict[str, Any]]:
+    """A review annotation as the service takes it: only what was given."""
+    return annotation.model_dump(exclude_none=True) if annotation is not None else None
+
+
+def _annotations(annotations: dict[str, ReviewAnnotationRequest]) -> dict[str, dict[str, Any]]:
+    return {op_id: a.model_dump(exclude_none=True) for op_id, a in annotations.items()}
 
 
 def _http_error(exc: Exception, unknown_ids_are_invalid: bool = False) -> HTTPException:
@@ -299,6 +309,7 @@ async def create_proposal(
             source_detail=request.source_detail,
             dry_run=dry_run,
             source_revision=revision,
+            client_metadata=request.client_metadata,
             dataset_id=request.dataset_id,
         )
         return proposal_response(service, proposal, dry_run=dry_run)
@@ -364,6 +375,7 @@ async def add_individual(
             request.class_ids,
             request.passage.model_dump(),
             review_ms=request.review_ms,
+            annotation=_annotation(request.annotation),
         )
         return proposal_response(service, proposal)
 
@@ -469,6 +481,7 @@ async def apply_proposal(
             resolutions,
             chosen_alternatives=request.chosen_alternatives,
             review_ms=request.review_ms,
+            annotations=_annotations(request.annotations),
         )
         return proposal_response(service, proposal)
 
@@ -514,6 +527,7 @@ async def reject_proposal(
             request.note,
             reason_code=request.reason_code,
             review_ms=request.review_ms,
+            annotations=_annotations(request.annotations),
         )
         return proposal_response(service, proposal)
 

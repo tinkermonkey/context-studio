@@ -93,6 +93,8 @@ from tests.fakes.fake_nlp_processor import FakeNLPProcessor
 from tests.fakes.fake_reference_source import FakeReferenceSource
 from tests.integration.pipelines._harness.benchmark import (
     BENCHMARK_DIR,
+    DEV_DOCUMENTS,
+    HOLDOUT_DOCUMENTS,
     BenchmarkScore,
     Passage,
     Predicted,
@@ -298,9 +300,6 @@ def recorded_targets() -> list[BenchmarkTarget]:
     return targets
 
 
-# Which documents the loop optimises on, and which only vetoes (never selects).
-DEV_DOCUMENTS = ("edit_check", "gitlab_architecture")
-HOLDOUT_DOCUMENTS = ("wikimedia_enterprise",)
 SOURCE_ID = "benchmark"
 
 

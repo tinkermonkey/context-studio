@@ -468,3 +468,22 @@ def test_reverting_undoes_an_added_element_and_its_provenance(parts, house):
     assert entity_sources.list_for_entity(individual_id) == []
     [decision] = gold(service, house, include_superseded=True)
     assert decision.added and decision.superseded_at is not None
+
+
+def test_review_annotations_round_trip(parts, house):
+    """#1613: what a reviewer notes for gold is stored on the decision."""
+    ontology, _, _, service, session_factory = parts
+    hall = ontology.create_class(house["vocab"], "Hall", parent_class_id=house["room"])
+    proposal = propose(service, house)
+    ops = {o.seq: o for o in proposal.operations}
+    note = {"tier": "core", "also_defensible": [hall.id]}
+
+    service.apply(proposal.id, [ops[1].id], annotations={ops[1].id: note})
+    service.reject(proposal.id, [ops[2].id], annotations={ops[2].id: {"tier": "supporting"}})
+
+    decisions = {d.seq: d for d in gold(service, house)}
+    assert decisions[1].annotations == note
+    assert decisions[2].annotations == {"tier": "supporting"}
+    with session_factory() as session:
+        row = session.query(ProposalDecisionRecord).filter_by(operation_id=ops[1].id).one()
+        assert row.annotations == note

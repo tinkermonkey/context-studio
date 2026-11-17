@@ -1065,8 +1065,8 @@ class TestReviewDecisions:
         assert all(o["status"] == "pending" for o in operations)
 
 
-class TestAddIndividual:
-    """#1610: POST /api/proposals/{id}/operations adds an element the extraction missed."""
+class _ExtractedFromSource:
+    """A proposal extracted from a small source, and the body of an element added from it."""
 
     TEXT = "The Study faces the hall. A Pantry sits off the Den."
 
@@ -1116,6 +1116,10 @@ class TestAddIndividual:
             },
             **extra,
         }
+
+
+class TestAddIndividual(_ExtractedFromSource):
+    """#1610: POST /api/proposals/{id}/operations adds an element the extraction missed."""
 
     def test_adds_and_applies_it(self, client, graph, source):
         proposal = self._extracted(client, graph, source)
@@ -1237,3 +1241,105 @@ class TestAddIndividual:
         assert response.status_code == 422
         [error] = response.json()["detail"]["errors"]
         assert (error["seq"], error["code"]) == (2, "quote_mismatch")
+
+
+class TestGoldCheckReview(_ExtractedFromSource):
+    """#1613: client_metadata on create, and review annotations on decisions."""
+
+    ORIGIN = {
+        "pipeline_type": "individual_extraction",
+        "implementation_id": "gold_check",
+        "configuration_ref": "gold",
+        "configuration_version": 1,
+        "digest": "0123456789ab",
+    }
+
+    def _study_body(self, graph, **extra):
+        study = {
+            "seq": 1,
+            "op": "create",
+            "kind": "individual",
+            "ref": "study",
+            "fields": {"class_ids": [graph["room"]], "title": "Study"},
+        }
+        return _body(graph, study, source="pipeline", **extra)
+
+    def test_create_keeps_client_metadata(self, client, graph, source):
+        metadata = {"source_id": source.id, "origin": self.ORIGIN, "gold_check": {"split": "dev"}}
+
+        response = client.post(
+            "/api/proposals", json=self._study_body(graph, client_metadata=metadata)
+        )
+
+        assert response.status_code == 201, response.text
+        body = response.json()
+        assert body["client_metadata"] == metadata
+        assert body["origin"]["implementation_id"] == "gold_check"
+
+    @pytest.mark.parametrize(
+        "metadata",
+        [{"source_id": "nope"}, {"origin": {"pipeline_type": "x"}}, ["not", "an", "object"]],
+    )
+    def test_create_with_bad_client_metadata_is_422(self, client, graph, source, metadata):
+        response = client.post(
+            "/api/proposals", json=self._study_body(graph, client_metadata=metadata)
+        )
+
+        assert response.status_code == 422
+        assert client.get("/api/proposals").json()["total"] == 0
+
+    def test_apply_reject_and_add_record_annotations(self, client, graph, source, ontology):
+        hall = ontology.create_class(graph["vocab"], "Hall", parent_class_id=graph["room"]).id
+        proposal = _propose(client, graph, _create_kit(seq=1, graph=graph), _describe_room(graph))
+        kit_id, describe_id = _op_ids(proposal, 1, 2)
+        extracted = self._extracted(client, graph, source)
+
+        applied = client.post(
+            f"/api/proposals/{proposal['id']}/apply",
+            json={
+                "operation_ids": [kit_id],
+                "annotations": {kit_id: {"tier": "core", "also_defensible": [hall]}},
+            },
+        )
+        rejected = client.post(
+            f"/api/proposals/{proposal['id']}/reject",
+            json={
+                "operation_ids": [describe_id],
+                "annotations": {describe_id: {"tier": "supporting"}},
+            },
+        )
+        added = client.post(
+            f"/api/proposals/{extracted.id}/operations",
+            json=self._body(graph, source, annotation={"tier": "core"}),
+        )
+
+        assert [r.status_code for r in (applied, rejected, added)] == [200, 200, 201]
+        url = f"/api/taxonomies/{graph['taxonomy']}/gold"
+        notes = [d["annotations"] for d in client.get(url).json()["items"]]
+        assert notes == [
+            {"tier": "core", "also_defensible": [hall]},
+            {"tier": "supporting"},
+            {"tier": "core"},
+        ]
+        exported = [
+            json.loads(line)["annotations"]
+            for line in client.get(f"{url}/export").text.splitlines()
+        ]
+        assert exported == notes
+
+    @pytest.mark.parametrize(
+        "annotation",
+        [{"tier": "central"}, {"rank": 1}, {"also_defensible": ["nope"]}],
+    )
+    def test_a_bad_annotation_is_422(self, client, graph, source, annotation):
+        proposal = _propose(client, graph, _create_kit(seq=1, graph=graph))
+        [kit_id] = _op_ids(proposal, 1)
+
+        for action in ("apply", "reject"):
+            response = client.post(
+                f"/api/proposals/{proposal['id']}/{action}",
+                json={"operation_ids": [kit_id], "annotations": {kit_id: annotation}},
+            )
+            assert response.status_code == 422, (action, response.text)
+        [op] = client.get(f"/api/proposals/{proposal['id']}").json()["operations"]
+        assert op["status"] == "pending"

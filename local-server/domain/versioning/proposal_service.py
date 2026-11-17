@@ -68,6 +68,8 @@ from domain.versioning.exceptions import (
     ProposalValidationError,
 )
 from domain.versioning.gold import (
+    ANNOTATION_KEYS,
+    ANNOTATION_TIERS,
     DECIDED_BY_POLICY,
     DECIDED_BY_USER,
     DecisionFilter,
@@ -88,6 +90,7 @@ from domain.versioning.in_use import (
     reverses,
 )
 from domain.versioning.proposals import (
+    ORIGIN,
     TYPE_KEY_FIELDS,
     AlternativeKind,
     ChangeProposal,
@@ -98,6 +101,7 @@ from domain.versioning.proposals import (
     OperationKind,
     OperationStatus,
     OperationType,
+    ProposalOrigin,
     ProposalSource,
     ProposalStatus,
     ProposedOperation,
@@ -652,7 +656,10 @@ class ProposalService:
                 proposal was drafted against; without one, the revision the
                 taxonomy was last imported at, if it records one
             client_metadata: Kept on the proposal for the proposing client
-                (see ChangeProposal.client_metadata)
+                (see ChangeProposal.client_metadata). A source_id in it must
+                be a source of the taxonomy (checked when the service can read
+                sources), and an origin must be a ProposalOrigin; what the
+                service records itself (`recording`) wins on clashing keys
             dataset_id: The dataset its individual and relationship operations
                 are in; may be omitted while the taxonomy has at most one.
                 Every individual an operation references must be in it.
@@ -684,6 +691,8 @@ class ProposalService:
                         None, "too_long", f"{name} is {len(value)} characters; at most {limit}"
                     )
                 )
+
+        errors += self._client_metadata_errors(taxonomy_id, client_metadata)
 
         if taxonomy is not None and any(
             str(getattr(d.kind, "value", d.kind)) in _DATA_KINDS for d in operations
@@ -748,6 +757,44 @@ class ProposalService:
         if dry_run:
             return proposal
         return self._auto_apply(self._proposals.create(proposal))
+
+    def _client_metadata_errors(
+        self, taxonomy_id: str, client_metadata: Mapping[str, Any] | None
+    ) -> list[OperationError]:
+        """
+        What is wrong with the client_metadata a proposer gives, if anything.
+        Keys the service records itself replace the proposer's, so theirs go unchecked.
+        """
+        if client_metadata is None:
+            return []
+        if not isinstance(client_metadata, Mapping):
+            return [OperationError(None, "invalid", "client_metadata must be an object")]
+        client_metadata = {
+            k: v for k, v in client_metadata.items() if k not in self._recorded_metadata
+        }
+        errors = []
+        if SOURCE_ID in client_metadata and self._source_repo is not None:
+            source_id = client_metadata[SOURCE_ID]
+            source = self._source_repo.get(source_id) if isinstance(source_id, str) else None
+            if source is None or source.taxonomy_id != taxonomy_id:
+                errors.append(
+                    OperationError(
+                        None,
+                        "source_not_found",
+                        f"client_metadata source_id {source_id!r} is not a source of the"
+                        " taxonomy",
+                    )
+                )
+        if ORIGIN in client_metadata and ProposalOrigin.from_json(client_metadata[ORIGIN]) is None:
+            errors.append(
+                OperationError(
+                    None,
+                    "invalid",
+                    "client_metadata origin needs pipeline_type, implementation_id,"
+                    " configuration_ref, configuration_version (an integer) and digest",
+                )
+            )
+        return errors
 
     def _proposal_dataset(
         self, taxonomy_id: str, dataset_id: str | None, dry_run: bool
@@ -1623,6 +1670,7 @@ class ProposalService:
         decided_by: str = DECIDED_BY_USER,
         chosen_alternatives: Mapping[str, dict[str, Any]] | None = None,
         review_ms: Mapping[str, int] | None = None,
+        annotations: Mapping[str, Mapping[str, Any]] | None = None,
     ) -> ChangeProposal:
         """
         Apply the chosen operations, in seq order, under the proposal's run id.
@@ -1708,6 +1756,9 @@ class ProposalService:
                 needs the edit that applies it)
             review_ms: Operation id -> the milliseconds the reviewer spent on
                 it, recorded in its decision
+            annotations: Operation id -> what the reviewer notes for gold,
+                {tier?: "core" | "supporting", also_defensible?: [class id]},
+                recorded in its decision
 
         An applied individual, relationship or class operation whose evidence
         locates passages in a source records each as an EntitySource of the
@@ -1732,7 +1783,9 @@ class ProposalService:
                 "existing" one the operation doesn't list, an "existing" one
                 with an edit, or another kind without an edit), or review_ms
                 names an operation not being applied or isn't a non-negative
-                integer; nothing is applied
+                integer, or an annotation names an operation not being
+                applied, has another key, an unknown tier, or a class that
+                isn't the taxonomy's; nothing is applied
         """
         with self._lock(proposal_id):
             return self._apply_unlocked(
@@ -1744,6 +1797,7 @@ class ProposalService:
                 decided_by,
                 chosen_alternatives,
                 review_ms,
+                annotations,
             )
 
     def _apply_unlocked(
@@ -1756,6 +1810,7 @@ class ProposalService:
         decided_by: str,
         chosen_alternatives: Mapping[str, dict[str, Any]] | None,
         review_ms: Mapping[str, int] | None,
+        annotations: Mapping[str, Mapping[str, Any]] | None = None,
     ) -> ChangeProposal:
         """`apply`, under the proposal's lock, which the caller holds."""
         proposal = self._get(proposal_id)
@@ -1769,6 +1824,7 @@ class ProposalService:
         alternatives = dict(chosen_alternatives or {})
         self._check_alternatives_placed(chosen, edits, alternatives)
         times = _checked_review_ms(chosen, review_ms, "applied")
+        notes = self._checked_annotations(chosen, annotations, proposal.taxonomy_id, "applied")
         force = set(force_stale)
         refs = {o.ref: o for o in proposal.operations if o.ref}
 
@@ -1819,6 +1875,7 @@ class ProposalService:
                             proposed[operation.id],
                             chosen_alternative=alternatives.get(operation.id),
                             review_ms=times.get(operation.id),
+                            annotations=notes.get(operation.id),
                         )
                     )
                 sources = []
@@ -1848,6 +1905,7 @@ class ProposalService:
         passage: Mapping[str, Any],
         decided_by: str = DECIDED_BY_USER,
         review_ms: int | None = None,
+        annotation: Mapping[str, Any] | None = None,
     ) -> ChangeProposal:
         """
         Add an individual the extraction missed to its proposal, as the
@@ -1874,6 +1932,8 @@ class ProposalService:
             passage: {source_id, start, end, quote}: offsets into the source's text
             decided_by: Who decided
             review_ms: The milliseconds the reviewer spent on it
+            annotation: What the reviewer notes for gold (e.g. its tier), as
+                `apply`'s annotations take, recorded in its decision
 
         Returns:
             The proposal, with the added operation and its outcome
@@ -1884,7 +1944,8 @@ class ProposalService:
                 superseded, is not an extraction from a source, or has no dataset
             ProposalValidationError: If the title, a class or the passage is
                 invalid; nothing is added
-            ValueError: If review_ms isn't a non-negative integer; nothing is added
+            ValueError: If review_ms isn't a non-negative integer, or the
+                annotation is invalid; nothing is added
         """
         with self._lock(proposal_id):
             proposal = self._get(proposal_id)
@@ -1913,13 +1974,80 @@ class ProposalService:
             times = _checked_review_ms(
                 [operation], {operation.id: review_ms} if review_ms is not None else None, "added"
             )
+            notes = self._checked_annotations(
+                [operation],
+                {operation.id: annotation} if annotation is not None else None,
+                proposal.taxonomy_id,
+                "added",
+            )
             self._proposals.add_operations(proposal.id, [operation])
             if proposal.status is ProposalStatus.DONE:
                 # Undecided again until the added operation applies (see settle_status).
                 self._proposals.set_status(proposal.id, ProposalStatus.OPEN)
             return self._apply_unlocked(
-                proposal.id, [operation.id], (), None, None, decided_by, None, times
+                proposal.id, [operation.id], (), None, None, decided_by, None, times, notes
             )
+
+    def _checked_annotations(
+        self,
+        chosen: list[ProposedOperation],
+        annotations: Mapping[str, Mapping[str, Any]] | None,
+        taxonomy_id: str,
+        action: str,
+    ) -> dict[str, dict[str, Any]]:
+        """
+        Review annotations for operations in this call: {tier?, also_defensible?},
+        a tier of ANNOTATION_TIERS and classes of the taxonomy. Empty ones are dropped.
+
+        Raises:
+            ValueError: Naming the first misplaced or invalid one
+        """
+        found = dict(annotations or {})
+        ids = {o.id for o in chosen}
+        misplaced = sorted(i for i in found if i not in ids)
+        if misplaced:
+            raise ValueError(f"Annotations for operations not being {action}: {misplaced}")
+        checked: dict[str, dict[str, Any]] = {}
+        for operation_id, annotation in found.items():
+            if not isinstance(annotation, Mapping):
+                raise ValueError(f"The annotation for {operation_id} must be an object")
+            unknown = sorted(set(annotation) - ANNOTATION_KEYS)
+            if unknown:
+                raise ValueError(
+                    f"The annotation for {operation_id} takes only tier and also_defensible,"
+                    f" not {unknown}"
+                )
+            kept: dict[str, Any] = {}
+            tier = annotation.get("tier")
+            if tier is not None:
+                if tier not in ANNOTATION_TIERS:
+                    raise ValueError(
+                        f"The annotation for {operation_id}: tier must be one of"
+                        f" {', '.join(ANNOTATION_TIERS)}, not {tier!r}"
+                    )
+                kept["tier"] = tier
+            defensible = annotation.get("also_defensible")
+            if defensible is not None:
+                if not isinstance(defensible, list) or not all(
+                    isinstance(c, str) for c in defensible
+                ):
+                    raise ValueError(
+                        f"The annotation for {operation_id}: also_defensible must be a list"
+                        " of class ids"
+                    )
+                outside = [
+                    c for c in defensible if self._taxonomies((K.CLASS,), c) != {taxonomy_id}
+                ]
+                if outside:
+                    raise ValueError(
+                        f"The annotation for {operation_id}: {outside} are not classes of the"
+                        " taxonomy"
+                    )
+                if defensible:
+                    kept["also_defensible"] = list(dict.fromkeys(defensible))
+            if kept:
+                checked[operation_id] = kept
+        return checked
 
     @staticmethod
     def _check_takes_additions(proposal: ChangeProposal) -> None:
@@ -2938,6 +3066,7 @@ class ProposalService:
         decided_by: str | None = DECIDED_BY_USER,
         reason_code: RejectionReason | None = None,
         review_ms: Mapping[str, int] | None = None,
+        annotations: Mapping[str, Mapping[str, Any]] | None = None,
     ) -> ChangeProposal:
         """
         Reject pending or failed operations, with an optional note as the reason.
@@ -2950,13 +3079,16 @@ class ProposalService:
                 each operation and its decision beside the note
             review_ms: Operation id -> the milliseconds the reviewer spent on
                 it, recorded in its decision
+            annotations: Operation id -> what the reviewer notes for gold, as
+                `apply` takes them, recorded in its decision
 
         Raises:
             ChangeProposalNotFoundError: If the proposal does not exist
             ChangeProposalStateError: If an operation is already applied or rejected
             ValueError: If an operation id is not in the proposal, or review_ms
                 names an operation not being rejected or isn't a non-negative
-                integer; nothing is rejected
+                integer, or an annotation is invalid (see `apply`); nothing is
+                rejected
         """
         if reason_code is not None:
             reason_code = RejectionReason(reason_code)
@@ -2964,6 +3096,7 @@ class ProposalService:
             proposal = self._get(proposal_id)
             chosen = self._chosen(proposal, operation_ids, "reject")
             times = _checked_review_ms(chosen, review_ms, "rejected")
+            notes = self._checked_annotations(chosen, annotations, proposal.taxonomy_id, "rejected")
             for operation in chosen:
                 operation.status = OperationStatus.REJECTED
                 operation.reason = note
@@ -2972,7 +3105,14 @@ class ProposalService:
             if decided_by is not None:
                 now = datetime.now(timezone.utc)
                 decisions = [
-                    decision_of(proposal, o, decided_by, now, review_ms=times.get(o.id))
+                    decision_of(
+                        proposal,
+                        o,
+                        decided_by,
+                        now,
+                        review_ms=times.get(o.id),
+                        annotations=notes.get(o.id),
+                    )
                     for o in chosen
                 ]
             self._proposals.save_operations(proposal.id, chosen, decisions)

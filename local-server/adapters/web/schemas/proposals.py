@@ -165,6 +165,13 @@ class ChangeProposalCreateRequest(BaseModel):
         description="The dataset its individual and relationship operations are in; may be "
         "omitted while the taxonomy has at most one dataset",
     )
+    client_metadata: Optional[dict[str, Any]] = Field(
+        None,
+        description="Kept on the proposal for the proposing client (JSON values). A source_id "
+        "names the source it was extracted from (a source of the taxonomy), and an origin the "
+        "pipeline that made it ({pipeline_type, implementation_id, configuration_ref, "
+        "configuration_version, digest}); either is checked when given (422 otherwise)",
+    )
 
 
 class InUseResolutionRequest(BaseModel):
@@ -185,6 +192,19 @@ class InUseResolutionRequest(BaseModel):
         description="The relationships the reviewer saw using the type (its blockers' "
         "edges); if those using it at apply time differ, the operation fails "
         "(unresolvable) and nothing changes",
+    )
+
+
+class ReviewAnnotationRequest(BaseModel):
+    """What a reviewer notes for gold beside a decision."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    tier: Optional[Literal["core", "supporting"]] = Field(
+        None, description="How central the element is (the extraction benchmark's tier)"
+    )
+    also_defensible: Optional[list[str]] = Field(
+        None, description="Classes of the taxonomy that would also be right for it, by id"
     )
 
 
@@ -236,6 +256,11 @@ class ChangeProposalApplyRequest(BaseModel):
         description="Operation id -> the milliseconds the reviewer spent on it, for ops in "
         "operation_ids; recorded in its decision (gold's review_ms)",
     )
+    annotations: dict[str, ReviewAnnotationRequest] = Field(
+        default_factory=dict,
+        description="Operation id -> what the reviewer notes for gold (tier, also_defensible "
+        "classes of the taxonomy), for ops in operation_ids; recorded in its decision",
+    )
 
 
 class ChangeProposalRejectRequest(BaseModel):
@@ -252,6 +277,11 @@ class ChangeProposalRejectRequest(BaseModel):
         default_factory=dict,
         description="Operation id -> the milliseconds the reviewer spent on it, for "
         "operations being rejected; recorded in its decision (gold's review_ms)",
+    )
+    annotations: dict[str, ReviewAnnotationRequest] = Field(
+        default_factory=dict,
+        description="Operation id -> what the reviewer notes for gold, for operations being "
+        "rejected; recorded in its decision",
     )
 
 
@@ -279,6 +309,9 @@ class AddIndividualRequest(BaseModel):
         ge=0,
         le=MAX_REVIEW_MS,
         description="The milliseconds the reviewer spent on it, recorded in its decision",
+    )
+    annotation: Optional[ReviewAnnotationRequest] = Field(
+        None, description="What the reviewer notes for gold (its tier), recorded in its decision"
     )
 
 
@@ -1015,6 +1048,11 @@ class GoldDecisionResponse(BaseModel):
     )
     superseded_at: Optional[datetime] = None
     superseded_by: Optional[str] = None
+    annotations: Optional[dict[str, Any]] = Field(
+        None,
+        description="What the reviewer noted for gold: {tier?, also_defensible?: [class id]}; "
+        "null when nothing was noted",
+    )
     added: bool = Field(
         False,
         description="The operation was added by the reviewer (an element the extraction "
