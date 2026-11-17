@@ -558,7 +558,7 @@ class IndividualRecognizer(Protocol):
     returns immediately, a single clear vector-similarity winner returns
     immediately, and multiple candidates within a small score band of each
     other trigger an LLM tiebreak (degrading to the highest-scoring candidate
-    when no LLM is configured).
+    when no LLM is configured or no model is named).
     """
 
     def recognize(
@@ -569,6 +569,7 @@ class IndividualRecognizer(Protocol):
         taxonomy_id: str | None = None,
         threshold: float | None = None,
         dataset_id: str | None = None,
+        model: str | None = None,
     ) -> RecognitionMatch | None:
         """
         Resolve an extracted mention to an existing individual, or None.
@@ -592,6 +593,9 @@ class IndividualRecognizer(Protocol):
             dataset_id: Match only individuals of this dataset (None: any).
                 Datasets share classes, so "API Gateway" in one platform's
                 dataset must not resolve to another's.
+            model: The model the LLM tiebreak asks: the recognition_model of
+                the configuration of the run whose mention this is. None: no
+                tiebreak call is made and a tie goes to the top candidate.
 
         Returns:
             A RecognitionMatch on resolution, or None when no existing

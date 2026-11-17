@@ -8,6 +8,12 @@ the type's default; a configuration left out is the implementation's default.
 The run's model, temperature and output-token limit are the configuration's
 unless the input file names its own.
 
+Every pipeline type can run: the adapters and services an implementation draws
+on are wired as the app's composition root (app.py) wires them and handed to
+the implementation as the app's background worker hands them
+(build_orchestrator_services). Proposals a run makes land in the workspace for
+review, as they do from the app.
+
 Usage (from local-server/, venv active):
     python scripts/run_pipeline.py \\
         --type individual_extraction \\
@@ -42,50 +48,77 @@ Examples:
 """
 
 import argparse
-import atexit
 import asyncio
+import atexit
 import json
 import sys
 from datetime import datetime
 from pathlib import Path
+from types import SimpleNamespace
 from typing import Any, cast
 
 # Add local-server to path so we can import domain modules
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
+from adapters.clustering.sklearn_clusterer import SklearnClusterer
+from adapters.decision.registry import build_decision_models
 from adapters.embedding.sentence_transformer import SentenceTransformerEmbedding
+from adapters.events.change_recorder import ChangeEventRecorder
 from adapters.events.in_process import InProcessEventPublisher
-from adapters.factories.orchestrator_factory import create_selected_run
+from adapters.factories.orchestrator_factory import (
+    build_orchestrator_services,
+    create_selected_run,
+)
+from adapters.interchange.dr_predicates import DrPredicateRules
+from adapters.interchange.dr_relationships import DrRelationshipRules
 from adapters.llm.provider_router import LLMProviderRouter
 from adapters.nlp.spacy_processor import SpacyNLPProcessor
+from adapters.persistence.sqlite.approval_policy_repo import SQLiteApprovalPolicyRepository
+from adapters.persistence.sqlite.change_repo import SQLiteChangeRepository
+from adapters.persistence.sqlite.claim_repo import SQLiteClaimRepository
 from adapters.persistence.sqlite.connection import DatabaseManager
+from adapters.persistence.sqlite.entity_source_repo import SQLiteEntitySourceRepository
 from adapters.persistence.sqlite.extraction_repo import SQLiteExtractionRepository
 from adapters.persistence.sqlite.extraction_run_repo import (
     SQLiteExtractionRunRepository,
 )
+from adapters.persistence.sqlite.individual_vector_index import SqliteIndividualVectorIndex
 from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
+from adapters.persistence.sqlite.proposal_repo import SQLiteChangeProposalRepository
+from adapters.persistence.sqlite.schema_vector_index import SqliteSchemaVectorIndex
+from adapters.persistence.sqlite.transaction import SharedSessionFactory, SqliteTransactionScope
 from adapters.reference.conceptnet import ConceptNetSource
 from adapters.reference.dbpedia import DBpediaSource
 from adapters.reference.grounding import GroundingAdapter
 from adapters.reference.proxy import ReferenceProxy
 from adapters.reference.schema_org import SchemaOrgSource
 from adapters.reference.wikidata import WikidataSource
-from config import get_settings
-from domain.extraction.ports import ReferenceSource
+from config import Settings, get_settings
+from domain.extraction.ports import NLPProcessor, ReferenceSource
 from domain.extraction.services import ExtractionService
-from domain.ontology.ports import OntologyRepository
+from domain.ontology.ports import EmbeddingService, OntologyRepository
+from domain.ontology.services import OntologyService
 from domain.pipelines.bootstrap import register_pipelines
 from domain.pipelines.entities import PipelineType
 from domain.pipelines.exceptions import PipelineSelectionError
+from domain.pipelines.orchestration.base import PipelineOrchestrator, PipelineState
+from domain.pipelines.ports import LLMProvider
 from domain.pipelines.registry import (
     PipelineConfigurationRegistry,
     PipelineImplementationRegistry,
     PipelineTypeRegistry,
 )
 from domain.pipelines.schema_node_grounding.scoring import GroundingScorer
+from domain.pipelines.selection import PipelineSelection
+from domain.versioning.claims import ClaimService
+from domain.versioning.proposal_service import ProposalService
+from domain.versioning.revert_service import RevertService
 from utils.logger import get_logger
 
 _logger = get_logger(__name__)
+
+# The id a script run's orchestrator is given (the run is not stored)
+SCRIPT_RUN_ID = "script-run"
 
 
 def main() -> int:
@@ -188,16 +221,16 @@ def main() -> int:
             _logger.info("[DRY-RUN] Configuration validated successfully")
             return 0
 
-        # Initialize database and services for execution
+        # Initialize database and services for execution, as the app does
         _logger.info("Initializing services...")
+        settings = get_settings()
         db_manager = DatabaseManager()
         db_manager.initialize(
-            local_db_url="sqlite:///./local.db",
-            operations_db_url="sqlite:///./operations.db",
+            local_db_url=f"sqlite:///{settings.database.local_db_path}",
+            operations_db_url=f"sqlite:///{settings.database.operations_db_path}",
         )
 
         # Initialize LLM provider router with configured API keys
-        settings = get_settings()
         try:
             llm_provider = LLMProviderRouter(
                 openrouter_api_key=settings.llm.openrouter_api_key,
@@ -212,84 +245,23 @@ def main() -> int:
             )
             return 1
 
-        # Initialize repositories
-        local_session_factory = db_manager.get_local_session_factory()
-        ontology_repo = SQLiteOntologyRepository(local_session_factory)
-        extraction_repo = SQLiteExtractionRepository(local_session_factory)
-        extraction_run_repo = SQLiteExtractionRunRepository(local_session_factory)
-
-        # Create services
-        embedding_service = SentenceTransformerEmbedding(model_name="all-MiniLM-L12-v2")
-        nlp_processor = SpacyNLPProcessor()
         # Reference calls go through the caching, rate-limiting reference proxy
         reference_proxy = ReferenceProxy(settings.reference.proxy)
         reference_proxy.start()
         atexit.register(reference_proxy.stop)
-        conceptnet_source = ConceptNetSource(
-            base_url=reference_proxy.base_url("conceptnet"),
-            upstream_url=reference_proxy.upstream_url("conceptnet"),
-            timeout=settings.reference.conceptnet_timeout,
+        app_state = build_app_state(
+            local_session_factory=db_manager.get_local_session_factory(),
+            settings=settings,
+            llm_provider=llm_provider,
+            embedding_service=SentenceTransformerEmbedding(model_name="all-MiniLM-L12-v2"),
+            nlp_processor=SpacyNLPProcessor(),
+            reference_proxy=reference_proxy,
         )
-        dbpedia_source = DBpediaSource(
-            base_url=reference_proxy.base_url("dbpedia"),
-            upstream_url=reference_proxy.upstream_url("dbpedia"),
-        )
-        wikidata_source = WikidataSource(
-            base_url=reference_proxy.base_url("wikidata"),
-            upstream_url=reference_proxy.upstream_url("wikidata"),
-        )
-        schema_org_source = SchemaOrgSource()
-        reference_sources: list[ReferenceSource] = [
-            conceptnet_source,
-            dbpedia_source,
-            wikidata_source,
-            schema_org_source,
-        ]
-
-        extraction_service = ExtractionService(
-            ontology_repo=cast(OntologyRepository, ontology_repo),
-            embedding_service=embedding_service,
-            llm=llm_provider,
-            nlp=nlp_processor,
-            reference_sources=reference_sources,
-            event_publisher=InProcessEventPublisher(),
-            extraction_repo=extraction_repo,
-            extraction_run_repo=extraction_run_repo,
-        )
-
-        # Prepare services dict for orchestrator factory
-        services: dict[str, Any] = {
-            "config": config,
-            "extraction_service": extraction_service,
-            "ontology_repo": ontology_repo,
-            "extraction_repo": extraction_repo,
-            "grounding_adapter": GroundingAdapter(
-                dbpedia=dbpedia_source,
-                conceptnet=conceptnet_source,
-                wikidata=wikidata_source,
-                schema_org=schema_org_source,
-            ),
-            "scorer": GroundingScorer(embedding_service=embedding_service),
-            "grounding_config": {
-                "top_n": config.get("top_n", 10),
-                "weights": config.get(
-                    "weights",
-                    {
-                        "source_score": 0.3,
-                        "label_match": 0.3,
-                        "semantic_similarity": 0.4,
-                    },
-                ),
-            },
-            "refinement_config": config,
-        }
 
         # Instantiate the implementation and its state: the configuration's
         # model, temperature and output limit, unless the input names its own
         _logger.info("Instantiating implementation...")
-        orchestrator, state = create_selected_run(
-            selection, llm_provider, services, "script-run", input_data
-        )
+        orchestrator, state = instantiate_run(selection, app_state, llm_provider, input_data)
 
         _logger.info("Executing pipeline...")
         result_state = asyncio.run(orchestrator.execute(state))
@@ -340,6 +312,138 @@ def main() -> int:
                 _logger.error(f"Failed to log iteration: {log_exc}")
 
         return 1
+
+
+def build_app_state(
+    local_session_factory: Any,
+    settings: Settings,
+    llm_provider: LLMProvider,
+    embedding_service: EmbeddingService,
+    nlp_processor: NLPProcessor,
+    reference_proxy: ReferenceProxy,
+) -> SimpleNamespace:
+    """
+    The adapters and services an implementation draws on, wired as the app's
+    composition root (app.py lifespan) wires them, under the names it gives
+    them in app.state: what build_orchestrator_services reads. Ontology changes
+    are recorded in the audit trail, as in the app.
+
+    Args:
+        local_session_factory: Sessions of the workspace database (local.db)
+        settings: The app's settings (config.json): reference sources and
+            decision models
+        llm_provider: The LLM provider runs and decision models call
+        embedding_service: Embeds text for the vector indexes and grounding
+        nlp_processor: The spaCy processor the open_v1 implementations parse with
+        reference_proxy: Where reference sources send their requests (their
+            own APIs when it is not running)
+    """
+    shared = SharedSessionFactory(local_session_factory)
+    ontology_repo = cast(OntologyRepository, SQLiteOntologyRepository(shared))
+    extraction_repo = SQLiteExtractionRepository(local_session_factory)
+    event_publisher = InProcessEventPublisher()
+    change_repo = SQLiteChangeRepository(shared)
+    ChangeEventRecorder(change_repo).subscribe_ontology_events(event_publisher)
+    schema_vector_index = SqliteSchemaVectorIndex(shared, embedding_service)
+    individual_vector_index = SqliteIndividualVectorIndex(shared, embedding_service)
+    transaction_scope = SqliteTransactionScope(shared)
+
+    conceptnet_source = ConceptNetSource(
+        base_url=reference_proxy.base_url("conceptnet"),
+        upstream_url=reference_proxy.upstream_url("conceptnet"),
+        timeout=settings.reference.conceptnet_timeout,
+    )
+    dbpedia_source = DBpediaSource(
+        base_url=reference_proxy.base_url("dbpedia"),
+        upstream_url=reference_proxy.upstream_url("dbpedia"),
+    )
+    wikidata_source = WikidataSource(
+        base_url=reference_proxy.base_url("wikidata"),
+        upstream_url=reference_proxy.upstream_url("wikidata"),
+    )
+    schema_org_source = SchemaOrgSource()
+    reference_sources: list[ReferenceSource] = [
+        conceptnet_source,
+        dbpedia_source,
+        wikidata_source,
+        schema_org_source,
+    ]
+
+    ontology_service = OntologyService(
+        repository=ontology_repo,
+        embedding_service=embedding_service,
+        event_publisher=event_publisher,
+        schema_index=schema_vector_index,
+        individual_index=individual_vector_index,
+        transaction_scope=transaction_scope,
+    )
+    extraction_service = ExtractionService(
+        ontology_repo=ontology_repo,
+        embedding_service=embedding_service,
+        llm=llm_provider,
+        nlp=nlp_processor,
+        reference_sources=reference_sources,
+        event_publisher=event_publisher,
+        extraction_repo=extraction_repo,
+        extraction_run_repo=SQLiteExtractionRunRepository(local_session_factory),
+        schema_index=schema_vector_index,
+        individual_index=individual_vector_index,
+    )
+    revert_service = RevertService(
+        change_repo=change_repo,
+        ontology_repo=ontology_repo,
+        schema_index=schema_vector_index,
+        individual_index=individual_vector_index,
+        event_publisher=event_publisher,
+        transaction_scope=transaction_scope,
+    )
+    proposal_service = ProposalService(
+        proposals=SQLiteChangeProposalRepository(shared),
+        ontology_service=ontology_service,
+        ontology_repo=ontology_repo,
+        revert_service=revert_service,
+        approval_policies=SQLiteApprovalPolicyRepository(shared),
+        apply_rules=[DrRelationshipRules(ontology_repo), DrPredicateRules(ontology_repo)],
+        transaction_scope=transaction_scope,
+        event_publisher=event_publisher,
+        entity_sources=SQLiteEntitySourceRepository(shared),
+    )
+
+    return SimpleNamespace(
+        extraction_service=extraction_service,
+        ontology_repo=ontology_repo,
+        decision_models=build_decision_models(settings.decision_models, llm_provider),
+        proposal_service=proposal_service,
+        claim_service=ClaimService(SQLiteClaimRepository(shared), ontology_repo),
+        extraction_repo=extraction_repo,
+        grounding_adapter=GroundingAdapter(
+            dbpedia=dbpedia_source,
+            conceptnet=conceptnet_source,
+            wikidata=wikidata_source,
+            schema_org=schema_org_source,
+        ),
+        grounding_scorer=GroundingScorer(embedding_service=embedding_service),
+        nlp_processor=nlp_processor,
+        embedding_service=embedding_service,
+        clusterer=SklearnClusterer(),
+        schema_vector_index=schema_vector_index,
+        conceptnet_source=conceptnet_source,
+    )
+
+
+def instantiate_run(
+    selection: PipelineSelection,
+    app_state: SimpleNamespace,
+    llm_provider: LLMProvider,
+    input_data: dict[str, Any],
+) -> tuple[PipelineOrchestrator, PipelineState]:
+    """
+    The orchestrator and initial state of a script run of `selection`, built
+    from `app_state` (build_app_state) as the app's background worker builds a
+    run's: build_orchestrator_services, then create_selected_run.
+    """
+    services = build_orchestrator_services(app_state, selection.config, SCRIPT_RUN_ID, None)
+    return create_selected_run(selection, llm_provider, services, SCRIPT_RUN_ID, input_data)
 
 
 def _append_iteration_log(

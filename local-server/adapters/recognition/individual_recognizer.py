@@ -25,8 +25,6 @@ from domain.pipelines.ports import LLMProvider
 
 _logger = logging.getLogger(__name__)
 
-_DEFAULT_MODEL = "google/gemini-3-flash-preview"
-
 _TIEBREAK_SYSTEM_PROMPT = (
     "You are an entity-resolution assistant. Given a mention extracted from "
     "text, its surrounding context, and a list of existing individuals that "
@@ -41,11 +39,12 @@ class CascadeIndividualRecognizer:
     IndividualRecognizer adapter: exact match -> clear vector winner -> LLM tiebreak.
 
     Composes an IndividualVectorIndex (candidate retrieval) and an
-    EmbeddingService (query embedding) with an optional LLMProvider. Without
-    an LLM provider, an ambiguous case (multiple candidates within
-    ``tiebreak_band`` of the top score) degrades to the highest-scoring
-    candidate rather than failing, so the recognizer stays functional without
-    LLM cost.
+    EmbeddingService (query embedding) with an optional LLMProvider. The
+    tiebreak's model is the caller's: the run's configuration names it (its
+    recognition_model) and each call passes it. Without an LLM provider or a
+    model, an ambiguous case (multiple candidates within ``tiebreak_band`` of
+    the top score) degrades to the highest-scoring candidate rather than
+    failing, so the recognizer stays functional without LLM cost.
     """
 
     def __init__(
@@ -56,7 +55,6 @@ class CascadeIndividualRecognizer:
         threshold: float = 0.90,
         tiebreak_band: float = 0.05,
         top_k: int = 5,
-        model: str = _DEFAULT_MODEL,
     ) -> None:
         """
         Args:
@@ -73,7 +71,6 @@ class CascadeIndividualRecognizer:
                 the top score are treated as tied and routed to the tiebreak
                 tier.
             top_k: Maximum candidates retrieved from the index per call.
-            model: LLM model identifier used for tiebreak calls.
 
         Raises:
             ValueError: If threshold or tiebreak_band is not 0.0-1.0, or if
@@ -91,7 +88,6 @@ class CascadeIndividualRecognizer:
         self._threshold = threshold
         self._tiebreak_band = tiebreak_band
         self._top_k = top_k
-        self._model = model
 
     def recognize(
         self,
@@ -101,6 +97,7 @@ class CascadeIndividualRecognizer:
         taxonomy_id: str | None = None,
         threshold: float | None = None,
         dataset_id: str | None = None,
+        model: str | None = None,
     ) -> RecognitionMatch | None:
         """Resolve a mention to an existing individual via the match cascade."""
         mention = label.strip()
@@ -133,10 +130,10 @@ class CascadeIndividualRecognizer:
             return RecognitionMatch(top.individual_id, top.title, top.score, "vector")
 
         llm = self._llm
-        if llm is None:
+        if llm is None or not model:
             return RecognitionMatch(top.individual_id, top.title, top.score, "vector")
 
-        chosen, confirmed = self._llm_tiebreak(llm, mention, context, tied)
+        chosen, confirmed = self._llm_tiebreak(llm, model, mention, context, tied)
         if chosen is None:
             return None
         method: Literal["exact", "vector", "llm"] = "llm" if confirmed else "vector"
@@ -157,7 +154,12 @@ class CascadeIndividualRecognizer:
         return [c for c in qualifying if (top_score - c.score) < self._tiebreak_band]
 
     def _llm_tiebreak(
-        self, llm: LLMProvider, mention: str, context: str, tied: list[IndividualMatch]
+        self,
+        llm: LLMProvider,
+        model: str,
+        mention: str,
+        context: str,
+        tied: list[IndividualMatch],
     ) -> tuple[IndividualMatch | None, bool]:
         """
         Ask the LLM to pick among near-equal candidates, or confirm none match.
@@ -183,7 +185,7 @@ class CascadeIndividualRecognizer:
             response = llm.complete(
                 system_prompt=_TIEBREAK_SYSTEM_PROMPT,
                 user_prompt=user_prompt,
-                model=self._model,
+                model=model,
                 temperature=0.0,
                 max_tokens=200,
                 response_format="json",

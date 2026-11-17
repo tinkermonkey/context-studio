@@ -30,7 +30,12 @@ from domain.extraction.ports import RecognitionMatch
 from domain.extraction.services import ExtractionService
 from domain.ontology.entities import Class, ConceptScheme, Taxonomy
 from domain.ontology.ports import SchemaMatch
+from domain.pipelines.bootstrap import register_pipelines
 from domain.pipelines.entities import PipelineRunStatus, PipelineType
+from domain.pipelines.registry import (
+    PipelineConfigurationRegistry,
+    PipelineImplementationRegistry,
+)
 from domain.pipelines.schema_extraction.recognition_preview import (
     SchemaRecognitionPreviewService,
 )
@@ -123,6 +128,9 @@ def client(pipeline_repo, batch_repo, ontology_repo, extraction_service, schema_
     app.state.pipeline_run_repo = pipeline_repo
     app.state.batch_repo = batch_repo
     app.state.extraction_service = extraction_service
+    app.state.implementation_registry = PipelineImplementationRegistry()
+    app.state.config_registry = PipelineConfigurationRegistry()
+    register_pipelines(app.state.implementation_registry, app.state.config_registry)
     app.state.schema_recognition_preview_svc = SchemaRecognitionPreviewService(
         ontology_repo, schema_index=schema_index, embedding_service=FakeEmbeddingService()
     )
@@ -595,6 +603,18 @@ def test_recognition_preview_includes_candidate_class_ids(client, pipeline_repo,
     hit = data["hits"][0]
     assert "candidate_class_ids" in hit
     assert hit["candidate_class_ids"] == [CLASS_ID]
+
+
+def test_recognition_preview_asks_the_run_configurations_recognition_model(
+    client, pipeline_repo, recognizer
+):
+    """The tiebreak model recognition is given is the run's configuration's."""
+    run_id = _create_and_complete_individual_run(pipeline_repo, triples=[_make_triple("Frank")])
+
+    response = client.post(f"/api/pipelines/runs/{run_id}/recognition-preview")
+
+    assert response.status_code == status.HTTP_200_OK
+    assert [call["model"] for call in recognizer.calls] == ["google/gemini-3-flash-preview"]
 
 
 if __name__ == "__main__":

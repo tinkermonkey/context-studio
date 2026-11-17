@@ -146,6 +146,7 @@ class IndividualExtractionApplyService:
         recognition_threshold: float | None = None,
         accepted_candidate_ids: "set[str] | list[str] | None" = None,
         recognition_decisions: "list[RecognitionDecision] | None" = None,
+        recognition_model: str | None = None,
     ) -> ApplyResult:
         """
         Apply individual extraction results to the ontology.
@@ -157,6 +158,10 @@ class IndividualExtractionApplyService:
             recognition_threshold: Minimum similarity (0.0-1.0) the recognizer
                 requires to resolve a mention to an existing individual.
                 Defaults to the recognizer's own configured value when omitted.
+            recognition_model: The model that settles a recognition tie: the
+                recognition_model of the run's configuration
+                (PipelineSelection.recognition_model). None: no tiebreak call
+                is made and a tie goes to the top-scoring candidate.
             accepted_candidate_ids: Explicit reviewer selection of triple ids
                 (``triple-{i}``); when given it is the full selection — every
                 other triple is skipped regardless of confidence.
@@ -293,6 +298,7 @@ class IndividualExtractionApplyService:
                         triple,
                         recognition_threshold,
                         dataset_id,
+                        recognition_model,
                     )
 
                 if match is not None and match.individual_id in created_this_run:
@@ -440,6 +446,7 @@ class IndividualExtractionApplyService:
         triple: dict,
         threshold: float | None = None,
         dataset_id: str | None = None,
+        model: str | None = None,
     ) -> "RecognitionMatch | None":
         """
         Recognition stage: resolve an extracted mention to an existing graph node.
@@ -466,6 +473,7 @@ class IndividualExtractionApplyService:
                 taxonomy_id=taxonomy_id,
                 threshold=threshold,
                 dataset_id=dataset_id,
+                model=model,
             )
         except (TypeError, AttributeError, KeyError, IndexError):
             raise
