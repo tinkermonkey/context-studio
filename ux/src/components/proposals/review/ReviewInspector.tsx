@@ -65,6 +65,8 @@ interface ReviewInspectorProps {
   onNearChoice: (choice: Choice) => void;
   /** The taxonomy's classes that are not derived, for the picker. */
   pickable: ClassResponse[];
+  /** The taxonomy's classes are still loading: no class can be shown or picked yet. */
+  classesLoading?: boolean;
   /** Classes picked earlier in this review, offered on keys 1-3. */
   suggestions: ClassResponse[];
   /** The proposal takes decisions (it isn't reverted). */
@@ -85,6 +87,8 @@ export interface GoldInspector {
   /** The tier gold gives it, when it is in gold. */
   goldTier?: Tier;
   aliases: string[];
+  /** Class ids already in the element's acceptable_classes: shown as such, not toggled. */
+  acceptableIds: string[];
   draft: GoldDraft;
   onDraft: (draft: GoldDraft) => void;
 }
@@ -225,10 +229,11 @@ export function ReviewInspector({
   onReject,
   onSelect,
   gold,
+  classesLoading = false,
 }: ReviewInspectorProps) {
   const [note, setNote] = useState("");
-  // In gold mode a rejection needs a note: it becomes the excluded entry's reason.
-  const noteMissing = !!gold && !note.trim();
+  // In gold mode rejecting an element needs a note: it becomes the excluded entry's reason.
+  const noteMissing = !!gold && isElement(operation) && !note.trim();
   const draft = gold?.draft;
   const tier = draft?.tier ?? gold?.goldTier ?? "core";
   const element = isElement(operation);
@@ -301,7 +306,13 @@ export function ReviewInspector({
         {element && (
           <div className="review-section" data-testid="review-definition">
             <Eyebrow>{`What ${names.classLabel(classId)} means`}</Eyebrow>
-            <Definition key={classId} text={cls?.description} />
+            {classesLoading ? (
+              <p className="review-definition review-muted" data-testid="review-definition-loading">
+                Loading…
+              </p>
+            ) : (
+              <Definition key={classId} text={cls?.description} />
+            )}
           </div>
         )}
 
@@ -370,20 +381,24 @@ export function ReviewInspector({
                   </span>
                 )}
                 {suggestions.map((suggestion, i) => {
-                  const defensible = !!draft?.alsoDefensible.includes(suggestion.id);
+                  // Keys 1-3 pick the first three.
+                  const keyed = i < 3;
+                  const acceptable = !!gold?.acceptableIds.includes(suggestion.id);
+                  const defensible = acceptable || !!draft?.alsoDefensible.includes(suggestion.id);
                   const pick = (
                     <button
                       key={suggestion.id}
                       type="button"
                       className="review-alt"
                       disabled={busy || usingExisting}
-                      aria-keyshortcuts={String(i + 1)}
+                      aria-keyshortcuts={keyed ? String(i + 1) : undefined}
                       title={names.classLabel(suggestion.id)}
                       onClick={() => onPickClass(suggestion.id)}
                       data-testid={`review-suggestion-${i + 1}`}
                     >
                       <span className="review-alt__class">
-                        {i + 1} {names.classLabel(suggestion.id)}
+                        {keyed ? `${i + 1} ` : ""}
+                        {names.classLabel(suggestion.id)}
                       </span>
                       {suggestion.description && (
                         <span className="review-alt__definition">{suggestion.description}</span>
@@ -396,12 +411,21 @@ export function ReviewInspector({
                       {pick}
                       <button
                         type="button"
-                        className={["review-defensible", defensible && "review-defensible--on"]
+                        className={[
+                          "review-defensible",
+                          defensible && "review-defensible--on",
+                          acceptable && "review-defensible--gold",
+                        ]
                           .filter(Boolean)
                           .join(" ")}
                         aria-pressed={defensible}
-                        aria-label={`${names.classLabel(suggestion.id)} is also defensible`}
-                        disabled={busy}
+                        aria-label={
+                          acceptable
+                            ? `${names.classLabel(suggestion.id)} is acceptable in gold`
+                            : `${names.classLabel(suggestion.id)} is also defensible`
+                        }
+                        // Already in gold: write-gold only adds, so there is nothing to toggle.
+                        disabled={busy || acceptable}
                         onClick={() =>
                           gold.onDraft({
                             ...draft,
@@ -412,12 +436,12 @@ export function ReviewInspector({
                         }
                         data-testid={`review-defensible-${i + 1}`}
                       >
-                        Also defensible
+                        {acceptable ? "Acceptable in gold" : "Also defensible"}
                       </button>
                     </div>
                   );
                 })}
-                {gold && draft && classId && (
+                {gold && draft && classId && !usingExisting && !classesLoading && (
                   <label className="review-check" data-testid="review-keep-old">
                     <input
                       type="checkbox"
@@ -432,6 +456,7 @@ export function ReviewInspector({
                   classes={pickable}
                   current={cls}
                   disabled={busy || usingExisting}
+                  loading={classesLoading}
                   onPick={onPickClass}
                 />
               </div>
@@ -461,7 +486,7 @@ export function ReviewInspector({
                 ))}
               </div>
               <label htmlFor="review-note" className="review-muted">
-                {gold
+                {gold && element
                   ? "Note, needed · the excluded entry's reason"
                   : "Note, optional · kept with the decision"}
               </label>

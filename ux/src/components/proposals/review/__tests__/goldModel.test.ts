@@ -188,15 +188,17 @@ describe("the Gold page's rows", () => {
       ],
     });
     expect(goldRow(done, goldCheckOf(done)!)).toMatchObject({ status: "checked", action: "Open" });
-    const reverted = goldProposal({ status: "reverted" });
-    expect(goldRow(reverted, goldCheckOf(reverted)!).status).toBe("reverted");
   });
 
-  it("lists only gold checks, newest first", () => {
+  it("lists only standing gold checks, newest first", () => {
     const older = goldProposal({ id: "p-old", created_at: "2026-11-01T00:00:00Z" });
     const newer = goldProposal({ id: "p-new", created_at: "2026-11-10T00:00:00Z" });
     const other = createChangeProposal({ id: "p-x", source: "pipeline" });
-    expect(goldRows([older, other, newer]).map((r) => r.proposalId)).toEqual(["p-new", "p-old"]);
+    const reverted = goldProposal({ id: "p-rev", status: "reverted" });
+    expect(goldRows([older, other, reverted, newer]).map((r) => r.proposalId)).toEqual([
+      "p-new",
+      "p-old",
+    ]);
   });
 
   it("builds the scripts' commands", () => {

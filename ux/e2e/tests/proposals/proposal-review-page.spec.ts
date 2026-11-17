@@ -655,5 +655,18 @@ test.describe("Proposal review page", () => {
     );
     const decision = gold.items.find((d) => d.operation_id === ops.billing);
     expect(decision).toMatchObject({ decision: "applied", annotations: { tier: "supporting" } });
+
+    // The Benchmark gold page lists the check, partly checked, and opens it again.
+    await page.goto("/app/pipelines/gold");
+    await page.waitForLoadState("networkidle");
+    await expect(page.getByTestId(`gold-row-${proposal.id}`)).toHaveText(GOLD_DOCUMENT);
+    await expect(page.getByTestId(`gold-status-${proposal.id}`)).toHaveText("model-made");
+    await expect(page.getByTestId(`gold-write-${proposal.id}`)).toContainText(
+      `write-gold --document ${GOLD_DOCUMENT} --proposal ${proposal.id}`,
+    );
+    const open = page.getByRole("button", { name: `Continue: ${GOLD_DOCUMENT}` });
+    await open.click();
+    await expect(page).toHaveURL(new RegExp(`/app/proposals/${proposal.id}/review$`));
+    await expect(page.getByTestId("review-header")).toContainText(`Gold check: ${GOLD_DOCUMENT}`);
   });
 });

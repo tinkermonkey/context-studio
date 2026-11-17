@@ -164,12 +164,11 @@ export function annotationOf(
 
 // ==================== The Gold page ====================
 
-export type GoldStatus = "model-made" | "checked" | "reverted";
+export type GoldStatus = "model-made" | "checked";
 
 export const GOLD_STATUS_CHIP: Record<GoldStatus, ChipVariant> = {
   "model-made": "amber",
   checked: "emerald",
-  reverted: "rose",
 };
 
 export interface GoldRow {
@@ -194,8 +193,7 @@ export function goldRow(proposal: ChangeProposal, gold: GoldCheck): GoldRow {
   const awaiting = reviewed.filter(isAwaiting).length;
   const total = reviewed.length;
   const decided = total - awaiting;
-  const status: GoldStatus =
-    proposal.status === "reverted" ? "reverted" : awaiting > 0 ? "model-made" : "checked";
+  const status: GoldStatus = awaiting > 0 ? "model-made" : "checked";
   return {
     proposalId: proposal.id,
     document: gold.document,
@@ -210,9 +208,10 @@ export function goldRow(proposal: ChangeProposal, gold: GoldCheck): GoldRow {
   };
 }
 
-/** The gold checks among proposals, newest first. */
+/** The gold checks among proposals, newest first; a reverted one is no check any more. */
 export function goldRows(proposals: ChangeProposal[]): GoldRow[] {
-  return [...proposals]
+  return proposals
+    .filter((p) => p.status !== "reverted")
     .sort((a, b) => b.created_at.localeCompare(a.created_at))
     .flatMap((p) => {
       const gold = goldCheckOf(p);

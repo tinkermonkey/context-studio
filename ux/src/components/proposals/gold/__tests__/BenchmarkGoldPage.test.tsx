@@ -72,7 +72,8 @@ describe("BenchmarkGoldPage", () => {
     const query = serve([
       goldCheck("p-edit", "edit_check", "dev", ["pending", "pending", "pending"]),
       goldCheck("p-wiki", "wikimedia_enterprise", "holdout", ["applied", "pending"]),
-      createChangeProposal({ id: "p-other", source: "pipeline" }),
+      // A reverted check is no check any more.
+      { ...goldCheck("p-old", "edit_check", "dev", ["rejected"]), status: "reverted" },
     ]);
     const onOpen = vi.fn();
     const user = userEvent.setup();
@@ -83,24 +84,25 @@ describe("BenchmarkGoldPage", () => {
     expect(
       within(screen.getByTestId("gold-header")).getByRole("heading", { level: 1 }),
     ).toHaveTextContent("Benchmark gold");
-    expect(query()?.get("source")).toBe("pipeline");
-    expect(query()?.get("limit")).toBe("500");
+    expect(query()?.get("implementation_id")).toBe("gold_check");
+    expect(query()?.get("offset")).toBe("0");
     const rows = within(table).getAllByRole("row").slice(1);
     expect(rows).toHaveLength(2);
     const edit = rows.find((r) => within(r).queryByText("edit_check"))!;
     expect(within(edit).getByText("dev")).toHaveClass("chip--cyan");
     expect(edit).toHaveTextContent("0 / 3 decided");
     expect(within(edit).getByRole("progressbar")).toHaveAttribute("aria-valuenow", "0");
-    expect(screen.getByTestId("gold-status-edit_check")).toHaveTextContent("model-made");
-    expect(screen.getByTestId("gold-status-edit_check")).toHaveClass("chip--amber");
+    expect(screen.getByTestId("gold-status-p-edit")).toHaveTextContent("model-made");
+    expect(screen.getByTestId("gold-status-p-edit")).toHaveClass("chip--amber");
     const wiki = rows.find((r) => within(r).queryByText("wikimedia_enterprise"))!;
     expect(within(wiki).getByText("holdout")).toHaveClass("chip--violet");
     expect(wiki).toHaveTextContent("1 / 2 decided");
-    expect(screen.queryByText("p-other")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("gold-row-p-old")).not.toBeInTheDocument();
+    expect(screen.getByTestId("gold-row-p-edit")).toHaveTextContent("edit_check");
 
-    expect(screen.getByTestId("gold-open-edit_check")).toHaveTextContent("Check gold");
+    expect(screen.getByTestId("gold-open-p-edit")).toHaveTextContent("Check gold");
     const resume = screen.getByRole("button", { name: "Continue: wikimedia_enterprise" });
-    expect(resume).toBe(screen.getByTestId("gold-open-wikimedia_enterprise"));
+    expect(resume).toBe(screen.getByTestId("gold-open-p-wiki"));
     await user.click(resume);
     expect(onOpen).toHaveBeenCalledWith("p-wiki");
   });
@@ -108,10 +110,10 @@ describe("BenchmarkGoldPage", () => {
   it("marks a finished check as checked, to open", async () => {
     serve([goldCheck("p-edit", "edit_check", "dev", ["applied", "rejected"])]);
     render(<BenchmarkGoldPage onOpenReview={vi.fn()} />);
-    const status = await screen.findByTestId("gold-status-edit_check");
+    const status = await screen.findByTestId("gold-status-p-edit");
     expect(status).toHaveTextContent("checked");
     expect(status).toHaveClass("chip--emerald");
-    expect(screen.getByTestId("gold-open-edit_check")).toHaveTextContent("Open");
+    expect(screen.getByTestId("gold-open-p-edit")).toHaveTextContent("Open");
   });
 
   it("shows the write-back and re-score commands, each copyable", async () => {
@@ -119,7 +121,7 @@ describe("BenchmarkGoldPage", () => {
     const user = userEvent.setup();
     const write = vi.spyOn(navigator.clipboard, "writeText");
     render(<BenchmarkGoldPage onOpenReview={vi.fn()} />);
-    const command = await screen.findByTestId("gold-write-edit_check");
+    const command = await screen.findByTestId("gold-write-p-edit");
     expect(command).toHaveClass("gold-command");
     expect(command).toHaveTextContent(
       "python scripts/extraction_benchmark.py write-gold --document edit_check --proposal p-edit",
@@ -143,7 +145,7 @@ describe("BenchmarkGoldPage", () => {
   });
 
   it("shows the check command when no gold check is loaded", async () => {
-    serve([createChangeProposal({ id: "p-other", source: "pipeline" })]);
+    serve([]);
     render(<BenchmarkGoldPage onOpenReview={vi.fn()} />);
     expect(await screen.findByTestId("gold-empty")).toHaveTextContent("No gold check is loaded");
     expect(screen.getByTestId("gold-empty-command")).toHaveTextContent(

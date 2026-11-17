@@ -12,6 +12,8 @@ interface AddElementPopoverProps {
   passage: SelectedPassage;
   /** The taxonomy's classes that are not derived. */
   pickable: ClassResponse[];
+  /** The taxonomy's classes are still loading. */
+  classesLoading?: boolean;
   /** The class it opens with: the one picked most recently in this review, if any. */
   initialClassId?: string;
   classLabel: (classId: string | undefined) => string;
@@ -36,6 +38,7 @@ interface AddElementPopoverProps {
 export function AddElementPopover({
   passage,
   pickable,
+  classesLoading = false,
   initialClassId,
   classLabel,
   classOf,
@@ -133,6 +136,7 @@ export function AddElementPopover({
             classes={pickable}
             current={classOf(classId)}
             disabled={busy}
+            loading={classesLoading}
             inputId="review-add-class-search"
             label={classId ? "Another class" : "Search the classes"}
             onPick={(picked) => {

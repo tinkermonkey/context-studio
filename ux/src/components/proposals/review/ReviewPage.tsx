@@ -169,8 +169,8 @@ export function ReviewPage({ id, onFinish }: ReviewPageProps) {
   const refs = useMemo(() => (proposal ? refsByOperation([proposal]) : undefined), [proposal]);
   const context = useOperationContext(operations, refs);
   const actions = useProposalActions(proposal);
-  const { classes } = useTaxonomyClasses(taxonomyId, !!taxonomyId);
-  const { data: schemes } = useSchemes(
+  const { classes, isError: classesFailed } = useTaxonomyClasses(taxonomyId, !!taxonomyId);
+  const { data: schemes, isError: schemesFailed } = useSchemes(
     taxonomyId,
     { limit: SMALL_SET_LIMIT },
     { enabled: !!taxonomyId },
@@ -207,19 +207,24 @@ export function ReviewPage({ id, onFinish }: ReviewPageProps) {
     () => new Map((schemes?.items ?? []).map((s) => [s.id, s])),
     [schemes],
   );
+  // Until the classes load, no class can be named, defined or picked (a failure falls back to ids).
+  const classesLoading = !classes && !classesFailed;
+  const layersLoading = classesLoading || (!schemes && !schemesFailed);
   const layerOf = useCallback(
     (operation: ProposedOperation): Layer => {
+      if (layersLoading) return { key: "loading", label: "Loading layers…" };
       const scheme = schemeById.get(
         classById.get(proposedClassId(operation) ?? "")?.concept_scheme_id ?? "",
       );
       return scheme ? { key: scheme.id, label: scheme.title } : { key: "other", label: "Other" };
     },
-    [classById, schemeById],
+    [classById, schemeById, layersLoading],
   );
 
   const names: ReviewNames = useMemo(() => {
     const labelOf = (classId: string | undefined) => {
       if (!classId) return "no class";
+      if (classesLoading) return "…";
       const found = classById.get(classId);
       return found ? classLabel(found) : classId;
     };
@@ -244,7 +249,7 @@ export function ReviewPage({ id, onFinish }: ReviewPageProps) {
         return typeof title === "string" && title ? title : `#${operation.seq}`;
       },
     };
-  }, [classById, context]);
+  }, [classById, context, classesLoading]);
 
   const rowOf = (operation: ProposedOperation): ElementRow => ({
     title: isRelationship(operation)
@@ -634,6 +639,7 @@ export function ReviewPage({ id, onFinish }: ReviewPageProps) {
                 key={`${adding.passage.start}-${adding.passage.end}`}
                 passage={adding.passage}
                 pickable={pickable}
+                classesLoading={classesLoading}
                 initialClassId={recentClasses[0]}
                 classLabel={names.classLabel}
                 classOf={names.classOf}
@@ -668,6 +674,7 @@ export function ReviewPage({ id, onFinish }: ReviewPageProps) {
             nearChoice={nearChoiceOf(selected)}
             onNearChoice={(choice) => setNearChoices((all) => ({ ...all, [selected.id]: choice }))}
             pickable={pickable}
+            classesLoading={classesLoading}
             suggestions={suggestions}
             deciding={deciding}
             busy={actions.busy}
@@ -683,6 +690,10 @@ export function ReviewPage({ id, onFinish }: ReviewPageProps) {
                 ? {
                     goldTier: goldTierOf(gold, selected),
                     aliases: goldElementOf(gold, selected)?.aliases ?? [],
+                    acceptableIds: classesByRef(
+                      goldElementOf(gold, selected)?.acceptableClasses ?? [],
+                      classes ?? [],
+                    ).map((c) => c.id),
                     draft: draftOf(selected),
                     onDraft: (draft) => setGoldDrafts((all) => ({ ...all, [selected.id]: draft })),
                   }

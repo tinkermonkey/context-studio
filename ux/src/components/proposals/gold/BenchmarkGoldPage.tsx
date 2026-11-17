@@ -1,10 +1,11 @@
 import { useMemo } from "react";
 import { Button, Chip, PageHeader, Panel, ProgressBar, Table } from "@tinkermonkey/heimdall-ui";
-import { useChangeProposals } from "@/api/hooks/proposals";
+import { useAllChangeProposals } from "@/api/hooks/proposals";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
 import { useToasts } from "@/components/ui/Toast";
 import {
+  GOLD_CHECK_IMPLEMENTATION,
   GOLD_COMMANDS,
   GOLD_STATUS_CHIP,
   GOLD_WRITES,
@@ -14,8 +15,8 @@ import {
 } from "../review/goldModel";
 import "./gold.css";
 
-/** Gold checks are pipeline proposals; one page of them covers every document. */
-const LIST_PARAMS = { source: "pipeline" as const, limit: 500 };
+/** The proposals `extraction_benchmark.py check` makes. */
+const LIST_PARAMS = { implementation_id: GOLD_CHECK_IMPLEMENTATION };
 
 /** A shell command with a Copy button. */
 function CommandLine({
@@ -56,8 +57,8 @@ interface BenchmarkGoldPageProps {
  * check, write it back and re-score the saved takes.
  */
 export function BenchmarkGoldPage({ onOpenReview }: BenchmarkGoldPageProps) {
-  const { data, error, isLoading, refetch } = useChangeProposals(LIST_PARAMS);
-  const rows = useMemo(() => goldRows(data?.items ?? []), [data]);
+  const { data, error, isLoading, refetch } = useAllChangeProposals(LIST_PARAMS);
+  const rows = useMemo(() => goldRows(data ?? []), [data]);
 
   const header = (
     <PageHeader
@@ -104,7 +105,7 @@ export function BenchmarkGoldPage({ onOpenReview }: BenchmarkGoldPageProps) {
                 key: "document",
                 label: "Document",
                 render: (_, row) => (
-                  <span className="gold-mono" data-testid={`gold-row-${row.document}`}>
+                  <span className="gold-mono" data-testid={`gold-row-${row.proposalId}`}>
                     {row.document}
                   </span>
                 ),
@@ -148,7 +149,7 @@ export function BenchmarkGoldPage({ onOpenReview }: BenchmarkGoldPageProps) {
                 render: (_, row) => (
                   <Chip
                     variant={GOLD_STATUS_CHIP[row.status]}
-                    data-testid={`gold-status-${row.document}`}
+                    data-testid={`gold-status-${row.proposalId}`}
                   >
                     {row.status}
                   </Chip>
@@ -163,7 +164,7 @@ export function BenchmarkGoldPage({ onOpenReview }: BenchmarkGoldPageProps) {
                     size="sm"
                     aria-label={`${row.action}: ${row.document}`}
                     onClick={() => onOpenReview(row.proposalId)}
-                    data-testid={`gold-open-${row.document}`}
+                    data-testid={`gold-open-${row.proposalId}`}
                   >
                     {row.action}
                   </Button>
@@ -227,7 +228,7 @@ export function BenchmarkGoldPage({ onOpenReview }: BenchmarkGoldPageProps) {
               <span className="gold-mono">{row.document}</span>
               <CommandLine
                 command={GOLD_COMMANDS.writeGold(row.document, row.proposalId)}
-                data-testid={`gold-write-${row.document}`}
+                data-testid={`gold-write-${row.proposalId}`}
               />
               <CommandLine command={GOLD_COMMANDS.validate(row.document)} />
             </div>

@@ -14,6 +14,14 @@ export function useChangeProposals(
   });
 }
 
+/** Every proposal matching `params`, all pages (e.g. the benchmark's gold checks). */
+export function useAllChangeProposals(params: Omit<ChangeProposalListParams, "limit" | "offset">) {
+  return useQuery({
+    queryKey: QUERY_KEYS.changeProposals({ ...params, all: true }),
+    queryFn: () => proposalsService.listAllProposals(params),
+  });
+}
+
 /**
  * The proposal's standing decisions (its gold), with who decided each and
  * when. `enabled` is false for a reverted proposal (a revert supersedes what

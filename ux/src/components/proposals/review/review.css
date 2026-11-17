@@ -534,6 +534,13 @@
     color: rgb(var(--canvas-fg-1));
   }
 
+  /* Already acceptable in gold: shown on, not a toggle. */
+  .review-defensible.review-defensible--gold:disabled {
+    opacity: 1;
+    cursor: default;
+    border-style: dashed;
+  }
+
   .review-defensible:focus-visible {
     outline: 2px solid rgb(var(--accent-primary));
     outline-offset: 1px;

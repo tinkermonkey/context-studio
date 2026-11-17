@@ -31,6 +31,8 @@ export interface ChangeProposalListParams {
   source?: ChangeProposal["source"];
   /** Landed (true) or not yet landed (false) in a mirrored taxonomy's source. */
   landed?: boolean;
+  /** Only proposals a run of this pipeline implementation made (their origin's), e.g. "gold_check". */
+  implementation_id?: string;
   limit?: number;
   offset?: number;
 }
@@ -43,6 +45,19 @@ class ProposalsService extends BaseService {
       "/api/proposals",
       params as unknown as Record<string, unknown>,
     );
+  }
+
+  /** Every proposal matching `params`, paging through the list by its total. */
+  async listAllProposals(
+    params: Omit<ChangeProposalListParams, "limit" | "offset"> = {},
+  ): Promise<ChangeProposal[]> {
+    const limit = 500;
+    const proposals: ChangeProposal[] = [];
+    for (let offset = 0; ; offset += limit) {
+      const page = await this.listProposals({ ...params, limit, offset });
+      proposals.push(...page.items);
+      if (page.items.length < limit || proposals.length >= page.total) return proposals;
+    }
   }
 
   async getProposal(id: string): Promise<ChangeProposal> {
