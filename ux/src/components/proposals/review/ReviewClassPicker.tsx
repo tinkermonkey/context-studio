@@ -15,13 +15,26 @@ interface ReviewClassPickerProps {
   current?: ClassResponse;
   disabled?: boolean;
   onPick: (classId: string) => void;
+  /** The search input's id: unique on the page (the inspector and the add form each have one). */
+  inputId?: string;
+  /** The label above the search; defaults to "Search all N classes". */
+  label?: string;
+  "data-testid"?: string;
 }
 
 /**
  * Search the taxonomy's classes by reference, title or identifier, the
  * current class's layer-mates first, and pick one for the element.
  */
-export function ReviewClassPicker({ classes, current, disabled, onPick }: ReviewClassPickerProps) {
+export function ReviewClassPicker({
+  classes,
+  current,
+  disabled,
+  onPick,
+  inputId = "review-class-search",
+  label,
+  "data-testid": testId = "review-class-picker",
+}: ReviewClassPickerProps) {
   const [query, setQuery] = useState("");
   const results = useMemo(() => {
     const needle = query.trim().toLowerCase();
@@ -39,12 +52,12 @@ export function ReviewClassPicker({ classes, current, disabled, onPick }: Review
   }, [classes, current, query]);
 
   return (
-    <div className="review-section" data-testid="review-class-picker">
-      <label htmlFor="review-class-search" className="review-muted">
-        Search all {classes.length} classes
+    <div className="review-section" data-testid={testId}>
+      <label htmlFor={inputId} className="review-muted">
+        {label ?? `Search all ${classes.length} classes`}
       </label>
       <EntityPicker
-        inputId="review-class-search"
+        inputId={inputId}
         query={query}
         onQueryChange={setQuery}
         results={results}

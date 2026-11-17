@@ -6,6 +6,8 @@ export type ProposedOperation = components["schemas"]["ProposedOperationResponse
 export type ChangeProposalCreateRequest = components["schemas"]["ChangeProposalCreateRequest"];
 export type ChangeProposalApplyRequest = components["schemas"]["ChangeProposalApplyRequest"];
 export type ChangeProposalRejectRequest = components["schemas"]["ChangeProposalRejectRequest"];
+/** An individual the extraction missed, as the reviewer found it in the proposal's source. */
+export type AddIndividualRequest = components["schemas"]["AddIndividualRequest"];
 /** Why a reviewer rejected an operation, as a code (sent with a reject, kept on the operation). */
 export type RejectionReason = components["schemas"]["RejectionReason"];
 export type ChangeProposalRevertResponse = components["schemas"]["ChangeProposalRevertResponse"];
@@ -58,6 +60,16 @@ class ProposalsService extends BaseService {
 
   async rejectProposal(id: string, data: ChangeProposalRejectRequest): Promise<ChangeProposal> {
     return this.post<ChangeProposal>(`/api/proposals/${id}/reject`, data);
+  }
+
+  /**
+   * Add an individual the extraction missed, with the passage the reviewer
+   * selected in the proposal's source, and apply it: the proposal afterwards.
+   * 422 (detail.errors with a code) when the title, a class or the passage is
+   * invalid or the title is taken; 409 when the proposal takes no additions.
+   */
+  async addIndividual(id: string, data: AddIndividualRequest): Promise<ChangeProposal> {
+    return this.post<ChangeProposal>(`/api/proposals/${id}/operations`, data);
   }
 
   async revertProposal(id: string): Promise<ChangeProposalRevertResponse> {

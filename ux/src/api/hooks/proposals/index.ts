@@ -4,6 +4,7 @@ export {
   useApplyChangeProposal,
   useRejectChangeProposal,
   useRevertChangeProposal,
+  useAddProposalIndividual,
   useExportProposalDecisions,
 } from "./useProposalMutations";
 export { useApprovalPolicy, useSetApprovalPolicy } from "./useApprovalPolicy";

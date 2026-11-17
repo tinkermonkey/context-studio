@@ -5,13 +5,15 @@ import { activeMsAt, recordActivity, startClock, type ActiveClock } from "./revi
 const ACTIVITY_EVENTS = ["pointerdown", "pointermove", "keydown", "wheel"] as const;
 
 /**
- * Two active-time clocks for a review: one for the page, and one for the
- * selected element, restarted whenever another element is selected. Kept in
- * refs: activity never re-renders the page.
+ * Active-time clocks for a review: one for the page, one for the selected
+ * element (restarted whenever another element is selected), and one for an
+ * element being added from selected text (started when its form opens).
+ * Kept in refs: activity never re-renders the page.
  */
 export function useReviewClock() {
   const page = useRef<ActiveClock>(startClock(Date.now()));
   const element = useRef<{ id: string; clock: ActiveClock } | null>(null);
+  const adding = useRef<ActiveClock | null>(null);
 
   useEffect(() => {
     const onActivity = () => {
@@ -20,6 +22,7 @@ export function useReviewClock() {
       if (element.current) {
         element.current = { ...element.current, clock: recordActivity(element.current.clock, now) };
       }
+      if (adding.current) adding.current = recordActivity(adding.current, now);
     };
     for (const name of ACTIVITY_EVENTS)
       window.addEventListener(name, onActivity, { passive: true });
@@ -47,5 +50,16 @@ export function useReviewClock() {
   /** Active milliseconds on the page. */
   const pageMs = useCallback(() => activeMsAt(page.current, Date.now()), []);
 
-  return { startElement, spentOn, pageMs };
+  /** Start timing an element being added (its form opened). */
+  const startAdding = useCallback(() => {
+    adding.current = startClock(Date.now());
+  }, []);
+
+  /** Active milliseconds since the add form opened; 0 when none is open. */
+  const spentAdding = useCallback(
+    () => (adding.current ? activeMsAt(adding.current, Date.now()) : 0),
+    [],
+  );
+
+  return { startElement, spentOn, pageMs, startAdding, spentAdding };
 }

@@ -3,6 +3,7 @@ import { isTimeout } from "@/api/client/interceptors";
 import { QUERY_KEYS } from "@/api/config";
 import {
   proposalsService,
+  type AddIndividualRequest,
   type ChangeProposalApplyRequest,
   type ChangeProposalCreateRequest,
   type ChangeProposalRejectRequest,
@@ -70,6 +71,28 @@ export function useRejectChangeProposal() {
     onSuccess: (proposal) => {
       queryClient.setQueryData(QUERY_KEYS.changeProposal(proposal.id), proposal);
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.changeProposalsRoot });
+    },
+  });
+}
+
+/**
+ * Add an individual the extraction missed (selected in the source) to a
+ * proposal; it is applied in the same call. The caller shows a refusal
+ * (422, 409) next to its form, so the global toast is skipped.
+ */
+export function useAddProposalIndividual() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: AddIndividualRequest }) =>
+      proposalsService.addIndividual(id, data),
+    meta: { skipGlobalErrorToast: true },
+    onSuccess: (proposal) => {
+      queryClient.setQueryData(QUERY_KEYS.changeProposal(proposal.id), proposal);
+      invalidateOntology(queryClient);
+    },
+    // A timed-out addition may still be running, or have finished, on the server: show where it got.
+    onError: (error) => {
+      if (isTimeout(error)) invalidateOntology(queryClient);
     },
   });
 }

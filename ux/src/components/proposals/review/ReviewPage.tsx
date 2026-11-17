@@ -10,7 +10,7 @@ import {
 import { Button, ConfirmDialog, PageHeader, ProgressBar } from "@tinkermonkey/heimdall-ui";
 import { SMALL_SET_LIMIT } from "@/api/config";
 import { ApiError } from "@/api/client/interceptors";
-import { useChangeProposal } from "@/api/hooks/proposals";
+import { useAddProposalIndividual, useChangeProposal } from "@/api/hooks/proposals";
 import { useTaxonomyClasses } from "@/api/hooks/ontology/useClasses";
 import { useDatasets } from "@/api/hooks/ontology/useDatasets";
 import { useSchemes } from "@/api/hooks/ontology/useSchemes";
@@ -34,7 +34,16 @@ import { useOperationContext } from "../useOperationContext";
 import { useProposalActions, type ApplyOutcome } from "../useProposalActions";
 import { ReviewElementsPane, type ElementRow } from "./ReviewElementsPane";
 import { ReviewInspector, type ReviewNames } from "./ReviewInspector";
-import { ReviewSourcePane } from "./ReviewSourcePane";
+import { ReviewSourcePane, type PopoverAnchor } from "./ReviewSourcePane";
+import { AddElementPopover } from "./AddElementPopover";
+import {
+  addErrorMessage,
+  addedOperation,
+  additionsBlocked,
+  proposalSourceId,
+  toSourcePassage,
+  type SelectedPassage,
+} from "./addFromText";
 import {
   classLabel,
   endsToDecide,
@@ -162,7 +171,10 @@ export function ReviewPage({ id, onFinish }: ReviewPageProps) {
   const reviewed = useMemo(() => [...elements, ...relationships], [elements, relationships]);
 
   // The source: its whole text, once it is ready.
-  const sourceId = useMemo(() => reviewSourceId(elements), [elements]);
+  // The source the proposal records it was extracted from, else the one its passages cite.
+  const recordedSourceId = proposalSourceId(proposal);
+  const citedSourceId = useMemo(() => reviewSourceId(elements), [elements]);
+  const sourceId = recordedSourceId ?? citedSourceId;
   const { data: source, isError: sourceFailed } = useSource(sourceId);
   const readable = !!source && source.status === "ready" && !source.removed_at;
   const { data: sourceText, isError: textFailed } = useSourceText(sourceId, null, {
@@ -270,6 +282,59 @@ export function ReviewPage({ id, onFinish }: ReviewPageProps) {
   );
 
   const deciding = !!proposal && takesDecisions(proposal);
+
+  // Adding an element the extraction missed, from text selected in the source.
+  const addIndividual = useAddProposalIndividual();
+  const [adding, setAdding] = useState<{ passage: SelectedPassage; anchor: PopoverAnchor }>();
+  const [addError, setAddError] = useState<string>();
+  const addBlocked = proposal ? additionsBlocked(proposal) : undefined;
+  const canAdd = !!proposal && !addBlocked && !!sourceText && sourceId === recordedSourceId;
+  const openAdding = (passage: SelectedPassage, anchor: PopoverAnchor) => {
+    setAdding({ passage, anchor });
+    setAddError(undefined);
+    clock.startAdding();
+  };
+  const sourceTextRef = useRef<HTMLDivElement>(null);
+  /** Close the add form; focus goes back to the source text unless the reviewer clicked away. */
+  const closeAdding = ({ refocus = true } = {}) => {
+    setAdding(undefined);
+    setAddError(undefined);
+    if (refocus) sourceTextRef.current?.focus({ preventScroll: true });
+  };
+  const addElement = async (title: string, classId: string) => {
+    if (!adding || !recordedSourceId || !sourceText || addIndividual.isPending) return;
+    // The server counts offsets in code points, the browser in UTF-16 units.
+    const passage = toSourcePassage(adding.passage, sourceText.text, sourceText.start);
+    const before = new Set(operations.map((o) => o.id));
+    try {
+      const after = await addIndividual.mutateAsync({
+        id,
+        data: {
+          title,
+          class_ids: [classId],
+          passage: {
+            source_id: recordedSourceId,
+            start: passage.start,
+            end: passage.end,
+            quote: passage.quote,
+          },
+          review_ms: clock.spentAdding(),
+        },
+      });
+      closeAdding();
+      window.getSelection()?.removeAllRanges();
+      setRecentClasses((recent) => rememberPick(recent, classId));
+      const added = addedOperation(before, after);
+      if (added) setSelectedId(added.id);
+      if (added?.status === "failed") {
+        toast("error", `Added ${title}, but it didn't apply`, added.reason ?? undefined);
+      } else {
+        toast("success", `Added ${title}`, `As ${names.classLabel(classId)}`);
+      }
+    } catch (error) {
+      setAddError(addErrorMessage(error, { title, classLabel: names.classLabel(classId) }));
+    }
+  };
   const reasonsRef = useRef<HTMLDivElement>(null);
 
   // A near match's choice, by operation: an existing individual, or create new.
@@ -340,6 +405,11 @@ export function ReviewPage({ id, onFinish }: ReviewPageProps) {
   // Keys: A correct, 1-3 a suggested class, X the reasons, J / K next and previous.
   const onKey = useRef<(event: KeyboardEvent) => void>(() => {});
   onKey.current = (event) => {
+    // While the add form is open, keys are its own; Escape closes it wherever focus went.
+    if (adding) {
+      if (event.key === "Escape" && !event.defaultPrevented) closeAdding();
+      return;
+    }
     if (event.defaultPrevented || event.metaKey || event.ctrlKey || event.altKey) return;
     if (actions.forceRequest || ignoresKeys(event.target)) return;
     const key = event.key.toLowerCase();
@@ -499,6 +569,28 @@ export function ReviewPage({ id, onFinish }: ReviewPageProps) {
           }}
           selectedId={selectedId}
           onSelect={setSelectedId}
+          textRef={sourceTextRef}
+          onDismissPopover={() => closeAdding({ refocus: false })}
+          onSelectText={canAdd ? openAdding : undefined}
+          addBlocked={addBlocked}
+          popoverAnchor={adding?.anchor}
+          popover={
+            adding && (
+              <AddElementPopover
+                key={`${adding.passage.start}-${adding.passage.end}`}
+                passage={adding.passage}
+                pickable={pickable}
+                initialClassId={recentClasses[0]}
+                classLabel={names.classLabel}
+                classOf={names.classOf}
+                busy={addIndividual.isPending}
+                error={addError}
+                onEdit={() => setAddError(undefined)}
+                onAdd={(title, classId) => void addElement(title, classId)}
+                onCancel={() => closeAdding()}
+              />
+            )
+          }
         />
         <ReviewElementsPane
           groups={shownGroups}

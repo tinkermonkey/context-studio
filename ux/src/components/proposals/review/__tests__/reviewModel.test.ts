@@ -152,6 +152,19 @@ describe("the source", () => {
     ]);
   });
 
+  it("places passages after an emoji: code-point offsets to UTF-16 spans", () => {
+    const text = `😀 ${TEXT}`;
+    // "feedback" is at code points 20-28, UTF-16 units 21-29.
+    const ops = [
+      element("a", {
+        evidence: [{ source_id: "src-1", page: null, start: 20, end: 28, quote: "feedback" }],
+      }),
+    ];
+    expect(reviewSpans(ops, "src-1", text)).toEqual([
+      { key: "a", quote: "feedback", start: 21, end: 29 },
+    ]);
+  });
+
   it("places passages in text that starts later in the whole text", () => {
     const ops = [element("a", { evidence: [{ ...passage("feedback"), start: 118, end: 126 }] })];
     expect(reviewSpans(ops, "src-1", TEXT, 100)).toEqual([

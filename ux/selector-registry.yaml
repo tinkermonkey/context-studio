@@ -3287,6 +3287,47 @@ selectors:
     component: src/components/proposals/review/ReviewInspector.tsx
     description: "One of the element's relationships, by operation id: from, predicate, to and status; click selects it"
 
+  # Review page: add a missed element from selected text (#1612)
+  - selector: review-source-selectable
+    component: src/components/proposals/review/ReviewSourcePane.tsx
+    description: "The source text wrapper (tabindex -1: focus returns here when the add form closes) whose text selection (mouse up, or a Shift key up outside fields with the selection in the source) opens the add form; offsets are counted across highlight marks and sent as code points"
+  - selector: review-source-hint
+    component: src/components/proposals/review/ReviewSourcePane.tsx
+    description: "Hint under the source: \"Select any text to add an element the pipeline missed. Click a highlight to open it.\" when the proposal takes additions, else \"Click a highlight to open it.\""
+  - selector: review-add-unavailable
+    component: src/components/proposals/review/ReviewSourcePane.tsx
+    description: "Why no element can be added (reverted, landed, or no recorded source and dataset)"
+  - selector: review-add-popover
+    component: src/components/proposals/review/AddElementPopover.tsx
+    description: "Add form (role=dialog, \"Selected text · not in the proposal\"), fixed at the selection; Escape or Cancel closes it"
+  - selector: review-add-quote
+    component: src/components/proposals/review/AddElementPopover.tsx
+    description: "The selected text (trimmed), the passage sent"
+  - selector: review-add-title
+    component: src/components/proposals/review/AddElementPopover.tsx
+    description: "Title input, prefilled with the selection; required, its error clears on change"
+  - selector: review-add-class
+    component: src/components/proposals/review/AddElementPopover.tsx
+    description: "\"Add as\": the chosen class (the most recently picked one to start with) and the picker"
+  - selector: review-add-class-chosen
+    component: src/components/proposals/review/AddElementPopover.tsx
+    description: "The chosen class chip"
+  - selector: review-add-class-picker
+    component: src/components/proposals/review/AddElementPopover.tsx
+    description: "Class picker over the non-derived classes, the chosen class's layer-mates first"
+  - selector: review-add-class-error
+    component: src/components/proposals/review/AddElementPopover.tsx
+    description: "\"Choose its class.\" until a class is chosen"
+  - selector: review-add-error
+    component: src/components/proposals/review/AddElementPopover.tsx
+    description: "The server's refusal (422/409), e.g. \"<title> already exists in this dataset as <class>.\"; clears on change"
+  - selector: review-add-submit
+    component: src/components/proposals/review/AddElementPopover.tsx
+    description: "\"Add element\": POST /api/proposals/{id}/operations with title, class_ids, passage and review_ms"
+  - selector: review-add-cancel
+    component: src/components/proposals/review/AddElementPopover.tsx
+    description: "Cancel: closes the add form"
+
   # Review queue: decisions (#1361)
   - selector: proposal-actions
     component: src/components/proposals/ProposalDetailPage.tsx
