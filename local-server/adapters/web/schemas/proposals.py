@@ -18,7 +18,6 @@ from domain.pipelines.schema_relationship_reflection.drafts import (
 from domain.versioning.approval_policy import ApprovalPolicy
 from domain.versioning.gold import DecisionKind, ProposalDecision
 from domain.versioning.in_use import DeleteBlockers, PairMatch, ReplacementCheck
-from domain.versioning.yielding import DatasetImpact
 from domain.versioning.proposals import (
     ChangeProposal,
     ChangeScope,
@@ -32,6 +31,7 @@ from domain.versioning.proposals import (
     ProposedOperation,
     ResolutionStrategy,
 )
+from domain.versioning.yielding import DatasetImpact
 
 logger = logging.getLogger(__name__)
 
@@ -627,8 +627,8 @@ class ProposalOriginResponse(BaseModel):
         ...,
         description="A short hash of what that configuration version made the run do: its "
         "settings, the stage prompts the implementation resolved (defaults included) and the "
-        "model, temperature and output-token limit the run executed with. Two proposals with "
-        "the same origin, digest included, were produced the same way",
+        "model, temperature and output-token limit the run executed with. It does not cover "
+        "the implementation's own code, prompts that live in code included",
     )
 
     @classmethod

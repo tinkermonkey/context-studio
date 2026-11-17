@@ -639,6 +639,16 @@ class TestARunRecordsItsOrigin:
         assert own_model.configuration_version == configured.configuration_version
         assert own_model.digest != configured.digest
 
+    def test_a_number_written_another_way_gives_the_same_digest(self, resolver):
+        selection = resolver.resolve(EXTRACTION, "default")  # its temperature is 0.0
+
+        configured = selection.origin(selection.run_input({}))
+        integer = selection.origin(selection.run_input({"temperature": 0}))
+        limit = selection.origin({**selection.run_input({}), "max_tokens": 20000.0})
+
+        assert integer.digest == configured.digest
+        assert limit.digest == configured.digest
+
     def test_a_changed_configuration_is_a_new_version_and_digest(self, registries, resolver):
         _, configurations = registries
         before = resolver.resolve(EXTRACTION, "find_then_type")

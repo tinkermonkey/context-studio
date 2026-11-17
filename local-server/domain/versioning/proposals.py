@@ -43,8 +43,12 @@ ORIGIN = "origin"
 @dataclass(frozen=True)
 class ProposalOrigin:
     """
-    The pipeline that produced a proposal, and which version of it: two
-    proposals with the same origin were produced the same way.
+    The pipeline that produced a proposal, and which version of it. Two
+    proposals with the same origin ran with the same configuration, stage
+    prompts and model parameters. The implementation's own code is not
+    covered, prompts that live in code included (an implementation without
+    configurable stage prompts, such as the refinements, keeps all of its
+    prompts there).
 
     Attributes:
         pipeline_type: The pipeline type (e.g. "individual_extraction")

@@ -143,7 +143,7 @@ class PipelineSelection:
         executed = {
             "settings": settings,
             "stage_prompts": {key: [p.system, p.user] for key, p in prompts.items()},
-            "parameters": {key: run_input.get(key) for key in RUN_PARAMETERS},
+            "parameters": _executed_parameters(run_input),
         }
         text = json.dumps(executed, sort_keys=True, default=str)
         return ProposalOrigin(
@@ -370,6 +370,21 @@ class PipelineResolver:
                     )
         if missing:
             raise ValueError("Pipeline registration is incomplete: " + "; ".join(missing))
+
+
+def _executed_parameters(run_input: Mapping[str, Any]) -> dict[str, Any]:
+    """
+    The model, temperature and output-token limit a run executes with, each
+    written one way however its input spelled it (a temperature of 0 is 0.0, a
+    limit of 8000.0 is 8000), so equal runs hash alike.
+    """
+    parameters = {key: run_input.get(key) for key in RUN_PARAMETERS}
+    temperature, limit = parameters["temperature"], parameters["max_tokens"]
+    if isinstance(temperature, (int, float)) and not isinstance(temperature, bool):
+        parameters["temperature"] = float(temperature)
+    if isinstance(limit, float) and limit.is_integer():
+        parameters["max_tokens"] = int(limit)
+    return parameters
 
 
 def _is_output_limit(value: Any) -> bool:

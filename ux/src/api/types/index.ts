@@ -9278,7 +9278,7 @@ export interface components {
       configuration_version: number;
       /**
        * Digest
-       * @description A short hash of what that configuration version made the run do: its settings, the stage prompts the implementation resolved (defaults included) and the model, temperature and output-token limit the run executed with. Two proposals with the same origin, digest included, were produced the same way
+       * @description A short hash of what that configuration version made the run do: its settings, the stage prompts the implementation resolved (defaults included) and the model, temperature and output-token limit the run executed with. It does not cover the implementation's own code, prompts that live in code included
        */
       digest: string;
     };
