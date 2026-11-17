@@ -221,6 +221,21 @@ def _normalize_predicate_label(label: str) -> str:
     return label.strip().lower().replace("_", " ").replace("-", " ")
 
 
+def is_below_confidence(triple: Mapping[str, Any], threshold: float) -> bool:
+    """
+    Whether a triple's confidence is under a threshold. A triple that gives no
+    confidence (``None``, or none at all) is never under it: the threshold
+    compares a score, and the extraction gave none, which is not a score of 0.
+    The single call that finds and types individuals (single_call) rates none
+    of them, so a threshold leaves its individuals in rather than dropping
+    every one.
+    """
+    confidence = triple.get("confidence")
+    if confidence is None:
+        return False
+    return float(confidence) < threshold
+
+
 def is_typing_triple(triple: Mapping[str, Any]) -> bool:
     """
     Whether a triple is an ``is_a``/rdf:type assertion: its predicate label
@@ -2885,7 +2900,8 @@ class ExtractionService:
 
         Computes at request time against current ontology state, with zero writes.
         For each distinct typing triple (subject is an individual) with confidence
-        >= confidence_threshold, attempts to resolve the mention via IndividualRecognizer
+        >= confidence_threshold, or with no confidence at all (is_below_confidence),
+        attempts to resolve the mention via IndividualRecognizer
         if configured. Returns a hit for each qualifying mention, whether it would match
         or be created as new.
 
@@ -2924,9 +2940,7 @@ class ExtractionService:
 
             seen_mentions.add(mention_key(mention_label))
 
-            confidence_raw = triple.get("confidence")
-            confidence = float(confidence_raw) if confidence_raw is not None else 0.0
-            if confidence < confidence_threshold:
+            if is_below_confidence(triple, confidence_threshold):
                 skipped_count += 1
                 continue
 

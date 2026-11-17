@@ -190,6 +190,10 @@ class AnthropicProvider:
 
                 start_time = time.perf_counter()
                 if max_tokens > _UNSTREAMED_MAX_TOKENS:
+                    # An error event part-way through the stream (an overloaded
+                    # API, say) raises an APIStatusError with status 200, not
+                    # the 5xx the same failure would bring unstreamed; the
+                    # router maps both to LLMProviderError (_completion_error)
                     with self._client.messages.stream(**kwargs) as stream:  # type: ignore[union-attr]
                         response = stream.get_final_message()
                 else:

@@ -835,8 +835,9 @@ test("the ledger merges as a union, so main and the integration branch can both 
 // -- what the script decides from the verifier's report ---------------------
 
 const DEFAULT_OTHER = { implementation: "default", configuration: "extraction-openrouter-default", model: "google/gemini-3-flash-preview", status: "scored", devTypedF1: 0.1138, devFoundF1: 0.4112 };
+const SINGLE_CALL_OTHER = { implementation: "single_call", configuration: "extraction-single-call", model: "claude-opus-5-5", status: "scored", devTypedF1: 0.5762, devFoundF1: 0.6107 };
 const DEFAULT_OTHER_GUARD = { implementation: "default", configuration: "extraction-openrouter-default", status: "scored", strict_f1: 0.9319, soft_f1: 0.9433 };
-// find_then_type on main: default's benchmark and the triple corpus are the other things a change could move.
+// find_then_type on main: default's and single_call's benchmarks and the triple corpus are the other things a change could move.
 const FTT_INCUMBENT = {
   ...FTT_TARGET,
   measurementStatus: "scored",
@@ -848,7 +849,7 @@ const FTT_INCUMBENT = {
   failureCounts: { relationship_missed: 109, spurious: 93, missed_supporting: 67, missed_core: 18, mistyped: 15, excluded_extracted: 9 },
   staleElsewhere: ["open_v1"],
   recordedModels: ["claude-haiku-5-5"],
-  otherTargets: [DEFAULT_OTHER],
+  otherTargets: [DEFAULT_OTHER, SINGLE_CALL_OTHER],
   otherGuards: [DEFAULT_OTHER_GUARD],
 };
 function fttCandidate(overrides = {}) {
@@ -884,7 +885,7 @@ function passingVerdict(overrides = {}) {
     diffMatchesHypothesis: true,
     measuredModel: FTT_TARGET.model,
     recordedModels: [FTT_TARGET.model],
-    otherTargets: [{ ...DEFAULT_OTHER }],
+    otherTargets: [{ ...DEFAULT_OTHER }, { ...SINGLE_CALL_OTHER }],
     otherGuards: [{ ...DEFAULT_OTHER_GUARD }],
     verdict: "pass",
     reason: "",
@@ -953,9 +954,9 @@ test("a frozen path in the candidate's own changed files is a rejection, whateve
 });
 test("a change that damages another recorded target is rejected, by that target's own margin", () => {
   // default's epsilon is 0.02: a drop of exactly that is tolerated, more is not.
-  const within = standing({}, { otherTargets: [{ ...DEFAULT_OTHER, devTypedF1: 0.0938 }] });
+  const within = standing({}, { otherTargets: [{ ...DEFAULT_OTHER, devTypedF1: 0.0938 }, { ...SINGLE_CALL_OTHER }] });
   assert.equal(within.status, "verified");
-  const beyond = standing({}, { otherTargets: [{ ...DEFAULT_OTHER, devTypedF1: 0.0937 }] });
+  const beyond = standing({}, { otherTargets: [{ ...DEFAULT_OTHER, devTypedF1: 0.0937 }, { ...SINGLE_CALL_OTHER }] });
   assert.equal(beyond.status, "rejected");
   assert.ok(beyond.reason.includes("damages another recorded target"));
   assert.equal(beyond.others.targets[0].dev_typed_f1.after, 0.0937);
@@ -1029,34 +1030,35 @@ test("decideAll accepts the best verified candidate and records what each change
   assert.equal(byId.stale.decision, "unmeasured", "the higher score with a stale other target is not accepted");
   assert.equal(byId.flat.decision, "rejected");
   assert.equal(byId.failed.decision, "unmeasured");
-  assert.equal(byId.good.others.targets.length, 1);
+  assert.equal(byId.good.others.targets.length, 2);
   assert.equal(byId.failed.others, null);
 });
 test("what a change could move comes from the recorded targets, not from the measurement", () => {
   const ftt = expectedOthers(FTT_TARGET);
-  assert.equal(ftt.targets.map((t) => t.implementation).join(","), "default");
+  assert.equal(ftt.targets.map((t) => t.implementation).join(","), "default,single_call");
   assert.equal(ftt.guards.map((t) => t.configuration).join(","), "extraction-openrouter-default");
   const twoPass = expectedOthers(DEFAULT_TARGET);
-  assert.equal(twoPass.targets.map((t) => t.implementation).join(","), "find_then_type");
+  assert.equal(twoPass.targets.map((t) => t.implementation).join(","), "find_then_type,single_call");
   assert.equal(twoPass.guards.length, 0, "the corpus is two-pass's own guard");
-  // Another configuration of two-pass: both recorded targets, and the corpus, are others.
+  // Another configuration of two-pass: every recorded target, and the corpus, are others.
   const other = expectedOthers({ implementation: "default", configuration: "extraction-default" });
-  assert.equal(other.targets.length, 2);
+  assert.equal(other.targets.length, 3);
   assert.equal(other.guards.length, 1);
 });
 test("the iteration does not start when something else a change could move is missing or has no score on main", () => {
   assert.equal(baselineProblems(FTT_INCUMBENT, FTT_TARGET).length, 0);
-  assert.equal(baselineProblems({ ...FTT_INCUMBENT, otherTargets: [{ ...DEFAULT_OTHER, status: "stale", devTypedF1: undefined }] }, FTT_TARGET).length, 1);
+  assert.equal(baselineProblems({ ...FTT_INCUMBENT, otherTargets: [{ ...DEFAULT_OTHER, status: "stale", devTypedF1: undefined }, SINGLE_CALL_OTHER] }, FTT_TARGET).length, 1);
   assert.equal(baselineProblems({ ...FTT_INCUMBENT, otherGuards: [{ ...DEFAULT_OTHER_GUARD, status: "not_registered", strict_f1: undefined }] }, FTT_TARGET).length, 1);
   assert.equal(baselineProblems({ ...FTT_INCUMBENT, otherTargets: undefined }, FTT_TARGET).length, 1);
-  // An empty baseline is not one: both of find_then_type's others are missing.
+  // An empty baseline is not one: each of find_then_type's others is missing.
   const empty = baselineProblems({ ...FTT_INCUMBENT, otherTargets: [], otherGuards: [] }, FTT_TARGET);
-  assert.equal(empty.length, 2);
+  assert.equal(empty.length, 3);
   assert.ok(empty.every((problem) => problem.includes("missing from the baseline")));
-  // Two-pass with its recorded configuration has find_then_type's benchmark to compare, and no other guard.
-  const twoPass = { ...FTT_INCUMBENT, ...DEFAULT_TARGET, otherTargets: [{ ...DEFAULT_OTHER, ...FTT_TARGET, devTypedF1: 0.4648, devFoundF1: 0.5343 }], otherGuards: [] };
+  // Two-pass with its recorded configuration has find_then_type's and single_call's benchmarks to compare, and no other guard.
+  const twoPass = { ...FTT_INCUMBENT, ...DEFAULT_TARGET, otherTargets: [{ ...DEFAULT_OTHER, ...FTT_TARGET, devTypedF1: 0.4648, devFoundF1: 0.5343 }, SINGLE_CALL_OTHER], otherGuards: [] };
   assert.equal(baselineProblems(twoPass, DEFAULT_TARGET).length, 0);
-  assert.equal(baselineProblems({ ...twoPass, otherTargets: [] }, DEFAULT_TARGET).length, 1);
+  assert.equal(baselineProblems({ ...twoPass, otherTargets: [] }, DEFAULT_TARGET).length, 2);
+  assert.equal(baselineProblems({ ...twoPass, otherTargets: [SINGLE_CALL_OTHER] }, DEFAULT_TARGET).length, 1);
 });
 test("RECORDED_TARGETS and TRIPLE_CORPUS_TARGET are what the Python scripts pin", () => {
   const replay = fs.readFileSync(path.join(__dirname, "../../local-server/scripts/benchmark_replay.py"), "utf8");
@@ -1070,8 +1072,15 @@ test("RECORDED_TARGETS and TRIPLE_CORPUS_TARGET are what the Python scripts pin"
   const corpus = tournament.match(/^TRIPLE_CORPUS_IMPLEMENTATION = "([^"]+)"/m)[1];
   assert.equal(TRIPLE_CORPUS_TARGET.implementation, corpus);
   assert.equal(TRIPLE_CORPUS_TARGET.configuration, pinned.find((t) => t.implementation === corpus).configuration);
-  // Every recorded target's implementation has margins; those measured with it name it.
+  // A recorded target's margins, when its implementation has any, name the
+  // configuration they were measured with. single_call has none: it cannot be
+  // refined, only checked as another target a change could move (it shares
+  // find_then_type's relate step).
   for (const target of RECORDED_TARGETS) {
+    if (target.implementation === "single_call") {
+      assert.equal(GATE_MARGINS.single_call, undefined);
+      continue;
+    }
     assert.equal(GATE_MARGINS[target.implementation].configuration, target.configuration);
   }
 });
@@ -1198,7 +1207,7 @@ await asyncTest("run: a gain that is only a change of model is not accepted, and
 });
 await asyncTest("run: a shared change that damages default is rejected though find_then_type gains", async () => {
   const { result } = await runWorkflow(ASKED, {
-    verify: (id) => passingVerdict({ hypothesisId: id, otherTargets: [{ ...DEFAULT_OTHER, devTypedF1: 0.05 }] }),
+    verify: (id) => passingVerdict({ hypothesisId: id, otherTargets: [{ ...DEFAULT_OTHER, devTypedF1: 0.05 }, { ...SINGLE_CALL_OTHER }] }),
   });
   assert.equal(result.status, "no_accept");
   for (const d of result.decisions) {
@@ -1223,11 +1232,11 @@ await asyncTest("run: an incumbent that reports a guard number where the margins
 await asyncTest("run: default with a configuration its margins were not measured with runs provisional, with no guard", async () => {
   const other = { implementation: "default", configuration: "extraction-default", model: "claude-opus-4-7" };
   const fttOther = { ...DEFAULT_OTHER, ...FTT_TARGET, devTypedF1: 0.4648, devFoundF1: 0.5343 };
-  const incumbent = { ...FTT_INCUMBENT, ...other, recordedModels: [other.model], otherTargets: [DEFAULT_OTHER, fttOther], otherGuards: [DEFAULT_OTHER_GUARD] };
+  const incumbent = { ...FTT_INCUMBENT, ...other, recordedModels: [other.model], otherTargets: [DEFAULT_OTHER, fttOther, SINGLE_CALL_OTHER], otherGuards: [DEFAULT_OTHER_GUARD] };
   const { result, calls } = await runWorkflow({ implementation: "default", configuration: "extraction-default" }, {
     evaluate: incumbent,
     experiment: (id) => fttCandidate({ ...other, hypothesisId: id }),
-    verify: (id) => passingVerdict({ hypothesisId: id, measuredModel: other.model, recordedModels: [other.model], otherTargets: [{ ...DEFAULT_OTHER }, { ...fttOther }] }),
+    verify: (id) => passingVerdict({ hypothesisId: id, measuredModel: other.model, recordedModels: [other.model], otherTargets: [{ ...DEFAULT_OTHER }, { ...fttOther }, { ...SINGLE_CALL_OTHER }] }),
   });
   assert.equal(result.provisionalMargins, true);
   assert.equal(result.configuration, "extraction-default");
@@ -1334,7 +1343,7 @@ await asyncTest("run: the current-state page is given an accept only when the ac
     assert.ok(unmerged.result.stop.reason.includes("could not be merged"));
     assert.ok(unmerged.result.decisions.some((d) => d.decision === "accept_unmerged"));
   }
-  const none = await runWorkflow(ASKED, { verify: (id) => passingVerdict({ hypothesisId: id, otherTargets: [{ ...DEFAULT_OTHER, devTypedF1: 0.05 }] }) });
+  const none = await runWorkflow(ASKED, { verify: (id) => passingVerdict({ hypothesisId: id, otherTargets: [{ ...DEFAULT_OTHER, devTypedF1: 0.05 }, { ...SINGLE_CALL_OTHER }] }) });
   assert.equal(none.result.status, "no_accept");
   assert.equal(recordRequestOf(none.calls.find((c) => c.step === "record").prompt).accepted_hypothesis, null);
 });
@@ -1342,7 +1351,7 @@ await asyncTest("run: an iteration whose record was not committed stops the loop
   for (const record of [null, { ledgerAppended: 0, committed: false, experimentPage: "", notes: "campaign.py failed" }]) {
     const { result } = await runWorkflow(ASKED, {
       record,
-      verify: (id) => passingVerdict({ hypothesisId: id, otherTargets: [{ ...DEFAULT_OTHER, devTypedF1: 0.05 }] }),
+      verify: (id) => passingVerdict({ hypothesisId: id, otherTargets: [{ ...DEFAULT_OTHER, devTypedF1: 0.05 }, { ...SINGLE_CALL_OTHER }] }),
     });
     assert.equal(result.status, "no_accept");
     assert.ok(result.stop && result.stop.reason.includes("not committed"), JSON.stringify(result.stop));

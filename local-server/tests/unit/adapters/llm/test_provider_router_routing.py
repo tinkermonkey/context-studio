@@ -13,14 +13,18 @@ Tests verify:
   the domain's error for it
 """
 
+import json
 from unittest.mock import Mock, patch
 
 import anthropic as anthropic_sdk
 import httpx
+import httpx2
 import openai as openai_sdk
 import pytest
 
-from adapters.llm.provider_router import LLMProviderRouter
+from adapters.llm.anthropic_provider import AnthropicProvider
+from adapters.llm.provider_router import LLMProviderRouter, _completion_error
+from domain.extraction.llm_calls import failure_fields
 from domain.pipelines.exceptions import (
     LLMProviderError,
     LLMRateLimitError,
@@ -649,3 +653,101 @@ class TestLLMProviderRouterAuthFallback:
         assert str(exc_info.value) == "The anthropic provider has no model claude-opus-4-7"
         assert exc_info.value.__cause__ is error
         assert router._rejected_providers == set()
+
+
+def _stream_with_error_event(error_type: str) -> bytes:
+    """A streamed response that starts, then sends an error event part-way through."""
+    message = {
+        "id": "msg_test",
+        "type": "message",
+        "role": "assistant",
+        "model": "claude-opus-5-5",
+        "content": [],
+        "stop_reason": None,
+        "stop_sequence": None,
+        "usage": {"input_tokens": 10, "output_tokens": 1},
+    }
+    events = [
+        ("message_start", {"type": "message_start", "message": message}),
+        (
+            "content_block_start",
+            {
+                "type": "content_block_start",
+                "index": 0,
+                "content_block": {"type": "text", "text": ""},
+            },
+        ),
+        (
+            "content_block_delta",
+            {
+                "type": "content_block_delta",
+                "index": 0,
+                "delta": {"type": "text_delta", "text": "{"},
+            },
+        ),
+        ("error", {"type": "error", "error": {"type": error_type, "message": "secret detail"}}),
+    ]
+    return "".join(f"event: {e}\ndata: {json.dumps(d)}\n\n" for e, d in events).encode()
+
+
+@pytest.mark.llm
+class TestStreamedErrorEvents:
+    """
+    An error event part-way through a streamed response (a request for more
+    than 20,000 output tokens is streamed) is the provider failing, as the 5xx
+    of a request that does not stream is: LLMProviderError, whose reason a run
+    tells its caller.
+    """
+
+    @staticmethod
+    def router_streaming(error_type: str) -> LLMProviderRouter:
+        def handler(request):
+            return httpx2.Response(
+                200,
+                headers={"content-type": "text/event-stream"},
+                content=_stream_with_error_event(error_type),
+            )
+
+        provider = AnthropicProvider("test-key")
+        provider._client = anthropic_sdk.Anthropic(
+            api_key="test-key",
+            http_client=httpx2.Client(transport=httpx2.MockTransport(handler)),
+            max_retries=0,
+        )
+        router = LLMProviderRouter(openai_api_key="dummy-key")
+        router._providers.clear()
+        router._providers["anthropic"] = provider
+        return router
+
+    @pytest.mark.parametrize("error_type", ["overloaded_error", "api_error", "rate_limit_error"])
+    def test_an_error_event_mid_stream_is_a_provider_failure(self, error_type):
+        router = self.router_streaming(error_type)
+
+        with pytest.raises(LLMProviderError) as exc_info:
+            router.complete("sys", "user", "claude-opus-5-5", max_tokens=64000)
+
+        error = exc_info.value
+        assert not isinstance(error, (LLMRequestRefusedError, LLMRateLimitError))
+        assert str(error) == (
+            f"The anthropic provider failed part-way through its answer: {error_type}"
+        )
+        assert "secret detail" not in str(error)
+        assert isinstance(error.__cause__, anthropic_sdk.APIStatusError)
+        assert error.__cause__.status_code == 200
+        # A run reads it as a provider failure written for its caller
+        assert failure_fields(error)["provider_failed"] is True
+        assert failure_fields(error)["provider_refused"] is False
+
+    def test_an_overloaded_error_type_with_any_status_is_a_provider_failure(self):
+        response = httpx2.Response(418, request=httpx2.Request("POST", "https://x"))
+        error = anthropic_sdk.APIStatusError(
+            "x", response=response, body={"type": "error", "error": {"type": "overloaded_error"}}
+        )
+
+        assert isinstance(_completion_error("anthropic", "m", error), LLMProviderError)
+
+    def test_another_status_error_is_left_as_it_was(self):
+        response = httpx2.Response(418, request=httpx2.Request("POST", "https://x"))
+        error = anthropic_sdk.APIStatusError("x", response=response, body={"error": {"type": "x"}})
+
+        assert _completion_error("anthropic", "m", error) is error

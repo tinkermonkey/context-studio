@@ -73,7 +73,7 @@ Read as one take:
 
 ## Output-token limit
 
-The single call used up to 12,618 output tokens here (arm B, which also listed relationships, up to 28,700). Selection capped a run's output limit at 20,000 because the Anthropic client refuses a request that does not stream above about 21,000. The simplest fix consistent with the selection method: the Anthropic provider now streams any request for more than 20,000 output tokens, and the cap (`MAX_OUTPUT_TOKENS` in `local-server/domain/pipelines/selection.py`) is 64,000, which `extraction-single-call` sets like any configuration's limit. One limit for the run still applies to every call of it, so the relate calls may also use up to 64,000; they used at most 11,808.
+The single call used up to 12,618 output tokens here (arm B, which also listed relationships, up to 28,700). Selection capped a run's output limit at 20,000 because the Anthropic client refuses a request that does not stream above about 21,000. The simplest fix consistent with the selection method: the Anthropic provider now streams any request for more than 20,000 output tokens, and the cap (`MAX_OUTPUT_TOKENS` in `local-server/domain/pipelines/selection.py`) is 64,000, which `extraction-single-call` sets like any configuration's limit. The relate calls keep `find_then_type`'s own limit, 16,000 (or the run's when lower; `RELATE_MAX_TOKENS` in `single_call.py`); in this recording, made while they were still given 64,000, they used at most 11,808. The cassette key does not include the output limit, so the recording replays unchanged. A single call cut off at its limit is not asked again (it would be cut off the same way): its section fails, saying so.
 
 ## Limits
 
@@ -82,6 +82,7 @@ The single call used up to 12,618 output tokens here (arm B, which also listed r
 - Three documents; per-document results differ a lot.
 - Long documents (several sections) are covered only by unit tests with a fake LLM.
 - Relationship recall is scored without relationship precision.
+- The single call rates none of its individuals, so their typing triples carry no confidence (`None`). A confidence threshold (applying a run without a selection, the recognition preview's default 0.5) does not hold them to it: no score is not a score of 0 (`is_below_confidence` in `local-server/domain/extraction/services.py`). Their relationships, from the relate step, are rated as before.
 
 ## Verdict
 

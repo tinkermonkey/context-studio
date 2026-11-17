@@ -22,7 +22,11 @@ chunk, without a passage.
 The single call gives no confidence: its typing triples carry none.
 
 The call asks for the configuration's ``effort`` ("high" for
-extraction-single-call); the relate calls for the model's default.
+extraction-single-call); the relate calls for the model's default. The run's
+output limit (64,000 for extraction-single-call) is the single call's; a relate
+call may produce at most RELATE_MAX_TOKENS (find-then-type's own limit), or the
+run's when that is lower. An answer of the single call cut off at the output
+limit is not asked for again: its section fails, saying so.
 
 Failures keep find-then-type's rules: a section whose call failed makes each
 of its chunks a failed chunk; the run fails when every section's call failed,
@@ -57,6 +61,10 @@ from domain.pipelines.individual_extraction.orchestrator import (
 # characters so leaves the answer about twice the room it was seen to need.
 SECTION_CHARS = 60000
 
+# The most output tokens a relate call may produce: what extraction-find-then-type
+# gives its relate calls. The recorded relate calls wrote at most 11,808.
+RELATE_MAX_TOKENS = 16000
+
 
 class SingleCallOrchestrator(FindThenTypeOrchestrator):
     """
@@ -72,6 +80,12 @@ class SingleCallOrchestrator(FindThenTypeOrchestrator):
     """
 
     STAGE_PROMPTS = SINGLE_CALL_STAGES
+
+    def _relate_max_tokens(self, state: IndividualExtractionState) -> int | None:
+        """RELATE_MAX_TOKENS, or the run's limit when that is lower."""
+        if state.max_tokens is None:
+            return RELATE_MAX_TOKENS
+        return min(state.max_tokens, RELATE_MAX_TOKENS)
 
     async def _individuals(
         self,

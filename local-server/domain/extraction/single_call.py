@@ -120,6 +120,9 @@ def find_individuals(
             request,
             lambda content: parse_individuals(content, text, class_refs),
             spent,
+            # An answer cut off at the output limit would be cut off again, at
+            # up to 64,000 Opus output tokens a time: the section fails at once
+            stop_when_cut_off=True,
         )
     except Exception as exc:
         _logger.error("Finding individuals failed: %s", exc, exc_info=exc)

@@ -78,7 +78,8 @@ def get_single_call_config() -> dict:
     what the call that finds the individuals asks for; the relate calls ask
     for the model's default. ``max_tokens`` (64,000) is for that call, which
     thinks and then lists every individual of a whole document: the
-    Anthropic provider streams a request asking for more than 20,000.
+    Anthropic provider streams a request asking for more than 20,000. The
+    relate calls keep find-then-type's 16,000 (single_call.RELATE_MAX_TOKENS).
 
     Returns:
         Configuration dict with LLM settings (Anthropic provider)

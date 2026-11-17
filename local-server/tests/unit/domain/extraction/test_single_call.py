@@ -42,7 +42,10 @@ TEXT = "The Gateway serves requests. Our goal is to keep latency low."
 
 
 class _LLM:
-    """Answers each call with the next of ``answers``, recording the requests."""
+    """
+    Answers each call with the next of ``answers`` (a content, or a content
+    and its finish reason), recording the requests.
+    """
 
     def __init__(self, *answers):
         self.answers = list(answers)
@@ -51,7 +54,9 @@ class _LLM:
 
     def complete(self, **request):
         self.requests.append(request)
-        return LLMResponse(self.answers.pop(0), 100, 50, 1.0, "end_turn", request["model"])
+        answer = self.answers.pop(0)
+        content, finish = answer if isinstance(answer, tuple) else (answer, "end_turn")
+        return LLMResponse(content, 100, 50, 1.0, finish, request["model"])
 
     def forget(self, **request):
         self.forgotten += 1
@@ -134,6 +139,31 @@ class TestTheCall:
         assert result.individuals == []
         assert result.incomplete_response
         assert "find_individuals" in result.failure_reason
+
+    @pytest.mark.parametrize("finish", ["max_tokens", "length"])
+    def test_an_answer_cut_off_at_the_output_limit_is_not_asked_for_again(self, finish):
+        cut = '{"individuals": [{"title": "Gateway", "class": "applica'
+        llm = _LLM((cut, finish), _answer(("Gateway", "application.component", "Gateway")))
+
+        result = _call(llm, max_tokens=64000)
+
+        assert len(llm.requests) == 1, "the same request would be cut off the same way"
+        assert llm.forgotten == 1
+        assert result.individuals == []
+        assert result.incomplete_response and not result.provider_failed
+        assert result.failure_reason == (
+            "The LLM response for find_individuals was cut off at the output limit (64000"
+            " tokens), so it is not asked for again: raise the configuration's max_tokens, or"
+            " the text is too long for one call"
+        )
+        assert result.metadata["tokens_used"] == 150, "what the cut-off answer cost is counted"
+
+    def test_a_cut_off_answer_that_still_parses_is_used(self):
+        llm = _LLM((_answer(("Gateway", "application.component", "Gateway")), "max_tokens"))
+
+        result = _call(llm)
+
+        assert [i.mention.name for i in result.individuals] == ["Gateway"]
 
 
 class TestReadingTheAnswer:

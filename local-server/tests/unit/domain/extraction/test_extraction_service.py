@@ -2400,6 +2400,23 @@ class TestPreviewRecognition:
         assert len(hits) == 1
         assert hits[0].mention_label == "Bob"
 
+    def test_a_triple_that_gives_no_confidence_is_previewed_at_the_default_threshold(
+        self, service_with_recognizer
+    ):
+        """single_call's typing triples carry no confidence: none is skipped for that."""
+        service = service_with_recognizer["service"]
+        unrated = self._make_triple("Carol")
+        unrated["confidence"] = None
+        missing = self._make_triple("Dave")
+        del missing["confidence"]
+        low = self._make_triple("Eve")
+        low["confidence"] = 0.2
+
+        result = service.preview_recognition([unrated, missing, low])
+
+        assert sorted(hit.mention_label for hit in result.hits) == ["Carol", "Dave"]
+        assert result.skipped_count == 1
+
     def test_preview_recognition_passes_recognition_threshold(self, service_with_recognizer):
         """recognition_threshold is passed to recognizer."""
         service = service_with_recognizer["service"]

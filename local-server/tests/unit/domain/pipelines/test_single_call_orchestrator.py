@@ -30,6 +30,7 @@ from domain.pipelines.exceptions import ExtractionFailedError, PipelineExecution
 from domain.pipelines.individual_extraction.find_then_type import FindThenTypeOrchestrator
 from domain.pipelines.individual_extraction.orchestrator import IndividualExtractionState
 from domain.pipelines.individual_extraction.single_call import (
+    RELATE_MAX_TOKENS,
     SECTION_CHARS,
     SingleCallOrchestrator,
     _placements,
@@ -86,6 +87,7 @@ class _FakeExtraction:
         self.read: list[str] = []
         self.related: list[list[str]] = []
         self.calls: list[dict] = []
+        self.relate_limits: list = []
 
     def find_individuals(
         self,
@@ -132,6 +134,7 @@ class _FakeExtraction:
     ):
         names = list(dict.fromkeys(t["subject"]["label"] for t in typing_triples))
         self.related.append(names)
+        self.relate_limits.append(max_tokens)
         for triple in typing_triples:
             provenance = triple["provenance"]
             if provenance["start"] is not None:
@@ -239,6 +242,17 @@ class TestSingleCallFlow:
 
         assert extraction.calls[0]["effort"] == "high"
         assert extraction.calls[0]["max_tokens"] == 64000
+        # The relate calls keep find-then-type's own limit
+        assert set(extraction.relate_limits) == {RELATE_MAX_TOKENS} == {16000}
+
+    @pytest.mark.parametrize("limit, related", [(8000, 8000), (None, 16000)])
+    async def test_a_relate_call_gets_the_run_s_limit_when_it_is_lower(self, limit, related):
+        extraction = _FakeExtraction()
+
+        await _run(extraction, source_id="s", **({"max_tokens": limit} if limit else {}))
+
+        assert extraction.calls[0]["max_tokens"] == limit
+        assert set(extraction.relate_limits) == {related}
 
     async def test_with_no_effort_configured_none_is_asked_for(self):
         extraction = _FakeExtraction()

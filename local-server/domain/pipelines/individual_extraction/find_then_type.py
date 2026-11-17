@@ -406,7 +406,7 @@ class FindThenTypeOrchestrator(IndividualExtractionOrchestrator):
                     model=state.model,
                     temperature=state.temperature,
                     stage_prompts=self._stage_prompts,
-                    max_tokens=state.max_tokens,
+                    max_tokens=self._relate_max_tokens(state),
                 )
                 spent.append(result)
                 warnings.extend(where(index) + w for w in result.warnings)
@@ -477,6 +477,10 @@ class FindThenTypeOrchestrator(IndividualExtractionOrchestrator):
             failures,
             spent,
         )
+
+    def _relate_max_tokens(self, state: IndividualExtractionState) -> int | None:
+        """The most output tokens a relate call may produce: the run's limit."""
+        return state.max_tokens
 
     async def _type(
         self,

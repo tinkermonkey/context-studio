@@ -94,6 +94,7 @@ def complete_parsed(
     request: Mapping[str, Any],
     parse: Callable[[str], _T],
     spent: TokenTally,
+    stop_when_cut_off: bool = False,
 ) -> _T:
     """
     Ask the LLM for a stage's answer, asking again when it got no whole answer:
@@ -118,6 +119,11 @@ def complete_parsed(
         parse: Reads a response's content; raises IncompleteLLMResponseError
             when it is not the whole answer
         spent: Counts the tokens of every response received, used or not
+        stop_when_cut_off: A response that does not parse because it was cut
+            off at the output limit (finish_reason ``max_tokens`` or
+            ``length``) is not asked for again: the same request would be cut
+            off the same way, at the same cost. For a call whose answer can be
+            long and expensive (single_call's find_individuals)
 
     Returns:
         What ``parse`` made of the first whole answer
@@ -148,6 +154,16 @@ def complete_parsed(
         try:
             return parse(response.content)
         except IncompleteLLMResponseError as exc:
+            if stop_when_cut_off and response.finish_reason in _CUT_OFF:
+                llm.forget(**{k: v for k, v in request.items() if k in _FORGET_KEYS})
+                failure = IncompleteLLMResponseError(
+                    f"The LLM response for {stage} was cut off at the output limit"
+                    f" ({request.get('max_tokens')} tokens), so it is not asked for again:"
+                    " raise the configuration's max_tokens, or the text is too long for one"
+                    " call"
+                )
+                failure.__cause__ = exc
+                raise failure
             problem = f"{exc} (finish_reason={response.finish_reason})"
             _logger.warning(
                 "Incomplete LLM response for %s, attempt %d of %d: %s",
@@ -160,6 +176,9 @@ def complete_parsed(
             failures.append(IncompleteLLMResponseError(problem))
     raise no_whole_answer(stage, failures)
 
+
+# The finish reasons of a response cut off at its output limit (Anthropic, OpenAI)
+_CUT_OFF = frozenset({"max_tokens", "length"})
 
 # The arguments of LLMProvider.complete that LLMProvider.forget also takes
 _FORGET_KEYS = frozenset(

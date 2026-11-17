@@ -18,6 +18,7 @@ This adapter implements the LLMProvider port and is used by the Knowledge Extrac
 and LLM Pipeline services.
 """
 
+import re
 from typing import AsyncIterator, Literal, Sequence
 
 import anthropic
@@ -71,7 +72,10 @@ def _completion_error(name: str, model: str, error: Exception) -> Exception:
       or the rate limit;
     - a server error, a timeout or a failed connection is a plain
       LLMProviderError, neither a refusal nor one to ask again: the SDK has
-      already retried it.
+      already retried it;
+    - so is an error event part-way through a streamed response
+      (_streamed_error_type), which the SDK does not retry: asking again
+      would pay for the whole answer again.
 
     Any other error is returned as it is.
     """
@@ -86,11 +90,43 @@ def _completion_error(name: str, model: str, error: Exception) -> Exception:
         return LLMRateLimitError(f"The {name} provider's rate limit was exceeded")
     if isinstance(status, int) and (status == 408 or status >= 500):
         return LLMProviderError(f"The {name} provider answered with a server error: {status}")
+    streamed = _streamed_error_type(error)
+    if streamed is not None:
+        return LLMProviderError(
+            f"The {name} provider failed part-way through its answer: {streamed}"
+        )
     if isinstance(error, _TIMEOUT_ERRORS):
         return LLMProviderError(f"The {name} provider did not answer in time")
     if isinstance(error, _CONNECTION_ERRORS):
         return LLMProviderError(f"The {name} provider could not be reached")
     return error
+
+
+# The error types a provider reports for a failure of its own, whatever the
+# HTTP status the error came with
+_SERVER_ERROR_TYPES = ("overloaded_error", "api_error")
+_ERROR_TYPE = re.compile(r"^[a-z_]{1,40}$")
+
+
+def _streamed_error_type(error: Exception) -> str | None:
+    """
+    The error type of a provider failure that came as an Anthropic error event
+    part-way through a streamed response (an `overloaded_error` after
+    `message_start`, say). The SDK raises it as an APIStatusError with the
+    stream's status, 200, which no status check above maps; the same failure
+    of a request that does not stream comes as a 5xx. None for any other
+    error. Only the type is returned, a word from the API's fixed list, never
+    the error's text.
+    """
+    if not isinstance(error, anthropic.APIStatusError):
+        return None
+    body = getattr(error, "body", None)
+    detail = body.get("error") if isinstance(body, dict) else None
+    kind = detail.get("type") if isinstance(detail, dict) else None
+    kind = kind if isinstance(kind, str) and _ERROR_TYPE.match(kind) else None
+    if error.status_code == 200 or kind in _SERVER_ERROR_TYPES:
+        return kind or "error"
+    return None
 
 
 # Errors meaning "the provider could not be reached or did not answer in time":
