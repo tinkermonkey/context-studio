@@ -194,6 +194,13 @@ class ChangeProposalRepository(Protocol):
         """
         ...
 
+    def set_decision_comparison(self, operation_id: str, comparison: dict[str, Any]) -> None:
+        """
+        Record a comparison on the operation's standing decision (one decided
+        before, then compared). Raises ValueError if it has none.
+        """
+        ...
+
     def list_decisions(
         self, filters: DecisionFilter, limit: Optional[int] = None, offset: int = 0
     ) -> list[ProposalDecision]:

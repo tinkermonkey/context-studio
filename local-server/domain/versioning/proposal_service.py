@@ -73,6 +73,7 @@ from domain.versioning.gold import (
     DECIDED_BY_POLICY,
     DECIDED_BY_USER,
     DecisionFilter,
+    DecisionKind,
     ProposalDecision,
     by_operation,
     decision_of,
@@ -3091,7 +3092,11 @@ class ProposalService:
         if not _is_ref(value):
             return value
         source = refs.get(value[1:])
-        if source is not None and _closed_as_duplicate(source):
+        if (
+            source is not None
+            and _closed_as_duplicate(source)
+            and self._repo.get_individual(source.result_entity_id) is not None  # type: ignore[arg-type]
+        ):
             # Another proposal's copy of the same element landed: point there.
             return source.result_entity_id
         if source is None or source.status is not OperationStatus.APPLIED:
@@ -3265,6 +3270,10 @@ class ProposalService:
                     OperationStatus.FAILED,
                 ):
                     landing.setdefault(decision.land.proposal_id, []).append(decision)
+            landing_ids = {
+                pid: {d.land.operation_id for d in landed}  # type: ignore[union-attr]
+                for pid, landed in landing.items()
+            }
             for proposal_id, landed in landing.items():
                 ids = [d.land.operation_id for d in landed]  # type: ignore[union-attr]
                 comparisons = {
@@ -3292,6 +3301,17 @@ class ProposalService:
                     None,
                     comparisons,
                 )
+            for decision in decisions:
+                land = decision.land
+                reused = land is not None and land.operation_id not in landing_ids.get(
+                    land.proposal_id, set()
+                )
+                if reused and land.operation_id in decision.comparisons:  # type: ignore[union-attr]
+                    # Applied before it was compared: its decision records the comparison too.
+                    self._proposals.set_decision_comparison(
+                        land.operation_id,  # type: ignore[union-attr]
+                        decision.comparisons[land.operation_id],  # type: ignore[union-attr]
+                    )
             return [self._close_copies(d, proposals, decided_by) for d in decisions]
 
     @staticmethod
@@ -3487,6 +3507,10 @@ class ProposalService:
         relationships pointed at that individual are undone with their own
         operations.
 
+        Another proposal's copies closed as duplicates of what this one landed
+        (`decide_copies`) are reopened: pending again, their decisions
+        superseded, under every involved proposal's lock (taken in id order).
+
         A proposal its client has landed on a mirrored taxonomy can't be
         reverted here: the source already holds it, so the client proposes the
         reversal instead. Unlanded, it can (that is how it is abandoned).
@@ -3497,13 +3521,20 @@ class ProposalService:
             RevertConflictError, RevertRefusedError: From RevertService when the
                 run can't be undone; nothing is changed and the status is left as it was
         """
-        with self._lock(proposal_id):
+        copies = self._duplicates_of(self._get(proposal_id))
+        with ExitStack() as stack:
+            for locked in sorted({proposal_id, *copies}):
+                stack.enter_context(self._lock(locked))
             proposal = self._get(proposal_id)
             if proposal.landed is not None and self._mirrored(proposal.taxonomy_id):
                 raise ChangeProposalStateError(
                     f"Change proposal {proposal_id} has landed in the taxonomy's source;"
                     " propose the reversal from the source instead of reverting it here"
                 )
+            # Only those locked: a copy closed since the first read waits for its own revert.
+            copies = {
+                pid: ids for pid, ids in self._duplicates_of(proposal).items() if pid in copies
+            }
 
             def close_proposal(_result: RevertResult) -> None:
                 # Inside the revert's transaction: the status commits with the revert.
@@ -3519,8 +3550,71 @@ class ProposalService:
                 if self._sources is not None:
                     self._sources.delete_for_proposal(proposal.id)
                 self._proposals.set_status(proposal.id, ProposalStatus.REVERTED)
+                self._reopen_duplicates(copies, reverted_by)
 
             return self._revert.revert_with_summary(proposal.id, on_reverted=close_proposal)
+
+    def _duplicates_of(self, proposal: ChangeProposal) -> dict[str, list[str]]:
+        """
+        Other proposals' operations closed as duplicates of what this one landed
+        (decide_copies): their result is an individual it created, or their
+        decision was taken comparing with it. Proposal id -> operation ids.
+        """
+        created = {
+            o.result_entity_id
+            for o in proposal.operations
+            if o.status is OperationStatus.APPLIED
+            and o.op is OperationType.CREATE
+            and o.kind is K.INDIVIDUAL
+            and not o.matched
+        }
+        found: dict[str, list[str]] = {}
+        loaded: dict[str, ChangeProposal | None] = {}
+        for decision in self._proposals.list_decisions(
+            DecisionFilter(taxonomy_id=proposal.taxonomy_id, decision=DecisionKind.REJECTED)
+        ):
+            if decision.proposal_id == proposal.id or decision.operation_id in found.get(
+                decision.proposal_id, ()
+            ):
+                continue
+            compared = (decision.comparison or {}).get("with_proposal_id") == proposal.id
+            if not compared and decision.result_entity_id not in created:
+                continue
+            if decision.proposal_id not in loaded:
+                loaded[decision.proposal_id] = self._proposals.get(decision.proposal_id)
+            other = loaded[decision.proposal_id]
+            operation = next(
+                (o for o in (other.operations if other else ()) if o.id == decision.operation_id),
+                None,
+            )
+            if operation is not None and _closed_as_duplicate(operation):
+                found.setdefault(decision.proposal_id, []).append(operation.id)
+        return found
+
+    def _reopen_duplicates(self, copies: Mapping[str, list[str]], reverted_by: str) -> None:
+        """
+        Reopen copies closed as duplicates of what a revert undid: pending
+        again, their decisions superseded, their proposal open.
+        """
+        now = datetime.now(timezone.utc)
+        for proposal_id, operation_ids in copies.items():
+            proposal = self._get(proposal_id)
+            reopened = [
+                o for o in proposal.operations if o.id in operation_ids and _closed_as_duplicate(o)
+            ]
+            for operation in reopened:
+                operation.status = OperationStatus.PENDING
+                operation.result_entity_id = None
+                operation.reason = None
+                operation.reason_code = None
+            if not reopened:
+                continue
+            self._proposals.save_operations(proposal_id, reopened)
+            self._proposals.supersede_operation_decisions(
+                proposal_id, [o.id for o in reopened], now, reverted_by
+            )
+            if proposal.status is ProposalStatus.DONE:
+                self._proposals.set_status(proposal_id, ProposalStatus.OPEN)
 
     # ------------------------------------------------------------------ landing
 
@@ -3780,7 +3874,10 @@ class ProposalService:
         create = creates.get(end[1:])
         if create is None:
             return None
-        if create.status is OperationStatus.APPLIED and create.result_entity_id:
+        if (
+            create.status is OperationStatus.APPLIED or _closed_as_duplicate(create)
+        ) and create.result_entity_id:
+            # A copy closed as a duplicate resolves to the individual it landed as.
             return fit.end_class_ids(create.result_entity_id)
         class_ids = create.fields.get("class_ids") if create.kind is K.INDIVIDUAL else None
         if not isinstance(class_ids, list) or not class_ids:

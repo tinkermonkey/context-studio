@@ -22,6 +22,7 @@ from adapters.persistence.sqlite.models import Base, ProposalDecisionRecord
 from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
 from adapters.persistence.sqlite.proposal_repo import SQLiteChangeProposalRepository
 from adapters.persistence.sqlite.transaction import SharedSessionFactory, SqliteTransactionScope
+from domain.ontology.exceptions import EntityNotFoundError
 from domain.ontology.services import OntologyService
 from domain.pipelines.proposal_comparison import (
     PairDecision,
@@ -181,3 +182,40 @@ def test_reverting_the_landed_copy_conflicts_with_the_others_relationship(parts,
         service.revert(a.id)
 
     assert service.get(a.id).operations[0].status is OperationStatus.APPLIED
+
+
+def test_reverting_the_landed_copy_reopens_the_other_and_its_relationship_resolves_again(
+    parts, house
+):
+    ontology, service, comparisons, _ = parts
+    a = extraction(service, house, house["room"], "single_call")
+    b = extraction(service, house, house["room"], "find_then_type")
+    comparisons.decide(
+        a.id,
+        b.id,
+        PairDecision(
+            Verdict.KEEP, a_operation_id=a.operations[0].id, b_operation_id=b.operations[0].id
+        ),
+    )
+    landed = service.get(a.id).operations[0].result_entity_id
+
+    service.revert(a.id)
+
+    reopened = service.get(b.id).operations[0]
+    assert reopened.status is OperationStatus.PENDING and reopened.result_entity_id is None
+    with pytest.raises(EntityNotFoundError):
+        ontology.get_individual(landed)
+    decisions = {
+        d.operation_id: d
+        for d in service.list_decisions(
+            DecisionFilter(taxonomy_id=house["taxonomy"], include_superseded=True)
+        )
+    }
+    assert decisions[reopened.id].superseded_at is not None
+    assert reopened.id not in {
+        d.operation_id
+        for d in service.list_decisions(DecisionFilter(taxonomy_id=house["taxonomy"]))
+    }
+
+    applied = service.apply(b.id, [reopened.id, b.operations[1].id]).operations
+    assert [o.status for o in applied] == [OperationStatus.APPLIED, OperationStatus.APPLIED]

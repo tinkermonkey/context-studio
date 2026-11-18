@@ -1,8 +1,8 @@
 """
 Comparing two pipelines' proposals for the same source.
 
-Two individual extractions of one source (two implementations, or two
-configurations) propose many of the same individuals. Their individual creates
+Two individual extractions of one source by two implementations propose many
+of the same individuals. Their individual creates
 are paired by the merge key of their titles (`individual_key`) into four
 groups: both with the same classes, both with different classes, only in A,
 only in B. A pair is decided once for both proposals: the chosen copy lands,
@@ -104,6 +104,10 @@ class InvalidPairDecisionError(ValueError):
 
 class SampleUncheckedError(Exception):
     """The rest of the agreements can't be accepted while a sample pair is open."""
+
+
+class SampleTooSmallError(ValueError):
+    """The rest of the agreements can't be accepted on a sample smaller than the minimum."""
 
 
 @dataclass(frozen=True)
@@ -217,7 +221,8 @@ def sample_ids(pairs: Sequence[Pair], a_id: str, b_id: str, sample_size: int) ->
     on every read, and a larger one contains a smaller one.
     """
     same = [p.pair_id for p in pairs if p.group is ComparisonGroup.SAME_CLASS]
-    random.Random(f"{a_id}:{b_id}").shuffle(same)
+    # Seeded with the ids sorted: comparing B with A draws the same sample.
+    random.Random(":".join(sorted((a_id, b_id)))).shuffle(same)
     return same[: max(0, min(len(same), sample_size))]
 
 
@@ -230,6 +235,11 @@ def comparability_problem(a: ChangeProposal, b: ChangeProposal) -> str | None:
         pipeline = metadata.get("pipeline") or (metadata.get(ORIGIN) or {}).get("pipeline_type")
         if not proposal.extracted_from_source or pipeline != INDIVIDUAL_EXTRACTION:
             return f"Proposal {proposal.id} is not an individual extraction from a source"
+        if proposal.superseded_by_extraction:
+            return (
+                f"Proposal {proposal.id} was superseded by a newer run of the same"
+                " implementation; compare the newer one"
+            )
     if a.taxonomy_id != b.taxonomy_id:
         return "The proposals are about different taxonomies"
     if a.dataset_id != b.dataset_id:
@@ -262,11 +272,26 @@ class Comparison:
     def sample_stats(self) -> SampleStats:
         in_sample = [p for p in self.pairs if p.pair_id in set(self.sample)]
         checked = [p for p in in_sample if p.state is PairState.DECIDED]
-        return SampleStats(
-            len(in_sample), len(checked), sum(1 for p in checked if self._changed(p))
-        )
+        return SampleStats(len(in_sample), len(checked), sum(1 for p in checked if self.changed(p)))
 
-    def _changed(self, pair: Pair) -> bool:
+    def checked_sample(self) -> list[Pair]:
+        """
+        The decided pairs a decision recorded as checked in a sample of these
+        two proposals (comparison.sample), whatever the sample's size now.
+        """
+        found = []
+        for pair in self.pairs:
+            if pair.state is not PairState.DECIDED:
+                continue
+            for operation, other in ((pair.a, self.b), (pair.b, self.a)):
+                decision = self.decisions.get(operation.id) if operation else None
+                record = (decision.comparison if decision else None) or {}
+                if record.get("sample") and record.get("with_proposal_id") == other.id:
+                    found.append(pair)
+                    break
+        return found
+
+    def changed(self, pair: Pair) -> bool:
         """Whether deciding a (decided) pair changed what the two pipelines agreed on."""
         for operation in pair.operations:
             decision = self.decisions.get(operation.id)
@@ -429,11 +454,14 @@ class ProposalComparisonService:
         """
         Decide a pair once for both proposals.
 
-        keep lands A's copy (or the only one given), a_class lands A's and
-        b_class B's, with its own classes; the other copy closes as a
-        duplicate of it. not_element rejects every copy given with the
-        reason_code. match_entity_id applies the landing copy as that near
-        match. Both copies' decisions record the comparison.
+        A decision names both copies of the pair; one alone only when the
+        pair has one, or its other copy is already decided (its decision then
+        names that copy). keep lands A's copy (or the only one given),
+        a_class lands A's and b_class B's, with its own classes; the other copy
+        closes as a duplicate of it. not_element rejects every copy given with
+        the reason_code. match_entity_id applies the landing copy as that near
+        match. Each copy's decision records the comparison, its verdict
+        comparing its proposed classes with what landed.
 
         Raises:
             ChangeProposalNotFoundError, ProposalsNotComparableError: As `compare`
@@ -444,6 +472,15 @@ class ProposalComparisonService:
         comparison = self.compare(a_id, b_id, sample_size)
         _check_standing(comparison)
         pair = comparison.pair(decision.a_operation_id, decision.b_operation_id)
+        for side, given, copy in (
+            ("A", decision.a_operation_id, pair.a),
+            ("B", decision.b_operation_id, pair.b),
+        ):
+            if copy is not None and not given and not copy.decided:
+                # Deciding one copy alone would land the element twice.
+                raise InvalidPairDecisionError(
+                    f"Name both copies of the pair: {side}'s is still undecided"
+                )
         a = pair.a if decision.a_operation_id else None
         b = pair.b if decision.b_operation_id else None
         copy_decision = self._copy_decision(comparison, pair, a, b, decision)
@@ -473,16 +510,15 @@ class ProposalComparisonService:
         if verdict is Verdict.NOT_ELEMENT and decision.match_entity_id is not None:
             raise InvalidPairDecisionError("A match_entity_id is only for an element that lands")
         sampled = pair.pair_id in comparison.sample
-        records = _records(comparison, a, b, verdict, sampled, None)
         if verdict is Verdict.NOT_ELEMENT:
             copies = [o for o in (a, b) if o is not None]
             return CopyDecision(
                 close=tuple(_ref(comparison, o) for o in copies),
                 reason_code=RejectionReason(decision.reason_code or RejectionReason.OTHER),
                 review_ms=decision.review_ms,
-                comparisons=records,
+                comparisons=_records(comparison, pair, a, b, None, sampled, None),
             )
-        land = b if verdict is Verdict.B_CLASS or a is None else a
+        land: ProposedOperation = b if verdict is Verdict.B_CLASS or a is None else a  # type: ignore[assignment]
         other = a if land is b else b
         alternative = None
         if decision.match_entity_id is not None:
@@ -494,13 +530,29 @@ class ProposalComparisonService:
                 "kind": AlternativeKind.EXISTING.value,
                 "entity_id": decision.match_entity_id,
             }
+        landed = self._landed_classes(land, decision.match_entity_id)
         return CopyDecision(
             land=_ref(comparison, land),
             close=(_ref(comparison, other),) if other is not None else (),
             chosen_alternative=alternative,
             review_ms=decision.review_ms,
-            comparisons=records,
+            comparisons=_records(comparison, pair, a, b, landed, sampled, None),
         )
+
+    def _landed_classes(
+        self, land: ProposedOperation, match_entity_id: str | None
+    ) -> frozenset[str]:
+        """
+        The classes the element lands with: the near match's it is applied as,
+        the individual it already made (as edited), or its own as proposed.
+        """
+        entity_id = match_entity_id or (
+            land.result_entity_id if land.status is OperationStatus.APPLIED else None
+        )
+        individual = self._repo.get_individual(entity_id) if entity_id else None
+        if individual is not None:
+            return frozenset(individual.class_ids)
+        return frozenset((land.applied_fields or land.fields).get("class_ids") or ())
 
     def accept_rest(
         self, a_id: str, b_id: str, sample_size: int = DEFAULT_SAMPLE_SIZE
@@ -509,16 +561,27 @@ class ProposalComparisonService:
         Accept every same-class pair outside the sample whose two copies are
         both pending: A's copy lands and B's closes as its duplicate. A pair
         whose copy lists near matches, or cites no passage, is left for a
-        person (skipped). Each decision records the sample's size and how many
-        of it were changed. Calling it again changes nothing more.
+        person (skipped). The sample must be at least the default size (or
+        every agreement, when fewer), and every pair in it decided. Each
+        decision records how many sample pairs were actually checked and how
+        many of those were changed (from their decisions' comparison records,
+        not the sample_size asked). Calling it again changes nothing more.
 
         Raises:
             ChangeProposalNotFoundError, ProposalsNotComparableError: As `compare`
+            SampleTooSmallError: If sample_size is below the minimum
             SampleUncheckedError: While a sample pair is not decided
             ChangeProposalStateError: If a proposal is reverted or superseded
         """
         comparison = self.compare(a_id, b_id, sample_size)
         _check_standing(comparison)
+        agreements = sum(1 for p in comparison.pairs if p.group is ComparisonGroup.SAME_CLASS)
+        minimum = min(DEFAULT_SAMPLE_SIZE, agreements)
+        if sample_size < minimum:
+            raise SampleTooSmallError(
+                f"Check at least {minimum} of the {agreements} agreements before accepting the"
+                f" rest (sample_size {sample_size})"
+            )
         stats = comparison.sample_stats
         unchecked = [
             p.pair_id
@@ -529,7 +592,12 @@ class ProposalComparisonService:
             raise SampleUncheckedError(
                 f"{len(unchecked)} of the {stats.size} sample pairs are not decided yet"
             )
-        bulk = {"sample_size": stats.size, "sample_changed": stats.changed}
+        # What was actually checked, whatever sample_size this call names.
+        checked = comparison.checked_sample()
+        bulk = {
+            "sample_size": len(checked),
+            "sample_changed": sum(1 for p in checked if comparison.changed(p)),
+        }
         decisions: list[tuple[str, CopyDecision]] = []
         skipped: list[tuple[str, str]] = []
         for pair in comparison.pairs:
@@ -545,7 +613,9 @@ class ProposalComparisonService:
             if any(comparison_lacks_passage(comparison, o) for o in pair.operations):
                 skipped.append((pair.pair_id, "no_passage"))
                 continue
-            records = _records(comparison, pair.a, pair.b, Verdict.KEEP, False, bulk)
+            records = _records(
+                comparison, pair, pair.a, pair.b, _classes(pair.a), False, bulk  # type: ignore[arg-type]
+            )
             decisions.append(
                 (
                     pair.pair_id,
@@ -570,16 +640,12 @@ class ProposalComparisonService:
 
 def _check_standing(comparison: Comparison) -> None:
     """
-    Both proposals still take decisions: a pair is decided for both, even when
-    only one of its copies is named.
+    Both proposals still take decisions (a superseded one is not comparable at
+    all): a decision covers both copies of its pair.
     """
     for proposal in (comparison.a, comparison.b):
         if proposal.status is ProposalStatus.REVERTED:
             raise ChangeProposalStateError(f"Change proposal {proposal.id} is reverted")
-        if proposal.superseded_by_extraction:
-            raise ChangeProposalStateError(
-                f"Change proposal {proposal.id} was superseded by a newer extraction"
-            )
 
 
 def _proposal_of(comparison: Comparison, operation: ProposedOperation) -> ChangeProposal:
@@ -598,30 +664,36 @@ def _ref(comparison: Comparison, operation: ProposedOperation) -> OperationRef:
 
 def _records(
     comparison: Comparison,
+    pair: Pair,
     a: ProposedOperation | None,
     b: ProposedOperation | None,
-    verdict: Verdict,
+    landed: frozenset[str] | None,
     sample: bool,
     bulk: Mapping[str, Any] | None,
 ) -> dict[str, dict[str, Any]]:
-    """The comparison record each copy's decision keeps, from its own pipeline's view."""
-    seen = {
-        Verdict.KEEP: (ComparisonVerdict.KEPT, ComparisonVerdict.KEPT),
-        Verdict.A_CLASS: (ComparisonVerdict.KEPT, ComparisonVerdict.CLASS_CHANGED),
-        Verdict.B_CLASS: (ComparisonVerdict.CLASS_CHANGED, ComparisonVerdict.KEPT),
-        Verdict.NOT_ELEMENT: (ComparisonVerdict.NOT_ELEMENT, ComparisonVerdict.NOT_ELEMENT),
-    }[verdict]
+    """
+    The comparison record each decided copy's decision keeps, from its own
+    pipeline's view: kept when what landed has the classes it proposed,
+    class_changed otherwise; not_element without a landing (landed None). The
+    other copy is the pair's, decided now or before.
+    """
     records: dict[str, dict[str, Any]] = {}
-    for operation, other, other_proposal, view in (
-        (a, b, comparison.b, seen[0]),
-        (b, a, comparison.a, seen[1]),
+    for operation, other, other_proposal in (
+        (a, pair.b, comparison.b),
+        (b, pair.a, comparison.a),
     ):
         if operation is None:
             continue
+        if landed is None:
+            verdict = ComparisonVerdict.NOT_ELEMENT
+        elif _classes(operation) == landed:
+            verdict = ComparisonVerdict.KEPT
+        else:
+            verdict = ComparisonVerdict.CLASS_CHANGED
         records[operation.id] = {
             "with_proposal_id": other_proposal.id,
             "with_operation_id": other.id if other is not None else None,
-            "verdict": view.value,
+            "verdict": verdict.value,
             "sample": sample,
             "bulk": dict(bulk) if bulk is not None else None,
         }

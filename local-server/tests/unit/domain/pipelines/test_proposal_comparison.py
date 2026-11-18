@@ -14,11 +14,13 @@ from domain.pipelines.proposal_comparison import (
     PairState,
     ProposalComparisonService,
     ProposalsNotComparableError,
+    SampleTooSmallError,
     SampleUncheckedError,
     Verdict,
     pair_operations,
     sample_ids,
 )
+from domain.pipelines.source_proposals import SUPERSEDED_REASON
 from domain.versioning.exceptions import ChangeProposalStateError
 from domain.versioning.gold import DecisionKind
 from domain.versioning.proposal_service import OperationDraft, ProposalService
@@ -215,7 +217,8 @@ class TestPairing:
         assert sample_ids(pairs, a.id, b.id, 8)[:5] == five
         assert len(set(five)) == 5
         assert sample_ids(pairs, a.id, b.id, 50) and len(sample_ids(pairs, a.id, b.id, 50)) == 20
-        assert sample_ids(pairs, b.id, a.id, 5) != five or len(pairs) < 2
+        # Comparing B with A draws the same sample
+        assert sample_ids(pairs, b.id, a.id, 5) == five
 
 
 # ---------------------------------------------------------------- comparable
@@ -503,10 +506,11 @@ class TestVerdicts:
         ("verdict", "sides", "extra", "message"),
         [
             ("keep", "ab", {}, "different classes"),
-            ("a_class", "a", {}, "needs both"),
-            ("keep", "a", {"reason_code": RejectionReason.OTHER}, "only for not_element"),
-            ("keep", "a", {"match_entity_id": "nope"}, "not a near match"),
-            ("not_element", "a", {"match_entity_id": "nope"}, "only for an element"),
+            ("a_class", "a", {}, "Name both copies"),
+            ("keep", "b", {}, "Name both copies"),
+            ("a_class", "ab", {"reason_code": RejectionReason.OTHER}, "only for not_element"),
+            ("b_class", "ab", {"match_entity_id": "nope"}, "not a near match"),
+            ("not_element", "ab", {"match_entity_id": "nope"}, "only for an element"),
             ("keep", "", {}, "Name the A or the B"),
         ],
     )
@@ -598,45 +602,70 @@ class TestRefFollowsTheDuplicate:
 # ---------------------------------------------------------------- accept the rest
 
 
+def rooms(graph, count, start=1):
+    return [create(n, f"Room {n}", graph["room"]) for n in range(start, start + count)]
+
+
+def decide_sample(comparisons, a, b, sample_size=10, not_element=0):
+    """Decide every pair in the sample: keep, the first not_element ones rejected."""
+    comparison = comparisons.compare(a.id, b.id, sample_size)
+    sample = [p for p in comparison.pairs if p.pair_id in comparison.sample]
+    for n, pair in enumerate(sample):
+        if n < not_element:
+            decide(
+                comparisons,
+                a,
+                b,
+                "not_element",
+                pair.a,
+                pair.b,
+                reason_code=RejectionReason.TOO_GENERIC,
+            )
+        else:
+            decide(comparisons, a, b, "keep", pair.a, pair.b)
+    return comparison, sample
+
+
 class TestAcceptTheRest:
-    def setup_pairs(self, service, graph, extra_a=(), extra_b=()):
-        drafts = [create(n, f"Room {n}", graph["room"]) for n in range(1, 7)]
-        return two(service, graph, drafts + list(extra_a), drafts + list(extra_b))
-
     def test_refused_while_a_sample_pair_is_open(self, service, graph, comparisons):
-        a, b = self.setup_pairs(service, graph)
+        a, b = two(service, graph, rooms(graph, 12), rooms(graph, 12))
 
-        with pytest.raises(SampleUncheckedError, match="2 of the 2 sample pairs"):
-            comparisons.accept_rest(a.id, b.id, sample_size=2)
+        with pytest.raises(SampleUncheckedError, match="10 of the 10 sample pairs"):
+            comparisons.accept_rest(a.id, b.id)
 
-    def test_lands_the_rest_skips_what_a_person_must_see_and_records_the_sample(
+    @pytest.mark.parametrize(("agreements", "too_small"), [(12, 9), (4, 3), (12, 0)])
+    def test_a_sample_below_the_minimum_is_refused(
+        self, service, graph, comparisons, agreements, too_small
+    ):
+        a, b = two(service, graph, rooms(graph, agreements), rooms(graph, agreements))
+
+        with pytest.raises(SampleTooSmallError, match="Check at least"):
+            comparisons.accept_rest(a.id, b.id, sample_size=too_small)
+
+    def test_fewer_agreements_than_the_minimum_are_all_the_sample(
+        self, service, graph, comparisons
+    ):
+        a, b = two(service, graph, rooms(graph, 3), rooms(graph, 3))
+        decide_sample(comparisons, a, b, sample_size=3)
+
+        result = comparisons.accept_rest(a.id, b.id, sample_size=3)
+
+        assert (result.landed, result.skipped) == (0, [])
+        assert (result.sample.size, result.sample.checked) == (3, 3)
+
+    def test_lands_the_rest_skips_what_a_person_must_see_and_records_the_check(
         self, service, graph, comparisons, proposals
     ):
         match = {"kind": "existing", "entity_id": graph["den"], "similarity": 0.9}
-        a, b = self.setup_pairs(
-            service,
-            graph,
-            extra_a=[
-                create(7, "Nook", graph["room"], alternatives=[match]),
-                create(8, "Attic", graph["room"], evidence=False),
-            ],
-            extra_b=[create(7, "Nook", graph["room"]), create(8, "Attic", graph["room"])],
-        )
-        comparison = comparisons.compare(a.id, b.id, sample_size=2)
-        sample = [p for p in comparison.pairs if p.pair_id in comparison.sample]
-        assert len(sample) == 2
-        decide(comparisons, a, b, "keep", sample[0].a, sample[0].b)
-        decide(
-            comparisons,
-            a,
-            b,
-            "not_element",
-            sample[1].a,
-            sample[1].b,
-            reason_code=RejectionReason.TOO_GENERIC,
-        )
+        extra_a = [
+            create(13, "Nook", graph["room"], alternatives=[match]),
+            create(14, "Attic", graph["room"], evidence=False),
+        ]
+        extra_b = [create(13, "Nook", graph["room"]), create(14, "Attic", graph["room"])]
+        a, b = two(service, graph, rooms(graph, 12) + extra_a, rooms(graph, 12) + extra_b)
+        comparison, sample = decide_sample(comparisons, a, b, not_element=1)
 
-        result = comparisons.accept_rest(a.id, b.id, sample_size=2)
+        result = comparisons.accept_rest(a.id, b.id)
 
         by_title = {p.a.fields["title"]: p.pair_id for p in comparison.pairs}
         sampled = {p.pair_id for p in sample}
@@ -646,44 +675,69 @@ class TestAcceptTheRest:
             if by_title[title] not in sampled
         }
         assert dict(result.skipped) == expected
-        assert result.landed == 8 - len(sampled) - len(expected)
+        assert result.landed == 14 - len(sampled) - len(expected)
         assert result.failed == []
-        assert (result.sample.size, result.sample.checked, result.sample.changed) == (2, 2, 1)
+        assert (result.sample.size, result.sample.checked, result.sample.changed) == (10, 10, 1)
         bulk = [d.comparison for d in proposals.decisions if (d.comparison or {}).get("bulk")]
         assert len(bulk) == 2 * result.landed
         assert all(
-            c["bulk"] == {"sample_size": 2, "sample_changed": 1} and not c["sample"] for c in bulk
+            c["bulk"] == {"sample_size": 10, "sample_changed": 1} and not c["sample"] for c in bulk
         )
-        assert comparisons.compare(a.id, b.id, sample_size=2).counts()["open"] == len(expected)
+        assert comparisons.compare(a.id, b.id).counts()["open"] == len(expected)
 
-        again = comparisons.accept_rest(a.id, b.id, sample_size=2)
+        again = comparisons.accept_rest(a.id, b.id)
 
         assert (again.landed, again.failed, again.skipped) == (0, [], result.skipped)
-        assert len(proposals.decisions) == 4 + 2 * result.landed
+        assert len(proposals.decisions) == 20 + 2 * result.landed
+
+    def test_bulk_counts_the_pairs_checked_not_the_sample_size_asked(
+        self, service, graph, comparisons, proposals
+    ):
+        a, b = two(service, graph, rooms(graph, 14), rooms(graph, 14))
+        decide_sample(comparisons, a, b)
+        # Two more agreements decided outside a sample: not checked as a sample
+        rest = [
+            p
+            for p in comparisons.compare(a.id, b.id, 12).pairs
+            if p.pair_id in comparisons.compare(a.id, b.id, 12).sample and p.state is PairState.OPEN
+        ]
+        for pair in rest:
+            decide(comparisons, a, b, "keep", pair.a, pair.b)
+
+        result = comparisons.accept_rest(a.id, b.id, sample_size=12)
+
+        assert result.landed == 2
+        bulk = {
+            str(d.comparison["bulk"])
+            for d in proposals.decisions
+            if (d.comparison or {}).get("bulk")
+        }
+        assert bulk == {str({"sample_size": 10, "sample_changed": 0})}
 
     def test_skips_a_near_match_and_a_copy_without_a_passage(self, service, graph, comparisons):
         match = {"kind": "existing", "entity_id": graph["den"], "similarity": 0.9}
-        a, b = two(
-            service,
-            graph,
-            [
-                create(1, "Nook", graph["room"], alternatives=[match]),
-                create(2, "Attic", graph["room"]),
-                create(3, "Loft", graph["room"]),
-            ],
-            [
-                create(1, "Nook", graph["room"]),
-                create(2, "Attic", graph["room"], evidence=False),
-                create(3, "Loft", graph["room"]),
-            ],
-        )
+        specials_a = [
+            create(13, "Nook", graph["room"], alternatives=[match]),
+            create(14, "Attic", graph["room"]),
+        ]
+        specials_b = [
+            create(13, "Nook", graph["room"]),
+            create(14, "Attic", graph["room"], evidence=False),
+        ]
+        a, b = two(service, graph, rooms(graph, 12) + specials_a, rooms(graph, 12) + specials_b)
+        comparison, sample = decide_sample(comparisons, a, b)
 
-        result = comparisons.accept_rest(a.id, b.id, sample_size=0)
+        result = comparisons.accept_rest(a.id, b.id)
 
-        assert sorted(why for _, why in result.skipped) == ["near_match", "no_passage"]
-        assert result.landed == 1
-        assert by_seq(service.get(a.id))[3].status is OperationStatus.APPLIED
-        assert by_seq(service.get(b.id))[3].reason_code is RejectionReason.DUPLICATE
+        unsampled = {p.a.fields["title"] for p in comparison.pairs} - {
+            p.a.fields["title"] for p in sample
+        }
+        whys = {"Nook": "near_match", "Attic": "no_passage"}
+        titles = {p.pair_id: p.a.fields["title"] for p in comparison.pairs}
+        assert {titles[p]: w for p, w in result.skipped} == {
+            t: w for t, w in whys.items() if t in unsampled
+        }
+        assert result.landed == len(unsampled - set(whys))
 
 
 # ---------------------------------------------------------------- concurrency
@@ -721,3 +775,178 @@ def test_two_reviewers_deciding_one_pair_from_both_sides_do_not_deadlock(
 
     assert not any(t.is_alive() for t in threads)
     assert sorted(outcomes) == ["conflict", "landed"]
+
+
+# ---------------------------------------------------------------- review follow-ups
+
+
+class TestBothCopiesOfAPair:
+    def test_one_side_of_an_open_pair_is_refused(self, service, graph, comparisons, proposals):
+        a, b = two(
+            service, graph, [create(1, "Study", graph["room"])], [create(1, "Study", graph["room"])]
+        )
+
+        for side in ({"a_op": a.operations[0]}, {"b_op": b.operations[0]}):
+            with pytest.raises(InvalidPairDecisionError, match="Name both copies"):
+                decide(comparisons, a, b, "keep", **side)
+
+        assert proposals.decisions == []
+
+    def test_one_side_when_the_other_is_decided_names_it(
+        self, service, graph, comparisons, proposals
+    ):
+        a, b = two(
+            service, graph, [create(1, "Study", graph["room"])], [create(1, "Study", graph["room"])]
+        )
+        service.reject(b.id, [b.operations[0].id], note="decided on the Review page")
+
+        result = decide(comparisons, a, b, "keep", a.operations[0])
+
+        assert result.outcome is CopyOutcome.LANDED
+        record = decisions_by_op(proposals)[a.operations[0].id].comparison
+        assert record["with_operation_id"] == b.operations[0].id
+
+    def test_a_class_on_a_pair_of_one_needs_both(self, service, graph, comparisons):
+        a, b = two(
+            service,
+            graph,
+            [create(1, "Pantry", graph["room"])],
+            [create(1, "Larder", graph["room"])],
+        )
+
+        with pytest.raises(InvalidPairDecisionError, match="needs both"):
+            decide(comparisons, a, b, "a_class", a.operations[0])
+
+
+class TestRevertingTheLandedCopy:
+    def test_reopens_the_other_proposals_copy(self, service, graph, comparisons, proposals):
+        a, b = two(
+            service,
+            graph,
+            [create(1, "Study", graph["room"])],
+            [create(1, "Study", graph["room"], ref="study"), near(2, "study", graph["den"], graph)],
+        )
+        decide(comparisons, a, b, "keep", a.operations[0], b.operations[0])
+        assert service.get(b.id).status.value == "open"  # its relationship awaits
+        service.reject(b.id, [by_seq(b)[2].id])  # B done
+        assert service.get(b.id).status.value == "done"
+
+        service.revert(a.id)
+
+        reopened = by_seq(service.get(b.id))[1]
+        assert reopened.status is OperationStatus.PENDING
+        assert (reopened.result_entity_id, reopened.reason_code, reopened.reason) == (
+            None,
+            None,
+            None,
+        )
+        assert service.get(b.id).status.value == "open"
+        superseded = decisions_by_op(proposals)[b.operations[0].id]
+        assert superseded.superseded_at is not None and superseded.superseded_by == "user"
+
+    def test_the_reopened_copy_decided_again_resolves_its_relationship(
+        self, service, graph, comparisons, repo
+    ):
+        a, b = two(
+            service,
+            graph,
+            [create(1, "Study", graph["room"])],
+            [create(1, "Study", graph["room"], ref="study"), near(2, "study", graph["den"], graph)],
+        )
+        decide(comparisons, a, b, "keep", a.operations[0], b.operations[0])
+        landed = service.get(a.id).operations[0].result_entity_id
+        service.revert(a.id)
+        repo.delete_individual(landed)  # the stub revert undoes nothing itself
+
+        applied = service.apply(b.id, [b.operations[0].id, by_seq(b)[2].id])
+
+        study, relationship = by_seq(applied)[1], by_seq(applied)[2]
+        assert relationship.status is OperationStatus.APPLIED
+        assert repo.get_relationship(relationship.result_entity_id).source_id == (
+            study.result_entity_id
+        )
+
+    def test_a_duplicate_whose_individual_is_gone_fails_unresolved(
+        self, service, graph, comparisons, repo
+    ):
+        a, b = two(
+            service,
+            graph,
+            [create(1, "Study", graph["room"])],
+            [create(1, "Study", graph["room"], ref="study"), near(2, "study", graph["den"], graph)],
+        )
+        decide(comparisons, a, b, "keep", a.operations[0], b.operations[0])
+        repo.delete_individual(service.get(a.id).operations[0].result_entity_id)
+
+        relationship = by_seq(service.apply(b.id, [by_seq(b)[2].id]))[2]
+
+        assert relationship.reason.startswith("unresolved_ref:")
+
+
+class TestVerdictsFromWhatLanded:
+    def test_a_reused_edited_landing_records_its_class_change(
+        self, service, graph, comparisons, proposals
+    ):
+        a, b = two(
+            service, graph, [create(1, "Study", graph["room"])], [create(1, "Study", graph["room"])]
+        )
+        op_a, op_b = a.operations[0], b.operations[0]
+        service.apply(a.id, [op_a.id], edits={op_a.id: {"class_ids": [graph["kitchen"]]}})
+
+        decide(comparisons, a, b, "keep", op_a, op_b)
+
+        records = decisions_by_op(proposals)
+        assert records[op_a.id].decision is DecisionKind.APPLIED_WITH_EDITS
+        assert records[op_a.id].comparison["verdict"] == "class_changed"
+        assert records[op_a.id].comparison["with_operation_id"] == op_b.id
+        assert records[op_b.id].comparison["verdict"] == "class_changed"
+
+    def test_a_near_match_of_another_class_is_a_class_change(
+        self, service, graph, comparisons, proposals, ontology
+    ):
+        pantry = ontology.create_individual(graph["kitchen"], "Pantry")
+        match = {"kind": "existing", "entity_id": pantry.id, "similarity": 0.9}
+        a, b = two(
+            service,
+            graph,
+            [create(1, "The pantry", graph["room"], alternatives=[match])],
+            [create(1, "The pantry", graph["room"])],
+        )
+
+        result = decide(
+            comparisons, a, b, "keep", a.operations[0], b.operations[0], match_entity_id=pantry.id
+        )
+
+        verdicts = {d.comparison["verdict"] for d in proposals.decisions}
+        assert verdicts == {"class_changed"}
+        assert result.comparison.changed(result.pair)
+
+
+def test_the_relationship_preview_follows_a_closed_copy(service, graph, comparisons):
+    """A Place is no Room: B's near relationship to its closed copy won't fit, and says so."""
+    a, b = two(
+        service,
+        graph,
+        [create(1, "Study", graph["place"])],
+        [create(1, "Study", graph["room"], ref="study"), near(2, "study", graph["den"], graph)],
+    )
+    relationship_id = by_seq(b)[2].id
+    assert relationship_id not in service.domain_range_mismatches(service.get(b.id))
+
+    decide(comparisons, a, b, "a_class", a.operations[0], b.operations[0])
+
+    assert relationship_id in service.domain_range_mismatches(service.get(b.id))
+    applied = by_seq(service.apply(b.id, [relationship_id]))[2]
+    assert applied.reason.startswith("domain_range_mismatch:")
+
+
+def test_a_superseded_proposal_is_not_comparable(service, graph, comparisons):
+    a, b = two(
+        service, graph, [create(1, "Study", graph["room"])], [create(1, "Study", graph["room"])]
+    )
+    service.reject(
+        a.id, [a.operations[0].id], note=SUPERSEDED_REASON.format("newer"), decided_by=None
+    )
+
+    with pytest.raises(ProposalsNotComparableError, match="compare the newer one"):
+        comparisons.compare(a.id, b.id)

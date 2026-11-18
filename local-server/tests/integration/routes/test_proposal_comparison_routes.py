@@ -27,6 +27,7 @@ from adapters.web.proposal_comparison_routes import router as comparison_router
 from adapters.web.proposals_routes import router as proposals_router
 from domain.ontology.services import OntologyService
 from domain.pipelines.proposal_comparison import ProposalComparisonService
+from domain.pipelines.source_proposals import SUPERSEDED_REASON
 from domain.versioning.proposal_service import OperationDraft, ProposalService
 from domain.versioning.proposals import OperationKind as K
 from domain.versioning.proposals import OperationType as T
@@ -243,19 +244,21 @@ def test_a_decided_copy_is_409(client, pair):
 
 
 def test_accept_rest_waits_for_the_sample_then_lands_once(client, house):
-    rows = [(f"Room {n}", "room", ()) for n in range(1, 6)]
+    rows = [(f"Room {n}", "room", ()) for n in range(1, 13)]
     a = extraction(client, house, rows, "single_call")
     b = extraction(client, house, rows, "x")
 
-    unchecked = client.post(url(a, b, "/accept-rest"), json={"sample_size": 2})
+    too_small = client.post(url(a, b, "/accept-rest"), json={"sample_size": 2})
+    assert too_small.status_code == 422
+    assert too_small.json()["detail"]["code"] == "sample_too_small"
+    unchecked = client.post(url(a, b, "/accept-rest"), json={})
     assert unchecked.status_code == 409
     assert unchecked.json()["detail"]["code"] == "sample_unchecked"
 
-    comparison = client.get(url(a, b), params={"sample_size": 2}).json()
+    comparison = client.get(url(a, b)).json()
     for p in [p for p in comparison["pairs"] if p["in_sample"]]:
         decided = client.post(
             url(a, b, "/decide"),
-            params={"sample_size": 2},
             json={
                 "a_operation_id": p["a"]["operation_id"],
                 "b_operation_id": p["b"]["operation_id"],
@@ -264,18 +267,44 @@ def test_accept_rest_waits_for_the_sample_then_lands_once(client, house):
         )
         assert decided.status_code == 200, decided.text
 
-    accepted = client.post(url(a, b, "/accept-rest"), json={"sample_size": 2})
-    again = client.post(url(a, b, "/accept-rest"), json={"sample_size": 2})
+    accepted = client.post(url(a, b, "/accept-rest"), json={})
+    again = client.post(url(a, b, "/accept-rest"), json={})
 
     assert accepted.status_code == 200, accepted.text
     assert accepted.json() == {
-        "landed": 3,
+        "landed": 2,
         "failed": [],
         "skipped": [],
-        "sample": {"size": 2, "checked": 2, "changed": 0},
+        "sample": {"size": 10, "checked": 10, "changed": 0},
     }
     assert again.json()["landed"] == 0
-    after = client.get(url(a, b), params={"sample_size": 2}).json()
+    after = client.get(url(a, b)).json()
     assert after["counts"]["open"] == 0
     bulk = [p["a"]["comparison"]["bulk"] for p in after["pairs"] if not p["in_sample"]]
-    assert bulk == [{"sample_size": 2, "sample_changed": 0}] * 3
+    assert bulk == [{"sample_size": 10, "sample_changed": 0}] * 2
+
+
+def test_one_copy_of_an_open_pair_is_422(client, pair):
+    a, b = pair
+    study = client.get(url(a, b)).json()["pairs"][0]
+
+    response = client.post(
+        url(a, b, "/decide"),
+        json={"a_operation_id": study["a"]["operation_id"], "verdict": "keep"},
+    )
+
+    assert response.status_code == 422
+    assert "Name both copies" in response.json()["detail"]["message"]
+
+
+def test_a_superseded_proposal_is_422_not_comparable(client, pair):
+    a, b = pair
+    client.app.state.proposal_service.reject(
+        a.id, [a.operations[0].id], note=SUPERSEDED_REASON.format("newer"), decided_by=None
+    )
+
+    response = client.get(url(a, b))
+
+    assert response.status_code == 422
+    assert response.json()["detail"]["code"] == "not_comparable"
+    assert "compare the newer one" in response.json()["detail"]["message"]

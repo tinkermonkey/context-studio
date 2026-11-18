@@ -120,7 +120,11 @@ class ProposalComparisonResponse(BaseModel):
 class PairDecisionRequest(BaseModel):
     """A decision on one pair, taken once for both proposals."""
 
-    a_operation_id: Optional[str] = Field(None, description="A's copy (from the pair)")
+    a_operation_id: Optional[str] = Field(
+        None,
+        description="A's copy (from the pair). Name both copies; one alone only when the "
+        "pair has one, or the other is already decided",
+    )
     b_operation_id: Optional[str] = Field(None, description="B's copy (from the pair)")
     verdict: Verdict = Field(
         ...,
@@ -156,7 +160,12 @@ class PairDecisionResponse(BaseModel):
 class AcceptRestRequest(BaseModel):
     """Accept the agreements outside the sample, once the sample is checked."""
 
-    sample_size: int = Field(DEFAULT_SAMPLE_SIZE, ge=0, le=MAX_SAMPLE_SIZE)
+    sample_size: int = Field(
+        DEFAULT_SAMPLE_SIZE,
+        ge=0,
+        le=MAX_SAMPLE_SIZE,
+        description="The sample checked: at least 10, or every agreement when there are fewer",
+    )
 
 
 class PairFailureResponse(BaseModel):

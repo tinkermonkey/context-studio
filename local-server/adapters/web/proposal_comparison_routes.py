@@ -36,6 +36,7 @@ from domain.pipelines.proposal_comparison import (
     ProposalComparisonService,
     ProposalsNotComparableError,
     SampleStats,
+    SampleTooSmallError,
     SampleUncheckedError,
     comparison_lacks_passage,
 )
@@ -53,8 +54,9 @@ _ERRORS: dict[int | str, dict[str, Any]] = {
     404: {"description": "A proposal does not exist"},
     422: {
         "description": (
-            "not_comparable: the same proposal twice, or not two individual "
-            "extractions of one source in one dataset of one taxonomy; or a malformed request"
+            "not_comparable: the same proposal twice, a superseded proposal, or not two "
+            "individual extractions of one source in one dataset of one taxonomy; or a "
+            "malformed request"
         )
     },
 }
@@ -76,6 +78,11 @@ def _error(exc: Exception) -> HTTPException:
         return HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail={"code": "invalid_decision", "message": str(exc)},
+        )
+    if isinstance(exc, SampleTooSmallError):
+        return HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            detail={"code": "sample_too_small", "message": str(exc)},
         )
     if isinstance(exc, SampleUncheckedError):
         return HTTPException(
@@ -204,7 +211,7 @@ async def compare_proposals(
     response_model=PairDecisionResponse,
     responses={
         **_ERRORS,
-        409: {"description": "A copy is already decided, or a proposal is reverted or superseded"},
+        409: {"description": "A copy is already decided, or a proposal is reverted"},
     },
 )
 async def decide_pair(
@@ -215,12 +222,15 @@ async def decide_pair(
     service: ProposalComparisonService = Depends(get_proposal_comparison_service),
 ) -> PairDecisionResponse:
     """
-    Decide one pair once for both proposals: the chosen copy lands (keep: A's,
-    or the only one given; a_class: A's; b_class: B's) and the other closes as
-    its duplicate, so relationships naming it follow the landed individual;
-    not_element rejects both. A failed landing (outcome failed) leaves the
-    other copy as it was. Both copies' decisions record the comparison, and the
-    landed one the review time.
+    Decide one pair once for both proposals. Name both copies; one alone only
+    when the pair has one, or its other copy is already decided (422
+    otherwise). The chosen copy lands (keep: A's, or the only one given;
+    a_class: A's; b_class: B's) and the other closes as its duplicate, so
+    relationships naming it follow the landed individual; not_element rejects
+    both. A failed landing (outcome failed) leaves the other copy as it was.
+    Each copy's decision records the comparison (kept when what landed has the
+    classes it proposed, class_changed otherwise), and the landed one the
+    review time.
     """
 
     def run() -> PairDecisionResponse:
@@ -258,8 +268,7 @@ async def decide_pair(
         **_ERRORS,
         409: {
             "description": (
-                "sample_unchecked: a sample pair is not decided yet; or a proposal "
-                "is reverted or superseded"
+                "sample_unchecked: a sample pair is not decided yet; or a proposal " "is reverted"
             )
         },
     },
@@ -273,9 +282,11 @@ async def accept_rest(
     """
     Accept every same-class pair outside the sample whose copies are both
     pending: A's lands, B's closes as its duplicate. Pairs whose copy lists near
-    matches or cites no passage are skipped, for a person. Each decision records
-    the sample's size and how many of it were changed. Calling it again changes
-    nothing more.
+    matches or cites no passage are skipped, for a person. The sample must be at
+    least 10 pairs (every agreement, when fewer; 422 sample_too_small below
+    that) and all of it decided. Each decision records how many sample pairs
+    were actually checked and how many of those were changed. Calling it again
+    changes nothing more.
     """
 
     def run() -> AcceptRestResponse:

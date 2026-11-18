@@ -4178,12 +4178,15 @@ export interface paths {
     put?: never;
     /**
      * Decide Pair
-     * @description Decide one pair once for both proposals: the chosen copy lands (keep: A's,
-     *     or the only one given; a_class: A's; b_class: B's) and the other closes as
-     *     its duplicate, so relationships naming it follow the landed individual;
-     *     not_element rejects both. A failed landing (outcome failed) leaves the
-     *     other copy as it was. Both copies' decisions record the comparison, and the
-     *     landed one the review time.
+     * @description Decide one pair once for both proposals. Name both copies; one alone only
+     *     when the pair has one, or its other copy is already decided (422
+     *     otherwise). The chosen copy lands (keep: A's, or the only one given;
+     *     a_class: A's; b_class: B's) and the other closes as its duplicate, so
+     *     relationships naming it follow the landed individual; not_element rejects
+     *     both. A failed landing (outcome failed) leaves the other copy as it was.
+     *     Each copy's decision records the comparison (kept when what landed has the
+     *     classes it proposed, class_changed otherwise), and the landed one the
+     *     review time.
      */
     post: operations["decide_pair_api_proposals__a_id__compare__b_id__decide_post"];
     delete?: never;
@@ -4205,9 +4208,11 @@ export interface paths {
      * Accept Rest
      * @description Accept every same-class pair outside the sample whose copies are both
      *     pending: A's lands, B's closes as its duplicate. Pairs whose copy lists near
-     *     matches or cites no passage are skipped, for a person. Each decision records
-     *     the sample's size and how many of it were changed. Calling it again changes
-     *     nothing more.
+     *     matches or cites no passage are skipped, for a person. The sample must be at
+     *     least 10 pairs (every agreement, when fewer; 422 sample_too_small below
+     *     that) and all of it decided. Each decision records how many sample pairs
+     *     were actually checked and how many of those were changed. Calling it again
+     *     changes nothing more.
      */
     post: operations["accept_rest_api_proposals__a_id__compare__b_id__accept_rest_post"];
     delete?: never;
@@ -4480,6 +4485,7 @@ export interface components {
     AcceptRestRequest: {
       /**
        * Sample Size
+       * @description The sample checked: at least 10, or every agreement when there are fewer
        * @default 10
        */
       sample_size: number;
@@ -8946,7 +8952,7 @@ export interface components {
     PairDecisionRequest: {
       /**
        * A Operation Id
-       * @description A's copy (from the pair)
+       * @description A's copy (from the pair). Name both copies; one alone only when the pair has one, or the other is already decided
        */
       a_operation_id?: string | null;
       /**
@@ -17319,7 +17325,7 @@ export interface operations {
         };
         content?: never;
       };
-      /** @description not_comparable: the same proposal twice, or not two individual extractions of one source in one dataset of one taxonomy; or a malformed request */
+      /** @description not_comparable: the same proposal twice, a superseded proposal, or not two individual extractions of one source in one dataset of one taxonomy; or a malformed request */
       422: {
         headers: {
           [name: string]: unknown;
@@ -17362,14 +17368,14 @@ export interface operations {
         };
         content?: never;
       };
-      /** @description A copy is already decided, or a proposal is reverted or superseded */
+      /** @description A copy is already decided, or a proposal is reverted */
       409: {
         headers: {
           [name: string]: unknown;
         };
         content?: never;
       };
-      /** @description not_comparable: the same proposal twice, or not two individual extractions of one source in one dataset of one taxonomy; or a malformed request */
+      /** @description not_comparable: the same proposal twice, a superseded proposal, or not two individual extractions of one source in one dataset of one taxonomy; or a malformed request */
       422: {
         headers: {
           [name: string]: unknown;
@@ -17410,14 +17416,14 @@ export interface operations {
         };
         content?: never;
       };
-      /** @description sample_unchecked: a sample pair is not decided yet; or a proposal is reverted or superseded */
+      /** @description sample_unchecked: a sample pair is not decided yet; or a proposal is reverted */
       409: {
         headers: {
           [name: string]: unknown;
         };
         content?: never;
       };
-      /** @description not_comparable: the same proposal twice, or not two individual extractions of one source in one dataset of one taxonomy; or a malformed request */
+      /** @description not_comparable: the same proposal twice, a superseded proposal, or not two individual extractions of one source in one dataset of one taxonomy; or a malformed request */
       422: {
         headers: {
           [name: string]: unknown;
