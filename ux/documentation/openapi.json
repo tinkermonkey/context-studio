@@ -8505,6 +8505,202 @@
         }
       }
     },
+    "/api/proposals/{a_id}/compare/{b_id}": {
+      "get": {
+        "tags": [
+          "proposals"
+        ],
+        "summary": "Compare Proposals",
+        "description": "Two individual extractions of one source, their individual creates paired\nby normalised title: same class, class differs, only in A, only in B. A\nstable random sample of the same-class pairs is marked to check first.",
+        "operationId": "compare_proposals_api_proposals__a_id__compare__b_id__get",
+        "parameters": [
+          {
+            "name": "a_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "A Id"
+            }
+          },
+          {
+            "name": "b_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "B Id"
+            }
+          },
+          {
+            "name": "sample_size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 500,
+              "minimum": 0,
+              "description": "How many same-class pairs to check before accepting the rest",
+              "default": 10,
+              "title": "Sample Size"
+            },
+            "description": "How many same-class pairs to check before accepting the rest"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProposalComparisonResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "A proposal does not exist"
+          },
+          "422": {
+            "description": "not_comparable: the same proposal twice, or not two individual extractions of one source in one dataset of one taxonomy; or a malformed request"
+          }
+        }
+      }
+    },
+    "/api/proposals/{a_id}/compare/{b_id}/decide": {
+      "post": {
+        "tags": [
+          "proposals"
+        ],
+        "summary": "Decide Pair",
+        "description": "Decide one pair once for both proposals: the chosen copy lands (keep: A's,\nor the only one given; a_class: A's; b_class: B's) and the other closes as\nits duplicate, so relationships naming it follow the landed individual;\nnot_element rejects both. A failed landing (outcome failed) leaves the\nother copy as it was. Both copies' decisions record the comparison, and the\nlanded one the review time.",
+        "operationId": "decide_pair_api_proposals__a_id__compare__b_id__decide_post",
+        "parameters": [
+          {
+            "name": "a_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "A Id"
+            }
+          },
+          {
+            "name": "b_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "B Id"
+            }
+          },
+          {
+            "name": "sample_size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 500,
+              "minimum": 0,
+              "default": 10,
+              "title": "Sample Size"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PairDecisionRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PairDecisionResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "A proposal does not exist"
+          },
+          "422": {
+            "description": "not_comparable: the same proposal twice, or not two individual extractions of one source in one dataset of one taxonomy; or a malformed request"
+          },
+          "409": {
+            "description": "A copy is already decided, or a proposal is reverted or superseded"
+          }
+        }
+      }
+    },
+    "/api/proposals/{a_id}/compare/{b_id}/accept-rest": {
+      "post": {
+        "tags": [
+          "proposals"
+        ],
+        "summary": "Accept Rest",
+        "description": "Accept every same-class pair outside the sample whose copies are both\npending: A's lands, B's closes as its duplicate. Pairs whose copy lists near\nmatches or cites no passage are skipped, for a person. Each decision records\nthe sample's size and how many of it were changed. Calling it again changes\nnothing more.",
+        "operationId": "accept_rest_api_proposals__a_id__compare__b_id__accept_rest_post",
+        "parameters": [
+          {
+            "name": "a_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "A Id"
+            }
+          },
+          {
+            "name": "b_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "B Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AcceptRestRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AcceptRestResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "A proposal does not exist"
+          },
+          "422": {
+            "description": "not_comparable: the same proposal twice, or not two individual extractions of one source in one dataset of one taxonomy; or a malformed request"
+          },
+          "409": {
+            "description": "sample_unchecked: a sample pair is not decided yet; or a proposal is reverted or superseded"
+          }
+        }
+      }
+    },
     "/api/taxonomies/{taxonomy_id}/claims": {
       "get": {
         "tags": [
@@ -9611,6 +9807,55 @@
   },
   "components": {
     "schemas": {
+      "AcceptRestRequest": {
+        "properties": {
+          "sample_size": {
+            "type": "integer",
+            "maximum": 500.0,
+            "minimum": 0.0,
+            "title": "Sample Size",
+            "default": 10
+          }
+        },
+        "type": "object",
+        "title": "AcceptRestRequest",
+        "description": "Accept the agreements outside the sample, once the sample is checked."
+      },
+      "AcceptRestResponse": {
+        "properties": {
+          "landed": {
+            "type": "integer",
+            "title": "Landed"
+          },
+          "failed": {
+            "items": {
+              "$ref": "#/components/schemas/PairFailureResponse"
+            },
+            "type": "array",
+            "title": "Failed"
+          },
+          "skipped": {
+            "items": {
+              "$ref": "#/components/schemas/PairSkippedResponse"
+            },
+            "type": "array",
+            "title": "Skipped",
+            "description": "Left for a person: a copy lists near matches, or cites no passage"
+          },
+          "sample": {
+            "$ref": "#/components/schemas/SampleResponse"
+          }
+        },
+        "type": "object",
+        "required": [
+          "landed",
+          "failed",
+          "skipped",
+          "sample"
+        ],
+        "title": "AcceptRestResponse",
+        "description": "What accepting the rest of the agreements did."
+      },
       "AddIndividualRequest": {
         "properties": {
           "title": {
@@ -12697,6 +12942,237 @@
         "title": "CommunitiesResponse",
         "description": "Response containing community detection results."
       },
+      "ComparedAlternativeResponse": {
+        "properties": {
+          "kind": {
+            "type": "string",
+            "const": "existing",
+            "title": "Kind",
+            "default": "existing"
+          },
+          "entity_id": {
+            "type": "string",
+            "title": "Entity Id"
+          },
+          "similarity": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Similarity"
+          },
+          "title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title",
+            "description": "Its current title; null if it is gone"
+          }
+        },
+        "type": "object",
+        "required": [
+          "entity_id"
+        ],
+        "title": "ComparedAlternativeResponse",
+        "description": "A near match the operation lists: an individual already in the dataset."
+      },
+      "ComparedClassResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "title"
+        ],
+        "title": "ComparedClassResponse",
+        "description": "A class an operation gives its individual."
+      },
+      "ComparedOperationResponse": {
+        "properties": {
+          "operation_id": {
+            "type": "string",
+            "title": "Operation Id"
+          },
+          "seq": {
+            "type": "integer",
+            "title": "Seq"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title",
+            "description": "The title it applies (an edit's, if edited)"
+          },
+          "classes": {
+            "items": {
+              "$ref": "#/components/schemas/ComparedClassResponse"
+            },
+            "type": "array",
+            "title": "Classes",
+            "description": "The classes it applies (an edit's, if edited)"
+          },
+          "status": {
+            "$ref": "#/components/schemas/OperationStatus"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          },
+          "reason_code": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/RejectionReason"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "evidence": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Evidence"
+          },
+          "alternatives": {
+            "items": {
+              "$ref": "#/components/schemas/ComparedAlternativeResponse"
+            },
+            "type": "array",
+            "title": "Alternatives"
+          },
+          "lacks_passage": {
+            "type": "boolean",
+            "title": "Lacks Passage",
+            "description": "It cites no passage in the source: a person decides it",
+            "default": false
+          },
+          "comparison": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Comparison",
+            "description": "Its decision's comparison record, when it was decided comparing: {with_proposal_id, with_operation_id, verdict, sample, bulk}"
+          }
+        },
+        "type": "object",
+        "required": [
+          "operation_id",
+          "seq",
+          "title",
+          "classes",
+          "status"
+        ],
+        "title": "ComparedOperationResponse",
+        "description": "One proposal's copy of a pair's element: its individual create."
+      },
+      "ComparedProposalResponse": {
+        "properties": {
+          "proposal_id": {
+            "type": "string",
+            "title": "Proposal Id"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "description": "open, done or reverted"
+          },
+          "origin": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ProposalOriginResponse"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The pipeline implementation and version that produced it"
+          }
+        },
+        "type": "object",
+        "required": [
+          "proposal_id",
+          "status"
+        ],
+        "title": "ComparedProposalResponse",
+        "description": "One of the two proposals compared."
+      },
+      "ComparisonCountsResponse": {
+        "properties": {
+          "same_class": {
+            "type": "integer",
+            "title": "Same Class"
+          },
+          "class_differs": {
+            "type": "integer",
+            "title": "Class Differs"
+          },
+          "only_a": {
+            "type": "integer",
+            "title": "Only A"
+          },
+          "only_b": {
+            "type": "integer",
+            "title": "Only B"
+          },
+          "open": {
+            "type": "integer",
+            "title": "Open",
+            "description": "Pairs not decided yet"
+          }
+        },
+        "type": "object",
+        "required": [
+          "same_class",
+          "class_differs",
+          "only_a",
+          "only_b",
+          "open"
+        ],
+        "title": "ComparisonCountsResponse"
+      },
+      "ComparisonGroup": {
+        "type": "string",
+        "enum": [
+          "same_class",
+          "class_differs",
+          "only_a",
+          "only_b"
+        ],
+        "title": "ComparisonGroup",
+        "description": "How the two proposals agree on an element."
+      },
       "ComponentStatusResponse": {
         "properties": {
           "available": {
@@ -13008,6 +13484,16 @@
         ],
         "title": "ConversationResponse",
         "description": "A stored conversation."
+      },
+      "CopyOutcome": {
+        "type": "string",
+        "enum": [
+          "landed",
+          "rejected",
+          "failed"
+        ],
+        "title": "CopyOutcome",
+        "description": "What a CopyDecision did."
       },
       "CycleCheckRequest": {
         "properties": {
@@ -14621,6 +15107,19 @@
             ],
             "title": "Annotations",
             "description": "What the reviewer noted for gold: {tier?, also_defensible?: [class id]}; null when nothing was noted"
+          },
+          "comparison": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Comparison",
+            "description": "Set when decided comparing two proposals of one source: {with_proposal_id, with_operation_id (the other copy, or null), verdict (kept, class_changed or not_element, from this operation's pipeline's view), sample (a checked agreement), bulk ({sample_size, sample_changed} when the rest was accepted, else null)}"
           },
           "added": {
             "type": "boolean",
@@ -17103,6 +17602,132 @@
         "title": "PageContextSchema",
         "description": "The page the user is viewing when sending a message."
       },
+      "PairDecisionRequest": {
+        "properties": {
+          "a_operation_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "A Operation Id",
+            "description": "A's copy (from the pair)"
+          },
+          "b_operation_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "B Operation Id",
+            "description": "B's copy (from the pair)"
+          },
+          "verdict": {
+            "$ref": "#/components/schemas/Verdict",
+            "description": "keep: land A's copy (or the only one given), whose classes the copies share; a_class / b_class: land that copy with its classes; not_element: reject every copy given. The other copy closes as a duplicate of the landed one"
+          },
+          "reason_code": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/RejectionReason"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "not_element only: why (other when omitted)"
+          },
+          "match_entity_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Match Entity Id",
+            "description": "A near match the landing copy lists, to apply it as instead"
+          },
+          "review_ms": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 2147483647.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Review Ms",
+            "description": "The time spent on the pair, recorded whole on the landed copy's decision"
+          }
+        },
+        "type": "object",
+        "required": [
+          "verdict"
+        ],
+        "title": "PairDecisionRequest",
+        "description": "A decision on one pair, taken once for both proposals."
+      },
+      "PairDecisionResponse": {
+        "properties": {
+          "pair": {
+            "$ref": "#/components/schemas/PairResponse"
+          },
+          "outcome": {
+            "$ref": "#/components/schemas/CopyOutcome",
+            "description": "landed, rejected (not_element) or failed (the landing copy failed)"
+          },
+          "failure_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Failure Reason"
+          },
+          "sample": {
+            "$ref": "#/components/schemas/SampleResponse"
+          }
+        },
+        "type": "object",
+        "required": [
+          "pair",
+          "outcome",
+          "sample"
+        ],
+        "title": "PairDecisionResponse",
+        "description": "A decided pair, as it stands after the decision."
+      },
+      "PairFailureResponse": {
+        "properties": {
+          "pair_id": {
+            "type": "string",
+            "title": "Pair Id"
+          },
+          "reason": {
+            "type": "string",
+            "title": "Reason"
+          }
+        },
+        "type": "object",
+        "required": [
+          "pair_id",
+          "reason"
+        ],
+        "title": "PairFailureResponse"
+      },
       "PairMatch": {
         "type": "string",
         "enum": [
@@ -17113,6 +17738,90 @@
         ],
         "title": "PairMatch",
         "description": "How a replacement's domain and range compare with the deleted type's."
+      },
+      "PairResponse": {
+        "properties": {
+          "pair_id": {
+            "type": "string",
+            "title": "Pair Id",
+            "description": "Stable id of the pair"
+          },
+          "group": {
+            "$ref": "#/components/schemas/ComparisonGroup"
+          },
+          "in_sample": {
+            "type": "boolean",
+            "title": "In Sample",
+            "description": "One of the agreements to check first"
+          },
+          "state": {
+            "$ref": "#/components/schemas/PairState"
+          },
+          "a": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ComparedOperationResponse"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "A's copy; null if none"
+          },
+          "b": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ComparedOperationResponse"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "B's copy; null if none"
+          }
+        },
+        "type": "object",
+        "required": [
+          "pair_id",
+          "group",
+          "in_sample",
+          "state"
+        ],
+        "title": "PairResponse",
+        "description": "One element as the two proposals propose it."
+      },
+      "PairSkippedResponse": {
+        "properties": {
+          "pair_id": {
+            "type": "string",
+            "title": "Pair Id"
+          },
+          "why": {
+            "type": "string",
+            "enum": [
+              "near_match",
+              "no_passage"
+            ],
+            "title": "Why"
+          }
+        },
+        "type": "object",
+        "required": [
+          "pair_id",
+          "why"
+        ],
+        "title": "PairSkippedResponse"
+      },
+      "PairState": {
+        "type": "string",
+        "enum": [
+          "open",
+          "decided",
+          "partly_decided",
+          "failed"
+        ],
+        "title": "PairState",
+        "description": "Where a pair's decision stands."
       },
       "PathResultResponse": {
         "properties": {
@@ -18455,6 +19164,61 @@
         "type": "object",
         "title": "PropertyDefinitionUpdateRequest",
         "description": "Request to update a property definition."
+      },
+      "ProposalComparisonResponse": {
+        "properties": {
+          "a": {
+            "$ref": "#/components/schemas/ComparedProposalResponse"
+          },
+          "b": {
+            "$ref": "#/components/schemas/ComparedProposalResponse"
+          },
+          "taxonomy_id": {
+            "type": "string",
+            "title": "Taxonomy Id"
+          },
+          "dataset_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dataset Id"
+          },
+          "source_id": {
+            "type": "string",
+            "title": "Source Id"
+          },
+          "pairs": {
+            "items": {
+              "$ref": "#/components/schemas/PairResponse"
+            },
+            "type": "array",
+            "title": "Pairs",
+            "description": "Ordered by group (same_class, class_differs, only_a, only_b), then seq"
+          },
+          "counts": {
+            "$ref": "#/components/schemas/ComparisonCountsResponse"
+          },
+          "sample": {
+            "$ref": "#/components/schemas/SampleResponse"
+          }
+        },
+        "type": "object",
+        "required": [
+          "a",
+          "b",
+          "taxonomy_id",
+          "source_id",
+          "pairs",
+          "counts",
+          "sample"
+        ],
+        "title": "ProposalComparisonResponse",
+        "description": "Two individual extractions of one source, their individual creates paired."
       },
       "ProposalOriginResponse": {
         "properties": {
@@ -20338,6 +21102,33 @@
         ],
         "title": "SPARQLResponse",
         "description": "Response from SPARQL query execution."
+      },
+      "SampleResponse": {
+        "properties": {
+          "size": {
+            "type": "integer",
+            "title": "Size",
+            "description": "Same-class pairs in the sample"
+          },
+          "checked": {
+            "type": "integer",
+            "title": "Checked",
+            "description": "Of them, decided"
+          },
+          "changed": {
+            "type": "integer",
+            "title": "Changed",
+            "description": "Of the decided, those whose decision changed what both pipelines agreed on (another class, not an element, an edit)"
+          }
+        },
+        "type": "object",
+        "required": [
+          "size",
+          "checked",
+          "changed"
+        ],
+        "title": "SampleResponse",
+        "description": "How far the check of the agreements' sample has got."
       },
       "SchemaAttributeCandidate": {
         "properties": {
@@ -22423,6 +23214,17 @@
         ],
         "title": "Validity",
         "description": "Whether a claim points at a real problem."
+      },
+      "Verdict": {
+        "type": "string",
+        "enum": [
+          "keep",
+          "a_class",
+          "b_class",
+          "not_element"
+        ],
+        "title": "Verdict",
+        "description": "A reviewer's decision on a pair: keep it (the copies agree, or the only\none is right), take A's class or B's, or neither is an element."
       },
       "VersioningChangeEventResponse": {
         "properties": {

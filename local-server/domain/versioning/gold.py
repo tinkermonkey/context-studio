@@ -80,6 +80,12 @@ class ProposalDecision:
         annotations: What the reviewer noted for gold beside the decision:
             {tier?: "core" | "supporting", also_defensible?: [class id, ...]}
             (classes that would also be right); None when nothing was noted
+        comparison: Set when the decision was taken comparing two proposals of
+            the same source (domain.pipelines.proposal_comparison):
+            {with_proposal_id, with_operation_id (the other proposal's copy, or
+            None), verdict ("kept" | "class_changed" | "not_element", from this
+            operation's pipeline's view), sample (a checked agreement),
+            bulk ({sample_size, sample_changed} for an accepted rest, else None)}
         id: Unique id
     """
 
@@ -106,6 +112,7 @@ class ProposalDecision:
     superseded_by: str | None = None
     added: bool = False
     annotations: dict[str, Any] | None = None
+    comparison: dict[str, Any] | None = None
     id: str = field(default_factory=lambda: str(uuid4()))
 
     def __post_init__(self) -> None:
@@ -150,6 +157,7 @@ def decision_of(
     chosen_alternative: dict[str, Any] | None = None,
     review_ms: int | None = None,
     annotations: dict[str, Any] | None = None,
+    comparison: dict[str, Any] | None = None,
 ) -> ProposalDecision:
     """
     The decision an applied or rejected operation records.
@@ -160,6 +168,7 @@ def decision_of(
         chosen_alternative: The alternative the reviewer chose, when there is one
         review_ms: Milliseconds the reviewer spent on it, when measured
         annotations: What the reviewer noted for gold, if anything
+        comparison: How the decision was taken comparing two proposals, if it was
 
     Raises:
         ValueError: If the operation is neither applied nor rejected
@@ -186,8 +195,12 @@ def decision_of(
         decided_by=decided_by,
         proposed=proposed if proposed is not None else proposed_snapshot(operation),
         applied_fields=applied,
+        # A rejection as a duplicate keeps the individual its copy landed as.
         result_entity_id=(
-            operation.result_entity_id if operation.status is OperationStatus.APPLIED else None
+            operation.result_entity_id
+            if operation.status is OperationStatus.APPLIED
+            or operation.reason_code is RejectionReason.DUPLICATE
+            else None
         ),
         reason=operation.reason,
         reason_code=(
@@ -199,6 +212,7 @@ def decision_of(
         probability=operation.probability,
         added=operation.added_by_reviewer,
         annotations=dict(annotations) if annotations else None,
+        comparison=dict(comparison) if comparison else None,
     )
 
 

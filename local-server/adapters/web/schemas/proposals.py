@@ -1075,6 +1075,14 @@ class GoldDecisionResponse(BaseModel):
         description="What the reviewer noted for gold: {tier?, also_defensible?: [class id]}; "
         "null when nothing was noted",
     )
+    comparison: Optional[dict[str, Any]] = Field(
+        None,
+        description="Set when decided comparing two proposals of one source: "
+        "{with_proposal_id, with_operation_id (the other copy, or null), verdict (kept, "
+        "class_changed or not_element, from this operation's pipeline's view), sample (a "
+        "checked agreement), bulk ({sample_size, sample_changed} when the rest was accepted, "
+        "else null)}",
+    )
     added: bool = Field(
         False,
         description="The operation was added by the reviewer (an element the extraction "

@@ -116,6 +116,7 @@ from adapters.web.interchange_routes import router as interchange_router
 from adapters.web.ontology_routes import router as ontology_router
 from adapters.web.pipelines_routes import config_router as pipeline_config_router
 from adapters.web.pipelines_routes import router as pipelines_router
+from adapters.web.proposal_comparison_routes import router as proposal_comparison_router
 from adapters.web.proposals_routes import router as proposals_router
 from adapters.web.reference_routes import router as reference_router
 from adapters.web.request_guard import add_browser_guards
@@ -166,6 +167,7 @@ from domain.ontology.events import (
 from domain.ontology.ports import OntologyRepository
 from domain.ontology.services import OntologyService
 from domain.pipelines.bootstrap import register_pipelines
+from domain.pipelines.proposal_comparison import ProposalComparisonService
 from domain.pipelines.individual_extraction.apply_service import (
     IndividualExtractionApplyService,
 )
@@ -800,6 +802,9 @@ async def lifespan(app: FastAPI):
         app.state.versioning_service = versioning_service
         app.state.revert_service = revert_service
         app.state.proposal_service = proposal_service
+        app.state.proposal_comparison_service = ProposalComparisonService(
+            proposal_service, cast(OntologyRepository, ontology_repo)
+        )
         app.state.bundle_import_service = BundleImportService(
             proposal_service, ontology_service, cast(OntologyRepository, ontology_repo)
         )
@@ -1010,6 +1015,7 @@ app.include_router(admin_router)
 app.include_router(interchange_router)
 app.include_router(chat_router)
 app.include_router(proposals_router)
+app.include_router(proposal_comparison_router)
 app.include_router(claims_router)
 app.include_router(sources_router)
 app.include_router(bundle_router)

@@ -438,6 +438,7 @@ def _decision_to_orm(decision: ProposalDecision) -> ProposalDecisionRecord:
         superseded_by=decision.superseded_by,
         added=decision.added,
         annotations=dict(decision.annotations) if decision.annotations is not None else None,
+        comparison=dict(decision.comparison) if decision.comparison is not None else None,
     )
 
 
@@ -471,6 +472,7 @@ def _decision_to_domain(row: ProposalDecisionRecord) -> ProposalDecision:
         superseded_by=row.superseded_by,  # type: ignore[arg-type]
         added=bool(row.added),
         annotations=dict(row.annotations) if row.annotations is not None else None,  # type: ignore[arg-type]
+        comparison=dict(row.comparison) if row.comparison is not None else None,  # type: ignore[arg-type]
     )
 
 

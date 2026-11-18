@@ -25,7 +25,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import Any
+from typing import Any, Mapping
 from uuid import uuid4
 
 from domain.ontology.entities import same_attribute_value
@@ -664,6 +664,84 @@ class ProposedOperation:
             and self.result_entity_id is not None
             and self.alternative(self.result_entity_id) is not None
         )
+
+
+@dataclass(frozen=True)
+class OperationRef:
+    """One operation of one proposal."""
+
+    proposal_id: str
+    operation_id: str
+
+
+@dataclass(frozen=True)
+class CopyDecision:
+    """
+    One decision on an element that several proposals hold a copy of (two
+    pipelines' extractions of one source), taken once for all of them.
+
+    Attributes:
+        land: The copy that is applied; None to reject every copy
+        close: The other copies: rejected as duplicates of what `land`
+            created, once it is applied (a failed landing leaves them as they
+            are); or, without `land`, rejected with `reason_code`
+        reason_code: Why every copy is rejected (only without `land`)
+        chosen_alternative: An "existing" near match of `land` to apply it as
+            ({"kind": "existing", "entity_id"})
+        review_ms: The time the reviewer spent, recorded whole on the landed
+            copy's decision (without `land`, on the first closed copy's)
+        comparisons: Operation id -> the comparison record its decision keeps
+            (see ProposalDecision.comparison)
+    """
+
+    land: OperationRef | None = None
+    close: tuple[OperationRef, ...] = ()
+    reason_code: RejectionReason | None = None
+    chosen_alternative: dict[str, Any] | None = None
+    review_ms: int | None = None
+    comparisons: Mapping[str, dict[str, Any]] = field(default_factory=dict)
+
+    def __post_init__(self) -> None:
+        if self.land is None and not self.close:
+            raise ValueError("A decision needs a copy to land or to close")
+        if self.land is None and self.reason_code is None:
+            raise ValueError("Rejecting every copy needs a reason_code")
+        if self.land is not None and self.reason_code is not None:
+            raise ValueError("A copy that lands closes the others as duplicates")
+        refs = self.refs
+        if len(set(refs)) != len(refs):
+            raise ValueError("A copy can only be named once")
+
+    @property
+    def refs(self) -> list[OperationRef]:
+        """Every copy the decision names, the landing one first."""
+        return ([self.land] if self.land else []) + list(self.close)
+
+
+class CopyOutcome(str, Enum):
+    """What a CopyDecision did."""
+
+    # Its copy was applied (or already had been) and the others closed
+    LANDED = "landed"
+    # Every copy was rejected
+    REJECTED = "rejected"
+    # Its copy failed to apply; the others are as they were
+    FAILED = "failed"
+
+
+@dataclass(frozen=True)
+class CopyResult:
+    """
+    A CopyDecision's outcome.
+
+    Attributes:
+        entity_id: The individual the landed copy created or resolved to
+        failure_reason: Why the landing copy failed, when it did
+    """
+
+    outcome: CopyOutcome
+    entity_id: str | None = None
+    failure_reason: str | None = None
 
 
 @dataclass(frozen=True)
