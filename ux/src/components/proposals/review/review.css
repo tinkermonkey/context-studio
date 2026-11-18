@@ -385,6 +385,13 @@
     gap: 6px;
   }
 
+  .review-inspector__top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
   .review-inspector__title {
     color: rgb(var(--canvas-fg-1));
     font-size: 18px;
@@ -671,16 +678,20 @@
     }
   }
 
-  /* ---- pills: a class, an individual, a predicate; hover or focus explains ---- */
+  /* ---- pills: a class, an individual, a predicate; hover or focus explains ----
+     Three kinds that never read alike: an individual is the primary thing (a
+     bold, link-like title, its decision beside it); a class is a small, quiet,
+     typed tag (a class icon, monospace, dashed border); a predicate is the
+     relationship's verb (an arrow, the cyan tint, squared corners). */
   .review-pill {
     display: inline-flex;
     align-items: center;
+    gap: 4px;
     max-width: 100%;
     min-width: 0;
-    padding: 2px 8px;
-    border: 1px solid rgb(var(--canvas-border-strong));
-    border-radius: 999px;
-    background: rgb(var(--canvas-bg-2));
+    padding: 0;
+    border: 0;
+    background: none;
     color: rgb(var(--canvas-fg-1));
     font: inherit;
     font-size: 12px;
@@ -693,13 +704,10 @@
     cursor: pointer;
   }
 
-  .review-pill:hover {
-    border-color: rgb(var(--canvas-fg-3));
-  }
-
   .review-pill:focus-visible {
     outline: 2px solid rgb(var(--accent-primary));
-    outline-offset: 1px;
+    outline-offset: 2px;
+    border-radius: 4px;
   }
 
   .review-pill__text {
@@ -709,27 +717,241 @@
     white-space: nowrap;
   }
 
-  .review-pill--class {
-    font-family: var(--font-mono);
-    border-color: rgb(var(--status-violet) / 0.5);
-    background: rgb(var(--status-violet) / 0.1);
+  .review-pill__icon {
+    display: inline-flex;
+    flex-shrink: 0;
   }
 
-  .review-pill--predicate {
-    font-family: var(--font-mono);
-    border-color: rgb(var(--status-cyan) / 0.5);
-    background: rgb(var(--status-cyan) / 0.1);
-  }
-
+  /* An individual: the title itself, bold; a link to its element is underlined on hover. */
   .review-pill--individual {
-    font-weight: 500;
+    font-size: 13px;
+    font-weight: 600;
+    border-bottom: 1px dotted rgb(var(--canvas-fg-3));
+  }
+
+  a.review-pill--individual {
+    color: rgb(var(--accent-cyan));
+    border-bottom-color: transparent;
+  }
+
+  a.review-pill--individual:hover {
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+
+  .review-pill--individual.review-pill--lg {
+    font-size: 15px;
+    text-align: left;
+  }
+
+  /* A relationship's end shows its whole title, wrapping, never cut. */
+  .review-pill--individual.review-pill--lg .review-pill__text {
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+
+  /* An individual with its decision beside it. */
+  .review-individual {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .review-individual__status {
+    font-size: 12px;
+    color: rgb(var(--canvas-fg-3));
+    white-space: nowrap;
+  }
+
+  /* A class: small, quiet, typed. */
+  .review-pill--class {
+    padding: 1px 7px 1px 5px;
+    border: 1px dashed rgb(var(--status-violet) / 0.55);
+    border-radius: 4px;
+    background: rgb(var(--status-violet) / 0.06);
+    color: rgb(var(--canvas-fg-2));
+    font-family: var(--font-mono);
+    font-size: 11px;
+  }
+
+  .review-pill--class .review-pill__icon {
+    color: rgb(var(--status-violet));
+  }
+
+  .review-pill--class:hover {
+    border-style: solid;
+    color: rgb(var(--canvas-fg-1));
   }
 
   /* The selected element's class, under its title: the most prominent fact about it. */
-  .review-pill--lg {
-    padding: 4px 12px;
-    font-size: 14px;
+  .review-pill--class.review-pill--lg {
+    padding: 3px 10px 3px 7px;
+    font-size: 13.5px;
     font-weight: 600;
+    color: rgb(var(--canvas-fg-1));
+    border-style: solid;
+    background: rgb(var(--status-violet) / 0.12);
+  }
+
+  /* A predicate: the relationship's verb. */
+  .review-pill--predicate {
+    padding: 1px 8px 1px 6px;
+    border: 1px solid rgb(var(--status-cyan) / 0.6);
+    border-radius: 3px;
+    background: rgb(var(--status-cyan) / 0.14);
+    font-family: var(--font-mono);
+    font-weight: 600;
+  }
+
+  .review-pill--predicate .review-pill__icon {
+    color: rgb(var(--status-cyan));
+  }
+
+  .review-pill--predicate:hover {
+    background: rgb(var(--status-cyan) / 0.22);
+  }
+
+  .review-pill--predicate.review-pill--lg {
+    padding: 4px 12px 4px 9px;
+    font-size: 14px;
+  }
+
+  /* ---- a relationship, read top to bottom: From, the predicate, To ---- */
+  .review-triple {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .review-triple__row {
+    display: grid;
+    grid-template-columns: 36px minmax(0, 1fr);
+    align-items: baseline;
+    gap: 8px;
+  }
+
+  .review-triple__role {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: rgb(var(--canvas-fg-3));
+  }
+
+  .review-triple__end {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px 8px;
+    min-width: 0;
+  }
+
+  .review-triple__row--predicate {
+    align-items: center;
+    padding: 2px 0;
+  }
+
+  .review-triple__row--predicate > .review-pill {
+    justify-self: start;
+  }
+
+  /* The line down from the source to the target, beside the predicate. */
+  .review-triple__rail {
+    justify-self: center;
+    width: 2px;
+    height: 28px;
+    background: rgb(var(--status-cyan) / 0.5);
+    border-radius: 1px;
+  }
+
+  /* ---- gold's tier: the control, then what it means in plain words ---- */
+  .review-tier-block {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .review-tier__hint {
+    font-size: 12px;
+    line-height: 1.45;
+    color: rgb(var(--canvas-fg-3));
+  }
+
+  .review-hint-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: rgb(var(--canvas-fg-2));
+    font: inherit;
+    font-size: 12.5px;
+    cursor: help;
+    text-decoration: underline dotted;
+    text-underline-offset: 3px;
+  }
+
+  .review-hint-label:focus-visible {
+    outline: 2px solid rgb(var(--accent-primary));
+    outline-offset: 2px;
+    border-radius: 3px;
+  }
+
+  /* ---- a relationship's alternatives: predicate, source, target, alike ---- */
+  .review-alternatives {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .review-alternative {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 12px 0;
+    border-top: 1px solid rgb(var(--canvas-border));
+  }
+
+  .review-alternative:first-child {
+    border-top: 0;
+    padding-top: 0;
+  }
+
+  .review-alternative__note {
+    font-size: 12px;
+    color: rgb(var(--canvas-fg-3));
+  }
+
+  .review-alternative__options {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .review-alternative__pick {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 8px;
+    padding: 6px 8px;
+    border: 1px solid rgb(var(--accent-primary) / 0.5);
+    border-radius: 6px;
+    background: rgb(var(--accent-primary) / 0.06);
+  }
+
+  .review-alternatives__footer {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding-top: 12px;
+    border-top: 1px solid rgb(var(--canvas-border));
+  }
+
+  .review-relationship__verdict {
+    margin-left: auto;
   }
 
   /* ---- the hover overlay's richer content (class, predicate, individual) ---- */
@@ -805,26 +1027,6 @@
   .review-relationship__direction {
     font-family: var(--font-mono);
     color: rgb(var(--canvas-fg-3));
-  }
-
-  .review-end {
-    display: grid;
-    grid-template-columns: 40px minmax(0, 1fr);
-    align-items: center;
-    gap: 8px;
-  }
-
-  .review-end__role {
-    font-size: 12px;
-    color: rgb(var(--canvas-fg-3));
-  }
-
-  .review-end__pills {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 6px;
-    min-width: 0;
   }
 
   .review-decide {

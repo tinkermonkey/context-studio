@@ -1,12 +1,5 @@
 import { useEffect, useState, type RefObject } from "react";
-import {
-  Button,
-  Chip,
-  FormCallout,
-  Panel,
-  SegmentedControl,
-  TextArea,
-} from "@tinkermonkey/heimdall-ui";
+import { Button, Chip, FormCallout, Panel, TextArea } from "@tinkermonkey/heimdall-ui";
 import type { ProposedOperation, RejectionReason } from "@/api/services/proposals";
 import type { components } from "@/api/types";
 import { formatProbability } from "../proposalModel";
@@ -18,9 +11,13 @@ import {
   type NearMatchChoice as Choice,
 } from "../sourceModel";
 import { ReviewClassPicker } from "./ReviewClassPicker";
+import { TierControl } from "./TierControl";
 import { ClassPill, IndividualPill, PredicatePill } from "./ReviewPills";
 import {
-  RelationshipDetails,
+  EndsMisfit,
+  PredicateMeaning,
+  RelationshipTriple,
+  endsFit,
   RelationshipEditor,
   type EndCandidate,
   type EndInfo,
@@ -112,35 +109,6 @@ export interface GoldInspector {
   acceptableIds: string[];
   draft: GoldDraft;
   onDraft: (draft: GoldDraft) => void;
-}
-
-/** The tier control: core or supporting, starting from gold's. */
-function TierControl({
-  tier,
-  onChange,
-  disabled,
-}: {
-  tier: Tier;
-  onChange: (tier: Tier) => void;
-  disabled: boolean;
-}) {
-  return (
-    <div className="review-tier" data-testid="review-tier">
-      <span className="review-muted" id="review-tier-label">
-        Tier
-      </span>
-      <SegmentedControl
-        value={tier}
-        onChange={(value) => onChange(value as Tier)}
-        aria-labelledby="review-tier-label"
-        disabled={disabled}
-        options={[
-          { value: "core", label: "Core" },
-          { value: "supporting", label: "Supporting" },
-        ]}
-      />
-    </div>
-  );
 }
 
 function Eyebrow({ children }: { children: string }) {
@@ -344,6 +312,8 @@ export function ReviewInspector({
       };
   // Already correct as proposed: nothing for Correct to change.
   const alreadyCorrect = verdict === "correct" && !operation.matched;
+  // The ends no longer fit its type (an end's class changed): it can't apply as it is.
+  const misfit = !!relationshipEnds && endsFit(operation, relationshipEnds, schema) === false;
 
   return (
     <Panel
@@ -355,26 +325,42 @@ export function ReviewInspector({
       data-testid="review-inspector"
     >
       <div className="review-inspector__head">
-        <span className="review-eyebrow" data-testid="review-inspector-eyebrow">
-          {element ? "Individual" : "Relationship"}
-          {probability}
-        </span>
-        <span className="review-inspector__title" data-testid="review-inspector-title">
-          {names.titleOf(operation)}
-        </span>
+        <div className="review-inspector__top">
+          <span className="review-eyebrow" data-testid="review-inspector-eyebrow">
+            {element ? "Individual" : "Relationship"}
+            {probability}
+          </span>
+          {/* A relationship's decision sits by its kind: the header below is the relationship. */}
+          {!element && (
+            <Chip variant={VERDICT_CHIP[verdict]} data-testid="review-inspector-status">
+              {verdictLabel(operation)}
+            </Chip>
+          )}
+        </div>
+        {relationshipEnds ? (
+          <RelationshipTriple
+            operation={operation}
+            ends={relationshipEnds}
+            title={names.titleOf(operation)}
+          />
+        ) : (
+          <span className="review-inspector__title" data-testid="review-inspector-title">
+            {names.titleOf(operation)}
+          </span>
+        )}
         {gold && gold.aliases.length > 0 && (
           <span className="review-muted" data-testid="review-gold-aliases">
             Also called {gold.aliases.join(", ")}
           </span>
         )}
-        <div className="review-chips">
-          {element && (
+        {element && (
+          <div className="review-chips">
             <ClassPill classId={classId} size="lg" data-testid="review-inspector-class" />
-          )}
-          <Chip variant={VERDICT_CHIP[verdict]} data-testid="review-inspector-status">
-            {verdictLabel(operation)}
-          </Chip>
-        </div>
+            <Chip variant={VERDICT_CHIP[verdict]} data-testid="review-inspector-status">
+              {verdictLabel(operation)}
+            </Chip>
+          </div>
+        )}
       </div>
 
       <div className="review-inspector__body">
@@ -415,9 +401,7 @@ export function ReviewInspector({
           </div>
         )}
 
-        {relationshipEnds && (
-          <RelationshipDetails operation={operation} ends={relationshipEnds} schema={schema} />
-        )}
+        {relationshipEnds && <PredicateMeaning operation={operation} schema={schema} />}
 
         {!awaiting && (
           <div className="review-section">
@@ -463,6 +447,9 @@ export function ReviewInspector({
                   </FormCallout>
                 )
               )}
+              {misfit && ends.rejected.length === 0 && (
+                <EndsMisfit schema={schema} operation={operation} />
+              )}
               {nearMatch && (
                 <NearMatchChoice
                   operation={operation}
@@ -476,6 +463,7 @@ export function ReviewInspector({
               {gold && draft && (
                 <TierControl
                   tier={tier}
+                  kind={element ? "element" : "relationship"}
                   disabled={busy}
                   onChange={(next) => gold.onDraft({ ...draft, tier: next })}
                 />
@@ -485,7 +473,7 @@ export function ReviewInspector({
                   <Button
                     variant="primary"
                     size="sm"
-                    disabled={busy || ends.undecided.length > 0 || alreadyCorrect}
+                    disabled={busy || ends.undecided.length > 0 || alreadyCorrect || misfit}
                     onClick={onCorrect}
                     aria-keyshortcuts={awaiting ? "A" : undefined}
                     data-testid="review-correct"
@@ -722,11 +710,17 @@ export function ReviewInspector({
                         title={other.title}
                         classId={other.classId}
                         status={other.status}
+                        hideStatus
                         operationId={other.operationId}
                         data-testid={`review-relationship-${relationship.id}-end`}
                       />
                       {other.classId && <ClassPill classId={other.classId} />}
-                      <Chip variant={VERDICT_CHIP[relVerdict]}>{verdictLabel(relationship)}</Chip>
+                      <Chip
+                        variant={VERDICT_CHIP[relVerdict]}
+                        className="review-relationship__verdict"
+                      >
+                        {verdictLabel(relationship)}
+                      </Chip>
                     </li>
                   );
                 })}

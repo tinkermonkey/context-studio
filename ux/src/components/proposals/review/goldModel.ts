@@ -21,6 +21,30 @@ export type Split = "dev" | "holdout";
 /** The tier an element added in review gets unless the reviewer says otherwise. */
 export const ADDED_TIER: Tier = "supporting";
 
+/**
+ * What an element's tier means, as the benchmark's gold format defines it
+ * (extraction_benchmark/README.md) and its scorer counts it
+ * (tests/integration/pipelines/_harness/benchmark.py): every gold element counts
+ * toward recall; core ones also toward core recall.
+ */
+export const ELEMENT_TIER_HINT =
+  "Core: the text names it and says what it is or does. Supporting: only mentioned in passing. Missing a core one also costs core recall.";
+
+export const ELEMENT_TIER_DETAIL = [
+  "Core: the document names the element and says what it is or does, or lists it in its main inventory (a component table, an outcomes table).",
+  "Supporting: named only in a diagram, a table cell, an example or in passing, or its title had to be written from a statement.",
+  "A run that misses either loses recall. A core miss also lowers core recall, so core is what a pipeline must not miss.",
+];
+
+/** A relationship's tier: recorded in gold, not used in scoring. */
+export const RELATIONSHIP_TIER_HINT =
+  "Recorded in gold only: relationships are scored on recall over all of them, whatever the tier.";
+
+export const RELATIONSHIP_TIER_DETAIL = [
+  "Gold keeps a tier on each relationship (core unless noted), and writes the one you note.",
+  "Scoring doesn't use it: relationship recall counts every gold relationship alike.",
+];
+
 export interface GoldElement {
   key: string;
   tier: Tier;

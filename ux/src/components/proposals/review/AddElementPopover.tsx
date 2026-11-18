@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState, type KeyboardEvent } from "react";
-import { Button, Field, SegmentedControl, TextInput } from "@tinkermonkey/heimdall-ui";
+import { Button, Field, TextInput } from "@tinkermonkey/heimdall-ui";
 import type { components } from "@/api/types";
 import { titleFromQuote, type SelectedPassage } from "./addFromText";
 import { ClassChip } from "./ReviewInspector";
 import { ADDED_TIER, type Tier } from "./goldModel";
+import { TierControl } from "./TierControl";
 import { ReviewClassPicker } from "./ReviewClassPicker";
 
 type ClassResponse = components["schemas"]["ClassResponse"];
@@ -153,21 +154,14 @@ export function AddElementPopover({
           )}
         </div>
         {askTier && (
-          <div className="review-tier" data-testid="review-add-tier">
-            <span className="review-muted" id="review-add-tier-label">
-              Tier
-            </span>
-            <SegmentedControl
-              value={tier}
-              onChange={(value) => setTier(value as Tier)}
-              aria-labelledby="review-add-tier-label"
-              disabled={busy}
-              options={[
-                { value: "core", label: "Core" },
-                { value: "supporting", label: "Supporting" },
-              ]}
-            />
-          </div>
+          <TierControl
+            tier={tier}
+            kind="element"
+            onChange={setTier}
+            disabled={busy}
+            idPrefix="review-add-tier"
+            data-testid="review-add-tier"
+          />
         )}
         {error && (
           <div className="review-failed" role="alert" data-testid="review-add-error">

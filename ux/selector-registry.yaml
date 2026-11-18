@@ -3304,12 +3304,15 @@ selectors:
   - selector: review-pill-overlay
     component: src/components/proposals/review/ReviewPills.tsx
     description: "The hover overlay (role=tooltip, .definition-overlay, beside the inspector) of a class, individual or predicate pill: definition, layer, and for a class the relationships the schema allows from and to it"
-  - selector: review-relationship-ends
-    component: src/components/proposals/review/ReviewRelationship.tsx
-    description: "ENDS: review-end-source and review-end-target rows"
   - selector: review-end-*
     component: src/components/proposals/review/ReviewRelationship.tsx
-    description: "A relationship end row (review-end-{source,target}) with its -individual pill (a link when it is an element of the proposal), -class pill and -status (verdict chip, or \"in the workspace\")"
+    description: "A row of the relationship header (review-inspector-title, .review-triple): review-end-source (From) and review-end-target (To), each with its -individual pill (.review-pill--individual.review-pill--lg, a link when it is an element of the proposal; -individual-status beside it: its verdict chip, or \"in the workspace\") and -class pill (.review-pill--class)"
+  - selector: review-ends-misfit
+    component: src/components/proposals/review/ReviewRelationship.tsx
+    description: "Warning that the relationship's ends no longer fit its type (an end's class changed); Correct is disabled, a better predicate or end or a reject remain"
+  - selector: review-hint-overlay
+    component: src/components/proposals/review/ReviewPills.tsx
+    description: "A HintLabel's overlay (role=tooltip): e.g. the tier label's rule, how the scorer counts core and supporting"
   - selector: review-predicate
     component: src/components/proposals/review/ReviewRelationship.tsx
     description: "WHAT <predicate> MEANS: review-predicate-pill, -definition, -allowed (domain and range class pills)"
@@ -3382,7 +3385,10 @@ selectors:
     description: "Gold mode: the element's gold aliases under its title (\"Also called …\")"
   - selector: review-tier
     component: src/components/proposals/review/ReviewInspector.tsx
-    description: "Gold mode: Tier control (core / supporting) starting from the gold tier (an element's, or a relationship's by seq); a change is sent as annotations[op].tier"
+    description: "Gold mode: Tier control (core / supporting) starting from the gold tier (an element's, or a relationship's by seq); a change is sent as annotations[op].tier. -label is a HintLabel (hover: the scorer's rule), -hint the rule in one line"
+  - selector: review-tier-*
+    component: src/components/proposals/review/TierControl.tsx
+    description: "review-tier-label (the label, a button whose overlay gives the rule) and review-tier-hint (one line under the control: what core and supporting mean, or that a relationship's tier is only recorded)"
   - selector: review-defensible-*
     component: src/components/proposals/review/ReviewInspector.tsx
     description: "Gold mode: \"Also defensible\" toggle (aria-pressed) beside suggested class N (the gold's acceptable classes first), sent in annotations[op].also_defensible; for a class already in the gold's acceptable_classes it is pressed, disabled and reads \"Acceptable in gold\""
@@ -3394,7 +3400,7 @@ selectors:
     description: "Gold mode, elements only: shown while the note is empty; the Not-an-element reasons stay disabled until it has text (it becomes the excluded entry's reason)"
   - selector: review-add-tier
     component: src/components/proposals/review/AddElementPopover.tsx
-    description: "Gold mode: the added element's tier (supporting to start with), sent as annotation.tier"
+    description: "Gold mode: the added element's tier (supporting to start with), sent as annotation.tier; review-add-tier-label and -hint as review-tier's"
   - selector: gold-row-*
     component: src/components/proposals/gold/BenchmarkGoldPage.tsx
     description: "A gold check's document id in its table row, by proposal id"

@@ -6,7 +6,10 @@ import {
   type MouseEvent,
   type ReactNode,
 } from "react";
+import { ArrowRight, Info, Shapes } from "lucide-react";
+import { Chip } from "@tinkermonkey/heimdall-ui";
 import type { HoverOverlay } from "../HoverOverlay";
+import { VERDICT_CHIP, type Verdict } from "./reviewModel";
 import type { ReviewSchema } from "./reviewSchema";
 
 /**
@@ -161,10 +164,11 @@ function Pill({
   card,
   operationId,
   size = "md",
+  icon,
   className,
   "aria-label": ariaLabel,
   "data-testid": testId,
-}: PillProps) {
+}: PillProps & { icon?: ReactNode }) {
   const { overlay, link } = usePills();
   const overlayId = useId();
   const show = (event: MouseEvent<HTMLElement> | FocusEvent<HTMLElement>) =>
@@ -182,23 +186,36 @@ function Pill({
       .filter(Boolean)
       .join(" "),
   };
-  const text = <span className="review-pill__text">{label}</span>;
+  const content = (
+    <>
+      {icon && (
+        <span className="review-pill__icon" aria-hidden="true">
+          {icon}
+        </span>
+      )}
+      <span className="review-pill__text">{label}</span>
+    </>
+  );
   if (operationId) {
     const { href, onClick } = link(operationId);
     return (
       <a {...handlers} href={href} onClick={onClick}>
-        {text}
+        {content}
       </a>
     );
   }
   return (
     <button type="button" {...handlers}>
-      {text}
+      {content}
     </button>
   );
 }
 
-/** A class as a pill; hover shows its definition and the relationships it allows. */
+/**
+ * A class as a pill: quiet and typed (a class icon, small monospace text), so
+ * it never reads as the individual it types. Hover shows its definition and
+ * the relationships it allows.
+ */
 export function ClassPill({
   classId,
   size,
@@ -215,6 +232,7 @@ export function ClassPill({
       kind="class"
       size={size}
       label={label}
+      icon={<Shapes size={size === "lg" ? 14 : 11} strokeWidth={2} />}
       aria-label={`Class ${label}`}
       card={() => <ClassCard classId={classId} schema={schema} />}
       data-testid={testId}
@@ -222,25 +240,38 @@ export function ClassPill({
   );
 }
 
-/** An individual as a pill, linking to its operation when it is in the proposal. */
+/**
+ * An individual: the primary thing, its title bold and link-like (a link to
+ * its element when it is in the proposal), with its decision beside it when
+ * given. Hover shows its class and what that means.
+ */
 export function IndividualPill({
   title,
   classId,
   status,
+  verdict,
+  hideStatus = false,
   operationId,
+  size,
   "data-testid": testId,
 }: {
   title: string;
   classId?: string;
-  /** Where it stands: a verdict, or "in the workspace". */
+  /** Where it stands: a verdict's label, or "in the workspace". */
   status?: string;
+  /** Its verdict, shown beside it as a chip; without one, `status` shows as muted text. */
+  verdict?: Verdict;
+  /** Keep the status for the overlay only (a row that shows another decision beside it). */
+  hideStatus?: boolean;
   operationId?: string;
+  size?: "md" | "lg";
   "data-testid"?: string;
 }) {
   const { schema } = usePills();
-  return (
+  const pill = (
     <Pill
       kind="individual"
+      size={size}
       label={title}
       operationId={operationId}
       aria-label={operationId ? `Open ${title}` : title}
@@ -250,17 +281,41 @@ export function IndividualPill({
       data-testid={testId}
     />
   );
+  if (!status || hideStatus) return pill;
+  return (
+    <span className="review-individual">
+      {pill}
+      {verdict ? (
+        <Chip variant={VERDICT_CHIP[verdict]} data-testid={testId ? `${testId}-status` : undefined}>
+          {status}
+        </Chip>
+      ) : (
+        <span
+          className="review-individual__status"
+          data-testid={testId ? `${testId}-status` : undefined}
+        >
+          {status}
+        </span>
+      )}
+    </span>
+  );
 }
 
-/** A relationship's predicate as a pill, linking to the relationship when given. */
+/**
+ * A relationship's predicate: what the relationship says, so a pill of its
+ * own kind (an arrow, the accent's tint), larger where it defines the
+ * relationship. A link to the relationship when given.
+ */
 export function PredicatePill({
   propertyId,
   operationId,
+  size,
   "data-testid": testId,
 }: {
   propertyId?: string;
   /** The relationship operation the pill opens. */
   operationId?: string;
+  size?: "md" | "lg";
   "data-testid"?: string;
 }) {
   const { schema } = usePills();
@@ -268,11 +323,50 @@ export function PredicatePill({
   return (
     <Pill
       kind="predicate"
+      size={size}
       label={label}
+      icon={<ArrowRight size={size === "lg" ? 15 : 12} strokeWidth={2.25} />}
       operationId={operationId}
       aria-label={operationId ? `Open relationship ${label}` : `Predicate ${label}`}
       card={() => <PredicateCard propertyId={propertyId} schema={schema} />}
       data-testid={testId}
     />
+  );
+}
+
+/**
+ * A label that explains itself: the text with an info mark, a button whose
+ * hover or focus shows `hint` in the hover overlay.
+ */
+export function HintLabel({
+  label,
+  hint,
+  id,
+  "data-testid": testId,
+}: {
+  label: string;
+  hint: ReactNode;
+  id?: string;
+  "data-testid"?: string;
+}) {
+  const { overlay } = usePills();
+  const overlayId = useId();
+  const show = (event: MouseEvent<HTMLElement> | FocusEvent<HTMLElement>) =>
+    overlay.show(overlayId, hint, event.currentTarget, "review-hint-overlay");
+  return (
+    <button
+      type="button"
+      id={id}
+      className="review-hint-label"
+      onMouseEnter={show}
+      onFocus={show}
+      onMouseLeave={() => overlay.hide(overlayId)}
+      onBlur={() => overlay.hide(overlayId)}
+      aria-describedby={overlay.openId === overlayId ? overlayId : undefined}
+      data-testid={testId}
+    >
+      {label}
+      <Info size={12} aria-hidden="true" />
+    </button>
   );
 }

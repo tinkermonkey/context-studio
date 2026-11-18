@@ -134,10 +134,24 @@ function usePanesHeight(ready: boolean) {
   const [height, setHeight] = useState<number>();
   useLayoutEffect(() => {
     const measure = () => {
-      const top = ref.current?.getBoundingClientRect().top;
-      if (top === undefined) return;
+      const panes = ref.current;
+      if (!panes) return;
+      const rect = panes.getBoundingClientRect();
+      // In the shell's scrolling canvas: fill what it shows, counting from the top of its
+      // content (a scrolled page measures the same) and leaving room for whatever sits
+      // below the panes (its padding), so the page never scrolls and clips the headers.
+      const scroller = panes.closest("main");
+      if (scroller && scroller.clientHeight > 0) {
+        const box = scroller.getBoundingClientRect();
+        const top = rect.top - box.top + scroller.scrollTop;
+        const below = scroller.scrollHeight - (rect.bottom - box.top + scroller.scrollTop);
+        setHeight(
+          Math.max(PANES_MIN_HEIGHT, Math.floor(scroller.clientHeight - top - Math.max(0, below))),
+        );
+        return;
+      }
       setHeight(
-        Math.max(PANES_MIN_HEIGHT, Math.round(window.innerHeight - top - PANES_BOTTOM_GAP)),
+        Math.max(PANES_MIN_HEIGHT, Math.round(window.innerHeight - rect.top - PANES_BOTTOM_GAP)),
       );
     };
     measure();
