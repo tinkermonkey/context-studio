@@ -322,7 +322,7 @@ test.describe("Proposal review page", () => {
     await expect(page.getByTestId("review-progress")).toBeVisible();
     await expect(page.getByTestId("review-progress-decided")).toHaveText("0 / 4");
     await expect(page.getByTestId("review-progress-counts")).toHaveText(
-      "0 correct · 0 class changed · 0 not elements · 0 added",
+      "0 correct · 0 changed · 0 rejected · 0 added",
     );
     await expect(page.getByTestId("review-time")).toHaveText(/^\d+:\d{2} on this review$/);
 
@@ -475,7 +475,7 @@ test.describe("Proposal review page", () => {
     await expect(row(page, ops.gateway)).toHaveAttribute("data-verdict", "changed");
     await expect(gatewayMark).toHaveClass(/\breview-mark--changed\b/);
     await expect(decided).toHaveText("2 / 4");
-    await expect(counts).toContainText("1 class changed");
+    await expect(counts).toContainText("1 changed");
     await expect(row(page, ops.customers)).toHaveAttribute("aria-selected", "true");
     await expect(title).toHaveText("Customers");
 
@@ -496,7 +496,7 @@ test.describe("Proposal review page", () => {
     const customersMark = await markOf(page, "Customers", ops.customers);
     await expect(customersMark).toHaveClass(/\breview-mark--rejected\b/);
     await expect(decided).toHaveText("3 / 4");
-    await expect(counts).toHaveText("1 correct · 1 class changed · 1 not elements · 0 added");
+    await expect(counts).toHaveText("1 correct · 1 changed · 1 rejected · 0 added");
     await expect(page.getByTestId("review-filter")).toContainText("Awaiting · 1");
     await expect(row(page, ops.serves)).toHaveAttribute("aria-selected", "true");
 
@@ -521,9 +521,9 @@ test.describe("Proposal review page", () => {
     const serves = relationships.getByTestId(`review-relationship-${ops.serves}`);
     await expect(serves).toContainText("Mail Gateway");
     await expect(serves).toContainText("e2e_review_serves");
-    await expect(serves).toContainText("Customers");
+    // From Customers: the predicate, the other end and its class, as pills.
     await expect(serves).toContainText("awaiting");
-    await serves.click();
+    await serves.getByTestId(`review-relationship-${ops.serves}-open`).click();
 
     await expect(row(page, ops.serves)).toHaveAttribute("aria-selected", "true");
     await expect(page.getByTestId("review-inspector-eyebrow")).toContainText(
@@ -535,7 +535,7 @@ test.describe("Proposal review page", () => {
     const callout = page.getByTestId("review-ends-callout");
     await expect(callout).toBeVisible();
     await expect(callout).toContainText("#3 was rejected");
-    await expect(callout).toContainText("Reject it.");
+    await expect(callout).toContainText("Reject it, or give it another end.");
     await expect(page.getByTestId("review-correct")).toHaveCount(0);
     await expect(page.getByTestId("review-reasons")).toBeVisible();
     await expect(page.getByTestId("review-reason-not_in_text")).toBeEnabled();
