@@ -94,6 +94,20 @@ npm test
 
 When the API changes, run `local-server/scripts/update_api_specs.py`, then `npm run generate-types` in `ux/`.
 
+### A QA instance from a git worktree
+
+A git worktree has no venv, `node_modules` or databases. One command from the worktree's root runs a full instance of its branch beside the main checkout's servers:
+
+```bash
+./dev.sh --worktree --from-workspace   # start; prints the UI and API URLs
+./dev.sh --worktree --restart-backend  # after a back-end change: re-migrate the copies, restart
+./dev.sh --worktree --stop             # stop both servers, remove the copies, config and links
+```
+
+Starting links `local-server/.venv`, `local-server/.env` and `ux/node_modules` from the main checkout (it runs `npm ci` instead when `package-lock.json` differs). It creates the databases in `.qa-instance/` (gitignored) and migrates them: `--from-workspace` snapshots the main checkout's workspace with `sqlite3 .backup`, otherwise they start empty. It writes `.qa-instance/config.json` with the instance's port and `ui_base_url`, with no sync, and starts both servers in the background. The ports are 8000+N and 3100+N, N being `--port-offset N` or else the first free of 10, 20, …. The front end's API client and its `/api` proxy both follow `VITE_API_BASE_URL`, so the instance never calls the back end on 8000.
+
+The command refuses to run in the main checkout or on a port already in use, and it only ever reads the workspace databases. `./dev.sh --worktree --setup` makes the links alone, which is enough for the unit tests and the E2E harness (`npm run test:e2e` in `ux/`); `--stop` removes them. Plain `./dev.sh` is unchanged.
+
 The field guide is a single HTML page at [documentation/field-guide/index.html](documentation/field-guide/index.html). A push to `main` that changes it republishes the site.
 
 ## Configuration and security
