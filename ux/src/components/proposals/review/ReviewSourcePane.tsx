@@ -38,7 +38,15 @@ interface ReviewSourcePaneProps {
   popoverAnchor?: PopoverAnchor;
   /** A mouse press outside the add form (and outside the source text) closes it. */
   onDismissPopover?: () => void;
+  /**
+   * A passage to bring into view and flash: where it starts in the text
+   * (UTF-16), and a nonce so asking for the same passage again shows it again.
+   */
+  focus?: { start: number; nonce: number };
 }
+
+/** How long a passage shown from the inspector stays flashed, in ms. */
+const FLASH_MS = 1600;
 
 /** Keys pressed in a field or a dialog never start an add. */
 function inFieldOrDialog(target: EventTarget | null): boolean {
@@ -86,6 +94,7 @@ export function ReviewSourcePane({
   popover,
   popoverAnchor,
   onDismissPopover,
+  focus,
 }: ReviewSourcePaneProps) {
   const ownTextRef = useRef<HTMLDivElement>(null);
   const textRef = givenTextRef ?? ownTextRef;
@@ -137,6 +146,21 @@ export function ReviewSourcePane({
     document.addEventListener("mousedown", onMouseDown);
     return () => document.removeEventListener("mousedown", onMouseDown);
   }, [open, textRef]);
+
+  // A passage asked for from the inspector: scroll the text to it and flash it.
+  useEffect(() => {
+    const box = textRef.current?.querySelector<HTMLElement>(".review-source__text");
+    if (!focus || !box) return;
+    const mark = box.querySelector<HTMLElement>(`mark[data-start="${focus.start}"]`);
+    if (!mark) return;
+    box.scrollTo?.({ top: Math.max(0, mark.offsetTop - box.clientHeight / 3), behavior: "smooth" });
+    mark.classList.add("review-mark--flash");
+    const timer = window.setTimeout(() => mark.classList.remove("review-mark--flash"), FLASH_MS);
+    return () => {
+      window.clearTimeout(timer);
+      mark.classList.remove("review-mark--flash");
+    };
+  }, [focus, textRef]);
 
   // The selected element's verdict colours an overlap it is part of; else the first one's.
   const shownKey = (keys: string[]) =>

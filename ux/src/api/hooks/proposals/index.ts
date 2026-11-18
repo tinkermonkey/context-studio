@@ -8,6 +8,7 @@ export {
   useCreateChangeProposal,
   useApplyChangeProposal,
   useRejectChangeProposal,
+  useReopenProposalOperations,
   useRevertChangeProposal,
   useAddProposalIndividual,
   useExportProposalDecisions,

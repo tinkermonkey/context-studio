@@ -82,6 +82,7 @@ export function SourceText({
             className={markClassName(keys, active)}
             data-testid={markTestId}
             data-span-keys={keys.join(" ")}
+            data-start={start}
             aria-current={active ? "true" : undefined}
             aria-label={markLabel(keys, chunk)}
             role="button"

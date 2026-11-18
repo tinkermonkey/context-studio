@@ -3219,7 +3219,7 @@ selectors:
     description: 'A group of rows (role=group), by concept scheme id, "other", or "relationships"'
   - selector: review-row-*
     component: src/components/proposals/review/ReviewElementsPane.tsx
-    description: "An element row (role=option, aria-selected), by operation id: title, class or predicate, probability, status chip; .review-row--selected when selected"
+    description: "An element row, a link (<a role=option href=?selected=<id>>, aria-selected), by operation id: title, class or predicate, probability, status chip; .review-row--selected when selected; a plain click selects it (a history entry)"
   - selector: review-inspector
     component: src/components/proposals/review/ReviewInspector.tsx
     description: 'Inspector (region "Selected element") for the selected element or relationship'
@@ -3231,7 +3231,7 @@ selectors:
     description: 'The element title, or a relationship''s "from predicate to"'
   - selector: review-inspector-class
     component: src/components/proposals/review/ReviewInspector.tsx
-    description: "Class chip (the applied class once changed); elements only"
+    description: "The class as a large pill (.review-pill--class.review-pill--lg, a button, aria-label \"Class <label>\"; the applied class once changed); hover or focus shows its overlay; elements only"
   - selector: review-inspector-status
     component: src/components/proposals/review/ReviewInspector.tsx
     description: "Verdict chip: awaiting (amber), correct (emerald), class changed (violet), not an element (rose), added (cyan)"
@@ -3240,7 +3240,10 @@ selectors:
     description: "Alert with the reason the last apply failed"
   - selector: review-evidence
     component: src/components/proposals/review/ReviewInspector.tsx
-    description: "EVIDENCE: the passages' quotes"
+    description: "EVIDENCE: the passages' quotes, each a button (review-evidence-{n}) that scrolls the source to it and flashes it (.review-mark--flash)"
+  - selector: review-evidence-*
+    component: src/components/proposals/review/ReviewInspector.tsx
+    description: "One evidence passage (a button, 1-based): scrolls the source to it and flashes it"
   - selector: review-definition
     component: src/components/proposals/review/ReviewInspector.tsx
     description: '"WHAT <class> MEANS" with the class description'
@@ -3261,7 +3264,7 @@ selectors:
     description: "OR A BETTER CLASS: suggestions and the class picker"
   - selector: review-suggestion-*
     component: src/components/proposals/review/ReviewInspector.tsx
-    description: "Suggested class 1-3 (keys 1-3): classes picked earlier in the review, most recent first, with definitions; applies with edits class_ids"
+    description: "Suggested class 1-3 (keys 1-3): gold's acceptable classes, then the two picked most recently, with definitions; applies with edits class_ids. review-suggestion-{n}-remove (.review-forget) removes a recent one"
   - selector: review-class-picker
     component: src/components/proposals/review/ReviewClassPicker.tsx
     description: 'EntityPicker over the taxonomy''s non-derived classes ("Search all N classes")'
@@ -3276,7 +3279,19 @@ selectors:
     description: "Optional note TextArea sent with a reject"
   - selector: review-decided
     component: src/components/proposals/review/ReviewInspector.tsx
-    description: "A decided operation's decision, read-only"
+    description: "A decided operation's decision, its class (review-decided-class) or predicate as pills"
+  - selector: review-decided-class
+    component: src/components/proposals/review/ReviewInspector.tsx
+    description: "The class an element was accepted or added as, a class pill with its overlay"
+  - selector: review-decided-*
+    component: src/components/proposals/review/ReviewInspector.tsx
+    description: "An edited relationship's decision: review-decided-predicate, -source_id, -target_id, each as it is now beside what was proposed"
+  - selector: review-change-*
+    component: src/components/proposals/review/ReviewInspector.tsx
+    description: "review-change-decision: Change the decision / Keep this decision (aria-expanded, aria-controls review-change) on a decided operation; review-change-note says what changing it undoes"
+  - selector: review-decide
+    component: src/components/proposals/review/ReviewInspector.tsx
+    description: "The decision controls (#review-change): Correct, a better class or predicate/end, the reasons; a decided operation shows them after Change the decision (reopen, then decide)"
   - selector: review-decided-note
     component: src/components/proposals/review/ReviewInspector.tsx
     description: "A rejected operation's note"
@@ -3285,7 +3300,34 @@ selectors:
     description: "ITS RELATIONSHIPS · N: relationship operations with this element at either end"
   - selector: review-relationship-*
     component: src/components/proposals/review/ReviewInspector.tsx
-    description: "One of the element's relationships, by operation id: from, predicate, to and status; click selects it"
+    description: "One of the element's relationships (li), by operation id: direction, the predicate pill (review-relationship-{id}-open, a link opening it), the other end's individual pill (-end, a link to its element) and class pill, status chip"
+  - selector: review-pill-overlay
+    component: src/components/proposals/review/ReviewPills.tsx
+    description: "The hover overlay (role=tooltip, .definition-overlay, beside the inspector) of a class, individual or predicate pill: definition, layer, and for a class the relationships the schema allows from and to it"
+  - selector: review-relationship-ends
+    component: src/components/proposals/review/ReviewRelationship.tsx
+    description: "ENDS: review-end-source and review-end-target rows"
+  - selector: review-end-*
+    component: src/components/proposals/review/ReviewRelationship.tsx
+    description: "A relationship end row (review-end-{source,target}) with its -individual pill (a link when it is an element of the proposal), -class pill and -status (verdict chip, or \"in the workspace\")"
+  - selector: review-predicate
+    component: src/components/proposals/review/ReviewRelationship.tsx
+    description: "WHAT <predicate> MEANS: review-predicate-pill, -definition, -allowed (domain and range class pills)"
+  - selector: review-predicate-*
+    component: src/components/proposals/review/ReviewRelationship.tsx
+    description: "review-predicate-pill/-definition/-allowed; review-predicate-option-{n}: a better predicate the schema allows between the ends' classes (aria-pressed); review-predicate-none when there is none"
+  - selector: review-relationship-editor
+    component: src/components/proposals/review/ReviewRelationship.tsx
+    description: "OR A BETTER PREDICATE, SOURCE OR TARGET: the draft of a relationship's edit"
+  - selector: review-better-*
+    component: src/components/proposals/review/ReviewRelationship.tsx
+    description: "review-better-source / review-better-target: search the individuals (accepted elements, the dataset's) of a class the chosen type allows"
+  - selector: review-draft-*
+    component: src/components/proposals/review/ReviewRelationship.tsx
+    description: "review-draft-{source,target}: the end picked, with -undo; review-draft-clear clears the draft"
+  - selector: review-accept-edited
+    component: src/components/proposals/review/ReviewRelationship.tsx
+    description: "Accept with these changes: applies the relationship with edits (property_definition_id, source_id, target_id); disabled until the draft changes something"
 
   # Review page: add a missed element from selected text (#1612)
   - selector: review-source-selectable

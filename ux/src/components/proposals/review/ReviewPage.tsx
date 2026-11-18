@@ -6,13 +6,17 @@ import {
   useRef,
   useState,
   type CSSProperties,
+  type MouseEvent,
 } from "react";
 import { Button, Chip, ConfirmDialog, PageHeader, ProgressBar } from "@tinkermonkey/heimdall-ui";
-import { SMALL_SET_LIMIT } from "@/api/config";
+import { SCHEMA_PROPERTIES_LIMIT, SMALL_SET_LIMIT } from "@/api/config";
 import { ApiError } from "@/api/client/interceptors";
 import { useAddProposalIndividual, useChangeProposal } from "@/api/hooks/proposals";
 import { useTaxonomyClasses } from "@/api/hooks/ontology/useClasses";
 import { useDatasets } from "@/api/hooks/ontology/useDatasets";
+import { useIndividuals, useIndividualsByIds } from "@/api/hooks/ontology/useIndividuals";
+import { useTaxonomyPredicates } from "@/api/hooks/ontology/usePredicates";
+import { useProperties } from "@/api/hooks/ontology/useProperties";
 import { useSchemes } from "@/api/hooks/ontology/useSchemes";
 import { useSource, useSourceText } from "@/api/hooks/sources/useSource";
 import type { ProposedOperation, RejectionReason } from "@/api/services/proposals";
@@ -32,8 +36,12 @@ import {
 } from "../sourceModel";
 import { useOperationContext } from "../useOperationContext";
 import { useProposalActions, type ApplyOutcome } from "../useProposalActions";
+import { useHoverOverlay } from "../HoverOverlay";
 import { ReviewElementsPane, type ElementRow } from "./ReviewElementsPane";
 import { ReviewInspector, type ReviewNames } from "./ReviewInspector";
+import { ReviewPillsProvider, type OperationLink, type ReviewPillsValue } from "./ReviewPills";
+import type { EndCandidate, EndInfo } from "./ReviewRelationship";
+import { buildReviewSchema } from "./reviewSchema";
 import { ReviewSourcePane, type PopoverAnchor } from "./ReviewSourcePane";
 import { AddElementPopover } from "./AddElementPopover";
 import {
@@ -45,9 +53,10 @@ import {
   type SelectedPassage,
 } from "./addFromText";
 import {
-  classLabel,
+  endOperation,
   endsToDecide,
   filterGroups,
+  forgetPick,
   formatDuration,
   groupForReview,
   isElement,
@@ -60,8 +69,11 @@ import {
   reviewSourceId,
   reviewSpans,
   shownClassId,
+  shownFields,
+  shownTitle,
   step,
   suggestedClasses,
+  verdictLabel,
   verdictOf,
   type ElementFilter,
   type Layer,
@@ -146,12 +158,27 @@ function usePanesHeight(ready: boolean) {
 type Decision =
   | { kind: "correct" }
   | { kind: "class"; classId: string }
+  | { kind: "edit"; edit: Record<string, string> }
   | { kind: "reject"; reasonCode: RejectionReason; note: string };
 
 interface ReviewPageProps {
   id: string;
   /** Back to the proposal's page. */
   onFinish: () => void;
+  /**
+   * The selected operation, from the URL; with onSelect and hrefOf the page
+   * follows the route (each selection a history entry). Without them it keeps
+   * the selection itself.
+   */
+  selectedId?: string;
+  onSelect?: (operationId: string) => void;
+  /** The href that opens an operation (a link can open it in a new tab). */
+  hrefOf?: (operationId: string) => string;
+}
+
+/** A plain left click selects in place; a modified one is left to the browser (new tab). */
+function plainClick(event: MouseEvent): boolean {
+  return !(event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || event.button !== 0);
 }
 
 /**
@@ -161,7 +188,13 @@ interface ReviewPageProps {
  * (A correct, 1-3 a class picked earlier, X a reason, J / K next and previous).
  * Each decision records the active time spent on the element.
  */
-export function ReviewPage({ id, onFinish }: ReviewPageProps) {
+export function ReviewPage({
+  id,
+  onFinish,
+  selectedId: routeSelectedId,
+  onSelect: routeOnSelect,
+  hrefOf: routeHrefOf,
+}: ReviewPageProps) {
   const { toast } = useToasts();
   const { data: proposal, error, refetch } = useChangeProposal(id);
   const taxonomyId = proposal?.taxonomy_id ?? "";
@@ -192,7 +225,8 @@ export function ReviewPage({ id, onFinish }: ReviewPageProps) {
   const { data: sourceText, isError: textFailed } = useSourceText(sourceId, null, {
     enabled: readable,
   });
-  const spans = useMemo(
+  // The highlighted passages: every element's, and the open relationship's (see below).
+  const elementSpans = useMemo(
     () =>
       sourceId && sourceText
         ? reviewSpans(elements, sourceId, sourceText.text, sourceText.start)
@@ -221,21 +255,61 @@ export function ReviewPage({ id, onFinish }: ReviewPageProps) {
     [classById, schemeById, layersLoading],
   );
 
+  // The schema: every relationship type, with the taxonomy's predicate catalog.
+  const { data: propertyList, isError: propertiesFailed } = useProperties(
+    undefined,
+    { limit: SCHEMA_PROPERTIES_LIMIT },
+    { enabled: !!taxonomyId },
+  );
+  const { data: catalog } = useTaxonomyPredicates(taxonomyId || undefined);
+  const schema = useMemo(
+    () =>
+      buildReviewSchema({
+        classes: classes ?? [],
+        schemes: schemes?.items ?? [],
+        properties: propertyList?.items ?? [],
+        predicates: catalog ?? [],
+        loading: classesLoading || (!propertyList && !propertiesFailed),
+      }),
+    [classes, schemes, propertyList, catalog, classesLoading, propertiesFailed],
+  );
+
+  // Individuals a relationship names by id (an existing end, or an edit's): titles and classes.
+  const endIds = useMemo(
+    () =>
+      relationships.flatMap((o) =>
+        [shownFields(o).source_id, shownFields(o).target_id].filter(
+          (v): v is string => typeof v === "string" && !v.startsWith("$"),
+        ),
+      ),
+    [relationships],
+  );
+  const { data: endIndividuals } = useIndividualsByIds(endIds);
+
   const names: ReviewNames = useMemo(() => {
     const labelOf = (classId: string | undefined) => {
-      if (!classId) return "no class";
-      if (classesLoading) return "…";
-      const found = classById.get(classId);
-      return found ? classLabel(found) : classId;
+      if (classesLoading) return classId ? "…" : "no class";
+      return schema.classLabel(classId);
     };
-    const endTitle = (value: unknown, operation: ProposedOperation) =>
-      typeof value === "string" ? (context.nameOf(value, operation) ?? value) : "?";
-    const relationshipParts = (operation: ProposedOperation) => ({
-      from: endTitle(operation.fields?.source_id, operation),
-      predicate:
-        context.predicateOf(operation.fields?.property_definition_id as string | undefined) ?? "…",
-      to: endTitle(operation.fields?.target_id, operation),
-    });
+    const created = (value: unknown) => endOperation(value, operations);
+    const endTitle = (value: unknown, operation: ProposedOperation) => {
+      const create = created(value);
+      if (create) return shownTitle(create);
+      const found = endIndividuals?.items.find((i) => i.id === value);
+      if (found) return found.title;
+      return typeof value === "string" ? (context.nameOf(value, operation) ?? value) : "?";
+    };
+    const relationshipParts = (operation: ProposedOperation) => {
+      const fields = shownFields(operation);
+      const propertyId = fields.property_definition_id as string | undefined;
+      return {
+        from: endTitle(fields.source_id, operation),
+        predicate: schema.property(propertyId)
+          ? schema.predicateLabel(propertyId)
+          : (context.predicateOf(propertyId) ?? "…"),
+        to: endTitle(fields.target_id, operation),
+      };
+    };
     return {
       classLabel: labelOf,
       classOf: (classId) => (classId ? classById.get(classId) : undefined),
@@ -245,11 +319,30 @@ export function ReviewPage({ id, onFinish }: ReviewPageProps) {
           const { from, predicate, to } = relationshipParts(operation);
           return `${from} ${predicate} ${to}`;
         }
-        const title = operation.fields?.title;
-        return typeof title === "string" && title ? title : `#${operation.seq}`;
+        return shownTitle(operation);
       },
     };
-  }, [classById, context, classesLoading]);
+  }, [classById, context, classesLoading, schema, operations, endIndividuals]);
+
+  /** A relationship's end as the inspector shows it: an element of the proposal, or an individual. */
+  const endOf = (value: unknown): EndInfo => {
+    const create = endOperation(value, operations);
+    if (create) {
+      return {
+        title: shownTitle(create),
+        classId: shownClassId(create),
+        verdict: verdictOf(create),
+        status: verdictLabel(create),
+        operationId: create.id,
+      };
+    }
+    const found = endIndividuals?.items.find((i) => i.id === value);
+    return {
+      title: found?.title ?? (typeof value === "string" ? value : "?"),
+      classId: found?.class_ids?.[0],
+      status: found ? "in the workspace" : "not found",
+    };
+  };
 
   const rowOf = (operation: ProposedOperation): ElementRow => ({
     title: isRelationship(operation)
@@ -263,27 +356,58 @@ export function ReviewPage({ id, onFinish }: ReviewPageProps) {
         ? ""
         : formatProbability(operation.probability),
     verdict: verdictOf(operation),
+    verdictLabel: verdictLabel(operation),
   });
 
-  // Groups, filter and selection.
+  // Groups, filter and selection. The selection follows the route when it has one
+  // (?selected=..., each selection a history entry), else the page keeps it.
   const [filter, setFilter] = useState<ElementFilter>("all");
-  const [chosenId, setSelectedId] = useState<string>();
+  const [ownSelectedId, setOwnSelectedId] = useState<string>();
+  const chosenId = routeOnSelect ? routeSelectedId : ownSelectedId;
+  const selectedRef = useRef<string | undefined>(undefined);
+  const setSelectedId = (operationId: string) => {
+    // Selecting what is already selected adds no history entry.
+    if (operationId === selectedRef.current) return;
+    if (routeOnSelect) routeOnSelect(operationId);
+    else setOwnSelectedId(operationId);
+  };
+  const hrefOf =
+    routeHrefOf ?? ((operationId: string) => `?selected=${encodeURIComponent(operationId)}`);
+  /** An operation's link: a real href (open in a new tab), a plain click selecting it here. */
+  const link = (operationId: string): OperationLink => ({
+    href: hrefOf(operationId),
+    onClick: (event) => {
+      if (!plainClick(event)) return;
+      event.preventDefault();
+      setSelectedId(operationId);
+    },
+  });
   const groups = useMemo(
     () => groupForReview(elements, relationships, layerOf),
     [elements, relationships, layerOf],
   );
   const order = useMemo(() => orderOf(groups), [groups]);
-  // Until the reviewer picks one, the first element awaiting a decision (else the first).
+  // Until the reviewer picks one (or when a link names none of this proposal's),
+  // the first element awaiting a decision, else the first.
   const selectedId =
-    chosenId ??
+    (chosenId && reviewed.some((o) => o.id === chosenId) ? chosenId : undefined) ??
     order.find((opId) => reviewed.some((o) => o.id === opId && isAwaiting(o))) ??
     order[0];
+  selectedRef.current = selectedId;
   const shownGroups = useMemo(
     () => filterGroups(groups, filter, selectedId),
     [groups, filter, selectedId],
   );
   const shownOrder = useMemo(() => orderOf(shownGroups), [shownGroups]);
   const selected = reviewed.find((o) => o.id === selectedId);
+  // A relationship's passages are highlighted while it is open: selecting it scrolls to them.
+  const spans = useMemo(
+    () =>
+      selected && isRelationship(selected) && sourceId && sourceText
+        ? [...elementSpans, ...reviewSpans([selected], sourceId, sourceText.text, sourceText.start)]
+        : elementSpans,
+    [elementSpans, selected, sourceId, sourceText],
+  );
   useEffect(() => clock.startElement(selectedId), [clock, selectedId]);
 
   // Gold mode: a benchmark gold file loaded for a person to check.
@@ -320,6 +444,41 @@ export function ReviewPage({ id, onFinish }: ReviewPageProps) {
     );
     return all.slice(0, Math.max(3, acceptable.length));
   }, [recentClasses, selected, classById, classes, gold]);
+
+  // The individuals a relationship's ends can be changed to: this proposal's accepted
+  // elements, and the dataset's individuals (loaded once a relationship is open).
+  const relationshipOpen = !!selected && isRelationship(selected);
+  const { data: datasetIndividuals } = useIndividuals(
+    { dataset_id: proposal?.dataset_id ?? undefined, limit: SMALL_SET_LIMIT, sort_by: "title" },
+    { enabled: relationshipOpen && !!proposal?.dataset_id },
+  );
+  const endCandidates = useMemo((): EndCandidate[] => {
+    if (!relationshipOpen) return [];
+    const accepted = elements
+      .filter((o) => o.status === "applied" && o.result_entity_id)
+      .map((o) => ({
+        entityId: o.result_entity_id!,
+        title: shownTitle(o),
+        classId: shownClassId(o),
+        operationId: o.id,
+      }));
+    const known = new Set(accepted.map((c) => c.entityId));
+    const others = (datasetIndividuals?.items ?? [])
+      .filter((i) => !known.has(i.id))
+      .map((i) => ({ entityId: i.id, title: i.title, classId: i.class_ids?.[0] }));
+    return [...accepted, ...others];
+  }, [relationshipOpen, elements, datasetIndividuals]);
+
+  // The hover overlay the pills share, beside the inspector.
+  const overlay = useHoverOverlay("#review-inspector");
+  const pills: ReviewPillsValue = { schema, overlay, link };
+
+  // A passage asked for from the inspector's evidence: shown and flashed in the source.
+  const [focus, setFocus] = useState<{ start: number; nonce: number }>();
+  const showPassage = (operationId: string, quote: string) => {
+    const span = spans.find((s) => s.key === operationId && s.quote === quote);
+    if (span?.start != null) setFocus({ start: span.start, nonce: Date.now() });
+  };
 
   const deciding = !!proposal && takesDecisions(proposal);
 
@@ -387,10 +546,44 @@ export function ReviewPage({ id, onFinish }: ReviewPageProps) {
     isElement(operation) && isNearMatch(operation)
       ? chosenAlternative(nearChoiceOf(operation))
       : undefined;
-  /** A relationship can't be accepted before its new ends are, nor after one is rejected. */
-  const acceptBlocked = (operation: ProposedOperation) => {
-    const ends = endsToDecide(operation, operations);
-    return ends.undecided.length > 0 || ends.rejected.length > 0;
+  /**
+   * A relationship can't be accepted before its new ends are, nor after one is
+   * rejected; an end the edit replaces doesn't count.
+   */
+  const acceptBlocked = (
+    operation: ProposedOperation,
+    all: ProposedOperation[],
+    edit?: Record<string, string>,
+  ) => {
+    const ends = endsToDecide(operation, all);
+    const kept = (end: { role: "source" | "target" }) => !edit?.[`${end.role}_id`];
+    return ends.undecided.some(kept) || ends.rejected.some(kept);
+  };
+
+  /**
+   * Reopen a decided operation so it can be decided again: the operation as
+   * reopened and the proposal's operations then, or undefined when refused.
+   * Accepted relationships that use it reopen with it; the toast says so.
+   */
+  const reopen = async (operation: ProposedOperation) => {
+    const after = await actions.reopenOperations([operation.id]);
+    if (!after) return undefined;
+    const reopened = after.operations.find((o) => o.id === operation.id);
+    if (!reopened) return undefined;
+    const withIt = after.operations.filter(
+      (o) =>
+        o.id !== operation.id &&
+        isAwaiting(o) &&
+        operations.some((before) => before.id === o.id && !isAwaiting(before)),
+    );
+    if (withIt.length > 0) {
+      toast(
+        "info",
+        `${withIt.length} relationship${withIt.length === 1 ? " awaits" : "s await"} a decision again`,
+        `They used ${shownTitle(operation)}: ${withIt.map((o) => `#${o.seq}`).join(", ")}`,
+      );
+    }
+    return { operation: reopened, operations: after.operations };
   };
 
   /** After deciding `decidedId`, select the next element still awaiting a decision. */
@@ -412,28 +605,51 @@ export function ReviewPage({ id, onFinish }: ReviewPageProps) {
     return outcome.proposal.operations;
   };
 
-  const decide = async (operation: ProposedOperation, decision: Decision) => {
-    if (!deciding || !isAwaiting(operation) || actions.busy) return;
+  const decide = async (decided: ProposedOperation, decision: Decision) => {
+    if (!deciding || actions.busy) return;
+    const edit = decision.kind === "edit" ? decision.edit : undefined;
+    const existing = existingOf(decided);
+    // The server takes an existing individual or a class edit, never both.
+    if (decision.kind === "class" && existing) return;
+    // A decided one is decided again: checked first, so a refusal reopens nothing.
+    const redeciding = !isAwaiting(decided);
+    if (decision.kind !== "reject") {
+      const blocked = redeciding
+        ? isRelationship(decided) &&
+          acceptBlocked({ ...decided, status: "pending" }, operations, edit)
+        : acceptBlocked(decided, operations, edit);
+      if (blocked) return;
+    }
+    let operation = decided;
+    let current = operations;
+    if (redeciding) {
+      const reopened = await reopen(decided);
+      if (!reopened) return;
+      ({ operation, operations: current } = reopened);
+    }
     const reviewMs = { [operation.id]: clock.spentOn(operation.id) };
+    // A first decision moves on to the next awaiting one; a changed one stays to show it.
+    const moveOn = (after: ProposedOperation[]) => {
+      if (!redeciding) advance(operation.id, after);
+    };
     if (decision.kind === "reject") {
       const rejected = await actions.rejectOperations([operation.id], decision.note, {
         reasonCode: decision.reasonCode,
         reviewMs,
         annotations: goldAnnotations(operation),
       });
-      if (rejected) advance(operation.id, operations);
+      if (rejected) moveOn(current);
       return;
     }
-    if (acceptBlocked(operation)) return;
-    const existing = existingOf(operation);
-    // The server takes an existing individual or a class edit, never both.
-    if (decision.kind === "class" && existing) return;
     const outcome = await actions.accept([operation.id], {
+      current,
       reviewMs,
       edits:
         decision.kind === "class"
           ? { [operation.id]: { class_ids: [decision.classId] } }
-          : undefined,
+          : edit
+            ? { [operation.id]: edit }
+            : undefined,
       chosenAlternatives: existing ? { [operation.id]: existing } : undefined,
       annotations: goldAnnotations(
         operation,
@@ -445,7 +661,7 @@ export function ReviewPage({ id, onFinish }: ReviewPageProps) {
     if (decision.kind === "class") {
       setRecentClasses((recent) => rememberPick(recent, decision.classId));
     }
-    advance(operation.id, after);
+    moveOn(after);
   };
 
   // Keys: A correct, 1-3 a suggested class, X the reasons, J / K next and previous.
@@ -596,116 +812,129 @@ export function ReviewPage({ id, onFinish }: ReviewPageProps) {
           />
         </div>
         <span className="review-progress__counts" data-testid="review-progress-counts">
-          {progress.correct} correct · {progress.changed} class changed · {progress.rejected} not
-          elements · {progress.added} added
+          {progress.correct} correct · {progress.changed} changed · {progress.rejected} rejected ·{" "}
+          {progress.added} added
         </span>
         <ReviewElapsed pageMs={clock.pageMs} />
       </section>
 
-      <div
-        ref={panes.ref}
-        className="review-panes"
-        // The window height left below the panes' top: worked out at run time.
-        style={
-          panes.height
-            ? ({ "--review-panes-height": `${panes.height}px` } as CSSProperties)
-            : undefined
-        }
-        data-testid="review-panes"
-      >
-        <ReviewSourcePane
-          title={source?.title}
-          text={sourceText?.text}
-          unavailable={unavailable}
-          spans={spans}
-          verdictOf={(opId) => {
-            const operation = reviewed.find((o) => o.id === opId);
-            return operation ? verdictOf(operation) : "awaiting";
-          }}
-          titleOf={(opId) => {
-            const operation = reviewed.find((o) => o.id === opId);
-            return operation ? names.titleOf(operation) : opId;
-          }}
-          selectedId={selectedId}
-          onSelect={setSelectedId}
-          textRef={sourceTextRef}
-          onDismissPopover={() => closeAdding({ refocus: false })}
-          onSelectText={canAdd ? openAdding : undefined}
-          addBlocked={addBlocked}
-          popoverAnchor={adding?.anchor}
-          popover={
-            adding && (
-              <AddElementPopover
-                key={`${adding.passage.start}-${adding.passage.end}`}
-                passage={adding.passage}
-                pickable={pickable}
-                classesLoading={classesLoading}
-                initialClassId={recentClasses[0]}
-                classLabel={names.classLabel}
-                classOf={names.classOf}
-                busy={addIndividual.isPending}
-                error={addError}
-                onEdit={() => setAddError(undefined)}
-                askTier={!!gold}
-                onAdd={(title, classId, tier) => void addElement(title, classId, tier)}
-                onCancel={() => closeAdding()}
-              />
-            )
+      <ReviewPillsProvider value={pills}>
+        <div
+          ref={panes.ref}
+          className="review-panes"
+          // The window height left below the panes' top: worked out at run time.
+          style={
+            panes.height
+              ? ({ "--review-panes-height": `${panes.height}px` } as CSSProperties)
+              : undefined
           }
-        />
-        <ReviewElementsPane
-          groups={shownGroups}
-          filter={filter}
-          onFilter={setFilter}
-          awaiting={awaitingCount}
-          total={progress.total}
-          rowOf={rowOf}
-          selectedId={selectedId}
-          onSelect={setSelectedId}
-        />
-        {selected ? (
-          <ReviewInspector
-            key={selected.id}
-            operation={selected}
-            operations={operations}
-            names={names}
-            taxonomyId={proposal.taxonomy_id}
-            datasetId={proposal.dataset_id}
-            nearChoice={nearChoiceOf(selected)}
-            onNearChoice={(choice) => setNearChoices((all) => ({ ...all, [selected.id]: choice }))}
-            pickable={pickable}
-            classesLoading={classesLoading}
-            suggestions={suggestions}
-            deciding={deciding}
-            busy={actions.busy}
-            reasonsRef={reasonsRef}
-            onCorrect={() => void decide(selected, { kind: "correct" })}
-            onPickClass={(classId) => void decide(selected, { kind: "class", classId })}
-            onReject={(reasonCode, note) =>
-              void decide(selected, { kind: "reject", reasonCode, note })
-            }
+          data-testid="review-panes"
+        >
+          <ReviewSourcePane
+            title={source?.title}
+            text={sourceText?.text}
+            unavailable={unavailable}
+            spans={spans}
+            verdictOf={(opId) => {
+              const operation = reviewed.find((o) => o.id === opId);
+              return operation ? verdictOf(operation) : "awaiting";
+            }}
+            titleOf={(opId) => {
+              const operation = reviewed.find((o) => o.id === opId);
+              return operation ? names.titleOf(operation) : opId;
+            }}
+            selectedId={selectedId}
             onSelect={setSelectedId}
-            gold={
-              gold
-                ? {
-                    goldTier: goldTierOf(gold, selected),
-                    aliases: goldElementOf(gold, selected)?.aliases ?? [],
-                    acceptableIds: classesByRef(
-                      goldElementOf(gold, selected)?.acceptableClasses ?? [],
-                      classes ?? [],
-                    ).map((c) => c.id),
-                    draft: draftOf(selected),
-                    onDraft: (draft) => setGoldDrafts((all) => ({ ...all, [selected.id]: draft })),
-                  }
-                : undefined
+            focus={focus}
+            textRef={sourceTextRef}
+            onDismissPopover={() => closeAdding({ refocus: false })}
+            onSelectText={canAdd ? openAdding : undefined}
+            addBlocked={addBlocked}
+            popoverAnchor={adding?.anchor}
+            popover={
+              adding && (
+                <AddElementPopover
+                  key={`${adding.passage.start}-${adding.passage.end}`}
+                  passage={adding.passage}
+                  pickable={pickable}
+                  classesLoading={classesLoading}
+                  initialClassId={recentClasses[0]}
+                  classLabel={names.classLabel}
+                  classOf={names.classOf}
+                  busy={addIndividual.isPending}
+                  error={addError}
+                  onEdit={() => setAddError(undefined)}
+                  askTier={!!gold}
+                  onAdd={(title, classId, tier) => void addElement(title, classId, tier)}
+                  onCancel={() => closeAdding()}
+                />
+              )
             }
           />
-        ) : (
-          <p className="review-pane review-pane--inspector review-muted">
-            This proposal has no elements to review.
-          </p>
-        )}
-      </div>
+          <ReviewElementsPane
+            groups={shownGroups}
+            filter={filter}
+            onFilter={setFilter}
+            awaiting={awaitingCount}
+            total={progress.total}
+            rowOf={rowOf}
+            selectedId={selectedId}
+            link={link}
+          />
+          {selected ? (
+            <ReviewInspector
+              key={selected.id}
+              operation={selected}
+              operations={operations}
+              names={names}
+              schema={schema}
+              endOf={endOf}
+              endCandidates={endCandidates}
+              taxonomyId={proposal.taxonomy_id}
+              datasetId={proposal.dataset_id}
+              nearChoice={nearChoiceOf(selected)}
+              onNearChoice={(choice) =>
+                setNearChoices((all) => ({ ...all, [selected.id]: choice }))
+              }
+              pickable={pickable}
+              classesLoading={classesLoading}
+              suggestions={suggestions}
+              recentIds={recentClasses}
+              onForgetClass={(classId) => setRecentClasses((recent) => forgetPick(recent, classId))}
+              deciding={deciding}
+              busy={actions.busy}
+              reasonsRef={reasonsRef}
+              onCorrect={() => void decide(selected, { kind: "correct" })}
+              onPickClass={(classId) => void decide(selected, { kind: "class", classId })}
+              onReject={(reasonCode, note) =>
+                void decide(selected, { kind: "reject", reasonCode, note })
+              }
+              onAcceptEdited={(edit) => void decide(selected, { kind: "edit", edit })}
+              onShowPassage={(quote) => showPassage(selected.id, quote)}
+              gold={
+                gold
+                  ? {
+                      goldTier: goldTierOf(gold, selected),
+                      aliases: goldElementOf(gold, selected)?.aliases ?? [],
+                      acceptableIds: classesByRef(
+                        goldElementOf(gold, selected)?.acceptableClasses ?? [],
+                        classes ?? [],
+                      ).map((c) => c.id),
+                      draft: draftOf(selected),
+                      onDraft: (draft) =>
+                        setGoldDrafts((all) => ({ ...all, [selected.id]: draft })),
+                    }
+                  : undefined
+              }
+            />
+          ) : (
+            <p className="review-pane review-pane--inspector review-muted">
+              This proposal has no elements to review.
+            </p>
+          )}
+        </div>
+        {overlay.overlay}
+      </ReviewPillsProvider>
 
       <ConfirmDialog
         isOpen={!!force}

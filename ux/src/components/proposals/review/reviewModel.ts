@@ -79,11 +79,46 @@ export function classChanged(operation: ProposedOperation): boolean {
   return applied.length !== proposed.length || applied.some((id, i) => id !== proposed[i]);
 }
 
+/** A relationship create's type and ends, as an edit can change them. */
+export const RELATIONSHIP_FIELDS = ["property_definition_id", "source_id", "target_id"] as const;
+
+/** The fields an operation has now: the ones it applied with over the proposed ones. */
+export function shownFields(operation: ProposedOperation): Record<string, unknown> {
+  return { ...(operation.fields ?? {}), ...(operation.applied_fields ?? {}) };
+}
+
+/** An element's title as it stands (an edit's over the proposed one), else "#seq". */
+export function shownTitle(operation: ProposedOperation): string {
+  const title = shownFields(operation).title;
+  return typeof title === "string" && title ? title : `#${operation.seq}`;
+}
+
+/** A relationship applied with another type or end than proposed. */
+export function relationshipEdited(operation: ProposedOperation): boolean {
+  if (operation.status !== "applied" || !operation.applied_fields) return false;
+  return RELATIONSHIP_FIELDS.some(
+    (name) =>
+      name in operation.applied_fields! &&
+      operation.applied_fields![name] !== operation.fields?.[name],
+  );
+}
+
 export function verdictOf(operation: ProposedOperation): Verdict {
   if (isAwaiting(operation)) return "awaiting";
   if (operation.status === "rejected") return "rejected";
   if (operation.added_by_reviewer) return "added";
+  if (isRelationship(operation)) return relationshipEdited(operation) ? "changed" : "correct";
   return classChanged(operation) ? "changed" : "correct";
+}
+
+/** A verdict's label for this operation: a relationship is "edited" or "not a relationship". */
+export function verdictLabel(operation: ProposedOperation): string {
+  const verdict = verdictOf(operation);
+  if (isRelationship(operation)) {
+    if (verdict === "changed") return "edited";
+    if (verdict === "rejected") return "not a relationship";
+  }
+  return VERDICT_LABEL[verdict];
 }
 
 // ==================== Progress ====================
@@ -274,9 +309,17 @@ export function layerMatesFirst(classes: ClassResponse[], schemeId: string | und
 /** How many classes picked earlier in the review are offered as one-key suggestions. */
 export const SUGGESTIONS = 3;
 
-/** Record a class the reviewer picked: most recent first, each once. */
-export function rememberPick(recent: string[], classId: string): string[] {
-  return [classId, ...recent.filter((id) => id !== classId)];
+/** How many recently picked classes the review keeps; the oldest drops off. */
+export const RECENT_CLASSES = 2;
+
+/** Record a class the reviewer picked: most recent first, each once, at most `keep`. */
+export function rememberPick(recent: string[], classId: string, keep = RECENT_CLASSES): string[] {
+  return [classId, ...recent.filter((id) => id !== classId)].slice(0, keep);
+}
+
+/** Forget a recently picked class (the reviewer removed it). */
+export function forgetPick(recent: string[], classId: string): string[] {
+  return recent.filter((id) => id !== classId);
 }
 
 /** Classes picked earlier in this review, most recent first, other than the element's own. */
@@ -298,11 +341,55 @@ export function relationshipsOf(
   element: ProposedOperation,
   operations: ProposedOperation[],
 ): ProposedOperation[] {
-  return operations.filter(
-    (o) =>
-      isRelationship(o) &&
-      (names(o.fields?.source_id, element) || names(o.fields?.target_id, element)),
-  );
+  return operations.filter((o) => {
+    if (!isRelationship(o)) return false;
+    // As it applied (an edit may have moved an end), and as proposed.
+    const ends = [shownFields(o).source_id, shownFields(o).target_id];
+    if (o.status !== "applied") ends.push(o.fields?.source_id, o.fields?.target_id);
+    return ends.some((end) => names(end, element));
+  });
+}
+
+/** The operation an end value names: a "$ref" create of the proposal, or the entity one made. */
+export function endOperation(
+  value: unknown,
+  operations: ProposedOperation[],
+): ProposedOperation | undefined {
+  if (typeof value !== "string") return undefined;
+  return operations.find((o) => isElement(o) && names(value, o));
+}
+
+/**
+ * The entity id an end value stands for: an id as it is, a "$ref" create's
+ * result once it applied; undefined for a create not applied.
+ */
+export function endEntityId(value: unknown, operations: ProposedOperation[]): string | undefined {
+  if (typeof value !== "string") return undefined;
+  if (!value.startsWith("$")) return value;
+  const create = endOperation(value, operations);
+  return create?.status === "applied" ? (create.result_entity_id ?? undefined) : undefined;
+}
+
+/**
+ * What a relationship accepted with this draft sends as its edit: each of
+ * its type and ends the reviewer changed, against what it stands for now
+ * (an end's entity id); undefined when nothing changed.
+ */
+export function relationshipEdit(
+  operation: ProposedOperation,
+  operations: ProposedOperation[],
+  draft: Partial<Record<(typeof RELATIONSHIP_FIELDS)[number], string>>,
+): Record<string, string> | undefined {
+  const edit: Record<string, string> = {};
+  for (const name of RELATIONSHIP_FIELDS) {
+    const chosen = draft[name];
+    if (!chosen) continue;
+    const proposed = operation.fields?.[name];
+    const current =
+      name === "property_definition_id" ? proposed : endEntityId(proposed, operations);
+    if (chosen !== current && chosen !== proposed) edit[name] = chosen;
+  }
+  return Object.keys(edit).length > 0 ? edit : undefined;
 }
 
 /**

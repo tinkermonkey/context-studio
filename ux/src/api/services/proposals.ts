@@ -6,6 +6,8 @@ export type ProposedOperation = components["schemas"]["ProposedOperationResponse
 export type ChangeProposalCreateRequest = components["schemas"]["ChangeProposalCreateRequest"];
 export type ChangeProposalApplyRequest = components["schemas"]["ChangeProposalApplyRequest"];
 export type ChangeProposalRejectRequest = components["schemas"]["ChangeProposalRejectRequest"];
+/** Decided operations to reopen, to decide again. */
+export type ChangeProposalReopenRequest = components["schemas"]["ChangeProposalReopenRequest"];
 /** An individual the extraction missed, as the reviewer found it in the proposal's source. */
 export type AddIndividualRequest = components["schemas"]["AddIndividualRequest"];
 /** What a reviewer notes for benchmark gold on a decision: the tier, and also defensible classes. */
@@ -77,6 +79,15 @@ class ProposalsService extends BaseService {
 
   async rejectProposal(id: string, data: ChangeProposalRejectRequest): Promise<ChangeProposal> {
     return this.post<ChangeProposal>(`/api/proposals/${id}/reject`, data);
+  }
+
+  /**
+   * Reopen decided individual and relationship creates, to decide them again: an
+   * applied one is undone (with the applied relationships that use it), and its
+   * decisions are superseded. 409 when refused; nothing changed.
+   */
+  async reopenOperations(id: string, data: ChangeProposalReopenRequest): Promise<ChangeProposal> {
+    return this.post<ChangeProposal>(`/api/proposals/${id}/reopen`, data);
   }
 
   /**

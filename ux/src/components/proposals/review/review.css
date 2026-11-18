@@ -630,4 +630,235 @@
     gap: 4px;
     color: rgb(var(--canvas-fg-2));
   }
+
+  /* ---- rows are links (a row opens in a new tab with a modifier) ---- */
+  a.review-row {
+    text-decoration: none;
+  }
+
+  /* ---- evidence: each passage shows itself in the source ---- */
+  button.review-evidence {
+    border-top: 0;
+    border-right: 0;
+    border-bottom: 0;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+  }
+
+  button.review-evidence:hover {
+    background: rgb(var(--status-amber) / 0.16);
+  }
+
+  button.review-evidence:focus-visible {
+    outline: 2px solid rgb(var(--accent-primary));
+    outline-offset: 1px;
+  }
+
+  /* A passage shown from the inspector flashes once it is scrolled to. */
+  .review-mark--flash {
+    animation: review-flash 1.6s ease-out;
+  }
+
+  @keyframes review-flash {
+    0%,
+    40% {
+      background: rgb(var(--accent-primary) / 0.45);
+      box-shadow: 0 0 0 3px rgb(var(--accent-primary) / 0.35);
+    }
+    100% {
+      box-shadow: 0 0 0 0 rgb(var(--accent-primary) / 0);
+    }
+  }
+
+  /* ---- pills: a class, an individual, a predicate; hover or focus explains ---- */
+  .review-pill {
+    display: inline-flex;
+    align-items: center;
+    max-width: 100%;
+    min-width: 0;
+    padding: 2px 8px;
+    border: 1px solid rgb(var(--canvas-border-strong));
+    border-radius: 999px;
+    background: rgb(var(--canvas-bg-2));
+    color: rgb(var(--canvas-fg-1));
+    font: inherit;
+    font-size: 12px;
+    line-height: 1.5;
+    text-decoration: none;
+    cursor: help;
+  }
+
+  a.review-pill {
+    cursor: pointer;
+  }
+
+  .review-pill:hover {
+    border-color: rgb(var(--canvas-fg-3));
+  }
+
+  .review-pill:focus-visible {
+    outline: 2px solid rgb(var(--accent-primary));
+    outline-offset: 1px;
+  }
+
+  .review-pill__text {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .review-pill--class {
+    font-family: var(--font-mono);
+    border-color: rgb(var(--status-violet) / 0.5);
+    background: rgb(var(--status-violet) / 0.1);
+  }
+
+  .review-pill--predicate {
+    font-family: var(--font-mono);
+    border-color: rgb(var(--status-cyan) / 0.5);
+    background: rgb(var(--status-cyan) / 0.1);
+  }
+
+  .review-pill--individual {
+    font-weight: 500;
+  }
+
+  /* The selected element's class, under its title: the most prominent fact about it. */
+  .review-pill--lg {
+    padding: 4px 12px;
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  /* ---- the hover overlay's richer content (class, predicate, individual) ---- */
+  .review-card__sub {
+    font-size: 12px;
+    color: rgb(var(--canvas-fg-3));
+  }
+
+  .review-card__clamp {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 8;
+    line-clamp: 8;
+    overflow: hidden;
+  }
+
+  .review-card__clamp--short {
+    -webkit-line-clamp: 3;
+    line-clamp: 3;
+  }
+
+  .review-card__section {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    margin-top: 4px;
+  }
+
+  .review-card__eyebrow {
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: rgb(var(--canvas-fg-3));
+  }
+
+  .review-card__list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font-family: var(--font-mono);
+    font-size: 11.5px;
+    color: rgb(var(--canvas-fg-2));
+  }
+
+  .review-card__line {
+    font-family: var(--font-mono);
+    font-size: 11.5px;
+    color: rgb(var(--canvas-fg-2));
+  }
+
+  .review-card__more {
+    font-size: 11.5px;
+    color: rgb(var(--canvas-fg-3));
+  }
+
+  /* ---- an element's relationships, and a relationship's ends ---- */
+  .review-relationships {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .review-relationships > .review-relationship {
+    padding: 6px 8px;
+    border: 1px solid rgb(var(--canvas-border));
+    border-radius: 6px;
+  }
+
+  .review-relationship__direction {
+    font-family: var(--font-mono);
+    color: rgb(var(--canvas-fg-3));
+  }
+
+  .review-end {
+    display: grid;
+    grid-template-columns: 40px minmax(0, 1fr);
+    align-items: center;
+    gap: 8px;
+  }
+
+  .review-end__role {
+    font-size: 12px;
+    color: rgb(var(--canvas-fg-3));
+  }
+
+  .review-end__pills {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+  }
+
+  .review-decide {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .review-alt--pressed {
+    border-color: rgb(var(--accent-primary));
+    background: rgb(var(--accent-primary) / 0.1);
+  }
+
+  /* Remove a recently picked class from the suggestions. */
+  .review-forget {
+    flex-shrink: 0;
+    width: 28px;
+    padding: 0;
+    border: 1px solid rgb(var(--canvas-border));
+    border-radius: 6px;
+    background: transparent;
+    color: rgb(var(--canvas-fg-3));
+    font: inherit;
+    font-size: 15px;
+    cursor: pointer;
+  }
+
+  .review-forget:hover {
+    color: rgb(var(--canvas-fg-1));
+    border-color: rgb(var(--canvas-border-strong));
+  }
+
+  .review-forget:focus-visible {
+    outline: 2px solid rgb(var(--accent-primary));
+    outline-offset: 1px;
+  }
 }
