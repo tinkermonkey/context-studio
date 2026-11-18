@@ -1092,6 +1092,15 @@
     pointer-events: none;
   }
 
+  /* An overlay the pointer can reach (its card has links): it lingers after its item is left. */
+  .definition-overlay--interactive {
+    gap: 6px;
+    padding: 12px;
+    border-color: rgb(var(--canvas-border));
+    box-shadow: 0 8px 24px rgb(15 23 42 / 0.12);
+    pointer-events: auto;
+  }
+
   .definition-overlay__term {
     font-family: var(--font-mono);
     font-size: 12px;

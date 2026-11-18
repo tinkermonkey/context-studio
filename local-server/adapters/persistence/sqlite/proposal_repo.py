@@ -223,6 +223,36 @@ class SQLiteChangeProposalRepository:
             session.commit()
             return count
 
+    def supersede_operation_decisions(
+        self,
+        proposal_id: str,
+        operation_ids: Sequence[str],
+        superseded_at: datetime,
+        by: str,
+    ) -> int:
+        if not operation_ids:
+            return 0
+        with self._session_factory() as session:
+            count = (
+                session.query(ProposalDecisionRecord)
+                .filter(
+                    ProposalDecisionRecord.proposal_id == proposal_id,
+                    ProposalDecisionRecord.operation_id.in_(list(operation_ids)),
+                    ProposalDecisionRecord.superseded_at.is_(None),
+                )
+                .update(
+                    {
+                        ProposalDecisionRecord.superseded_at: superseded_at.astimezone(
+                            timezone.utc
+                        ),
+                        ProposalDecisionRecord.superseded_by: by,
+                    },
+                    synchronize_session=False,
+                )
+            )
+            session.commit()
+            return count
+
     def list_decisions(
         self, filters: DecisionFilter, limit: Optional[int] = None, offset: int = 0
     ) -> list[ProposalDecision]:

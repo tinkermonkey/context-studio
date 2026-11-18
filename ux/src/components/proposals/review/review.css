@@ -376,30 +376,148 @@
     color: rgb(var(--canvas-fg-3));
   }
 
-  /* ---- inspector ---- */
+  /* ---- inspector ----
+     One skeleton for an element and a relationship: the head (what it is),
+     then ruled blocks (evidence, what the schema says, decide, change it), and
+     a grey gold-only footer. Colours are Heimdall's: the semantic chip tokens
+     on the light canvas, the status colours on the dark one (as its chips do). */
+  :root {
+    --rv-cyan-fg: rgb(var(--semantic-cyan-fg));
+    --rv-cyan-bg: rgb(var(--semantic-cyan-bg));
+    --rv-cyan-border: rgb(var(--semantic-cyan-border));
+    --rv-cyan-strong: rgb(var(--status-cyan) / 0.65);
+    --rv-violet-fg: rgb(var(--semantic-violet-fg));
+    --rv-violet-bg: rgb(var(--semantic-violet-bg));
+    --rv-violet-border: rgb(var(--semantic-violet-border));
+    --rv-violet-strong: rgb(var(--status-violet) / 0.5);
+    --rv-amber-bg: rgb(var(--semantic-amber-bg));
+    --rv-amber-border: rgb(var(--semantic-amber-border));
+    --rv-amber-strong: rgb(var(--status-amber) / 0.75);
+    --rv-amber-tint: rgb(var(--status-amber) / 0.05);
+    --rv-amber-link: rgb(var(--semantic-version-fg));
+    --rv-rose-fg: rgb(var(--semantic-rose-fg));
+    --rv-rose-bg: rgb(var(--semantic-rose-bg));
+    --rv-rose-border: rgb(var(--semantic-rose-border));
+    --rv-emerald-fg: rgb(var(--semantic-emerald-fg));
+  }
+
+  body.dark-canvas {
+    --rv-cyan-fg: rgb(var(--status-cyan));
+    --rv-cyan-bg: rgb(var(--status-cyan) / 0.12);
+    --rv-cyan-border: rgb(var(--status-cyan) / 0.3);
+    --rv-cyan-strong: rgb(var(--status-cyan) / 0.6);
+    --rv-violet-fg: rgb(var(--status-violet));
+    --rv-violet-bg: rgb(var(--status-violet) / 0.12);
+    --rv-violet-border: rgb(var(--status-violet) / 0.32);
+    --rv-violet-strong: rgb(var(--status-violet) / 0.6);
+    --rv-amber-bg: rgb(var(--status-amber) / 0.1);
+    --rv-amber-border: rgb(var(--status-amber) / 0.3);
+    --rv-amber-strong: rgb(var(--status-amber) / 0.6);
+    --rv-amber-tint: rgb(var(--status-amber) / 0.06);
+    --rv-amber-link: rgb(var(--status-amber));
+    --rv-rose-fg: rgb(var(--status-rose));
+    --rv-rose-bg: rgb(var(--status-rose) / 0.1);
+    --rv-rose-border: rgb(var(--status-rose) / 0.32);
+    --rv-emerald-fg: rgb(var(--status-emerald));
+  }
+
   .review-inspector__head {
-    padding: 14px 16px;
+    padding: 14px 16px 12px;
     border-bottom: 1px solid rgb(var(--canvas-border));
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 8px;
+  }
+
+  .review-inspector__top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
   }
 
   .review-inspector__title {
+    margin: 0;
     color: rgb(var(--canvas-fg-1));
-    font-size: 18px;
-    font-weight: 600;
-    letter-spacing: -0.015em;
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    line-height: 1.35;
     overflow-wrap: anywhere;
   }
 
+  /* A relationship's title: the relationship as a sentence, its predicate a pill. */
+  .review-head__sentence {
+    margin: 0;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    color: rgb(var(--canvas-fg-1));
+    font-size: 17px;
+    font-weight: 650;
+    line-height: 1.45;
+    overflow-wrap: anywhere;
+  }
+
+  .review-head__sentence .review-pill--predicate {
+    padding: 1px 8px;
+    font-size: 13px;
+  }
+
   .review-inspector__body {
-    padding: 12px 16px;
     display: flex;
     flex-direction: column;
-    gap: 14px;
     overflow-y: auto;
     overscroll-behavior: contain;
+  }
+
+  .review-change {
+    display: contents;
+  }
+
+  /* A block of the inspector, ruled off from the next. */
+  .review-block {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 12px 16px;
+    border-bottom: 1px solid rgb(var(--canvas-border));
+  }
+
+  .review-block__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  .review-block__title {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .review-block__subtitle {
+    font-size: 12px;
+    color: rgb(var(--canvas-fg-3));
+  }
+
+  .review-block__end {
+    display: flex;
+    justify-content: flex-end;
+  }
+
+  /* Gold only: a grey footer at the foot of the inspector. */
+  .review-block--gold {
+    gap: 6px;
+    padding: 10px 16px 14px;
+    border-bottom: 0;
+    background: rgb(var(--canvas-bg-2));
+  }
+
+  .review-block--gold .review-tier {
+    justify-content: space-between;
   }
 
   .review-section {
@@ -412,19 +530,43 @@
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: 6px;
+    gap: 6px 8px;
   }
 
+  /* ---- evidence: each passage a block that shows itself in the source ---- */
   .review-evidence {
+    display: block;
+    width: 100%;
     margin: 0;
     padding: 8px 10px;
-    border-left: 2px solid rgb(var(--status-amber));
-    background: rgb(var(--status-amber) / 0.08);
+    border: 1px solid var(--rv-amber-border);
+    border-radius: 6px;
+    background: var(--rv-amber-bg);
     color: rgb(var(--canvas-fg-1));
+    font: inherit;
+    font-size: 13px;
+    line-height: 1.5;
+    text-align: left;
+    cursor: pointer;
+  }
+
+  .review-evidence--more {
+    border-color: rgb(var(--canvas-border));
+    background: rgb(var(--canvas-bg-2));
+  }
+
+  .review-evidence:hover {
+    border-color: var(--rv-amber-strong);
+  }
+
+  .review-evidence:focus-visible {
+    outline: 2px solid rgb(var(--accent-primary));
+    outline-offset: 1px;
   }
 
   .review-definition {
     margin: 0;
+    font-size: 13px;
     color: rgb(var(--canvas-fg-2));
   }
 
@@ -432,8 +574,8 @@
   .review-definition--clamped {
     display: -webkit-box;
     -webkit-box-orient: vertical;
-    -webkit-line-clamp: 4;
-    line-clamp: 4;
+    -webkit-line-clamp: 3;
+    line-clamp: 3;
     overflow: hidden;
   }
 
@@ -442,10 +584,11 @@
     padding: 0;
     border: 0;
     background: none;
-    color: rgb(var(--canvas-fg-2));
+    color: var(--rv-amber-link);
     font: inherit;
-    font-size: 12.5px;
+    font-size: 12px;
     text-decoration: underline;
+    text-underline-offset: 2px;
     cursor: pointer;
   }
 
@@ -456,99 +599,484 @@
 
   .review-keys {
     font-family: var(--font-mono);
-    font-size: 12px;
+    font-size: 11px;
     color: rgb(var(--canvas-fg-3));
   }
 
-  .review-alt {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    padding: 8px 10px;
-    border: 1px solid rgb(var(--canvas-border));
-    border-radius: 6px;
-    background: transparent;
-    color: rgb(var(--canvas-fg-1));
+  /* ---- the three kinds ---- */
+  .review-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    max-width: 100%;
+    min-width: 0;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: inherit;
     font: inherit;
+    line-height: 1.6;
+    text-decoration: none;
+    cursor: help;
+  }
+
+  .review-pill:focus-visible {
+    outline: 2px solid rgb(var(--accent-primary));
+    outline-offset: 2px;
+  }
+
+  .review-pill__text {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .review-pill__icon {
+    display: inline-flex;
+    flex-shrink: 0;
+  }
+
+  /* An individual: plain bold text, a dot, a dotted underline; not a pill. */
+  .review-pill--individual {
+    gap: 6px;
+    color: rgb(var(--canvas-fg-1));
+    font-size: 14px;
+    font-weight: 600;
     text-align: left;
     cursor: pointer;
   }
 
-  .review-alt:hover:not(:disabled) {
-    border-color: rgb(var(--canvas-border-strong));
+  .review-pill--individual .review-pill__text {
+    white-space: normal;
+    overflow-wrap: anywhere;
+    text-decoration: underline dotted rgb(var(--canvas-fg-3));
+    text-underline-offset: 3px;
   }
 
-  .review-alt:focus-visible {
-    outline: 2px solid rgb(var(--accent-primary));
-    outline-offset: 1px;
+  .review-pill--individual:hover {
+    color: var(--rv-amber-link);
   }
 
-  .review-alt__class {
+  .review-ind__dot {
+    flex-shrink: 0;
+  }
+
+  /* A class: a small violet tag, square-cornered, monospace, a diamond. */
+  .review-pill--class {
+    align-self: flex-start;
+    padding: 0 7px;
+    border: 1px solid var(--rv-violet-border);
+    border-radius: 4px;
+    background: var(--rv-violet-bg);
+    color: var(--rv-violet-fg);
+    font-family: var(--font-mono);
+    font-size: 11.5px;
+    font-weight: 400;
+  }
+
+  button.review-pill--class:hover {
+    border-color: var(--rv-violet-strong);
+  }
+
+  /* The selected element's class, under its title: larger, stronger. */
+  .review-pill--class.review-pill--lg {
+    gap: 6px;
+    padding: 2px 10px;
+    border-color: var(--rv-violet-strong);
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 600;
+  }
+
+  /* A predicate: a round cyan pill, monospace, an arrow for its direction. */
+  .review-pill--predicate {
+    padding: 0 8px;
+    border: 1px solid var(--rv-cyan-border);
+    border-radius: 999px;
+    background: var(--rv-cyan-bg);
+    color: var(--rv-cyan-fg);
     font-family: var(--font-mono);
     font-size: 12px;
     font-weight: 600;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
   }
 
-  .review-alt__definition {
-    font-size: 12px;
-    color: rgb(var(--canvas-fg-2));
+  button.review-pill--predicate:hover {
+    border-color: var(--rv-cyan-strong);
   }
 
-  /* Gold mode: tier control, also defensible toggles, keep-old checkbox */
-  .review-tier {
+  .review-pill--predicate.review-pill--sm {
+    padding: 0 7px;
+    font-size: 11.5px;
+  }
+
+  /* Between a relationship's ends: the largest pill on the panel. */
+  .review-pill--predicate.review-pill--lg {
+    gap: 5px;
+    padding: 3px 10px;
+    border-color: var(--rv-cyan-strong);
+    font-size: 14px;
+    font-weight: 700;
+  }
+
+  /* Its ends don't fit its type. */
+  .review-pill--predicate.review-pill--misfit {
+    border: 1px dashed rgb(var(--status-rose));
+    background: rgb(var(--canvas-bg));
+    color: var(--rv-rose-fg);
+  }
+
+  /* ---- the relationship: FROM, the predicate between, TO ---- */
+  .review-rel {
+    gap: 0;
+    padding-top: 14px;
+    padding-bottom: 14px;
+  }
+
+  .review-rel__row {
+    display: grid;
+    grid-template-columns: 44px minmax(0, 1fr);
+    column-gap: 8px;
+    align-items: start;
+  }
+
+  .review-rel__role {
+    padding-top: 3px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    color: rgb(var(--canvas-fg-3));
+  }
+
+  .review-end-card {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+    padding: 8px 10px;
+    border: 1px solid rgb(var(--canvas-border));
+    border-radius: 8px;
+  }
+
+  .review-end-card__line {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  .review-rel__link {
+    display: flex;
+    gap: 10px;
+    padding-left: 18px;
+  }
+
+  .review-rel__connector {
+    flex: 0 0 2px;
+    width: 2px;
+    background: var(--rv-cyan-border);
+  }
+
+  .review-rel__predicate {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 0;
+    padding: 10px 0;
+  }
+
+  .review-rel__fit {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
     gap: 8px;
   }
 
-  .review-alt-row {
-    display: flex;
-    gap: 6px;
-    align-items: stretch;
+  .review-fit {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 12px;
+    color: var(--rv-emerald-fg);
   }
 
-  .review-alt-row > .review-alt {
-    flex: 1;
+  .review-rel__definition {
+    margin: 0;
+    font-size: 13px;
+    color: rgb(var(--canvas-fg-2));
+  }
+
+  /* The ends don't fit: in place of the green tick, on the predicate. */
+  .review-misfit {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 8px;
+    padding: 8px 10px;
+    border: 1px solid var(--rv-rose-border);
+    border-radius: 8px;
+    background: var(--rv-rose-bg);
+  }
+
+  .review-misfit__text {
+    font-size: 12px;
+    color: var(--rv-rose-fg);
+  }
+
+  /* ---- Or correct it: three rows of one shape ---- */
+  .review-fix {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 8px 10px;
+    border: 1px solid rgb(var(--canvas-border));
+    border-radius: 8px;
+  }
+
+  .review-fix--open {
+    gap: 8px;
+    border-color: var(--rv-amber-strong);
+    background: var(--rv-amber-tint);
+  }
+
+  .review-fix--changed {
+    border-color: var(--rv-amber-strong);
+  }
+
+  .review-fix__line {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  .review-fix__label {
+    flex: 0 0 64px;
+    font-size: 12px;
+    font-weight: 600;
+    color: rgb(var(--canvas-fg-2));
+  }
+
+  .review-fix__value {
+    display: inline-flex;
+    flex: 1 1 auto;
     min-width: 0;
   }
 
-  .review-defensible {
+  .review-fix__name {
+    font-size: 13px;
+    font-weight: 600;
+    color: rgb(var(--canvas-fg-1));
+    overflow-wrap: anywhere;
+  }
+
+  .review-fix__note {
+    padding-left: 72px;
+    font-size: 12px;
+    color: rgb(var(--canvas-fg-3));
+  }
+
+  .review-fix__panel {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding-left: 72px;
+  }
+
+  .review-fix__hint {
+    font-size: 12px;
+    color: rgb(var(--canvas-fg-3));
+  }
+
+  .review-results {
+    display: flex;
+    flex-direction: column;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    border: 1px solid rgb(var(--canvas-border));
+    border-radius: 6px;
+    background: rgb(var(--canvas-bg));
+  }
+
+  .review-results > li + li {
+    border-top: 1px solid rgb(var(--canvas-border));
+  }
+
+  .review-result {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+    width: 100%;
+    padding: 6px 8px;
+    border: 0;
+    background: none;
+    color: rgb(var(--canvas-fg-1));
+    font: inherit;
+    font-size: 13px;
+    text-align: left;
+    cursor: pointer;
+  }
+
+  .review-result:hover {
+    background: rgb(var(--canvas-fg-1) / 0.04);
+  }
+
+  .review-result:focus-visible {
+    outline: 2px solid rgb(var(--accent-primary));
+    outline-offset: -2px;
+  }
+
+  .review-result__name {
+    min-width: 0;
+    font-weight: 600;
+    overflow-wrap: anywhere;
+  }
+
+  .review-result .review-pill--class {
+    align-self: center;
     flex-shrink: 0;
-    padding: 4px 8px;
+    max-width: 55%;
+    font-size: 11px;
+  }
+
+  .review-result--predicate {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+  }
+
+  .review-result__predicate {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .review-result__classes {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--rv-violet-fg);
+  }
+
+  .review-result__definition {
+    font-size: 12px;
+    color: rgb(var(--canvas-fg-2));
+  }
+
+  /* ---- not an element / relationship, because: ghost buttons ---- */
+  .review-reasons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .review-reason {
+    padding: 3px 10px;
     border: 1px solid rgb(var(--canvas-border));
     border-radius: 6px;
     background: transparent;
     color: rgb(var(--canvas-fg-2));
     font: inherit;
-    font-size: 12px;
+    font-size: 13px;
     cursor: pointer;
   }
 
-  .review-defensible--on {
-    border-color: rgb(var(--status-emerald));
-    background: rgb(var(--status-emerald) / 0.12);
-    color: rgb(var(--canvas-fg-1));
+  .review-reason:hover:not(:disabled) {
+    border-color: var(--rv-rose-border);
+    background: var(--rv-rose-bg);
+    color: var(--rv-rose-fg);
   }
 
-  /* Already acceptable in gold: shown on, not a toggle. */
-  .review-defensible.review-defensible--gold:disabled {
-    opacity: 1;
-    cursor: default;
-    border-style: dashed;
-  }
-
-  .review-defensible:focus-visible {
-    outline: 2px solid rgb(var(--accent-primary));
+  .review-reason:focus-visible {
+    outline: 2px solid rgb(var(--status-rose));
     outline-offset: 1px;
   }
 
-  .review-defensible:disabled {
+  .review-reason:disabled {
     opacity: 0.5;
     cursor: not-allowed;
+  }
+
+  /* ---- or a better class: the suggestions as class tags ---- */
+  .review-suggestions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .review-suggestion {
+    display: inline-flex;
+    align-items: center;
+    border: 1px solid var(--rv-violet-border);
+    border-radius: 4px;
+    background: var(--rv-violet-bg);
+    color: var(--rv-violet-fg);
+    font-family: var(--font-mono);
+    font-size: 11.5px;
+  }
+
+  .review-suggestion__pick {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 0 7px;
+    border: 0;
+    background: none;
+    color: inherit;
+    font: inherit;
+    line-height: 1.6;
+    cursor: pointer;
+  }
+
+  .review-suggestion__key {
+    color: rgb(var(--canvas-fg-3));
+  }
+
+  .review-suggestion__pick:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .review-suggestion__defensible {
+    padding: 0 6px;
+    border: 0;
+    border-left: 1px solid var(--rv-violet-border);
+    background: none;
+    color: rgb(var(--canvas-fg-3));
+    font: inherit;
+    font-size: 10.5px;
+    cursor: pointer;
+  }
+
+  .review-suggestion__defensible--on {
+    color: var(--rv-emerald-fg);
+  }
+
+  .review-suggestion__defensible:disabled {
+    cursor: default;
+  }
+
+  .review-forget {
+    padding: 0 6px 0 3px;
+    border: 0;
+    background: none;
+    color: inherit;
+    font: inherit;
+    font-size: 13px;
+    line-height: 1;
+    cursor: pointer;
+  }
+
+  .review-suggestion button:focus-visible {
+    outline: 2px solid rgb(var(--accent-primary));
+    outline-offset: 1px;
   }
 
   .review-check {
@@ -565,55 +1093,64 @@
     color: rgb(var(--canvas-fg-2));
   }
 
-  .review-reasons {
+  /* ---- its relationships: each a card that opens it, read as a sentence ---- */
+  .review-relationships {
     display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
+    flex-direction: column;
+    gap: 8px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
   }
 
-  .review-reason {
-    padding: 4px 10px;
-    border: 1px solid rgb(var(--status-rose) / 0.35);
-    border-radius: 4px;
-    background: rgb(var(--status-rose) / 0.08);
-    color: rgb(var(--status-rose));
-    font: inherit;
-    font-size: 13px;
-    cursor: pointer;
+  .review-relrow {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 8px 10px;
+    border: 1px solid rgb(var(--canvas-border));
+    border-radius: 8px;
+    color: rgb(var(--canvas-fg-1));
+    text-decoration: none;
   }
 
-  .review-reason:hover:not(:disabled) {
-    background: rgb(var(--status-rose) / 0.16);
+  .review-relrow:hover {
+    border-color: rgb(var(--canvas-border-strong));
+    background: rgb(var(--canvas-fg-1) / 0.02);
   }
 
-  .review-reason:focus-visible {
-    outline: 2px solid rgb(var(--status-rose));
+  .review-relrow:focus-visible {
+    outline: 2px solid rgb(var(--accent-primary));
     outline-offset: 1px;
   }
 
-  .review-alt:disabled,
-  .review-reason:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
+  .review-relrow__line {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
   }
 
-  .review-relationship {
-    display: flex;
-    flex-direction: row;
+  .review-relrow__sentence {
+    display: inline-flex;
     flex-wrap: wrap;
     align-items: center;
     gap: 6px;
+    min-width: 0;
     font-size: 13px;
   }
 
-  .review-relationship__end {
-    font-weight: 500;
+  .review-relrow__name {
+    font-weight: 600;
+    overflow-wrap: anywhere;
   }
 
-  .review-relationship__predicate {
-    font-family: var(--font-mono);
-    font-size: 12px;
-    color: rgb(var(--canvas-fg-2));
+  .review-relrow__self {
+    color: rgb(var(--canvas-fg-3));
+  }
+
+  .review-relrow .review-pill--class {
+    font-size: 11px;
   }
 
   .review-failed {
@@ -628,6 +1165,153 @@
     display: flex;
     flex-direction: column;
     gap: 4px;
+    color: rgb(var(--canvas-fg-1));
+  }
+
+  /* ---- rows are links (a row opens in a new tab with a modifier) ---- */
+  a.review-row {
+    text-decoration: none;
+  }
+
+  /* A passage shown from the inspector flashes once it is scrolled to. */
+  .review-mark--flash {
+    animation: review-flash 1.6s ease-out;
+  }
+
+  @keyframes review-flash {
+    0%,
+    40% {
+      background: rgb(var(--accent-primary) / 0.45);
+      box-shadow: 0 0 0 3px rgb(var(--accent-primary) / 0.35);
+    }
+    100% {
+      box-shadow: 0 0 0 0 rgb(var(--accent-primary) / 0);
+    }
+  }
+
+  /* ---- gold's tier: the control, then what it means in plain words ---- */
+  .review-tier {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .review-tier-block {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .review-tier__hint {
+    font-size: 12px;
+    line-height: 1.45;
+    color: rgb(var(--canvas-fg-3));
+  }
+
+  .review-hint-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 0;
+    border: 0;
+    background: none;
     color: rgb(var(--canvas-fg-2));
+    font: inherit;
+    font-size: 12.5px;
+    cursor: help;
+    text-decoration: underline dotted;
+    text-underline-offset: 3px;
+  }
+
+  /* The footer's label reads as an eyebrow. */
+  .review-hint-label--eyebrow {
+    text-decoration: none;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    color: rgb(var(--canvas-fg-3));
+  }
+
+  .review-hint-label:focus-visible {
+    outline: 2px solid rgb(var(--accent-primary));
+    outline-offset: 2px;
+  }
+
+  /* ---- the hover cards (individual, class, predicate) ---- */
+  .review-card {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    font-size: 12px;
+    color: rgb(var(--canvas-fg-1));
+  }
+
+  .review-card__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  .review-card__name {
+    font-size: 14px;
+    font-weight: 700;
+  }
+
+  .review-card__name--class {
+    font-family: var(--font-mono);
+    color: var(--rv-violet-fg);
+  }
+
+  .review-card__name--predicate {
+    font-family: var(--font-mono);
+    color: var(--rv-cyan-fg);
+  }
+
+  .review-card__text {
+    color: rgb(var(--canvas-fg-2));
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 5;
+    line-clamp: 5;
+    overflow: hidden;
+  }
+
+  .review-card__muted {
+    color: rgb(var(--canvas-fg-3));
+  }
+
+  .review-card__eyebrow {
+    margin-top: 2px;
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    letter-spacing: 0.08em;
+    color: rgb(var(--canvas-fg-3));
+  }
+
+  .review-card__line {
+    font-size: 12px;
+  }
+
+  .review-card__predicate {
+    font-family: var(--font-mono);
+    color: var(--rv-cyan-fg);
+  }
+
+  .review-card__class {
+    font-family: var(--font-mono);
+    color: var(--rv-violet-fg);
+  }
+
+  .review-card__link {
+    align-self: flex-start;
+    color: var(--rv-amber-link);
+    font-size: 12px;
+  }
+
+  .review-card .review-pill--class {
+    align-self: flex-start;
   }
 }

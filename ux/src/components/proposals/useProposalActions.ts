@@ -3,6 +3,7 @@ import {
   useApplyChangeProposal,
   useExportProposalDecisions,
   useRejectChangeProposal,
+  useReopenProposalOperations,
   useRevertChangeProposal,
 } from "@/api/hooks/proposals";
 import { ApiError, isTimeout } from "@/api/client/interceptors";
@@ -66,6 +67,11 @@ interface ApplyOptions {
   annotations?: Annotations;
   /** Add these outcomes to the results view instead of replacing it (a retry from it). */
   merge?: boolean;
+  /**
+   * The proposal's operations as they stand now, when the page has newer ones than
+   * the last render (just reopened to decide again).
+   */
+  current?: ProposedOperation[];
 }
 
 /** An apply that includes stale operations, waiting for the reviewer to confirm Apply anyway. */
@@ -76,13 +82,14 @@ export interface ForceRequest extends ApplyOptions {
 
 /** The apply or reject request in flight, and how many operations it sends. */
 export interface PendingRequest {
-  action: "apply" | "reject";
+  action: "apply" | "reject" | "reopen";
   count: number;
 }
 
 /** "Applying 105 operations…" */
 export function pendingLabel({ action, count }: PendingRequest): string {
-  return `${action === "apply" ? "Applying" : "Rejecting"} ${plural(count, "operation")}…`;
+  const verb = { apply: "Applying", reject: "Rejecting", reopen: "Reopening" }[action];
+  return `${verb} ${plural(count, "operation")}…`;
 }
 
 /** Reasons an edited apply leaves on the operation: the edit, not the proposal, failed. */
@@ -140,6 +147,7 @@ export function useProposalActions(proposal: ChangeProposal | undefined) {
   const apply = useApplyChangeProposal();
   const reject = useRejectChangeProposal();
   const revert = useRevertChangeProposal();
+  const reopen = useReopenProposalOperations();
   const exportDecisions = useExportProposalDecisions();
   const [lastApplied, setLastApplied] = useState<string[] | null>(null);
   const [forceRequest, setForceRequest] = useState<ForceRequest | null>(null);
@@ -249,7 +257,7 @@ export function useProposalActions(proposal: ChangeProposal | undefined) {
     options: ApplyOptions = {},
   ): Promise<ApplyOutcome> => {
     if (!proposal) return {};
-    const { fresh, stale } = splitStale(proposal.operations, operationIds);
+    const { fresh, stale } = splitStale(options.current ?? proposal.operations, operationIds);
     if (stale.length > 0) {
       return new Promise((settle) => {
         const request = { ...options, operationIds: [...fresh, ...stale], settle };
@@ -380,6 +388,22 @@ export function useProposalActions(proposal: ChangeProposal | undefined) {
   };
 
   /**
+   * Reopen decided operations to decide them again (the applied relationships
+   * that use one reopen with it): the proposal afterwards, or undefined when the
+   * server refused (the global mutation toast says why) or another request runs.
+   */
+  const reopenOperations = async (operationIds: string[]) => {
+    if (operationIds.length === 0) return undefined;
+    return exclusive({ action: "reopen", count: operationIds.length }, async () => {
+      try {
+        return await reopen.mutateAsync({ id, data: { operation_ids: operationIds } });
+      } catch {
+        return undefined;
+      }
+    });
+  };
+
+  /**
    * Keep one operation of a conflict: apply it, then reject the others with
    * "conflict: kept seq N". Nothing is rejected unless it applied.
    */
@@ -421,6 +445,7 @@ export function useProposalActions(proposal: ChangeProposal | undefined) {
     accept,
     acceptFresh,
     rejectOperations,
+    reopenOperations,
     keepConflict,
     revertProposal,
     downloadDecisions,
@@ -437,7 +462,12 @@ export function useProposalActions(proposal: ChangeProposal | undefined) {
     closeResults: () => setLastApplied(null),
     revertConflict,
     dismissRevertConflict: () => setRevertConflict(null),
-    busy: pending !== null || apply.isPending || reject.isPending || revert.isPending,
+    busy:
+      pending !== null ||
+      apply.isPending ||
+      reject.isPending ||
+      reopen.isPending ||
+      revert.isPending,
     /** The apply or reject in flight, for a busy label; null when none is. */
     pending,
     exporting: exportDecisions.isPending,

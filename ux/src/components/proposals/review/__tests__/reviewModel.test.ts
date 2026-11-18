@@ -21,6 +21,8 @@ import {
   orderOf,
   reasonLabel,
   relationshipsOf,
+  RECENT_CLASSES,
+  forgetPick,
   rememberPick,
   reviewProgress,
   reviewSourceId,
@@ -270,10 +272,19 @@ describe("classes and reasons", () => {
 
   it("suggests up to three classes picked earlier, most recent first, not the current one", () => {
     let recent: string[] = [];
-    for (const id of ["c1", "c2", "c3", "c4", "c2"]) recent = rememberPick(recent, id);
+    for (const id of ["c1", "c2", "c3", "c4", "c2"]) recent = rememberPick(recent, id, 4);
     expect(recent).toEqual(["c2", "c4", "c3", "c1"]);
     expect(suggestedClasses(recent, "c4")).toEqual(["c2", "c3", "c1"]);
     expect(suggestedClasses(recent, undefined)).toEqual(["c2", "c4", "c3"]);
+  });
+
+  it("keeps two recent classes by default, dropping the oldest, and forgets one", () => {
+    let recent: string[] = [];
+    for (const id of ["c1", "c2", "c3"]) recent = rememberPick(recent, id);
+    expect(RECENT_CLASSES).toBe(2);
+    expect(recent).toEqual(["c3", "c2"]);
+    expect(rememberPick(recent, "c2")).toEqual(["c2", "c3"]);
+    expect(forgetPick(recent, "c3")).toEqual(["c2"]);
   });
 
   it("labels each reason code", () => {

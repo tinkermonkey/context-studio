@@ -7,6 +7,7 @@ import {
   type ChangeProposalApplyRequest,
   type ChangeProposalCreateRequest,
   type ChangeProposalRejectRequest,
+  type ChangeProposalReopenRequest,
 } from "@/api/services/proposals";
 
 /** Create (auto-apply), apply and revert change the ontology: refresh all a proposal can touch. */
@@ -39,8 +40,9 @@ export function useCreateChangeProposal() {
 
 /**
  * Apply operations. `data.edits` maps an operation id to the fields a reviewer corrected it to
- * (property updates and deletes, where an edited delete applies as an update; and an individual
- * create's `title` and `class_ids`). Each applied operation's `applied_fields` reports what was
+ * (property updates and deletes, where an edited delete applies as an update; an individual
+ * create's `title` and `class_ids`; a relationship create's `property_definition_id`, `source_id`
+ * and `target_id`). Each applied operation's `applied_fields` reports what was
  * applied. `data.review_ms` records the time the reviewer spent on each operation.
  */
 export function useApplyChangeProposal() {
@@ -58,6 +60,23 @@ export function useApplyChangeProposal() {
     // A timed-out apply may still be running, or have finished, on the server: show where it got.
     onError: (error) => {
       if (isTimeout(error)) invalidateOntology(queryClient);
+    },
+  });
+}
+
+/**
+ * Reopen decided operations to decide them again. An applied one's entity is
+ * undone (and the applied relationships that use it reopen with it), so the
+ * ontology is refreshed too.
+ */
+export function useReopenProposalOperations() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: ChangeProposalReopenRequest }) =>
+      proposalsService.reopenOperations(id, data),
+    onSuccess: (proposal) => {
+      queryClient.setQueryData(QUERY_KEYS.changeProposal(proposal.id), proposal);
+      invalidateOntology(queryClient);
     },
   });
 }

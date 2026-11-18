@@ -322,7 +322,7 @@ test.describe("Proposal review page", () => {
     await expect(page.getByTestId("review-progress")).toBeVisible();
     await expect(page.getByTestId("review-progress-decided")).toHaveText("0 / 4");
     await expect(page.getByTestId("review-progress-counts")).toHaveText(
-      "0 correct · 0 class changed · 0 not elements · 0 added",
+      "0 correct · 0 changed · 0 rejected · 0 added",
     );
     await expect(page.getByTestId("review-time")).toHaveText(/^\d+:\d{2} on this review$/);
 
@@ -392,7 +392,7 @@ test.describe("Proposal review page", () => {
     await expect(page.getByTestId("review-correct")).toBeEnabled();
     await expect(page.getByTestId("review-better-class")).toBeVisible();
     await expect(page.getByTestId("review-reasons")).toBeVisible();
-    await expect(page.getByTestId("review-relationships")).toContainText("Its relationships · 0");
+    await expect(page.getByTestId("review-relationships")).toContainText("ITS RELATIONSHIPS · 0");
 
     // 10. A highlight click opens its element.
     await customersMark.click();
@@ -462,7 +462,7 @@ test.describe("Proposal review page", () => {
 
     // 2. A better class (element 2), from the picker.
     const relationships = page.getByTestId("review-relationships");
-    await expect(relationships).toContainText("Its relationships · 1");
+    await expect(relationships).toContainText("ITS RELATIONSHIPS · 1");
     await expect(relationships.getByTestId(`review-relationship-${ops.serves}`)).toBeVisible();
     const picker = page.getByTestId("review-class-picker");
     await expect(picker).toContainText("Search all 3 classes");
@@ -475,7 +475,7 @@ test.describe("Proposal review page", () => {
     await expect(row(page, ops.gateway)).toHaveAttribute("data-verdict", "changed");
     await expect(gatewayMark).toHaveClass(/\breview-mark--changed\b/);
     await expect(decided).toHaveText("2 / 4");
-    await expect(counts).toContainText("1 class changed");
+    await expect(counts).toContainText("1 changed");
     await expect(row(page, ops.customers)).toHaveAttribute("aria-selected", "true");
     await expect(title).toHaveText("Customers");
 
@@ -496,7 +496,7 @@ test.describe("Proposal review page", () => {
     const customersMark = await markOf(page, "Customers", ops.customers);
     await expect(customersMark).toHaveClass(/\breview-mark--rejected\b/);
     await expect(decided).toHaveText("3 / 4");
-    await expect(counts).toHaveText("1 correct · 1 class changed · 1 not elements · 0 added");
+    await expect(counts).toHaveText("1 correct · 1 changed · 1 rejected · 0 added");
     await expect(page.getByTestId("review-filter")).toContainText("Awaiting · 1");
     await expect(row(page, ops.serves)).toHaveAttribute("aria-selected", "true");
 
@@ -521,7 +521,7 @@ test.describe("Proposal review page", () => {
     const serves = relationships.getByTestId(`review-relationship-${ops.serves}`);
     await expect(serves).toContainText("Mail Gateway");
     await expect(serves).toContainText("e2e_review_serves");
-    await expect(serves).toContainText("Customers");
+    // From Customers: a card read as a sentence ("Mail Gateway serves → this"), a link to it.
     await expect(serves).toContainText("awaiting");
     await serves.click();
 
@@ -535,7 +535,7 @@ test.describe("Proposal review page", () => {
     const callout = page.getByTestId("review-ends-callout");
     await expect(callout).toBeVisible();
     await expect(callout).toContainText("#3 was rejected");
-    await expect(callout).toContainText("Reject it.");
+    await expect(callout).toContainText("Reject it, or give it another end.");
     await expect(page.getByTestId("review-correct")).toHaveCount(0);
     await expect(page.getByTestId("review-reasons")).toBeVisible();
     await expect(page.getByTestId("review-reason-not_in_text")).toBeEnabled();

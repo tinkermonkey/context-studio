@@ -159,6 +159,8 @@ REVERTED_REASON = "proposal reverted"
 MAX_REVIEW_MS = 2**31 - 1
 # What a reviewer's edit of an individual create may set
 _INDIVIDUAL_EDIT_FIELDS = frozenset({"title", "class_ids"})
+# What a reviewer's edit of a relationship create may set: its type and its ends
+_RELATIONSHIP_EDIT_FIELDS = frozenset({"property_definition_id", "source_id", "target_id"})
 
 _REF_PREFIX = "$"
 # A relationship's end fields
@@ -1854,6 +1856,8 @@ class ProposalService:
                     self._apply_match(operation, alternative["entity_id"], proposal)
                 elif operation.id in edits and operation.kind is K.INDIVIDUAL:
                     self._apply_edited_create(proposal, operation, edits[operation.id], refs)
+                elif operation.id in edits and operation.kind is K.RELATIONSHIP:
+                    self._apply_edited_relationship(proposal, operation, edits[operation.id], refs)
                 elif operation.id in edits:
                     others = {i: e for i, e in edits.items() if i != operation.id}
                     edit = edits[operation.id]
@@ -2164,18 +2168,28 @@ class ProposalService:
             individual_create = (
                 operation.kind is K.INDIVIDUAL and operation.op is OperationType.CREATE
             )
-            if not individual_create and (
-                operation.kind is not K.PROPERTY
-                or operation.op not in (OperationType.UPDATE, OperationType.DELETE)
+            relationship_create = (
+                operation.kind is K.RELATIONSHIP and operation.op is OperationType.CREATE
+            )
+            if (
+                not individual_create
+                and not relationship_create
+                and (
+                    operation.kind is not K.PROPERTY
+                    or operation.op not in (OperationType.UPDATE, OperationType.DELETE)
+                )
             ):
                 raise ValueError(
                     f"{label} is a {operation.kind.value} {operation.op.value}; only a "
-                    "property update or delete, or an individual create, can be edited"
+                    "property update or delete, or an individual or relationship create, "
+                    "can be edited"
                 )
             if not isinstance(fields, dict) or not fields:
                 raise ValueError(f"{label}: an edit needs at least one field")
             if individual_create:
                 _check_individual_edit(label, fields)
+            if relationship_create:
+                _check_relationship_edit(label, fields)
             refs = sorted(
                 name for name, value in fields.items() if name in ID_FIELDS and _is_ref(value)
             )
@@ -2326,6 +2340,45 @@ class ProposalService:
         def run() -> str:
             fields = {**operation.fields, **edit}
             self._check_individual_create_edit(operation, fields, set(edit), proposal, refs)
+            values = {
+                name: self._resolved(value, refs) if name in ID_FIELDS else value
+                for name, value in fields.items()
+            }
+            result = self._dispatch(operation, values, proposal, OperationType.CREATE)
+            operation.applied_fields = fields
+            return result
+
+        self._record_outcome(operation, proposal.id, run)
+
+    def _apply_edited_relationship(
+        self,
+        proposal: ChangeProposal,
+        operation: ProposedOperation,
+        edit: dict[str, Any],
+        refs: dict[str, ProposedOperation],
+    ) -> None:
+        """
+        Apply a reviewer's edit of a relationship create: create it with the
+        proposed type and ends overridden by the edit, recorded as
+        applied_fields. The edited relationship is checked as a proposed one is
+        (its type and ends exist, its ends are in the proposal's dataset); its
+        ends must fit the type's domain and range, as any relationship's must.
+        """
+
+        def run() -> str:
+            fields = {**operation.fields, **edit}
+            as_create = ProposedOperation(
+                seq=operation.seq, op=OperationType.CREATE, kind=K.RELATIONSHIP, fields=fields
+            )
+            try:
+                self._check_field_names(as_create)
+                self._check_values(as_create)
+                self._check_id_fields(as_create, {name: o.kind for name, o in refs.items()})
+                self._check_dataset(as_create, proposal.dataset_id)
+            except _Invalid as exc:
+                raise _ApplyFailed(INVALID_EDIT, exc.message) from exc
+            except (TypeError, ValueError) as exc:
+                raise _ApplyFailed(INVALID_EDIT, str(exc)) from exc
             values = {
                 name: self._resolved(value, refs) if name in ID_FIELDS else value
                 for name, value in fields.items()
@@ -3118,6 +3171,117 @@ class ProposalService:
             self._proposals.save_operations(proposal.id, chosen, decisions)
             proposal.settle_status()
             self._proposals.set_status(proposal.id, proposal.status)
+            return self._get(proposal_id)
+
+    def reopen(
+        self,
+        proposal_id: str,
+        operation_ids: Iterable[str],
+        reopened_by: str = DECIDED_BY_USER,
+    ) -> ChangeProposal:
+        """
+        Reopen decided individual and relationship creates so the reviewer can
+        decide them again (accept instead of reject, another class, another
+        predicate or end, or reject instead of accept).
+
+        Each goes back to pending as if never decided: what its apply did is
+        undone, its decisions are superseded (by reopened_by), so the decision
+        it takes next is the one that counts, and the source passages it
+        recorded are removed. The applied operations of the proposal that
+        depend on one (a relationship naming a reopened individual by "$ref" or
+        by the id it created) are reopened with it, since undoing the
+        individual would leave them dangling. An applied create's entity is
+        deleted by undoing the run's changes to it (RevertService, only those
+        entities), so a later revert of the whole proposal skips them; a create
+        applied as an existing near match created nothing, so nothing of it is
+        undone. A rejected operation changed nothing, so only its decision is
+        superseded. A done proposal is open again.
+
+        Returns:
+            The proposal with the reopened operations pending
+
+        Raises:
+            ChangeProposalNotFoundError: If the proposal does not exist
+            ChangeProposalStateError: If the proposal is reverted or landed, an
+                operation is still undecided (pending or failed), or an applied
+                operation of another kind depends on one; nothing is changed
+            ValueError: If an operation id is not in the proposal, or names an
+                operation that is not an individual or relationship create
+            RevertConflictError, RevertRefusedError: From RevertService, when
+                something outside the proposal uses an entity being undone;
+                nothing is changed
+        """
+        with self._lock(proposal_id):
+            proposal = self._get(proposal_id)
+            if proposal.status is ProposalStatus.REVERTED:
+                raise ChangeProposalStateError(f"Change proposal {proposal_id} is reverted")
+            if proposal.landed is not None:
+                raise ChangeProposalStateError(
+                    f"Change proposal {proposal_id} has landed; its decisions can't change"
+                )
+            by_id = {o.id: o for o in proposal.operations}
+            ids = list(dict.fromkeys(operation_ids))
+            unknown = [i for i in ids if i not in by_id]
+            if unknown:
+                raise ValueError(f"Change proposal {proposal.id} has no operations {unknown}")
+            chosen = [by_id[i] for i in ids]
+            for operation in chosen:
+                if operation.op is not OperationType.CREATE or operation.kind not in (
+                    K.INDIVIDUAL,
+                    K.RELATIONSHIP,
+                ):
+                    raise ValueError(
+                        f"seq {operation.seq} is a {operation.kind.value} {operation.op.value};"
+                        " only an individual or relationship create can be reopened"
+                    )
+            undecided = [
+                o.seq
+                for o in chosen
+                if o.status not in (OperationStatus.APPLIED, OperationStatus.REJECTED)
+            ]
+            if undecided:
+                raise ChangeProposalStateError(
+                    f"Can't reopen operations of change proposal {proposal.id} that are not"
+                    f" decided (seq {undecided})"
+                )
+            reopened = _with_dependents(proposal, chosen)
+            undo = sorted(
+                {
+                    o.result_entity_id
+                    for o in reopened
+                    if o.status is OperationStatus.APPLIED
+                    and o.result_entity_id
+                    and not o.matched
+                }
+            )
+
+            def close(_result: RevertResult | None) -> None:
+                # Inside the revert's transaction: the operations reopen with the undo.
+                for operation in reopened:
+                    operation.status = OperationStatus.PENDING
+                    operation.reason = None
+                    operation.reason_code = None
+                    operation.applied_fields = None
+                    operation.result_entity_id = None
+                    operation.resolution = None
+                    operation.type_change = None
+                self._proposals.save_operations(proposal.id, reopened)
+                self._proposals.supersede_operation_decisions(
+                    proposal.id,
+                    [o.id for o in reopened],
+                    datetime.now(timezone.utc),
+                    reopened_by,
+                )
+                if self._sources is not None:
+                    self._sources.delete_for_operations(proposal.id, [o.seq for o in reopened])
+                if proposal.status is ProposalStatus.DONE:
+                    self._proposals.set_status(proposal.id, ProposalStatus.OPEN)
+
+            if undo:
+                self._revert.revert_with_summary(proposal.id, on_reverted=close, entity_ids=undo)
+            else:
+                with self._atomic():
+                    close(None)
             return self._get(proposal_id)
 
     def revert(self, proposal_id: str, reverted_by: str = DECIDED_BY_USER) -> RevertResult:
@@ -3918,6 +4082,76 @@ def _check_individual_edit(label: str, fields: Mapping[str, Any]) -> None:
     refs = sorted(c for c in fields.get("class_ids", []) if _is_ref(c))
     if refs:
         raise ValueError(f"{label}: an edit can't point at a $ref ({refs})")
+
+
+def _with_dependents(
+    proposal: ChangeProposal, chosen: list[ProposedOperation]
+) -> list[ProposedOperation]:
+    """
+    The chosen operations and every applied operation of the proposal that
+    depends on one of them, in seq order: one naming it by "$ref", or naming
+    the entity it created by id.
+
+    Raises:
+        ChangeProposalStateError: If a dependent is not an individual or
+            relationship create (reopening it would undo more than a review
+            decision)
+    """
+
+    def names(value: Any, operation: ProposedOperation) -> bool:
+        values = value if isinstance(value, list) else [value]
+        for item in values:
+            if not isinstance(item, str):
+                continue
+            if operation.ref and item == f"{_REF_PREFIX}{operation.ref}":
+                return True
+            if (
+                operation.status is OperationStatus.APPLIED
+                and not operation.matched
+                and operation.result_entity_id
+                and item == operation.result_entity_id
+            ):
+                return True
+        return False
+
+    found = {o.id: o for o in chosen}
+    grew = True
+    while grew:
+        grew = False
+        for candidate in proposal.operations:
+            if candidate.id in found or candidate.status is not OperationStatus.APPLIED:
+                continue
+            fields = {**candidate.fields, **(candidate.applied_fields or {})}
+            if not any(
+                name in ID_FIELDS and names(value, o)
+                for name, value in fields.items()
+                for o in list(found.values())
+            ):
+                continue
+            if candidate.op is not OperationType.CREATE or candidate.kind not in (
+                K.INDIVIDUAL,
+                K.RELATIONSHIP,
+            ):
+                raise ChangeProposalStateError(
+                    f"seq {candidate.seq} ({candidate.kind.value} {candidate.op.value}) is applied"
+                    " and uses an operation being reopened; it can't be reopened with it"
+                )
+            found[candidate.id] = candidate
+            grew = True
+    return sorted(found.values(), key=lambda o: o.seq)
+
+
+def _check_relationship_edit(label: str, fields: Mapping[str, Any]) -> None:
+    """A relationship create's edit sets only its type and ends, each an id."""
+    unknown = sorted(set(fields) - _RELATIONSHIP_EDIT_FIELDS)
+    if unknown:
+        raise ValueError(
+            f"{label}: a relationship create's edit sets only property_definition_id,"
+            f" source_id and target_id, not {unknown}"
+        )
+    for name, value in fields.items():
+        if not isinstance(value, str) or not value:
+            raise ValueError(f"{label}: an edited {name} must be an id")
 
 
 def _checked_review_ms(

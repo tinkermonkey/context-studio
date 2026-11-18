@@ -3219,7 +3219,7 @@ selectors:
     description: 'A group of rows (role=group), by concept scheme id, "other", or "relationships"'
   - selector: review-row-*
     component: src/components/proposals/review/ReviewElementsPane.tsx
-    description: "An element row (role=option, aria-selected), by operation id: title, class or predicate, probability, status chip; .review-row--selected when selected"
+    description: "An element row, a link (<a role=option href=?selected=<id>>, aria-selected), by operation id: title, class or predicate, probability, status chip; .review-row--selected when selected; a plain click selects it (a history entry)"
   - selector: review-inspector
     component: src/components/proposals/review/ReviewInspector.tsx
     description: 'Inspector (region "Selected element") for the selected element or relationship'
@@ -3228,10 +3228,10 @@ selectors:
     description: '"INDIVIDUAL · p 0.97" or "RELATIONSHIP · p 0.90"'
   - selector: review-inspector-title
     component: src/components/proposals/review/ReviewInspector.tsx
-    description: 'The element title, or a relationship''s "from predicate to"'
+    description: "An element's title (h2, 20px), or a relationship's title as a sentence (h2.review-head__sentence: source, predicate pill review-title-predicate, target; aria-label \"source predicate target\")"
   - selector: review-inspector-class
     component: src/components/proposals/review/ReviewInspector.tsx
-    description: "Class chip (the applied class once changed); elements only"
+    description: "The element's class under its title: the large class tag (.review-pill--class.review-pill--lg, a button, aria-label \"Class <label>\") whose hover explains it; elements only"
   - selector: review-inspector-status
     component: src/components/proposals/review/ReviewInspector.tsx
     description: "Verdict chip: awaiting (amber), correct (emerald), class changed (violet), not an element (rose), added (cyan)"
@@ -3240,7 +3240,10 @@ selectors:
     description: "Alert with the reason the last apply failed"
   - selector: review-evidence
     component: src/components/proposals/review/ReviewInspector.tsx
-    description: "EVIDENCE: the passages' quotes"
+    description: "EVIDENCE (· N for an element; a relationship's has Show in source): each passage a button (review-evidence-{n}), the first amber, the rest neutral (.review-evidence--more); a click scrolls the source to it and flashes it"
+  - selector: review-evidence-*
+    component: src/components/proposals/review/ReviewInspector.tsx
+    description: "One evidence passage (a button, 1-based): scrolls the source to it and flashes it"
   - selector: review-definition
     component: src/components/proposals/review/ReviewInspector.tsx
     description: '"WHAT <class> MEANS" with the class description'
@@ -3261,7 +3264,7 @@ selectors:
     description: "OR A BETTER CLASS: suggestions and the class picker"
   - selector: review-suggestion-*
     component: src/components/proposals/review/ReviewInspector.tsx
-    description: "Suggested class 1-3 (keys 1-3): classes picked earlier in the review, most recent first, with definitions; applies with edits class_ids"
+    description: "Suggested classes as class tags (.review-suggestion__pick, keys 1-3 on the first three, aria-label \"Accept as <class>\", the definition as title): gold's acceptable ones, then the two picked most recently; review-suggestion-{n}-remove (.review-forget) removes a recent one"
   - selector: review-class-picker
     component: src/components/proposals/review/ReviewClassPicker.tsx
     description: 'EntityPicker over the taxonomy''s non-derived classes ("Search all N classes")'
@@ -3276,7 +3279,19 @@ selectors:
     description: "Optional note TextArea sent with a reject"
   - selector: review-decided
     component: src/components/proposals/review/ReviewInspector.tsx
-    description: "A decided operation's decision, read-only"
+    description: "A decided operation's decision, its class (review-decided-class) or predicate as pills"
+  - selector: review-decided-class
+    component: src/components/proposals/review/ReviewInspector.tsx
+    description: "The class an element was accepted or added as, a class pill with its overlay"
+  - selector: review-decided-*
+    component: src/components/proposals/review/ReviewInspector.tsx
+    description: "An edited relationship's decision: review-decided-predicate, -source_id, -target_id, each as it is now beside what was proposed"
+  - selector: review-change-*
+    component: src/components/proposals/review/ReviewInspector.tsx
+    description: "review-change-decision: Change the decision / Keep this decision (secondary, aria-expanded, aria-controls review-change) on a decided operation, review-change-note its hint; review-change-{predicate,source,target}: a correction row's Change / Cancel (aria-expanded)"
+  - selector: review-decide
+    component: src/components/proposals/review/ReviewInspector.tsx
+    description: "DECIDE: Correct (primary), Not an element / Not a relationship (review-not, secondary: focuses the reasons), the key hint; with the ends callouts and a near match's choice"
   - selector: review-decided-note
     component: src/components/proposals/review/ReviewInspector.tsx
     description: "A rejected operation's note"
@@ -3285,7 +3300,49 @@ selectors:
     description: "ITS RELATIONSHIPS · N: relationship operations with this element at either end"
   - selector: review-relationship-*
     component: src/components/proposals/review/ReviewInspector.tsx
-    description: "One of the element's relationships, by operation id: from, predicate, to and status; click selects it"
+    description: "review-relationship-block: THE RELATIONSHIP (section, aria-label \"The relationship\"): FROM end card, the predicate between (review-predicate-pill, review-ends-fit or review-ends-misfit, review-predicate-definition), TO end card. review-relationship-{id}: one of an element's relationships, a link card (.review-relrow, data-direction in|out) read as a sentence with \"this\" for the element, its status chip, then the other end's class tag. review-relationship-editor: OR CORRECT IT"
+  - selector: review-pill-overlay
+    component: src/components/proposals/review/ReviewPills.tsx
+    description: "The hover overlay (role=tooltip, .definition-overlay, beside the inspector) of a class, individual or predicate pill: definition, layer, and for a class the relationships the schema allows from and to it"
+  - selector: review-end-*
+    component: src/components/proposals/review/ReviewRelationship.tsx
+    description: "An end card of the relationship block: review-end-{source,target} (FROM / TO), with its -individual (bold text with a dot, .review-pill--individual; a link when it is an element of the proposal), -status (its verdict chip, or \"in the workspace\"), -class (class tag); review-end-search-{role} and review-end-option-{role}: an open Source / Target row's search and results"
+  - selector: review-show-in-source
+    component: src/components/proposals/review/ReviewInspector.tsx
+    description: "A relationship's EVIDENCE: Show in source, scrolls the source to its first passage"
+  - selector: review-not
+    component: src/components/proposals/review/ReviewInspector.tsx
+    description: "Not an element / Not a relationship (secondary, key X): focuses the first reason"
+  - selector: review-title-predicate
+    component: src/components/proposals/review/ReviewRelationship.tsx
+    description: "The predicate pill in a relationship's title sentence"
+  - selector: review-ends-fit
+    component: src/components/proposals/review/ReviewRelationship.tsx
+    description: "✓ both ends fit the schema, beside the predicate between a relationship's ends"
+  - selector: review-ends-misfit
+    component: src/components/proposals/review/ReviewRelationship.tsx
+    description: "In place of the green fit line when the relationship's ends don't fit its type (role=alert): the predicate pill turns misfit (.review-pill--misfit, dashed rose) and the text says which end is wrong (\"source is x; realizes needs y\"); Correct is disabled"
+  - selector: review-hint-overlay
+    component: src/components/proposals/review/ReviewPills.tsx
+    description: "A HintLabel's overlay (role=tooltip): e.g. the tier label's rule, how the scorer counts core and supporting"
+  - selector: review-predicate
+    component: src/components/proposals/review/ReviewRelationship.tsx
+    description: "WHAT <predicate> MEANS: review-predicate-pill, -definition, -allowed (domain and range class pills)"
+  - selector: review-predicate-*
+    component: src/components/proposals/review/ReviewRelationship.tsx
+    description: "review-predicate-pill/-definition/-allowed; review-predicate-option-{n}: a better predicate the schema allows between the ends' classes (aria-pressed); review-predicate-none when there is none"
+  - selector: review-relationship-editor
+    component: src/components/proposals/review/ReviewRelationship.tsx
+    description: "OR CORRECT IT: three rows of one shape (review-better-predicate / -source / -target, .review-fix) each with Change (review-change-{row}); then Accept with these changes (review-accept-edited, secondary)"
+  - selector: review-better-*
+    component: src/components/proposals/review/ReviewRelationship.tsx
+    description: "A row of Or correct it (.review-fix: label, current value, ghost Change; .review-fix--open with Cancel, a hint, a search and results; .review-fix--changed with Undo once a value is picked). review-better-class: OR A BETTER CLASS"
+  - selector: review-draft-*
+    component: src/components/proposals/review/ReviewRelationship.tsx
+    description: "review-draft-{predicate,source,target}: a correction row's current value (the draft's when changed), with -undo; review-draft-predicate-pill"
+  - selector: review-accept-edited
+    component: src/components/proposals/review/ReviewRelationship.tsx
+    description: "Accept with these changes: applies the relationship with edits (property_definition_id, source_id, target_id); disabled until the draft changes something"
 
   # Review page: add a missed element from selected text (#1612)
   - selector: review-source-selectable
@@ -3340,7 +3397,10 @@ selectors:
     description: "Gold mode: the element's gold aliases under its title (\"Also called …\")"
   - selector: review-tier
     component: src/components/proposals/review/ReviewInspector.tsx
-    description: "Gold mode: Tier control (core / supporting) starting from the gold tier (an element's, or a relationship's by seq); a change is sent as annotations[op].tier"
+    description: "Gold mode: Tier control (core / supporting) starting from the gold tier (an element's, or a relationship's by seq); a change is sent as annotations[op].tier. -label is a HintLabel (hover: the scorer's rule), -hint the rule in one line"
+  - selector: review-tier-*
+    component: src/components/proposals/review/TierControl.tsx
+    description: "review-tier-label (the label, a button whose overlay gives the rule) and review-tier-hint (one line under the control: what core and supporting mean, or that a relationship's tier is only recorded)"
   - selector: review-defensible-*
     component: src/components/proposals/review/ReviewInspector.tsx
     description: "Gold mode: \"Also defensible\" toggle (aria-pressed) beside suggested class N (the gold's acceptable classes first), sent in annotations[op].also_defensible; for a class already in the gold's acceptable_classes it is pressed, disabled and reads \"Acceptable in gold\""
@@ -3352,7 +3412,7 @@ selectors:
     description: "Gold mode, elements only: shown while the note is empty; the Not-an-element reasons stay disabled until it has text (it becomes the excluded entry's reason)"
   - selector: review-add-tier
     component: src/components/proposals/review/AddElementPopover.tsx
-    description: "Gold mode: the added element's tier (supporting to start with), sent as annotation.tier"
+    description: "Gold mode: the added element's tier (supporting to start with), sent as annotation.tier; review-add-tier-label and -hint as review-tier's"
   - selector: gold-row-*
     component: src/components/proposals/gold/BenchmarkGoldPage.tsx
     description: "A gold check's document id in its table row, by proposal id"

@@ -27,6 +27,7 @@ from adapters.web.schemas.proposals import (
     ChangeProposalCreateRequest,
     ChangeProposalLandedRequest,
     ChangeProposalRejectRequest,
+    ChangeProposalReopenRequest,
     ChangeProposalResponse,
     ChangeProposalRevertConflictResponse,
     ChangeProposalRevertResponse,
@@ -470,6 +471,13 @@ async def apply_proposal(
     data_properties the edited classes don't define, fails only that operation
     with "invalid_edit: ...".
 
+    edits also corrects a relationship create's type and ends: any of
+    property_definition_id, source_id and target_id (ids of existing entities,
+    not "$ref"s) replaces the proposed one (recorded as applied_fields, decided
+    applied_with_edits). An end that doesn't exist or is in another dataset
+    fails only that operation with "invalid_edit: ..."; ends that don't fit
+    the type's domain and range with "domain_range_mismatch: ...".
+
     review_ms records, in each applied operation's decision, the milliseconds
     the reviewer spent on it.
 
@@ -546,6 +554,55 @@ async def reject_proposal(
             review_ms=request.review_ms,
             annotations=_annotations(request.annotations),
         )
+        return proposal_response(service, proposal)
+
+    try:
+        return await run_sync_in_executor(run)
+    except Exception as exc:
+        raise _http_error(exc, unknown_ids_are_invalid=True) from exc
+
+
+@router.post(
+    "/proposals/{proposal_id}/reopen",
+    response_model=ChangeProposalResponse,
+    responses={
+        **_NOT_FOUND,
+        409: {
+            "model": ChangeProposalRevertConflictResponse,
+            "description": (
+                "Refused, nothing changed: the proposal is reverted or landed, an "
+                "operation is not decided, an applied operation of another kind uses "
+                "one, or something outside the proposal uses an entity it created "
+                "(detail.blocking lists them)"
+            ),
+        },
+        422: {
+            "description": (
+                "An operation id is not in the proposal, or is not an individual or "
+                "relationship create"
+            )
+        },
+    },
+)
+async def reopen_operations(
+    proposal_id: str,
+    request: ChangeProposalReopenRequest,
+    service: ProposalService = Depends(get_proposal_service),
+) -> ChangeProposalResponse:
+    """
+    Reopen decided individual and relationship creates, to decide them again.
+
+    Each goes back to pending: what its apply did is undone (the entity it
+    created is deleted, under the proposal's run, so a later revert skips it),
+    its decisions are superseded so the next one is the one that counts, and
+    its source passages are removed. Applied relationships of the proposal
+    that use a reopened individual are reopened with it. A rejected operation
+    changed nothing, so only its decision is superseded. In one transaction:
+    a refusal changes nothing.
+    """
+
+    def run() -> ChangeProposalResponse:
+        proposal = service.reopen(proposal_id, request.operation_ids)
         return proposal_response(service, proposal)
 
     try:

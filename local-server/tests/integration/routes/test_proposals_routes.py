@@ -1065,6 +1065,134 @@ class TestReviewDecisions:
         assert all(o["status"] == "pending" for o in operations)
 
 
+class TestReopen:
+    """Changing a decision while the review is open: reopen, then decide again."""
+
+    @pytest.fixture()
+    def near(self, ontology, graph):
+        return ontology.create_property_definition(
+            "near", "near", domain_class_id=graph["room"], range_class_id=graph["room"]
+        ).id
+
+    def _study(self, graph):
+        return {
+            "seq": 1,
+            "op": "create",
+            "kind": "individual",
+            "ref": "study",
+            "fields": {"class_ids": [graph["room"]], "title": "Study"},
+        }
+
+    def _near_den(self, graph, near):
+        return {
+            "seq": 2,
+            "op": "create",
+            "kind": "relationship",
+            "fields": {
+                "source_id": "$study",
+                "target_id": graph["den"],
+                "property_definition_id": near,
+            },
+        }
+
+    def _titles(self, ontology):
+        return sorted(i.title for i in ontology.list_individuals(limit=None))
+
+    def test_an_accepted_individual_is_undone_and_accepted_again_with_another_class(
+        self, client, graph, ontology
+    ):
+        hall = ontology.create_class(graph["vocab"], "Hall", parent_class_id=graph["room"]).id
+        proposal = _propose(client, graph, self._study(graph))
+        [op_id] = _op_ids(proposal, 1)
+        url = f"/api/proposals/{proposal['id']}"
+        client.post(f"{url}/apply", json={"operation_ids": [op_id]})
+        assert self._titles(ontology) == ["Den", "Study"]
+
+        reopened = client.post(f"{url}/reopen", json={"operation_ids": [op_id]})
+
+        assert reopened.status_code == 200, reopened.text
+        [op] = reopened.json()["operations"]
+        assert (op["status"], op["result_entity_id"]) == ("pending", None)
+        assert reopened.json()["status"] == "open"
+        assert self._titles(ontology) == ["Den"]
+
+        again = client.post(
+            f"{url}/apply",
+            json={"operation_ids": [op_id], "edits": {op_id: {"class_ids": [hall]}}},
+        )
+        [op] = again.json()["operations"]
+        assert op["status"] == "applied"
+        assert ontology.get_individual(op["result_entity_id"]).class_ids == [hall]
+        gold = f"/api/taxonomies/{graph['taxonomy']}/gold"
+        [standing] = client.get(gold).json()["items"]
+        assert standing["decision"] == "applied_with_edits"
+        history = client.get(gold, params={"include_superseded": True}).json()["items"]
+        assert [d["decision"] for d in history] == ["applied", "applied_with_edits"]
+        assert history[0]["superseded_by"] == "user"
+
+        # Reverting the whole proposal still undoes what stands, and only that.
+        assert client.post(f"{url}/revert").status_code == 200
+        assert self._titles(ontology) == ["Den"]
+
+    def test_a_rejection_reopens_and_can_be_accepted(self, client, graph, ontology):
+        proposal = _propose(client, graph, self._study(graph))
+        [op_id] = _op_ids(proposal, 1)
+        url = f"/api/proposals/{proposal['id']}"
+        client.post(f"{url}/reject", json={"operation_ids": [op_id], "reason_code": "other"})
+
+        assert client.post(f"{url}/reopen", json={"operation_ids": [op_id]}).status_code == 200
+        [op] = client.post(f"{url}/apply", json={"operation_ids": [op_id]}).json()["operations"]
+
+        assert op["status"] == "applied" and op["reason_code"] is None
+        assert self._titles(ontology) == ["Den", "Study"]
+
+    def test_the_relationships_that_use_it_reopen_with_it(self, client, graph, ontology, near):
+        proposal = _propose(client, graph, self._study(graph), self._near_den(graph, near))
+        study_id, near_id = _op_ids(proposal, 1, 2)
+        url = f"/api/proposals/{proposal['id']}"
+        client.post(f"{url}/apply", json={"operation_ids": [study_id, near_id]})
+        assert len(ontology.list_relationships(limit=None)) == 1
+
+        response = client.post(f"{url}/reopen", json={"operation_ids": [study_id]})
+
+        assert response.status_code == 200, response.text
+        assert [o["status"] for o in response.json()["operations"]] == ["pending", "pending"]
+        assert ontology.list_relationships(limit=None) == []
+        assert self._titles(ontology) == ["Den"]
+
+    def test_an_undecided_operation_is_409_and_an_unknown_one_422(self, client, graph):
+        proposal = _propose(client, graph, self._study(graph))
+        url = f"/api/proposals/{proposal['id']}/reopen"
+
+        undecided = client.post(url, json={"operation_ids": _op_ids(proposal, 1)})
+        unknown = client.post(url, json={"operation_ids": ["nope"]})
+
+        assert (undecided.status_code, unknown.status_code) == (409, 422)
+
+    def test_a_relationship_accepts_with_another_end(self, client, graph, ontology, near):
+        hall = ontology.create_individual(graph["room"], "Hall").id
+        proposal = _propose(client, graph, self._study(graph), self._near_den(graph, near))
+        study_id, near_id = _op_ids(proposal, 1, 2)
+        url = f"/api/proposals/{proposal['id']}"
+        client.post(f"{url}/apply", json={"operation_ids": [study_id]})
+
+        response = client.post(
+            f"{url}/apply",
+            json={"operation_ids": [near_id], "edits": {near_id: {"target_id": hall}}},
+        )
+
+        assert response.status_code == 200, response.text
+        op = _by_seq(response.json())[2]
+        assert op["status"] == "applied", op["reason"]
+        assert op["applied_fields"]["target_id"] == hall
+        [relationship] = ontology.list_relationships(limit=None)
+        assert relationship.target_id == hall
+
+
+def _by_seq(proposal):
+    return {o["seq"]: o for o in proposal["operations"]}
+
+
 class _ExtractedFromSource:
     """A proposal extracted from a small source, and the body of an element added from it."""
 

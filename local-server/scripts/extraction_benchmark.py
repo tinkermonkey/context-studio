@@ -672,6 +672,7 @@ def rewrite_gold(
     decisions: list[dict[str, Any]],
     class_ref: dict[str, str],
     class_attributes: Mapping[str, Collection[str]] | None = None,
+    property_predicate: Mapping[str, str] | None = None,
 ) -> GoldRewrite:
     """
     A gold file with a gold check's review written back; the input is left as it is.
@@ -688,7 +689,11 @@ def rewrite_gold(
     ones move to `excluded` with the note (else the reason code's label), with
     every relationship touching them. Ones the reviewer added become new
     individuals (tier from the annotation, else "supporting"). Relationships:
-    applied are marked checked (and take a tier annotation), rejected removed.
+    applied are marked checked (and take a tier annotation), rejected removed;
+    applied with an edited type or ends replace the gold relationship with the
+    edited one (its evidence kept), marked checked, when each edited end is an
+    individual of the gold check and the type's predicate is known (else it is
+    left as it is, noted).
     Pending and failed operations change nothing, so a proposal nobody reviewed
     gives the gold back unchanged; and writing the same review again changes
     nothing more.
@@ -700,6 +705,8 @@ def rewrite_gold(
         class_ref: Class id -> the class's reference in gold ("product.feature")
         class_attributes: Class reference -> the attributes it defines; without
             it a class edit keeps every `data` value
+        property_predicate: Relationship type id -> its predicate in gold
+            ("realizes"); without it an edited relationship is left as it is
     """
     result = copy.deepcopy(gold)
     rewrite = GoldRewrite(result)
@@ -715,6 +722,9 @@ def rewrite_gold(
     checked_relationships: dict[tuple[str, str, str], tuple[dict[str, Any], str]] = {}
     excluded_labels = {str(e.get("label")) for e in result.get("excluded", ())}
     added: list[dict[str, Any]] = []
+    # Entity id -> its gold key, for the ends of edited relationships.
+    key_of: dict[str, str] = {}
+    edited: list[tuple[dict[str, Any], dict[str, Any], dict[str, Any]]] = []
     for operation in sorted(proposal["operations"], key=lambda o: o["seq"]):
         decision = by_operation.get(operation["id"])
         if operation["op"] != "create" or not _by_reviewer(decision):
@@ -731,12 +741,16 @@ def rewrite_gold(
                     taken.add(item["key"])
                     origins[item["key"]] = _origin(operation)
                     added.append(item)
+                    if operation.get("result_entity_id"):
+                        key_of[operation["result_entity_id"]] = item["key"]
                 continue
             element = elements.get(operation.get("ref"))
             item = items.get(element["key"]) if element else None
             if item is None:
                 continue
             origins[item["key"]] = _origin(operation)
+            if status == "applied" and operation.get("result_entity_id"):
+                key_of[operation["result_entity_id"]] = item["key"]
             if status == "rejected":
                 removed.add(item["key"])
                 if item["title"] not in excluded_labels:
@@ -756,10 +770,46 @@ def rewrite_gold(
             origins[" ".join(triple)] = f"seq {operation['seq']} ({' '.join(triple)})"
             if status == "rejected":
                 removed_relationships.add(triple)
+            elif status == "applied" and operation.get("applied_fields"):
+                edited.append((rel, operation, decision))
             elif status == "applied":
                 checked_relationships[triple] = (decision, proposal_id)
+    def end_key(value: Any) -> str | None:
+        """An end's gold key: the "$ref" of a gold element, or the entity an element made."""
+        if isinstance(value, str) and value.startswith("$"):
+            element = elements.get(value[1:])
+            return element["key"] if element else None
+        return key_of.get(value) if isinstance(value, str) else None
+
+    replacements: dict[tuple[str, str, str], tuple[str, str, str]] = {}
+    for rel, operation, decision in edited:
+        triple = (rel["source"], rel["predicate"], rel["target"])
+        fields = operation["applied_fields"]
+        source = end_key(fields.get("source_id"))
+        target = end_key(fields.get("target_id"))
+        predicate = (property_predicate or {}).get(fields.get("property_definition_id", ""))
+        if source is None or target is None or predicate is None:
+            notes.append(
+                f"seq {operation['seq']} ({' '.join(triple)}) was accepted with another type"
+                " or end that isn't an individual of this gold check; left as it is"
+            )
+            continue
+        new_triple = (source, predicate, target)
+        removed_relationships.add(triple)
+        replacements[triple] = new_triple
+        checked_relationships[new_triple] = (decision, proposal_id)
+        origins[" ".join(new_triple)] = f"seq {operation['seq']} ({' '.join(new_triple)})"
     result["individuals"] = [i for i in result["individuals"] if i["key"] not in removed] + added
     relationships = []
+    present = {(r["source"], r["predicate"], r["target"]) for r in result["relationships"]}
+    for rel in list(result["relationships"]):
+        new_triple = replacements.get((rel["source"], rel["predicate"], rel["target"]))
+        if new_triple is not None and new_triple not in present:
+            present.add(new_triple)
+            source, predicate, target = new_triple
+            result["relationships"].append(
+                {**rel, "source": source, "predicate": predicate, "target": target}
+            )
     for rel in result["relationships"]:
         triple = (rel["source"], rel["predicate"], rel["target"])
         if rel["source"] in removed or rel["target"] in removed or triple in removed_relationships:
@@ -948,7 +998,12 @@ def cmd_write_gold(args: argparse.Namespace) -> int:
             "file as it is now"
         )
     rewrite = rewrite_gold(
-        gold, proposal, decisions, schema.class_ref, SchemaSnapshot.load().attributes
+        gold,
+        proposal,
+        decisions,
+        schema.class_ref,
+        SchemaSnapshot.load().attributes,
+        {property_id: triple[1] for property_id, triple in schema.property_triple.items()},
     )
     for note in rewrite.notes:
         print(f"  note: {note}")

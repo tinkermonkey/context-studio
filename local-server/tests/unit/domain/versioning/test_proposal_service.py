@@ -44,12 +44,17 @@ class StubRevertService:
 
     def __init__(self, error: Exception | None = None):
         self.reverted: list[str] = []
+        # The entities each partial revert (entity_ids given) was asked to undo, in order.
+        self.entities: list[list[str]] = []
         self.error = error
 
-    def revert_with_summary(self, run_id: str, on_reverted=None) -> RevertResult:
+    def revert_with_summary(self, run_id: str, on_reverted=None, entity_ids=None) -> RevertResult:
         if self.error is not None:
             raise self.error
-        self.reverted.append(run_id)
+        if entity_ids is not None:
+            self.entities.append(list(entity_ids))
+        else:
+            self.reverted.append(run_id)
         result = RevertResult(run_id=run_id, events_reverted=0)
         if on_reverted is not None:
             on_reverted(result)

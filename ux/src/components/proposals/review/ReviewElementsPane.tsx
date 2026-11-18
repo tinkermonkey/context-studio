@@ -1,13 +1,8 @@
 import { useEffect, useRef } from "react";
 import { Chip, Panel, SegmentedControl } from "@tinkermonkey/heimdall-ui";
 import type { ProposedOperation } from "@/api/services/proposals";
-import {
-  VERDICT_CHIP,
-  VERDICT_LABEL,
-  type ElementFilter,
-  type ElementGroup,
-  type Verdict,
-} from "./reviewModel";
+import type { OperationLink } from "./ReviewPills";
+import { VERDICT_CHIP, type ElementFilter, type ElementGroup, type Verdict } from "./reviewModel";
 
 export interface ElementRow {
   title: string;
@@ -15,6 +10,8 @@ export interface ElementRow {
   detail: string;
   probability: string;
   verdict: Verdict;
+  /** The verdict as this row reads it (a relationship's change is "edited"). */
+  verdictLabel: string;
 }
 
 interface ReviewElementsPaneProps {
@@ -25,7 +22,8 @@ interface ReviewElementsPaneProps {
   total: number;
   rowOf: (operation: ProposedOperation) => ElementRow;
   selectedId?: string;
-  onSelect: (operationId: string) => void;
+  /** Opens an operation: its href (?selected=...), a plain click selecting it. */
+  link: (operationId: string) => OperationLink;
 }
 
 /** The proposed elements grouped by layer, then the relationships, each with its status. */
@@ -37,7 +35,7 @@ export function ReviewElementsPane({
   total,
   rowOf,
   selectedId,
-  onSelect,
+  link,
 }: ReviewElementsPaneProps) {
   const listRef = useRef<HTMLDivElement>(null);
 
@@ -96,9 +94,9 @@ export function ReviewElementsPane({
               const row = rowOf(operation);
               const selected = operation.id === selectedId;
               return (
-                <button
+                <a
                   key={operation.id}
-                  type="button"
+                  {...link(operation.id)}
                   role="option"
                   aria-selected={selected}
                   aria-controls="review-inspector"
@@ -107,7 +105,6 @@ export function ReviewElementsPane({
                     .join(" ")}
                   data-row-id={operation.id}
                   data-verdict={row.verdict}
-                  onClick={() => onSelect(operation.id)}
                   data-testid={`review-row-${operation.id}`}
                 >
                   <span className="review-row__text">
@@ -118,9 +115,9 @@ export function ReviewElementsPane({
                   </span>
                   <span className="review-row__meta">
                     <span className="review-row__p">{row.probability}</span>
-                    <Chip variant={VERDICT_CHIP[row.verdict]}>{VERDICT_LABEL[row.verdict]}</Chip>
+                    <Chip variant={VERDICT_CHIP[row.verdict]}>{row.verdictLabel}</Chip>
                   </span>
-                </button>
+                </a>
               );
             })}
           </div>

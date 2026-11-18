@@ -297,6 +297,16 @@ class ChangeProposalRejectRequest(BaseModel):
     )
 
 
+class ChangeProposalReopenRequest(BaseModel):
+    """Decided operations to reopen, to decide again."""
+
+    operation_ids: list[str] = Field(
+        ...,
+        min_length=1,
+        description="Applied or rejected individual or relationship creates to reopen",
+    )
+
+
 class AddedPassageRequest(BaseModel):
     """Where in the proposal's source the reviewer found the element."""
 
