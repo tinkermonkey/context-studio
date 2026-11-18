@@ -13,6 +13,7 @@ Architecture:
 """
 
 import logging
+import threading
 from collections.abc import Sequence
 from contextlib import AsyncExitStack, asynccontextmanager
 from datetime import datetime, timezone
@@ -306,6 +307,11 @@ async def lifespan(app: FastAPI):
         # Embedding service
         embedding_service = SentenceTransformerEmbedding(model_name="all-MiniLM-L12-v2")
         logger.info("EmbeddingService created")
+        # Load the model off the startup path so the first request that needs it
+        # (e.g. a first apply) doesn't pay for it; health reports it warming up
+        threading.Thread(
+            target=embedding_service.warm_up, name="embedding-warm-up", daemon=True
+        ).start()
 
         # Clustering adapter (open-extraction schema distillation)
         clusterer = SklearnClusterer()

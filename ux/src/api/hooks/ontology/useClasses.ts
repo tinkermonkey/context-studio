@@ -1,5 +1,5 @@
 import { useQuery, useQueries, useMutation, useQueryClient } from "@tanstack/react-query";
-import { QUERY_KEYS, SMALL_SET_LIMIT } from "@/api/config";
+import { QUERY_KEYS } from "@/api/config";
 import { ontologyService, type ClassListParams } from "@/api/services/ontology";
 import type { components } from "@/api/types";
 import { listQueryOptions, type ListQueryOptions } from "./listQueryOptions";
@@ -35,33 +35,16 @@ export function useClassesByIds(ids: Array<string | null | undefined>) {
 }
 
 /**
- * Every class of one taxonomy: its concept schemes, then each scheme's classes
- * (bounded per scheme). Skipped while `enabled` is false.
+ * Every class of one taxonomy, in one request. `classes` stays undefined until
+ * it loads. Skipped while `enabled` is false.
  */
 export function useTaxonomyClasses(taxonomyId: string, enabled = true) {
-  const schemeParams = { limit: SMALL_SET_LIMIT };
-  const schemes = useQuery({
-    queryKey: [...QUERY_KEYS.schemes(taxonomyId), schemeParams],
-    queryFn: () => ontologyService.listSchemes(taxonomyId, schemeParams),
+  const query = useQuery({
+    queryKey: QUERY_KEYS.taxonomyClasses(taxonomyId),
+    queryFn: () => ontologyService.listTaxonomyClasses(taxonomyId),
     enabled: enabled && !!taxonomyId,
   });
-  const schemeIds = (schemes.data?.items ?? []).map((s) => s.id);
-  const results = useQueries({
-    queries: schemeIds.map((schemeId) => {
-      const params: ClassListParams = { concept_scheme_id: schemeId, limit: SMALL_SET_LIMIT };
-      return {
-        queryKey: QUERY_KEYS.classes(params),
-        queryFn: () => ontologyService.listClasses(params),
-        enabled,
-      };
-    }),
-  });
-  const isSuccess = schemes.isSuccess && results.every((r) => r.isSuccess);
-  return {
-    classes: isSuccess ? results.flatMap((r) => r.data?.items ?? []) : undefined,
-    isSuccess,
-    isError: schemes.isError || results.some((r) => r.isError),
-  };
+  return { classes: query.data, isSuccess: query.isSuccess, isError: query.isError };
 }
 
 /**

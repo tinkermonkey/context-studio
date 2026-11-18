@@ -245,6 +245,31 @@ async def list_taxonomy_predicates(
         raise HTTPException(status_code=status_code, detail=message)
 
 
+@router.get("/taxonomies/{taxonomy_id}/classes", response_model=list[ClassResponse])
+async def list_taxonomy_classes(
+    taxonomy_id: str,
+    service: OntologyService = Depends(get_ontology_service),
+) -> list[ClassResponse]:
+    """
+    Every class of the taxonomy, across its concept schemes, by title, in one request.
+
+    Not paginated: a taxonomy's classes are its schema, a bounded set. Each class
+    carries its scheme, description, derived flag and references; `embedding` is
+    left out (null), since no reader of this list uses it and it dwarfs the rest.
+
+    Raises:
+        HTTPException: 404 if the taxonomy is not found
+    """
+    try:
+        classes = await run_sync_in_executor(service.list_taxonomy_classes, taxonomy_id)
+        return [
+            ClassResponse.model_validate(c).model_copy(update={"embedding": None}) for c in classes
+        ]
+    except Exception as exc:
+        status_code, message = _handle_domain_error(exc)
+        raise HTTPException(status_code=status_code, detail=message)
+
+
 @router.get("/predicates", response_model=list[PredicateResponse])
 async def list_predicates_by_ids(
     ids: list[str] = Query(

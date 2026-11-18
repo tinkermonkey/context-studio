@@ -26,11 +26,15 @@ class FakeHealthCheckableNLP:
 class FakeHealthCheckableEmbedding:
     """Fake embedding component implementing HealthCheckableEmbedding protocol."""
 
-    def __init__(self, is_loaded: bool = True):
+    def __init__(self, is_loaded: bool = True, is_loading: bool = False):
         self._is_loaded = is_loaded
+        self._is_loading = is_loading
 
     def is_loaded(self) -> bool:
         return self._is_loaded
+
+    def is_loading(self) -> bool:
+        return self._is_loading
 
 
 class FakeHealthCheckableLLM:
@@ -162,6 +166,22 @@ def test_get_embedding_model_status_not_loaded():
 
     status = collector.get_embedding_model_status()
     assert status.available is False
+    assert status.details == "Embedding model not loaded"
+
+
+def test_get_embedding_model_status_warming_up():
+    """While the startup warm-up loads the model, the status says so."""
+    collector = SystemMetricsCollector(
+        llm=FakeHealthCheckableLLM(),
+        nlp=FakeHealthCheckableNLP(),
+        embedding=FakeHealthCheckableEmbedding(is_loaded=False, is_loading=True),
+        db_engine=create_engine("sqlite:///:memory:"),
+        start_time=time.time(),
+    )
+
+    status = collector.get_embedding_model_status()
+    assert status.available is False
+    assert status.details == "Embedding model warming up"
 
 
 def test_get_nlp_pipeline_status_ready():

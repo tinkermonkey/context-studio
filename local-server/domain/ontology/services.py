@@ -1242,6 +1242,18 @@ class OntologyService:
             ids=ids,
         )
 
+    def list_taxonomy_classes(self, taxonomy_id: str) -> list[Class]:
+        """
+        Every class of one taxonomy, across its concept schemes, by title.
+
+        A taxonomy's classes are its schema, a bounded set, so this is not paginated.
+
+        Raises:
+            EntityNotFoundError: If the taxonomy does not exist
+        """
+        self.get_taxonomy(taxonomy_id)
+        return self._repository.list_classes(taxonomy_id=taxonomy_id, limit=None, sort_by="title")
+
     def update_class(
         self,
         class_id: str,

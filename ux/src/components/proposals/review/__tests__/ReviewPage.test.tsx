@@ -238,6 +238,7 @@ beforeEach(() => {
     // The schema's relationship types (see below): realizes and serves join feature to capability.
     http.get("*/api/properties", () => list([realizesType, servesType, drivesType])),
     http.get("*/api/schemes", () => list([product, motivation])),
+    http.get("*/api/taxonomies/:id/classes", () => HttpResponse.json(classes)),
     http.get("*/api/classes", ({ request }) => {
       const url = new URL(request.url);
       const scheme = url.searchParams.get("concept_scheme_id");
@@ -1394,6 +1395,7 @@ describe("gold mode", () => {
     });
     const all = [...classes, driver];
     server.use(
+      http.get("*/api/taxonomies/:id/classes", () => HttpResponse.json(all)),
       http.get("*/api/classes", ({ request }) => {
         const url = new URL(request.url);
         const scheme = url.searchParams.get("concept_scheme_id");
@@ -1461,15 +1463,9 @@ describe("while the classes load", () => {
       release = resolve;
     });
     server.use(
-      http.get("*/api/classes", async ({ request }) => {
+      http.get("*/api/taxonomies/:id/classes", async () => {
         await loaded;
-        const url = new URL(request.url);
-        const scheme = url.searchParams.get("concept_scheme_id");
-        const ids = url.searchParams.getAll("ids");
-        const items = classes.filter(
-          (c) => (!scheme || c.concept_scheme_id === scheme) && (!ids.length || ids.includes(c.id)),
-        );
-        return HttpResponse.json({ items, total: items.length, limit: 500, offset: 0 });
+        return HttpResponse.json(classes);
       }),
     );
     render(<ReviewPage id="proposal-1" onFinish={onFinish} />);
