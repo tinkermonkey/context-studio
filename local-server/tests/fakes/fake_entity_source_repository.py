@@ -24,3 +24,11 @@ class FakeEntitySourceRepository:
         removed = len(self.rows) - len(kept)
         self.rows = kept
         return removed
+
+    def delete_for_operations(self, proposal_id: str, seqs: Sequence[int]) -> int:
+        kept = [
+            row for row in self.rows if not (row.proposal_id == proposal_id and row.op_seq in seqs)
+        ]
+        removed = len(self.rows) - len(kept)
+        self.rows = kept
+        return removed

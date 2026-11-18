@@ -11,7 +11,7 @@ from __future__ import annotations
 import logging
 from contextlib import nullcontext
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, Callable, Optional
+from typing import TYPE_CHECKING, Any, Callable, Collection, Optional
 
 from domain.ontology.datasets import resolve_dataset_id
 from domain.ontology.entities import Individual
@@ -112,6 +112,7 @@ class RevertService:
         self,
         batch_run_id: str,
         on_reverted: Callable[[RevertResult], None] | None = None,
+        entity_ids: Collection[str] | None = None,
     ) -> RevertResult:
         """
         Revert all changes made by a specific batch run and return detailed summary.
@@ -124,6 +125,12 @@ class RevertService:
             on_reverted: Called with the result once every inverse is applied, inside
                 the same transaction, for the caller's own bookkeeping writes (a
                 proposal's status, say); if it raises, the whole revert rolls back
+            entity_ids: Undo only the run's events on these entities (one
+                proposal operation's, say), leaving the rest of the run as it is.
+                Anything else still pointing at an entity whose create is undone,
+                the run's own entities included, refuses the revert as an outside
+                dependent would. A later revert of the whole run skips what this
+                one undid.
 
         Returns:
             RevertResult with event count and detailed breakdown by entity type
@@ -166,6 +173,7 @@ class RevertService:
                     for event in events
                     if self._normalize_entity_type(event.entity_type) not in self._RECORD_ONLY_TYPES
                     and not self._should_skip_revert(event, events)
+                    and (entity_ids is None or event.entity_id in entity_ids)
                 ]
                 self._check_restorable(batch_run_id, pending)
                 self._check_no_outside_dependents(batch_run_id, pending)

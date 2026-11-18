@@ -46,6 +46,21 @@ class SQLiteEntitySourceRepository:
             session.commit()
             return count
 
+    def delete_for_operations(self, proposal_id: str, seqs: Sequence[int]) -> int:
+        if not seqs:
+            return 0
+        with self._session_factory() as session:
+            count = (
+                session.query(EntitySourceRecord)
+                .filter(
+                    EntitySourceRecord.proposal_id == str(proposal_id),
+                    EntitySourceRecord.op_seq.in_(list(seqs)),
+                )
+                .delete(synchronize_session=False)
+            )
+            session.commit()
+            return count
+
 
 def _to_orm(source: EntitySource) -> EntitySourceRecord:
     return EntitySourceRecord(

@@ -7643,7 +7643,7 @@
           "proposals"
         ],
         "summary": "Apply Proposal",
-        "description": "Apply the chosen operations in seq order under the proposal's run.\n\nEach operation records its own outcome; one that fails (e.g. \"target_changed\")\ndoes not undo the others. Pass a stale operation in force_stale to apply it\nanyway (edited ones too).\n\nedits corrects property-definition updates and deletes before they apply:\neach replaces the operation's proposed fields, applied as an update. A field\nproblem, or a breach of the taxonomy's rules (for dr_spec: both classes are\nDR spec classes, the predicate is in its predicate catalog, and no other\nrelationship type or operation has the triple), fails only that operation\nwith \"invalid_edit: ...\"; it stays open, to apply again with a corrected\nedit or reject. For dr_spec the identifier and DR external reference follow\nfrom the triple. What was applied is returned as the operation's\napplied_fields.\n\nresolutions lets a relationship-type delete apply although relationships\nstill use the type (its blockers list them): \"move\" gives each the\nreplacement type instead (all must fit its domain and range, inheritance-\naware, and allow their attributes, or nothing moves), \"delete\" deletes them\ntoo. The relationships and the type change in one transaction tagged with\nthe proposal's run, so Revert restores them together; a failure fails only\nthat operation (\"unresolvable: ...\" for a misfit) and changes nothing.\nWithout a resolution such a delete fails as in use. A property update that\nretargets a type relationships use (another domain and range pair) needs\none the same way (its blockers list them); a retarget of an unused type\nneeds none. What was moved or deleted is returned as the operation's\nresolution.\n\nA property update that reverses the type (domain and range swapped) swaps\nthe ends of every relationship using it in place (each keeps its id), and\na rename keeps them, in one transaction with the update; Revert undoes both.\n\nedits also corrects an individual create's title and/or class_ids: the\nindividual is created with the proposed fields overridden by the edit\n(recorded as applied_fields, decided applied_with_edits). A class that\ndoesn't exist or isn't in the proposal's taxonomy, or proposed\ndata_properties the edited classes don't define, fails only that operation\nwith \"invalid_edit: ...\".\n\nreview_ms records, in each applied operation's decision, the milliseconds\nthe reviewer spent on it.\n\nchosen_alternatives records, in each applied operation's decision, the\nalternative the reviewer chose over the proposal's pick (gold's\nchosen_alternative), e.g. a reflection's answers when accepted with an edit.\nFor an individual create with near matches, {\"kind\": \"existing\",\n\"entity_id\"} applies it as that existing individual: nothing is created,\nand relationships that name it by \"$ref\" point at the existing one.",
+        "description": "Apply the chosen operations in seq order under the proposal's run.\n\nEach operation records its own outcome; one that fails (e.g. \"target_changed\")\ndoes not undo the others. Pass a stale operation in force_stale to apply it\nanyway (edited ones too).\n\nedits corrects property-definition updates and deletes before they apply:\neach replaces the operation's proposed fields, applied as an update. A field\nproblem, or a breach of the taxonomy's rules (for dr_spec: both classes are\nDR spec classes, the predicate is in its predicate catalog, and no other\nrelationship type or operation has the triple), fails only that operation\nwith \"invalid_edit: ...\"; it stays open, to apply again with a corrected\nedit or reject. For dr_spec the identifier and DR external reference follow\nfrom the triple. What was applied is returned as the operation's\napplied_fields.\n\nresolutions lets a relationship-type delete apply although relationships\nstill use the type (its blockers list them): \"move\" gives each the\nreplacement type instead (all must fit its domain and range, inheritance-\naware, and allow their attributes, or nothing moves), \"delete\" deletes them\ntoo. The relationships and the type change in one transaction tagged with\nthe proposal's run, so Revert restores them together; a failure fails only\nthat operation (\"unresolvable: ...\" for a misfit) and changes nothing.\nWithout a resolution such a delete fails as in use. A property update that\nretargets a type relationships use (another domain and range pair) needs\none the same way (its blockers list them); a retarget of an unused type\nneeds none. What was moved or deleted is returned as the operation's\nresolution.\n\nA property update that reverses the type (domain and range swapped) swaps\nthe ends of every relationship using it in place (each keeps its id), and\na rename keeps them, in one transaction with the update; Revert undoes both.\n\nedits also corrects an individual create's title and/or class_ids: the\nindividual is created with the proposed fields overridden by the edit\n(recorded as applied_fields, decided applied_with_edits). A class that\ndoesn't exist or isn't in the proposal's taxonomy, or proposed\ndata_properties the edited classes don't define, fails only that operation\nwith \"invalid_edit: ...\".\n\nedits also corrects a relationship create's type and ends: any of\nproperty_definition_id, source_id and target_id (ids of existing entities,\nnot \"$ref\"s) replaces the proposed one (recorded as applied_fields, decided\napplied_with_edits). An end that doesn't exist or is in another dataset\nfails only that operation with \"invalid_edit: ...\"; ends that don't fit\nthe type's domain and range with \"domain_range_mismatch: ...\".\n\nreview_ms records, in each applied operation's decision, the milliseconds\nthe reviewer spent on it.\n\nchosen_alternatives records, in each applied operation's decision, the\nalternative the reviewer chose over the proposal's pick (gold's\nchosen_alternative), e.g. a reflection's answers when accepted with an edit.\nFor an individual create with near matches, {\"kind\": \"existing\",\n\"entity_id\"} applies it as that existing individual: nothing is created,\nand relationships that name it by \"$ref\" point at the existing one.",
         "operationId": "apply_proposal_api_proposals__proposal_id__apply_post",
         "parameters": [
           {
@@ -7737,6 +7737,65 @@
           },
           "422": {
             "description": "An operation id is not in the proposal, the reason_code is unknown, or review_ms names an operation not being rejected"
+          }
+        }
+      }
+    },
+    "/api/proposals/{proposal_id}/reopen": {
+      "post": {
+        "tags": [
+          "proposals"
+        ],
+        "summary": "Reopen Operations",
+        "description": "Reopen decided individual and relationship creates, to decide them again.\n\nEach goes back to pending: what its apply did is undone (the entity it\ncreated is deleted, under the proposal's run, so a later revert skips it),\nits decisions are superseded so the next one is the one that counts, and\nits source passages are removed. Applied relationships of the proposal\nthat use a reopened individual are reopened with it. A rejected operation\nchanged nothing, so only its decision is superseded. In one transaction:\na refusal changes nothing.",
+        "operationId": "reopen_operations_api_proposals__proposal_id__reopen_post",
+        "parameters": [
+          {
+            "name": "proposal_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Proposal Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChangeProposalReopenRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChangeProposalResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Change proposal not found"
+          },
+          "409": {
+            "description": "Refused, nothing changed: the proposal is reverted or landed, an operation is not decided, an applied operation of another kind uses one, or something outside the proposal uses an entity it created (detail.blocking lists them)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChangeProposalRevertConflictResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "An operation id is not in the proposal, or is not an individual or relationship create"
           }
         }
       }
@@ -11206,6 +11265,25 @@
         "type": "object",
         "title": "ChangeProposalRejectRequest",
         "description": "Operations to reject; without operation_ids, every pending or failed one."
+      },
+      "ChangeProposalReopenRequest": {
+        "properties": {
+          "operation_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "minItems": 1,
+            "title": "Operation Ids",
+            "description": "Applied or rejected individual or relationship creates to reopen"
+          }
+        },
+        "type": "object",
+        "required": [
+          "operation_ids"
+        ],
+        "title": "ChangeProposalReopenRequest",
+        "description": "Decided operations to reopen, to decide again."
       },
       "ChangeProposalResponse": {
         "properties": {

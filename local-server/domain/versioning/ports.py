@@ -180,6 +180,20 @@ class ChangeProposalRepository(Protocol):
         """
         ...
 
+    def supersede_operation_decisions(
+        self,
+        proposal_id: str,
+        operation_ids: Sequence[str],
+        superseded_at: datetime,
+        by: str,
+    ) -> int:
+        """
+        Mark every decision on these operations not yet superseded as
+        superseded, rejections too: the operations were reopened to be decided
+        again. Return how many.
+        """
+        ...
+
     def list_decisions(
         self, filters: DecisionFilter, limit: Optional[int] = None, offset: int = 0
     ) -> list[ProposalDecision]:
@@ -208,6 +222,10 @@ class EntitySourceRepository(Protocol):
 
     def delete_for_proposal(self, proposal_id: str) -> int:
         """Remove the rows the proposal's operations wrote; return how many."""
+        ...
+
+    def delete_for_operations(self, proposal_id: str, seqs: Sequence[int]) -> int:
+        """Remove the rows these operations of the proposal wrote; return how many."""
         ...
 
 

@@ -120,6 +120,21 @@ class FakeChangeProposalRepository:
             decision.superseded_by = by
         return len(standing)
 
+    def supersede_operation_decisions(
+        self, proposal_id: str, operation_ids, superseded_at: datetime, by: str
+    ) -> int:
+        standing = [
+            d
+            for d in self.decisions
+            if d.proposal_id == proposal_id
+            and d.operation_id in operation_ids
+            and d.superseded_at is None
+        ]
+        for decision in standing:
+            decision.superseded_at = superseded_at
+            decision.superseded_by = by
+        return len(standing)
+
     def list_decisions(
         self, filters: DecisionFilter, limit: Optional[int] = None, offset: int = 0
     ) -> list[ProposalDecision]:

@@ -711,6 +711,68 @@ def test_an_applied_relationship_takes_its_tier_annotation():
     assert result["relationships"][1]["checked"] == CHECKED
 
 
+class TestEditedRelationships:
+    """A relationship accepted with another type or end replaces the gold one."""
+
+    def _applied_ends(self, proposal):
+        """Accept every individual, each creating an entity named after its key."""
+        decisions = []
+        for operation in proposal["operations"]:
+            if operation["kind"] == "individual":
+                decisions.append(decide(proposal, operation["seq"], "applied"))
+                operation["result_entity_id"] = f"ent:{operation['ref']}"
+        return decisions
+
+    def test_another_predicate_and_end_replace_the_relationship(self):
+        gold = gold_file()
+        proposal = proposal_of(gold)
+        decisions = self._applied_ends(proposal)
+        uses = [o["seq"] for o in proposal["operations"] if o["kind"] == "relationship"][1]
+        operation = next(o for o in proposal["operations"] if o["seq"] == uses)
+        # applied_fields are the proposed fields with the edit over them: the source stays a $ref.
+        edit = {
+            **operation["fields"],
+            "property_definition_id": "prop-serves",
+            "target_id": "ent:reference-check",
+        }
+        decisions.append(
+            decide(proposal, uses, "applied", "applied_with_edits", applied_fields=edit)
+        )
+
+        result = rewrite(
+            gold, proposal, decisions, CLASS_REF, property_predicate={"prop-serves": "serves"}
+        )
+
+        triples = [(r["source"], r["predicate"], r["target"]) for r in result["relationships"]]
+        assert ("editors", "uses", "edit-check") not in triples
+        assert ("editors", "serves", "reference-check") in triples
+        replaced = next(r for r in result["relationships"] if r["predicate"] == "serves")
+        assert replaced["checked"] == CHECKED
+        assert replaced["evidence"] == gold["relationships"][1]["evidence"]
+
+    def test_an_end_outside_the_gold_check_is_left_as_it_is_and_noted(self):
+        gold = gold_file()
+        proposal = proposal_of(gold)
+        decisions = self._applied_ends(proposal)
+        uses = [o["seq"] for o in proposal["operations"] if o["kind"] == "relationship"][1]
+        decisions.append(
+            decide(
+                proposal,
+                uses,
+                "applied",
+                "applied_with_edits",
+                applied_fields={"target_id": "elsewhere"},
+            )
+        )
+
+        result = rewrite_gold(
+            gold, proposal, decisions, CLASS_REF, property_predicate={"prop-serves": "serves"}
+        )
+
+        assert result.gold["relationships"][1] == gold["relationships"][1]
+        assert any("left as it is" in note for note in result.notes)
+
+
 class _FakeApi:
     """Just enough of the API for check: the new proposal comes back as `status` says."""
 
