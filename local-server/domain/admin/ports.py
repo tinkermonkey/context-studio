@@ -108,6 +108,15 @@ class HealthCheckableEmbedding(Protocol):
         """
         ...
 
+    def is_loading(self) -> bool:
+        """
+        Check if the embedding model is loading right now (e.g. warming up at startup).
+
+        Returns:
+            True while a load is in progress, False otherwise
+        """
+        ...
+
 
 class HealthCheckableLLM(Protocol):
     """

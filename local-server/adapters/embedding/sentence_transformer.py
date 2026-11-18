@@ -35,7 +35,8 @@ class SentenceTransformerEmbedding:
     embeddings. The embeddings are returned as lists of floats suitable for
     similarity comparisons and semantic search.
 
-    The model is lazily loaded on first use to avoid startup delays.
+    The model loads on first use, or earlier through warm_up(), which the app
+    runs in a background thread at startup so no request pays for the load.
     """
 
     def __init__(self, model_name: str = "all-MiniLM-L12-v2") -> None:
@@ -71,7 +72,11 @@ class SentenceTransformerEmbedding:
                 from sentence_transformers import SentenceTransformer
 
                 logger.info(f"Loading SentenceTransformer model: {self.model_name}")
-                self._model = SentenceTransformer(self.model_name)
+                model = SentenceTransformer(self.model_name)
+                # The first encode is much slower than the rest (runtime set-up):
+                # pay it here, so the model is ready for real work once published.
+                model.encode("warm up", convert_to_tensor=False)
+                self._model = model
                 logger.info("SentenceTransformer model loaded successfully")
             except ImportError:
                 logger.error(
@@ -174,6 +179,29 @@ class SentenceTransformerEmbedding:
         except Exception as e:
             logger.error(f"Failed to compute similarity: {e}")
             raise
+
+    def warm_up(self) -> None:
+        """
+        Load the model now, so the first request that needs it doesn't pay for it.
+
+        Safe to call while the model is loaded or loading: it shares the load lock,
+        so a request that needs the model meanwhile waits for this load instead of
+        starting another. A failure is logged, not raised; the next request that
+        needs the model tries the load again.
+        """
+        try:
+            self._ensure_model_loaded()
+        except Exception:
+            logger.warning("Embedding model warm-up failed; the next use will retry the load")
+
+    def is_loading(self) -> bool:
+        """
+        Whether the model is loading right now (warming up, or a first request).
+
+        Returns:
+            True while a load is in progress, False otherwise
+        """
+        return self._model is None and self._load_lock.locked()
 
     def is_loaded(self) -> bool:
         """

@@ -127,9 +127,11 @@ class SystemMetricsCollector:
             ComponentStatus of the embedding model
         """
         try:
-            loaded = self._embedding.is_loaded()
-            details = "Embedding model loaded" if loaded else "Embedding model not loaded"
-            return ComponentStatus(available=loaded, details=details)
+            if self._embedding.is_loaded():
+                return ComponentStatus(available=True, details="Embedding model loaded")
+            if self._embedding.is_loading():
+                return ComponentStatus(available=False, details="Embedding model warming up")
+            return ComponentStatus(available=False, details="Embedding model not loaded")
         except Exception as e:
             logger.warning(f"Failed to check embedding model: {e}")
             return ComponentStatus(available=False, details=f"Error checking embedding model: {e}")
