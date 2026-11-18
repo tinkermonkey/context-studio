@@ -49,7 +49,12 @@
      "start": 5576,
      "end": 5697
     }
-   ]
+   ],
+   "checked": {
+    "by": "user",
+    "at": "2026-11-17T18:18:34.521597Z",
+    "proposal": "03ff79ca-105d-4237-8f3c-7b44f5b6fb25"
+   }
   },
   {
    "key": "reference-check",
@@ -76,7 +81,12 @@
      "start": 730,
      "end": 751
     }
-   ]
+   ],
+   "checked": {
+    "by": "user",
+    "at": "2026-11-17T18:18:56.957335Z",
+    "proposal": "03ff79ca-105d-4237-8f3c-7b44f5b6fb25"
+   }
   },
   {
    "key": "link-check",
@@ -97,7 +107,12 @@
      "start": 752,
      "end": 794
     }
-   ]
+   ],
+   "checked": {
+    "by": "user",
+    "at": "2026-11-17T18:19:30.156578Z",
+    "proposal": "03ff79ca-105d-4237-8f3c-7b44f5b6fb25"
+   }
   },
   {
    "key": "paste-check",
@@ -114,7 +129,12 @@
      "start": 795,
      "end": 812
     }
-   ]
+   ],
+   "checked": {
+    "by": "user",
+    "at": "2026-11-17T18:19:34.726556Z",
+    "proposal": "03ff79ca-105d-4237-8f3c-7b44f5b6fb25"
+   }
   },
   {
    "key": "tone-check",
@@ -134,7 +154,12 @@
      "start": 853,
      "end": 869
     }
-   ]
+   ],
+   "checked": {
+    "by": "user",
+    "at": "2026-11-17T18:19:37.115118Z",
+    "proposal": "03ff79ca-105d-4237-8f3c-7b44f5b6fb25"
+   }
   },
   {
    "key": "multi-check",
@@ -160,7 +185,12 @@
      "start": 15484,
      "end": 15552
     }
-   ]
+   ],
+   "checked": {
+    "by": "user",
+    "at": "2026-11-17T18:20:07.895031Z",
+    "proposal": "03ff79ca-105d-4237-8f3c-7b44f5b6fb25"
+   }
   },
   {
    "key": "suggestion-mode",
@@ -185,7 +215,12 @@
      "start": 920,
      "end": 941
     }
-   ]
+   ],
+   "checked": {
+    "by": "user",
+    "at": "2026-11-17T18:20:20.449869Z",
+    "proposal": "03ff79ca-105d-4237-8f3c-7b44f5b6fb25"
+   }
   },
   {
    "key": "textmatch",
@@ -211,7 +246,12 @@
      "start": 942,
      "end": 957
     }
-   ]
+   ],
+   "checked": {
+    "by": "user",
+    "at": "2026-11-17T18:20:22.592588Z",
+    "proposal": "03ff79ca-105d-4237-8f3c-7b44f5b6fb25"
+   }
   },
   {
    "key": "add-an-image-suggestion",
@@ -231,7 +271,12 @@
      "start": 2017,
      "end": 2144
     }
-   ]
+   ],
+   "checked": {
+    "by": "user",
+    "at": "2026-11-17T18:24:59.578888Z",
+    "proposal": "03ff79ca-105d-4237-8f3c-7b44f5b6fb25"
+   }
   },
   {
    "key": "add-a-link-suggestion",
@@ -251,7 +296,12 @@
      "start": 2169,
      "end": 2302
     }
-   ]
+   ],
+   "checked": {
+    "by": "user",
+    "at": "2026-11-17T18:25:08.038301Z",
+    "proposal": "03ff79ca-105d-4237-8f3c-7b44f5b6fb25"
+   }
   },
   {
    "key": "check-configurability",
@@ -280,7 +330,12 @@
      "start": 8155,
      "end": 8285
     }
-   ]
+   ],
+   "checked": {
+    "by": "user",
+    "at": "2026-11-17T18:25:26.008005Z",
+    "proposal": "03ff79ca-105d-4237-8f3c-7b44f5b6fb25"
+   }
   },
   {
    "key": "suggestion-storage",
@@ -300,7 +355,12 @@
      "start": 2762,
      "end": 2834
     }
-   ]
+   ],
+   "checked": {
+    "by": "user",
+    "at": "2026-11-17T18:27:57.822406Z",
+    "proposal": "03ff79ca-105d-4237-8f3c-7b44f5b6fb25"
+   }
   },
   {
    "key": "newcomer",
@@ -342,7 +402,12 @@
      "start": 1044,
      "end": 1101
     }
-   ]
+   ],
+   "checked": {
+    "by": "user",
+    "at": "2026-11-17T18:28:03.734739Z",
+    "proposal": "03ff79ca-105d-4237-8f3c-7b44f5b6fb25"
+   }
   },
   {
    "key": "moderator",
@@ -384,7 +449,12 @@
      "start": 12267,
      "end": 12371
     }
-   ]
+   ],
+   "checked": {
+    "by": "user",
+    "at": "2026-11-17T18:28:12.400932Z",
+    "proposal": "03ff79ca-105d-4237-8f3c-7b44f5b6fb25"
+   }
   },
   {
    "key": "administrator",
@@ -405,7 +475,12 @@
      "start": 4153,
      "end": 4217
     }
-   ]
+   ],
+   "checked": {
+    "by": "user",
+    "at": "2026-11-17T18:30:17.692102Z",
+    "proposal": "03ff79ca-105d-4237-8f3c-7b44f5b6fb25"
+   }
   },
   {
    "key": "publishing-workflow",
@@ -423,7 +498,12 @@
      "start": 13080,
      "end": 13146
     }
-   ]
+   ],
+   "checked": {
+    "by": "user",
+    "at": "2026-11-17T18:28:38.632087Z",
+    "proposal": "03ff79ca-105d-4237-8f3c-7b44f5b6fb25"
+   }
   },
   {
    "key": "reference-check-step",
@@ -441,7 +521,12 @@
      "start": 13065,
      "end": 13218
     }
-   ]
+   ],
+   "checked": {
+    "by": "user",
+    "at": "2026-11-17T18:29:16.182372Z",
+    "proposal": "03ff79ca-105d-4237-8f3c-7b44f5b6fb25"
+   }
   },
   {
    "key": "multi-check-deployment",
@@ -458,7 +543,12 @@
      "start": 14004,
      "end": 14104
     }
-   ]
+   ],
+   "checked": {
+    "by": "user",
+    "at": "2026-11-17T18:29:34.940815Z",
+    "proposal": "03ff79ca-105d-4237-8f3c-7b44f5b6fb25"
+   }
   },
   {
    "key": "siderail-redesign",
@@ -475,7 +565,12 @@
      "start": 16947,
      "end": 17028
     }
-   ]
+   ],
+   "checked": {
+    "by": "user",
+    "at": "2026-11-17T18:29:49.845144Z",
+    "proposal": "03ff79ca-105d-4237-8f3c-7b44f5b6fb25"
+   }
   },
   {
    "key": "suggestion-mode-beta",
@@ -492,7 +587,12 @@
      "start": 3124,
      "end": 3224
     }
-   ]
+   ],
+   "checked": {
+    "by": "user",
+    "at": "2026-11-17T18:30:07.988778Z",
+    "proposal": "03ff79ca-105d-4237-8f3c-7b44f5b6fb25"
+   }
   },
   {
    "key": "edit-check-siderail",
@@ -519,7 +619,12 @@
      "start": 13235,
      "end": 13280
     }
-   ]
+   ],
+   "checked": {
+    "by": "user",
+    "at": "2026-11-17T18:36:04.281957Z",
+    "proposal": "03ff79ca-105d-4237-8f3c-7b44f5b6fb25"
+   }
   },
   {
    "key": "special-editchecks",
@@ -533,7 +638,12 @@
      "start": 3552,
      "end": 3645
     }
-   ]
+   ],
+   "checked": {
+    "by": "user",
+    "at": "2026-11-17T18:36:16.150311Z",
+    "proposal": "03ff79ca-105d-4237-8f3c-7b44f5b6fb25"
+   }
   },
   {
    "key": "hide-suggestions-toggle",
@@ -547,7 +657,12 @@
      "start": 3417,
      "end": 3476
     }
-   ]
+   ],
+   "checked": {
+    "by": "user",
+    "at": "2026-11-17T18:36:25.807450Z",
+    "proposal": "03ff79ca-105d-4237-8f3c-7b44f5b6fb25"
+   }
   },
   {
    "key": "visual-editor",
@@ -575,7 +690,12 @@
      "start": 210,
      "end": 253
     }
-   ]
+   ],
+   "checked": {
+    "by": "user",
+    "at": "2026-11-17T18:36:35.853561Z",
+    "proposal": "03ff79ca-105d-4237-8f3c-7b44f5b6fb25"
+   }
   },
   {
    "key": "editcheck-init-js",
@@ -593,7 +713,12 @@
      "start": 11456,
      "end": 11539
     }
-   ]
+   ],
+   "checked": {
+    "by": "user",
+    "at": "2026-11-17T18:36:52.709121Z",
+    "proposal": "03ff79ca-105d-4237-8f3c-7b44f5b6fb25"
+   }
   },
   {
    "key": "reference-detection",
@@ -620,7 +745,12 @@
      "start": 10961,
      "end": 11060
     }
-   ]
+   ],
+   "checked": {
+    "by": "user",
+    "at": "2026-11-18T15:31:57.978593Z",
+    "proposal": "03ff79ca-105d-4237-8f3c-7b44f5b6fb25"
+   }
   },
   {
    "key": "editing-team",
@@ -641,7 +771,12 @@
      "start": 179,
      "end": 253
     }
-   ]
+   ],
+   "checked": {
+    "by": "user",
+    "at": "2026-11-17T18:34:59.391425Z",
+    "proposal": "03ff79ca-105d-4237-8f3c-7b44f5b6fb25"
+   }
   },
   {
    "key": "wmf-product-department",
@@ -661,7 +796,12 @@
      "start": 501,
      "end": 576
     }
-   ]
+   ],
+   "checked": {
+    "by": "user",
+    "at": "2026-11-17T18:35:04.161890Z",
+    "proposal": "03ff79ca-105d-4237-8f3c-7b44f5b6fb25"
+   }
   },
   {
    "key": "growth-team",
@@ -678,7 +818,12 @@
      "start": 2086,
      "end": 2143
     }
-   ]
+   ],
+   "checked": {
+    "by": "user",
+    "at": "2026-11-17T18:35:18.923061Z",
+    "proposal": "03ff79ca-105d-4237-8f3c-7b44f5b6fb25"
+   }
   },
   {
    "key": "edit",
@@ -707,7 +852,12 @@
      "start": 19052,
      "end": 19144
     }
-   ]
+   ],
+   "checked": {
+    "by": "user",
+    "at": "2026-11-17T18:35:30.619009Z",
+    "proposal": "03ff79ca-105d-4237-8f3c-7b44f5b6fb25"
+   }
   },
   {
    "key": "reference",
@@ -729,7 +879,12 @@
      "start": 5884,
      "end": 5960
     }
-   ]
+   ],
+   "checked": {
+    "by": "user",
+    "at": "2026-11-17T18:35:39.966904Z",
+    "proposal": "03ff79ca-105d-4237-8f3c-7b44f5b6fb25"
+   }
   },
   {
    "key": "suggestion",
@@ -750,7 +905,12 @@
      "start": 3807,
      "end": 3846
     }
-   ]
+   ],
+   "checked": {
+    "by": "user",
+    "at": "2026-11-17T18:35:42.772434Z",
+    "proposal": "03ff79ca-105d-4237-8f3c-7b44f5b6fb25"
+   }
   },
   {
    "key": "policies-and-guidelines",
@@ -773,7 +933,12 @@
      "start": 6623,
      "end": 6716
     }
-   ]
+   ],
+   "checked": {
+    "by": "user",
+    "at": "2026-11-17T18:35:48.919995Z",
+    "proposal": "03ff79ca-105d-4237-8f3c-7b44f5b6fb25"
+   }
   },
   {
    "key": "moderating-changes",
@@ -800,7 +965,12 @@
      "start": 7363,
      "end": 7472
     }
-   ]
+   ],
+   "checked": {
+    "by": "user",
+    "at": "2026-11-17T18:35:52.758151Z",
+    "proposal": "03ff79ca-105d-4237-8f3c-7b44f5b6fb25"
+   }
   },
   {
    "key": "wikipedia-projects",
@@ -818,7 +988,12 @@
      "start": 7759,
      "end": 7842
     }
-   ]
+   ],
+   "checked": {
+    "by": "user",
+    "at": "2026-11-18T15:32:16.863034Z",
+    "proposal": "03ff79ca-105d-4237-8f3c-7b44f5b6fb25"
+   }
   },
   {
    "key": "goal-newcomers-confident",
@@ -835,7 +1010,12 @@
      "start": 1044,
      "end": 1237
     }
-   ]
+   ],
+   "checked": {
+    "by": "user",
+    "at": "2026-11-18T15:32:59.190150Z",
+    "proposal": "03ff79ca-105d-4237-8f3c-7b44f5b6fb25"
+   }
   },
   {
    "key": "goal-moderators-engaged",
@@ -852,7 +1032,12 @@
      "start": 1241,
      "end": 1430
     }
-   ]
+   ],
+   "checked": {
+    "by": "user",
+    "at": "2026-11-18T15:33:13.531022Z",
+    "proposal": "03ff79ca-105d-4237-8f3c-7b44f5b6fb25"
+   }
   },
   {
    "key": "goal-norms-legible",
@@ -870,7 +1055,12 @@
      "start": 9266,
      "end": 9395
     }
-   ]
+   ],
+   "checked": {
+    "by": "user",
+    "at": "2026-11-18T15:33:52.273178Z",
+    "proposal": "03ff79ca-105d-4237-8f3c-7b44f5b6fb25"
+   }
   },
   {
    "key": "goal-diverse-norms",
@@ -884,7 +1074,12 @@
      "start": 9086,
      "end": 9264
     }
-   ]
+   ],
+   "checked": {
+    "by": "user",
+    "at": "2026-11-18T15:33:57.299394Z",
+    "proposal": "03ff79ca-105d-4237-8f3c-7b44f5b6fb25"
+   }
   },
   {
    "key": "outcome-edit-quality",
@@ -904,7 +1099,12 @@
      "start": 22806,
      "end": 22938
     }
-   ]
+   ],
+   "checked": {
+    "by": "user",
+    "at": "2026-11-18T15:34:12.590019Z",
+    "proposal": "03ff79ca-105d-4237-8f3c-7b44f5b6fb25"
+   }
   },
   {
    "key": "outcome-references-added",
@@ -924,7 +1124,12 @@
      "start": 23280,
      "end": 23445
     }
-   ]
+   ],
+   "checked": {
+    "by": "user",
+    "at": "2026-11-18T15:34:47.822456Z",
+    "proposal": "03ff79ca-105d-4237-8f3c-7b44f5b6fb25"
+   }
   },
   {
    "key": "outcome-safe-confident",
@@ -941,7 +1146,12 @@
      "start": 23803,
      "end": 23942
     }
-   ]
+   ],
+   "checked": {
+    "by": "user",
+    "at": "2026-11-18T15:34:59.694410Z",
+    "proposal": "03ff79ca-105d-4237-8f3c-7b44f5b6fb25"
+   }
   },
   {
    "key": "outcome-volunteers-iterate-config",
@@ -958,7 +1168,12 @@
      "start": 24186,
      "end": 24378
     }
-   ]
+   ],
+   "checked": {
+    "by": "user",
+    "at": "2026-11-18T15:35:10.126165Z",
+    "proposal": "03ff79ca-105d-4237-8f3c-7b44f5b6fb25"
+   }
   },
   {
    "key": "outcome-reference-awareness",
@@ -975,7 +1190,12 @@
      "start": 24394,
      "end": 24559
     }
-   ]
+   ],
+   "checked": {
+    "by": "user",
+    "at": "2026-11-18T15:35:16.793175Z",
+    "proposal": "03ff79ca-105d-4237-8f3c-7b44f5b6fb25"
+   }
   },
   {
    "key": "assessment-policies-not-surfaced",
@@ -995,7 +1215,12 @@
      "start": 6556,
      "end": 6717
     }
-   ]
+   ],
+   "checked": {
+    "by": "user",
+    "at": "2026-11-18T15:35:31.656033Z",
+    "proposal": "03ff79ca-105d-4237-8f3c-7b44f5b6fb25"
+   }
   },
   {
    "key": "driver-newcomers-driven-away",
@@ -1015,7 +1240,12 @@
      "start": 6973,
      "end": 7155
     }
-   ]
+   ],
+   "checked": {
+    "by": "user",
+    "at": "2026-11-18T15:35:55.854308Z",
+    "proposal": "03ff79ca-105d-4237-8f3c-7b44f5b6fb25"
+   }
   },
   {
    "key": "driver-moderation-burden",
@@ -1035,7 +1265,12 @@
      "start": 7570,
      "end": 7755
     }
-   ]
+   ],
+   "checked": {
+    "by": "user",
+    "at": "2026-11-18T15:38:47.305989Z",
+    "proposal": "03ff79ca-105d-4237-8f3c-7b44f5b6fb25"
+   }
   },
   {
    "key": "driver-volunteer-growth",
@@ -1055,7 +1290,12 @@
      "start": 7784,
      "end": 7903
     }
-   ]
+   ],
+   "checked": {
+    "by": "user",
+    "at": "2026-11-18T15:38:57.121450Z",
+    "proposal": "03ff79ca-105d-4237-8f3c-7b44f5b6fb25"
+   }
   },
   {
    "key": "driver-retention-outside-europe",
@@ -1075,7 +1315,12 @@
      "start": 10356,
      "end": 10439
     }
-   ]
+   ],
+   "checked": {
+    "by": "user",
+    "at": "2026-11-18T15:39:03.084523Z",
+    "proposal": "03ff79ca-105d-4237-8f3c-7b44f5b6fb25"
+   }
   },
   {
    "key": "assessment-ssa-underrepresented",
@@ -1095,58 +1340,12 @@
      "start": 10515,
      "end": 10680
     }
-   ]
-  },
-  {
-   "key": "assessment-reference-check-ab-test",
-   "title": "Reference Check A/B test",
-   "class": "motivation.assessment",
-   "tier": "core",
-   "description": "The finding that Reference Check raised the quality of newcomers' edits without significant disruption (2.2 times more constructive edits with a reference; revert rate down 8.6%).",
-   "aliases": [
-    "Reference Check A/B Test"
    ],
-   "acceptable_classes": [
-    "motivation.outcome"
-   ],
-   "data": {
-    "assessment_type": "impact"
-   },
-   "evidence": [
-    {
-     "quote": "Reference Check caused an **increase in the quality of edits** newcomers publish and **did not cause any significant disruption**.",
-     "start": 18615,
-     "end": 18745
-    },
-    {
-     "quote": "People shown the Reference Check are **2.2 times more likely** to publish a new content edit that includes a reference and is constructive (not reverted within 48 hours).",
-     "start": 19052,
-     "end": 19222
-    }
-   ]
-  },
-  {
-   "key": "assessment-multi-check-ab-test",
-   "title": "Multi-Check (References) A/B test",
-   "class": "motivation.assessment",
-   "tier": "core",
-   "description": "The finding that Multi-Check significantly raised the share of edits that include a reference and are not reverted, without harming edit completion.",
-   "aliases": [
-    "Multi-Check (References) A/B Test"
-   ],
-   "acceptable_classes": [
-    "motivation.outcome"
-   ],
-   "data": {
-    "assessment_type": "impact"
-   },
-   "evidence": [
-    {
-     "quote": "Multi-Check caused statistically significant increases in the proportion of edits that include a reference and are not reverted within 48 hours without causing undesirable changes in edit completion or other forms of disruption (e.g. blocks).",
-     "start": 13747,
-     "end": 13989
-    }
-   ]
+   "checked": {
+    "by": "user",
+    "at": "2026-11-18T15:39:09.053625Z",
+    "proposal": "03ff79ca-105d-4237-8f3c-7b44f5b6fb25"
+   }
   },
   {
    "key": "assessment-multi-check-phase-1",
@@ -1174,7 +1373,12 @@
      "start": 17331,
      "end": 17427
     }
-   ]
+   ],
+   "checked": {
+    "by": "user",
+    "at": "2026-11-18T15:47:40.297348Z",
+    "proposal": "03ff79ca-105d-4237-8f3c-7b44f5b6fb25"
+   }
   },
   {
    "key": "assessment-llm-reference-verification",
@@ -1191,28 +1395,34 @@
      "start": 2548,
      "end": 2679
     }
-   ]
+   ],
+   "checked": {
+    "by": "user",
+    "at": "2026-11-18T15:47:53.409361Z",
+    "proposal": "03ff79ca-105d-4237-8f3c-7b44f5b6fb25"
+   }
   },
   {
    "key": "risk-edit-quality-decreases",
    "title": "Risk: edit quality decreases",
-   "class": "motivation.assessment",
+   "class": "motivation.driver",
    "tier": "core",
    "description": "One of the impacts the Edit Check features are intended to avert, with the data that would show it.",
    "acceptable_classes": [
-    "motivation.outcome",
-    "motivation.driver"
+    "motivation.outcome"
    ],
-   "data": {
-    "assessment_type": "risk"
-   },
    "evidence": [
     {
      "quote": "| 1. | Edit quality decreases |",
      "start": 24829,
      "end": 24860
     }
-   ]
+   ],
+   "checked": {
+    "by": "user",
+    "at": "2026-11-18T15:48:45.771647Z",
+    "proposal": "03ff79ca-105d-4237-8f3c-7b44f5b6fb25"
+   }
   },
   {
    "key": "risk-harder-to-patrol",
@@ -1233,117 +1443,127 @@
      "start": 25158,
      "end": 25248
     }
-   ]
+   ],
+   "checked": {
+    "by": "user",
+    "at": "2026-11-18T15:48:54.455438Z",
+    "proposal": "03ff79ca-105d-4237-8f3c-7b44f5b6fb25"
+   }
   },
   {
    "key": "risk-completion-rate-drops",
    "title": "Risk: edit completion rate drastically decreases",
-   "class": "motivation.assessment",
+   "class": "motivation.driver",
    "tier": "core",
    "description": "One of the impacts the Edit Check features are intended to avert, with the data that would show it.",
    "acceptable_classes": [
-    "motivation.outcome",
-    "motivation.driver"
+    "motivation.outcome"
    ],
-   "data": {
-    "assessment_type": "risk"
-   },
    "evidence": [
     {
      "quote": "Edit completion rate drastically decreases",
      "start": 25527,
      "end": 25569
     }
-   ]
+   ],
+   "checked": {
+    "by": "user",
+    "at": "2026-11-18T15:49:06.736306Z",
+    "proposal": "03ff79ca-105d-4237-8f3c-7b44f5b6fb25"
+   }
   },
   {
    "key": "risk-abandonment-rises",
    "title": "Risk: edit abandonment rate drastically increases",
-   "class": "motivation.assessment",
+   "class": "motivation.driver",
    "tier": "core",
    "description": "One of the impacts the Edit Check features are intended to avert, with the data that would show it.",
    "acceptable_classes": [
-    "motivation.outcome",
-    "motivation.driver"
+    "motivation.outcome"
    ],
-   "data": {
-    "assessment_type": "risk"
-   },
    "evidence": [
     {
      "quote": "Edit abandonment rate drastically increases",
      "start": 25721,
      "end": 25764
     }
-   ]
+   ],
+   "checked": {
+    "by": "user",
+    "at": "2026-11-18T15:49:15.084425Z",
+    "proposal": "03ff79ca-105d-4237-8f3c-7b44f5b6fb25"
+   }
   },
   {
    "key": "risk-blocks-increase",
    "title": "Risk: blocks increase",
-   "class": "motivation.assessment",
+   "class": "motivation.driver",
    "tier": "core",
    "description": "One of the impacts the Edit Check features are intended to avert, with the data that would show it.",
    "acceptable_classes": [
-    "motivation.outcome",
-    "motivation.driver"
+    "motivation.outcome"
    ],
-   "data": {
-    "assessment_type": "risk"
-   },
    "evidence": [
     {
      "quote": "| 5. | Blocks increase |",
      "start": 25945,
      "end": 25969
     }
-   ]
+   ],
+   "checked": {
+    "by": "user",
+    "at": "2026-11-18T15:49:20.065019Z",
+    "proposal": "03ff79ca-105d-4237-8f3c-7b44f5b6fb25"
+   }
   },
   {
    "key": "risk-false-positives",
    "title": "Risk: high false positive or false negative rates",
-   "class": "motivation.assessment",
+   "class": "motivation.driver",
    "tier": "core",
    "description": "One of the impacts the Edit Check features are intended to avert, with the data that would show it.",
    "acceptable_classes": [
-    "motivation.outcome",
-    "motivation.driver"
+    "motivation.outcome"
    ],
-   "data": {
-    "assessment_type": "risk"
-   },
    "evidence": [
     {
      "quote": "High false positive or false negative rates",
      "start": 26148,
      "end": 26191
     }
-   ]
+   ],
+   "checked": {
+    "by": "user",
+    "at": "2026-11-18T15:49:28.383098Z",
+    "proposal": "03ff79ca-105d-4237-8f3c-7b44f5b6fb25"
+   }
   },
   {
    "key": "risk-too-resource-intensive",
    "title": "Risk: Edit Check is too resource intensive to scale",
-   "class": "motivation.assessment",
+   "class": "motivation.driver",
    "tier": "core",
    "description": "One of the impacts the Edit Check features are intended to avert, with the data that would show it.",
    "acceptable_classes": [
-    "motivation.outcome",
-    "motivation.driver"
+    "motivation.outcome"
    ],
-   "data": {
-    "assessment_type": "risk"
-   },
    "evidence": [
     {
      "quote": "Edit Check is too resource intensive to scale",
      "start": 26640,
      "end": 26685
     }
-   ]
+   ],
+   "checked": {
+    "by": "user",
+    "at": "2026-11-18T15:49:32.213763Z",
+    "proposal": "03ff79ca-105d-4237-8f3c-7b44f5b6fb25"
+   }
   },
   {
    "key": "principle-minimize-false-positives",
    "title": "Minimize false positives",
-   "class": "motivation.principle",
+   "class": "motivation.goal",
    "tier": "core",
    "description": "Start with an approach that minimizes the likelihood of false positives.",
    "acceptable_classes": [
@@ -1355,7 +1575,12 @@
      "start": 10823,
      "end": 10928
     }
-   ]
+   ],
+   "checked": {
+    "by": "user",
+    "at": "2026-11-18T15:50:07.292676Z",
+    "proposal": "03ff79ca-105d-4237-8f3c-7b44f5b6fb25"
+   }
   },
   {
    "key": "principle-start-simple",
@@ -1373,7 +1598,12 @@
      "start": 11541,
      "end": 11664
     }
-   ]
+   ],
+   "checked": {
+    "by": "user",
+    "at": "2026-11-18T15:51:03.821132Z",
+    "proposal": "03ff79ca-105d-4237-8f3c-7b44f5b6fb25"
+   }
   },
   {
    "key": "requirement-moderators-configure",
@@ -1393,29 +1623,12 @@
      "start": 12243,
      "end": 12372
     }
-   ]
-  },
-  {
-   "key": "requirement-reference-check-activation",
-   "title": "Reference Check activation conditions",
-   "class": "motivation.requirement",
-   "tier": "core",
-   "description": "Reference Check activates only when a new paragraph is added, it contains no reference, and the page is in the main namespace.",
-   "data": {
-    "requirement_type": "functional"
-   },
-   "evidence": [
-    {
-     "quote": "This strategy amounts to the initial reference Edit Check becoming activated if/when all of the following conditions are met:",
-     "start": 11063,
-     "end": 11188
-    },
-    {
-     "quote": "A minimum of one new paragraph of text is added to the article someone is editing",
-     "start": 11193,
-     "end": 11274
-    }
-   ]
+   ],
+   "checked": {
+    "by": "user",
+    "at": "2026-11-18T15:51:15.977670Z",
+    "proposal": "03ff79ca-105d-4237-8f3c-7b44f5b6fb25"
+   }
   },
   {
    "key": "metric-revert-rate",
@@ -1438,7 +1651,12 @@
      "start": 14523,
      "end": 14538
     }
-   ]
+   ],
+   "checked": {
+    "by": "user",
+    "at": "2026-11-18T15:55:12.984350Z",
+    "proposal": "03ff79ca-105d-4237-8f3c-7b44f5b6fb25"
+   }
   },
   {
    "key": "metric-edit-completion-rate",
@@ -1460,7 +1678,12 @@
      "start": 20481,
      "end": 20505
     }
-   ]
+   ],
+   "checked": {
+    "by": "user",
+    "at": "2026-11-18T15:55:16.104161Z",
+    "proposal": "03ff79ca-105d-4237-8f3c-7b44f5b6fb25"
+   }
   },
   {
    "key": "metric-edit-abandonment-rate",
@@ -1474,7 +1697,12 @@
      "start": 25767,
      "end": 25856
     }
-   ]
+   ],
+   "checked": {
+    "by": "user",
+    "at": "2026-11-18T15:55:18.560227Z",
+    "proposal": "03ff79ca-105d-4237-8f3c-7b44f5b6fb25"
+   }
   },
   {
    "key": "metric-block-rate",
@@ -1491,7 +1719,12 @@
      "start": 20955,
      "end": 20969
     }
-   ]
+   ],
+   "checked": {
+    "by": "user",
+    "at": "2026-11-18T15:55:20.254083Z",
+    "proposal": "03ff79ca-105d-4237-8f3c-7b44f5b6fb25"
+   }
   },
   {
    "key": "metric-false-negative-rate",
@@ -1505,7 +1738,12 @@
      "start": 21145,
      "end": 21168
     }
-   ]
+   ],
+   "checked": {
+    "by": "user",
+    "at": "2026-11-18T15:55:22.211337Z",
+    "proposal": "03ff79ca-105d-4237-8f3c-7b44f5b6fb25"
+   }
   },
   {
    "key": "metric-false-positive-rate",
@@ -1519,7 +1757,12 @@
      "start": 21345,
      "end": 21368
     }
-   ]
+   ],
+   "checked": {
+    "by": "user",
+    "at": "2026-11-18T15:55:26.072121Z",
+    "proposal": "03ff79ca-105d-4237-8f3c-7b44f5b6fb25"
+   }
   },
   {
    "key": "metric-constructive-retention-rate",
@@ -1533,7 +1776,12 @@
      "start": 20098,
      "end": 20129
     }
-   ]
+   ],
+   "checked": {
+    "by": "user",
+    "at": "2026-11-18T15:55:28.791896Z",
+    "proposal": "03ff79ca-105d-4237-8f3c-7b44f5b6fb25"
+   }
   },
   {
    "key": "metric-edits-with-reference",
@@ -1552,7 +1800,12 @@
      "start": 23448,
      "end": 23540
     }
-   ]
+   ],
+   "checked": {
+    "by": "user",
+    "at": "2026-11-18T15:55:35.355271Z",
+    "proposal": "03ff79ca-105d-4237-8f3c-7b44f5b6fb25"
+   }
   },
   {
    "key": "metric-users-with-reference",
@@ -1571,7 +1824,12 @@
      "start": 23541,
      "end": 23678
     }
-   ]
+   ],
+   "checked": {
+    "by": "user",
+    "at": "2026-11-18T15:55:38.103539Z",
+    "proposal": "03ff79ca-105d-4237-8f3c-7b44f5b6fb25"
+   }
   },
   {
    "key": "assessment-newcomers-in-africa-asia",
@@ -1591,7 +1849,12 @@
      "start": 10291,
      "end": 10353
     }
-   ]
+   ],
+   "checked": {
+    "by": "user",
+    "at": "2026-11-18T15:54:37.802806Z",
+    "proposal": "03ff79ca-105d-4237-8f3c-7b44f5b6fb25"
+   }
   },
   {
    "key": "assessment-ssa-editors-english-french",
@@ -1608,7 +1871,12 @@
      "start": 10684,
      "end": 10774
     }
-   ]
+   ],
+   "checked": {
+    "by": "user",
+    "at": "2026-11-18T15:54:51.526577Z",
+    "proposal": "03ff79ca-105d-4237-8f3c-7b44f5b6fb25"
+   }
   }
  ],
  "relationships": [
@@ -1623,7 +1891,12 @@
      "start": 5775,
      "end": 5829
     }
-   ]
+   ],
+   "checked": {
+    "by": "user",
+    "at": "2026-11-18T20:58:03.577927Z",
+    "proposal": "03ff79ca-105d-4237-8f3c-7b44f5b6fb25"
+   }
   },
   {
    "source": "link-check",
@@ -1636,7 +1909,12 @@
      "start": 679,
      "end": 728
     }
-   ]
+   ],
+   "checked": {
+    "by": "user",
+    "at": "2026-11-18T20:58:09.751976Z",
+    "proposal": "03ff79ca-105d-4237-8f3c-7b44f5b6fb25"
+   }
   },
   {
    "source": "paste-check",
@@ -1649,7 +1927,12 @@
      "start": 679,
      "end": 728
     }
-   ]
+   ],
+   "checked": {
+    "by": "user",
+    "at": "2026-11-18T20:58:12.627102Z",
+    "proposal": "03ff79ca-105d-4237-8f3c-7b44f5b6fb25"
+   }
   },
   {
    "source": "tone-check",
@@ -1662,7 +1945,12 @@
      "start": 814,
      "end": 851
     }
-   ]
+   ],
+   "checked": {
+    "by": "user",
+    "at": "2026-11-18T20:58:14.972654Z",
+    "proposal": "03ff79ca-105d-4237-8f3c-7b44f5b6fb25"
+   }
   },
   {
    "source": "multi-check",
@@ -1675,7 +1963,12 @@
      "start": 18047,
      "end": 18142
     }
-   ]
+   ],
+   "checked": {
+    "by": "user",
+    "at": "2026-11-18T20:58:26.828237Z",
+    "proposal": "03ff79ca-105d-4237-8f3c-7b44f5b6fb25"
+   }
   },
   {
    "source": "multi-check",
@@ -1688,7 +1981,12 @@
      "start": 14004,
      "end": 14086
     }
-   ]
+   ],
+   "checked": {
+    "by": "user",
+    "at": "2026-11-18T20:58:40.285048Z",
+    "proposal": "03ff79ca-105d-4237-8f3c-7b44f5b6fb25"
+   }
   },
   {
    "source": "add-an-image-suggestion",
@@ -1701,7 +1999,12 @@
      "start": 2017,
      "end": 2067
     }
-   ]
+   ],
+   "checked": {
+    "by": "user",
+    "at": "2026-11-18T20:58:47.157171Z",
+    "proposal": "03ff79ca-105d-4237-8f3c-7b44f5b6fb25"
+   }
   },
   {
    "source": "add-a-link-suggestion",
@@ -1714,7 +2017,12 @@
      "start": 2200,
      "end": 2232
     }
-   ]
+   ],
+   "checked": {
+    "by": "user",
+    "at": "2026-11-18T20:58:52.696563Z",
+    "proposal": "03ff79ca-105d-4237-8f3c-7b44f5b6fb25"
+   }
   },
   {
    "source": "textmatch",
@@ -1727,7 +2035,12 @@
      "start": 4881,
      "end": 4931
     }
-   ]
+   ],
+   "checked": {
+    "by": "user",
+    "at": "2026-11-18T20:59:49.589063Z",
+    "proposal": "03ff79ca-105d-4237-8f3c-7b44f5b6fb25"
+   }
   },
   {
    "source": "reference-check",
@@ -1740,7 +2053,12 @@
      "start": 12010,
      "end": 12068
     }
-   ]
+   ],
+   "checked": {
+    "by": "user",
+    "at": "2026-11-18T20:59:59.539946Z",
+    "proposal": "03ff79ca-105d-4237-8f3c-7b44f5b6fb25"
+   }
   },
   {
    "source": "suggestion-mode",
@@ -1753,7 +2071,12 @@
      "start": 4630,
      "end": 4756
     }
-   ]
+   ],
+   "checked": {
+    "by": "user",
+    "at": "2026-11-18T21:00:23.341100Z",
+    "proposal": "03ff79ca-105d-4237-8f3c-7b44f5b6fb25"
+   }
   },
   {
    "source": "edit-check",
@@ -1766,7 +2089,12 @@
      "start": 5289,
      "end": 5524
     }
-   ]
+   ],
+   "checked": {
+    "by": "user",
+    "at": "2026-11-18T21:00:32.031861Z",
+    "proposal": "03ff79ca-105d-4237-8f3c-7b44f5b6fb25"
+   }
   },
   {
    "source": "check-configurability",
@@ -1779,7 +2107,12 @@
      "start": 1363,
      "end": 1429
     }
-   ]
+   ],
+   "checked": {
+    "by": "user",
+    "at": "2026-11-18T21:00:48.372057Z",
+    "proposal": "03ff79ca-105d-4237-8f3c-7b44f5b6fb25"
+   }
   },
   {
    "source": "edit-check",
@@ -1792,7 +2125,12 @@
      "start": 9283,
      "end": 9395
     }
-   ]
+   ],
+   "checked": {
+    "by": "user",
+    "at": "2026-11-18T21:00:57.363070Z",
+    "proposal": "03ff79ca-105d-4237-8f3c-7b44f5b6fb25"
+   }
   },
   {
    "source": "check-configurability",
@@ -1805,20 +2143,12 @@
      "start": 12508,
      "end": 12580
     }
-   ]
-  },
-  {
-   "source": "reference-check",
-   "predicate": "satisfies",
-   "target": "requirement-reference-check-activation",
-   "tier": "core",
-   "evidence": [
-    {
-     "quote": "the initial reference Edit Check becoming activated if/when all of the following conditions are met",
-     "start": 11088,
-     "end": 11187
-    }
-   ]
+   ],
+   "checked": {
+    "by": "user",
+    "at": "2026-11-18T21:01:22.337429Z",
+    "proposal": "03ff79ca-105d-4237-8f3c-7b44f5b6fb25"
+   }
   },
   {
    "source": "multi-check",
@@ -1831,7 +2161,12 @@
      "start": 14004,
      "end": 14104
     }
-   ]
+   ],
+   "checked": {
+    "by": "user",
+    "at": "2026-11-18T21:03:42.134295Z",
+    "proposal": "03ff79ca-105d-4237-8f3c-7b44f5b6fb25"
+   }
   },
   {
    "source": "suggestion-mode",
@@ -1844,7 +2179,12 @@
      "start": 3103,
      "end": 3178
     }
-   ]
+   ],
+   "checked": {
+    "by": "user",
+    "at": "2026-11-18T21:03:44.444434Z",
+    "proposal": "03ff79ca-105d-4237-8f3c-7b44f5b6fb25"
+   }
   },
   {
    "source": "publishing-workflow",
@@ -1857,7 +2197,12 @@
      "start": 13080,
      "end": 13146
     }
-   ]
+   ],
+   "checked": {
+    "by": "user",
+    "at": "2026-11-18T21:04:07.972991Z",
+    "proposal": "03ff79ca-105d-4237-8f3c-7b44f5b6fb25"
+   }
   },
   {
    "source": "reference-check-step",
@@ -1870,7 +2215,12 @@
      "start": 13147,
      "end": 13218
     }
-   ]
+   ],
+   "checked": {
+    "by": "user",
+    "at": "2026-11-18T21:04:14.703310Z",
+    "proposal": "03ff79ca-105d-4237-8f3c-7b44f5b6fb25"
+   }
   },
   {
    "source": "publishing-workflow",
@@ -1883,7 +2233,12 @@
      "start": 13033,
      "end": 13090
     }
-   ]
+   ],
+   "checked": {
+    "by": "user",
+    "at": "2026-11-18T21:05:29.365525Z",
+    "proposal": "03ff79ca-105d-4237-8f3c-7b44f5b6fb25"
+   }
   },
   {
    "source": "outcome-safe-confident",
@@ -1896,7 +2251,12 @@
      "start": 23876,
      "end": 23942
     }
-   ]
+   ],
+   "checked": {
+    "by": "user",
+    "at": "2026-11-18T21:05:52.183635Z",
+    "proposal": "03ff79ca-105d-4237-8f3c-7b44f5b6fb25"
+   }
   },
   {
    "source": "outcome-edit-quality",
@@ -1909,7 +2269,12 @@
      "start": 22806,
      "end": 22938
     }
-   ]
+   ],
+   "checked": {
+    "by": "user",
+    "at": "2026-11-18T21:06:01.787811Z",
+    "proposal": "03ff79ca-105d-4237-8f3c-7b44f5b6fb25"
+   }
   },
   {
    "source": "outcome-volunteers-iterate-config",
@@ -1922,7 +2287,12 @@
      "start": 24186,
      "end": 24286
     }
-   ]
+   ],
+   "checked": {
+    "by": "user",
+    "at": "2026-11-18T21:06:21.348994Z",
+    "proposal": "03ff79ca-105d-4237-8f3c-7b44f5b6fb25"
+   }
   },
   {
    "source": "assessment-policies-not-surfaced",
@@ -1935,7 +2305,12 @@
      "start": 7906,
      "end": 7960
     }
-   ]
+   ],
+   "checked": {
+    "by": "user",
+    "at": "2026-11-18T21:06:52.738058Z",
+    "proposal": "03ff79ca-105d-4237-8f3c-7b44f5b6fb25"
+   }
   },
   {
    "source": "driver-newcomers-driven-away",
@@ -1948,7 +2323,12 @@
      "start": 7157,
      "end": 7255
     }
-   ]
+   ],
+   "checked": {
+    "by": "user",
+    "at": "2026-11-18T21:07:03.319182Z",
+    "proposal": "03ff79ca-105d-4237-8f3c-7b44f5b6fb25"
+   }
   },
   {
    "source": "driver-moderation-burden",
@@ -1961,46 +2341,12 @@
      "start": 7363,
      "end": 7411
     }
-   ]
-  },
-  {
-   "source": "assessment-reference-check-ab-test",
-   "predicate": "influence",
-   "target": "outcome-edit-quality",
-   "tier": "core",
-   "evidence": [
-    {
-     "quote": "Reference Check caused an **increase in the quality of edits** newcomers publish",
-     "start": 18615,
-     "end": 18695
-    }
-   ]
-  },
-  {
-   "source": "assessment-reference-check-ab-test",
-   "predicate": "influence",
-   "target": "outcome-references-added",
-   "tier": "core",
-   "evidence": [
-    {
-     "quote": "People shown the Reference Check are **2.2 times more likely** to publish a new content edit that includes a reference",
-     "start": 19052,
-     "end": 19170
-    }
-   ]
-  },
-  {
-   "source": "assessment-multi-check-ab-test",
-   "predicate": "influence",
-   "target": "outcome-references-added",
-   "tier": "core",
-   "evidence": [
-    {
-     "quote": "Multi-Check caused statistically significant increases in the proportion of edits that include a reference",
-     "start": 13747,
-     "end": 13853
-    }
-   ]
+   ],
+   "checked": {
+    "by": "user",
+    "at": "2026-11-18T21:07:23.175964Z",
+    "proposal": "03ff79ca-105d-4237-8f3c-7b44f5b6fb25"
+   }
   },
   {
    "source": "assessment-multi-check-phase-1",
@@ -2013,33 +2359,12 @@
      "start": 17331,
      "end": 17427
     }
-   ]
-  },
-  {
-   "source": "principle-minimize-false-positives",
-   "predicate": "influence",
-   "target": "requirement-reference-check-activation",
-   "tier": "core",
-   "evidence": [
-    {
-     "quote": "This strategy amounts to the initial reference Edit Check becoming activated if/when all of the following conditions are met:",
-     "start": 11063,
-     "end": 11188
-    }
-   ]
-  },
-  {
-   "source": "principle-start-simple",
-   "predicate": "influence",
-   "target": "requirement-reference-check-activation",
-   "tier": "supporting",
-   "evidence": [
-    {
-     "quote": "The Editing Team arrived at the decision to *start* with a relatively limited and straightforward set of rules",
-     "start": 11541,
-     "end": 11651
-    }
-   ]
+   ],
+   "checked": {
+    "by": "user",
+    "at": "2026-11-18T21:08:05.622264Z",
+    "proposal": "03ff79ca-105d-4237-8f3c-7b44f5b6fb25"
+   }
   },
   {
    "source": "wikipedia-projects",
@@ -2052,7 +2377,12 @@
      "start": 7759,
      "end": 7842
     }
-   ]
+   ],
+   "checked": {
+    "by": "user",
+    "at": "2026-11-18T21:08:49.751124Z",
+    "proposal": "03ff79ca-105d-4237-8f3c-7b44f5b6fb25"
+   }
   },
   {
    "source": "driver-retention-outside-europe",
@@ -2065,7 +2395,12 @@
      "start": 10232,
      "end": 10287
     }
-   ]
+   ],
+   "checked": {
+    "by": "user",
+    "at": "2026-11-18T21:09:16.982735Z",
+    "proposal": "03ff79ca-105d-4237-8f3c-7b44f5b6fb25"
+   }
   },
   {
    "source": "metric-revert-rate",
@@ -2078,7 +2413,12 @@
      "start": 22941,
      "end": 23042
     }
-   ]
+   ],
+   "checked": {
+    "by": "user",
+    "at": "2026-11-18T21:09:34.303949Z",
+    "proposal": "03ff79ca-105d-4237-8f3c-7b44f5b6fb25"
+   }
   },
   {
    "source": "metric-edits-with-reference",
@@ -2091,7 +2431,12 @@
      "start": 23448,
      "end": 23540
     }
-   ]
+   ],
+   "checked": {
+    "by": "user",
+    "at": "2026-11-18T21:09:44.577533Z",
+    "proposal": "03ff79ca-105d-4237-8f3c-7b44f5b6fb25"
+   }
   },
   {
    "source": "visual-editor",
@@ -2104,7 +2449,12 @@
      "start": 24516,
      "end": 24607
     }
-   ]
+   ],
+   "checked": {
+    "by": "user",
+    "at": "2026-11-18T21:09:58.118035Z",
+    "proposal": "03ff79ca-105d-4237-8f3c-7b44f5b6fb25"
+   }
   },
   {
    "source": "editcheck-init-js",
@@ -2117,7 +2467,12 @@
      "start": 11456,
      "end": 11539
     }
-   ]
+   ],
+   "checked": {
+    "by": "user",
+    "at": "2026-11-18T21:10:27.278994Z",
+    "proposal": "03ff79ca-105d-4237-8f3c-7b44f5b6fb25"
+   }
   },
   {
    "source": "visual-editor",
@@ -2130,33 +2485,12 @@
      "start": 11456,
      "end": 11539
     }
-   ]
-  },
-  {
-   "source": "reference-detection",
-   "predicate": "satisfies",
-   "target": "requirement-reference-check-activation",
-   "tier": "supporting",
-   "evidence": [
-    {
-     "quote": "This strategy amounts to the initial reference Edit Check becoming activated",
-     "start": 11063,
-     "end": 11139
-    }
-   ]
-  },
-  {
-   "source": "risk-false-positives",
-   "predicate": "influence",
-   "target": "requirement-reference-check-activation",
-   "tier": "supporting",
-   "evidence": [
-    {
-     "quote": "minimizes the likelihood of false positives",
-     "start": 10885,
-     "end": 10928
-    }
-   ]
+   ],
+   "checked": {
+    "by": "user",
+    "at": "2026-11-18T21:10:37.530642Z",
+    "proposal": "03ff79ca-105d-4237-8f3c-7b44f5b6fb25"
+   }
   },
   {
    "source": "assessment-ssa-underrepresented",
@@ -2169,7 +2503,12 @@
      "start": 10232,
      "end": 10287
     }
-   ]
+   ],
+   "checked": {
+    "by": "user",
+    "at": "2026-11-18T21:10:59.023126Z",
+    "proposal": "03ff79ca-105d-4237-8f3c-7b44f5b6fb25"
+   }
   },
   {
    "source": "goal-norms-legible",
@@ -2182,7 +2521,12 @@
      "start": 9266,
      "end": 9395
     }
-   ]
+   ],
+   "checked": {
+    "by": "user",
+    "at": "2026-11-18T21:11:22.714181Z",
+    "proposal": "03ff79ca-105d-4237-8f3c-7b44f5b6fb25"
+   }
   },
   {
    "source": "assessment-policies-not-surfaced",
@@ -2195,7 +2539,12 @@
      "start": 6820,
      "end": 6936
     }
-   ]
+   ],
+   "checked": {
+    "by": "user",
+    "at": "2026-11-18T21:11:35.171043Z",
+    "proposal": "03ff79ca-105d-4237-8f3c-7b44f5b6fb25"
+   }
   },
   {
    "source": "assessment-policies-not-surfaced",
@@ -2208,7 +2557,12 @@
      "start": 6820,
      "end": 6936
     }
-   ]
+   ],
+   "checked": {
+    "by": "user",
+    "at": "2026-11-18T21:11:43.734015Z",
+    "proposal": "03ff79ca-105d-4237-8f3c-7b44f5b6fb25"
+   }
   },
   {
    "source": "assessment-policies-not-surfaced",
@@ -2221,7 +2575,12 @@
      "start": 6820,
      "end": 6936
     }
-   ]
+   ],
+   "checked": {
+    "by": "user",
+    "at": "2026-11-18T21:11:52.522323Z",
+    "proposal": "03ff79ca-105d-4237-8f3c-7b44f5b6fb25"
+   }
   },
   {
    "source": "edit-check",
@@ -2234,7 +2593,12 @@
      "start": 16947,
      "end": 17028
     }
-   ]
+   ],
+   "checked": {
+    "by": "user",
+    "at": "2026-11-18T21:12:02.043846Z",
+    "proposal": "03ff79ca-105d-4237-8f3c-7b44f5b6fb25"
+   }
   },
   {
    "source": "multi-check",
@@ -2247,7 +2611,12 @@
      "start": 13337,
      "end": 13458
     }
-   ]
+   ],
+   "checked": {
+    "by": "user",
+    "at": "2026-11-18T21:12:16.388652Z",
+    "proposal": "03ff79ca-105d-4237-8f3c-7b44f5b6fb25"
+   }
   },
   {
    "source": "metric-users-with-reference",
@@ -2260,7 +2629,12 @@
      "start": 23541,
      "end": 23678
     }
-   ]
+   ],
+   "checked": {
+    "by": "user",
+    "at": "2026-11-18T21:12:37.707165Z",
+    "proposal": "03ff79ca-105d-4237-8f3c-7b44f5b6fb25"
+   }
   },
   {
    "source": "metric-users-with-reference",
@@ -2273,7 +2647,12 @@
      "start": 23541,
      "end": 23678
     }
-   ]
+   ],
+   "checked": {
+    "by": "user",
+    "at": "2026-11-18T21:12:45.195820Z",
+    "proposal": "03ff79ca-105d-4237-8f3c-7b44f5b6fb25"
+   }
   },
   {
    "source": "assessment-newcomers-in-africa-asia",
@@ -2286,7 +2665,12 @@
      "start": 10232,
      "end": 10287
     }
-   ]
+   ],
+   "checked": {
+    "by": "user",
+    "at": "2026-11-18T21:12:54.229467Z",
+    "proposal": "03ff79ca-105d-4237-8f3c-7b44f5b6fb25"
+   }
   },
   {
    "source": "assessment-ssa-editors-english-french",
@@ -2299,7 +2683,12 @@
      "start": 10232,
      "end": 10287
     }
-   ]
+   ],
+   "checked": {
+    "by": "user",
+    "at": "2026-11-18T21:13:02.791660Z",
+    "proposal": "03ff79ca-105d-4237-8f3c-7b44f5b6fb25"
+   }
   }
  ],
  "excluded": [
@@ -2410,6 +2799,18 @@
   {
    "label": "19 June 2026 / 10 April 2026 / 4 February 2026 status updates",
    "reason": "Dated progress reports; the deliveries they mention are captured as milestones and features."
+  },
+  {
+   "label": "Reference Check A/B test",
+   "reason": "The assessment to me is that \"references checks increase likelihood of publishing new content. \"Reference Check A/B Test\" sounds more like a product feature."
+  },
+  {
+   "label": "Multi-Check (References) A/B test",
+   "reason": "The assessment to me is that \"references checks increase likelihood of publishing new content. \"Reference Check A/B Test\" sounds more like a product feature."
+  },
+  {
+   "label": "Reference Check activation conditions",
+   "reason": "The specific conditions are the requirements, the concept of \"Reference Check activation conditions\" would refer to the set of requirements defining specifically what those condition need to be."
   }
  ]
 }
