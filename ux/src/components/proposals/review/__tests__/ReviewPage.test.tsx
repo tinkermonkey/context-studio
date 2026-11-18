@@ -1071,6 +1071,19 @@ describe("adding an element from selected text", () => {
     expect(popover()).not.toBeInTheDocument();
   });
 
+  it("stays open when a press inside it removes its own target (picking from the class list)", async () => {
+    await renderPage();
+    selectText("feel safe");
+    fireEvent.mouseDown(screen.getByTestId("review-source-selectable"));
+    fireEvent.mouseUp(screen.getByTestId("review-source-selectable"));
+    // An option that is gone from the page once pressed, as a picked option is.
+    const option = document.createElement("div");
+    screen.getByTestId("review-add-popover").append(option);
+    option.addEventListener("mousedown", () => option.remove());
+    fireEvent.mouseDown(option);
+    expect(popover()).toBeInTheDocument();
+  });
+
   it("opens from Shift only for a selection in the source text, made outside fields", async () => {
     const user = await renderPage();
     // A selection outside the source text.
@@ -1114,5 +1127,316 @@ describe("adding an element from selected text", () => {
     } finally {
       vi.useRealTimers();
     }
+  });
+});
+
+/** Make the proposal a gold check of edit_check (or the holdout). */
+function makeGoldCheck(split: "dev" | "holdout" = "dev") {
+  const origin = {
+    pipeline_type: "individual_extraction",
+    implementation_id: "gold_check",
+    configuration_ref: "gold",
+    configuration_version: 1,
+    digest: "abc123def456",
+  };
+  proposal.origin = origin;
+  proposal.client_metadata = {
+    source_id: "src-1",
+    origin,
+    gold_check: {
+      document: split === "dev" ? "edit_check" : "wikimedia_enterprise",
+      split,
+      elements: {
+        edit: {
+          key: "edit",
+          tier: "core",
+          acceptable_classes: ["product.feature"],
+          aliases: ["EditCheck"],
+        },
+        ref: { key: "ref", tier: "supporting", acceptable_classes: [], aliases: [] },
+        region: {
+          key: "region",
+          tier: "core",
+          acceptable_classes: ["motivation.goal"],
+          aliases: [],
+        },
+      },
+      relationships: {
+        "5": { source: "ref", predicate: "realizes", target: "edit", tier: "supporting" },
+      },
+    },
+  };
+}
+
+describe("gold mode", () => {
+  const tier = () => screen.getByTestId("review-tier");
+
+  it("says it is a gold check, with its split", async () => {
+    makeGoldCheck();
+    await renderPage();
+    expect(
+      within(screen.getByTestId("review-header")).getByRole("heading", { level: 1 }),
+    ).toHaveTextContent("Gold check: edit_check");
+    const split = screen.getByTestId("review-gold-split");
+    expect(split).toHaveTextContent("dev");
+    expect(split).toHaveClass("chip--cyan");
+    expect(screen.queryByTestId("review-gold-holdout")).not.toBeInTheDocument();
+  });
+
+  it("notes the holdout rule on a holdout check", async () => {
+    makeGoldCheck("holdout");
+    await renderPage();
+    expect(screen.getByTestId("review-gold-split")).toHaveClass("chip--violet");
+    expect(screen.getByTestId("review-gold-holdout")).toHaveTextContent(
+      "Holdout: check it like the others; its element-level errors are never shown where pipelines are tuned.",
+    );
+  });
+
+  it("shows the aliases and tier, offers the acceptable classes, and sends what is noted", async () => {
+    makeGoldCheck();
+    const user = await renderPage();
+    expect(screen.getByTestId("review-gold-aliases")).toHaveTextContent("Also called EditCheck");
+    expect(within(tier()).getByRole("radio", { name: "Core" })).toHaveAttribute(
+      "aria-checked",
+      "true",
+    );
+    // A class picked earlier (here for Reference check) is offered after gold's acceptable ones.
+    await user.click(screen.getByTestId("review-row-op-ref"));
+    const picker = within(screen.getByTestId("review-class-picker"));
+    await user.type(picker.getByRole("combobox"), "stake");
+    await user.click(await picker.findByRole("option", { name: "motivation.stakeholder" }));
+    await waitFor(() => expect(applies).toHaveLength(1));
+    await user.click(screen.getByTestId("review-row-op-edit"));
+
+    // The gold's acceptable class: first, shown as acceptable in gold, not a toggle.
+    expect(screen.getByTestId("review-suggestion-1")).toHaveTextContent("1 product.feature");
+    const inGold = screen.getByTestId("review-defensible-1");
+    expect(inGold).toHaveTextContent("Acceptable in gold");
+    expect(inGold).toHaveAttribute("aria-pressed", "true");
+    expect(inGold).toBeDisabled();
+    expect(inGold).toHaveClass("review-defensible--on", "review-defensible--gold");
+    // The other class toggles.
+    expect(screen.getByTestId("review-suggestion-2")).toHaveTextContent("2 motivation.stakeholder");
+    const toggle = screen.getByTestId("review-defensible-2");
+    expect(toggle).toHaveTextContent("Also defensible");
+    expect(toggle).toHaveAttribute("aria-pressed", "false");
+    await user.click(toggle);
+    expect(toggle).toHaveAttribute("aria-pressed", "true");
+    expect(toggle).toHaveClass("review-defensible--on");
+    await user.click(screen.getByTestId("review-correct"));
+    await waitFor(() => expect(applies).toHaveLength(2));
+    expect(applies[1].annotations).toEqual({ "op-edit": { also_defensible: ["cls-stakeholder"] } });
+  });
+
+  it("sends a flipped tier, and nothing when nothing is noted", async () => {
+    makeGoldCheck();
+    const user = await renderPage();
+    await user.click(within(tier()).getByRole("radio", { name: "Supporting" }));
+    await user.click(screen.getByTestId("review-correct"));
+    await waitFor(() => expect(applies).toHaveLength(1));
+    expect(applies[0].annotations).toEqual({ "op-edit": { tier: "supporting" } });
+    // Next: Reference check, nothing noted.
+    await waitFor(() => expect(inspectorTitle()).toHaveTextContent("Reference check"));
+    expect(within(tier()).getByRole("radio", { name: "Supporting" })).toHaveAttribute(
+      "aria-checked",
+      "true",
+    );
+    await user.click(screen.getByTestId("review-correct"));
+    await waitFor(() => expect(applies).toHaveLength(2));
+    expect(applies[1].annotations).toBeUndefined();
+  });
+
+  it("keeps the replaced class as also defensible when asked", async () => {
+    makeGoldCheck();
+    const user = await renderPage();
+    const keep = within(screen.getByTestId("review-keep-old")).getByRole("checkbox", {
+      name: "Keep Software capability as also defensible",
+    });
+    expect(keep).not.toBeChecked();
+    await user.click(keep);
+    await user.click(screen.getByTestId("review-suggestion-1"));
+    await waitFor(() => expect(applies).toHaveLength(1));
+    expect(applies[0].edits).toEqual({ "op-edit": { class_ids: ["cls-feature"] } });
+    expect(applies[0].annotations).toEqual({ "op-edit": { also_defensible: ["cls-capability"] } });
+  });
+
+  it("needs a note to reject, the message clearing once there is one", async () => {
+    makeGoldCheck();
+    const user = await renderPage();
+    await user.click(screen.getByTestId("review-row-op-region"));
+    expect(screen.getByTestId("review-reason-out_of_scope")).toBeDisabled();
+    expect(screen.getByTestId("review-note-required")).toHaveTextContent(
+      "Write why it is not an element to reject it",
+    );
+    expect(screen.getByTestId("review-note")).toHaveAttribute(
+      "aria-describedby",
+      "review-note-required",
+    );
+    // X goes to the note while it is empty.
+    await user.click(screen.getByTestId("review-inspector-title"));
+    await user.keyboard("x");
+    expect(screen.getByTestId("review-note")).toHaveFocus();
+    await user.type(screen.getByTestId("review-note"), "A region, not a party");
+    expect(screen.queryByTestId("review-note-required")).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(/Write why it is not an element to reject it/),
+    ).not.toBeInTheDocument();
+    await user.click(screen.getByTestId("review-reason-out_of_scope"));
+    await waitFor(() => expect(rejects).toHaveLength(1));
+    expect(rejects[0]).toMatchObject({
+      operation_ids: ["op-region"],
+      note: "A region, not a party",
+      reason_code: "out_of_scope",
+    });
+  });
+
+  it("gives a relationship its gold tier", async () => {
+    makeGoldCheck();
+    const user = await renderPage();
+    await user.click(screen.getByTestId("review-row-op-rel"));
+    expect(within(tier()).getByRole("radio", { name: "Supporting" })).toHaveAttribute(
+      "aria-checked",
+      "true",
+    );
+  });
+
+  it("asks an added element's tier, supporting to start with", async () => {
+    makeGoldCheck();
+    const user = await renderPage();
+    selectText("feel safe");
+    fireEvent.mouseUp(screen.getByTestId("review-source-selectable"));
+    const addTier = screen.getByTestId("review-add-tier");
+    expect(within(addTier).getByRole("radio", { name: "Supporting" })).toHaveAttribute(
+      "aria-checked",
+      "true",
+    );
+    await user.click(within(addTier).getByRole("radio", { name: "Core" }));
+    const picker = within(screen.getByTestId("review-add-class-picker"));
+    await user.type(picker.getByRole("combobox"), "goal");
+    await user.click(await picker.findByRole("option", { name: "motivation.goal" }));
+    await user.click(screen.getByTestId("review-add-submit"));
+    await waitFor(() => expect(additions).toHaveLength(1));
+    expect(additions[0].annotation).toEqual({ tier: "core" });
+  });
+
+  it("needs no note to reject a relationship", async () => {
+    makeGoldCheck();
+    const user = await renderPage();
+    await user.click(screen.getByTestId("review-row-op-rel"));
+    expect(screen.getByTestId("review-reason-not_in_text")).toBeEnabled();
+    expect(screen.queryByTestId("review-note-required")).not.toBeInTheDocument();
+    expect(screen.getByText("Note, optional · kept with the decision")).toBeInTheDocument();
+  });
+
+  it("numbers and keys only the first three suggestions", async () => {
+    makeGoldCheck();
+    const driver = createClass({
+      id: "cls-driver",
+      concept_scheme_id: "scheme-m",
+      taxonomy_id: "tax-1",
+      identifier: "motivation_driver",
+      title: "Driver",
+      external_references: [{ source: "documentation_robotics", identifier: "motivation.driver" }],
+    });
+    const all = [...classes, driver];
+    server.use(
+      http.get("*/api/classes", ({ request }) => {
+        const url = new URL(request.url);
+        const scheme = url.searchParams.get("concept_scheme_id");
+        const ids = url.searchParams.getAll("ids");
+        const items = all.filter(
+          (c) => (!scheme || c.concept_scheme_id === scheme) && (!ids.length || ids.includes(c.id)),
+        );
+        return HttpResponse.json({ items, total: items.length, limit: 500, offset: 0 });
+      }),
+    );
+    const elements = (
+      proposal.client_metadata!.gold_check as {
+        elements: Record<string, { acceptable_classes: string[] }>;
+      }
+    ).elements;
+    elements.region.acceptable_classes = [
+      "product.feature",
+      "motivation.goal",
+      "motivation.driver",
+      "product.softwarecapability",
+    ];
+    const user = await renderPage();
+    await user.click(screen.getByTestId("review-row-op-region"));
+    expect(screen.getByTestId("review-suggestion-3")).toHaveAttribute("aria-keyshortcuts", "3");
+    expect(screen.getByTestId("review-suggestion-3")).toHaveTextContent(/^3 motivation\.driver/);
+    const fourth = screen.getByTestId("review-suggestion-4");
+    expect(fourth).not.toHaveAttribute("aria-keyshortcuts");
+    expect(fourth).toHaveTextContent(/^Software capability/);
+  });
+
+  it("hides keeping the old class while a near match uses the existing individual", async () => {
+    makeGoldCheck();
+    Object.assign(proposal.operations.find((o) => o.id === "op-edit")!, {
+      alternatives: [
+        { kind: "existing", entity_id: "ind-1", similarity: 0.9, title: "LLM Provider Router" },
+      ],
+    });
+    const user = await renderPage();
+    expect(screen.queryByTestId("review-keep-old")).not.toBeInTheDocument();
+    await user.click(
+      within(screen.getByTestId("operation-near-match-option-new")).getByRole("radio"),
+    );
+    expect(screen.getByTestId("review-keep-old")).toBeInTheDocument();
+  });
+
+  it("changes nothing for a normal proposal", async () => {
+    const user = await renderPage();
+    expect(screen.queryByTestId("review-tier")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("review-gold-split")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("review-defensible-1")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("review-keep-old")).not.toBeInTheDocument();
+    expect(screen.getByTestId("review-reason-out_of_scope")).toBeEnabled();
+    expect(screen.queryByTestId("review-note-required")).not.toBeInTheDocument();
+    selectText("feel safe");
+    fireEvent.mouseUp(screen.getByTestId("review-source-selectable"));
+    expect(screen.queryByTestId("review-add-tier")).not.toBeInTheDocument();
+    await user.click(screen.getByTestId("review-add-cancel"));
+  });
+});
+
+describe("while the classes load", () => {
+  it("shows placeholders, not class ids, and groups by layer once loaded", async () => {
+    let release: () => void = () => {};
+    const loaded = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    server.use(
+      http.get("*/api/classes", async ({ request }) => {
+        await loaded;
+        const url = new URL(request.url);
+        const scheme = url.searchParams.get("concept_scheme_id");
+        const ids = url.searchParams.getAll("ids");
+        const items = classes.filter(
+          (c) => (!scheme || c.concept_scheme_id === scheme) && (!ids.length || ids.includes(c.id)),
+        );
+        return HttpResponse.json({ items, total: items.length, limit: 500, offset: 0 });
+      }),
+    );
+    render(<ReviewPage id="proposal-1" onFinish={onFinish} />);
+    const group = await screen.findByTestId("review-group-loading", {}, { timeout: 10000 });
+    expect(group).toHaveAttribute("aria-label", "Loading layers…");
+    expect(screen.getByTestId("review-row-op-edit")).toHaveTextContent("…");
+    expect(screen.getByTestId("review-row-op-edit")).not.toHaveTextContent("cls-capability");
+    expect(screen.getByTestId("review-inspector-class")).toHaveTextContent("…");
+    expect(screen.getByTestId("review-definition-loading")).toHaveTextContent("Loading…");
+    expect(screen.getByTestId("review-definition")).not.toHaveTextContent("cls-capability");
+    const picker = within(screen.getByTestId("review-class-picker"));
+    expect(picker.getByText("Loading classes…")).toBeInTheDocument();
+    expect(picker.getByRole("combobox")).toBeDisabled();
+    expect(screen.queryByTestId("review-group-other")).not.toBeInTheDocument();
+
+    release();
+    expect(
+      await screen.findByTestId("review-group-scheme-p", {}, { timeout: 10000 }),
+    ).toBeInTheDocument();
+    expect(screen.queryByTestId("review-group-loading")).not.toBeInTheDocument();
+    expect(screen.getByTestId("review-inspector-class")).toHaveTextContent("Software capability");
+    expect(screen.queryByTestId("review-definition-loading")).not.toBeInTheDocument();
   });
 });

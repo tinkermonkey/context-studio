@@ -4,6 +4,7 @@ import {
   Chip,
   ConfirmDialog,
   Field,
+  FormCallout,
   Icon,
   PageHeader,
   ProgressBar,
@@ -77,6 +78,7 @@ import {
 import { nearMatchHeldIds, nearMatchHeldNote, noPassageHeldIds } from "./sourceModel";
 import { ProposalOriginChip } from "./ProposalOrigin";
 import { extractedFromSource } from "./review/reviewModel";
+import { goldCheckOf } from "./review/goldModel";
 import { useOperationContext } from "./useOperationContext";
 import { pendingLabel, useProposalActions } from "./useProposalActions";
 import "./proposals.css";
@@ -162,6 +164,9 @@ export function ProposalDetailPage({
   }
 
   const deciding = !!proposal && takesDecisions(proposal);
+  // A benchmark gold check is decided on the Review page, which records what gold needs.
+  const goldCheck = !!goldCheckOf(proposal);
+  const decidesHere = deciding && !goldCheck;
   const reverted = proposal?.status === "reverted";
   const progress = useMemo(() => decisionProgress(operations, threshold), [operations, threshold]);
   const filter = chosenFilter ?? defaultOperationFilter(progress, openOnAll.current);
@@ -253,7 +258,7 @@ export function ProposalDetailPage({
   const passageHeld = useMemo(() => noPassageHeldIds(operations), [operations]);
   const bulkReady = bulkOps.filter((o) => !o.stale && !isBlocked(o) && !passageHeld.has(o.id));
   const showThreshold =
-    !byKind && deciding && awaitingOps.length > 0 && hasProbabilities(operations);
+    !byKind && decidesHere && awaitingOps.length > 0 && hasProbabilities(operations);
   // The threshold picks only from what the filters show, so it never checks hidden rows.
   const shownAwaiting = awaitingOps.filter((o) => shownIds.has(o.id)).length;
   const matching = showThreshold
@@ -263,7 +268,7 @@ export function ProposalDetailPage({
       )
     : [];
   const showPlanKind = operations.some((o) => planKind(o) !== undefined);
-  const selectable = deciding && awaitingOps.length > 0;
+  const selectable = decidesHere && awaitingOps.length > 0;
   const columns = useMemo(
     () =>
       operationColumns(context, {
@@ -447,7 +452,7 @@ export function ProposalDetailPage({
                   <Icon name="reload" size={13} /> Revert proposal
                 </Button>
               )}
-              {awaitingOps.length > 0 && (
+              {decidesHere && awaitingOps.length > 0 && (
                 <>
                   <Button
                     variant="secondary"
@@ -536,6 +541,23 @@ export function ProposalDetailPage({
         />
       </div>
 
+      {goldCheck && deciding && (
+        <FormCallout variant="info" icon="info" data-testid="proposal-gold-callout">
+          Gold checks are decided on the Review page, where tier, also-defensible and the excluded
+          reason are recorded.{" "}
+          {onReviewAgainstSource && (
+            <Button
+              variant="link"
+              size="sm"
+              onClick={onReviewAgainstSource}
+              data-testid="proposal-gold-review"
+            >
+              Open the Review page
+            </Button>
+          )}
+        </FormCallout>
+      )}
+
       {actions.revertConflict && (
         <RevertConflict
           proposal={proposal}
@@ -588,7 +610,7 @@ export function ProposalDetailPage({
         selectedId={selectedOperationId}
         renderInspectorContent={(operation) => {
           const picks = picksByOperation[operation.id] ?? {};
-          const picking = deciding && takesPicks(operation);
+          const picking = decidesHere && takesPicks(operation);
           return (
             <OperationInspector
               key={operation.id}
@@ -607,7 +629,7 @@ export function ProposalDetailPage({
                   : undefined
               }
               decision={
-                deciding && isAwaiting(operation) ? (
+                decidesHere && isAwaiting(operation) ? (
                   <OperationDecision
                     operation={operation}
                     proposal={proposal}
@@ -710,7 +732,7 @@ export function ProposalDetailPage({
               operations={shownOperations}
               allOperations={operations}
               context={context}
-              deciding={deciding}
+              deciding={decidesHere}
               reverted={reverted}
               threshold={threshold}
               onThresholdChange={setThreshold}

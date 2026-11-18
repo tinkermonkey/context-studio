@@ -128,10 +128,11 @@ export function ReviewSourcePane({
   useEffect(() => {
     if (!open) return;
     const onMouseDown = (event: MouseEvent) => {
-      const target = event.target as Node | null;
-      if (target && (anchorRef.current?.contains(target) || textRef.current?.contains(target)))
-        return;
-      dismissRef.current?.();
+      // The path as dispatched: a press that removes its own target (picking from the
+      // class list) still counts as inside.
+      const path = event.composedPath();
+      const inside = [anchorRef.current, textRef.current].some((el) => !!el && path.includes(el));
+      if (!inside) dismissRef.current?.();
     };
     document.addEventListener("mousedown", onMouseDown);
     return () => document.removeEventListener("mousedown", onMouseDown);

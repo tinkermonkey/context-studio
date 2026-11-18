@@ -41,9 +41,10 @@ class FakeChangeProposalRepository:
         limit: int = 50,
         offset: int = 0,
         landed: Optional[bool] = None,
+        implementation_id: Optional[str] = None,
     ) -> list[ChangeProposal]:
         matches = sorted(
-            self._matching(taxonomy_id, status, source, landed),
+            self._matching(taxonomy_id, status, source, landed, implementation_id),
             key=lambda p: (p.created_at, p.id),
             reverse=True,
         )
@@ -55,8 +56,9 @@ class FakeChangeProposalRepository:
         status: Optional[ProposalStatus] = None,
         source: Optional[ProposalSource] = None,
         landed: Optional[bool] = None,
+        implementation_id: Optional[str] = None,
     ) -> int:
-        return len(self._matching(taxonomy_id, status, source, landed))
+        return len(self._matching(taxonomy_id, status, source, landed, implementation_id))
 
     def operation_counts(self, proposal_ids: Sequence[str]) -> dict[str, int]:
         return {
@@ -141,6 +143,7 @@ class FakeChangeProposalRepository:
         status: Optional[ProposalStatus],
         source: Optional[ProposalSource],
         landed: Optional[bool] = None,
+        implementation_id: Optional[str] = None,
     ) -> list[ChangeProposal]:
         return [
             p
@@ -149,6 +152,11 @@ class FakeChangeProposalRepository:
             and (status is None or p.status == status)
             and (source is None or p.source == source)
             and (landed is None or (p.landed is not None) == landed)
+            and (
+                implementation_id is None
+                or ((p.client_metadata or {}).get("origin") or {}).get("implementation_id")
+                == implementation_id
+            )
         ]
 
 

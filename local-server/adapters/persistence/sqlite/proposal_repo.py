@@ -99,10 +99,11 @@ class SQLiteChangeProposalRepository:
         limit: int = 50,
         offset: int = 0,
         landed: Optional[bool] = None,
+        implementation_id: Optional[str] = None,
     ) -> list[ChangeProposal]:
         with self._session_factory() as session:
             runs = (
-                _filtered(session, taxonomy_id, status, source, landed)
+                _filtered(session, taxonomy_id, status, source, landed, implementation_id)
                 .order_by(ChangeProposalRun.created_at.desc(), ChangeProposalRun.id.desc())
                 .offset(offset)
                 .limit(limit)
@@ -117,9 +118,12 @@ class SQLiteChangeProposalRepository:
         status: Optional[ProposalStatus] = None,
         source: Optional[ProposalSource] = None,
         landed: Optional[bool] = None,
+        implementation_id: Optional[str] = None,
     ) -> int:
         with self._session_factory() as session:
-            return _filtered(session, taxonomy_id, status, source, landed).count()
+            return _filtered(
+                session, taxonomy_id, status, source, landed, implementation_id
+            ).count()
 
     def operation_counts(self, proposal_ids: Sequence[str]) -> dict[str, int]:
         if not proposal_ids:
@@ -446,8 +450,15 @@ def _filtered(
     status: Optional[ProposalStatus],
     source: Optional[ProposalSource],
     landed: Optional[bool] = None,
+    implementation_id: Optional[str] = None,
 ):
     query = session.query(ChangeProposalRun)
+    if implementation_id is not None:
+        # The pipeline implementation the proposal's origin records (ProposalOrigin)
+        recorded = func.json_extract(
+            ChangeProposalRun.client_metadata, "$.origin.implementation_id"
+        )
+        query = query.filter(recorded == implementation_id)
     if landed is not None:
         column = ChangeProposalRun.landed
         query = query.filter(column.isnot(None) if landed else column.is_(None))

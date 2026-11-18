@@ -14,6 +14,8 @@ interface ReviewClassPickerProps {
   /** The element's own class: left out, and its layer's classes listed first. */
   current?: ClassResponse;
   disabled?: boolean;
+  /** The classes are still loading: the search waits. */
+  loading?: boolean;
   onPick: (classId: string) => void;
   /** The search input's id: unique on the page (the inspector and the add form each have one). */
   inputId?: string;
@@ -30,6 +32,7 @@ export function ReviewClassPicker({
   classes,
   current,
   disabled,
+  loading = false,
   onPick,
   inputId = "review-class-search",
   label,
@@ -54,7 +57,7 @@ export function ReviewClassPicker({
   return (
     <div className="review-section" data-testid={testId}>
       <label htmlFor={inputId} className="review-muted">
-        {label ?? `Search all ${classes.length} classes`}
+        {loading ? "Loading classes…" : (label ?? `Search all ${classes.length} classes`)}
       </label>
       <EntityPicker
         inputId={inputId}
@@ -68,7 +71,7 @@ export function ReviewClassPicker({
         onClear={() => setQuery("")}
         placeholder="Search classes…"
         placement="top-start"
-        disabled={disabled}
+        disabled={disabled || loading}
       />
     </div>
   );

@@ -97,4 +97,62 @@ describe("Review against source", () => {
     await screen.findByTestId("proposal-summary", {}, { timeout: 10000 });
     expect(screen.queryByTestId("proposal-review-against-source")).not.toBeInTheDocument();
   });
+
+  it("decides a gold check only on the Review page", async () => {
+    const origin = {
+      pipeline_type: "individual_extraction",
+      implementation_id: "gold_check",
+      configuration_ref: "gold",
+      configuration_version: 1,
+      digest: "abc",
+    };
+    serve(
+      createChangeProposal({
+        source: "pipeline",
+        origin,
+        client_metadata: {
+          origin,
+          gold_check: { document: "edit_check", split: "dev", elements: {}, relationships: {} },
+        },
+        operations: [{ ...extracted, probability: 0.9 }],
+      }),
+    );
+    const onReview = vi.fn();
+    render(
+      <ProposalDetailPage
+        id="proposal-1"
+        selectedOperationId="op-1"
+        onSelectOperation={vi.fn()}
+        onReviewAgainstSource={onReview}
+      />,
+    );
+    const callout = await screen.findByTestId("proposal-gold-callout", {}, { timeout: 10000 });
+    expect(callout).toHaveTextContent(
+      "Gold checks are decided on the Review page, where tier, also-defensible and the excluded reason are recorded.",
+    );
+    expect(screen.queryByTestId("proposal-accept-all")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("proposal-reject-all")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("operation-decision")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("proposal-threshold-bar")).not.toBeInTheDocument();
+    expect(screen.queryByRole("checkbox")).not.toBeInTheDocument();
+    await userEvent.click(screen.getByTestId("proposal-gold-review"));
+    expect(onReview).toHaveBeenCalledTimes(1);
+  });
+
+  it("decides other proposals on this page as before", async () => {
+    serve(createChangeProposal({ source: "pipeline", operations: [extracted] }));
+    render(
+      <ProposalDetailPage
+        id="proposal-1"
+        selectedOperationId="op-1"
+        onSelectOperation={vi.fn()}
+        onReviewAgainstSource={vi.fn()}
+      />,
+    );
+    expect(
+      await screen.findByTestId("proposal-accept-all", {}, { timeout: 10000 }),
+    ).toBeInTheDocument();
+    expect(await screen.findByTestId("operation-decision")).toBeInTheDocument();
+    expect(screen.queryByTestId("proposal-gold-callout")).not.toBeInTheDocument();
+  });
 });

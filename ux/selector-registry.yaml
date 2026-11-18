@@ -3328,6 +3328,89 @@ selectors:
     component: src/components/proposals/review/AddElementPopover.tsx
     description: "Cancel: closes the add form"
 
+  # Gold check: gold mode on the Review page and the Benchmark gold page (#1614)
+  - selector: review-gold-split
+    component: src/components/proposals/review/ReviewPage.tsx
+    description: "Gold mode: the check's split chip beside \"Proposed by\" (dev cyan, holdout violet); the title reads \"Gold check: <document>\""
+  - selector: review-gold-holdout
+    component: src/components/proposals/review/ReviewPage.tsx
+    description: "Gold mode, holdout only: \"Holdout: check it like the others; its element-level errors are never shown where pipelines are tuned.\""
+  - selector: review-gold-aliases
+    component: src/components/proposals/review/ReviewInspector.tsx
+    description: "Gold mode: the element's gold aliases under its title (\"Also called …\")"
+  - selector: review-tier
+    component: src/components/proposals/review/ReviewInspector.tsx
+    description: "Gold mode: Tier control (core / supporting) starting from the gold tier (an element's, or a relationship's by seq); a change is sent as annotations[op].tier"
+  - selector: review-defensible-*
+    component: src/components/proposals/review/ReviewInspector.tsx
+    description: "Gold mode: \"Also defensible\" toggle (aria-pressed) beside suggested class N (the gold's acceptable classes first), sent in annotations[op].also_defensible; for a class already in the gold's acceptable_classes it is pressed, disabled and reads \"Acceptable in gold\""
+  - selector: review-keep-old
+    component: src/components/proposals/review/ReviewInspector.tsx
+    description: "Gold mode: checkbox \"Keep <class> as also defensible\" (off): picking a better class keeps the old one in also_defensible"
+  - selector: review-note-required
+    component: src/components/proposals/review/ReviewInspector.tsx
+    description: "Gold mode, elements only: shown while the note is empty; the Not-an-element reasons stay disabled until it has text (it becomes the excluded entry's reason)"
+  - selector: review-add-tier
+    component: src/components/proposals/review/AddElementPopover.tsx
+    description: "Gold mode: the added element's tier (supporting to start with), sent as annotation.tier"
+  - selector: gold-row-*
+    component: src/components/proposals/gold/BenchmarkGoldPage.tsx
+    description: "A gold check's document id in its table row, by proposal id"
+  - selector: proposal-gold-callout
+    component: src/components/proposals/ProposalDetailPage.tsx
+    description: "On a gold-check proposal: \"Gold checks are decided on the Review page, …\"; its decision controls (per operation, bulk, threshold, selection) are off"
+  - selector: proposal-gold-review
+    component: src/components/proposals/ProposalDetailPage.tsx
+    description: "Link in the gold callout: opens the Review page"
+  - selector: review-definition-loading
+    component: src/components/proposals/review/ReviewInspector.tsx
+    description: "\"Loading…\" in place of the class definition until the taxonomy's classes load (class labels show \"…\", the picker reads \"Loading classes…\" and is disabled, rows group under review-group-loading)"
+  - selector: gold-page
+    component: src/components/proposals/gold/BenchmarkGoldPage.tsx
+    description: "Root of the Benchmark gold page (/app/pipelines/gold)"
+  - selector: gold-header
+    component: src/components/proposals/gold/BenchmarkGoldPage.tsx
+    description: "PageHeader \"Benchmark gold\""
+  - selector: gold-documents
+    component: src/components/proposals/gold/BenchmarkGoldPage.tsx
+    description: "Table (region \"Documents\") of the gold checks: document, split, individuals, relationships, checked progress, status, action"
+  - selector: gold-status-*
+    component: src/components/proposals/gold/BenchmarkGoldPage.tsx
+    description: "Status chip by proposal id: model-made (amber) while any operation awaits, checked (emerald); reverted checks are left out"
+  - selector: gold-open-*
+    component: src/components/proposals/gold/BenchmarkGoldPage.tsx
+    description: "Check gold / Continue / Open by proposal id: opens the check on the Review page"
+  - selector: gold-empty
+    component: src/components/proposals/gold/BenchmarkGoldPage.tsx
+    description: "Empty state when no gold check is loaded"
+  - selector: gold-empty-command
+    component: src/components/proposals/gold/BenchmarkGoldPage.tsx
+    description: "The check command shown in the empty state"
+  - selector: gold-writes
+    component: src/components/proposals/gold/BenchmarkGoldPage.tsx
+    description: "Panel: what each verdict writes to gold.json"
+  - selector: gold-differences
+    component: src/components/proposals/gold/BenchmarkGoldPage.tsx
+    description: "Panel: what is different from a normal review"
+  - selector: gold-commands
+    component: src/components/proposals/gold/BenchmarkGoldPage.tsx
+    description: "Panel: per-document write-gold and validate commands, re-score commands and the check command, each copyable"
+  - selector: gold-write-*
+    component: src/components/proposals/gold/BenchmarkGoldPage.tsx
+    description: "Copyable write-gold command by proposal id"
+  - selector: gold-replay
+    component: src/components/proposals/gold/BenchmarkGoldPage.tsx
+    description: "Copyable \"python scripts/benchmark_replay.py --all\""
+  - selector: gold-replay-external
+    component: src/components/proposals/gold/BenchmarkGoldPage.tsx
+    description: "Copyable \"python scripts/benchmark_external.py replay\""
+  - selector: gold-check-command
+    component: src/components/proposals/gold/BenchmarkGoldPage.tsx
+    description: "Copyable check command for another document"
+  - selector: gold-holdout
+    component: src/components/proposals/gold/BenchmarkGoldPage.tsx
+    description: "Panel: the holdout rule and re-scoring"
+
   # Review queue: decisions (#1361)
   - selector: proposal-actions
     component: src/components/proposals/ProposalDetailPage.tsx

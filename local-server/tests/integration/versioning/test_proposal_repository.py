@@ -144,6 +144,38 @@ def test_list_filters_and_orders_newest_first(repo):
     assert len(repo.list_proposals(limit=2)) == 2
 
 
+def test_list_by_the_implementation_its_origin_names(repo):
+    """#1614: total and paging count only the matching proposals."""
+
+    def made_by(proposal_id, implementation_id, created_at):
+        proposal = _proposal(proposal_id, source=ProposalSource.PIPELINE, created_at=created_at)
+        proposal.client_metadata = {
+            "origin": {
+                "pipeline_type": "individual_extraction",
+                "implementation_id": implementation_id,
+                "configuration_ref": "gold",
+                "configuration_version": 1,
+                "digest": "0123456789ab",
+            }
+        }
+        return proposal
+
+    for hour, (proposal_id, implementation) in enumerate(
+        [("g1", "gold_check"), ("s1", "single_call"), ("g2", "gold_check"), ("g3", "gold_check")]
+    ):
+        repo.create(made_by(proposal_id, implementation, NOW + timedelta(hours=hour)))
+    repo.create(_proposal("none"))  # no origin at all
+
+    listed = repo.list_proposals(implementation_id="gold_check")
+    assert [p.id for p in listed] == ["g3", "g2", "g1"]
+    assert repo.count_proposals(implementation_id="gold_check") == 3
+    assert repo.count_proposals(implementation_id="single_call") == 1
+    assert repo.count_proposals(implementation_id="nope") == 0
+    page = repo.list_proposals(implementation_id="gold_check", limit=1, offset=1)
+    assert [p.id for p in page] == ["g2"]
+    assert repo.count_proposals(implementation_id="gold_check", source=ProposalSource.MCP) == 0
+
+
 def test_ties_on_created_at_order_by_id_descending(repo):
     for proposal_id in ("a", "b", "c"):
         repo.create(_proposal(proposal_id))

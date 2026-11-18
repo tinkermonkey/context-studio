@@ -12,6 +12,7 @@ import type {
   ChangeProposalRevertConflict,
   ProposedOperation,
   RejectionReason,
+  ReviewAnnotation,
 } from "@/api/services/proposals";
 import { useToasts } from "@/components/ui/Toast";
 import { downloadJson } from "@/lib/download";
@@ -36,10 +37,14 @@ export type ChosenAlternatives = Record<string, Record<string, unknown>>;
 /** Operation id -> the milliseconds the reviewer spent on it (recorded in its decision). */
 export type ReviewMs = Record<string, number>;
 
-/** What a reject records beside the operations: why, as a code, and the time spent on each. */
+/** Operation id -> what the reviewer notes for benchmark gold (tier, also defensible classes). */
+export type Annotations = Record<string, ReviewAnnotation>;
+
+/** What a reject records beside the operations: why, as a code, the time spent, gold notes. */
 export interface RejectOptions {
   reasonCode?: RejectionReason;
   reviewMs?: ReviewMs;
+  annotations?: Annotations;
 }
 
 /** How an apply ended: the server's error, or the reviewer cancelled the Apply anyway. */
@@ -57,6 +62,8 @@ interface ApplyOptions {
   resolutions?: Resolutions;
   /** The time the reviewer spent on each operation sent. */
   reviewMs?: ReviewMs;
+  /** What the reviewer notes for benchmark gold on each operation sent. */
+  annotations?: Annotations;
   /** Add these outcomes to the results view instead of replacing it (a retry from it). */
   merge?: boolean;
 }
@@ -183,6 +190,7 @@ export function useProposalActions(proposal: ChangeProposal | undefined) {
       chosenAlternatives = {},
       resolutions = {},
       reviewMs = {},
+      annotations = {},
       merge = false,
     }: ApplyOptions,
   ): Promise<ApplyOutcome> => {
@@ -209,6 +217,7 @@ export function useProposalActions(proposal: ChangeProposal | undefined) {
             : {}),
           ...(Object.keys(resolutions).length > 0 ? { resolutions } : {}),
           ...(Object.keys(reviewMs).length > 0 ? { review_ms: reviewMs } : {}),
+          ...(Object.keys(annotations).length > 0 ? { annotations } : {}),
         },
       });
       setLastApplied((previous) =>
@@ -345,7 +354,7 @@ export function useProposalActions(proposal: ChangeProposal | undefined) {
   const rejectNow = async (
     operationIds: string[],
     note: string | undefined,
-    { reasonCode, reviewMs = {} }: RejectOptions,
+    { reasonCode, reviewMs = {}, annotations = {} }: RejectOptions,
   ) => {
     try {
       await reject.mutateAsync({
@@ -355,6 +364,7 @@ export function useProposalActions(proposal: ChangeProposal | undefined) {
           note: note?.trim() || null,
           ...(reasonCode ? { reason_code: reasonCode } : {}),
           ...(Object.keys(reviewMs).length > 0 ? { review_ms: reviewMs } : {}),
+          ...(Object.keys(annotations).length > 0 ? { annotations } : {}),
         },
       });
       toast(

@@ -48,6 +48,31 @@ describe("ProposalsService", () => {
     expect(query?.get("limit")).toBe("10");
   });
 
+  it("lists every proposal of an implementation, page after page", async () => {
+    const offsets: (string | null)[] = [];
+    const all = Array.from({ length: 501 }, (_, i) => createChangeProposal({ id: `p-${i}` }));
+    server.use(
+      http.get("*/api/proposals", ({ request }) => {
+        const query = new URL(request.url).searchParams;
+        expect(query.get("implementation_id")).toBe("gold_check");
+        offsets.push(query.get("offset"));
+        const offset = Number(query.get("offset"));
+        const limit = Number(query.get("limit"));
+        return HttpResponse.json({
+          items: all.slice(offset, offset + limit),
+          total: all.length,
+          limit,
+          offset,
+        });
+      }),
+    );
+
+    const result = await proposalsService.listAllProposals({ implementation_id: "gold_check" });
+
+    expect(result).toHaveLength(501);
+    expect(offsets).toEqual(["0", "500"]);
+  });
+
   it("gets one proposal with stale flags", async () => {
     const proposal = createChangeProposal({
       operations: [createProposedOperation({ stale: true })],

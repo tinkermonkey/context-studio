@@ -1357,3 +1357,42 @@ class TestGoldCheckReview(_ExtractedFromSource):
         assert response.status_code == 422
         assert key in response.text
         assert client.get("/api/proposals").json()["total"] == 0
+
+
+class TestListByImplementation:
+    """#1614: GET /api/proposals?implementation_id= lists the proposals its runs made."""
+
+    def _made_by(self, client, graph, implementation_id, title):
+        origin = {
+            "pipeline_type": "individual_extraction",
+            "implementation_id": implementation_id,
+            "configuration_ref": "gold",
+            "configuration_version": 1,
+            "digest": "0123456789ab",
+        }
+        return _propose(
+            client,
+            graph,
+            _describe_room(graph, seq=1, text=title),
+            source="pipeline",
+            client_metadata={"origin": origin},
+        )
+
+    def test_filter_total_and_paging(self, client, graph):
+        first = self._made_by(client, graph, "gold_check", "First")
+        self._made_by(client, graph, "single_call", "Other")
+        _propose(client, graph, _create_kit(seq=1, graph=graph))
+        second = self._made_by(client, graph, "gold_check", "Second")
+
+        listed = client.get("/api/proposals", params={"implementation_id": "gold_check"}).json()
+        page = client.get(
+            "/api/proposals", params={"implementation_id": "gold_check", "limit": 1, "offset": 1}
+        ).json()
+
+        assert [p["id"] for p in listed["items"]] == [second["id"], first["id"]]
+        assert listed["total"] == 2
+        assert [p["id"] for p in page["items"]] == [first["id"]]
+        assert (page["total"], page["limit"], page["offset"]) == (2, 1, 1)
+        assert client.get("/api/proposals").json()["total"] == 4
+        none = client.get("/api/proposals", params={"implementation_id": "nope"}).json()
+        assert (none["items"], none["total"]) == ([], 0)

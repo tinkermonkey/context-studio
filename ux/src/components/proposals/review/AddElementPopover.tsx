@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState, type KeyboardEvent } from "react";
-import { Button, Field, TextInput } from "@tinkermonkey/heimdall-ui";
+import { Button, Field, SegmentedControl, TextInput } from "@tinkermonkey/heimdall-ui";
 import type { components } from "@/api/types";
 import { titleFromQuote, type SelectedPassage } from "./addFromText";
 import { ClassChip } from "./ReviewInspector";
+import { ADDED_TIER, type Tier } from "./goldModel";
 import { ReviewClassPicker } from "./ReviewClassPicker";
 
 type ClassResponse = components["schemas"]["ClassResponse"];
@@ -11,6 +12,8 @@ interface AddElementPopoverProps {
   passage: SelectedPassage;
   /** The taxonomy's classes that are not derived. */
   pickable: ClassResponse[];
+  /** The taxonomy's classes are still loading. */
+  classesLoading?: boolean;
   /** The class it opens with: the one picked most recently in this review, if any. */
   initialClassId?: string;
   classLabel: (classId: string | undefined) => string;
@@ -20,7 +23,10 @@ interface AddElementPopoverProps {
   error?: string;
   /** The reviewer changed the form: a refusal shown no longer applies. */
   onEdit: () => void;
-  onAdd: (title: string, classId: string) => void;
+  /** Gold mode: ask the element's tier (supporting to start with). */
+  askTier?: boolean;
+  /** `tier` only when asked. */
+  onAdd: (title: string, classId: string, tier?: Tier) => void;
   onCancel: () => void;
 }
 
@@ -32,6 +38,7 @@ interface AddElementPopoverProps {
 export function AddElementPopover({
   passage,
   pickable,
+  classesLoading = false,
   initialClassId,
   classLabel,
   classOf,
@@ -40,7 +47,9 @@ export function AddElementPopover({
   onEdit,
   onAdd,
   onCancel,
+  askTier = false,
 }: AddElementPopoverProps) {
+  const [tier, setTier] = useState<Tier>(ADDED_TIER);
   const [title, setTitle] = useState(() => titleFromQuote(passage.quote));
   const [titleError, setTitleError] = useState<string>();
   const [classId, setClassId] = useState(initialClassId);
@@ -59,7 +68,7 @@ export function AddElementPopover({
     setTitleError(noTitle);
     setClassError(noClass);
     if (noTitle || noClass || !classId) return;
-    onAdd(trimmed, classId);
+    onAdd(trimmed, classId, askTier ? tier : undefined);
   };
 
   const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
@@ -127,6 +136,7 @@ export function AddElementPopover({
             classes={pickable}
             current={classOf(classId)}
             disabled={busy}
+            loading={classesLoading}
             inputId="review-add-class-search"
             label={classId ? "Another class" : "Search the classes"}
             onPick={(picked) => {
@@ -142,6 +152,23 @@ export function AddElementPopover({
             </span>
           )}
         </div>
+        {askTier && (
+          <div className="review-tier" data-testid="review-add-tier">
+            <span className="review-muted" id="review-add-tier-label">
+              Tier
+            </span>
+            <SegmentedControl
+              value={tier}
+              onChange={(value) => setTier(value as Tier)}
+              aria-labelledby="review-add-tier-label"
+              disabled={busy}
+              options={[
+                { value: "core", label: "Core" },
+                { value: "supporting", label: "Supporting" },
+              ]}
+            />
+          </div>
+        )}
         {error && (
           <div className="review-failed" role="alert" data-testid="review-add-error">
             {error}

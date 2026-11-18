@@ -72,6 +72,44 @@ describe("useProposalActions", () => {
     });
   });
 
+  it("sends gold annotations with an apply and a reject", async () => {
+    const bodies: unknown[] = [];
+    server.use(
+      http.post("*/api/proposals/proposal-1/apply", async ({ request }) => {
+        bodies.push(await request.json());
+        return HttpResponse.json(proposal);
+      }),
+      http.post("*/api/proposals/proposal-1/reject", async ({ request }) => {
+        bodies.push(await request.json());
+        return HttpResponse.json(proposal);
+      }),
+    );
+    const { result } = renderHook(() => useProposalActions(proposal), { wrapper });
+
+    await act(async () => {
+      await result.current.accept(["op-1"], {
+        annotations: { "op-1": { tier: "core", also_defensible: ["class-2"] } },
+      });
+      await result.current.rejectOperations(["op-1"], "a heading", {
+        annotations: { "op-1": { tier: "supporting" } },
+      });
+    });
+
+    expect(bodies).toEqual([
+      {
+        operation_ids: ["op-1"],
+        force_stale: [],
+        edits: {},
+        annotations: { "op-1": { tier: "core", also_defensible: ["class-2"] } },
+      },
+      {
+        operation_ids: ["op-1"],
+        note: "a heading",
+        annotations: { "op-1": { tier: "supporting" } },
+      },
+    ]);
+  });
+
   it("leaves review_ms out of an apply without one", async () => {
     let body: ChangeProposalApplyRequest | undefined;
     server.use(

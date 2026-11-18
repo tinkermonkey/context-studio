@@ -30,6 +30,7 @@ import { Route as AppReferenceSourcesRouteImport } from './routes/app/reference/
 import { Route as AppProposalsProposalIdRouteImport } from './routes/app/proposals_.$proposalId'
 import { Route as AppPipelinesRunsRouteImport } from './routes/app/pipelines/runs'
 import { Route as AppPipelinesReviewRouteImport } from './routes/app/pipelines/review'
+import { Route as AppPipelinesGoldRouteImport } from './routes/app/pipelines/gold'
 import { Route as AppDataSourcesRouteImport } from './routes/app/data/sources'
 import { Route as AppDataIndividualsRouteImport } from './routes/app/data/individuals'
 import { Route as AppDataDatasetsRouteImport } from './routes/app/data/datasets'
@@ -148,6 +149,11 @@ const AppPipelinesReviewRoute = AppPipelinesReviewRouteImport.update({
   path: '/pipelines/review',
   getParentRoute: () => AppRoute,
 } as any)
+const AppPipelinesGoldRoute = AppPipelinesGoldRouteImport.update({
+  id: '/pipelines/gold',
+  path: '/pipelines/gold',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppDataSourcesRoute = AppDataSourcesRouteImport.update({
   id: '/data/sources',
   path: '/data/sources',
@@ -226,6 +232,7 @@ export interface FileRoutesByFullPath {
   '/app/data/datasets': typeof AppDataDatasetsRoute
   '/app/data/individuals': typeof AppDataIndividualsRoute
   '/app/data/sources': typeof AppDataSourcesRoute
+  '/app/pipelines/gold': typeof AppPipelinesGoldRoute
   '/app/pipelines/review': typeof AppPipelinesReviewRoute
   '/app/pipelines/runs': typeof AppPipelinesRunsRoute
   '/app/proposals/$proposalId': typeof AppProposalsProposalIdRoute
@@ -260,6 +267,7 @@ export interface FileRoutesByTo {
   '/app/data/datasets': typeof AppDataDatasetsRoute
   '/app/data/individuals': typeof AppDataIndividualsRoute
   '/app/data/sources': typeof AppDataSourcesRoute
+  '/app/pipelines/gold': typeof AppPipelinesGoldRoute
   '/app/pipelines/review': typeof AppPipelinesReviewRoute
   '/app/pipelines/runs': typeof AppPipelinesRunsRoute
   '/app/proposals/$proposalId': typeof AppProposalsProposalIdRoute
@@ -295,6 +303,7 @@ export interface FileRoutesById {
   '/app/data/datasets': typeof AppDataDatasetsRoute
   '/app/data/individuals': typeof AppDataIndividualsRoute
   '/app/data/sources': typeof AppDataSourcesRoute
+  '/app/pipelines/gold': typeof AppPipelinesGoldRoute
   '/app/pipelines/review': typeof AppPipelinesReviewRoute
   '/app/pipelines/runs': typeof AppPipelinesRunsRoute
   '/app/proposals_/$proposalId': typeof AppProposalsProposalIdRoute
@@ -332,6 +341,7 @@ export interface FileRouteTypes {
     | '/app/data/datasets'
     | '/app/data/individuals'
     | '/app/data/sources'
+    | '/app/pipelines/gold'
     | '/app/pipelines/review'
     | '/app/pipelines/runs'
     | '/app/proposals/$proposalId'
@@ -366,6 +376,7 @@ export interface FileRouteTypes {
     | '/app/data/datasets'
     | '/app/data/individuals'
     | '/app/data/sources'
+    | '/app/pipelines/gold'
     | '/app/pipelines/review'
     | '/app/pipelines/runs'
     | '/app/proposals/$proposalId'
@@ -400,6 +411,7 @@ export interface FileRouteTypes {
     | '/app/data/datasets'
     | '/app/data/individuals'
     | '/app/data/sources'
+    | '/app/pipelines/gold'
     | '/app/pipelines/review'
     | '/app/pipelines/runs'
     | '/app/proposals_/$proposalId'
@@ -578,6 +590,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppPipelinesReviewRouteImport
       parentRoute: typeof AppRoute
     }
+    '/app/pipelines/gold': {
+      id: '/app/pipelines/gold'
+      path: '/pipelines/gold'
+      fullPath: '/app/pipelines/gold'
+      preLoaderRoute: typeof AppPipelinesGoldRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/app/data/sources': {
       id: '/app/data/sources'
       path: '/data/sources'
@@ -686,6 +705,7 @@ interface AppRouteChildren {
   AppDataDatasetsRoute: typeof AppDataDatasetsRoute
   AppDataIndividualsRoute: typeof AppDataIndividualsRoute
   AppDataSourcesRoute: typeof AppDataSourcesRoute
+  AppPipelinesGoldRoute: typeof AppPipelinesGoldRoute
   AppPipelinesReviewRoute: typeof AppPipelinesReviewRoute
   AppPipelinesRunsRoute: typeof AppPipelinesRunsRoute
   AppProposalsProposalIdRoute: typeof AppProposalsProposalIdRoute
@@ -718,6 +738,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppDataDatasetsRoute: AppDataDatasetsRoute,
   AppDataIndividualsRoute: AppDataIndividualsRoute,
   AppDataSourcesRoute: AppDataSourcesRoute,
+  AppPipelinesGoldRoute: AppPipelinesGoldRoute,
   AppPipelinesReviewRoute: AppPipelinesReviewRoute,
   AppPipelinesRunsRoute: AppPipelinesRunsRoute,
   AppProposalsProposalIdRoute: AppProposalsProposalIdRoute,
