@@ -51,6 +51,8 @@ from tests.integration.pipelines._harness.cassettes import (
 )
 from tests.integration.pipelines._harness.dataset_split import OntologyContext
 from tests.integration.pipelines._harness.dr_spec import pinned_dr_spec_dir
+from tests.integration.pipelines._harness.report import metrics_dir_for_run
+
 
 def _find_dr_spec_dir() -> Path | None:
     """
@@ -283,6 +285,30 @@ def pytest_addoption(parser):
         action="store_true",
         default=False,
         help="Re-record all cassettes against live providers",
+    )
+    parser.addoption(
+        "--record-metrics",
+        action="store_true",
+        default=False,
+        help=(
+            "Append quality metrics rows to the committed "
+            "tests/integration/fixtures/pipelines/_metrics/*.jsonl history "
+            "(by default they go to a temporary directory)"
+        ),
+    )
+
+
+@pytest.fixture(scope="session")
+def quality_metrics_dir(request, tmp_path_factory) -> Path:
+    """Directory the quality suites write metrics rows to.
+
+    A temporary directory shared by the whole session, so a normal run leaves the
+    committed _metrics history untouched; the committed directory only with
+    --record-metrics.
+    """
+    return metrics_dir_for_run(
+        record=request.config.getoption("--record-metrics"),
+        scratch_dir=tmp_path_factory.mktemp("quality_metrics"),
     )
 
 

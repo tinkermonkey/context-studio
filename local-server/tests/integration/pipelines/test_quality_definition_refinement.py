@@ -28,6 +28,7 @@ from adapters.persistence.sqlite.models import Base
 from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
 from config import get_settings
 from domain.ontology.entities import Class, ConceptScheme, Taxonomy
+from domain.ontology.services import OntologyService
 from domain.pipelines.entities import PipelineRun, PipelineType
 from domain.pipelines.refinement.neighborhood import SchemaNeighborhoodTraversal
 from domain.pipelines.registry import (
@@ -44,12 +45,15 @@ from domain.pipelines.schema_node_definition_refinement.orchestrator import (
     DefinitionRefinementOrchestrator,
     DefinitionRefinementState,
 )
-from tests.integration.pipelines._harness.cassettes import CassetteLLMProvider
-from tests.integration.pipelines._harness.metrics import cosine_similarity
-from tests.integration.pipelines._harness.report import FloorGate, MetricsEmitter
-from domain.ontology.services import OntologyService
 from tests.fakes.fake_embedding_service import FakeEmbeddingService
 from tests.fakes.fake_event_publisher import FakeEventPublisher
+from tests.integration.pipelines._harness.cassettes import CassetteLLMProvider
+from tests.integration.pipelines._harness.metrics import cosine_similarity
+from tests.integration.pipelines._harness.report import (
+    FloorGate,
+    MetricsEmitter,
+    metrics_file_to_aggregate,
+)
 
 _logger = logging.getLogger(__name__)
 
@@ -161,11 +165,9 @@ def registered_definition_refinement(session_factory):
 
 
 @pytest.fixture
-def metrics_emitter():
-    """Create a MetricsEmitter for JSONL output."""
-    metrics_dir = Path(__file__).parent.parent / "fixtures" / "pipelines" / "_metrics"
-    metrics_dir.mkdir(parents=True, exist_ok=True)
-    return MetricsEmitter(metrics_dir)
+def metrics_emitter(quality_metrics_dir):
+    """Create a MetricsEmitter for JSONL output (committed history only with --record-metrics)."""
+    return MetricsEmitter(quality_metrics_dir)
 
 
 @pytest.fixture
@@ -645,8 +647,10 @@ class TestQualityDefinitionRefinementAggregation:
 
         FR-P4.2, FR-P4.3: Floors: mean cosine >= 0.75, pct_above_060 >= 80%
         """
-        # Read emitted metrics from JSONL file
-        metrics_file = metrics_emitter._metrics_dir / "definition_refinement.jsonl"
+        # This run's rows if the scenarios ran, else the committed history
+        metrics_file = metrics_file_to_aggregate(
+            metrics_emitter._metrics_dir, "definition_refinement"
+        )
 
         if not metrics_file.exists():
             pytest.skip(

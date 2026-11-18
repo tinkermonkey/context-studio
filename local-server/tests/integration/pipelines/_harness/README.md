@@ -55,7 +55,9 @@ All fixture loading delegates to `tests/fixtures/pipeline_fixtures.py`, which su
 
 JSONL metrics emission and floor gating.
 
-- `MetricsEmitter`: Appends versioned JSONL rows to `_metrics/`
+- `MetricsEmitter`: Appends versioned JSONL rows to a metrics directory
+- `metrics_dir_for_run`, `metrics_file_to_aggregate`: Where a run writes its rows and what an
+  aggregate gate reads (see Metrics Artifact)
 - `FloorGate`: Asserts metrics against configurable floors
 - `ABReport`: Formats side-by-side A/B comparison output
 
@@ -94,9 +96,25 @@ pytest tests/integration/pipelines/test_quality_*.py -m real_llm
 - Requires `@pytest.mark.external_network` marker (implies network access)
 - Used for validation and multi-model A/B comparison
 
+### Record Metrics
+
+```bash
+pytest tests/integration/pipelines/test_quality_*.py --record-metrics
+```
+
+- Appends this run's rows to the committed metrics history (see below)
+- Without it, rows go to a temporary directory for the session, so a test run leaves
+  the working tree clean
+- Combine with `--refresh-cassettes` or `-m real_llm` when a new recording or live run
+  should become part of the history; commit the appended rows on purpose
+
 ## Metrics Artifact
 
-Appended to `tests/integration/fixtures/pipelines/_metrics/{pipeline_type}.jsonl`.
+Committed history: `tests/integration/fixtures/pipelines/_metrics/{pipeline_type}.jsonl`.
+Rows are appended there only with `--record-metrics`. Suites get their directory from the
+`quality_metrics_dir` fixture (`conftest.py`), never a fixed path. The aggregate gates in the
+connection and definition refinement suites read this run's rows when the scenarios ran,
+otherwise the committed history.
 
 Each row is a versioned envelope:
 
@@ -300,8 +318,9 @@ def quality_runner(quality_llm_provider):
     return QualityRunner(quality_llm_provider)
 
 @pytest.fixture
-def metrics_emitter():
-    return MetricsEmitter(Path("tests/integration/fixtures/pipelines/_metrics"))
+def metrics_emitter(quality_metrics_dir):
+    # A temp dir unless the run passes --record-metrics
+    return MetricsEmitter(quality_metrics_dir)
 
 def test_quality_individual_extraction_across_corpus(
     quality_runner,
