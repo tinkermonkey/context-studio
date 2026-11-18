@@ -40,6 +40,9 @@ ux/node_modules
 ux/dist/
 ux/.vite/
 
+# QA instance of a git worktree (./dev.sh --worktree): database copies, config, logs
+/.qa-instance/
+
 # Screenshots (Claude debugging/review artifacts)
 screenshots/
 

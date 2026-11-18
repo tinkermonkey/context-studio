@@ -217,6 +217,8 @@ python app.py
 - The `.venv` directory lives at `local-server/.venv` and is gitignored
 - Server logs are at `local-server/logs/context_studio.log`
 
+**From a git worktree**, don't hand-link the venv, copy databases or edit config. Run a QA instance of the branch with `./dev.sh --worktree --from-workspace` from the worktree root. It prints the UI and API URLs (ports 8000+N and 3100+N; pick N with `--port-offset N`). After a back-end change run `./dev.sh --worktree --restart-backend`, and when done `./dev.sh --worktree --stop`, which removes the database copies, the generated config and the links. `./dev.sh --worktree --setup` only links the venv, `.env` and `node_modules`, which is enough for the tests and the E2E harness. The command refuses to run in the main checkout and only reads the workspace databases. See the README's "A QA instance from a git worktree".
+
 ### Dependency Rule
 
 All imports point inward. `domain/` has **zero imports** from `adapters/`, `database/`, FastAPI, SQLAlchemy, or any other infrastructure. Verify with `scripts/check_domain_imports.py`.
