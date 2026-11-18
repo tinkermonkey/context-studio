@@ -79,8 +79,8 @@ A configuration's stage prompts are the ones sent, so a prompt-only variant is a
 `default`, which says nothing about being the default. With no flags the target is the type's
 default implementation, with the configuration its recordings were made with, so
 `python scripts/benchmark_replay.py` replays `single_call`. To replay another, name it:
-`--implementation find_then_type` (prints `dev typed F1 0.465, found F1 0.534`) or
-`--implementation default` for two-pass (prints `dev typed F1 0.114, found F1 0.411`). The
+`--implementation find_then_type` (prints `dev typed F1 0.446, found F1 0.527`) or
+`--implementation default` for two-pass (prints `dev typed F1 0.101, found F1 0.400`). The
 refinement loop has no backlog for `single_call`: name `find_then_type` to run it.
 
 | target | recordings | recorded with |
@@ -166,6 +166,15 @@ only prints what it would record) if `open_v1`'s numbers matter.
 | `wikimedia_enterprise` (holdout) | 0.326 | 0.156 | 0.232 (0.289) | 0.548 | 0.478 | 0.000 |
 | **dev mean** | **0.411** | **0.114** | 0.342 (0.564) | 0.535 | 0.273 | 0.018 |
 
+**Re-scored 2026-11-18 against the human-checked `edit_check` gold, from the same recordings:**
+
+| | found F1 | typed F1 | recall (core) | precision | type accuracy | relationship recall |
+|---|---|---|---|---|---|---|
+| `edit_check` (dev) | 0.236 | 0.042 | 0.233 (0.308) | 0.239 | 0.176 | 0.000 |
+| **dev mean** | **0.400** | **0.101** | 0.334 (0.551) | 0.521 | 0.230 | 0.018 |
+
+The other two documents are unchanged.
+
 Triple-corpus guard for the same recordings: dev strict-F1 0.932, soft-F1 0.943.
 
 Type accuracy counts a found individual as typed correctly only when every class the run gave it
@@ -203,6 +212,15 @@ dev typed F1 0.446.
 | `gitlab_architecture` (dev) | 0.635 | 0.541 | 0.607 (0.889) | 0.667 | 0.851 | 0.265 |
 | `wikimedia_enterprise` (holdout) | 0.513 | 0.481 | 0.485 (0.658) | 0.545 | 0.938 | 0.036 |
 | **dev mean** | **0.534** | **0.465** | 0.560 (0.814) | 0.521 | 0.874 | 0.180 |
+
+**Re-scored 2026-11-18 against the human-checked `edit_check` gold, from the same recordings:**
+
+| | found F1 | typed F1 | recall (core) | precision | type accuracy | relationship recall |
+|---|---|---|---|---|---|---|
+| `edit_check` (dev) | 0.418 | 0.350 | 0.507 (0.744) | 0.356 | 0.838 | 0.111 |
+| **dev mean** | **0.527** | **0.446** | 0.557 (0.816) | 0.511 | 0.845 | 0.188 |
+
+The other two documents are unchanged. The failure counts below are from the model-made gold.
 
 Dev failure counts: 18 core and 67 supporting individuals missed, 15 mistyped, 93 spurious, 9
 known distractors extracted, 109 relationships missed. Against the baseline above, the gain is in
