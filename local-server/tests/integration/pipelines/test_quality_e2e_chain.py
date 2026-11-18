@@ -232,11 +232,9 @@ def registered_pipelines(session_factory):
 
 
 @pytest.fixture
-def metrics_emitter():
-    """Create a MetricsEmitter for JSONL output."""
-    metrics_dir = Path(__file__).parent.parent / "fixtures" / "pipelines" / "_metrics"
-    metrics_dir.mkdir(parents=True, exist_ok=True)
-    return MetricsEmitter(metrics_dir)
+def metrics_emitter(quality_metrics_dir):
+    """Create a MetricsEmitter for JSONL output (committed history only with --record-metrics)."""
+    return MetricsEmitter(quality_metrics_dir)
 
 
 @pytest.fixture(scope="session")

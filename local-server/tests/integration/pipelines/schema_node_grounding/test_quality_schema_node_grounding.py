@@ -24,6 +24,7 @@ from adapters.reference.schema_org import SchemaOrgSource
 from adapters.reference.wikidata import WikidataSource
 from config import get_settings
 from domain.ontology.entities import Class
+from domain.ontology.services import OntologyService
 from domain.pipelines.entities import PipelineRunStatus, PipelineType
 from domain.pipelines.schema_node_grounding.apply_service import (
     SchemaGroundingApplyService,
@@ -33,6 +34,8 @@ from domain.pipelines.schema_node_grounding.orchestrator import (
     SchemaGroundingState,
 )
 from domain.pipelines.schema_node_grounding.scoring import GroundingScorer
+from tests.fakes.fake_embedding_service import FakeEmbeddingService
+from tests.fakes.fake_event_publisher import FakeEventPublisher
 from tests.fixtures.pipeline_fixtures import (
     load_distractors,
     load_expected_output,
@@ -48,9 +51,6 @@ from tests.integration.pipelines._harness.cassettes import (
     RecordingHTTPTransport,
     RecordingLLMProvider,
 )
-from domain.ontology.services import OntologyService
-from tests.fakes.fake_embedding_service import FakeEmbeddingService
-from tests.fakes.fake_event_publisher import FakeEventPublisher
 
 _test_file = os.path.abspath(__file__)
 _test_dir = os.path.dirname(_test_file)
@@ -92,13 +92,6 @@ def _list_fixture_scenarios() -> list[str]:
     return sorted(
         [d.name for d in fixtures_dir.iterdir() if d.is_dir() and (d / "input.json").exists()]
     )
-
-
-def _get_metrics_dir() -> Path:
-    """Get the metrics artifact directory."""
-    metrics_dir = _get_fixtures_dir().parent / "_metrics"
-    metrics_dir.mkdir(parents=True, exist_ok=True)
-    return metrics_dir
 
 
 class TestQualitySchemaNodeGrounding:
@@ -165,7 +158,7 @@ class TestQualitySchemaNodeGrounding:
 
     @pytest.mark.asyncio
     async def test_quality_metrics_computation_all_fixtures(
-        self, grounding_adapter, grounding_scorer
+        self, grounding_adapter, grounding_scorer, quality_metrics_dir
     ):
         """
         Execute all 30+ fixtures through grounding orchestrator and compute ranking metrics.
@@ -207,8 +200,7 @@ class TestQualitySchemaNodeGrounding:
         )
 
         # Initialize metrics emission
-        metrics_dir = _get_metrics_dir()
-        emitter = MetricsEmitter(metrics_dir)
+        emitter = MetricsEmitter(quality_metrics_dir)
 
         # Collect per-fixture metrics for aggregation
         all_top1_scores = []
@@ -455,7 +447,7 @@ class TestQualitySchemaNodeGrounding:
 
     @pytest.mark.real_llm
     @pytest.mark.asyncio
-    async def test_live_quality_metrics_sample(self, request):
+    async def test_live_quality_metrics_sample(self, request, quality_metrics_dir):
         """
         Live test for grounding quality with real LLM provider and HTTP sources.
 
@@ -534,8 +526,7 @@ class TestQualitySchemaNodeGrounding:
         sample_scenarios = quality_scenarios[:5]  # Test first 5 scenarios
 
         grounding_scorer = GroundingScorer()
-        metrics_dir = _get_metrics_dir()
-        emitter = MetricsEmitter(metrics_dir)
+        emitter = MetricsEmitter(quality_metrics_dir)
 
         all_top1_scores = []
         all_top3_scores = []

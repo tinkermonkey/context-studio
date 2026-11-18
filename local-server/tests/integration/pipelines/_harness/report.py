@@ -1,7 +1,11 @@
 """JSONL metrics artifact emission and floor gating.
 
-Writes versioned JSONL rows to _metrics/ directory for queryable
+Writes versioned JSONL rows to a metrics directory for queryable
 metric history and A/B comparison aggregation.
+
+The committed history lives in COMMITTED_METRICS_DIR. A normal test run writes
+its rows to a scratch directory instead, so it leaves the working tree clean;
+only a run with --record-metrics appends to the committed files.
 """
 
 import json
@@ -9,6 +13,38 @@ import math
 import uuid
 from datetime import datetime, timezone
 from pathlib import Path
+
+COMMITTED_METRICS_DIR = (
+    Path(__file__).resolve().parent.parent.parent / "fixtures" / "pipelines" / "_metrics"
+)
+
+
+def metrics_dir_for_run(record: bool, scratch_dir: Path) -> Path:
+    """Return where a quality run writes its metrics rows.
+
+    Args:
+        record: True when the run was started with --record-metrics.
+        scratch_dir: The run's own temporary directory.
+
+    Returns:
+        COMMITTED_METRICS_DIR when recording, else scratch_dir.
+    """
+    return COMMITTED_METRICS_DIR if record else scratch_dir
+
+
+def metrics_file_to_aggregate(run_metrics_dir: Path, pipeline_type: str) -> Path:
+    """Return the metrics file an aggregate gate reads.
+
+    The rows this run emitted when there are any; otherwise the committed history.
+
+    Args:
+        run_metrics_dir: Where this run's emitter writes.
+        pipeline_type: Pipeline type; the file is {pipeline_type}.jsonl.
+    """
+    run_file = Path(run_metrics_dir) / f"{pipeline_type}.jsonl"
+    if run_file.exists():
+        return run_file
+    return COMMITTED_METRICS_DIR / f"{pipeline_type}.jsonl"
 
 
 class MetricsEmitter:
