@@ -129,6 +129,33 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/taxonomies/{taxonomy_id}/classes": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List Taxonomy Classes
+     * @description Every class of the taxonomy, across its concept schemes, by title, in one request.
+     *
+     *     Not paginated: a taxonomy's classes are its schema, a bounded set. Each class
+     *     carries its scheme, description, derived flag and references; `embedding` is
+     *     left out (null), since no reader of this list uses it and it dwarfs the rest.
+     *
+     *     Raises:
+     *         HTTPException: 404 if the taxonomy is not found
+     */
+    get: operations["list_taxonomy_classes_api_taxonomies__taxonomy_id__classes_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/predicates": {
     parameters: {
       query?: never;
@@ -11988,6 +12015,37 @@ export interface operations {
         };
         content: {
           "application/json": components["schemas"]["PredicateResponse"][];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  list_taxonomy_classes_api_taxonomies__taxonomy_id__classes_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        taxonomy_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ClassResponse"][];
         };
       };
       /** @description Validation Error */

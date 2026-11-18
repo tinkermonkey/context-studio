@@ -2127,6 +2127,71 @@ class TestRelationshipListQueryParams:
         assert len(body["items"]) == 1
 
 
+class TestTaxonomyClasses:
+    """GET /api/taxonomies/{id}/classes: every class of a taxonomy in one request."""
+
+    def test_every_scheme_by_title_with_what_the_review_page_reads(
+        self, client, ontology_service, repository
+    ):
+        tax = ontology_service.create_taxonomy(title="Architecture")
+        app = ontology_service.create_scheme(taxonomy_id=tax.id, title="Application")
+        business = ontology_service.create_scheme(taxonomy_id=tax.id, title="Business")
+        service_cls = ontology_service.create_class(
+            concept_scheme_id=app.id,
+            title="Service",
+            description="Behaviour exposed to its environment",
+            standard_reference="ArchiMate 3.2",
+            external_references=[
+                ExternalReference(source="dr_spec", identifier="application.applicationservice")
+            ],
+        )
+        actor = ontology_service.create_class(
+            concept_scheme_id=business.id, title="Actor", derived=True
+        )
+        other = ontology_service.create_taxonomy(title="Other")
+        other_scheme = ontology_service.create_scheme(taxonomy_id=other.id, title="Elsewhere")
+        ontology_service.create_class(concept_scheme_id=other_scheme.id, title="Alien")
+        stored = repository.get_class(service_cls.id)
+        stored.embedding = [0.5, 0.25]
+        repository.save_class(stored)
+
+        response = client.get(f"/api/taxonomies/{tax.id}/classes")
+
+        assert response.status_code == status.HTTP_200_OK
+        body = response.json()
+        assert [c["id"] for c in body] == [actor.id, service_cls.id]
+        assert body[0]["concept_scheme_id"] == business.id
+        assert body[0]["derived"] is True
+        service_body = body[1]
+        assert service_body["concept_scheme_id"] == app.id
+        assert service_body["taxonomy_id"] == tax.id
+        assert service_body["description"] == "Behaviour exposed to its environment"
+        assert service_body["derived"] is False
+        assert service_body["standard_reference"] == "ArchiMate 3.2"
+        assert service_body["external_references"] == [
+            {
+                "source": "dr_spec",
+                "identifier": "application.applicationservice",
+                "uri": None,
+                "metadata": None,
+            }
+        ]
+        # The embedding is left out of this list.
+        assert service_body["embedding"] is None
+
+    def test_taxonomy_without_classes_is_empty(self, client):
+        taxonomy_id = client.post("/api/taxonomies", json={"title": "Empty"}).json()["id"]
+
+        response = client.get(f"/api/taxonomies/{taxonomy_id}/classes")
+
+        assert response.status_code == status.HTTP_200_OK
+        assert response.json() == []
+
+    def test_unknown_taxonomy_404(self, client):
+        response = client.get("/api/taxonomies/missing/classes")
+        assert response.status_code == status.HTTP_404_NOT_FOUND
+
+
 class TestTaxonomyAndSchemeQueryMatchesIdentifier:
     """GET /api/taxonomies and /api/schemes q also match the identifier."""
 

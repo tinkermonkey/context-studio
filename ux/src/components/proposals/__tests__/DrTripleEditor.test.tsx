@@ -83,6 +83,7 @@ const server = setupServer(
     list([createConceptScheme({ id: "scheme-b", taxonomy_id: "tax-dr" })]),
   ),
   http.get("*/api/classes", () => list(classes)),
+  http.get("*/api/taxonomies/:id/classes", () => HttpResponse.json(classes)),
   http.get("*/api/taxonomies/:id/predicates", () => HttpResponse.json(predicates)),
   http.get("*/api/properties", ({ request }) => {
     const domain = new URL(request.url).searchParams.get("domain_class_id");

@@ -331,6 +331,53 @@
         }
       }
     },
+    "/api/taxonomies/{taxonomy_id}/classes": {
+      "get": {
+        "tags": [
+          "ontology"
+        ],
+        "summary": "List Taxonomy Classes",
+        "description": "Every class of the taxonomy, across its concept schemes, by title, in one request.\n\nNot paginated: a taxonomy's classes are its schema, a bounded set. Each class\ncarries its scheme, description, derived flag and references; `embedding` is\nleft out (null), since no reader of this list uses it and it dwarfs the rest.\n\nRaises:\n    HTTPException: 404 if the taxonomy is not found",
+        "operationId": "list_taxonomy_classes_api_taxonomies__taxonomy_id__classes_get",
+        "parameters": [
+          {
+            "name": "taxonomy_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Taxonomy Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ClassResponse"
+                  },
+                  "title": "Response List Taxonomy Classes Api Taxonomies  Taxonomy Id  Classes Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/predicates": {
       "get": {
         "tags": [

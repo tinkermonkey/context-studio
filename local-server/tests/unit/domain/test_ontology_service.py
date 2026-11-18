@@ -4167,6 +4167,43 @@ def _seed_counted_model(service):
     return tax, app, empty, component, service_cls
 
 
+class TestListTaxonomyClasses:
+    """Tests for list_taxonomy_classes: every class of a taxonomy in one call."""
+
+    def test_classes_of_every_scheme_by_title_and_no_other_taxonomy(self, service):
+        tax, app, empty, component, service_cls = _seed_counted_model(service)
+        decision = service.create_class(empty.id, title="Decision", derived=True)
+        other = service.create_taxonomy(title="Other")
+        service.create_class(service.create_scheme(other.id, title="Elsewhere").id, title="Alien")
+
+        classes = service.list_taxonomy_classes(tax.id)
+
+        assert [c.title for c in classes] == ["Component", "Decision", "Service"]
+        assert {c.id: c.concept_scheme_id for c in classes} == {
+            component.id: app.id,
+            decision.id: empty.id,
+            service_cls.id: app.id,
+        }
+        assert [c.derived for c in classes] == [False, True, False]
+
+    def test_not_bounded_by_a_page_size(self, service):
+        tax = service.create_taxonomy(title="Big")
+        scheme = service.create_scheme(tax.id, title="Only")
+        for n in range(120):
+            service.create_class(scheme.id, title=f"Class {n:03d}")
+
+        assert len(service.list_taxonomy_classes(tax.id)) == 120
+
+    def test_taxonomy_without_classes_is_empty(self, service):
+        tax = service.create_taxonomy(title="Empty")
+
+        assert service.list_taxonomy_classes(tax.id) == []
+
+    def test_unknown_taxonomy_raises(self, service):
+        with pytest.raises(EntityNotFoundError):
+            service.list_taxonomy_classes("missing")
+
+
 class TestSchemeAndClassCounts:
     """Tests for get_scheme_counts and get_class_counts."""
 

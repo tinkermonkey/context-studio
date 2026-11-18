@@ -74,18 +74,15 @@ afterAll(() => server.close());
 /** dr_spec classes with DR references, and the taxonomy's predicate catalog. */
 function useDrSpec() {
   const dr = (identifier: string) => [{ source: "documentation_robotics", identifier }];
+  const drClasses = [
+    { ...component, external_references: dr("application.component") },
+    { ...serviceClass, external_references: dr("application.service") },
+  ];
   server.use(
     http.get("*/api/classes", () =>
-      HttpResponse.json({
-        items: [
-          { ...component, external_references: dr("application.component") },
-          { ...serviceClass, external_references: dr("application.service") },
-        ],
-        total: 2,
-        limit: 500,
-        offset: 0,
-      }),
+      HttpResponse.json({ items: drClasses, total: 2, limit: 500, offset: 0 }),
     ),
+    http.get("*/api/taxonomies/:id/classes", () => HttpResponse.json(drClasses)),
     http.get("*/api/taxonomies/:id/predicates", () =>
       HttpResponse.json(
         ["realizes", "serves", "uses"].map((identifier) =>

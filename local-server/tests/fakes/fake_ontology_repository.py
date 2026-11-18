@@ -232,8 +232,11 @@ class FakeOntologyRepository:
         sort_order: str = "asc",
         query: str | None = None,
         ids: list[str] | None = None,
+        taxonomy_id: str | None = None,
     ) -> list[Class]:
         results = list(self._classes.values())
+        if taxonomy_id is not None:
+            results = [c for c in results if c.taxonomy_id == taxonomy_id]
         if concept_scheme_id is not None:
             results = [c for c in results if c.concept_scheme_id == concept_scheme_id]
         if parent_class_id is not None:

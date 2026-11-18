@@ -678,9 +678,12 @@ class SQLiteOntologyRepository:
         parent_class_id: Optional[str] = None,
         query: Optional[str] = None,
         ids: Optional[list[str]] = None,
+        taxonomy_id: Optional[str] = None,
     ) -> Any:
         """Build the filtered class query shared by list_classes and count_classes."""
         q = session.query(OntologyEntity).filter(OntologyEntity.node_type == NodeType.CLASS)
+        if taxonomy_id is not None:
+            q = q.filter(OntologyEntity.taxonomy_id == taxonomy_id)
         if concept_scheme_id is not None:
             q = q.filter(OntologyEntity.concept_scheme_id == concept_scheme_id)
         if parent_class_id is not None:
@@ -701,9 +704,10 @@ class SQLiteOntologyRepository:
         sort_order: Literal["asc", "desc"] = "asc",
         query: Optional[str] = None,
         ids: Optional[list[str]] = None,
+        taxonomy_id: Optional[str] = None,
     ) -> list[Class]:
         """
-        List classes, optionally filtered by concept scheme, parent class, text or ids.
+        List classes, optionally filtered by taxonomy, concept scheme, parent class, text or ids.
 
         Args:
             concept_scheme_id: Optional concept scheme ID to filter by
@@ -714,12 +718,15 @@ class SQLiteOntologyRepository:
             sort_order: Sort direction (asc or desc)
             query: Case-insensitive "title or identifier contains" text filter
             ids: Optional list of class IDs to restrict results to
+            taxonomy_id: Optional taxonomy ID to filter by (every scheme of it)
 
         Returns:
             Sequence of Class entities
         """
         with self.session_factory() as session:
-            q = self._class_query(session, concept_scheme_id, parent_class_id, query, ids)
+            q = self._class_query(
+                session, concept_scheme_id, parent_class_id, query, ids, taxonomy_id
+            )
             q = _apply_entity_sort(q, sort_by, sort_order)
             if limit is not None:
                 q = q.limit(limit)

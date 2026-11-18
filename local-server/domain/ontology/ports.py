@@ -247,6 +247,7 @@ class OntologyRepository(Protocol):
         sort_order: Literal["asc", "desc"] = "asc",
         query: str | None = None,
         ids: list[str] | None = None,
+        taxonomy_id: str | None = None,
     ) -> list[Class]:
         """
         Retrieve classes with optional filtering, sorting, text search and pagination.
@@ -260,6 +261,7 @@ class OntologyRepository(Protocol):
             sort_order: Sort direction (asc or desc)
             query: Case-insensitive "title or identifier contains" text filter
             ids: Optional list of class IDs to restrict results to
+            taxonomy_id: Optional taxonomy ID to filter by (every scheme of it)
 
         Returns:
             List of Class entities

@@ -186,6 +186,11 @@ class OntologyService extends BaseService {
     return this.get<ListClasses>("/api/classes", params as Record<string, unknown>);
   }
 
+  /** Every class of one taxonomy, across its schemes, by title (embeddings left out). */
+  async listTaxonomyClasses(taxonomyId: string): Promise<ClassResponse[]> {
+    return this.get<ClassResponse[]>(`/api/taxonomies/${taxonomyId}/classes`);
+  }
+
   async getClass(id: string): Promise<ClassResponse> {
     return this.get<ClassResponse>(`/api/classes/${id}`);
   }
