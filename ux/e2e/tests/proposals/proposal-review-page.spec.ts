@@ -392,7 +392,7 @@ test.describe("Proposal review page", () => {
     await expect(page.getByTestId("review-correct")).toBeEnabled();
     await expect(page.getByTestId("review-better-class")).toBeVisible();
     await expect(page.getByTestId("review-reasons")).toBeVisible();
-    await expect(page.getByTestId("review-relationships")).toContainText("Its relationships · 0");
+    await expect(page.getByTestId("review-relationships")).toContainText("ITS RELATIONSHIPS · 0");
 
     // 10. A highlight click opens its element.
     await customersMark.click();
@@ -462,7 +462,7 @@ test.describe("Proposal review page", () => {
 
     // 2. A better class (element 2), from the picker.
     const relationships = page.getByTestId("review-relationships");
-    await expect(relationships).toContainText("Its relationships · 1");
+    await expect(relationships).toContainText("ITS RELATIONSHIPS · 1");
     await expect(relationships.getByTestId(`review-relationship-${ops.serves}`)).toBeVisible();
     const picker = page.getByTestId("review-class-picker");
     await expect(picker).toContainText("Search all 3 classes");
@@ -521,9 +521,9 @@ test.describe("Proposal review page", () => {
     const serves = relationships.getByTestId(`review-relationship-${ops.serves}`);
     await expect(serves).toContainText("Mail Gateway");
     await expect(serves).toContainText("e2e_review_serves");
-    // From Customers: the predicate, the other end and its class, as pills.
+    // From Customers: a card read as a sentence ("Mail Gateway serves → this"), a link to it.
     await expect(serves).toContainText("awaiting");
-    await serves.getByTestId(`review-relationship-${ops.serves}-open`).click();
+    await serves.click();
 
     await expect(row(page, ops.serves)).toHaveAttribute("aria-selected", "true");
     await expect(page.getByTestId("review-inspector-eyebrow")).toContainText(

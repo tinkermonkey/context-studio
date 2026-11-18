@@ -6,17 +6,24 @@ import {
   type MouseEvent,
   type ReactNode,
 } from "react";
-import { ArrowRight, Info, Shapes } from "lucide-react";
+import { ArrowDown, ArrowRight, Info } from "lucide-react";
 import { Chip } from "@tinkermonkey/heimdall-ui";
+import { entityPath } from "@/lib/entityPaths";
 import type { HoverOverlay } from "../HoverOverlay";
 import { VERDICT_CHIP, type Verdict } from "./reviewModel";
 import type { ReviewSchema } from "./reviewSchema";
 
 /**
- * The Review page's pills: a class, an individual or a relationship's
- * predicate, each a small tag that shows more about it in the app's hover
- * overlay (beside the inspector) while hovered or focused. An individual or
- * relationship of the proposal is also a link that opens it (?selected=...).
+ * The Review page's three kinds, the same everywhere on the page, each with a
+ * hover card in the app's hover overlay (beside the inspector):
+ *
+ * - an individual: plain bold text with a dot and a dotted underline, not a
+ *   pill (it is the thing being reviewed); a link that selects it;
+ * - a class: a small violet tag, square-cornered, monospace, with a diamond;
+ * - a predicate: a round cyan pill, monospace, with an arrow for its direction.
+ *
+ * Inside a link (a relationship card) they render as static tags without a
+ * hover, since a link can't hold another control.
  */
 
 /** How to open an operation of the proposal: a real href, and a plain click selecting it. */
@@ -41,53 +48,108 @@ function usePills(): ReviewPillsValue {
   return value;
 }
 
-/** How many relationship types an overlay lists before "and N more". */
-const TYPES_LISTED = 8;
+/** How to open an operation of the proposal (a link's href and click). */
+export function useOperationLink(): (operationId: string) => OperationLink {
+  return usePills().link;
+}
 
-function TypeList({ title, items }: { title: string; items: string[] }) {
-  if (items.length === 0) return null;
-  const unique = [...new Set(items)];
+/** How many relationship types a class card lists in each direction before "n more". */
+const TYPES_LISTED = 4;
+/** How much of an individual's evidence its card quotes. */
+const QUOTE_CHARS = 110;
+
+/** The class diamond. */
+export function Diamond({ size = 9 }: { size?: number }) {
   return (
-    <div className="review-card__section">
-      <span className="review-card__eyebrow">{`${title} · ${unique.length}`}</span>
-      <ul className="review-card__list">
-        {unique.slice(0, TYPES_LISTED).map((item) => (
-          <li key={item}>{item}</li>
-        ))}
-      </ul>
-      {unique.length > TYPES_LISTED && (
-        <span className="review-card__more">and {unique.length - TYPES_LISTED} more</span>
+    <svg width={size} height={size} viewBox="0 0 10 10" aria-hidden="true">
+      <path d="M5 0.8 9.2 5 5 9.2 0.8 5Z" fill="none" stroke="currentColor" strokeWidth="1.4" />
+    </svg>
+  );
+}
+
+/** An individual's dot. */
+function Dot() {
+  return (
+    <svg className="review-ind__dot" width="8" height="8" viewBox="0 0 8 8" aria-hidden="true">
+      <circle cx="4" cy="4" r="4" fill="currentColor" />
+    </svg>
+  );
+}
+
+function TypeLines({
+  title,
+  lines,
+}: {
+  title: string;
+  lines: { predicate: string; other: string; into: boolean }[];
+}) {
+  const unique = lines.filter(
+    (l, i) => lines.findIndex((x) => x.predicate === l.predicate && x.other === l.other) === i,
+  );
+  return (
+    <>
+      <span className="review-card__eyebrow">{title}</span>
+      {unique.length === 0 ? (
+        <span className="review-card__line review-card__muted">None in the schema</span>
+      ) : (
+        <>
+          {unique.slice(0, TYPES_LISTED).map((l) => (
+            <span key={`${l.predicate}-${l.other}`} className="review-card__line">
+              {l.into && <span className="review-card__class">{l.other} </span>}
+              <span className="review-card__predicate">{l.predicate} →</span>
+              {!l.into && <span className="review-card__class"> {l.other}</span>}
+            </span>
+          ))}
+          {unique.length > TYPES_LISTED && (
+            <span className="review-card__line review-card__muted">
+              and {unique.length - TYPES_LISTED} more
+            </span>
+          )}
+        </>
+      )}
+    </>
+  );
+}
+
+/**
+ * A class's card: its name, what it means, the relationships the schema
+ * allows from it and into it, and a link to the class.
+ */
+export function ClassCard({ classId, schema }: { classId?: string; schema: ReviewSchema }) {
+  const cls = schema.classOf(classId);
+  const from = schema.typesFrom(classId).map((p) => ({
+    predicate: schema.predicateLabel(p.id),
+    other: schema.classLabel(p.range_class_id),
+    into: false,
+  }));
+  const into = schema.typesTo(classId).map((p) => ({
+    predicate: schema.predicateLabel(p.id),
+    other: schema.classLabel(p.domain_class_id),
+    into: true,
+  }));
+  return (
+    <div className="review-card">
+      <span className="review-card__name review-card__name--class">
+        {schema.classLabel(classId)}
+      </span>
+      {cls && schema.layerOf(classId) && (
+        <span className="review-card__muted">
+          {[cls.title, schema.layerOf(classId)].filter(Boolean).join(" · ")}
+        </span>
+      )}
+      <span className="review-card__text">{cls?.description || "No definition yet."}</span>
+      <TypeLines title="ALLOWED FROM IT" lines={from} />
+      <TypeLines title="ALLOWED INTO IT" lines={into} />
+      {classId && cls && (
+        <a className="review-card__link" href={entityPath("class", classId)}>
+          Open the class
+        </a>
       )}
     </div>
   );
 }
 
-/** A class's overlay: its definition, layer, and the relationships the schema allows from and to it. */
-export function ClassCard({ classId, schema }: { classId?: string; schema: ReviewSchema }) {
-  const cls = schema.classOf(classId);
-  const from = schema
-    .typesFrom(classId)
-    .map((p) => `${schema.predicateLabel(p.id)} → ${schema.classLabel(p.range_class_id)}`);
-  const to = schema
-    .typesTo(classId)
-    .map((p) => `${schema.classLabel(p.domain_class_id)} → ${schema.predicateLabel(p.id)}`);
-  const layer = schema.layerOf(classId);
-  return (
-    <>
-      <span className="definition-overlay__term">{schema.classLabel(classId)}</span>
-      {cls && (
-        <span className="review-card__sub">{[cls.title, layer].filter(Boolean).join(" · ")}</span>
-      )}
-      <p className="definition-overlay__text review-card__clamp">
-        {cls?.description || "No definition yet."}
-      </p>
-      <TypeList title="Relationships from it" items={from} />
-      <TypeList title="Relationships to it" items={to} />
-    </>
-  );
-}
-
-/** A relationship type's overlay: what its predicate means, and the classes it joins. */
+/** A relationship type's card: what its predicate means, and the classes it joins. */
 export function PredicateCard({
   propertyId,
   schema,
@@ -97,128 +159,94 @@ export function PredicateCard({
 }) {
   const property = schema.property(propertyId);
   return (
-    <>
-      <span className="definition-overlay__term">{schema.predicateLabel(propertyId)}</span>
-      {property && <span className="review-card__sub">{property.title}</span>}
-      <p className="definition-overlay__text review-card__clamp">
+    <div className="review-card">
+      <span className="review-card__name review-card__name--predicate">
+        {schema.predicateLabel(propertyId)}
+      </span>
+      <span className="review-card__text">
         {schema.predicateDefinition(propertyId) ?? "No definition yet."}
-      </p>
+      </span>
       {property && (
-        <div className="review-card__section">
-          <span className="review-card__eyebrow">Allowed</span>
-          <span className="review-card__line">
-            {schema.classLabel(property.domain_class_id) || "any"} →{" "}
-            {schema.classLabel(property.range_class_id) || "any"}
+        <span className="review-card__line">
+          From{" "}
+          <span className="review-card__class">
+            {property.domain_class_id ? schema.classLabel(property.domain_class_id) : "any class"}
+          </span>{" "}
+          to{" "}
+          <span className="review-card__class">
+            {property.range_class_id ? schema.classLabel(property.range_class_id) : "any class"}
           </span>
-        </div>
+        </span>
       )}
-    </>
+    </div>
   );
 }
 
-/** An individual's overlay: its class and what that means, and where it stands. */
+/** An individual's card: its title and decision, its class, its evidence, its relationships. */
 function IndividualCard({
   title,
   classId,
+  verdict,
   status,
-  schema,
+  quote,
+  relationships,
 }: {
   title: string;
   classId?: string;
+  verdict?: Verdict;
   status?: string;
-  schema: ReviewSchema;
+  quote?: string;
+  relationships?: number;
 }) {
-  const cls = schema.classOf(classId);
+  const snippet =
+    quote && (quote.length > QUOTE_CHARS ? `${quote.slice(0, QUOTE_CHARS).trimEnd()}…` : quote);
   return (
-    <>
-      <span className="definition-overlay__term">{title}</span>
-      <span className="review-card__sub">
-        {[schema.classLabel(classId), status].filter(Boolean).join(" · ")}
+    <div className="review-card">
+      <span className="review-card__head">
+        <span className="review-card__name">{title}</span>
+        {verdict && status ? (
+          <Chip variant={VERDICT_CHIP[verdict]}>{status}</Chip>
+        ) : (
+          status && <span className="review-card__muted">{status}</span>
+        )}
       </span>
-      {cls?.description && (
-        <p className="definition-overlay__text review-card__clamp review-card__clamp--short">
-          {cls.description}
-        </p>
+      {classId && <ClassTag classId={classId} />}
+      {snippet && <span className="review-card__text">“{snippet}”</span>}
+      {relationships !== undefined && (
+        <span className="review-card__muted">
+          {relationships} {relationships === 1 ? "relationship" : "relationships"} in this proposal
+        </span>
       )}
-    </>
+    </div>
   );
 }
 
-interface PillProps {
-  kind: "class" | "individual" | "predicate";
-  label: string;
-  card: () => ReactNode;
-  /** An operation of the proposal: the pill is a link that opens it. */
-  operationId?: string;
-  size?: "md" | "lg";
-  /** Extra classes, e.g. a verdict tint. */
-  className?: string;
-  "aria-label"?: string;
-  "data-testid"?: string;
-}
-
-/** A pill with a hover overlay: a link to an operation, else a button that only explains. */
-function Pill({
-  kind,
-  label,
-  card,
-  operationId,
-  size = "md",
-  icon,
-  className,
-  "aria-label": ariaLabel,
-  "data-testid": testId,
-}: PillProps & { icon?: ReactNode }) {
-  const { overlay, link } = usePills();
+/** Hover and focus handlers that show `card` in the overlay. */
+function useHover(card: () => ReactNode, testId = "review-pill-overlay") {
+  const { overlay } = usePills();
   const overlayId = useId();
   const show = (event: MouseEvent<HTMLElement> | FocusEvent<HTMLElement>) =>
-    overlay.show(overlayId, card(), event.currentTarget, "review-pill-overlay");
-  const handlers = {
+    overlay.show(overlayId, card(), event.currentTarget, testId);
+  return {
     onMouseEnter: show,
     onFocus: show,
     onMouseLeave: () => overlay.hide(overlayId),
     onBlur: () => overlay.hide(overlayId),
     "aria-describedby": overlay.openId === overlayId ? overlayId : undefined,
-    "aria-label": ariaLabel,
-    "data-testid": testId,
-    "data-pill": kind,
-    className: ["review-pill", `review-pill--${kind}`, `review-pill--${size}`, className]
-      .filter(Boolean)
-      .join(" "),
   };
-  const content = (
-    <>
-      {icon && (
-        <span className="review-pill__icon" aria-hidden="true">
-          {icon}
-        </span>
-      )}
-      <span className="review-pill__text">{label}</span>
-    </>
-  );
-  if (operationId) {
-    const { href, onClick } = link(operationId);
-    return (
-      <a {...handlers} href={href} onClick={onClick}>
-        {content}
-      </a>
-    );
-  }
-  return (
-    <button type="button" {...handlers}>
-      {content}
-    </button>
-  );
+}
+
+function classes(...names: (string | false | undefined)[]) {
+  return names.filter(Boolean).join(" ");
 }
 
 /**
- * A class as a pill: quiet and typed (a class icon, small monospace text), so
- * it never reads as the individual it types. Hover shows its definition and
- * the relationships it allows.
+ * A class: a small violet tag with a diamond (larger under an individual's
+ * title). Hover shows its definition and the relationships it allows.
  */
 export function ClassPill({
   classId,
-  size,
+  size = "md",
   "data-testid": testId,
 }: {
   classId?: string;
@@ -227,110 +255,156 @@ export function ClassPill({
 }) {
   const { schema } = usePills();
   const label = schema.classLabel(classId);
+  const hover = useHover(() => <ClassCard classId={classId} schema={schema} />);
   return (
-    <Pill
-      kind="class"
-      size={size}
-      label={label}
-      icon={<Shapes size={size === "lg" ? 14 : 11} strokeWidth={2} />}
+    <button
+      type="button"
+      {...hover}
+      className={classes("review-pill", "review-pill--class", `review-pill--${size}`)}
       aria-label={`Class ${label}`}
-      card={() => <ClassCard classId={classId} schema={schema} />}
+      data-pill="class"
       data-testid={testId}
-    />
+    >
+      <span className="review-pill__icon">
+        <Diamond size={size === "lg" ? 11 : 9} />
+      </span>
+      <span className="review-pill__text">{label}</span>
+    </button>
+  );
+}
+
+/** A class as a static tag (inside a link, where a hover control can't go). */
+export function ClassTag({ classId, children }: { classId?: string; children?: ReactNode }) {
+  const { schema } = usePills();
+  return (
+    <span className="review-pill review-pill--class review-pill--md" data-pill="class">
+      <span className="review-pill__icon">
+        <Diamond />
+      </span>
+      <span className="review-pill__text">{schema.classLabel(classId)}</span>
+      {children}
+    </span>
   );
 }
 
 /**
- * An individual: the primary thing, its title bold and link-like (a link to
- * its element when it is in the proposal), with its decision beside it when
- * given. Hover shows its class and what that means.
+ * An individual: plain bold text with a dot and a dotted underline, a link
+ * that selects its element when it is in the proposal. Hover shows its
+ * decision, class, evidence and relationships.
  */
 export function IndividualPill({
   title,
   classId,
   status,
   verdict,
-  hideStatus = false,
+  quote,
+  relationships,
   operationId,
-  size,
   "data-testid": testId,
 }: {
   title: string;
   classId?: string;
   /** Where it stands: a verdict's label, or "in the workspace". */
   status?: string;
-  /** Its verdict, shown beside it as a chip; without one, `status` shows as muted text. */
   verdict?: Verdict;
-  /** Keep the status for the overlay only (a row that shows another decision beside it). */
-  hideStatus?: boolean;
+  /** A passage of its evidence, for the card. */
+  quote?: string;
+  /** How many relationships of the proposal it is an end of. */
+  relationships?: number;
   operationId?: string;
-  size?: "md" | "lg";
   "data-testid"?: string;
 }) {
-  const { schema } = usePills();
-  const pill = (
-    <Pill
-      kind="individual"
-      size={size}
-      label={title}
-      operationId={operationId}
-      aria-label={operationId ? `Open ${title}` : title}
-      card={() => (
-        <IndividualCard title={title} classId={classId} status={status} schema={schema} />
-      )}
-      data-testid={testId}
+  const { link } = usePills();
+  const hover = useHover(() => (
+    <IndividualCard
+      title={title}
+      classId={classId}
+      verdict={verdict}
+      status={status}
+      quote={quote}
+      relationships={relationships}
     />
+  ));
+  const props = {
+    ...hover,
+    className: "review-pill review-pill--individual",
+    "data-pill": "individual",
+    "data-testid": testId,
+  };
+  const content = (
+    <>
+      <Dot />
+      <span className="review-pill__text">{title}</span>
+    </>
   );
-  if (!status || hideStatus) return pill;
+  if (operationId) {
+    const { href, onClick } = link(operationId);
+    return (
+      <a {...props} href={href} onClick={onClick} aria-label={`Open ${title}`}>
+        {content}
+      </a>
+    );
+  }
   return (
-    <span className="review-individual">
-      {pill}
-      {verdict ? (
-        <Chip variant={VERDICT_CHIP[verdict]} data-testid={testId ? `${testId}-status` : undefined}>
-          {status}
-        </Chip>
-      ) : (
-        <span
-          className="review-individual__status"
-          data-testid={testId ? `${testId}-status` : undefined}
-        >
-          {status}
-        </span>
-      )}
-    </span>
+    <button type="button" {...props} aria-label={title}>
+      {content}
+    </button>
   );
 }
 
 /**
- * A relationship's predicate: what the relationship says, so a pill of its
- * own kind (an arrow, the accent's tint), larger where it defines the
- * relationship. A link to the relationship when given.
+ * A predicate: a round cyan pill with an arrow (down where it sits between a
+ * relationship's ends). `misfit` marks one whose ends don't fit its type.
+ * Hover shows its definition and the classes it joins.
  */
 export function PredicatePill({
   propertyId,
-  operationId,
-  size,
+  size = "md",
+  direction = "right",
+  misfit = false,
   "data-testid": testId,
 }: {
   propertyId?: string;
-  /** The relationship operation the pill opens. */
-  operationId?: string;
-  size?: "md" | "lg";
+  size?: "sm" | "md" | "lg";
+  direction?: "right" | "down";
+  misfit?: boolean;
   "data-testid"?: string;
 }) {
   const { schema } = usePills();
   const label = schema.predicateLabel(propertyId);
+  const hover = useHover(() => <PredicateCard propertyId={propertyId} schema={schema} />);
+  const Arrow = direction === "down" ? ArrowDown : ArrowRight;
   return (
-    <Pill
-      kind="predicate"
-      size={size}
-      label={label}
-      icon={<ArrowRight size={size === "lg" ? 15 : 12} strokeWidth={2.25} />}
-      operationId={operationId}
-      aria-label={operationId ? `Open relationship ${label}` : `Predicate ${label}`}
-      card={() => <PredicateCard propertyId={propertyId} schema={schema} />}
+    <button
+      type="button"
+      {...hover}
+      className={classes(
+        "review-pill",
+        "review-pill--predicate",
+        `review-pill--${size}`,
+        misfit && "review-pill--misfit",
+      )}
+      aria-label={`Predicate ${label}${misfit ? ", its ends don't fit" : ""}`}
+      data-pill="predicate"
       data-testid={testId}
-    />
+    >
+      <span className="review-pill__text">{label}</span>
+      {!misfit && (
+        <span className="review-pill__icon">
+          <Arrow size={size === "lg" ? 13 : 12} strokeWidth={2.4} aria-hidden="true" />
+        </span>
+      )}
+    </button>
+  );
+}
+
+/** A predicate as a static pill (inside a link). */
+export function PredicateTag({ propertyId }: { propertyId?: string }) {
+  const { schema } = usePills();
+  return (
+    <span className="review-pill review-pill--predicate review-pill--sm" data-pill="predicate">
+      <span className="review-pill__text">{schema.predicateLabel(propertyId)} →</span>
+    </span>
   );
 }
 
@@ -342,27 +416,22 @@ export function HintLabel({
   label,
   hint,
   id,
+  className,
   "data-testid": testId,
 }: {
   label: string;
   hint: ReactNode;
   id?: string;
+  className?: string;
   "data-testid"?: string;
 }) {
-  const { overlay } = usePills();
-  const overlayId = useId();
-  const show = (event: MouseEvent<HTMLElement> | FocusEvent<HTMLElement>) =>
-    overlay.show(overlayId, hint, event.currentTarget, "review-hint-overlay");
+  const hover = useHover(() => hint, "review-hint-overlay");
   return (
     <button
       type="button"
       id={id}
-      className="review-hint-label"
-      onMouseEnter={show}
-      onFocus={show}
-      onMouseLeave={() => overlay.hide(overlayId)}
-      onBlur={() => overlay.hide(overlayId)}
-      aria-describedby={overlay.openId === overlayId ? overlayId : undefined}
+      {...hover}
+      className={classes("review-hint-label", className)}
       data-testid={testId}
     >
       {label}

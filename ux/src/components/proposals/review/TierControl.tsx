@@ -19,6 +19,7 @@ export function TierControl({
   disabled,
   kind,
   idPrefix = "review-tier",
+  label = "Tier",
   "data-testid": testId = "review-tier",
 }: {
   tier: Tier;
@@ -28,6 +29,8 @@ export function TierControl({
   kind: "element" | "relationship";
   /** Ids for the label and hint, unique on the page (the inspector and the add form). */
   idPrefix?: string;
+  /** The label, a HintLabel (the inspector's footer reads "GOLD ONLY · TIER"). */
+  label?: string;
   "data-testid"?: string;
 }) {
   const detail = kind === "element" ? ELEMENT_TIER_DETAIL : RELATIONSHIP_TIER_DETAIL;
@@ -37,7 +40,8 @@ export function TierControl({
       <div className="review-tier">
         <HintLabel
           id={`${idPrefix}-label`}
-          label="Tier"
+          label={label}
+          className={label === "Tier" ? undefined : "review-hint-label--eyebrow"}
           data-testid={`${testId}-label`}
           hint={
             <>

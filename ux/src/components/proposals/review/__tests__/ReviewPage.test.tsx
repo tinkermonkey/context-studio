@@ -470,27 +470,28 @@ describe("the review page", () => {
     expect(classChip).toHaveAttribute("aria-label", "Class Software capability");
     expect(screen.getByTestId("review-inspector-status")).toHaveTextContent("awaiting");
     expect(screen.getByTestId("review-evidence")).toHaveTextContent("Edit Check");
-    expect(screen.getByTestId("review-definition")).toHaveTextContent(
-      "What Software capability means",
+    expect(screen.getByTestId("review-evidence")).toHaveTextContent("EVIDENCE · 1");
+    expect(screen.getByTestId("review-evidence-1")).toHaveClass("review-evidence");
+    expect(screen.getByTestId("review-definition")).toHaveTextContent("WHAT THE CLASS MEANS");
+    expect(screen.getByTestId("review-definition")).toHaveAttribute(
+      "aria-label",
+      "What the class means",
     );
     expect(screen.getByTestId("review-definition")).toHaveTextContent(
       "An ability of the software platform.",
     );
-    await waitFor(() =>
-      expect(screen.getByTestId("review-relationship-op-rel")).toHaveTextContent(
-        "←realizesReference checkproduct.featureawaiting",
-      ),
-    );
-    // The predicate opens the relationship; the other end opens its element.
-    const open = screen.getByTestId("review-relationship-op-rel-open");
-    expect(open.tagName).toBe("A");
-    expect(open).toHaveAttribute("href", "?selected=op-rel");
-    expect(open).toHaveClass("review-pill--predicate");
-    expect(screen.getByTestId("review-relationship-op-rel-end")).toHaveAttribute(
-      "href",
-      "?selected=op-ref",
-    );
-    expect(screen.getByTestId("review-relationships")).toHaveTextContent("Its relationships · 1");
+    // Each relationship is a card that opens it, read as a sentence with "this" for the element:
+    // Reference check realizes → this (it points in), then the other end's class.
+    const card = screen.getByTestId("review-relationship-op-rel");
+    await waitFor(() => expect(card).toHaveTextContent("Reference checkrealizes →thisawaiting"));
+    expect(card.tagName).toBe("A");
+    expect(card).toHaveClass("review-relrow");
+    expect(card).toHaveAttribute("href", "?selected=op-rel");
+    expect(card).toHaveAttribute("data-direction", "in");
+    expect(card).toHaveTextContent("product.feature");
+    const kinds = [...card.querySelectorAll("[data-pill]")].map((p) => p.getAttribute("data-pill"));
+    expect(kinds).toEqual(["predicate", "class"]);
+    expect(screen.getByTestId("review-relationships")).toHaveTextContent("ITS RELATIONSHIPS · 1");
   });
 
   it("accepts as correct with the review time, then opens the next awaiting element", async () => {
@@ -529,10 +530,16 @@ describe("the review page", () => {
     expect(screen.queryByTestId("review-suggestion-1")).not.toBeInTheDocument();
     await user.click(screen.getByTestId("review-row-op-region"));
     const suggestion = screen.getByTestId("review-suggestion-1");
-    expect(suggestion).toHaveClass("review-alt");
+    // A suggestion is a class tag that picks the class; its definition is its title.
+    expect(suggestion).toHaveClass("review-suggestion__pick");
+    expect(suggestion.parentElement).toHaveClass("review-suggestion");
     expect(suggestion).toHaveAttribute("aria-keyshortcuts", "1");
+    expect(suggestion).toHaveAttribute("aria-label", "Accept as product.feature");
     expect(suggestion).toHaveTextContent("1 product.feature");
-    expect(suggestion).toHaveTextContent("A unit of product functionality");
+    expect(suggestion).toHaveAttribute(
+      "title",
+      "A unit of product functionality a persona can perceive.",
+    );
     await user.keyboard("1");
     await waitFor(() => expect(applies).toHaveLength(2));
     expect(applies[1].edits).toEqual({ "op-region": { class_ids: ["cls-feature"] } });
@@ -1209,7 +1216,7 @@ describe("gold mode", () => {
     // A relationship's tier is recorded, not scored: it says so.
     await user.click(screen.getByTestId("review-row-op-rel"));
     expect(screen.getByTestId("review-tier-hint")).toHaveTextContent(
-      "Recorded in gold only: relationships are scored on recall over all of them",
+      "Recorded in the gold file only. Relationship scores count every gold relationship alike",
     );
   });
 
@@ -1253,18 +1260,23 @@ describe("gold mode", () => {
     // The gold's acceptable class: first, shown as acceptable in gold, not a toggle.
     expect(screen.getByTestId("review-suggestion-1")).toHaveTextContent("1 product.feature");
     const inGold = screen.getByTestId("review-defensible-1");
-    expect(inGold).toHaveTextContent("Acceptable in gold");
+    expect(inGold).toHaveTextContent("in gold");
+    expect(inGold).toHaveAttribute("aria-label", "product.feature is acceptable in gold");
     expect(inGold).toHaveAttribute("aria-pressed", "true");
     expect(inGold).toBeDisabled();
-    expect(inGold).toHaveClass("review-defensible--on", "review-defensible--gold");
+    expect(inGold).toHaveClass(
+      "review-suggestion__defensible--on",
+      "review-suggestion__defensible--gold",
+    );
     // The other class toggles.
     expect(screen.getByTestId("review-suggestion-2")).toHaveTextContent("2 motivation.stakeholder");
     const toggle = screen.getByTestId("review-defensible-2");
-    expect(toggle).toHaveTextContent("Also defensible");
+    expect(toggle).toHaveTextContent("defensible");
+    expect(toggle).toHaveAttribute("aria-label", "motivation.stakeholder is also defensible");
     expect(toggle).toHaveAttribute("aria-pressed", "false");
     await user.click(toggle);
     expect(toggle).toHaveAttribute("aria-pressed", "true");
-    expect(toggle).toHaveClass("review-defensible--on");
+    expect(toggle).toHaveClass("review-suggestion__defensible--on");
     await user.click(screen.getByTestId("review-correct"));
     await waitFor(() => expect(applies).toHaveLength(2));
     expect(applies[1].annotations).toEqual({ "op-edit": { also_defensible: ["cls-stakeholder"] } });
@@ -1695,11 +1707,20 @@ describe("pills with hover overlays", () => {
     expect(overlay).toHaveClass("definition-overlay");
     expect(pill).toHaveAttribute("aria-describedby", overlay.id);
     expect(overlay).toHaveTextContent("A unit of product functionality");
-    expect(overlay).toHaveTextContent("Relationships from it · 2");
+    expect(overlay).toHaveClass("definition-overlay--interactive");
+    expect(overlay).toHaveTextContent("ALLOWED FROM IT");
     expect(overlay).toHaveTextContent("realizes → Software capability");
     expect(overlay).toHaveTextContent("serves → Software capability");
+    expect(overlay).toHaveTextContent("ALLOWED INTO IT");
+    expect(within(overlay).getByRole("link", { name: "Open the class" })).toHaveAttribute(
+      "href",
+      "/app/schema/classes/cls-feature",
+    );
+    // The pointer can move into the card (its link): it lingers, then closes.
     await user.unhover(pill);
-    expect(screen.queryByTestId("review-pill-overlay")).not.toBeInTheDocument();
+    await waitFor(() =>
+      expect(screen.queryByTestId("review-pill-overlay")).not.toBeInTheDocument(),
+    );
   });
 
   it("keeps a decided element's class a pill", async () => {
@@ -1733,23 +1754,30 @@ describe("the relationship inspector", () => {
       "aria-label",
       "Selected relationship",
     );
-    // The header is the relationship itself, top to bottom: From, the predicate, To.
-    const triple = screen.getByTestId("review-inspector-title");
-    expect(triple).toHaveClass("review-triple");
-    expect(triple).toHaveAttribute("role", "group");
-    expect(triple).toHaveAttribute("aria-label", "Reference check realizes Edit Check");
-    const order = [...triple.querySelectorAll("[data-pill]")].map((p) =>
+    // The title is the relationship as a sentence, its predicate a pill.
+    const title = screen.getByTestId("review-inspector-title");
+    expect(title.tagName).toBe("H2");
+    expect(title).toHaveClass("review-head__sentence");
+    expect(title).toHaveAttribute("aria-label", "Reference check realizes Edit Check");
+    expect(screen.getByTestId("review-title-predicate")).toHaveClass("review-pill--predicate");
+    // Then the relationship, top to bottom: FROM, the predicate between, TO.
+    const block = screen.getByTestId("review-relationship-block");
+    expect(block).toHaveAttribute("aria-label", "The relationship");
+    const order = [...block.querySelectorAll("[data-pill]")].map((p) =>
       p.getAttribute("data-pill"),
     );
     expect(order).toEqual(["individual", "class", "predicate", "individual", "class"]);
     const predicatePill = screen.getByTestId("review-predicate-pill");
     expect(predicatePill).toHaveClass("review-pill--predicate", "review-pill--lg");
     expect(predicatePill).toHaveTextContent("realizes");
-    // An individual is a bold link-like title; a class is a quiet, typed tag with an icon.
+    expect(screen.getByTestId("review-ends-fit")).toHaveTextContent("both ends fit the schema");
+    // An individual is bold text with a dot, not a pill; a class a violet tag with a diamond.
     expect(screen.getByTestId("review-end-source-individual")).toHaveClass(
       "review-pill--individual",
-      "review-pill--lg",
     );
+    expect(
+      screen.getByTestId("review-end-source-individual").querySelector(".review-ind__dot"),
+    ).not.toBeNull();
     const sourceClass = screen.getByTestId("review-end-source-class");
     expect(sourceClass).toHaveClass("review-pill--class");
     expect(sourceClass.querySelector(".review-pill__icon svg")).not.toBeNull();
@@ -1759,19 +1787,17 @@ describe("the relationship inspector", () => {
       "?selected=op-ref",
     );
     expect(screen.getByTestId("review-end-source-class")).toHaveTextContent("product.feature");
-    expect(screen.getByTestId("review-end-source-individual-status")).toHaveTextContent("correct");
+    expect(screen.getByTestId("review-end-source-status")).toHaveTextContent("correct");
     expect(screen.getByTestId("review-end-target-individual")).toHaveTextContent("Edit Check");
     await waitFor(() =>
       expect(screen.getByTestId("review-predicate-definition")).toHaveTextContent(
         "A feature makes a software capability available.",
       ),
     );
-    expect(screen.getByTestId("review-predicate-allowed")).toHaveTextContent(
-      "Allowed fromproduct.featuretoSoftware capability",
-    );
+    // The allowed classes are in the predicate's hover.
     await user.hover(screen.getByTestId("review-predicate-pill"));
     expect(await screen.findByTestId("review-pill-overlay")).toHaveTextContent(
-      "product.feature → Software capability",
+      "From product.feature to Software capability",
     );
   });
 
@@ -1797,13 +1823,19 @@ describe("the relationship inspector", () => {
   it("accepts it with a better predicate the schema allows between its ends' classes", async () => {
     const user = await renderPage();
     await user.click(screen.getByTestId("review-row-op-rel"));
+    expect(screen.getByTestId("review-accept-edited")).toBeDisabled();
+    const change = screen.getByTestId("review-change-predicate");
+    expect(change).toHaveAttribute("aria-expanded", "false");
+    await user.click(change);
+    expect(change).toHaveTextContent("Cancel");
+    expect(screen.getByTestId("review-better-predicate")).toHaveClass("review-fix--open");
     const option = await screen.findByTestId("review-predicate-option-1");
-    expect(option).toHaveTextContent("serves · product.feature → Software capability");
+    expect(option).toHaveTextContent("serves →");
     // drives (stakeholder → goal) doesn't fit these ends.
     expect(screen.queryByTestId("review-predicate-option-2")).not.toBeInTheDocument();
-    expect(screen.getByTestId("review-accept-edited")).toBeDisabled();
     await user.click(option);
-    expect(option).toHaveAttribute("aria-pressed", "true");
+    expect(screen.getByTestId("review-draft-predicate")).toHaveTextContent("serves");
+    expect(screen.getByTestId("review-better-predicate")).toHaveClass("review-fix--changed");
     await user.click(screen.getByTestId("review-accept-edited"));
     await waitFor(() => expect(applies).toHaveLength(1));
     expect(applies[0].edits).toEqual({ "op-rel": { property_definition_id: "prop-2" } });
@@ -1821,27 +1853,37 @@ describe("the relationship inspector", () => {
     });
     const user = await renderPage();
     await user.click(screen.getByTestId("review-row-op-rel"));
+    // In place of the green tick: the pill turns red and says which end is wrong.
     const warning = await screen.findByTestId("review-ends-misfit");
-    expect(warning).toHaveTextContent("Its ends don't fit realizes");
+    expect(warning).toHaveAttribute("role", "alert");
+    expect(warning).toHaveTextContent("source is motivation.goal; realizes needs product.feature");
+    expect(screen.getByTestId("review-predicate-pill")).toHaveClass("review-pill--misfit");
+    expect(screen.queryByTestId("review-ends-fit")).not.toBeInTheDocument();
     expect(screen.getByTestId("review-correct")).toBeDisabled();
   });
 
   it("accepts it with a better source of a class its type allows", async () => {
     const user = await renderPage();
     await user.click(screen.getByTestId("review-row-op-rel"));
-    for (const alternative of ["predicate", "source", "target"]) {
-      const section = screen.getByTestId(`review-better-${alternative}`);
-      expect(section.tagName).toBe("SECTION");
-      expect(section).toHaveClass("review-alternative");
-      expect(section).toHaveAttribute("aria-labelledby", `review-better-${alternative}-title`);
+    // Or correct it: three rows of one shape, each with Change.
+    const editor = screen.getByTestId("review-relationship-editor");
+    expect(editor).toHaveTextContent("OR CORRECT IT");
+    for (const row of ["predicate", "source", "target"]) {
+      expect(screen.getByTestId(`review-better-${row}`)).toHaveClass("review-fix");
     }
-    const source = within(screen.getByTestId("review-better-source"));
+    // No other predicate fits feature → capability but serves: its Change is enabled.
+    await user.click(screen.getByTestId("review-change-source"));
+    const panel = screen.getByRole("group", { name: "Source" });
+    expect(screen.getByTestId("review-change-source")).toHaveAttribute("aria-expanded", "true");
     // Feedback (added, a feature) fits; Reference check is the current source.
     expect(
-      source.getByText("2 individuals of product.feature, the source realizes allows"),
+      within(panel).getByText("2 product.feature individuals, in this proposal or the dataset"),
     ).toBeInTheDocument();
-    await user.type(source.getByRole("combobox"), "Feed");
-    await user.click((await source.findAllByRole("option"))[0]);
+    await user.type(within(panel).getByRole("textbox"), "Feed");
+    const results = within(panel).getAllByTestId("review-end-option-source");
+    expect(results).toHaveLength(1);
+    expect(results[0]).toHaveTextContent("Feedbackproduct.feature");
+    await user.click(results[0]);
     expect(screen.getByTestId("review-draft-source")).toHaveTextContent("Feedback");
     await user.click(screen.getByTestId("review-accept-edited"));
     await waitFor(() => expect(applies).toHaveLength(1));

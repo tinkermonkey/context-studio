@@ -32,6 +32,7 @@ import {
   chosenAlternative,
   defaultNearMatchChoice,
   isNearMatch,
+  sourcePassagesOf,
   type NearMatchChoice,
 } from "../sourceModel";
 import { useOperationContext } from "../useOperationContext";
@@ -64,6 +65,7 @@ import {
   nextAwaiting,
   orderOf,
   proposedClassId,
+  relationshipsOf,
   rememberPick,
   reviewProgress,
   reviewSourceId,
@@ -348,6 +350,8 @@ export function ReviewPage({
         verdict: verdictOf(create),
         status: verdictLabel(create),
         operationId: create.id,
+        quote: sourcePassagesOf(create).find((p) => p.quote)?.quote ?? undefined,
+        relationships: relationshipsOf(create, operations).length,
       };
     }
     const found = endIndividuals?.items.find((i) => i.id === value);
@@ -484,7 +488,7 @@ export function ReviewPage({
   }, [relationshipOpen, elements, datasetIndividuals]);
 
   // The hover overlay the pills share, beside the inspector.
-  const overlay = useHoverOverlay("#review-inspector");
+  const overlay = useHoverOverlay("#review-inspector", { lingerMs: 150, width: 320 });
   const pills: ReviewPillsValue = { schema, overlay, link };
 
   // A passage asked for from the inspector's evidence: shown and flashed in the source.

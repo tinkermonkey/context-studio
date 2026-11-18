@@ -1,4 +1,4 @@
-import { useEffect, useState, type RefObject } from "react";
+import { useEffect, useState, type ReactNode, type RefObject } from "react";
 import { Button, Chip, FormCallout, Panel, TextArea } from "@tinkermonkey/heimdall-ui";
 import type { ProposedOperation, RejectionReason } from "@/api/services/proposals";
 import type { components } from "@/api/types";
@@ -12,13 +12,19 @@ import {
 } from "../sourceModel";
 import { ReviewClassPicker } from "./ReviewClassPicker";
 import { TierControl } from "./TierControl";
-import { ClassPill, IndividualPill, PredicatePill } from "./ReviewPills";
 import {
-  EndsMisfit,
-  PredicateMeaning,
-  RelationshipTriple,
-  endsFit,
+  ClassPill,
+  ClassTag,
+  IndividualPill,
+  PredicatePill,
+  PredicateTag,
+  useOperationLink,
+} from "./ReviewPills";
+import {
+  RelationshipBlock,
   RelationshipEditor,
+  RelationshipTitle,
+  misfitOf,
   type EndCandidate,
   type EndInfo,
 } from "./ReviewRelationship";
@@ -111,8 +117,35 @@ export interface GoldInspector {
   onDraft: (draft: GoldDraft) => void;
 }
 
-function Eyebrow({ children }: { children: string }) {
-  return <span className="review-eyebrow">{children}</span>;
+function Eyebrow({ children, id }: { children: ReactNode; id?: string }) {
+  return (
+    <span className="review-eyebrow" id={id}>
+      {children}
+    </span>
+  );
+}
+
+/** One section of the inspector: padded, ruled off from the next. */
+function Block({
+  label,
+  className,
+  children,
+  "data-testid": testId,
+}: {
+  label: string;
+  className?: string;
+  children: ReactNode;
+  "data-testid"?: string;
+}) {
+  return (
+    <section
+      className={["review-block", className].filter(Boolean).join(" ")}
+      aria-label={label}
+      data-testid={testId}
+    >
+      {children}
+    </section>
+  );
 }
 
 /** A class on one line, cut with an ellipsis; the whole of it in the tooltip (the add form). */
@@ -191,6 +224,7 @@ function Decided({
             title={endOf(now[name]).title}
             classId={endOf(now[name]).classId}
             status={endOf(now[name]).status}
+            verdict={endOf(now[name]).verdict}
             operationId={endOf(now[name]).operationId}
           />
           <span className="review-muted">proposed {endOf(proposed[name]).title}</span>
@@ -242,13 +276,15 @@ function Decided({
 }
 
 /**
- * The selected element or relationship. An element: its evidence, its class
- * (a pill whose overlay explains it) and what it means, the decision (Correct,
- * a better class, or not an element with a reason), then the relationships it
- * is an end of. A relationship: its evidence, its ends with their classes and
- * decisions, its predicate and the classes it allows, and the decision
- * (Correct, a better predicate or end, or not a relationship). A decided one
- * shows how it was decided and can be decided again.
+ * The selected element or relationship, one skeleton for both: what it is,
+ * the evidence, what the schema says, decide, change it, gold only.
+ *
+ * A relationship reads as the relationship itself: FROM its source, the
+ * predicate between (whether the ends fit, what it means), TO its target; then
+ * Correct, Or correct it (predicate, source or target), or not a relationship.
+ * An element: its class, what that means, the decision (Correct, a better
+ * class, or not an element), then the relationships it is an end of. A
+ * decided one shows how it was decided and can be decided again.
  */
 export function ReviewInspector({
   operation,
@@ -288,6 +324,7 @@ export function ReviewInspector({
   const draft = gold?.draft;
   const tier = draft?.tier ?? gold?.goldTier ?? "core";
   const element = isElement(operation);
+  const kind = element ? "an element" : "a relationship";
   const verdict = verdictOf(operation);
   const awaiting = verdict === "awaiting";
   const classId = shownClassId(operation);
@@ -313,7 +350,298 @@ export function ReviewInspector({
   // Already correct as proposed: nothing for Correct to change.
   const alreadyCorrect = verdict === "correct" && !operation.matched;
   // The ends no longer fit its type (an end's class changed): it can't apply as it is.
-  const misfit = !!relationshipEnds && endsFit(operation, relationshipEnds, schema) === false;
+  const misfit = !!relationshipEnds && !!misfitOf(operation, relationshipEnds, schema);
+  /** Focus the first reason (the "Not …" button and key X). */
+  const focusReasons = () =>
+    reasonsRef.current?.querySelector<HTMLButtonElement>("button:not(:disabled)")?.focus();
+
+  const evidence = quotes.length > 0 && (
+    <Block label="Evidence" data-testid="review-evidence">
+      <div className="review-block__head">
+        <Eyebrow>{element ? `EVIDENCE · ${quotes.length}` : "EVIDENCE"}</Eyebrow>
+        {!element && (
+          <button
+            type="button"
+            className="review-link review-link--accent"
+            onClick={() => onShowPassage(quotes[0])}
+            data-testid="review-show-in-source"
+          >
+            Show in source
+          </button>
+        )}
+      </div>
+      {quotes.map((quote, i) => (
+        <button
+          key={i}
+          type="button"
+          className={["review-evidence", i > 0 && "review-evidence--more"]
+            .filter(Boolean)
+            .join(" ")}
+          aria-label={`Show in the source: ${quote}`}
+          onClick={() => onShowPassage(quote)}
+          data-testid={`review-evidence-${i + 1}`}
+        >
+          {quote}
+        </button>
+      ))}
+    </Block>
+  );
+
+  const decide = canDecide && (
+    <Block label="Decide" data-testid="review-decide">
+      <Eyebrow>{awaiting ? "DECIDE" : "DECIDE AGAIN"}</Eyebrow>
+      {ends.rejected.length > 0 ? (
+        <FormCallout variant="warn" icon="alert" data-testid="review-ends-callout">
+          {seqList(ends.rejected)} {ends.rejected.length === 1 ? "was" : "were"} rejected, so this
+          relationship can&apos;t apply as proposed. Reject it, or give it another end.
+        </FormCallout>
+      ) : (
+        ends.undecided.length > 0 && (
+          <FormCallout variant="info" icon="info" data-testid="review-ends-callout">
+            Decide {seqList(ends.undecided)} first: this relationship follows{" "}
+            {ends.undecided.length === 1 ? "its choice" : "their choices"}.
+          </FormCallout>
+        )
+      )}
+      {nearMatch && (
+        <NearMatchChoice
+          operation={operation}
+          taxonomyId={taxonomyId}
+          datasetId={datasetId}
+          choice={nearChoice}
+          onChoose={onNearChoice}
+          disabled={busy}
+        />
+      )}
+      <div className="review-chips">
+        {ends.rejected.length === 0 && (
+          <Button
+            variant="primary"
+            size="sm"
+            disabled={busy || ends.undecided.length > 0 || alreadyCorrect || misfit}
+            onClick={onCorrect}
+            aria-keyshortcuts={awaiting ? "A" : undefined}
+            data-testid="review-correct"
+          >
+            {usingExisting ? "Correct: use existing" : "Correct"}
+          </Button>
+        )}
+        <Button
+          variant="secondary"
+          size="sm"
+          disabled={busy}
+          onClick={focusReasons}
+          aria-keyshortcuts={awaiting ? "X" : undefined}
+          data-testid="review-not"
+        >
+          {element ? "Not an element" : "Not a relationship"}
+        </Button>
+        {awaiting && (
+          <span className="review-keys">
+            {element ? "A · 1-3 · X · J / K next" : "A · X · J / K next"}
+          </span>
+        )}
+      </div>
+    </Block>
+  );
+
+  const betterClass = canDecide && element && (
+    <Block label="Or a better class" data-testid="review-better-class">
+      <Eyebrow>OR A BETTER CLASS</Eyebrow>
+      {usingExisting && (
+        <span className="review-muted" data-testid="review-class-locked">
+          The existing individual keeps its classes. Choose Create new to give this one another
+          class.
+        </span>
+      )}
+      {suggestions.length > 0 && (
+        <div className="review-suggestions">
+          {suggestions.map((suggestion, i) => {
+            // Keys 1-3 pick the first three.
+            const keyed = i < 3 && awaiting;
+            const acceptable = !!gold?.acceptableIds.includes(suggestion.id);
+            const defensible = acceptable || !!draft?.alsoDefensible.includes(suggestion.id);
+            const recent = recentIds.includes(suggestion.id) && !acceptable;
+            return (
+              <span key={suggestion.id} className="review-suggestion">
+                <button
+                  type="button"
+                  className="review-suggestion__pick"
+                  disabled={busy || usingExisting}
+                  aria-keyshortcuts={keyed ? String(i + 1) : undefined}
+                  aria-label={`Accept as ${names.classLabel(suggestion.id)}`}
+                  title={suggestion.description ?? undefined}
+                  onClick={() => onPickClass(suggestion.id)}
+                  data-testid={`review-suggestion-${i + 1}`}
+                >
+                  {keyed && <span className="review-suggestion__key">{i + 1} </span>}
+                  {names.classLabel(suggestion.id)}
+                </button>
+                {gold && draft && (
+                  <button
+                    type="button"
+                    className={[
+                      "review-suggestion__defensible",
+                      defensible && "review-suggestion__defensible--on",
+                      acceptable && "review-suggestion__defensible--gold",
+                    ]
+                      .filter(Boolean)
+                      .join(" ")}
+                    aria-pressed={defensible}
+                    aria-label={
+                      acceptable
+                        ? `${names.classLabel(suggestion.id)} is acceptable in gold`
+                        : `${names.classLabel(suggestion.id)} is also defensible`
+                    }
+                    title={acceptable ? "Acceptable in gold" : "Also defensible"}
+                    // Already in gold: write-gold only adds, so there is nothing to toggle.
+                    disabled={busy || acceptable}
+                    onClick={() =>
+                      gold.onDraft({
+                        ...draft,
+                        alsoDefensible: defensible
+                          ? draft.alsoDefensible.filter((id) => id !== suggestion.id)
+                          : [...draft.alsoDefensible, suggestion.id],
+                      })
+                    }
+                    data-testid={`review-defensible-${i + 1}`}
+                  >
+                    {acceptable ? "in gold" : "defensible"}
+                  </button>
+                )}
+                {recent && (
+                  <button
+                    type="button"
+                    className="review-forget"
+                    aria-label={`Remove ${names.classLabel(suggestion.id)} from recent classes`}
+                    onClick={() => onForgetClass(suggestion.id)}
+                    data-testid={`review-suggestion-${i + 1}-remove`}
+                  >
+                    ×
+                  </button>
+                )}
+              </span>
+            );
+          })}
+          {recentIds.length > 0 && <span className="review-muted">recent keeps 2</span>}
+        </div>
+      )}
+      {gold && draft && classId && !usingExisting && !classesLoading && (
+        <label className="review-check" data-testid="review-keep-old">
+          <input
+            type="checkbox"
+            checked={draft.keepOld}
+            disabled={busy}
+            onChange={(e) => gold.onDraft({ ...draft, keepOld: e.target.checked })}
+          />
+          Keep {names.classLabel(classId)} as also defensible
+        </label>
+      )}
+      <ReviewClassPicker
+        classes={pickable}
+        current={cls}
+        disabled={busy || usingExisting}
+        loading={classesLoading}
+        onPick={onPickClass}
+      />
+    </Block>
+  );
+
+  const reasons = canDecide && (
+    <Block label={`Not ${kind}`}>
+      <Eyebrow>{`OR NOT ${kind.toUpperCase()}, BECAUSE`}</Eyebrow>
+      <div
+        ref={reasonsRef}
+        className="review-reasons"
+        role="group"
+        aria-label={element ? "Not an element, because" : "Not a relationship, because"}
+        aria-keyshortcuts={awaiting ? "X" : undefined}
+        data-testid="review-reasons"
+      >
+        {REJECTION_REASONS.map((reason) => (
+          <button
+            key={reason.code}
+            type="button"
+            className="review-reason"
+            disabled={
+              busy ||
+              noteMissing ||
+              (verdict === "rejected" &&
+                reason.code === operation.reason_code &&
+                note.trim() === (operation.reason ?? ""))
+            }
+            onClick={() => onReject(reason.code, note)}
+            data-testid={`review-reason-${reason.code}`}
+          >
+            {reason.label}
+          </button>
+        ))}
+      </div>
+      <label htmlFor="review-note" className="review-muted">
+        {gold && element
+          ? "Note, needed · the excluded entry's reason"
+          : "Note, optional · kept with the decision"}
+      </label>
+      <TextArea
+        id="review-note"
+        rows={2}
+        value={note}
+        aria-describedby={noteMissing ? "review-note-required" : undefined}
+        placeholder="e.g. a region the team targets, not a party with concerns"
+        onChange={(e) => setNote(e.target.value)}
+        data-testid="review-note"
+      />
+      {noteMissing && (
+        <span
+          id="review-note-required"
+          className="review-add__error"
+          data-testid="review-note-required"
+        >
+          Write why it is not an element to reject it: the note becomes its excluded entry.
+        </span>
+      )}
+    </Block>
+  );
+
+  const decided = !awaiting && (
+    <Block label="Decision">
+      <Eyebrow>DECIDED</Eyebrow>
+      <Decided operation={operation} endOf={endOf} />
+      {deciding && (
+        <>
+          <div className="review-chips">
+            <Button
+              variant="secondary"
+              size="sm"
+              aria-expanded={changing}
+              aria-controls="review-change"
+              onClick={() => setChanging((c) => !c)}
+              data-testid="review-change-decision"
+            >
+              {changing ? "Keep this decision" : "Change the decision"}
+            </Button>
+          </div>
+          <span className="review-block__subtitle" data-testid="review-change-note">
+            {element
+              ? "Changing it reopens this individual and the relationships that use it."
+              : "Changing it reopens this relationship."}
+          </span>
+        </>
+      )}
+    </Block>
+  );
+
+  const goldFooter = gold && draft && deciding && (
+    <section className="review-block review-block--gold" aria-label="Gold only">
+      <TierControl
+        tier={tier}
+        kind={element ? "element" : "relationship"}
+        label="GOLD ONLY · TIER"
+        disabled={busy}
+        onChange={(next) => gold.onDraft({ ...draft, tier: next })}
+      />
+    </section>
+  );
 
   return (
     <Panel
@@ -330,67 +658,49 @@ export function ReviewInspector({
             {element ? "Individual" : "Relationship"}
             {probability}
           </span>
-          {/* A relationship's decision sits by its kind: the header below is the relationship. */}
-          {!element && (
-            <Chip variant={VERDICT_CHIP[verdict]} data-testid="review-inspector-status">
-              {verdictLabel(operation)}
-            </Chip>
-          )}
+          <Chip variant={VERDICT_CHIP[verdict]} data-testid="review-inspector-status">
+            {verdictLabel(operation)}
+          </Chip>
         </div>
         {relationshipEnds ? (
-          <RelationshipTriple
+          <RelationshipTitle
             operation={operation}
             ends={relationshipEnds}
             title={names.titleOf(operation)}
           />
         ) : (
-          <span className="review-inspector__title" data-testid="review-inspector-title">
-            {names.titleOf(operation)}
-          </span>
+          <>
+            <h2 className="review-inspector__title" data-testid="review-inspector-title">
+              {names.titleOf(operation)}
+            </h2>
+            <ClassPill classId={classId} size="lg" data-testid="review-inspector-class" />
+          </>
         )}
         {gold && gold.aliases.length > 0 && (
-          <span className="review-muted" data-testid="review-gold-aliases">
+          <span className="review-block__subtitle" data-testid="review-gold-aliases">
             Also called {gold.aliases.join(", ")}
           </span>
-        )}
-        {element && (
-          <div className="review-chips">
-            <ClassPill classId={classId} size="lg" data-testid="review-inspector-class" />
-            <Chip variant={VERDICT_CHIP[verdict]} data-testid="review-inspector-status">
-              {verdictLabel(operation)}
-            </Chip>
-          </div>
         )}
       </div>
 
       <div className="review-inspector__body">
         {operation.status === "failed" && (
-          <div className="review-failed" role="alert" data-testid="review-failed">
-            The last apply failed: {operation.reason ?? "no reason given"}
+          <div className="review-block">
+            <div className="review-failed" role="alert" data-testid="review-failed">
+              The last apply failed: {operation.reason ?? "no reason given"}
+            </div>
           </div>
         )}
 
-        {quotes.length > 0 && (
-          <div className="review-section" data-testid="review-evidence">
-            <Eyebrow>Evidence</Eyebrow>
-            {quotes.map((quote, i) => (
-              <button
-                key={i}
-                type="button"
-                className="review-evidence"
-                aria-label={`Show in the source: ${quote}`}
-                onClick={() => onShowPassage(quote)}
-                data-testid={`review-evidence-${i + 1}`}
-              >
-                {quote}
-              </button>
-            ))}
-          </div>
+        {relationshipEnds && (
+          <RelationshipBlock operation={operation} ends={relationshipEnds} schema={schema} />
         )}
+
+        {evidence}
 
         {element && (
-          <div className="review-section" data-testid="review-definition">
-            <Eyebrow>{`What ${names.classLabel(classId)} means`}</Eyebrow>
+          <Block label="What the class means" data-testid="review-definition">
+            <Eyebrow>WHAT THE CLASS MEANS</Eyebrow>
             {classesLoading ? (
               <p className="review-definition review-muted" data-testid="review-definition-loading">
                 Loading…
@@ -398,337 +708,111 @@ export function ReviewInspector({
             ) : (
               <Definition key={classId} text={cls?.description} />
             )}
-          </div>
+          </Block>
         )}
 
-        {relationshipEnds && <PredicateMeaning operation={operation} schema={schema} />}
-
-        {!awaiting && (
-          <div className="review-section">
-            <Eyebrow>Decided</Eyebrow>
-            <Decided operation={operation} endOf={endOf} />
-            {deciding && (
-              <button
-                type="button"
-                className="review-link"
-                aria-expanded={changing}
-                aria-controls="review-change"
-                onClick={() => setChanging((c) => !c)}
-                data-testid="review-change-decision"
-              >
-                {changing ? "Keep this decision" : "Change the decision"}
-              </button>
-            )}
-          </div>
-        )}
-
-        {canDecide && (
-          <div id="review-change" className="review-decide" data-testid="review-decide">
-            <div className="review-section">
-              <Eyebrow>{awaiting ? "Decide" : "Change the decision"}</Eyebrow>
-              {!awaiting && (
-                <span className="review-muted" data-testid="review-change-note">
-                  {element && relationships.some((r) => r.status === "applied")
-                    ? "Changing it undoes what it applied, and its accepted relationships wait for a decision again."
-                    : "Changing it undoes what it applied; the new decision is the one that counts."}
-                </span>
-              )}
-              {ends.rejected.length > 0 ? (
-                <FormCallout variant="warn" icon="alert" data-testid="review-ends-callout">
-                  {seqList(ends.rejected)} {ends.rejected.length === 1 ? "was" : "were"} rejected,
-                  so this relationship can&apos;t apply as proposed. Reject it, or give it another
-                  end.
-                </FormCallout>
-              ) : (
-                ends.undecided.length > 0 && (
-                  <FormCallout variant="info" icon="info" data-testid="review-ends-callout">
-                    Decide {seqList(ends.undecided)} first: this relationship follows{" "}
-                    {ends.undecided.length === 1 ? "its choice" : "their choices"}.
-                  </FormCallout>
-                )
-              )}
-              {misfit && ends.rejected.length === 0 && (
-                <EndsMisfit schema={schema} operation={operation} />
-              )}
-              {nearMatch && (
-                <NearMatchChoice
-                  operation={operation}
-                  taxonomyId={taxonomyId}
-                  datasetId={datasetId}
-                  choice={nearChoice}
-                  onChoose={onNearChoice}
-                  disabled={busy}
-                />
-              )}
-              {gold && draft && (
-                <TierControl
-                  tier={tier}
-                  kind={element ? "element" : "relationship"}
-                  disabled={busy}
-                  onChange={(next) => gold.onDraft({ ...draft, tier: next })}
-                />
-              )}
-              {ends.rejected.length === 0 && (
-                <div className="review-chips">
-                  <Button
-                    variant="primary"
-                    size="sm"
-                    disabled={busy || ends.undecided.length > 0 || alreadyCorrect || misfit}
-                    onClick={onCorrect}
-                    aria-keyshortcuts={awaiting ? "A" : undefined}
-                    data-testid="review-correct"
-                  >
-                    {usingExisting ? "Correct: use existing" : "Correct"}
-                  </Button>
-                </div>
-              )}
-              {awaiting && (
-                <span className="review-keys">
-                  {element
-                    ? "A correct · 1-3 pick a class · X not an element · J / K next"
-                    : "A correct · X not a relationship · J / K next"}
-                </span>
-              )}
-            </div>
-
-            {element && (
-              <div className="review-section" data-testid="review-better-class">
-                <Eyebrow>Or a better class</Eyebrow>
-                {usingExisting && (
-                  <span className="review-muted" data-testid="review-class-locked">
-                    The existing individual keeps its classes. Choose Create new to give this one
-                    another class.
-                  </span>
-                )}
-                {suggestions.map((suggestion, i) => {
-                  // Keys 1-3 pick the first three.
-                  const keyed = i < 3 && awaiting;
-                  const acceptable = !!gold?.acceptableIds.includes(suggestion.id);
-                  const defensible = acceptable || !!draft?.alsoDefensible.includes(suggestion.id);
-                  const recent = recentIds.includes(suggestion.id) && !acceptable;
-                  const pick = (
-                    <button
-                      key={suggestion.id}
-                      type="button"
-                      className="review-alt"
-                      disabled={busy || usingExisting}
-                      aria-keyshortcuts={keyed ? String(i + 1) : undefined}
-                      title={names.classLabel(suggestion.id)}
-                      onClick={() => onPickClass(suggestion.id)}
-                      data-testid={`review-suggestion-${i + 1}`}
-                    >
-                      <span className="review-alt__class">
-                        {keyed ? `${i + 1} ` : ""}
-                        {names.classLabel(suggestion.id)}
-                      </span>
-                      {suggestion.description && (
-                        <span className="review-alt__definition">{suggestion.description}</span>
-                      )}
-                    </button>
-                  );
-                  const forget = recent && (
-                    <button
-                      type="button"
-                      className="review-forget"
-                      aria-label={`Remove ${names.classLabel(suggestion.id)} from recent classes`}
-                      onClick={() => onForgetClass(suggestion.id)}
-                      data-testid={`review-suggestion-${i + 1}-remove`}
-                    >
-                      ×
-                    </button>
-                  );
-                  if (!gold || !draft) {
-                    return (
-                      <div key={suggestion.id} className="review-alt-row">
-                        {pick}
-                        {forget}
-                      </div>
-                    );
-                  }
-                  return (
-                    <div key={suggestion.id} className="review-alt-row">
-                      {pick}
-                      <button
-                        type="button"
-                        className={[
-                          "review-defensible",
-                          defensible && "review-defensible--on",
-                          acceptable && "review-defensible--gold",
-                        ]
-                          .filter(Boolean)
-                          .join(" ")}
-                        aria-pressed={defensible}
-                        aria-label={
-                          acceptable
-                            ? `${names.classLabel(suggestion.id)} is acceptable in gold`
-                            : `${names.classLabel(suggestion.id)} is also defensible`
-                        }
-                        // Already in gold: write-gold only adds, so there is nothing to toggle.
-                        disabled={busy || acceptable}
-                        onClick={() =>
-                          gold.onDraft({
-                            ...draft,
-                            alsoDefensible: defensible
-                              ? draft.alsoDefensible.filter((id) => id !== suggestion.id)
-                              : [...draft.alsoDefensible, suggestion.id],
-                          })
-                        }
-                        data-testid={`review-defensible-${i + 1}`}
-                      >
-                        {acceptable ? "Acceptable in gold" : "Also defensible"}
-                      </button>
-                      {forget}
-                    </div>
-                  );
-                })}
-                {gold && draft && classId && !usingExisting && !classesLoading && (
-                  <label className="review-check" data-testid="review-keep-old">
-                    <input
-                      type="checkbox"
-                      checked={draft.keepOld}
-                      disabled={busy}
-                      onChange={(e) => gold.onDraft({ ...draft, keepOld: e.target.checked })}
-                    />
-                    Keep {names.classLabel(classId)} as also defensible
-                  </label>
-                )}
-                <ReviewClassPicker
-                  classes={pickable}
-                  current={cls}
-                  disabled={busy || usingExisting}
-                  loading={classesLoading}
-                  onPick={onPickClass}
-                />
-              </div>
-            )}
-
-            {relationshipEnds && (
-              <RelationshipEditor
-                key={operation.id}
-                operation={operation}
-                operations={operations}
-                ends={relationshipEnds}
-                candidates={endCandidates}
-                schema={schema}
-                busy={busy}
-                onAccept={onAcceptEdited}
-              />
-            )}
-
-            <div className="review-section">
-              <Eyebrow>
-                {element ? "Or not an element, because" : "Or not a relationship, because"}
-              </Eyebrow>
-              <div
-                ref={reasonsRef}
-                className="review-reasons"
-                role="group"
-                aria-label={element ? "Not an element, because" : "Not a relationship, because"}
-                aria-keyshortcuts={awaiting ? "X" : undefined}
-                data-testid="review-reasons"
-              >
-                {REJECTION_REASONS.map((reason) => (
-                  <button
-                    key={reason.code}
-                    type="button"
-                    className="review-reason"
-                    disabled={
-                      busy ||
-                      noteMissing ||
-                      (verdict === "rejected" &&
-                        reason.code === operation.reason_code &&
-                        note.trim() === (operation.reason ?? ""))
-                    }
-                    onClick={() => onReject(reason.code, note)}
-                    data-testid={`review-reason-${reason.code}`}
-                  >
-                    {reason.label}
-                  </button>
-                ))}
-              </div>
-              <label htmlFor="review-note" className="review-muted">
-                {gold && element
-                  ? "Note, needed · the excluded entry's reason"
-                  : "Note, optional · kept with the decision"}
-              </label>
-              <TextArea
-                id="review-note"
-                rows={2}
-                value={note}
-                aria-describedby={noteMissing ? "review-note-required" : undefined}
-                placeholder="e.g. a region the team targets, not a party with concerns"
-                onChange={(e) => setNote(e.target.value)}
-                data-testid="review-note"
-              />
-              {noteMissing && (
-                <span
-                  id="review-note-required"
-                  className="review-add__error"
-                  data-testid="review-note-required"
-                >
-                  Write why it is not an element to reject it: the note becomes its excluded entry.
-                </span>
-              )}
-            </div>
-          </div>
-        )}
+        {decided}
+        <div id="review-change" className="review-change">
+          {decide}
+          {betterClass}
+          {canDecide && relationshipEnds && (
+            <RelationshipEditor
+              key={operation.id}
+              operation={operation}
+              operations={operations}
+              ends={relationshipEnds}
+              candidates={endCandidates}
+              schema={schema}
+              busy={busy}
+              onAccept={onAcceptEdited}
+            />
+          )}
+          {reasons}
+        </div>
 
         {element && (
-          <div className="review-section" data-testid="review-relationships">
-            <Eyebrow>{`Its relationships · ${relationships.length}`}</Eyebrow>
+          <Block label="Its relationships" data-testid="review-relationships">
+            <Eyebrow>{`ITS RELATIONSHIPS · ${relationships.length}`}</Eyebrow>
             {relationships.length === 0 ? (
               <span className="review-muted">
                 None proposed. Relationships are decided after their ends.
               </span>
             ) : (
               <ul className="review-relationships">
-                {relationships.map((relationship) => {
-                  const fields = shownFields(relationship);
-                  const outgoing =
-                    endOf(fields.source_id).operationId === operation.id ||
-                    endOf(relationship.fields?.source_id).operationId === operation.id;
-                  const other = endOf(outgoing ? fields.target_id : fields.source_id);
-                  const relVerdict = verdictOf(relationship);
-                  return (
-                    <li
-                      key={relationship.id}
-                      className="review-relationship"
-                      data-testid={`review-relationship-${relationship.id}`}
-                    >
-                      <span
-                        className="review-relationship__direction"
-                        aria-label={outgoing ? "from this to" : "to this from"}
-                      >
-                        {outgoing ? "→" : "←"}
-                      </span>
-                      <PredicatePill
-                        propertyId={fields.property_definition_id as string | undefined}
-                        operationId={relationship.id}
-                        data-testid={`review-relationship-${relationship.id}-open`}
-                      />
-                      <IndividualPill
-                        title={other.title}
-                        classId={other.classId}
-                        status={other.status}
-                        hideStatus
-                        operationId={other.operationId}
-                        data-testid={`review-relationship-${relationship.id}-end`}
-                      />
-                      {other.classId && <ClassPill classId={other.classId} />}
-                      <Chip
-                        variant={VERDICT_CHIP[relVerdict]}
-                        className="review-relationship__verdict"
-                      >
-                        {verdictLabel(relationship)}
-                      </Chip>
-                    </li>
-                  );
-                })}
+                {relationships.map((relationship) => (
+                  <RelationshipRow
+                    key={relationship.id}
+                    relationship={relationship}
+                    element={operation}
+                    endOf={endOf}
+                  />
+                ))}
               </ul>
             )}
-          </div>
+          </Block>
         )}
+
+        {goldFooter}
       </div>
     </Panel>
+  );
+}
+
+/**
+ * One of an element's relationships: a card linking to it, read as a sentence
+ * with "this" for the element ("Reference Check realizes → this", or "this
+ * realizes → Paste Check"), its decision on the right, then the other end's class.
+ */
+function RelationshipRow({
+  relationship,
+  element,
+  endOf,
+}: {
+  relationship: ProposedOperation;
+  element: ProposedOperation;
+  endOf: (value: unknown) => EndInfo;
+}) {
+  const fields = shownFields(relationship);
+  const outgoing =
+    endOf(fields.source_id).operationId === element.id ||
+    endOf(relationship.fields?.source_id).operationId === element.id;
+  const other = endOf(outgoing ? fields.target_id : fields.source_id);
+  const verdict = verdictOf(relationship);
+  const { href, onClick } = useOperationLink()(relationship.id);
+  const predicate = (
+    <PredicateTag propertyId={fields.property_definition_id as string | undefined} />
+  );
+  const name = <span className="review-relrow__name">{other.title}</span>;
+  const self = <span className="review-relrow__self">this</span>;
+  return (
+    <li>
+      <a
+        className="review-relrow"
+        href={href}
+        onClick={onClick}
+        data-direction={outgoing ? "out" : "in"}
+        data-testid={`review-relationship-${relationship.id}`}
+      >
+        <span className="review-relrow__line">
+          <span className="review-relrow__sentence">
+            {outgoing ? (
+              <>
+                {self}
+                {predicate}
+                {name}
+              </>
+            ) : (
+              <>
+                {name}
+                {predicate}
+                {self}
+              </>
+            )}
+          </span>
+          <Chip variant={VERDICT_CHIP[verdict]}>{verdictLabel(relationship)}</Chip>
+        </span>
+        {other.classId && <ClassTag classId={other.classId} />}
+      </a>
+    </li>
   );
 }

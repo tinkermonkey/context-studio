@@ -38,7 +38,7 @@ export const ELEMENT_TIER_DETAIL = [
 
 /** A relationship's tier: recorded in gold, not used in scoring. */
 export const RELATIONSHIP_TIER_HINT =
-  "Recorded in gold only: relationships are scored on recall over all of them, whatever the tier.";
+  "Recorded in the gold file only. Relationship scores count every gold relationship alike, whatever its tier.";
 
 export const RELATIONSHIP_TIER_DETAIL = [
   "Gold keeps a tier on each relationship (core unless noted), and writes the one you note.",
