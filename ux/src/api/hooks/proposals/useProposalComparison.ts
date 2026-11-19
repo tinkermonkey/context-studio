@@ -28,7 +28,13 @@ export function useDecidePair(a: string, b: string, sampleSize = DEFAULT_SAMPLE_
   return useMutation({
     mutationFn: (data: PairDecisionRequest) => proposalsService.decidePair(a, b, data, sampleSize),
     meta: { skipGlobalErrorToast: true },
-    onSettled: () => invalidateOntology(queryClient),
+    // Wait for the comparison to refetch, so a decided row never shows its buttons again.
+    onSettled: () => {
+      invalidateOntology(queryClient);
+      return queryClient.invalidateQueries({
+        queryKey: QUERY_KEYS.proposalComparison(a, b, sampleSize),
+      });
+    },
   });
 }
 
@@ -38,6 +44,12 @@ export function useAcceptRest(a: string, b: string, sampleSize = DEFAULT_SAMPLE_
   return useMutation({
     mutationFn: () => proposalsService.acceptRest(a, b, sampleSize),
     meta: { skipGlobalErrorToast: true },
-    onSettled: () => invalidateOntology(queryClient),
+    // Wait for the comparison to refetch, so a decided row never shows its buttons again.
+    onSettled: () => {
+      invalidateOntology(queryClient);
+      return queryClient.invalidateQueries({
+        queryKey: QUERY_KEYS.proposalComparison(a, b, sampleSize),
+      });
+    },
   });
 }

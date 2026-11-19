@@ -167,6 +167,8 @@ export function proposalSize(proposal: ChangeProposal | undefined) {
   return { individuals: creates("individual"), relationships: creates("relationship") };
 }
 
+const INDIVIDUAL_EXTRACTION = "individual_extraction";
+
 /**
  * The open proposals `proposal` can be compared with: other open individual
  * extractions of the same source into the same dataset, made by another
@@ -178,7 +180,15 @@ export function comparableProposals(
 ): ChangeProposal[] {
   const sourceId = proposalSourceId(proposal);
   const implementation = proposal?.origin?.implementation_id;
-  if (!proposal || proposal.status !== "open" || !sourceId || !implementation) return [];
+  if (
+    !proposal ||
+    proposal.status !== "open" ||
+    !sourceId ||
+    !implementation ||
+    // The server compares individual extractions only.
+    proposal.origin?.pipeline_type !== INDIVIDUAL_EXTRACTION
+  )
+    return [];
   return candidates.filter(
     (c) =>
       c.id !== proposal.id &&

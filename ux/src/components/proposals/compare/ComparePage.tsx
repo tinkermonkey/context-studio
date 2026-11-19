@@ -134,7 +134,8 @@ function DecisionCell({
   onReason: (code: RejectionReason) => void;
   onCancelReason: () => void;
 }) {
-  const failure = failureOf(pair);
+  // A fresh error for this row already says why the landing failed.
+  const failure = error ? undefined : failureOf(pair);
   if (!takesDecision(pair)) {
     const landed = [pair.a, pair.b].some((c) => c?.status === "applied");
     return (

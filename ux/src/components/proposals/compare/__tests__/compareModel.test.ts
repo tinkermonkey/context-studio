@@ -153,6 +153,16 @@ describe("proposals to compare with", () => {
     expect(comparableProposals(undefined, candidates)).toEqual([]);
   });
 
+  it("offers nothing for a schema extraction, which the server can't compare", () => {
+    const schemaOrigin = (implementation_id: string) => ({
+      ...origin(implementation_id),
+      pipeline_type: "schema_extraction",
+    });
+    const mine = extraction("s1", "default", { origin: schemaOrigin("default") });
+    const other = extraction("s2", "open_v1", { origin: schemaOrigin("open_v1") });
+    expect(comparableProposals(mine, [mine, other])).toEqual([]);
+  });
+
   it("reads a proposal's model and size", () => {
     const proposal = extraction("p1", "single_call", {
       client_metadata: { source_id: "src-1", origin: { model: "Opus 5.5" } },
