@@ -3249,7 +3249,16 @@ selectors:
     description: "Show more / Show less (aria-expanded) for a class definition longer than 240 characters, clamped to 4 lines"
   - selector: review-ends-callout
     component: src/components/proposals/review/ReviewInspector.tsx
-    description: "A relationship whose new ends are undecided (\"Decide #n first\", Correct disabled) or rejected (\"#n was rejected … Reject it.\", no Correct)"
+    description: "A relationship whose new ends are undecided (\"Decide #n first\", Correct disabled) or rejected (\"#n was rejected … Reject it too\", no Correct: review-reject-end instead)"
+  - selector: review-reject-end
+    component: src/components/proposals/review/ReviewInspector.tsx
+    description: "Reject: an end was rejected (primary, key X) on a relationship whose end was rejected; rejects with reason_code other and the typed note, else \"An end was rejected: #n is not an element\""
+  - selector: review-relationships-callout
+    component: src/components/proposals/review/ReviewInspector.tsx
+    description: "On a rejected element: how many relationships using it still await a decision, with review-reject-relationships"
+  - selector: review-reject-relationships
+    component: src/components/proposals/review/ReviewInspector.tsx
+    description: "Reject it / them too: rejects the awaiting relationships that use a rejected element (reason_code other, \"An end was rejected\" note); a toast offers the same right after the element is rejected"
   - selector: review-class-locked
     component: src/components/proposals/review/ReviewInspector.tsx
     description: "Note that the existing individual a near match uses keeps its classes; suggestions, picker and keys 1-3 are disabled while it is chosen"

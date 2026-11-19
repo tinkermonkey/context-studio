@@ -319,6 +319,11 @@ function ToastProbe() {
         <li key={t.id} data-testid={`toast-${t.type}`}>
           {t.title}
           {t.sub ? ` | ${t.sub}` : ""}
+          {t.action && (
+            <button type="button" onClick={t.action.onAction} data-testid="toast-probe-action">
+              {t.action.label}
+            </button>
+          )}
         </li>
       ))}
     </ul>
@@ -669,15 +674,93 @@ describe("the review page", () => {
     const user = await renderPage();
     await user.click(screen.getByTestId("review-row-op-rel"));
     expect(screen.getByTestId("review-ends-callout")).toHaveTextContent(
-      "#1 was rejected, so this relationship can't apply as proposed. Reject it, or give it another end.",
+      "#1 was rejected, so this relationship can't apply as proposed. Reject it too, or give it another end.",
     );
     expect(screen.queryByTestId("review-correct")).not.toBeInTheDocument();
+    expect(screen.getByTestId("review-reject-end")).toHaveAttribute("aria-keyshortcuts", "X");
+    expect(screen.getByTestId("review-decide")).toHaveTextContent("X · J / K next");
+    // A can't accept it, and says what to do instead.
     await user.click(screen.getByTestId("review-inspector-title"));
     await user.keyboard("a");
     expect(applies).toHaveLength(0);
+    expect(await screen.findByText(/This relationship can't be accepted/)).toHaveTextContent(
+      "#1 was rejected: press X to reject it too, or give it another end.",
+    );
+    // Any reason still rejects it.
     await user.click(screen.getByTestId("review-reason-not_in_text"));
     await waitFor(() => expect(rejects).toHaveLength(1));
     expect(rejects[0].operation_ids).toEqual(["op-rel"]);
+  });
+
+  it("rejects a relationship whose end was rejected in one click, noting why", async () => {
+    proposal.operations.find((o) => o.id === "op-edit")!.status = "rejected";
+    const user = await renderPage();
+    await user.click(screen.getByTestId("review-row-op-rel"));
+    await user.click(screen.getByTestId("review-reject-end"));
+    await waitFor(() => expect(rejects).toHaveLength(1));
+    expect(rejects[0]).toEqual({
+      operation_ids: ["op-rel"],
+      note: "An end was rejected: #1 is not an element",
+      reason_code: "other",
+      review_ms: { "op-rel": expect.any(Number) },
+    });
+    await user.click(screen.getByTestId("review-row-op-rel"));
+    expect(screen.getByTestId("review-decided")).toHaveTextContent("Not a relationship: Other.");
+  });
+
+  it("rejects a relationship whose end was rejected on key X", async () => {
+    proposal.operations.find((o) => o.id === "op-edit")!.status = "rejected";
+    const user = await renderPage();
+    await user.click(screen.getByTestId("review-row-op-rel"));
+    await user.click(screen.getByTestId("review-inspector-title"));
+    await user.keyboard("x");
+    await waitFor(() => expect(rejects).toHaveLength(1));
+    expect(rejects[0]).toMatchObject({
+      operation_ids: ["op-rel"],
+      note: "An end was rejected: #1 is not an element",
+      reason_code: "other",
+    });
+  });
+
+  it("keeps a note written before rejecting a relationship whose end was rejected", async () => {
+    proposal.operations.find((o) => o.id === "op-edit")!.status = "rejected";
+    const user = await renderPage();
+    await user.click(screen.getByTestId("review-row-op-rel"));
+    await user.type(screen.getByTestId("review-note"), "Edit Check is out");
+    await user.click(screen.getByTestId("review-reject-end"));
+    await waitFor(() => expect(rejects).toHaveLength(1));
+    expect(rejects[0]).toMatchObject({ note: "Edit Check is out", reason_code: "other" });
+  });
+
+  it("offers on a rejected element to reject the relationships still awaiting that use it", async () => {
+    proposal.operations.find((o) => o.id === "op-edit")!.status = "rejected";
+    const user = await renderPage();
+    await user.click(screen.getByTestId("review-row-op-edit"));
+    expect(screen.getByTestId("review-relationships-callout")).toHaveTextContent(
+      "1 relationship uses it and still awaits a decision.",
+    );
+    await user.click(screen.getByTestId("review-reject-relationships"));
+    await waitFor(() => expect(rejects).toHaveLength(1));
+    expect(rejects[0]).toEqual({
+      operation_ids: ["op-rel"],
+      note: "An end was rejected: #1 is not an element",
+      reason_code: "other",
+    });
+    await waitFor(() =>
+      expect(screen.queryByTestId("review-relationships-callout")).not.toBeInTheDocument(),
+    );
+  });
+
+  it("offers nothing more when a rejected element's relationships are all decided", async () => {
+    const user = await renderPage();
+    // Sub-Saharan Africa is an end of no relationship.
+    await user.click(screen.getByTestId("review-row-op-region"));
+    await user.click(screen.getByTestId("review-reason-out_of_scope"));
+    await waitFor(() => expect(rejects).toHaveLength(1));
+    await screen.findByText("Operation rejected");
+    expect(screen.queryByTestId("toast-probe-action")).not.toBeInTheDocument();
+    await user.click(screen.getByTestId("review-row-op-region"));
+    expect(screen.queryByTestId("review-relationships-callout")).not.toBeInTheDocument();
   });
 
   it("uses an existing individual for a near match, with no class change", async () => {
@@ -1381,6 +1464,55 @@ describe("gold mode", () => {
     expect(screen.getByTestId("review-reason-not_in_text")).toBeEnabled();
     expect(screen.queryByTestId("review-note-required")).not.toBeInTheDocument();
     expect(screen.getByText("Note, optional · kept with the decision")).toBeInTheDocument();
+  });
+
+  // #1641: an individual rejected, the relationships using it must stay decidable.
+  it("rejects an individual, then its relationship from the inspector by key", async () => {
+    makeGoldCheck();
+    const user = await renderPage();
+    await user.click(screen.getByTestId("review-row-op-edit"));
+    await user.type(screen.getByTestId("review-note"), "a product, not a capability");
+    await user.click(screen.getByTestId("review-reason-too_generic"));
+    await waitFor(() => expect(rejects).toHaveLength(1));
+
+    await user.click(screen.getByTestId("review-row-op-rel"));
+    await waitFor(() => expect(screen.getByTestId("review-reject-end")).toBeEnabled());
+    await user.click(screen.getByTestId("review-inspector-title"));
+    await user.keyboard("x");
+    await waitFor(() => expect(rejects).toHaveLength(2));
+    expect(rejects[1]).toEqual({
+      operation_ids: ["op-rel"],
+      note: "An end was rejected: #1 is not an element",
+      reason_code: "other",
+      review_ms: { "op-rel": expect.any(Number) },
+    });
+    await waitFor(() =>
+      expect(screen.getByTestId("review-row-op-rel")).toHaveTextContent("not a relationship"),
+    );
+  });
+
+  it("offers to reject the relationships using an individual once it is rejected", async () => {
+    makeGoldCheck();
+    const user = await renderPage();
+    await user.click(screen.getByTestId("review-row-op-edit"));
+    await user.type(screen.getByTestId("review-note"), "a product, not a capability");
+    await user.click(screen.getByTestId("review-reason-too_generic"));
+    await waitFor(() => expect(rejects).toHaveLength(1));
+    const offer = await screen.findByText(/1 relationship uses Edit Check: reject it too\?/);
+    expect(offer).toHaveTextContent('#5 would be rejected as "an end was rejected".');
+    await user.click(within(offer).getByTestId("toast-probe-action"));
+    await waitFor(() => expect(rejects).toHaveLength(2));
+    expect(rejects[1]).toEqual({
+      operation_ids: ["op-rel"],
+      note: "An end was rejected: #1 is not an element",
+      reason_code: "other",
+    });
+    // Clicked again once they are decided, it sends nothing more.
+    await waitFor(() =>
+      expect(screen.getByTestId("review-row-op-rel")).toHaveTextContent("not a relationship"),
+    );
+    await user.click(within(offer).getByTestId("toast-probe-action"));
+    expect(rejects).toHaveLength(2);
   });
 
   it("numbers and keys only the first three suggestions", async () => {

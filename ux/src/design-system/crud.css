@@ -718,6 +718,23 @@
   pointer-events: none;
   max-width: 380px;
 }
+/* A toast with an action: the action under the toast, on the right, clickable and opaque
+   (the viewport lets clicks through, so each part opts back in). */
+.toast-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+}
+.toast-wrapper > .toast {
+  align-self: stretch;
+}
+.toast-wrapper > button {
+  pointer-events: auto;
+  background: rgb(var(--canvas-bg));
+  border: 1px solid rgb(var(--canvas-border));
+  box-shadow: 0 14px 40px -16px rgba(0, 0, 0, 0.5);
+}
 .toast {
   pointer-events: auto;
   display: flex;

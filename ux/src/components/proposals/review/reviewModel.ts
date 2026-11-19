@@ -413,6 +413,27 @@ export function seqList(ends: RelationshipEnd[]): string {
   return [...new Set(ends.map((e) => `#${e.seq}`))].join(" and ");
 }
 
+// ==================== An end was rejected ====================
+
+/** The reason a relationship is rejected with when an end of it was rejected. */
+export const END_REJECTED_REASON: RejectionReason = "other";
+
+/** The note it records: "An end was rejected: #51 is not an element". */
+export function endRejectedNote(seqs: (number | undefined)[]): string {
+  const unique = [...new Set(seqs.filter((s): s is number => s !== undefined))];
+  return `An end was rejected: ${unique.map((s) => `#${s}`).join(" and ")} ${
+    unique.length === 1 ? "is" : "are"
+  } not an element`;
+}
+
+/** The relationships still awaiting a decision that use this element at either end. */
+export function awaitingRelationshipsOf(
+  element: ProposedOperation,
+  operations: ProposedOperation[],
+): ProposedOperation[] {
+  return relationshipsOf(element, operations).filter(isAwaiting);
+}
+
 // ==================== Not an element ====================
 
 export const REJECTION_REASONS: { code: RejectionReason; label: string }[] = [
