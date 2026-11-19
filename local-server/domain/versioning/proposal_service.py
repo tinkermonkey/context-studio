@@ -32,7 +32,7 @@ import json
 import logging
 import re
 import threading
-from contextlib import nullcontext
+from contextlib import ExitStack, nullcontext
 from dataclasses import dataclass, replace
 from dataclasses import fields as dataclass_fields
 from datetime import date, datetime, timezone
@@ -73,6 +73,7 @@ from domain.versioning.gold import (
     DECIDED_BY_POLICY,
     DECIDED_BY_USER,
     DecisionFilter,
+    DecisionKind,
     ProposalDecision,
     by_operation,
     decision_of,
@@ -95,10 +96,14 @@ from domain.versioning.proposals import (
     AlternativeKind,
     ChangeProposal,
     ChangeScope,
+    CopyDecision,
+    CopyOutcome,
+    CopyResult,
     InUseResolution,
     Landing,
     OperationDraft,
     OperationKind,
+    OperationRef,
     OperationStatus,
     OperationType,
     ProposalOrigin,
@@ -1813,8 +1818,13 @@ class ProposalService:
         chosen_alternatives: Mapping[str, dict[str, Any]] | None,
         review_ms: Mapping[str, int] | None,
         annotations: Mapping[str, Mapping[str, Any]] | None = None,
+        comparisons: Mapping[str, dict[str, Any]] | None = None,
     ) -> ChangeProposal:
-        """`apply`, under the proposal's lock, which the caller holds."""
+        """
+        `apply`, under the proposal's lock, which the caller holds. comparisons:
+        operation id -> the comparison record its decision keeps (decide_copies).
+        """
+        comparisons = comparisons or {}
         proposal = self._get(proposal_id)
         if proposal.status is ProposalStatus.REVERTED:
             raise ChangeProposalStateError(f"Change proposal {proposal_id} is reverted")
@@ -1880,6 +1890,7 @@ class ProposalService:
                             chosen_alternative=alternatives.get(operation.id),
                             review_ms=times.get(operation.id),
                             annotations=notes.get(operation.id),
+                            comparison=comparisons.get(operation.id),
                         )
                     )
                 sources = []
@@ -3081,6 +3092,13 @@ class ProposalService:
         if not _is_ref(value):
             return value
         source = refs.get(value[1:])
+        if (
+            source is not None
+            and _closed_as_duplicate(source)
+            and self._repo.get_individual(source.result_entity_id) is not None  # type: ignore[arg-type]
+        ):
+            # Another proposal's copy of the same element landed: point there.
+            return source.result_entity_id
         if source is None or source.status is not OperationStatus.APPLIED:
             state = "missing" if source is None else source.status.value
             seq = f" (seq {source.seq})" if source is not None else ""
@@ -3143,35 +3161,226 @@ class ProposalService:
                 integer, or an annotation is invalid (see `apply`); nothing is
                 rejected
         """
+        with self._lock(proposal_id):
+            return self._reject_unlocked(
+                proposal_id, operation_ids, note, decided_by, reason_code, review_ms, annotations
+            )
+
+    def _reject_unlocked(
+        self,
+        proposal_id: str,
+        operation_ids: Iterable[str],
+        note: str | None,
+        decided_by: str | None,
+        reason_code: RejectionReason | None,
+        review_ms: Mapping[str, int] | None,
+        annotations: Mapping[str, Mapping[str, Any]] | None,
+        duplicate_of: Mapping[str, str] | None = None,
+        comparisons: Mapping[str, dict[str, Any]] | None = None,
+    ) -> ChangeProposal:
+        """
+        `reject`, under the proposal's lock, which the caller holds.
+
+        Args:
+            duplicate_of: Operation id -> the individual another proposal's copy
+                of it landed as, kept as its result_entity_id ("$ref" uses of it
+                resolve there); only with reason_code duplicate
+            comparisons: Operation id -> the comparison record its decision keeps
+        """
         if reason_code is not None:
             reason_code = RejectionReason(reason_code)
-        with self._lock(proposal_id):
-            proposal = self._get(proposal_id)
-            chosen = self._chosen(proposal, operation_ids, "reject")
-            times = _checked_review_ms(chosen, review_ms, "rejected")
-            notes = self._checked_annotations(chosen, annotations, proposal.taxonomy_id, "rejected")
-            for operation in chosen:
-                operation.status = OperationStatus.REJECTED
-                operation.reason = note
-                operation.reason_code = reason_code
-            decisions = []
-            if decided_by is not None:
-                now = datetime.now(timezone.utc)
-                decisions = [
-                    decision_of(
-                        proposal,
-                        o,
-                        decided_by,
-                        now,
-                        review_ms=times.get(o.id),
-                        annotations=notes.get(o.id),
+        duplicate_of = duplicate_of or {}
+        comparisons = comparisons or {}
+        if duplicate_of and reason_code is not RejectionReason.DUPLICATE:
+            raise ValueError("Only a duplicate keeps the individual its copy landed as")
+        proposal = self._get(proposal_id)
+        chosen = self._chosen(proposal, operation_ids, "reject")
+        times = _checked_review_ms(chosen, review_ms, "rejected")
+        notes = self._checked_annotations(chosen, annotations, proposal.taxonomy_id, "rejected")
+        for operation in chosen:
+            operation.status = OperationStatus.REJECTED
+            operation.reason = note
+            operation.reason_code = reason_code
+            if operation.id in duplicate_of:
+                operation.result_entity_id = duplicate_of[operation.id]
+        decisions = []
+        if decided_by is not None:
+            now = datetime.now(timezone.utc)
+            decisions = [
+                decision_of(
+                    proposal,
+                    o,
+                    decided_by,
+                    now,
+                    review_ms=times.get(o.id),
+                    annotations=notes.get(o.id),
+                    comparison=comparisons.get(o.id),
+                )
+                for o in chosen
+            ]
+        self._proposals.save_operations(proposal.id, chosen, decisions)
+        proposal.settle_status()
+        self._proposals.set_status(proposal.id, proposal.status)
+        return self._get(proposal_id)
+
+    # ---------------------------------------------------- copies across proposals
+
+    def decide_copies(
+        self, decisions: Sequence[CopyDecision], decided_by: str = DECIDED_BY_USER
+    ) -> list[CopyResult]:
+        """
+        Decide elements several proposals hold copies of, each once for all of
+        them (see CopyDecision), under every proposal's lock (taken in id
+        order, so two calls naming the same proposals in another order wait for
+        each other rather than deadlock).
+
+        Every named copy must be pending or failed, except a landing copy that
+        is already applied: its result is reused. The landing copies of each
+        proposal apply in one `apply` (provenance and decisions recorded as
+        usual); a copy closes as a duplicate only once its landing copy is
+        applied, keeping the individual it landed as as its result_entity_id
+        (a failed landing leaves it as it was). A decision without a landing
+        copy rejects every copy with its reason_code.
+
+        Returns:
+            One result per decision, in order
+
+        Raises:
+            ChangeProposalNotFoundError: If a proposal does not exist
+            ChangeProposalStateError: If a proposal is reverted or superseded
+                by a newer extraction, or a copy is already decided (a landing
+                copy may be applied); nothing is changed
+            ValueError: If a copy is not in its proposal, or named twice;
+                nothing is changed
+        """
+        refs = [ref for d in decisions for ref in d.refs]
+        if len(set(refs)) != len(refs):
+            raise ValueError("A copy can only be decided once in a call")
+        proposal_ids = sorted({ref.proposal_id for ref in refs})
+        with ExitStack() as stack:
+            for proposal_id in proposal_ids:
+                stack.enter_context(self._lock(proposal_id))
+            proposals = {pid: self._get(pid) for pid in proposal_ids}
+            self._check_copies(decisions, proposals)
+
+            landing: dict[str, list[CopyDecision]] = {}
+            for decision in decisions:
+                if decision.land is not None and _operation(proposals, decision.land).status in (
+                    OperationStatus.PENDING,
+                    OperationStatus.FAILED,
+                ):
+                    landing.setdefault(decision.land.proposal_id, []).append(decision)
+            landing_ids = {
+                pid: {d.land.operation_id for d in landed}  # type: ignore[union-attr]
+                for pid, landed in landing.items()
+            }
+            for proposal_id, landed in landing.items():
+                ids = [d.land.operation_id for d in landed]  # type: ignore[union-attr]
+                comparisons = {
+                    d.land.operation_id: d.comparisons[d.land.operation_id]  # type: ignore[union-attr]
+                    for d in landed
+                    if d.land.operation_id in d.comparisons  # type: ignore[union-attr]
+                }
+                proposals[proposal_id] = self._apply_unlocked(
+                    proposal_id,
+                    ids,
+                    (),
+                    None,
+                    None,
+                    decided_by,
+                    {
+                        d.land.operation_id: d.chosen_alternative  # type: ignore[union-attr]
+                        for d in landed
+                        if d.chosen_alternative is not None
+                    },
+                    {
+                        d.land.operation_id: d.review_ms  # type: ignore[union-attr]
+                        for d in landed
+                        if d.review_ms is not None
+                    },
+                    None,
+                    comparisons,
+                )
+            for decision in decisions:
+                land = decision.land
+                reused = land is not None and land.operation_id not in landing_ids.get(
+                    land.proposal_id, set()
+                )
+                if reused and land.operation_id in decision.comparisons:  # type: ignore[union-attr]
+                    # Applied before it was compared: its decision records the comparison too.
+                    self._proposals.set_decision_comparison(
+                        land.operation_id,  # type: ignore[union-attr]
+                        decision.comparisons[land.operation_id],  # type: ignore[union-attr]
                     )
-                    for o in chosen
-                ]
-            self._proposals.save_operations(proposal.id, chosen, decisions)
-            proposal.settle_status()
-            self._proposals.set_status(proposal.id, proposal.status)
-            return self._get(proposal_id)
+            return [self._close_copies(d, proposals, decided_by) for d in decisions]
+
+    @staticmethod
+    def _check_copies(
+        decisions: Sequence[CopyDecision], proposals: Mapping[str, ChangeProposal]
+    ) -> None:
+        """Every proposal stands, and every copy is in it and still undecided."""
+        for proposal in proposals.values():
+            if proposal.status is ProposalStatus.REVERTED:
+                raise ChangeProposalStateError(f"Change proposal {proposal.id} is reverted")
+            if proposal.superseded_by_extraction:
+                raise ChangeProposalStateError(
+                    f"Change proposal {proposal.id} was superseded by a newer extraction"
+                )
+        for decision in decisions:
+            for ref in decision.refs:
+                operation = _operation(proposals, ref)
+                reusable = ref == decision.land and operation.status is OperationStatus.APPLIED
+                if operation.decided and not reusable:
+                    raise ChangeProposalStateError(
+                        f"seq {operation.seq} of change proposal {ref.proposal_id} is already"
+                        f" {operation.status.value}"
+                    )
+
+    def _close_copies(
+        self,
+        decision: CopyDecision,
+        proposals: dict[str, ChangeProposal],
+        decided_by: str,
+    ) -> CopyResult:
+        """Close a decision's other copies, once its landing copy is applied."""
+        by_proposal: dict[str, list[OperationRef]] = {}
+        for ref in decision.close:
+            by_proposal.setdefault(ref.proposal_id, []).append(ref)
+        if decision.land is None:
+            first = decision.close[0]
+            for proposal_id, closed in by_proposal.items():
+                times = (
+                    {first.operation_id: decision.review_ms}
+                    if decision.review_ms is not None and proposal_id == first.proposal_id
+                    else None
+                )
+                proposals[proposal_id] = self._reject_unlocked(
+                    proposal_id,
+                    [r.operation_id for r in closed],
+                    None,
+                    decided_by,
+                    decision.reason_code,
+                    times,
+                    None,
+                    comparisons=decision.comparisons,
+                )
+            return CopyResult(CopyOutcome.REJECTED)
+        landed = _operation(proposals, decision.land)
+        if landed.status is not OperationStatus.APPLIED:
+            return CopyResult(CopyOutcome.FAILED, failure_reason=landed.reason)
+        for proposal_id, closed in by_proposal.items():
+            proposals[proposal_id] = self._reject_unlocked(
+                proposal_id,
+                [r.operation_id for r in closed],
+                None,
+                decided_by,
+                RejectionReason.DUPLICATE,
+                None,
+                None,
+                duplicate_of={r.operation_id: landed.result_entity_id for r in closed},  # type: ignore[misc]
+                comparisons=decision.comparisons,
+            )
+        return CopyResult(CopyOutcome.LANDED, entity_id=landed.result_entity_id)
 
     def reopen(
         self,
@@ -3298,6 +3507,10 @@ class ProposalService:
         relationships pointed at that individual are undone with their own
         operations.
 
+        Another proposal's copies closed as duplicates of what this one landed
+        (`decide_copies`) are reopened: pending again, their decisions
+        superseded, under every involved proposal's lock (taken in id order).
+
         A proposal its client has landed on a mirrored taxonomy can't be
         reverted here: the source already holds it, so the client proposes the
         reversal instead. Unlanded, it can (that is how it is abandoned).
@@ -3308,13 +3521,20 @@ class ProposalService:
             RevertConflictError, RevertRefusedError: From RevertService when the
                 run can't be undone; nothing is changed and the status is left as it was
         """
-        with self._lock(proposal_id):
+        copies = self._duplicates_of(self._get(proposal_id))
+        with ExitStack() as stack:
+            for locked in sorted({proposal_id, *copies}):
+                stack.enter_context(self._lock(locked))
             proposal = self._get(proposal_id)
             if proposal.landed is not None and self._mirrored(proposal.taxonomy_id):
                 raise ChangeProposalStateError(
                     f"Change proposal {proposal_id} has landed in the taxonomy's source;"
                     " propose the reversal from the source instead of reverting it here"
                 )
+            # Only those locked: a copy closed since the first read waits for its own revert.
+            copies = {
+                pid: ids for pid, ids in self._duplicates_of(proposal).items() if pid in copies
+            }
 
             def close_proposal(_result: RevertResult) -> None:
                 # Inside the revert's transaction: the status commits with the revert.
@@ -3330,8 +3550,71 @@ class ProposalService:
                 if self._sources is not None:
                     self._sources.delete_for_proposal(proposal.id)
                 self._proposals.set_status(proposal.id, ProposalStatus.REVERTED)
+                self._reopen_duplicates(copies, reverted_by)
 
             return self._revert.revert_with_summary(proposal.id, on_reverted=close_proposal)
+
+    def _duplicates_of(self, proposal: ChangeProposal) -> dict[str, list[str]]:
+        """
+        Other proposals' operations closed as duplicates of what this one landed
+        (decide_copies): their result is an individual it created, or their
+        decision was taken comparing with it. Proposal id -> operation ids.
+        """
+        created = {
+            o.result_entity_id
+            for o in proposal.operations
+            if o.status is OperationStatus.APPLIED
+            and o.op is OperationType.CREATE
+            and o.kind is K.INDIVIDUAL
+            and not o.matched
+        }
+        found: dict[str, list[str]] = {}
+        loaded: dict[str, ChangeProposal | None] = {}
+        for decision in self._proposals.list_decisions(
+            DecisionFilter(taxonomy_id=proposal.taxonomy_id, decision=DecisionKind.REJECTED)
+        ):
+            if decision.proposal_id == proposal.id or decision.operation_id in found.get(
+                decision.proposal_id, ()
+            ):
+                continue
+            compared = (decision.comparison or {}).get("with_proposal_id") == proposal.id
+            if not compared and decision.result_entity_id not in created:
+                continue
+            if decision.proposal_id not in loaded:
+                loaded[decision.proposal_id] = self._proposals.get(decision.proposal_id)
+            other = loaded[decision.proposal_id]
+            operation = next(
+                (o for o in (other.operations if other else ()) if o.id == decision.operation_id),
+                None,
+            )
+            if operation is not None and _closed_as_duplicate(operation):
+                found.setdefault(decision.proposal_id, []).append(operation.id)
+        return found
+
+    def _reopen_duplicates(self, copies: Mapping[str, list[str]], reverted_by: str) -> None:
+        """
+        Reopen copies closed as duplicates of what a revert undid: pending
+        again, their decisions superseded, their proposal open.
+        """
+        now = datetime.now(timezone.utc)
+        for proposal_id, operation_ids in copies.items():
+            proposal = self._get(proposal_id)
+            reopened = [
+                o for o in proposal.operations if o.id in operation_ids and _closed_as_duplicate(o)
+            ]
+            for operation in reopened:
+                operation.status = OperationStatus.PENDING
+                operation.result_entity_id = None
+                operation.reason = None
+                operation.reason_code = None
+            if not reopened:
+                continue
+            self._proposals.save_operations(proposal_id, reopened)
+            self._proposals.supersede_operation_decisions(
+                proposal_id, [o.id for o in reopened], now, reverted_by
+            )
+            if proposal.status is ProposalStatus.DONE:
+                self._proposals.set_status(proposal_id, ProposalStatus.OPEN)
 
     # ------------------------------------------------------------------ landing
 
@@ -3591,7 +3874,10 @@ class ProposalService:
         create = creates.get(end[1:])
         if create is None:
             return None
-        if create.status is OperationStatus.APPLIED and create.result_entity_id:
+        if (
+            create.status is OperationStatus.APPLIED or _closed_as_duplicate(create)
+        ) and create.result_entity_id:
+            # A copy closed as a duplicate resolves to the individual it landed as.
             return fit.end_class_ids(create.result_entity_id)
         class_ids = create.fields.get("class_ids") if create.kind is K.INDIVIDUAL else None
         if not isinstance(class_ids, list) or not class_ids:
@@ -4060,6 +4346,25 @@ class ProposalService:
                 ) from exc
             return target
         return svc.move_class(target, v["parent_class_id"]).id
+
+
+def _closed_as_duplicate(operation: ProposedOperation) -> bool:
+    """Rejected as a copy of another proposal's operation, which landed as result_entity_id."""
+    return (
+        operation.status is OperationStatus.REJECTED
+        and operation.reason_code is RejectionReason.DUPLICATE
+        and operation.result_entity_id is not None
+    )
+
+
+def _operation(proposals: Mapping[str, ChangeProposal], ref: OperationRef) -> ProposedOperation:
+    """The operation a reference names, in proposals as read."""
+    operation = next(
+        (o for o in proposals[ref.proposal_id].operations if o.id == ref.operation_id), None
+    )
+    if operation is None:
+        raise ValueError(f"Change proposal {ref.proposal_id} has no operation {ref.operation_id}")
+    return operation
 
 
 def _check_individual_edit(label: str, fields: Mapping[str, Any]) -> None:

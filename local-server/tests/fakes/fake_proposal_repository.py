@@ -107,6 +107,14 @@ class FakeChangeProposalRepository:
             target.base = copy.deepcopy(operation.base)
         self.decisions += [copy.deepcopy(d) for d in decisions]
 
+    def set_decision_comparison(self, operation_id: str, comparison: dict) -> None:
+        standing = [
+            d for d in self.decisions if d.operation_id == operation_id and d.superseded_at is None
+        ]
+        if not standing:
+            raise ValueError(f"Operation {operation_id} has no standing decision")
+        standing[-1].comparison = copy.deepcopy(comparison)
+
     def supersede_decisions(self, proposal_id: str, superseded_at: datetime, by: str) -> int:
         standing = [
             d

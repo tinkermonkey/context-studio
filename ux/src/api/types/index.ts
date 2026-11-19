@@ -4145,6 +4145,82 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/proposals/{a_id}/compare/{b_id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Compare Proposals
+     * @description Two individual extractions of one source, their individual creates paired
+     *     by normalised title: same class, class differs, only in A, only in B. A
+     *     stable random sample of the same-class pairs is marked to check first.
+     */
+    get: operations["compare_proposals_api_proposals__a_id__compare__b_id__get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/proposals/{a_id}/compare/{b_id}/decide": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Decide Pair
+     * @description Decide one pair once for both proposals. Name both copies; one alone only
+     *     when the pair has one, or its other copy is already decided (422
+     *     otherwise). The chosen copy lands (keep: A's, or the only one given;
+     *     a_class: A's; b_class: B's) and the other closes as its duplicate, so
+     *     relationships naming it follow the landed individual; not_element rejects
+     *     both. A failed landing (outcome failed) leaves the other copy as it was.
+     *     Each copy's decision records the comparison (kept when what landed has the
+     *     classes it proposed, class_changed otherwise), and the landed one the
+     *     review time.
+     */
+    post: operations["decide_pair_api_proposals__a_id__compare__b_id__decide_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/proposals/{a_id}/compare/{b_id}/accept-rest": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Accept Rest
+     * @description Accept every same-class pair outside the sample whose copies are both
+     *     pending: A's lands, B's closes as its duplicate. Pairs whose copy lists near
+     *     matches or cites no passage are skipped, for a person. The sample must be at
+     *     least 10 pairs (every agreement, when fewer; 422 sample_too_small below
+     *     that) and all of it decided. Each decision records how many sample pairs
+     *     were actually checked and how many of those were changed. Calling it again
+     *     changes nothing more.
+     */
+    post: operations["accept_rest_api_proposals__a_id__compare__b_id__accept_rest_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/taxonomies/{taxonomy_id}/claims": {
     parameters: {
       query?: never;
@@ -4402,6 +4478,34 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
   schemas: {
+    /**
+     * AcceptRestRequest
+     * @description Accept the agreements outside the sample, once the sample is checked.
+     */
+    AcceptRestRequest: {
+      /**
+       * Sample Size
+       * @description The sample checked: at least 10, or every agreement when there are fewer
+       * @default 10
+       */
+      sample_size: number;
+    };
+    /**
+     * AcceptRestResponse
+     * @description What accepting the rest of the agreements did.
+     */
+    AcceptRestResponse: {
+      /** Landed */
+      landed: number;
+      /** Failed */
+      failed: components["schemas"]["PairFailureResponse"][];
+      /**
+       * Skipped
+       * @description Left for a person: a copy lists near matches, or cites no passage
+       */
+      skipped: components["schemas"]["PairSkippedResponse"][];
+      sample: components["schemas"]["SampleResponse"];
+    };
     /**
      * AddIndividualRequest
      * @description An individual the extraction missed, as the reviewer found it in the source.
@@ -6105,6 +6209,117 @@ export interface components {
       communities: string[][];
     };
     /**
+     * ComparedAlternativeResponse
+     * @description A near match the operation lists: an individual already in the dataset.
+     */
+    ComparedAlternativeResponse: {
+      /**
+       * Kind
+       * @default existing
+       * @constant
+       */
+      kind: "existing";
+      /** Entity Id */
+      entity_id: string;
+      /** Similarity */
+      similarity?: number | null;
+      /**
+       * Title
+       * @description Its current title; null if it is gone
+       */
+      title?: string | null;
+    };
+    /**
+     * ComparedClassResponse
+     * @description A class an operation gives its individual.
+     */
+    ComparedClassResponse: {
+      /** Id */
+      id: string;
+      /** Title */
+      title: string;
+    };
+    /**
+     * ComparedOperationResponse
+     * @description One proposal's copy of a pair's element: its individual create.
+     */
+    ComparedOperationResponse: {
+      /** Operation Id */
+      operation_id: string;
+      /** Seq */
+      seq: number;
+      /**
+       * Title
+       * @description The title it applies (an edit's, if edited)
+       */
+      title: string;
+      /**
+       * Classes
+       * @description The classes it applies (an edit's, if edited)
+       */
+      classes: components["schemas"]["ComparedClassResponse"][];
+      status: components["schemas"]["OperationStatus"];
+      /** Reason */
+      reason?: string | null;
+      reason_code?: components["schemas"]["RejectionReason"] | null;
+      /** Evidence */
+      evidence?: {
+        [key: string]: unknown;
+      }[];
+      /** Alternatives */
+      alternatives?: components["schemas"]["ComparedAlternativeResponse"][];
+      /**
+       * Lacks Passage
+       * @description It cites no passage in the source: a person decides it
+       * @default false
+       */
+      lacks_passage: boolean;
+      /**
+       * Comparison
+       * @description Its decision's comparison record, when it was decided comparing: {with_proposal_id, with_operation_id, verdict, sample, bulk}
+       */
+      comparison?: {
+        [key: string]: unknown;
+      } | null;
+    };
+    /**
+     * ComparedProposalResponse
+     * @description One of the two proposals compared.
+     */
+    ComparedProposalResponse: {
+      /** Proposal Id */
+      proposal_id: string;
+      /**
+       * Status
+       * @description open, done or reverted
+       */
+      status: string;
+      /** @description The pipeline implementation and version that produced it */
+      origin?: components["schemas"]["ProposalOriginResponse"] | null;
+    };
+    /** ComparisonCountsResponse */
+    ComparisonCountsResponse: {
+      /** Same Class */
+      same_class: number;
+      /** Class Differs */
+      class_differs: number;
+      /** Only A */
+      only_a: number;
+      /** Only B */
+      only_b: number;
+      /**
+       * Open
+       * @description Pairs not decided yet
+       */
+      open: number;
+    };
+    /**
+     * ComparisonGroup
+     * @description How the two proposals agree on an element.
+     * @enum {string}
+     */
+    ComparisonGroup: "same_class" | "class_differs" | "only_a" | "only_b";
+    /**
      * ComponentStatusResponse
      * @description Response containing individual component status.
      */
@@ -6286,6 +6501,12 @@ export interface components {
        */
       updated_at: string;
     };
+    /**
+     * CopyOutcome
+     * @description What a CopyDecision did.
+     * @enum {string}
+     */
+    CopyOutcome: "landed" | "rejected" | "failed";
     /**
      * CycleCheckRequest
      * @description Request to check if adding an edge would create a cycle.
@@ -7259,6 +7480,13 @@ export interface components {
        * @description What the reviewer noted for gold: {tier?, also_defensible?: [class id]}; null when nothing was noted
        */
       annotations?: {
+        [key: string]: unknown;
+      } | null;
+      /**
+       * Comparison
+       * @description Set when decided comparing two proposals of one source: {with_proposal_id, with_operation_id (the other copy, or null), verdict (kept, class_changed or not_element, from this operation's pipeline's view), sample (a checked agreement), bulk ({sample_size, sample_changed} when the rest was accepted, else null)}
+       */
+      comparison?: {
         [key: string]: unknown;
       } | null;
       /**
@@ -8718,11 +8946,98 @@ export interface components {
       entity_id?: string | null;
     };
     /**
+     * PairDecisionRequest
+     * @description A decision on one pair, taken once for both proposals.
+     */
+    PairDecisionRequest: {
+      /**
+       * A Operation Id
+       * @description A's copy (from the pair). Name both copies; one alone only when the pair has one, or the other is already decided
+       */
+      a_operation_id?: string | null;
+      /**
+       * B Operation Id
+       * @description B's copy (from the pair)
+       */
+      b_operation_id?: string | null;
+      /** @description keep: land A's copy (or the only one given), whose classes the copies share; a_class / b_class: land that copy with its classes; not_element: reject every copy given. The other copy closes as a duplicate of the landed one */
+      verdict: components["schemas"]["Verdict"];
+      /** @description not_element only: why (other when omitted) */
+      reason_code?: components["schemas"]["RejectionReason"] | null;
+      /**
+       * Match Entity Id
+       * @description A near match the landing copy lists, to apply it as instead
+       */
+      match_entity_id?: string | null;
+      /**
+       * Review Ms
+       * @description The time spent on the pair, recorded whole on the landed copy's decision
+       */
+      review_ms?: number | null;
+    };
+    /**
+     * PairDecisionResponse
+     * @description A decided pair, as it stands after the decision.
+     */
+    PairDecisionResponse: {
+      pair: components["schemas"]["PairResponse"];
+      /** @description landed, rejected (not_element) or failed (the landing copy failed) */
+      outcome: components["schemas"]["CopyOutcome"];
+      /** Failure Reason */
+      failure_reason?: string | null;
+      sample: components["schemas"]["SampleResponse"];
+    };
+    /** PairFailureResponse */
+    PairFailureResponse: {
+      /** Pair Id */
+      pair_id: string;
+      /** Reason */
+      reason: string;
+    };
+    /**
      * PairMatch
      * @description How a replacement's domain and range compare with the deleted type's.
      * @enum {string}
      */
     PairMatch: "same" | "reversed" | "different" | "missing";
+    /**
+     * PairResponse
+     * @description One element as the two proposals propose it.
+     */
+    PairResponse: {
+      /**
+       * Pair Id
+       * @description Stable id of the pair
+       */
+      pair_id: string;
+      group: components["schemas"]["ComparisonGroup"];
+      /**
+       * In Sample
+       * @description One of the agreements to check first
+       */
+      in_sample: boolean;
+      state: components["schemas"]["PairState"];
+      /** @description A's copy; null if none */
+      a?: components["schemas"]["ComparedOperationResponse"] | null;
+      /** @description B's copy; null if none */
+      b?: components["schemas"]["ComparedOperationResponse"] | null;
+    };
+    /** PairSkippedResponse */
+    PairSkippedResponse: {
+      /** Pair Id */
+      pair_id: string;
+      /**
+       * Why
+       * @enum {string}
+       */
+      why: "near_match" | "no_passage";
+    };
+    /**
+     * PairState
+     * @description Where a pair's decision stands.
+     * @enum {string}
+     */
+    PairState: "open" | "decided" | "partly_decided" | "failed";
     /**
      * PathResultResponse
      * @description Response containing a single path between two nodes.
@@ -9477,6 +9792,27 @@ export interface components {
        * @description New symmetric flag
        */
       symmetric?: boolean | null;
+    };
+    /**
+     * ProposalComparisonResponse
+     * @description Two individual extractions of one source, their individual creates paired.
+     */
+    ProposalComparisonResponse: {
+      a: components["schemas"]["ComparedProposalResponse"];
+      b: components["schemas"]["ComparedProposalResponse"];
+      /** Taxonomy Id */
+      taxonomy_id: string;
+      /** Dataset Id */
+      dataset_id?: string | null;
+      /** Source Id */
+      source_id: string;
+      /**
+       * Pairs
+       * @description Ordered by group (same_class, class_differs, only_a, only_b), then seq
+       */
+      pairs: components["schemas"]["PairResponse"][];
+      counts: components["schemas"]["ComparisonCountsResponse"];
+      sample: components["schemas"]["SampleResponse"];
     };
     /**
      * ProposalOriginResponse
@@ -10571,6 +10907,27 @@ export interface components {
        * @description Total number of triples in the graph
        */
       triple_count: number;
+    };
+    /**
+     * SampleResponse
+     * @description How far the check of the agreements' sample has got.
+     */
+    SampleResponse: {
+      /**
+       * Size
+       * @description Same-class pairs in the sample
+       */
+      size: number;
+      /**
+       * Checked
+       * @description Of them, decided
+       */
+      checked: number;
+      /**
+       * Changed
+       * @description Of the decided, those whose decision changed what both pipelines agreed on (another class, not an element, an edit)
+       */
+      changed: number;
     };
     /**
      * SchemaAttributeCandidate
@@ -11725,6 +12082,13 @@ export interface components {
      * @enum {string}
      */
     Validity: "real_defect" | "works_as_designed" | "judgment_call" | "out_of_scope";
+    /**
+     * Verdict
+     * @description A reviewer's decision on a pair: keep it (the copies agree, or the only
+     *     one is right), take A's class or B's, or neither is an element.
+     * @enum {string}
+     */
+    Verdict: "keep" | "a_class" | "b_class" | "not_element";
     /**
      * VersioningChangeEventResponse
      * @description Response representing a versioning change event
@@ -16927,6 +17291,144 @@ export interface operations {
         content: {
           "application/json": components["schemas"]["HTTPValidationError"];
         };
+      };
+    };
+  };
+  compare_proposals_api_proposals__a_id__compare__b_id__get: {
+    parameters: {
+      query?: {
+        /** @description How many same-class pairs to check before accepting the rest */
+        sample_size?: number;
+      };
+      header?: never;
+      path: {
+        a_id: string;
+        b_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ProposalComparisonResponse"];
+        };
+      };
+      /** @description A proposal does not exist */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description not_comparable: the same proposal twice, a superseded proposal, or not two individual extractions of one source in one dataset of one taxonomy; or a malformed request */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  decide_pair_api_proposals__a_id__compare__b_id__decide_post: {
+    parameters: {
+      query?: {
+        sample_size?: number;
+      };
+      header?: never;
+      path: {
+        a_id: string;
+        b_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["PairDecisionRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["PairDecisionResponse"];
+        };
+      };
+      /** @description A proposal does not exist */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description A copy is already decided, or a proposal is reverted */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description not_comparable: the same proposal twice, a superseded proposal, or not two individual extractions of one source in one dataset of one taxonomy; or a malformed request */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  accept_rest_api_proposals__a_id__compare__b_id__accept_rest_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        a_id: string;
+        b_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["AcceptRestRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["AcceptRestResponse"];
+        };
+      };
+      /** @description A proposal does not exist */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description sample_unchecked: a sample pair is not decided yet; or a proposal is reverted */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description not_comparable: the same proposal twice, a superseded proposal, or not two individual extractions of one source in one dataset of one taxonomy; or a malformed request */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
       };
     };
   };

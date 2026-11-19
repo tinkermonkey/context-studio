@@ -201,6 +201,22 @@ class SQLiteChangeProposalRepository:
                 session.add(_decision_to_orm(decision))
             session.commit()
 
+    def set_decision_comparison(self, operation_id: str, comparison: dict) -> None:
+        with self._session_factory() as session:
+            row = (
+                session.query(ProposalDecisionRecord)
+                .filter(
+                    ProposalDecisionRecord.operation_id == operation_id,
+                    ProposalDecisionRecord.superseded_at.is_(None),
+                )
+                .order_by(ProposalDecisionRecord.decided_at.desc())
+                .first()
+            )
+            if row is None:
+                raise ValueError(f"Operation {operation_id} has no standing decision")
+            row.comparison = dict(comparison)  # type: ignore[assignment]
+            session.commit()
+
     def supersede_decisions(self, proposal_id: str, superseded_at: datetime, by: str) -> int:
         with self._session_factory() as session:
             count = (
@@ -438,6 +454,7 @@ def _decision_to_orm(decision: ProposalDecision) -> ProposalDecisionRecord:
         superseded_by=decision.superseded_by,
         added=decision.added,
         annotations=dict(decision.annotations) if decision.annotations is not None else None,
+        comparison=dict(decision.comparison) if decision.comparison is not None else None,
     )
 
 
@@ -471,6 +488,7 @@ def _decision_to_domain(row: ProposalDecisionRecord) -> ProposalDecision:
         superseded_by=row.superseded_by,  # type: ignore[arg-type]
         added=bool(row.added),
         annotations=dict(row.annotations) if row.annotations is not None else None,  # type: ignore[arg-type]
+        comparison=dict(row.comparison) if row.comparison is not None else None,  # type: ignore[arg-type]
     )
 
 
