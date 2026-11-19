@@ -155,4 +155,36 @@ describe("Review against source", () => {
     expect(await screen.findByTestId("operation-decision")).toBeInTheDocument();
     expect(screen.queryByTestId("proposal-gold-callout")).not.toBeInTheDocument();
   });
+
+  it("offers comparing with another pipeline's open extraction of the same source", async () => {
+    const origin = (implementation_id: string) => ({
+      pipeline_type: "individual_extraction",
+      implementation_id,
+      configuration_ref: "c",
+      configuration_version: 1,
+      digest: "abcdef",
+    });
+    const mine = createChangeProposal({
+      source: "pipeline",
+      dataset_id: "ds-1",
+      origin: origin("single_call"),
+      client_metadata: { source_id: "src-1" },
+      operations: [extracted],
+    });
+    const other = { ...mine, id: "proposal-2", origin: origin("find_then_type") };
+    serve(mine);
+    server.use(
+      http.get("*/api/proposals", () =>
+        HttpResponse.json({ items: [mine, other], total: 2, limit: 500, offset: 0 }),
+      ),
+    );
+    const onCompare = vi.fn();
+    render(
+      <ProposalDetailPage id="proposal-1" onSelectOperation={vi.fn()} onCompare={onCompare} />,
+    );
+    const button = await screen.findByTestId("proposal-compare", {}, { timeout: 10000 });
+    expect(button).toHaveTextContent("Compare with another pipeline");
+    await userEvent.click(button);
+    expect(onCompare).toHaveBeenCalledWith("proposal-2");
+  });
 });

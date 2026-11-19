@@ -27,6 +27,22 @@ export type GoldDecision = components["schemas"]["GoldDecisionResponse"];
 type GoldDecisionList = components["schemas"]["ListResponse_GoldDecisionResponse_"];
 type ChangeProposalList = components["schemas"]["ListResponse_ChangeProposalResponse_"];
 
+/** Two pipelines' proposals for one source, their individual creates paired. */
+export type ProposalComparison = components["schemas"]["ProposalComparisonResponse"];
+export type ComparisonPair = components["schemas"]["PairResponse"];
+export type ComparedOperation = components["schemas"]["ComparedOperationResponse"];
+export type ComparedProposal = components["schemas"]["ComparedProposalResponse"];
+export type ComparisonGroup = components["schemas"]["ComparisonGroup"];
+export type PairState = components["schemas"]["PairState"];
+export type PairVerdict = components["schemas"]["Verdict"];
+export type PairDecisionRequest = components["schemas"]["PairDecisionRequest"];
+export type PairDecisionResponse = components["schemas"]["PairDecisionResponse"];
+export type AcceptRestResponse = components["schemas"]["AcceptRestResponse"];
+export type ComparisonSample = components["schemas"]["SampleResponse"];
+
+/** How many agreements a comparison asks to check before accepting the rest. */
+export const DEFAULT_SAMPLE_SIZE = 10;
+
 export interface ChangeProposalListParams {
   taxonomy_id?: string;
   status?: ChangeProposal["status"];
@@ -60,6 +76,43 @@ class ProposalsService extends BaseService {
       proposals.push(...page.items);
       if (page.items.length < limit || proposals.length >= page.total) return proposals;
     }
+  }
+
+  /** Pair two individual extractions of one source (422 not_comparable otherwise). */
+  async compareProposals(
+    a: string,
+    b: string,
+    sampleSize = DEFAULT_SAMPLE_SIZE,
+  ): Promise<ProposalComparison> {
+    return this.get<ProposalComparison>(`/api/proposals/${a}/compare/${b}`, {
+      sample_size: sampleSize,
+    });
+  }
+
+  /**
+   * Decide one pair once for both proposals; 422 invalid_decision, 409
+   * already_decided. A failed landing comes back as outcome "failed".
+   */
+  async decidePair(
+    a: string,
+    b: string,
+    data: PairDecisionRequest,
+    sampleSize = DEFAULT_SAMPLE_SIZE,
+  ): Promise<PairDecisionResponse> {
+    return this.post<PairDecisionResponse>(`/api/proposals/${a}/compare/${b}/decide`, data, {
+      sample_size: sampleSize,
+    });
+  }
+
+  /** Accept the agreements outside the sample; 409 sample_unchecked, 422 sample_too_small. */
+  async acceptRest(
+    a: string,
+    b: string,
+    sampleSize = DEFAULT_SAMPLE_SIZE,
+  ): Promise<AcceptRestResponse> {
+    return this.post<AcceptRestResponse>(`/api/proposals/${a}/compare/${b}/accept-rest`, {
+      sample_size: sampleSize,
+    });
   }
 
   async getProposal(id: string): Promise<ChangeProposal> {

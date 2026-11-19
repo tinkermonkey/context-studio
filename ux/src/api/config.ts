@@ -93,6 +93,9 @@ export const QUERY_KEYS = {
   changesRoot: ["changes"] as const,
   changeProposalsRoot: ["change-proposals"] as const,
   changeProposals: (params?: object) => ["change-proposals", "list", params] as const,
+  /** Two proposals compared (/api/proposals/{a}/compare/{b}); under changeProposalsRoot. */
+  proposalComparison: (a: string, b: string, sampleSize: number) =>
+    ["change-proposals", "compare", a, b, sampleSize] as const,
   changeProposal: (id: string) => ["change-proposals", id] as const,
   // Under the proposal's key, so invalidating the proposals refreshes who decided what.
   changeProposalDecisions: (id: string) => ["change-proposals", id, "decisions"] as const,

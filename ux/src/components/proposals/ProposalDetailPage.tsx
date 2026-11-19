@@ -79,6 +79,7 @@ import { nearMatchHeldIds, nearMatchHeldNote, noPassageHeldIds } from "./sourceM
 import { ProposalOriginChip } from "./ProposalOrigin";
 import { extractedFromSource } from "./review/reviewModel";
 import { goldCheckOf } from "./review/goldModel";
+import { CompareEntry } from "./compare/CompareEntry";
 import { useOperationContext } from "./useOperationContext";
 import { pendingLabel, useProposalActions } from "./useProposalActions";
 import "./proposals.css";
@@ -119,6 +120,8 @@ interface ProposalDetailPageProps {
   onSelectOperation: (operationId: string | undefined) => void;
   /** Open the review against the source; the button shows only for an extraction from one. */
   onReviewAgainstSource?: () => void;
+  /** Open the comparison with another open proposal for the same source. */
+  onCompare?: (otherId: string) => void;
 }
 
 /**
@@ -133,6 +136,7 @@ export function ProposalDetailPage({
   selectedOperationId,
   onSelectOperation,
   onReviewAgainstSource,
+  onCompare,
 }: ProposalDetailPageProps) {
   const { data: proposal, error, refetch } = useChangeProposal(id);
   const { data: taxonomy } = useTaxonomy(proposal?.taxonomy_id ?? "");
@@ -427,6 +431,13 @@ export function ProposalDetailPage({
             >
               <Icon name="file" size={13} /> Review against source
             </Button>
+          )}
+          {onCompare && (
+            <CompareEntry
+              proposal={proposal}
+              onCompare={onCompare}
+              data-testid="proposal-compare"
+            />
           )}
           {deciding && (
             <span className="proposal-summary__actions" data-testid="proposal-actions">

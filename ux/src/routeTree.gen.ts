@@ -41,6 +41,7 @@ import { Route as AppSchemaClassesIdRouteImport } from './routes/app/schema/clas
 import { Route as AppProposalsProposalIdReviewRouteImport } from './routes/app/proposals_.$proposalId_.review'
 import { Route as AppPipelinesBatchesBatchIdRouteImport } from './routes/app/pipelines/batches/$batchId'
 import { Route as AppDataIndividualsIdRouteImport } from './routes/app/data/individuals_.$id'
+import { Route as AppProposalsProposalIdCompareOtherIdRouteImport } from './routes/app/proposals_.$proposalId_.compare.$otherId'
 import { Route as AppPipelinesTypesTypeRunRouteImport } from './routes/app/pipelines/types/$type/run'
 import { Route as AppDataSourcesSourceIdExtractRouteImport } from './routes/app/data/sources_.$sourceId.extract'
 
@@ -206,6 +207,12 @@ const AppDataIndividualsIdRoute = AppDataIndividualsIdRouteImport.update({
   path: '/data/individuals/$id',
   getParentRoute: () => AppRoute,
 } as any)
+const AppProposalsProposalIdCompareOtherIdRoute =
+  AppProposalsProposalIdCompareOtherIdRouteImport.update({
+    id: '/proposals_/$proposalId_/compare/$otherId',
+    path: '/proposals/$proposalId/compare/$otherId',
+    getParentRoute: () => AppRoute,
+  } as any)
 const AppPipelinesTypesTypeRunRoute =
   AppPipelinesTypesTypeRunRouteImport.update({
     id: '/pipelines/types/$type/run',
@@ -254,6 +261,7 @@ export interface FileRoutesByFullPath {
   '/app/schema/schemes/': typeof AppSchemaSchemesIndexRoute
   '/app/data/sources/$sourceId/extract': typeof AppDataSourcesSourceIdExtractRoute
   '/app/pipelines/types/$type/run': typeof AppPipelinesTypesTypeRunRoute
+  '/app/proposals/$proposalId/compare/$otherId': typeof AppProposalsProposalIdCompareOtherIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -288,6 +296,7 @@ export interface FileRoutesByTo {
   '/app/schema/schemes': typeof AppSchemaSchemesIndexRoute
   '/app/data/sources/$sourceId/extract': typeof AppDataSourcesSourceIdExtractRoute
   '/app/pipelines/types/$type/run': typeof AppPipelinesTypesTypeRunRoute
+  '/app/proposals/$proposalId/compare/$otherId': typeof AppProposalsProposalIdCompareOtherIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -325,6 +334,7 @@ export interface FileRoutesById {
   '/app/schema/schemes/': typeof AppSchemaSchemesIndexRoute
   '/app/data/sources_/$sourceId/extract': typeof AppDataSourcesSourceIdExtractRoute
   '/app/pipelines/types/$type/run': typeof AppPipelinesTypesTypeRunRoute
+  '/app/proposals_/$proposalId_/compare/$otherId': typeof AppProposalsProposalIdCompareOtherIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -363,6 +373,7 @@ export interface FileRouteTypes {
     | '/app/schema/schemes/'
     | '/app/data/sources/$sourceId/extract'
     | '/app/pipelines/types/$type/run'
+    | '/app/proposals/$proposalId/compare/$otherId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -397,6 +408,7 @@ export interface FileRouteTypes {
     | '/app/schema/schemes'
     | '/app/data/sources/$sourceId/extract'
     | '/app/pipelines/types/$type/run'
+    | '/app/proposals/$proposalId/compare/$otherId'
   id:
     | '__root__'
     | '/'
@@ -433,6 +445,7 @@ export interface FileRouteTypes {
     | '/app/schema/schemes/'
     | '/app/data/sources_/$sourceId/extract'
     | '/app/pipelines/types/$type/run'
+    | '/app/proposals_/$proposalId_/compare/$otherId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -667,6 +680,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppDataIndividualsIdRouteImport
       parentRoute: typeof AppRoute
     }
+    '/app/proposals_/$proposalId_/compare/$otherId': {
+      id: '/app/proposals_/$proposalId_/compare/$otherId'
+      path: '/proposals/$proposalId/compare/$otherId'
+      fullPath: '/app/proposals/$proposalId/compare/$otherId'
+      preLoaderRoute: typeof AppProposalsProposalIdCompareOtherIdRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/app/pipelines/types/$type/run': {
       id: '/app/pipelines/types/$type/run'
       path: '/pipelines/types/$type/run'
@@ -726,6 +746,7 @@ interface AppRouteChildren {
   AppSchemaTaxonomiesIdRoute: typeof AppSchemaTaxonomiesIdRoute
   AppDataSourcesSourceIdExtractRoute: typeof AppDataSourcesSourceIdExtractRoute
   AppPipelinesTypesTypeRunRoute: typeof AppPipelinesTypesTypeRunRoute
+  AppProposalsProposalIdCompareOtherIdRoute: typeof AppProposalsProposalIdCompareOtherIdRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
@@ -759,6 +780,8 @@ const AppRouteChildren: AppRouteChildren = {
   AppSchemaTaxonomiesIdRoute: AppSchemaTaxonomiesIdRoute,
   AppDataSourcesSourceIdExtractRoute: AppDataSourcesSourceIdExtractRoute,
   AppPipelinesTypesTypeRunRoute: AppPipelinesTypesTypeRunRoute,
+  AppProposalsProposalIdCompareOtherIdRoute:
+    AppProposalsProposalIdCompareOtherIdRoute,
 }
 
 const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)

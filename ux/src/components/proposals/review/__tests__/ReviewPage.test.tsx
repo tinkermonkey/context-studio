@@ -1886,3 +1886,39 @@ describe("the relationship inspector", () => {
     expect(applies[0].edits).toEqual({ "op-rel": { source_id: "ind-77" } });
   });
 });
+
+describe("comparing with another pipeline", () => {
+  it("offers it in the header when another pipeline extracted the source", async () => {
+    const origin = (implementation_id: string) => ({
+      pipeline_type: "individual_extraction",
+      implementation_id,
+      configuration_ref: "c",
+      configuration_version: 1,
+      digest: "abcdef",
+    });
+    proposal.origin = origin("single_call");
+    const other = { ...proposal, id: "proposal-2", origin: origin("find_then_type") };
+    server.use(
+      http.get("*/api/proposals", () =>
+        HttpResponse.json({ items: [proposal, other], total: 2, limit: 500, offset: 0 }),
+      ),
+    );
+    const onCompare = vi.fn();
+    const user = userEvent.setup();
+    render(<ReviewPage id="proposal-1" onFinish={onFinish} onCompare={onCompare} />);
+    const button = await screen.findByTestId("review-compare", {}, { timeout: 10000 });
+    expect(within(screen.getByTestId("review-header")).getByTestId("review-compare")).toBe(button);
+    await user.click(button);
+    expect(onCompare).toHaveBeenCalledWith("proposal-2");
+  });
+
+  it("isn't offered without another pipeline's extraction", async () => {
+    server.use(
+      http.get("*/api/proposals", () =>
+        HttpResponse.json({ items: [proposal], total: 1, limit: 500, offset: 0 }),
+      ),
+    );
+    await renderPage();
+    expect(screen.queryByTestId("review-compare")).not.toBeInTheDocument();
+  });
+});
