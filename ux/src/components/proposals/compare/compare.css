@@ -104,6 +104,7 @@
     width: 100%;
     min-width: 720px;
     border-collapse: collapse;
+    table-layout: fixed;
   }
 
   .compare-table th {
@@ -116,6 +117,22 @@
     text-transform: uppercase;
     color: rgb(var(--canvas-fg-3));
     border-bottom: 1px solid rgb(var(--canvas-border));
+  }
+
+  /* Fixed shares: the element pill wraps anywhere, so auto layout squeezed its column. */
+  .compare-table th:nth-child(1) {
+    width: 28%;
+  }
+
+  .compare-table th:nth-child(2),
+  .compare-table th:nth-child(3) {
+    width: 22%;
+  }
+
+  /* The class is what a row decides, so show it whole rather than cut off. */
+  .compare-table .review-pill--class .review-pill__text {
+    white-space: normal;
+    overflow-wrap: anywhere;
   }
 
   .compare-table td {
