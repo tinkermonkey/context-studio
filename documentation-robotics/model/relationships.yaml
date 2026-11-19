@@ -1,10 +1,10 @@
 # Intra-layer relationships
 # Format: source_id -> predicate -> target_id
-# Last updated: 2026-10-28T12:50:11.161Z
+# Last updated: 2026-11-17T18:49:10.614Z
 
 - source: motivation.assessment.security-posture-assessment
   target: motivation.outcome.curated-domain-ontology
-  predicate: associated-with
+  predicate: influence
   layer: motivation
   category: structural
 - source: motivation.meaning.knowledge-as-infrastructure
@@ -34,12 +34,12 @@
   category: structural
 - source: motivation.stakeholder.knowledge-manager
   target: motivation.stakeholder.desktop-application-user
-  predicate: associated-with
+  predicate: aggregates
   layer: motivation
   category: structural
 - source: motivation.stakeholder.platform-developer
   target: motivation.stakeholder.knowledge-manager
-  predicate: associated-with
+  predicate: aggregates
   layer: motivation
   category: structural
 - source: motivation.constraint.sqlite-only-persistence
@@ -49,7 +49,7 @@
   category: structural
 - source: security.securitymodel.context-studio-security-model
   target: security.dataclassification.internal-knowledge-graph-data
-  predicate: governs
+  predicate: aggregates
   layer: security
   category: structural
 - source: security.securitymodel.context-studio-security-model
@@ -82,19 +82,9 @@
   predicate: mitigates
   layer: security
   category: structural
-- source: business.businessevent.entity-changed-event
-  target: business.businessfunction.entity-enrichment
-  predicate: triggers
-  layer: business
-  category: structural
-- source: business.businessevent.sync-completed-event
-  target: business.businessfunction.conflict-resolution
-  predicate: triggers
-  layer: business
-  category: structural
 - source: business.businesscollaboration.knowledge-graph-collaboration
   target: business.businessinteraction.rag-knowledge-retrieval
-  predicate: performs
+  predicate: assigned-to
   layer: business
   category: structural
 - source: business.businessfunction.entity-enrichment
@@ -141,19 +131,9 @@
   predicate: triggers
   layer: technology
   category: structural
-- source: technology.technologyinteraction.s3-sync-via-boto3
-  target: technology.technologycollaboration.external-knowledge-integration
-  predicate: realizes
-  layer: technology
-  category: structural
-- source: technology.technologycollaboration.external-knowledge-integration
-  target: technology.technologyevent.rate-limit-threshold-event
-  predicate: triggers
-  layer: technology
-  category: structural
 - source: api.ratelimit.external-reference-api-rate-limit
   target: api.securityscheme.api-key
-  predicate: associated-with
+  predicate: references
   layer: api
   category: structural
 - source: api.ratelimit.external-reference-api-rate-limit
@@ -175,12 +155,6 @@
   targetLayer: application
   category: structural
 - source: data-store.storedlogic.sqlite-vec-cosine-similarity
-  target: business.businessfunction.semantic-search
-  predicate: realizes
-  layer: data-store
-  targetLayer: business
-  category: structural
-- source: data-store.storedlogic.sqlite-vec-cosine-similarity
   target: application.applicationfunction.embedding-generation
   predicate: realizes
   layer: data-store
@@ -190,54 +164,6 @@
   target: motivation.constraint.external-reference-source-rate-limits
   predicate: satisfies
   layer: data-store
-  targetLayer: motivation
-  category: structural
-- source: ux.view.datasets-view
-  target: api.securityscheme.api-key
-  predicate: uses
-  layer: ux
-  targetLayer: api
-  category: structural
-- source: ux.view.rag-experiments-view
-  target: api.securityscheme.api-key
-  predicate: uses
-  layer: ux
-  targetLayer: api
-  category: structural
-- source: ux.view.configuration-view
-  target: api.securityscheme.api-key
-  predicate: uses
-  layer: ux
-  targetLayer: api
-  category: structural
-- source: ux.view.admin-view
-  target: api.securityscheme.api-key
-  predicate: uses
-  layer: ux
-  targetLayer: api
-  category: structural
-- source: ux.view.datasets-view
-  target: motivation.stakeholder.knowledge-manager
-  predicate: serves
-  layer: ux
-  targetLayer: motivation
-  category: structural
-- source: ux.view.rag-experiments-view
-  target: motivation.stakeholder.ai-agent-consumer
-  predicate: serves
-  layer: ux
-  targetLayer: motivation
-  category: structural
-- source: ux.view.admin-view
-  target: motivation.stakeholder.platform-developer
-  predicate: serves
-  layer: ux
-  targetLayer: motivation
-  category: structural
-- source: ux.view.configuration-view
-  target: motivation.stakeholder.platform-developer
-  predicate: serves
-  layer: ux
   targetLayer: motivation
   category: structural
 - source: navigation.route.datasets-route
@@ -323,12 +249,6 @@
   predicate: monitors
   layer: apm
   category: structural
-- source: apm.alert.rate-limit-breach-alert
-  target: api.ratelimit.external-reference-api-rate-limit
-  predicate: monitors
-  layer: apm
-  targetLayer: api
-  category: structural
 - source: apm.alert.background-task-dead-letter-alert
   target: apm.span.api-request-span
   predicate: monitors
@@ -336,13 +256,13 @@
   category: structural
 - source: testing.testcoveragetarget.ontology-crud
   target: data-store.storedlogic.sqlite-vec-cosine-similarity
-  predicate: tests
+  predicate: covers
   layer: testing
   targetLayer: data-store
   category: structural
 - source: testing.testcoveragetarget.extraction-pipeline
   target: data-store.storedlogic.sqlite-vec-cosine-similarity
-  predicate: tests
+  predicate: covers
   layer: testing
   targetLayer: data-store
   category: structural
@@ -374,34 +294,6 @@
   predicate: references
   layer: testing
   category: structural
-- source: testing.inputspacepartition.entity-node-type-discriminator
-  target: testing.testcoveragetarget.ontology-crud
-  predicate: serves
-  layer: testing
-  category: structural
-- source: testing.inputspacepartition.entity-node-type-discriminator
-  target: testing.testcoveragetarget.extraction-pipeline
-  predicate: serves
-  layer: testing
-  category: structural
-- source: testing.testcoveragetarget.graph-analysis
-  target: apm.metricinstrument.rag-processing-time
-  predicate: references
-  layer: testing
-  targetLayer: apm
-  category: structural
-- source: testing.testcoveragetarget.extraction-pipeline
-  target: apm.metricinstrument.llm-execution-tracker
-  predicate: references
-  layer: testing
-  targetLayer: apm
-  category: structural
-- source: testing.testcoveragetarget.admin-health
-  target: apm.metricinstrument.background-task-queue-depth
-  predicate: references
-  layer: testing
-  targetLayer: apm
-  category: structural
 - source: security.threat.sql-injection
   target: security.dataclassification.internal-knowledge-graph-data
   predicate: influence
@@ -419,7 +311,7 @@
   category: structural
 - source: motivation.value.knowledge-reusability
   target: motivation.value.reduced-manual-curation-effort
-  predicate: associated-with
+  predicate: aggregates
   layer: motivation
   category: structural
 - source: motivation.meaning.knowledge-as-infrastructure
@@ -429,7 +321,7 @@
   category: structural
 - source: ux.view.rag-experiments-view
   target: motivation.outcome.improved-ai-inference-quality
-  predicate: maps-to
+  predicate: supports
   layer: ux
   targetLayer: motivation
   category: structural
@@ -456,11 +348,6 @@
   layer: api
   targetLayer: security
   category: structural
-- source: technology.technologycollaboration.external-knowledge-integration
-  target: technology.communicationnetwork.localhost-lan
-  predicate: uses
-  layer: technology
-  category: structural
 - source: data-store.accesspattern.entity-by-parent-range-scan
   target: data-store.storedlogic.sqlite-vec-cosine-similarity
   predicate: triggers
@@ -469,11 +356,6 @@
 - source: data-store.retentionpolicy.reference-api-cache-cleanup
   target: data-store.storedlogic.sqlite-vec-cosine-similarity
   predicate: triggers
-  layer: data-store
-  category: structural
-- source: data-store.storedlogic.sqlite-vec-cosine-similarity
-  target: data-store.validationrule.entity-cascade-delete
-  predicate: composes
   layer: data-store
   category: structural
 - source: ux.view.admin-view
@@ -512,17 +394,17 @@
   category: structural
 - source: data-model.arrayschema.external-references-list
   target: data-model.stringschema.uuid-string
-  predicate: aggregates
+  predicate: composes
   layer: data-model
   category: structural
 - source: data-model.arrayschema.external-references-list
   target: data-model.numericschema.relationship-weight
-  predicate: aggregates
+  predicate: composes
   layer: data-model
   category: structural
 - source: data-model.arrayschema.external-references-list
   target: data-model.stringschema.iso-8601-datetime
-  predicate: aggregates
+  predicate: composes
   layer: data-model
   category: structural
 - source: business.contract.open-api-contract
@@ -547,26 +429,8 @@
   category: structural
 - source: ux.statepattern.crud-entity-pattern
   target: ux.experiencestate.entity-crud-state
-  predicate: governs
+  predicate: aggregates
   layer: ux
-  category: structural
-- source: technology.systemsoftware.python
-  target: application.applicationservice.ontology-service
-  predicate: realizes
-  layer: technology
-  targetLayer: application
-  category: structural
-- source: technology.systemsoftware.fast-api
-  target: application.applicationservice.ontology-service
-  predicate: realizes
-  layer: technology
-  targetLayer: application
-  category: structural
-- source: technology.systemsoftware.sentence-transformers
-  target: application.applicationservice.extraction-service
-  predicate: realizes
-  layer: technology
-  targetLayer: application
   category: structural
 - source: technology.systemsoftware.sqlalchemy
   target: application.applicationcomponent.sqlite-persistence-adapter
@@ -577,24 +441,6 @@
 - source: technology.systemsoftware.network-x
   target: application.applicationcomponent.network-x-graph-engine-adapter
   predicate: serves
-  layer: technology
-  targetLayer: application
-  category: structural
-- source: technology.systemsoftware.rdflib
-  target: application.applicationservice.graph-analysis-service
-  predicate: realizes
-  layer: technology
-  targetLayer: application
-  category: structural
-- source: technology.systemsoftware.spa-cy
-  target: application.applicationservice.extraction-service
-  predicate: realizes
-  layer: technology
-  targetLayer: application
-  category: structural
-- source: technology.systemsoftware.duck-db
-  target: application.applicationservice.versioning-service
-  predicate: realizes
   layer: technology
   targetLayer: application
   category: structural
@@ -633,76 +479,10 @@
   predicate: uses
   layer: application
   category: structural
-- source: technology.systemsoftware.python
-  target: application.applicationservice.versioning-service
-  predicate: realizes
-  layer: technology
-  targetLayer: application
-  category: structural
-- source: technology.systemsoftware.python
-  target: application.applicationservice.pipeline-service
-  predicate: realizes
-  layer: technology
-  targetLayer: application
-  category: structural
-- source: technology.systemsoftware.python
-  target: application.applicationservice.admin-service
-  predicate: realizes
-  layer: technology
-  targetLayer: application
-  category: structural
-- source: technology.systemsoftware.react
-  target: application.applicationservice.admin-service
-  predicate: realizes
-  layer: technology
-  targetLayer: application
-  category: structural
-- source: data-model.objectschema.ontology-entity
-  target: technology.systemsoftware.sqlalchemy
-  predicate: depends-on
-  layer: data-model
-  targetLayer: technology
-  category: structural
-- source: data-model.objectschema.relationship
-  target: technology.systemsoftware.sqlalchemy
-  predicate: depends-on
-  layer: data-model
-  targetLayer: technology
-  category: structural
-- source: data-model.objectschema.change-event
-  target: technology.systemsoftware.sqlalchemy
-  predicate: depends-on
-  layer: data-model
-  targetLayer: technology
-  category: structural
-- source: data-model.objectschema.changeset
-  target: technology.systemsoftware.sqlalchemy
-  predicate: depends-on
-  layer: data-model
-  targetLayer: technology
-  category: structural
-- source: data-model.objectschema.import-run
-  target: technology.systemsoftware.sqlalchemy
-  predicate: depends-on
-  layer: data-model
-  targetLayer: technology
-  category: structural
-- source: data-model.objectschema.pipeline-configuration
-  target: technology.systemsoftware.sqlalchemy
-  predicate: depends-on
-  layer: data-model
-  targetLayer: technology
-  category: structural
 - source: technology.systemsoftware.alembic
   target: technology.systemsoftware.sqlalchemy
   predicate: depends-on
   layer: technology
-  category: structural
-- source: technology.systemsoftware.pydantic
-  target: application.applicationservice.ontology-service
-  predicate: realizes
-  layer: technology
-  targetLayer: application
   category: structural
 - source: application.applicationservice.import-run-service
   target: application.applicationservice.versioning-service
@@ -914,33 +694,6 @@
     source_provenance: inferred
     confidence: high
     basis: import dependency
-- source: technology.systemsoftware.fast-api
-  target: technology.technologyevent.rate-limit-threshold-event
-  predicate: triggers
-  layer: technology
-  category: structural
-  properties:
-    source_provenance: inferred
-    confidence: high
-    basis: domain pattern
-- source: technology.systemsoftware.fast-api
-  target: technology.communicationnetwork.localhost-lan
-  predicate: uses
-  layer: technology
-  category: structural
-  properties:
-    source_provenance: inferred
-    confidence: high
-    basis: domain pattern
-- source: technology.systemsoftware.vite
-  target: technology.communicationnetwork.localhost-lan
-  predicate: uses
-  layer: technology
-  category: structural
-  properties:
-    source_provenance: inferred
-    confidence: high
-    basis: domain pattern
 - source: technology.technologyinteraction.s3-sync-via-boto3
   target: technology.technologyevent.rate-limit-threshold-event
   predicate: triggers
@@ -952,7 +705,7 @@
     basis: domain pattern
 - source: technology.technologycollaboration.external-knowledge-integration
   target: technology.technologyinteraction.s3-sync-via-boto3
-  predicate: performs
+  predicate: assigned-to
   layer: technology
   category: structural
   properties:
@@ -961,7 +714,7 @@
     basis: domain pattern
 - source: data-model.arrayschema.external-references-list
   target: data-model.objectschema.ontology-entity
-  predicate: aggregates
+  predicate: composes
   layer: data-model
   category: structural
   properties:
@@ -970,7 +723,7 @@
     basis: naming convention
 - source: data-model.objectschema.import-run
   target: data-model.objectschema.changeset
-  predicate: extends
+  predicate: specializes
   layer: data-model
   category: structural
   properties:
@@ -979,7 +732,7 @@
     basis: domain pattern
 - source: data-model.objectschema.change-event
   target: data-model.objectschema.ontology-entity
-  predicate: extends
+  predicate: specializes
   layer: data-model
   category: structural
   properties:
@@ -1025,26 +778,6 @@
   properties:
     source_provenance: inferred
     confidence: high
-    basis: domain pattern
-- source: technology.systemsoftware.tan-stack-query
-  target: application.applicationservice.admin-service
-  predicate: realizes
-  layer: technology
-  targetLayer: application
-  category: structural
-  properties:
-    source_provenance: inferred
-    confidence: medium
-    basis: domain pattern
-- source: technology.systemsoftware.tan-stack-router
-  target: application.applicationservice.admin-service
-  predicate: realizes
-  layer: technology
-  targetLayer: application
-  category: structural
-  properties:
-    source_provenance: inferred
-    confidence: medium
     basis: domain pattern
 - source: application.applicationservice.ontology-service
   target: application.applicationservice.import-run-service
@@ -1103,32 +836,32 @@
   category: structural
 - source: data-model.objectschema.ontology-entity
   target: data-model.objectschema.relationship
-  predicate: extends
+  predicate: specializes
   layer: data-model
   category: structural
 - source: data-model.objectschema.changeset
   target: data-model.objectschema.changeset-event
-  predicate: extends
+  predicate: specializes
   layer: data-model
   category: structural
 - source: data-model.objectschema.changeset
   target: data-model.objectschema.proposal
-  predicate: extends
+  predicate: specializes
   layer: data-model
   category: structural
 - source: data-model.objectschema.proposal
   target: data-model.objectschema.conflict-resolution
-  predicate: extends
+  predicate: specializes
   layer: data-model
   category: structural
 - source: data-model.objectschema.pipeline-configuration
   target: data-model.objectschema.pipeline-execution
-  predicate: extends
+  predicate: specializes
   layer: data-model
   category: structural
 - source: data-model.objectschema.import-run
   target: data-model.objectschema.change-event
-  predicate: extends
+  predicate: specializes
   layer: data-model
   category: structural
 - source: api.operation.create-taxonomy
@@ -2171,72 +1904,6 @@
     source_provenance: inferred
     confidence: high
     basis: cosine similarity function serves extraction service embedding search
-- source: ux.view.taxonomies-view
-  target: application.applicationservice.ontology-service
-  predicate: serves
-  layer: ux
-  targetLayer: application
-  category: structural
-- source: ux.view.concept-schemes-view
-  target: application.applicationservice.ontology-service
-  predicate: serves
-  layer: ux
-  targetLayer: application
-  category: structural
-  properties:
-    source_provenance: inferred
-    confidence: high
-    basis: UI view backed by application service
-- source: ux.view.classes-view
-  target: application.applicationservice.ontology-service
-  predicate: serves
-  layer: ux
-  targetLayer: application
-  category: structural
-  properties:
-    source_provenance: inferred
-    confidence: high
-    basis: UI view backed by application service
-- source: ux.view.individuals-view
-  target: application.applicationservice.ontology-service
-  predicate: serves
-  layer: ux
-  targetLayer: application
-  category: structural
-  properties:
-    source_provenance: inferred
-    confidence: high
-    basis: UI view backed by application service
-- source: ux.view.properties-view
-  target: application.applicationservice.ontology-service
-  predicate: serves
-  layer: ux
-  targetLayer: application
-  category: structural
-  properties:
-    source_provenance: inferred
-    confidence: high
-    basis: UI view backed by application service
-- source: ux.view.relationships-view
-  target: application.applicationservice.ontology-service
-  predicate: serves
-  layer: ux
-  targetLayer: application
-  category: structural
-  properties:
-    source_provenance: inferred
-    confidence: high
-    basis: UI view backed by application service
-- source: ux.view.interchange-view
-  target: application.applicationservice.import-run-service
-  predicate: serves
-  layer: ux
-  targetLayer: application
-  category: structural
-  properties:
-    source_provenance: inferred
-    confidence: high
-    basis: UI view backed by application service
 - source: navigation.route.taxonomies-route
   target: ux.view.taxonomies-view
   predicate: maps-to
@@ -2303,46 +1970,6 @@
     source_provenance: inferred
     confidence: high
     basis: route maps to corresponding view
-- source: ux.view.datasets-view
-  target: application.applicationservice.ontology-service
-  predicate: serves
-  layer: ux
-  targetLayer: application
-  category: structural
-  properties:
-    source_provenance: inferred
-    confidence: medium
-    basis: datasets view manages ontology data
-- source: ux.view.rag-experiments-view
-  target: application.applicationservice.extraction-service
-  predicate: serves
-  layer: ux
-  targetLayer: application
-  category: structural
-  properties:
-    source_provenance: inferred
-    confidence: high
-    basis: RAG experiments UI backed by extraction/pipeline services
-- source: ux.view.configuration-view
-  target: application.applicationservice.admin-service
-  predicate: serves
-  layer: ux
-  targetLayer: application
-  category: structural
-  properties:
-    source_provenance: inferred
-    confidence: high
-    basis: configuration view backed by admin service
-- source: ux.view.admin-view
-  target: application.applicationservice.admin-service
-  predicate: serves
-  layer: ux
-  targetLayer: application
-  category: structural
-  properties:
-    source_provenance: inferred
-    confidence: high
-    basis: admin view backed by admin service
 - source: data-model.objectschema.individual-class
   target: api.requestbody.individual-class-request
   predicate: maps-to
@@ -2399,677 +2026,172 @@
     confidence: high
 - source: api.operation.create-taxonomy
   target: api.requestbody.taxonomy-create-request
-  predicate: aggregates
-  layer: api
-  category: structural
-- source: api.operation.create-taxonomy
-  target: api.response.taxonomy-response
-  predicate: delivers
+  predicate: composes
   layer: api
   category: structural
 - source: api.operation.update-taxonomy
   target: api.requestbody.taxonomy-update-request
-  predicate: aggregates
-  layer: api
-  category: structural
-- source: api.operation.update-taxonomy
-  target: api.response.taxonomy-response
-  predicate: delivers
-  layer: api
-  category: structural
-- source: api.operation.get-taxonomy
-  target: api.response.taxonomy-response
-  predicate: delivers
-  layer: api
-  category: structural
-- source: api.operation.list-taxonomies
-  target: api.response.taxonomy-response
-  predicate: delivers
-  layer: api
-  category: structural
-- source: api.operation.delete-taxonomy
-  target: api.response.taxonomy-response
-  predicate: delivers
+  predicate: composes
   layer: api
   category: structural
 - source: api.operation.create-concept-scheme
   target: api.requestbody.concept-scheme-create-request
-  predicate: aggregates
-  layer: api
-  category: structural
-- source: api.operation.create-concept-scheme
-  target: api.response.concept-scheme-response
-  predicate: delivers
+  predicate: composes
   layer: api
   category: structural
 - source: api.operation.update-concept-scheme
   target: api.requestbody.concept-scheme-update-request
-  predicate: aggregates
-  layer: api
-  category: structural
-- source: api.operation.update-concept-scheme
-  target: api.response.concept-scheme-response
-  predicate: delivers
-  layer: api
-  category: structural
-- source: api.operation.get-concept-scheme
-  target: api.response.concept-scheme-response
-  predicate: delivers
-  layer: api
-  category: structural
-- source: api.operation.list-concept-schemes
-  target: api.response.concept-scheme-response
-  predicate: delivers
-  layer: api
-  category: structural
-- source: api.operation.delete-concept-scheme
-  target: api.response.concept-scheme-response
-  predicate: delivers
+  predicate: composes
   layer: api
   category: structural
 - source: api.operation.create-class
   target: api.requestbody.class-create-request
-  predicate: aggregates
-  layer: api
-  category: structural
-- source: api.operation.create-class
-  target: api.response.class-response
-  predicate: delivers
+  predicate: composes
   layer: api
   category: structural
 - source: api.operation.update-class
   target: api.requestbody.class-update-request
-  predicate: aggregates
-  layer: api
-  category: structural
-- source: api.operation.update-class
-  target: api.response.class-response
-  predicate: delivers
-  layer: api
-  category: structural
-- source: api.operation.get-class
-  target: api.response.class-response
-  predicate: delivers
-  layer: api
-  category: structural
-- source: api.operation.list-classes
-  target: api.response.class-response
-  predicate: delivers
-  layer: api
-  category: structural
-- source: api.operation.delete-class
-  target: api.response.class-response
-  predicate: delivers
+  predicate: composes
   layer: api
   category: structural
 - source: api.operation.move-class
   target: api.requestbody.class-move-request
-  predicate: aggregates
-  layer: api
-  category: structural
-- source: api.operation.move-class
-  target: api.response.class-response
-  predicate: delivers
+  predicate: composes
   layer: api
   category: structural
 - source: api.operation.create-relationship
   target: api.requestbody.relationship-create-request
-  predicate: aggregates
-  layer: api
-  category: structural
-- source: api.operation.create-relationship
-  target: api.response.relationship-response
-  predicate: delivers
-  layer: api
-  category: structural
-- source: api.operation.get-relationship
-  target: api.response.relationship-response
-  predicate: delivers
-  layer: api
-  category: structural
-- source: api.operation.list-relationships
-  target: api.response.relationship-response
-  predicate: delivers
-  layer: api
-  category: structural
-- source: api.operation.delete-relationship
-  target: api.response.relationship-response
-  predicate: delivers
+  predicate: composes
   layer: api
   category: structural
 - source: api.operation.create-property-definition
   target: api.requestbody.property-definition-create-request
-  predicate: aggregates
-  layer: api
-  category: structural
-- source: api.operation.create-property-definition
-  target: api.response.property-definition-response
-  predicate: delivers
+  predicate: composes
   layer: api
   category: structural
 - source: api.operation.update-property-definition
   target: api.requestbody.property-definition-update-request
-  predicate: aggregates
-  layer: api
-  category: structural
-- source: api.operation.update-property-definition
-  target: api.response.property-definition-response
-  predicate: delivers
-  layer: api
-  category: structural
-- source: api.operation.get-property-definition
-  target: api.response.property-definition-response
-  predicate: delivers
-  layer: api
-  category: structural
-- source: api.operation.list-property-definitions
-  target: api.response.property-definition-response
-  predicate: delivers
-  layer: api
-  category: structural
-- source: api.operation.delete-property-definition
-  target: api.response.property-definition-response
-  predicate: delivers
+  predicate: composes
   layer: api
   category: structural
 - source: api.operation.create-individual
   target: api.requestbody.individual-create-request
-  predicate: aggregates
-  layer: api
-  category: structural
-- source: api.operation.create-individual
-  target: api.response.individual-response
-  predicate: delivers
+  predicate: composes
   layer: api
   category: structural
 - source: api.operation.create-individual
   target: api.requestbody.external-reference-request
-  predicate: aggregates
+  predicate: composes
   layer: api
   category: structural
 - source: api.operation.create-individual
   target: api.requestbody.lexical-sense-request
-  predicate: aggregates
+  predicate: composes
   layer: api
   category: structural
 - source: api.operation.update-individual
   target: api.requestbody.individual-update-request
-  predicate: aggregates
-  layer: api
-  category: structural
-- source: api.operation.update-individual
-  target: api.response.individual-response
-  predicate: delivers
-  layer: api
-  category: structural
-- source: api.operation.get-individual
-  target: api.response.individual-response
-  predicate: delivers
-  layer: api
-  category: structural
-- source: api.operation.get-individual
-  target: api.response.lexical-sense-response
-  predicate: delivers
+  predicate: composes
   layer: api
   category: structural
 - source: api.operation.get-individual
   target: api.requestbody.data-property-value-request
-  predicate: aggregates
-  layer: api
-  category: structural
-- source: api.operation.list-individuals
-  target: api.response.individual-response
-  predicate: delivers
-  layer: api
-  category: structural
-- source: api.operation.delete-individual
-  target: api.response.individual-response
-  predicate: delivers
+  predicate: composes
   layer: api
   category: structural
 - source: api.operation.add-parent-class-to-individual
   target: api.requestbody.individual-class-request
-  predicate: aggregates
-  layer: api
-  category: structural
-- source: api.operation.add-parent-class-to-individual
-  target: api.response.individual-response
-  predicate: delivers
-  layer: api
-  category: structural
-- source: api.operation.remove-parent-class-from-individual
-  target: api.response.individual-response
-  predicate: delivers
+  predicate: composes
   layer: api
   category: structural
 - source: api.operation.reorder-individual-classes
   target: api.requestbody.individual-class-list-request
-  predicate: aggregates
-  layer: api
-  category: structural
-- source: api.operation.reorder-individual-classes
-  target: api.response.individual-response
-  predicate: delivers
-  layer: api
-  category: structural
-- source: api.operation.get-individual-inherited-properties
-  target: api.response.data-property-value-response
-  predicate: delivers
-  layer: api
-  category: structural
-- source: api.operation.get-graph-metrics
-  target: api.response.graph-metrics-response
-  predicate: delivers
-  layer: api
-  category: structural
-- source: api.operation.get-shortest-path
-  target: api.response.path-result-response
-  predicate: delivers
-  layer: api
-  category: structural
-- source: api.operation.get-all-paths
-  target: api.response.path-result-response
-  predicate: delivers
-  layer: api
-  category: structural
-- source: api.operation.get-neighbors
-  target: api.response.neighbors-response
-  predicate: delivers
-  layer: api
-  category: structural
-- source: api.operation.get-subgraph
-  target: api.response.subgraph-result-response
-  predicate: delivers
-  layer: api
-  category: structural
-- source: api.operation.get-subgraph-by-depth
-  target: api.response.subgraph-data-response
-  predicate: delivers
-  layer: api
-  category: structural
-- source: api.operation.get-centrality
-  target: api.response.centrality-response
-  predicate: delivers
-  layer: api
-  category: structural
-- source: api.operation.get-communities
-  target: api.response.communities-response
-  predicate: delivers
-  layer: api
-  category: structural
-- source: api.operation.get-degree-distribution
-  target: api.response.degree-distribution-response
-  predicate: delivers
+  predicate: composes
   layer: api
   category: structural
 - source: api.operation.check-cycle
   target: api.requestbody.cycle-check-request
-  predicate: aggregates
-  layer: api
-  category: structural
-- source: api.operation.check-cycle
-  target: api.response.cycle-check-response
-  predicate: delivers
+  predicate: composes
   layer: api
   category: structural
 - source: api.operation.execute-sparql
   target: api.requestbody.sparqlrequest
-  predicate: aggregates
-  layer: api
-  category: structural
-- source: api.operation.execute-sparql
-  target: api.response.sparqlresponse
-  predicate: delivers
-  layer: api
-  category: structural
-- source: api.operation.build-knowledge-graph
-  target: api.response.knowledge-graph-response
-  predicate: delivers
-  layer: api
-  category: structural
-- source: api.operation.get-rdf-triples
-  target: api.response.triples-response
-  predicate: delivers
-  layer: api
-  category: structural
-- source: api.operation.get-rdf-triples
-  target: api.response.triple-response
-  predicate: delivers
-  layer: api
-  category: structural
-- source: api.operation.get-rdf-triple-count
-  target: api.response.triple-count-response
-  predicate: delivers
+  predicate: composes
   layer: api
   category: structural
 - source: api.operation.analyze-text
   target: api.requestbody.analyze-text-request
-  predicate: aggregates
-  layer: api
-  category: structural
-- source: api.operation.analyze-text
-  target: api.response.extraction-result-schema
-  predicate: delivers
+  predicate: composes
   layer: api
   category: structural
 - source: api.operation.extract-entities
   target: api.requestbody.extract-request
-  predicate: aggregates
-  layer: api
-  category: structural
-- source: api.operation.extract-entities
-  target: api.response.extraction-result-schema
-  predicate: delivers
+  predicate: composes
   layer: api
   category: structural
 - source: api.operation.enrich-from-references
   target: api.requestbody.enrich-from-references-request
-  predicate: aggregates
-  layer: api
-  category: structural
-- source: api.operation.enrich-from-references
-  target: api.response.external-reference-response
-  predicate: delivers
+  predicate: composes
   layer: api
   category: structural
 - source: api.operation.search-references
   target: api.requestbody.reference-search-request
-  predicate: aggregates
-  layer: api
-  category: structural
-- source: api.operation.search-references
-  target: api.response.reference-search-response-schema
-  predicate: delivers
-  layer: api
-  category: structural
-- source: api.operation.search-references
-  target: api.response.reference-result-schema
-  predicate: delivers
+  predicate: composes
   layer: api
   category: structural
 - source: api.operation.get-reference-relations
   target: api.requestbody.reference-relations-request
-  predicate: aggregates
-  layer: api
-  category: structural
-- source: api.operation.get-reference-relations
-  target: api.response.reference-relations-response-schema
-  predicate: delivers
-  layer: api
-  category: structural
-- source: api.operation.get-reference-relations
-  target: api.response.reference-relation-schema
-  predicate: delivers
-  layer: api
-  category: structural
-- source: api.operation.get-reference-status
-  target: api.response.reference-status-response-schema
-  predicate: delivers
-  layer: api
-  category: structural
-- source: api.operation.get-reference-status
-  target: api.response.reference-source-status-schema
-  predicate: delivers
+  predicate: composes
   layer: api
   category: structural
 - source: api.operation.export-ontology
   target: api.requestbody.export-request
-  predicate: aggregates
-  layer: api
-  category: structural
-- source: api.operation.export-ontology
-  target: api.response.serialization-scope-response
-  predicate: delivers
+  predicate: composes
   layer: api
   category: structural
 - source: api.operation.import-ontology
   target: api.requestbody.serialization-scope-request
-  predicate: aggregates
-  layer: api
-  category: structural
-- source: api.operation.import-ontology
-  target: api.response.import-plan-response
-  predicate: delivers
-  layer: api
-  category: structural
-- source: api.operation.import-ontology
-  target: api.response.import-conflict-response
-  predicate: delivers
-  layer: api
-  category: structural
-- source: api.operation.get-import-run
-  target: api.response.import-run-response
-  predicate: delivers
-  layer: api
-  category: structural
-- source: api.operation.list-import-runs
-  target: api.response.import-run-response
-  predicate: delivers
-  layer: api
-  category: structural
-- source: api.operation.get-run-change-events
-  target: api.response.interchange-change-event-response
-  predicate: delivers
+  predicate: composes
   layer: api
   category: structural
 - source: api.operation.create-changeset
   target: api.requestbody.changeset-create-request
-  predicate: aggregates
-  layer: api
-  category: structural
-- source: api.operation.create-changeset
-  target: api.response.changeset-response
-  predicate: delivers
-  layer: api
-  category: structural
-- source: api.operation.get-changeset
-  target: api.response.changeset-response
-  predicate: delivers
-  layer: api
-  category: structural
-- source: api.operation.stage-changeset
-  target: api.response.changeset-response
-  predicate: delivers
-  layer: api
-  category: structural
-- source: api.operation.submit-proposal
-  target: api.response.proposal-response
-  predicate: delivers
-  layer: api
-  category: structural
-- source: api.operation.approve-proposal
-  target: api.response.proposal-response
-  predicate: delivers
+  predicate: composes
   layer: api
   category: structural
 - source: api.operation.reject-proposal
   target: api.requestbody.reject-proposal-request
-  predicate: aggregates
-  layer: api
-  category: structural
-- source: api.operation.reject-proposal
-  target: api.response.proposal-response
-  predicate: delivers
-  layer: api
-  category: structural
-- source: api.operation.merge-proposal
-  target: api.response.merge-result-response
-  predicate: delivers
-  layer: api
-  category: structural
-- source: api.operation.detect-conflicts
-  target: api.response.conflict-report-response
-  predicate: delivers
+  predicate: composes
   layer: api
   category: structural
 - source: api.operation.resolve-conflicts
   target: api.requestbody.resolve-conflicts-request
-  predicate: aggregates
-  layer: api
-  category: structural
-- source: api.operation.resolve-conflicts
-  target: api.response.resolution-record-response
-  predicate: delivers
+  predicate: composes
   layer: api
   category: structural
 - source: api.operation.auto-resolve-conflicts
   target: api.requestbody.auto-resolve-conflicts-request
-  predicate: aggregates
-  layer: api
-  category: structural
-- source: api.operation.auto-resolve-conflicts
-  target: api.response.conflict-response
-  predicate: delivers
-  layer: api
-  category: structural
-- source: api.operation.get-change-history-all
-  target: api.response.change-history-response
-  predicate: delivers
-  layer: api
-  category: structural
-- source: api.operation.get-change-history-all
-  target: api.response.versioning-change-event-response
-  predicate: delivers
-  layer: api
-  category: structural
-- source: api.operation.get-change-history-by-entity
-  target: api.response.change-history-response
-  predicate: delivers
-  layer: api
-  category: structural
-- source: api.operation.get-entity-version
-  target: api.response.entity-version-response
-  predicate: delivers
-  layer: api
-  category: structural
-- source: api.operation.list-entity-versions
-  target: api.response.entity-version-response
-  predicate: delivers
-  layer: api
-  category: structural
-- source: api.operation.push-changes
-  target: api.response.sync-result-response
-  predicate: delivers
-  layer: api
-  category: structural
-- source: api.operation.pull-changes
-  target: api.response.sync-result-response
-  predicate: delivers
-  layer: api
-  category: structural
-- source: api.operation.get-sync-status
-  target: api.response.sync-status-response
-  predicate: delivers
+  predicate: composes
   layer: api
   category: structural
 - source: api.operation.create-pipeline-configuration
   target: api.requestbody.pipeline-configuration-create
-  predicate: aggregates
-  layer: api
-  category: structural
-- source: api.operation.create-pipeline-configuration
-  target: api.response.pipeline-configuration-response
-  predicate: delivers
+  predicate: composes
   layer: api
   category: structural
 - source: api.operation.update-pipeline-configuration
   target: api.requestbody.pipeline-configuration-update
-  predicate: aggregates
-  layer: api
-  category: structural
-- source: api.operation.update-pipeline-configuration
-  target: api.response.pipeline-configuration-response
-  predicate: delivers
-  layer: api
-  category: structural
-- source: api.operation.get-pipeline-configuration
-  target: api.response.pipeline-configuration-response
-  predicate: delivers
-  layer: api
-  category: structural
-- source: api.operation.list-pipeline-configurations
-  target: api.response.pipeline-configuration-response
-  predicate: delivers
-  layer: api
-  category: structural
-- source: api.operation.delete-pipeline-configuration
-  target: api.response.pipeline-configuration-response
-  predicate: delivers
+  predicate: composes
   layer: api
   category: structural
 - source: api.operation.execute-pipeline
   target: api.requestbody.pipeline-execute-request
-  predicate: aggregates
-  layer: api
-  category: structural
-- source: api.operation.execute-pipeline
-  target: api.response.execution-response
-  predicate: delivers
-  layer: api
-  category: structural
-- source: api.operation.get-pipeline-executions
-  target: api.response.execution-response
-  predicate: delivers
-  layer: api
-  category: structural
-- source: api.operation.get-system-health
-  target: api.response.system-health-response
-  predicate: delivers
-  layer: api
-  category: structural
-- source: api.operation.get-database-health
-  target: api.response.database-health-response
-  predicate: delivers
-  layer: api
-  category: structural
-- source: api.operation.get-embedding-health
-  target: api.response.component-status-response
-  predicate: delivers
-  layer: api
-  category: structural
-- source: api.operation.get-nlp-health
-  target: api.response.component-status-response
-  predicate: delivers
-  layer: api
-  category: structural
-- source: api.operation.get-service-metrics
-  target: api.response.service-metrics-response
-  predicate: delivers
-  layer: api
-  category: structural
-- source: api.operation.get-configuration
-  target: api.response.app-configuration-response
-  predicate: delivers
+  predicate: composes
   layer: api
   category: structural
 - source: api.operation.update-configuration-section
   target: api.requestbody.config-section-update-request
-  predicate: aggregates
-  layer: api
-  category: structural
-- source: api.operation.update-configuration-section
-  target: api.response.app-configuration-response
-  predicate: delivers
-  layer: api
-  category: structural
-- source: api.operation.reset-configuration
-  target: api.response.app-configuration-response
-  predicate: delivers
-  layer: api
-  category: structural
-- source: api.operation.list-background-tasks
-  target: api.response.background-task-response
-  predicate: delivers
-  layer: api
-  category: structural
-- source: api.operation.get-background-task
-  target: api.response.background-task-response
-  predicate: delivers
-  layer: api
-  category: structural
-- source: api.operation.get-background-tasks-summary
-  target: api.response.background-task-summary-response
-  predicate: delivers
+  predicate: composes
   layer: api
   category: structural
 - source: application.applicationcomponent.json-file-config-store
@@ -3207,171 +2329,153 @@
   predicate: composes
   layer: data-store
   category: structural
-- source: data-store.collection.ontology-entities
-  target: application.applicationcomponent.sqlite-ontology-repository
-  predicate: serves
-  layer: data-store
-  targetLayer: application
+- source: application.applicationcomponent.sqlite-ontology-repository
+  target: data-store.collection.ontology-entities
+  predicate: accesses
+  layer: application
+  targetLayer: data-store
   category: structural
-- source: data-store.collection.change-events
-  target: application.applicationcomponent.sqlite-change-repository
-  predicate: serves
-  layer: data-store
-  targetLayer: application
-  category: structural
-- source: data-store.database.operationsdb
-  target: application.applicationcomponent.sqlite-pipeline-repository
-  predicate: serves
-  layer: data-store
-  targetLayer: application
-  category: structural
-- source: data-store.database.reference-api-cachedb
-  target: application.applicationcomponent.cached-reference-source
-  predicate: serves
-  layer: data-store
-  targetLayer: application
-  category: structural
-- source: data-store.database.referencedb
-  target: application.applicationcomponent.local-reference-repository
-  predicate: serves
-  layer: data-store
-  targetLayer: application
+- source: application.applicationcomponent.sqlite-change-repository
+  target: data-store.collection.change-events
+  predicate: accesses
+  layer: application
+  targetLayer: data-store
   category: structural
 - source: testing.testcoveragetarget.interchange-integration-tests
   target: application.applicationcomponent.sqlite-interchange-repository
-  predicate: tests
+  predicate: covers
   layer: testing
   targetLayer: application
   category: structural
 - source: testing.testcoveragetarget.versioning-integration-tests
   target: application.applicationcomponent.sqlite-change-repository
-  predicate: tests
+  predicate: covers
   layer: testing
   targetLayer: application
   category: structural
 - source: testing.testcoveragetarget.e2e-test-suite
   target: data-store.collection.ontology-entities
-  predicate: tests
+  predicate: covers
   layer: testing
   targetLayer: data-store
   category: structural
 - source: testing.testcoveragetarget.performance-test-suite
   target: data-store.collection.ontology-entities
-  predicate: tests
+  predicate: covers
   layer: testing
   targetLayer: data-store
   category: structural
 - source: testing.testcoveragetarget.route-integration-tests
   target: application.applicationcomponent.sqlite-ontology-repository
-  predicate: tests
+  predicate: covers
   layer: testing
   targetLayer: application
   category: structural
-- source: data-store.collection.individual-classes-table
-  target: application.applicationcomponent.sqlite-ontology-repository
-  predicate: serves
-  layer: data-store
-  targetLayer: application
+- source: application.applicationcomponent.sqlite-ontology-repository
+  target: data-store.collection.individual-classes-table
+  predicate: accesses
+  layer: application
+  targetLayer: data-store
   category: structural
   properties:
     source_provenance: inferred
     confidence: high
     basis: repository-table ownership
-- source: data-store.collection.property-definitions-table
-  target: application.applicationcomponent.sqlite-ontology-repository
-  predicate: serves
-  layer: data-store
-  targetLayer: application
+- source: application.applicationcomponent.sqlite-ontology-repository
+  target: data-store.collection.property-definitions-table
+  predicate: accesses
+  layer: application
+  targetLayer: data-store
   category: structural
   properties:
     source_provenance: inferred
     confidence: high
     basis: repository-table ownership
-- source: data-store.collection.extraction-results-table
-  target: application.applicationcomponent.sqlite-extraction-repository
-  predicate: serves
-  layer: data-store
-  targetLayer: application
+- source: application.applicationcomponent.sqlite-extraction-repository
+  target: data-store.collection.extraction-results-table
+  predicate: accesses
+  layer: application
+  targetLayer: data-store
   category: structural
   properties:
     source_provenance: inferred
     confidence: high
     basis: repository-table ownership
-- source: data-store.collection.entity-versions-table
-  target: application.applicationcomponent.sqlite-change-repository
-  predicate: serves
-  layer: data-store
-  targetLayer: application
+- source: application.applicationcomponent.sqlite-change-repository
+  target: data-store.collection.entity-versions-table
+  predicate: accesses
+  layer: application
+  targetLayer: data-store
   category: structural
   properties:
     source_provenance: inferred
     confidence: high
     basis: repository-table ownership
-- source: data-store.collection.changesets-table
-  target: application.applicationcomponent.sqlite-change-repository
-  predicate: serves
-  layer: data-store
-  targetLayer: application
+- source: application.applicationcomponent.sqlite-change-repository
+  target: data-store.collection.changesets-table
+  predicate: accesses
+  layer: application
+  targetLayer: data-store
   category: structural
   properties:
     source_provenance: inferred
     confidence: high
     basis: repository-table ownership
-- source: data-store.collection.changeset-events-table
-  target: application.applicationcomponent.sqlite-change-repository
-  predicate: serves
-  layer: data-store
-  targetLayer: application
+- source: application.applicationcomponent.sqlite-change-repository
+  target: data-store.collection.changeset-events-table
+  predicate: accesses
+  layer: application
+  targetLayer: data-store
   category: structural
   properties:
     source_provenance: inferred
     confidence: high
     basis: repository-table ownership
-- source: data-store.collection.proposals-table
-  target: application.applicationcomponent.sqlite-change-repository
-  predicate: serves
-  layer: data-store
-  targetLayer: application
+- source: application.applicationcomponent.sqlite-change-repository
+  target: data-store.collection.proposals-table
+  predicate: accesses
+  layer: application
+  targetLayer: data-store
   category: structural
   properties:
     source_provenance: inferred
     confidence: high
     basis: repository-table ownership
-- source: data-store.collection.conflict-resolutions-table
-  target: application.applicationcomponent.sqlite-change-repository
-  predicate: serves
-  layer: data-store
-  targetLayer: application
+- source: application.applicationcomponent.sqlite-change-repository
+  target: data-store.collection.conflict-resolutions-table
+  predicate: accesses
+  layer: application
+  targetLayer: data-store
   category: structural
   properties:
     source_provenance: inferred
     confidence: high
     basis: repository-table ownership
-- source: data-store.collection.import-runs-table
-  target: application.applicationcomponent.sqlite-interchange-repository
-  predicate: serves
-  layer: data-store
-  targetLayer: application
+- source: application.applicationcomponent.sqlite-interchange-repository
+  target: data-store.collection.import-runs-table
+  predicate: accesses
+  layer: application
+  targetLayer: data-store
   category: structural
   properties:
     source_provenance: inferred
     confidence: high
     basis: repository-table ownership
-- source: data-store.collection.pipeline-configurations-table
-  target: application.applicationcomponent.sqlite-pipeline-repository
-  predicate: serves
-  layer: data-store
-  targetLayer: application
+- source: application.applicationcomponent.sqlite-pipeline-repository
+  target: data-store.collection.pipeline-configurations-table
+  predicate: accesses
+  layer: application
+  targetLayer: data-store
   category: structural
   properties:
     source_provenance: inferred
     confidence: high
     basis: repository-table ownership
-- source: data-store.collection.pipeline-executions-table
-  target: application.applicationcomponent.sqlite-pipeline-repository
-  predicate: serves
-  layer: data-store
-  targetLayer: application
+- source: application.applicationcomponent.sqlite-pipeline-repository
+  target: data-store.collection.pipeline-executions-table
+  predicate: accesses
+  layer: application
+  targetLayer: data-store
   category: structural
   properties:
     source_provenance: inferred
@@ -3589,7 +2693,7 @@
     basis: naming convention
 - source: data-model.objectschema.changeset-entity
   target: data-model.objectschema.changeset
-  predicate: extends
+  predicate: specializes
   layer: data-model
   category: structural
   properties:
@@ -3598,7 +2702,7 @@
     basis: domain pattern
 - source: data-model.objectschema.change-event-entity
   target: data-model.objectschema.change-event
-  predicate: extends
+  predicate: specializes
   layer: data-model
   category: structural
   properties:
@@ -3607,7 +2711,7 @@
     basis: domain pattern
 - source: data-model.objectschema.entity-version-entity
   target: data-model.objectschema.entity-version
-  predicate: extends
+  predicate: specializes
   layer: data-model
   category: structural
   properties:
@@ -3616,7 +2720,7 @@
     basis: domain pattern
 - source: data-model.objectschema.import-run-entity
   target: data-model.objectschema.import-run
-  predicate: extends
+  predicate: specializes
   layer: data-model
   category: structural
   properties:
@@ -3625,7 +2729,7 @@
     basis: domain pattern
 - source: data-model.objectschema.pipeline-configuration-entity
   target: data-model.objectschema.pipeline-configuration
-  predicate: extends
+  predicate: specializes
   layer: data-model
   category: structural
   properties:
@@ -3634,7 +2738,7 @@
     basis: domain pattern
 - source: data-model.objectschema.pipeline-configuration-entity
   target: data-model.objectschema.pipeline-execution
-  predicate: extends
+  predicate: specializes
   layer: data-model
   category: structural
   properties:
@@ -3643,7 +2747,7 @@
     basis: domain pattern
 - source: data-model.objectschema.proposal-entity
   target: data-model.objectschema.proposal
-  predicate: extends
+  predicate: specializes
   layer: data-model
   category: structural
   properties:
@@ -3765,18 +2869,6 @@
   predicate: depends-on
   layer: technology
   category: structural
-- source: technology.systemsoftware.uvicorn
-  target: application.applicationservice.admin-service
-  predicate: realizes
-  layer: technology
-  targetLayer: application
-  category: structural
-- source: technology.systemsoftware.uvicorn
-  target: application.applicationservice.ontology-service
-  predicate: realizes
-  layer: technology
-  targetLayer: application
-  category: structural
 - source: technology.systemsoftware.boto3
   target: technology.systemsoftware.python
   predicate: depends-on
@@ -3797,68 +2889,33 @@
   predicate: depends-on
   layer: technology
   category: structural
-- source: technology.systemsoftware.boto3
-  target: application.applicationservice.versioning-service
-  predicate: realizes
-  layer: technology
-  targetLayer: application
+- source: application.applicationcomponent.sqlite-interchange-repository
+  target: data-store.collection.batch-runs
+  predicate: accesses
+  layer: application
+  targetLayer: data-store
   category: structural
-- source: technology.systemsoftware.anthropic-sdk
-  target: application.applicationservice.pipeline-service
-  predicate: realizes
-  layer: technology
-  targetLayer: application
-  category: structural
-- source: technology.systemsoftware.openai-sdk
-  target: application.applicationservice.pipeline-service
-  predicate: realizes
-  layer: technology
-  targetLayer: application
-  category: structural
-- source: technology.systemsoftware.httpx
-  target: application.applicationservice.extraction-service
-  predicate: realizes
-  layer: technology
-  targetLayer: application
-  category: structural
-- source: data-store.collection.batch-runs
-  target: application.applicationcomponent.sqlite-interchange-repository
-  predicate: serves
-  layer: data-store
-  targetLayer: application
-  category: structural
-- source: data-store.collection.extraction-runs
-  target: application.applicationcomponent.sqlite-extraction-repository
-  predicate: serves
-  layer: data-store
-  targetLayer: application
-  category: structural
-- source: apm.logconfiguration.context-studio-server-log-configuration
-  target: business.businessservice.rest-api-gateway-service
-  predicate: monitors
-  layer: apm
-  targetLayer: business
-  category: structural
-- source: apm.logprocessor.rotating-file-log-processor
-  target: apm.span.api-request-span
-  predicate: flows-to
-  layer: apm
+- source: application.applicationcomponent.sqlite-extraction-repository
+  target: data-store.collection.extraction-runs
+  predicate: accesses
+  layer: application
+  targetLayer: data-store
   category: structural
 - source: testing.testcoveragetarget.interchange-round-trip-tests
   target: application.applicationcomponent.skos-interchange-adapter
-  predicate: tests
+  predicate: covers
   layer: testing
   targetLayer: application
   category: structural
 - source: testing.testcoveragetarget.adapter-unit-tests
   target: application.applicationcomponent.spa-cy-nlp-processor
-  predicate: tests
+  predicate: covers
   layer: testing
   targetLayer: application
   category: structural
 - source: testing.testcoveragetarget.domain-unit-tests
   target: application.applicationcomponent.sqlite-ontology-repository
-  predicate: tests
+  predicate: covers
   layer: testing
   targetLayer: application
   category: structural
@@ -3867,11 +2924,6 @@
   predicate: references
   layer: api
   targetLayer: application
-  category: structural
-- source: api.operation.get-publish-diff-stats
-  target: api.response.publish-diff-stats
-  predicate: delivers
-  layer: api
   category: structural
 - source: api.operation.publish-taxonomy
   target: application.applicationservice.ontology-service
@@ -3881,12 +2933,7 @@
   category: structural
 - source: api.operation.publish-taxonomy
   target: api.requestbody.taxonomy-publish-request
-  predicate: aggregates
-  layer: api
-  category: structural
-- source: api.operation.publish-taxonomy
-  target: api.response.taxonomy-response
-  predicate: delivers
+  predicate: composes
   layer: api
   category: structural
 - source: api.operation.extract-triples
@@ -3897,12 +2944,7 @@
   category: structural
 - source: api.operation.extract-triples
   target: api.requestbody.extract-triple-request
-  predicate: aggregates
-  layer: api
-  category: structural
-- source: api.operation.extract-triples
-  target: api.response.extract-triple-response
-  predicate: delivers
+  predicate: composes
   layer: api
   category: structural
 - source: application.applicationevent.ontology-changed-event
@@ -3940,29 +2982,24 @@
   predicate: assigned-to
   layer: application
   category: structural
-- source: application.applicationprocess.background-task-executor
-  target: application.applicationinterface.rest-api-interface
-  predicate: depends-on
-  layer: application
-  category: structural
 - source: application.applicationcollaboration.hexagonal-port-adapter-wiring
   target: application.applicationprocess.alembic-migration-runner
   predicate: assigned-to
   layer: application
   category: structural
-- source: application.applicationinteraction.domain-event-publication
-  target: application.applicationcollaboration.hexagonal-port-adapter-wiring
-  predicate: depends-on
+- source: application.applicationcollaboration.hexagonal-port-adapter-wiring
+  target: application.applicationinteraction.domain-event-publication
+  predicate: assigned-to
   layer: application
   category: structural
-- source: application.applicationinteraction.llm-provider-request
-  target: application.applicationcollaboration.hexagonal-port-adapter-wiring
-  predicate: depends-on
+- source: application.applicationcollaboration.hexagonal-port-adapter-wiring
+  target: application.applicationinteraction.llm-provider-request
+  predicate: assigned-to
   layer: application
   category: structural
-- source: application.applicationinteraction.external-reference-enrichment
-  target: application.applicationcollaboration.hexagonal-port-adapter-wiring
-  predicate: depends-on
+- source: application.applicationcollaboration.hexagonal-port-adapter-wiring
+  target: application.applicationinteraction.external-reference-enrichment
+  predicate: assigned-to
   layer: application
   category: structural
 - source: application.applicationcollaboration.hexagonal-port-adapter-wiring
@@ -3972,59 +3009,12 @@
   category: structural
 - source: application.applicationcollaboration.hexagonal-port-adapter-wiring
   target: application.applicationinterface.rest-api-interface
-  predicate: depends-on
+  predicate: provides
   layer: application
   category: structural
 - source: technology.systemsoftware.pyarrow
   target: technology.systemsoftware.duck-db
   predicate: depends-on
-  layer: technology
-  category: structural
-- source: technology.systemsoftware.python-multipart
-  target: application.applicationservice.ontology-service
-  predicate: realizes
-  layer: technology
-  targetLayer: application
-  category: structural
-- source: technology.systemsoftware.pyarrow
-  target: application.applicationservice.versioning-service
-  predicate: realizes
-  layer: technology
-  targetLayer: application
-  category: structural
-- source: technology.systemsoftware.hugging-face-datasets
-  target: application.applicationservice.extraction-service
-  predicate: realizes
-  layer: technology
-  targetLayer: application
-  category: structural
-- source: technology.systemsoftware.tan-stack-table
-  target: application.applicationservice.admin-service
-  predicate: realizes
-  layer: technology
-  targetLayer: application
-  category: structural
-- source: technology.systemsoftware.tan-stack-form
-  target: application.applicationservice.ontology-service
-  predicate: realizes
-  layer: technology
-  targetLayer: application
-  category: structural
-- source: technology.systemsoftware.zustand
-  target: application.applicationservice.admin-service
-  predicate: realizes
-  layer: technology
-  targetLayer: application
-  category: structural
-- source: technology.systemsoftware.reagraph
-  target: application.applicationservice.graph-analysis-service
-  predicate: realizes
-  layer: technology
-  targetLayer: application
-  category: structural
-- source: technology.systemsoftware.axios
-  target: technology.communicationnetwork.localhost-lan
-  predicate: uses
   layer: technology
   category: structural
 - source: testing.testcoveragemodel.context-studio-backend-test-coverage-model
@@ -4052,21 +3042,1074 @@
   predicate: composes
   layer: testing
   category: structural
-- source: testing.coveragerequirement.domain-unit-test-coverage
-  target: application.applicationfunction.embedding-generation
-  predicate: covers
-  layer: testing
+- source: api.operation.add-parent-class-to-individual
+  target: api.responses.add-parent-class-to-individual-responses
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.responses.add-parent-class-to-individual-responses
+  target: api.response.individual-response
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.operation.analyze-text
+  target: api.responses.analyze-text-responses
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.responses.analyze-text-responses
+  target: api.response.extraction-result-schema
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.operation.approve-proposal
+  target: api.responses.approve-proposal-responses
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.responses.approve-proposal-responses
+  target: api.response.proposal-response
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.operation.auto-resolve-conflicts
+  target: api.responses.auto-resolve-conflicts-responses
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.responses.auto-resolve-conflicts-responses
+  target: api.response.conflict-response
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.operation.build-knowledge-graph
+  target: api.responses.build-knowledge-graph-responses
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.responses.build-knowledge-graph-responses
+  target: api.response.knowledge-graph-response
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.operation.check-cycle
+  target: api.responses.check-cycle-responses
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.responses.check-cycle-responses
+  target: api.response.cycle-check-response
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.operation.create-changeset
+  target: api.responses.create-changeset-responses
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.responses.create-changeset-responses
+  target: api.response.changeset-response
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.operation.create-class
+  target: api.responses.create-class-responses
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.responses.create-class-responses
+  target: api.response.class-response
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.operation.create-concept-scheme
+  target: api.responses.create-concept-scheme-responses
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.responses.create-concept-scheme-responses
+  target: api.response.concept-scheme-response
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.operation.create-individual
+  target: api.responses.create-individual-responses
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.responses.create-individual-responses
+  target: api.response.individual-response
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.operation.create-pipeline-configuration
+  target: api.responses.create-pipeline-configuration-responses
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.responses.create-pipeline-configuration-responses
+  target: api.response.pipeline-configuration-response
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.operation.create-property-definition
+  target: api.responses.create-property-definition-responses
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.responses.create-property-definition-responses
+  target: api.response.property-definition-response
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.operation.create-relationship
+  target: api.responses.create-relationship-responses
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.responses.create-relationship-responses
+  target: api.response.relationship-response
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.operation.create-taxonomy
+  target: api.responses.create-taxonomy-responses
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.responses.create-taxonomy-responses
+  target: api.response.taxonomy-response
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.operation.delete-class
+  target: api.responses.delete-class-responses
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.responses.delete-class-responses
+  target: api.response.class-response
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.operation.delete-concept-scheme
+  target: api.responses.delete-concept-scheme-responses
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.responses.delete-concept-scheme-responses
+  target: api.response.concept-scheme-response
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.operation.delete-individual
+  target: api.responses.delete-individual-responses
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.responses.delete-individual-responses
+  target: api.response.individual-response
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.operation.delete-pipeline-configuration
+  target: api.responses.delete-pipeline-configuration-responses
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.responses.delete-pipeline-configuration-responses
+  target: api.response.pipeline-configuration-response
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.operation.delete-property-definition
+  target: api.responses.delete-property-definition-responses
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.responses.delete-property-definition-responses
+  target: api.response.property-definition-response
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.operation.delete-relationship
+  target: api.responses.delete-relationship-responses
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.responses.delete-relationship-responses
+  target: api.response.relationship-response
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.operation.delete-taxonomy
+  target: api.responses.delete-taxonomy-responses
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.responses.delete-taxonomy-responses
+  target: api.response.taxonomy-response
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.operation.detect-conflicts
+  target: api.responses.detect-conflicts-responses
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.responses.detect-conflicts-responses
+  target: api.response.conflict-report-response
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.operation.enrich-from-references
+  target: api.responses.enrich-from-references-responses
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.responses.enrich-from-references-responses
+  target: api.response.external-reference-response
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.operation.execute-pipeline
+  target: api.responses.execute-pipeline-responses
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.responses.execute-pipeline-responses
+  target: api.response.execution-response
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.operation.execute-sparql
+  target: api.responses.execute-sparql-responses
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.responses.execute-sparql-responses
+  target: api.response.sparqlresponse
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.operation.export-ontology
+  target: api.responses.export-ontology-responses
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.responses.export-ontology-responses
+  target: api.response.serialization-scope-response
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.operation.extract-entities
+  target: api.responses.extract-entities-responses
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.responses.extract-entities-responses
+  target: api.response.extraction-result-schema
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.operation.extract-triples
+  target: api.responses.extract-triples-responses
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.responses.extract-triples-responses
+  target: api.response.extract-triple-response
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.operation.get-all-paths
+  target: api.responses.get-all-paths-responses
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.responses.get-all-paths-responses
+  target: api.response.path-result-response
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.operation.get-background-task
+  target: api.responses.get-background-task-responses
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.responses.get-background-task-responses
+  target: api.response.background-task-response
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.operation.get-background-tasks-summary
+  target: api.responses.get-background-tasks-summary-responses
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.responses.get-background-tasks-summary-responses
+  target: api.response.background-task-summary-response
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.operation.get-centrality
+  target: api.responses.get-centrality-responses
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.responses.get-centrality-responses
+  target: api.response.centrality-response
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.operation.get-change-history-all
+  target: api.responses.get-change-history-all-responses
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.responses.get-change-history-all-responses
+  target: api.response.change-history-response
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.responses.get-change-history-all-responses
+  target: api.response.versioning-change-event-response
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.operation.get-change-history-by-entity
+  target: api.responses.get-change-history-by-entity-responses
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.responses.get-change-history-by-entity-responses
+  target: api.response.change-history-response
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.operation.get-changeset
+  target: api.responses.get-changeset-responses
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.responses.get-changeset-responses
+  target: api.response.changeset-response
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.operation.get-class
+  target: api.responses.get-class-responses
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.responses.get-class-responses
+  target: api.response.class-response
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.operation.get-communities
+  target: api.responses.get-communities-responses
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.responses.get-communities-responses
+  target: api.response.communities-response
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.operation.get-concept-scheme
+  target: api.responses.get-concept-scheme-responses
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.responses.get-concept-scheme-responses
+  target: api.response.concept-scheme-response
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.operation.get-configuration
+  target: api.responses.get-configuration-responses
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.responses.get-configuration-responses
+  target: api.response.app-configuration-response
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.operation.get-database-health
+  target: api.responses.get-database-health-responses
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.responses.get-database-health-responses
+  target: api.response.database-health-response
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.operation.get-degree-distribution
+  target: api.responses.get-degree-distribution-responses
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.responses.get-degree-distribution-responses
+  target: api.response.degree-distribution-response
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.operation.get-embedding-health
+  target: api.responses.get-embedding-health-responses
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.responses.get-embedding-health-responses
+  target: api.response.component-status-response
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.operation.get-entity-version
+  target: api.responses.get-entity-version-responses
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.responses.get-entity-version-responses
+  target: api.response.entity-version-response
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.operation.get-graph-metrics
+  target: api.responses.get-graph-metrics-responses
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.responses.get-graph-metrics-responses
+  target: api.response.graph-metrics-response
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.operation.get-import-run
+  target: api.responses.get-import-run-responses
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.responses.get-import-run-responses
+  target: api.response.import-run-response
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.operation.get-individual
+  target: api.responses.get-individual-responses
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.responses.get-individual-responses
+  target: api.response.individual-response
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.responses.get-individual-responses
+  target: api.response.lexical-sense-response
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.operation.get-individual-inherited-properties
+  target: api.responses.get-individual-inherited-properties-responses
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.responses.get-individual-inherited-properties-responses
+  target: api.response.data-property-value-response
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.operation.get-neighbors
+  target: api.responses.get-neighbors-responses
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.responses.get-neighbors-responses
+  target: api.response.neighbors-response
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.operation.get-nlp-health
+  target: api.responses.get-nlp-health-responses
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.responses.get-nlp-health-responses
+  target: api.response.component-status-response
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.operation.get-pipeline-configuration
+  target: api.responses.get-pipeline-configuration-responses
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.responses.get-pipeline-configuration-responses
+  target: api.response.pipeline-configuration-response
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.operation.get-pipeline-executions
+  target: api.responses.get-pipeline-executions-responses
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.responses.get-pipeline-executions-responses
+  target: api.response.execution-response
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.operation.get-property-definition
+  target: api.responses.get-property-definition-responses
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.responses.get-property-definition-responses
+  target: api.response.property-definition-response
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.operation.get-publish-diff-stats
+  target: api.responses.get-publish-diff-stats-responses
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.responses.get-publish-diff-stats-responses
+  target: api.response.publish-diff-stats
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.operation.get-rdf-triple-count
+  target: api.responses.get-rdf-triple-count-responses
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.responses.get-rdf-triple-count-responses
+  target: api.response.triple-count-response
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.operation.get-rdf-triples
+  target: api.responses.get-rdf-triples-responses
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.responses.get-rdf-triples-responses
+  target: api.response.triple-response
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.responses.get-rdf-triples-responses
+  target: api.response.triples-response
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.operation.get-reference-relations
+  target: api.responses.get-reference-relations-responses
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.responses.get-reference-relations-responses
+  target: api.response.reference-relation-schema
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.responses.get-reference-relations-responses
+  target: api.response.reference-relations-response-schema
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.operation.get-reference-status
+  target: api.responses.get-reference-status-responses
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.responses.get-reference-status-responses
+  target: api.response.reference-source-status-schema
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.responses.get-reference-status-responses
+  target: api.response.reference-status-response-schema
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.operation.get-relationship
+  target: api.responses.get-relationship-responses
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.responses.get-relationship-responses
+  target: api.response.relationship-response
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.operation.get-run-change-events
+  target: api.responses.get-run-change-events-responses
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.responses.get-run-change-events-responses
+  target: api.response.interchange-change-event-response
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.operation.get-service-metrics
+  target: api.responses.get-service-metrics-responses
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.responses.get-service-metrics-responses
+  target: api.response.service-metrics-response
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.operation.get-shortest-path
+  target: api.responses.get-shortest-path-responses
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.responses.get-shortest-path-responses
+  target: api.response.path-result-response
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.operation.get-subgraph
+  target: api.responses.get-subgraph-responses
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.responses.get-subgraph-responses
+  target: api.response.subgraph-result-response
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.operation.get-subgraph-by-depth
+  target: api.responses.get-subgraph-by-depth-responses
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.responses.get-subgraph-by-depth-responses
+  target: api.response.subgraph-data-response
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.operation.get-sync-status
+  target: api.responses.get-sync-status-responses
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.responses.get-sync-status-responses
+  target: api.response.sync-status-response
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.operation.get-system-health
+  target: api.responses.get-system-health-responses
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.responses.get-system-health-responses
+  target: api.response.system-health-response
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.operation.get-taxonomy
+  target: api.responses.get-taxonomy-responses
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.responses.get-taxonomy-responses
+  target: api.response.taxonomy-response
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.operation.import-ontology
+  target: api.responses.import-ontology-responses
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.responses.import-ontology-responses
+  target: api.response.import-conflict-response
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.responses.import-ontology-responses
+  target: api.response.import-plan-response
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.operation.list-background-tasks
+  target: api.responses.list-background-tasks-responses
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.responses.list-background-tasks-responses
+  target: api.response.background-task-response
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.operation.list-classes
+  target: api.responses.list-classes-responses
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.responses.list-classes-responses
+  target: api.response.class-response
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.operation.list-concept-schemes
+  target: api.responses.list-concept-schemes-responses
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.responses.list-concept-schemes-responses
+  target: api.response.concept-scheme-response
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.operation.list-entity-versions
+  target: api.responses.list-entity-versions-responses
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.responses.list-entity-versions-responses
+  target: api.response.entity-version-response
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.operation.list-import-runs
+  target: api.responses.list-import-runs-responses
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.responses.list-import-runs-responses
+  target: api.response.import-run-response
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.operation.list-individuals
+  target: api.responses.list-individuals-responses
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.responses.list-individuals-responses
+  target: api.response.individual-response
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.operation.list-pipeline-configurations
+  target: api.responses.list-pipeline-configurations-responses
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.responses.list-pipeline-configurations-responses
+  target: api.response.pipeline-configuration-response
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.operation.list-property-definitions
+  target: api.responses.list-property-definitions-responses
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.responses.list-property-definitions-responses
+  target: api.response.property-definition-response
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.operation.list-relationships
+  target: api.responses.list-relationships-responses
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.responses.list-relationships-responses
+  target: api.response.relationship-response
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.operation.list-taxonomies
+  target: api.responses.list-taxonomies-responses
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.responses.list-taxonomies-responses
+  target: api.response.taxonomy-response
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.operation.merge-proposal
+  target: api.responses.merge-proposal-responses
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.responses.merge-proposal-responses
+  target: api.response.merge-result-response
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.operation.move-class
+  target: api.responses.move-class-responses
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.responses.move-class-responses
+  target: api.response.class-response
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.operation.publish-taxonomy
+  target: api.responses.publish-taxonomy-responses
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.responses.publish-taxonomy-responses
+  target: api.response.taxonomy-response
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.operation.pull-changes
+  target: api.responses.pull-changes-responses
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.responses.pull-changes-responses
+  target: api.response.sync-result-response
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.operation.push-changes
+  target: api.responses.push-changes-responses
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.responses.push-changes-responses
+  target: api.response.sync-result-response
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.operation.reject-proposal
+  target: api.responses.reject-proposal-responses
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.responses.reject-proposal-responses
+  target: api.response.proposal-response
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.operation.remove-parent-class-from-individual
+  target: api.responses.remove-parent-class-from-individual-responses
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.responses.remove-parent-class-from-individual-responses
+  target: api.response.individual-response
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.operation.reorder-individual-classes
+  target: api.responses.reorder-individual-classes-responses
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.responses.reorder-individual-classes-responses
+  target: api.response.individual-response
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.operation.reset-configuration
+  target: api.responses.reset-configuration-responses
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.responses.reset-configuration-responses
+  target: api.response.app-configuration-response
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.operation.resolve-conflicts
+  target: api.responses.resolve-conflicts-responses
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.responses.resolve-conflicts-responses
+  target: api.response.resolution-record-response
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.operation.search-references
+  target: api.responses.search-references-responses
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.responses.search-references-responses
+  target: api.response.reference-result-schema
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.responses.search-references-responses
+  target: api.response.reference-search-response-schema
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.operation.stage-changeset
+  target: api.responses.stage-changeset-responses
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.responses.stage-changeset-responses
+  target: api.response.changeset-response
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.operation.submit-proposal
+  target: api.responses.submit-proposal-responses
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.responses.submit-proposal-responses
+  target: api.response.proposal-response
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.operation.update-class
+  target: api.responses.update-class-responses
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.responses.update-class-responses
+  target: api.response.class-response
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.operation.update-concept-scheme
+  target: api.responses.update-concept-scheme-responses
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.responses.update-concept-scheme-responses
+  target: api.response.concept-scheme-response
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.operation.update-configuration-section
+  target: api.responses.update-configuration-section-responses
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.responses.update-configuration-section-responses
+  target: api.response.app-configuration-response
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.operation.update-individual
+  target: api.responses.update-individual-responses
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.responses.update-individual-responses
+  target: api.response.individual-response
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.operation.update-pipeline-configuration
+  target: api.responses.update-pipeline-configuration-responses
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.responses.update-pipeline-configuration-responses
+  target: api.response.pipeline-configuration-response
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.operation.update-property-definition
+  target: api.responses.update-property-definition-responses
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.responses.update-property-definition-responses
+  target: api.response.property-definition-response
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.operation.update-taxonomy
+  target: api.responses.update-taxonomy-responses
+  predicate: composes
+  layer: api
+  category: structural
+- source: api.responses.update-taxonomy-responses
+  target: api.response.taxonomy-response
+  predicate: composes
+  layer: api
+  category: structural
+- source: technology.systemsoftware.rdflib
+  target: application.applicationcomponent.rdflib-query-engine-adapter
+  predicate: serves
+  layer: technology
   targetLayer: application
   category: structural
-- source: testing.coveragerequirement.route-integration-test-coverage
-  target: application.applicationfunction.sparql-query-function
-  predicate: covers
-  layer: testing
+- source: technology.systemsoftware.spa-cy
+  target: application.applicationcomponent.spa-cy-nlp-processor
+  predicate: serves
+  layer: technology
   targetLayer: application
   category: structural
-- source: testing.coveragerequirement.e2e-test-coverage
-  target: application.applicationfunction.llm-provider-routing
-  predicate: covers
-  layer: testing
+- source: technology.systemsoftware.duck-db
+  target: application.applicationcomponent.duck-db-sync-adapter
+  predicate: serves
+  layer: technology
+  targetLayer: application
+  category: structural
+- source: technology.systemsoftware.boto3
+  target: application.applicationcomponent.s3-sync-adapter
+  predicate: serves
+  layer: technology
+  targetLayer: application
+  category: structural
+- source: technology.systemsoftware.anthropic-sdk
+  target: application.applicationcomponent.llm-provider-router
+  predicate: serves
+  layer: technology
+  targetLayer: application
+  category: structural
+- source: technology.systemsoftware.openai-sdk
+  target: application.applicationcomponent.llm-provider-router
+  predicate: serves
+  layer: technology
+  targetLayer: application
+  category: structural
+- source: technology.systemsoftware.httpx
+  target: application.applicationcomponent.concept-net-reference-source
+  predicate: serves
+  layer: technology
+  targetLayer: application
+  category: structural
+- source: technology.systemsoftware.httpx
+  target: application.applicationcomponent.dbpedia-reference-source
+  predicate: serves
+  layer: technology
+  targetLayer: application
+  category: structural
+- source: technology.systemsoftware.httpx
+  target: application.applicationcomponent.schema-org-reference-source
+  predicate: serves
+  layer: technology
+  targetLayer: application
+  category: structural
+- source: technology.systemsoftware.httpx
+  target: application.applicationcomponent.wikidata-reference-source
+  predicate: serves
+  layer: technology
+  targetLayer: application
+  category: structural
+- source: technology.systemsoftware.pyarrow
+  target: application.applicationcomponent.duck-db-sync-adapter
+  predicate: serves
+  layer: technology
   targetLayer: application
   category: structural

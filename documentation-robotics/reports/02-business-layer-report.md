@@ -1,5 +1,7 @@
 # Business
 
+[← Back to README](../README.md)
+
 Business processes, functions, roles, and services.
 
 ## Report Index
@@ -15,14 +17,14 @@ Business processes, functions, roles, and services.
 | Metric                    | Count |
 | ------------------------- | ----- |
 | Elements                  | 9     |
-| Intra-Layer Relationships | 8     |
-| Inter-Layer Relationships | 6     |
-| Inbound Relationships     | 6     |
+| Intra-Layer Relationships | 6     |
+| Inter-Layer Relationships | 4     |
+| Inbound Relationships     | 4     |
 | Outbound Relationships    | 0     |
 
 **Cross-Layer References**:
 
-- **Upstream layers**: [APM](./11-apm-layer-report.md), [Application](./04-application-layer-report.md), [Data Store](./08-data-store-layer-report.md)
+- **Upstream layers**: [Application](./05-application-layer-report.md)
 
 ## Intra-Layer Relationships
 
@@ -38,9 +40,7 @@ flowchart LR
     business_businessinteraction_rag_knowledge_retrieval["RAG Knowledge Retrieval"]
     business_businessservice_rest_api_gateway_service["REST API Gateway Service"]
     business_contract_open_api_contract["OpenAPI Contract"]
-    business_businesscollaboration_knowledge_graph_collaboration -->|performs| business_businessinteraction_rag_knowledge_retrieval
-    business_businessevent_entity_changed_event -->|triggers| business_businessfunction_entity_enrichment
-    business_businessevent_sync_completed_event -->|triggers| business_businessfunction_conflict_resolution
+    business_businesscollaboration_knowledge_graph_collaboration -->|assigned-to| business_businessinteraction_rag_knowledge_retrieval
     business_businessfunction_conflict_resolution -->|flows-to| business_businessfunction_entity_enrichment
     business_businessfunction_entity_enrichment -->|flows-to| business_businessfunction_conflict_resolution
     business_businessfunction_entity_enrichment -->|flows-to| business_businessfunction_semantic_search
@@ -56,6 +56,7 @@ flowchart TB
   classDef current fill:#f9f,stroke:#333,stroke-width:2px
   motivation["Motivation"]
   business["Business"]
+  product["Product"]
   security["Security"]
   application["Application"]
   technology["Technology"]
@@ -66,22 +67,18 @@ flowchart TB
   navigation["Navigation"]
   apm["APM"]
   testing["Testing"]
-  apm --> business
   application --> business
-  data_store --> business
   class business current
 ```
 
 ## Inter-Layer Relationships Table
 
-| Relationship ID                                                      | Source Node                                                    | Dest Node                                           | Dest Layer | Predicate  | Cardinality  | Strength |
-| -------------------------------------------------------------------- | -------------------------------------------------------------- | --------------------------------------------------- | ---------- | ---------- | ------------ | -------- |
-| `apm.logconfiguration.monitors.business.businessservice`             | `apm.logconfiguration.context-studio-server-log-configuration` | `business.businessservice.rest-api-gateway-service` | `business` | `monitors` | many-to-many | medium   |
-| `application.applicationfunction.realizes.business.businessfunction` | `application.applicationfunction.embedding-generation`         | `business.businessfunction.entity-enrichment`       | `business` | `realizes` | many-to-many | medium   |
-| `application.applicationfunction.realizes.business.businessfunction` | `application.applicationfunction.llm-provider-routing`         | `business.businessfunction.entity-enrichment`       | `business` | `realizes` | many-to-many | medium   |
-| `application.applicationfunction.realizes.business.businessfunction` | `application.applicationfunction.network-metrics-function`     | `business.businessfunction.semantic-search`         | `business` | `realizes` | many-to-many | medium   |
-| `application.applicationfunction.realizes.business.businessfunction` | `application.applicationfunction.sparql-query-function`        | `business.businessfunction.semantic-search`         | `business` | `realizes` | many-to-many | medium   |
-| `data-store.storedlogic.realizes.business.businessfunction`          | `data-store.storedlogic.sqlite-vec-cosine-similarity`          | `business.businessfunction.semantic-search`         | `business` | `realizes` | many-to-many | medium   |
+| Relationship ID                                                      | Source Node                                                | Dest Node                                     | Dest Layer | Predicate  | Cardinality  | Strength |
+| -------------------------------------------------------------------- | ---------------------------------------------------------- | --------------------------------------------- | ---------- | ---------- | ------------ | -------- |
+| `application.applicationfunction.realizes.business.businessfunction` | `application.applicationfunction.embedding-generation`     | `business.businessfunction.entity-enrichment` | `business` | `realizes` | many-to-many | medium   |
+| `application.applicationfunction.realizes.business.businessfunction` | `application.applicationfunction.llm-provider-routing`     | `business.businessfunction.entity-enrichment` | `business` | `realizes` | many-to-many | medium   |
+| `application.applicationfunction.realizes.business.businessfunction` | `application.applicationfunction.network-metrics-function` | `business.businessfunction.semantic-search`   | `business` | `realizes` | many-to-many | medium   |
+| `application.applicationfunction.realizes.business.businessfunction` | `application.applicationfunction.sparql-query-function`    | `business.businessfunction.semantic-search`   | `business` | `realizes` | many-to-many | medium   |
 
 ## Element Reference
 
@@ -95,9 +92,9 @@ Business collaboration between Knowledge Managers sharing a knowledge graph thro
 
 #### Relationships
 
-| Type        | Related Element                                        | Predicate  | Direction |
-| ----------- | ------------------------------------------------------ | ---------- | --------- |
-| intra-layer | `business.businessinteraction.rag-knowledge-retrieval` | `performs` | outbound  |
+| Type        | Related Element                                        | Predicate     | Direction |
+| ----------- | ------------------------------------------------------ | ------------- | --------- |
+| intra-layer | `business.businessinteraction.rag-knowledge-retrieval` | `assigned-to` | outbound  |
 
 ### Entity Changed Event {#entity-changed-event}
 
@@ -117,7 +114,6 @@ Business event triggered when an ontology entity is created, updated, or deleted
 
 | Type        | Related Element                                        | Predicate  | Direction |
 | ----------- | ------------------------------------------------------ | ---------- | --------- |
-| intra-layer | `business.businessfunction.entity-enrichment`          | `triggers` | outbound  |
 | intra-layer | `business.businessinteraction.rag-knowledge-retrieval` | `triggers` | inbound   |
 
 ### Sync Completed Event {#sync-completed-event}
@@ -134,12 +130,6 @@ Business event signalling successful synchronisation of the local knowledge grap
 | ---- | -------- |
 | type | external |
 
-#### Relationships
-
-| Type        | Related Element                                 | Predicate  | Direction |
-| ----------- | ----------------------------------------------- | ---------- | --------- |
-| intra-layer | `business.businessfunction.conflict-resolution` | `triggers` | outbound  |
-
 ### Conflict Resolution {#conflict-resolution}
 
 **ID**: `business.businessfunction.conflict-resolution`
@@ -152,7 +142,6 @@ Core business function: detect and resolve merge conflicts in collaborative chan
 
 | Type        | Related Element                               | Predicate  | Direction |
 | ----------- | --------------------------------------------- | ---------- | --------- |
-| intra-layer | `business.businessevent.sync-completed-event` | `triggers` | inbound   |
 | intra-layer | `business.businessfunction.entity-enrichment` | `flows-to` | outbound  |
 | intra-layer | `business.businessfunction.entity-enrichment` | `flows-to` | inbound   |
 
@@ -170,7 +159,6 @@ Core business function: automatically enrich ontology entities with definitions,
 | ----------- | ------------------------------------------------------ | ---------- | --------- |
 | inter-layer | `application.applicationfunction.embedding-generation` | `realizes` | inbound   |
 | inter-layer | `application.applicationfunction.llm-provider-routing` | `realizes` | inbound   |
-| intra-layer | `business.businessevent.entity-changed-event`          | `triggers` | inbound   |
 | intra-layer | `business.businessfunction.conflict-resolution`        | `flows-to` | inbound   |
 | intra-layer | `business.businessfunction.conflict-resolution`        | `flows-to` | outbound  |
 | intra-layer | `business.businessfunction.semantic-search`            | `flows-to` | outbound  |
@@ -189,7 +177,6 @@ Core business function: vector-based similarity search across ontology entities 
 | ----------- | ---------------------------------------------------------- | ---------- | --------- |
 | inter-layer | `application.applicationfunction.network-metrics-function` | `realizes` | inbound   |
 | inter-layer | `application.applicationfunction.sparql-query-function`    | `realizes` | inbound   |
-| inter-layer | `data-store.storedlogic.sqlite-vec-cosine-similarity`      | `realizes` | inbound   |
 | intra-layer | `business.businessfunction.entity-enrichment`              | `flows-to` | inbound   |
 
 ### RAG Knowledge Retrieval {#rag-knowledge-retrieval}
@@ -202,10 +189,10 @@ Business interaction: AI agents query the knowledge graph via vector similarity 
 
 #### Relationships
 
-| Type        | Related Element                                                | Predicate  | Direction |
-| ----------- | -------------------------------------------------------------- | ---------- | --------- |
-| intra-layer | `business.businesscollaboration.knowledge-graph-collaboration` | `performs` | inbound   |
-| intra-layer | `business.businessevent.entity-changed-event`                  | `triggers` | outbound  |
+| Type        | Related Element                                                | Predicate     | Direction |
+| ----------- | -------------------------------------------------------------- | ------------- | --------- |
+| intra-layer | `business.businesscollaboration.knowledge-graph-collaboration` | `assigned-to` | inbound   |
+| intra-layer | `business.businessevent.entity-changed-event`                  | `triggers`    | outbound  |
 
 ### REST API Gateway Service {#rest-api-gateway-service}
 
@@ -217,10 +204,9 @@ The RESTful API surface of the Context Studio local server, implemented as FastA
 
 #### Relationships
 
-| Type        | Related Element                                                | Predicate  | Direction |
-| ----------- | -------------------------------------------------------------- | ---------- | --------- |
-| inter-layer | `apm.logconfiguration.context-studio-server-log-configuration` | `monitors` | inbound   |
-| intra-layer | `business.contract.open-api-contract`                          | `governs`  | inbound   |
+| Type        | Related Element                       | Predicate | Direction |
+| ----------- | ------------------------------------- | --------- | --------- |
+| intra-layer | `business.contract.open-api-contract` | `governs` | inbound   |
 
 ### OpenAPI Contract {#openapi-contract}
 
@@ -238,4 +224,4 @@ Business contract defining the REST API surface for Context Studio: endpoint sig
 
 ---
 
-Generated: 2026-05-11T12:08:47.429Z | Model Version: 0.1.0
+Generated: 2026-11-17T18:49:10.650Z | Model Version: 0.1.0

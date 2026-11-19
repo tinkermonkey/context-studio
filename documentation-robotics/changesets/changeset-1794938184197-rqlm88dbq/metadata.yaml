@@ -1,0 +1,1965 @@
+id: changeset-1794938184197-rqlm88dbq
+name: restore-upgrade-drops
+description: "Restore model information the spec 0.13.0 upgrade dropped because
+  its relationship types left the catalog. (1) The 104 api.operation delivers
+  api.response links become the OpenAPI shape the catalog allows: each of the 97
+  operations composes a new api.responses map, which composes its responses. (2)
+  Of the 26 technology.systemsoftware realizes application.applicationservice
+  links, the 9 with evidence in code become systemsoftware serves
+  applicationcomponent, linking the library to a component that realizes the
+  service and whose source file imports it (11 links). Generic stack entries
+  (python, react, tanstack, zustand, reagraph, fastapi, uvicorn, pydantic) stay
+  dropped. Done: no orphaned api.response elements, and validation stays at 0
+  errors."
+created: 2026-11-17T17:56:24.203Z
+modified: 2026-11-17T18:49:10.622Z
+status: committed
+baseSnapshot: sha256:62361812bbcf58ec2adbb6f325811dd7f6cd5915e35ac726693b0e60c45eae45
+origin:
+  kind: plan
+stats:
+  additions: 309
+  modifications: 0
+  deletions: 0
+lastSequence: 406
+unstaged:
+  - sequence: 0
+    removedAt: 309
+    change:
+      type: add
+      elementId: api.responses.add-parent-class-to-individual-responses
+      layerName: api
+      after:
+        id: b92b0ef1-620d-4bf1-8608-6e86ca577f40
+        path: api.responses.add-parent-class-to-individual-responses
+        spec_node_id: api.responses
+        type: responses
+        layer_id: api
+        name: add-parent-class-to-individual-responses
+        description: Responses map of the add-parent-class-to-individual operation.
+        metadata:
+          created_at: 2026-11-17T17:56:41.413Z
+          updated_at: 2026-11-17T17:56:41.413Z
+          version: 1
+      timestamp: 2026-11-17T17:56:41.432Z
+    rewritten: true
+  - sequence: 1
+    removedAt: 310
+    change:
+      type: add
+      elementId: api.responses.analyze-text-responses
+      layerName: api
+      after:
+        id: 01291861-7132-45d9-8066-84be0ef7d6ef
+        path: api.responses.analyze-text-responses
+        spec_node_id: api.responses
+        type: responses
+        layer_id: api
+        name: analyze-text-responses
+        description: Responses map of the analyze-text operation.
+        metadata:
+          created_at: 2026-11-17T17:56:50.214Z
+          updated_at: 2026-11-17T17:56:50.214Z
+          version: 1
+      timestamp: 2026-11-17T17:56:50.235Z
+    rewritten: true
+  - sequence: 2
+    removedAt: 311
+    change:
+      type: add
+      elementId: api.responses.approve-proposal-responses
+      layerName: api
+      after:
+        id: 65f12b26-f246-4e2c-bc44-f02c721e4c05
+        path: api.responses.approve-proposal-responses
+        spec_node_id: api.responses
+        type: responses
+        layer_id: api
+        name: approve-proposal-responses
+        description: Responses map of the approve-proposal operation.
+        metadata:
+          created_at: 2026-11-17T17:56:50.616Z
+          updated_at: 2026-11-17T17:56:50.616Z
+          version: 1
+      timestamp: 2026-11-17T17:56:50.633Z
+    rewritten: true
+  - sequence: 3
+    removedAt: 312
+    change:
+      type: add
+      elementId: api.responses.auto-resolve-conflicts-responses
+      layerName: api
+      after:
+        id: 21ff4e83-914d-4cfb-9b1b-baafbae6b395
+        path: api.responses.auto-resolve-conflicts-responses
+        spec_node_id: api.responses
+        type: responses
+        layer_id: api
+        name: auto-resolve-conflicts-responses
+        description: Responses map of the auto-resolve-conflicts operation.
+        metadata:
+          created_at: 2026-11-17T17:56:50.942Z
+          updated_at: 2026-11-17T17:56:50.942Z
+          version: 1
+      timestamp: 2026-11-17T17:56:50.955Z
+    rewritten: true
+  - sequence: 4
+    removedAt: 313
+    change:
+      type: add
+      elementId: api.responses.build-knowledge-graph-responses
+      layerName: api
+      after:
+        id: 8cb847a2-3c6f-4162-acb3-179980e437b4
+        path: api.responses.build-knowledge-graph-responses
+        spec_node_id: api.responses
+        type: responses
+        layer_id: api
+        name: build-knowledge-graph-responses
+        description: Responses map of the build-knowledge-graph operation.
+        metadata:
+          created_at: 2026-11-17T17:56:51.239Z
+          updated_at: 2026-11-17T17:56:51.239Z
+          version: 1
+      timestamp: 2026-11-17T17:56:51.251Z
+    rewritten: true
+  - sequence: 5
+    removedAt: 314
+    change:
+      type: add
+      elementId: api.responses.check-cycle-responses
+      layerName: api
+      after:
+        id: e1943172-3437-4c37-94a7-4de5a9dbcab1
+        path: api.responses.check-cycle-responses
+        spec_node_id: api.responses
+        type: responses
+        layer_id: api
+        name: check-cycle-responses
+        description: Responses map of the check-cycle operation.
+        metadata:
+          created_at: 2026-11-17T17:56:51.513Z
+          updated_at: 2026-11-17T17:56:51.513Z
+          version: 1
+      timestamp: 2026-11-17T17:56:51.525Z
+    rewritten: true
+  - sequence: 6
+    removedAt: 315
+    change:
+      type: add
+      elementId: api.responses.create-changeset-responses
+      layerName: api
+      after:
+        id: 14125938-4e56-4daf-8d1b-f943685d00c6
+        path: api.responses.create-changeset-responses
+        spec_node_id: api.responses
+        type: responses
+        layer_id: api
+        name: create-changeset-responses
+        description: Responses map of the create-changeset operation.
+        metadata:
+          created_at: 2026-11-17T17:56:51.780Z
+          updated_at: 2026-11-17T17:56:51.780Z
+          version: 1
+      timestamp: 2026-11-17T17:56:51.793Z
+    rewritten: true
+  - sequence: 7
+    removedAt: 316
+    change:
+      type: add
+      elementId: api.responses.create-class-responses
+      layerName: api
+      after:
+        id: 8c1a5465-c098-4d03-902c-ba1a64274feb
+        path: api.responses.create-class-responses
+        spec_node_id: api.responses
+        type: responses
+        layer_id: api
+        name: create-class-responses
+        description: Responses map of the create-class operation.
+        metadata:
+          created_at: 2026-11-17T17:56:52.084Z
+          updated_at: 2026-11-17T17:56:52.084Z
+          version: 1
+      timestamp: 2026-11-17T17:56:52.097Z
+    rewritten: true
+  - sequence: 8
+    removedAt: 317
+    change:
+      type: add
+      elementId: api.responses.create-concept-scheme-responses
+      layerName: api
+      after:
+        id: f339b4ca-ed12-4afa-993f-236aafe159e3
+        path: api.responses.create-concept-scheme-responses
+        spec_node_id: api.responses
+        type: responses
+        layer_id: api
+        name: create-concept-scheme-responses
+        description: Responses map of the create-concept-scheme operation.
+        metadata:
+          created_at: 2026-11-17T17:56:52.366Z
+          updated_at: 2026-11-17T17:56:52.366Z
+          version: 1
+      timestamp: 2026-11-17T17:56:52.380Z
+    rewritten: true
+  - sequence: 9
+    removedAt: 318
+    change:
+      type: add
+      elementId: api.responses.create-individual-responses
+      layerName: api
+      after:
+        id: bc810cd7-500b-4cc9-9526-aa9d207dedb3
+        path: api.responses.create-individual-responses
+        spec_node_id: api.responses
+        type: responses
+        layer_id: api
+        name: create-individual-responses
+        description: Responses map of the create-individual operation.
+        metadata:
+          created_at: 2026-11-17T17:56:52.669Z
+          updated_at: 2026-11-17T17:56:52.669Z
+          version: 1
+      timestamp: 2026-11-17T17:56:52.686Z
+    rewritten: true
+  - sequence: 10
+    removedAt: 319
+    change:
+      type: add
+      elementId: api.responses.create-pipeline-configuration-responses
+      layerName: api
+      after:
+        id: 9ef62fda-d329-4d4e-80e1-076c9550ff22
+        path: api.responses.create-pipeline-configuration-responses
+        spec_node_id: api.responses
+        type: responses
+        layer_id: api
+        name: create-pipeline-configuration-responses
+        description: Responses map of the create-pipeline-configuration operation.
+        metadata:
+          created_at: 2026-11-17T17:56:52.978Z
+          updated_at: 2026-11-17T17:56:52.978Z
+          version: 1
+      timestamp: 2026-11-17T17:56:52.993Z
+    rewritten: true
+  - sequence: 11
+    removedAt: 320
+    change:
+      type: add
+      elementId: api.responses.create-property-definition-responses
+      layerName: api
+      after:
+        id: 49c34163-3982-4cc1-b779-35cee152e7fd
+        path: api.responses.create-property-definition-responses
+        spec_node_id: api.responses
+        type: responses
+        layer_id: api
+        name: create-property-definition-responses
+        description: Responses map of the create-property-definition operation.
+        metadata:
+          created_at: 2026-11-17T17:56:53.232Z
+          updated_at: 2026-11-17T17:56:53.232Z
+          version: 1
+      timestamp: 2026-11-17T17:56:53.246Z
+    rewritten: true
+  - sequence: 12
+    removedAt: 321
+    change:
+      type: add
+      elementId: api.responses.create-relationship-responses
+      layerName: api
+      after:
+        id: a807bccc-0a66-47b9-b077-f42965b2d43d
+        path: api.responses.create-relationship-responses
+        spec_node_id: api.responses
+        type: responses
+        layer_id: api
+        name: create-relationship-responses
+        description: Responses map of the create-relationship operation.
+        metadata:
+          created_at: 2026-11-17T17:56:53.489Z
+          updated_at: 2026-11-17T17:56:53.489Z
+          version: 1
+      timestamp: 2026-11-17T17:56:53.502Z
+    rewritten: true
+  - sequence: 13
+    removedAt: 322
+    change:
+      type: add
+      elementId: api.responses.create-taxonomy-responses
+      layerName: api
+      after:
+        id: 27a5b0e2-9ede-4a56-86e9-f69ccbfe7945
+        path: api.responses.create-taxonomy-responses
+        spec_node_id: api.responses
+        type: responses
+        layer_id: api
+        name: create-taxonomy-responses
+        description: Responses map of the create-taxonomy operation.
+        metadata:
+          created_at: 2026-11-17T17:56:53.749Z
+          updated_at: 2026-11-17T17:56:53.749Z
+          version: 1
+      timestamp: 2026-11-17T17:56:53.761Z
+    rewritten: true
+  - sequence: 14
+    removedAt: 323
+    change:
+      type: add
+      elementId: api.responses.delete-class-responses
+      layerName: api
+      after:
+        id: ef922d97-c60e-4c7b-9947-60b6e2611f1f
+        path: api.responses.delete-class-responses
+        spec_node_id: api.responses
+        type: responses
+        layer_id: api
+        name: delete-class-responses
+        description: Responses map of the delete-class operation.
+        metadata:
+          created_at: 2026-11-17T17:56:54.044Z
+          updated_at: 2026-11-17T17:56:54.044Z
+          version: 1
+      timestamp: 2026-11-17T17:56:54.059Z
+    rewritten: true
+  - sequence: 15
+    removedAt: 324
+    change:
+      type: add
+      elementId: api.responses.delete-concept-scheme-responses
+      layerName: api
+      after:
+        id: 2aacd366-9ddf-429c-ba34-8ed4342c83ec
+        path: api.responses.delete-concept-scheme-responses
+        spec_node_id: api.responses
+        type: responses
+        layer_id: api
+        name: delete-concept-scheme-responses
+        description: Responses map of the delete-concept-scheme operation.
+        metadata:
+          created_at: 2026-11-17T17:56:54.309Z
+          updated_at: 2026-11-17T17:56:54.309Z
+          version: 1
+      timestamp: 2026-11-17T17:56:54.321Z
+    rewritten: true
+  - sequence: 16
+    removedAt: 325
+    change:
+      type: add
+      elementId: api.responses.delete-individual-responses
+      layerName: api
+      after:
+        id: 744a9361-77c7-47b7-b554-8c17fe8b5658
+        path: api.responses.delete-individual-responses
+        spec_node_id: api.responses
+        type: responses
+        layer_id: api
+        name: delete-individual-responses
+        description: Responses map of the delete-individual operation.
+        metadata:
+          created_at: 2026-11-17T17:56:54.572Z
+          updated_at: 2026-11-17T17:56:54.572Z
+          version: 1
+      timestamp: 2026-11-17T17:56:54.594Z
+    rewritten: true
+  - sequence: 17
+    removedAt: 326
+    change:
+      type: add
+      elementId: api.responses.delete-pipeline-configuration-responses
+      layerName: api
+      after:
+        id: dc363a4b-3271-4ccd-8d4b-c24208d7dc8b
+        path: api.responses.delete-pipeline-configuration-responses
+        spec_node_id: api.responses
+        type: responses
+        layer_id: api
+        name: delete-pipeline-configuration-responses
+        description: Responses map of the delete-pipeline-configuration operation.
+        metadata:
+          created_at: 2026-11-17T17:56:54.872Z
+          updated_at: 2026-11-17T17:56:54.872Z
+          version: 1
+      timestamp: 2026-11-17T17:56:54.884Z
+    rewritten: true
+  - sequence: 18
+    removedAt: 327
+    change:
+      type: add
+      elementId: api.responses.delete-property-definition-responses
+      layerName: api
+      after:
+        id: 8e33ecef-347a-40c8-ace1-f5fd9ee72194
+        path: api.responses.delete-property-definition-responses
+        spec_node_id: api.responses
+        type: responses
+        layer_id: api
+        name: delete-property-definition-responses
+        description: Responses map of the delete-property-definition operation.
+        metadata:
+          created_at: 2026-11-17T17:56:55.347Z
+          updated_at: 2026-11-17T17:56:55.347Z
+          version: 1
+      timestamp: 2026-11-17T17:56:55.362Z
+    rewritten: true
+  - sequence: 19
+    removedAt: 328
+    change:
+      type: add
+      elementId: api.responses.delete-relationship-responses
+      layerName: api
+      after:
+        id: f728318f-8bdb-4a7c-8fb6-c7a1198e61c2
+        path: api.responses.delete-relationship-responses
+        spec_node_id: api.responses
+        type: responses
+        layer_id: api
+        name: delete-relationship-responses
+        description: Responses map of the delete-relationship operation.
+        metadata:
+          created_at: 2026-11-17T17:56:55.659Z
+          updated_at: 2026-11-17T17:56:55.659Z
+          version: 1
+      timestamp: 2026-11-17T17:56:55.673Z
+    rewritten: true
+  - sequence: 20
+    removedAt: 329
+    change:
+      type: add
+      elementId: api.responses.delete-taxonomy-responses
+      layerName: api
+      after:
+        id: 5c7ae3fe-2fbb-41fa-8e3f-4d5d5227fc7f
+        path: api.responses.delete-taxonomy-responses
+        spec_node_id: api.responses
+        type: responses
+        layer_id: api
+        name: delete-taxonomy-responses
+        description: Responses map of the delete-taxonomy operation.
+        metadata:
+          created_at: 2026-11-17T17:56:55.914Z
+          updated_at: 2026-11-17T17:56:55.914Z
+          version: 1
+      timestamp: 2026-11-17T17:56:55.927Z
+    rewritten: true
+  - sequence: 21
+    removedAt: 330
+    change:
+      type: add
+      elementId: api.responses.detect-conflicts-responses
+      layerName: api
+      after:
+        id: 60c59513-1286-4214-b1c2-d6b4a1e096dc
+        path: api.responses.detect-conflicts-responses
+        spec_node_id: api.responses
+        type: responses
+        layer_id: api
+        name: detect-conflicts-responses
+        description: Responses map of the detect-conflicts operation.
+        metadata:
+          created_at: 2026-11-17T17:56:56.205Z
+          updated_at: 2026-11-17T17:56:56.205Z
+          version: 1
+      timestamp: 2026-11-17T17:56:56.219Z
+    rewritten: true
+  - sequence: 22
+    removedAt: 331
+    change:
+      type: add
+      elementId: api.responses.enrich-from-references-responses
+      layerName: api
+      after:
+        id: 9cfb4228-81f3-417d-9912-b30c90e1f034
+        path: api.responses.enrich-from-references-responses
+        spec_node_id: api.responses
+        type: responses
+        layer_id: api
+        name: enrich-from-references-responses
+        description: Responses map of the enrich-from-references operation.
+        metadata:
+          created_at: 2026-11-17T17:56:56.459Z
+          updated_at: 2026-11-17T17:56:56.459Z
+          version: 1
+      timestamp: 2026-11-17T17:56:56.471Z
+    rewritten: true
+  - sequence: 23
+    removedAt: 332
+    change:
+      type: add
+      elementId: api.responses.execute-pipeline-responses
+      layerName: api
+      after:
+        id: 4490ec30-fb87-4da6-9518-de47cd11e4fa
+        path: api.responses.execute-pipeline-responses
+        spec_node_id: api.responses
+        type: responses
+        layer_id: api
+        name: execute-pipeline-responses
+        description: Responses map of the execute-pipeline operation.
+        metadata:
+          created_at: 2026-11-17T17:56:56.710Z
+          updated_at: 2026-11-17T17:56:56.710Z
+          version: 1
+      timestamp: 2026-11-17T17:56:56.723Z
+    rewritten: true
+  - sequence: 24
+    removedAt: 333
+    change:
+      type: add
+      elementId: api.responses.execute-sparql-responses
+      layerName: api
+      after:
+        id: a14f5546-8602-4931-bd60-bf768195782f
+        path: api.responses.execute-sparql-responses
+        spec_node_id: api.responses
+        type: responses
+        layer_id: api
+        name: execute-sparql-responses
+        description: Responses map of the execute-sparql operation.
+        metadata:
+          created_at: 2026-11-17T17:56:56.973Z
+          updated_at: 2026-11-17T17:56:56.973Z
+          version: 1
+      timestamp: 2026-11-17T17:56:56.986Z
+    rewritten: true
+  - sequence: 25
+    removedAt: 334
+    change:
+      type: add
+      elementId: api.responses.export-ontology-responses
+      layerName: api
+      after:
+        id: 18576e31-c46a-4226-bcf8-0e11592fe930
+        path: api.responses.export-ontology-responses
+        spec_node_id: api.responses
+        type: responses
+        layer_id: api
+        name: export-ontology-responses
+        description: Responses map of the export-ontology operation.
+        metadata:
+          created_at: 2026-11-17T17:56:57.245Z
+          updated_at: 2026-11-17T17:56:57.245Z
+          version: 1
+      timestamp: 2026-11-17T17:56:57.265Z
+    rewritten: true
+  - sequence: 26
+    removedAt: 335
+    change:
+      type: add
+      elementId: api.responses.extract-entities-responses
+      layerName: api
+      after:
+        id: d3dbd16b-d989-4d81-97cb-df09fcc12236
+        path: api.responses.extract-entities-responses
+        spec_node_id: api.responses
+        type: responses
+        layer_id: api
+        name: extract-entities-responses
+        description: Responses map of the extract-entities operation.
+        metadata:
+          created_at: 2026-11-17T17:56:57.513Z
+          updated_at: 2026-11-17T17:56:57.513Z
+          version: 1
+      timestamp: 2026-11-17T17:56:57.526Z
+    rewritten: true
+  - sequence: 27
+    removedAt: 336
+    change:
+      type: add
+      elementId: api.responses.extract-triples-responses
+      layerName: api
+      after:
+        id: bcd8d4d6-776c-4251-818f-8825c236cc78
+        path: api.responses.extract-triples-responses
+        spec_node_id: api.responses
+        type: responses
+        layer_id: api
+        name: extract-triples-responses
+        description: Responses map of the extract-triples operation.
+        metadata:
+          created_at: 2026-11-17T17:56:57.805Z
+          updated_at: 2026-11-17T17:56:57.805Z
+          version: 1
+      timestamp: 2026-11-17T17:56:57.819Z
+    rewritten: true
+  - sequence: 28
+    removedAt: 337
+    change:
+      type: add
+      elementId: api.responses.get-all-paths-responses
+      layerName: api
+      after:
+        id: a293754f-9afe-44a5-98a6-3462797165a7
+        path: api.responses.get-all-paths-responses
+        spec_node_id: api.responses
+        type: responses
+        layer_id: api
+        name: get-all-paths-responses
+        description: Responses map of the get-all-paths operation.
+        metadata:
+          created_at: 2026-11-17T17:56:58.068Z
+          updated_at: 2026-11-17T17:56:58.068Z
+          version: 1
+      timestamp: 2026-11-17T17:56:58.081Z
+    rewritten: true
+  - sequence: 29
+    removedAt: 338
+    change:
+      type: add
+      elementId: api.responses.get-background-task-responses
+      layerName: api
+      after:
+        id: 7d1bf825-8f6f-4a7d-9f27-f58b621886b7
+        path: api.responses.get-background-task-responses
+        spec_node_id: api.responses
+        type: responses
+        layer_id: api
+        name: get-background-task-responses
+        description: Responses map of the get-background-task operation.
+        metadata:
+          created_at: 2026-11-17T17:56:58.337Z
+          updated_at: 2026-11-17T17:56:58.337Z
+          version: 1
+      timestamp: 2026-11-17T17:56:58.350Z
+    rewritten: true
+  - sequence: 30
+    removedAt: 339
+    change:
+      type: add
+      elementId: api.responses.get-background-tasks-summary-responses
+      layerName: api
+      after:
+        id: 119de5df-0b0c-4389-b761-d1ba5d9d16ee
+        path: api.responses.get-background-tasks-summary-responses
+        spec_node_id: api.responses
+        type: responses
+        layer_id: api
+        name: get-background-tasks-summary-responses
+        description: Responses map of the get-background-tasks-summary operation.
+        metadata:
+          created_at: 2026-11-17T17:56:58.597Z
+          updated_at: 2026-11-17T17:56:58.597Z
+          version: 1
+      timestamp: 2026-11-17T17:56:58.613Z
+    rewritten: true
+  - sequence: 31
+    removedAt: 340
+    change:
+      type: add
+      elementId: api.responses.get-centrality-responses
+      layerName: api
+      after:
+        id: 6d7c05a2-3805-4f66-a5be-349880b2f380
+        path: api.responses.get-centrality-responses
+        spec_node_id: api.responses
+        type: responses
+        layer_id: api
+        name: get-centrality-responses
+        description: Responses map of the get-centrality operation.
+        metadata:
+          created_at: 2026-11-17T17:56:58.872Z
+          updated_at: 2026-11-17T17:56:58.872Z
+          version: 1
+      timestamp: 2026-11-17T17:56:58.886Z
+    rewritten: true
+  - sequence: 32
+    removedAt: 341
+    change:
+      type: add
+      elementId: api.responses.get-change-history-all-responses
+      layerName: api
+      after:
+        id: d7cffea2-ccdc-45a3-879d-209eea363791
+        path: api.responses.get-change-history-all-responses
+        spec_node_id: api.responses
+        type: responses
+        layer_id: api
+        name: get-change-history-all-responses
+        description: Responses map of the get-change-history-all operation.
+        metadata:
+          created_at: 2026-11-17T17:56:59.275Z
+          updated_at: 2026-11-17T17:56:59.275Z
+          version: 1
+      timestamp: 2026-11-17T17:56:59.291Z
+    rewritten: true
+  - sequence: 33
+    removedAt: 342
+    change:
+      type: add
+      elementId: api.responses.get-change-history-by-entity-responses
+      layerName: api
+      after:
+        id: 5baa3c68-bc21-4079-89cb-383101ad0de8
+        path: api.responses.get-change-history-by-entity-responses
+        spec_node_id: api.responses
+        type: responses
+        layer_id: api
+        name: get-change-history-by-entity-responses
+        description: Responses map of the get-change-history-by-entity operation.
+        metadata:
+          created_at: 2026-11-17T17:56:59.576Z
+          updated_at: 2026-11-17T17:56:59.576Z
+          version: 1
+      timestamp: 2026-11-17T17:56:59.591Z
+    rewritten: true
+  - sequence: 34
+    removedAt: 343
+    change:
+      type: add
+      elementId: api.responses.get-changeset-responses
+      layerName: api
+      after:
+        id: 5e2eead7-63d7-4d6f-ba56-6b763ac2326d
+        path: api.responses.get-changeset-responses
+        spec_node_id: api.responses
+        type: responses
+        layer_id: api
+        name: get-changeset-responses
+        description: Responses map of the get-changeset operation.
+        metadata:
+          created_at: 2026-11-17T17:56:59.844Z
+          updated_at: 2026-11-17T17:56:59.844Z
+          version: 1
+      timestamp: 2026-11-17T17:56:59.862Z
+    rewritten: true
+  - sequence: 35
+    removedAt: 344
+    change:
+      type: add
+      elementId: api.responses.get-class-responses
+      layerName: api
+      after:
+        id: d2ebbdf9-1460-457a-acff-5407ea958b1f
+        path: api.responses.get-class-responses
+        spec_node_id: api.responses
+        type: responses
+        layer_id: api
+        name: get-class-responses
+        description: Responses map of the get-class operation.
+        metadata:
+          created_at: 2026-11-17T17:57:00.126Z
+          updated_at: 2026-11-17T17:57:00.126Z
+          version: 1
+      timestamp: 2026-11-17T17:57:00.140Z
+    rewritten: true
+  - sequence: 36
+    removedAt: 345
+    change:
+      type: add
+      elementId: api.responses.get-communities-responses
+      layerName: api
+      after:
+        id: 68e88620-de50-4de5-88d7-1af5e8843e4b
+        path: api.responses.get-communities-responses
+        spec_node_id: api.responses
+        type: responses
+        layer_id: api
+        name: get-communities-responses
+        description: Responses map of the get-communities operation.
+        metadata:
+          created_at: 2026-11-17T17:57:00.388Z
+          updated_at: 2026-11-17T17:57:00.388Z
+          version: 1
+      timestamp: 2026-11-17T17:57:00.402Z
+    rewritten: true
+  - sequence: 37
+    removedAt: 346
+    change:
+      type: add
+      elementId: api.responses.get-concept-scheme-responses
+      layerName: api
+      after:
+        id: 55e354df-e664-4044-b64a-2a88bb3334a4
+        path: api.responses.get-concept-scheme-responses
+        spec_node_id: api.responses
+        type: responses
+        layer_id: api
+        name: get-concept-scheme-responses
+        description: Responses map of the get-concept-scheme operation.
+        metadata:
+          created_at: 2026-11-17T17:57:00.662Z
+          updated_at: 2026-11-17T17:57:00.662Z
+          version: 1
+      timestamp: 2026-11-17T17:57:00.676Z
+    rewritten: true
+  - sequence: 38
+    removedAt: 347
+    change:
+      type: add
+      elementId: api.responses.get-configuration-responses
+      layerName: api
+      after:
+        id: 605ca45b-53ac-4346-82b1-ae31e0049b14
+        path: api.responses.get-configuration-responses
+        spec_node_id: api.responses
+        type: responses
+        layer_id: api
+        name: get-configuration-responses
+        description: Responses map of the get-configuration operation.
+        metadata:
+          created_at: 2026-11-17T17:57:00.935Z
+          updated_at: 2026-11-17T17:57:00.935Z
+          version: 1
+      timestamp: 2026-11-17T17:57:00.949Z
+    rewritten: true
+  - sequence: 39
+    removedAt: 348
+    change:
+      type: add
+      elementId: api.responses.get-database-health-responses
+      layerName: api
+      after:
+        id: 2a901f77-fb62-404e-a65b-a4e851dda186
+        path: api.responses.get-database-health-responses
+        spec_node_id: api.responses
+        type: responses
+        layer_id: api
+        name: get-database-health-responses
+        description: Responses map of the get-database-health operation.
+        metadata:
+          created_at: 2026-11-17T17:57:01.206Z
+          updated_at: 2026-11-17T17:57:01.206Z
+          version: 1
+      timestamp: 2026-11-17T17:57:01.220Z
+    rewritten: true
+  - sequence: 40
+    removedAt: 349
+    change:
+      type: add
+      elementId: api.responses.get-degree-distribution-responses
+      layerName: api
+      after:
+        id: 0934d492-1d42-4ed1-a8fd-c8958a0a4cf7
+        path: api.responses.get-degree-distribution-responses
+        spec_node_id: api.responses
+        type: responses
+        layer_id: api
+        name: get-degree-distribution-responses
+        description: Responses map of the get-degree-distribution operation.
+        metadata:
+          created_at: 2026-11-17T17:57:01.474Z
+          updated_at: 2026-11-17T17:57:01.474Z
+          version: 1
+      timestamp: 2026-11-17T17:57:01.488Z
+    rewritten: true
+  - sequence: 41
+    removedAt: 350
+    change:
+      type: add
+      elementId: api.responses.get-embedding-health-responses
+      layerName: api
+      after:
+        id: 0220458a-2197-4ea4-98d3-74f3fb3588db
+        path: api.responses.get-embedding-health-responses
+        spec_node_id: api.responses
+        type: responses
+        layer_id: api
+        name: get-embedding-health-responses
+        description: Responses map of the get-embedding-health operation.
+        metadata:
+          created_at: 2026-11-17T17:57:01.773Z
+          updated_at: 2026-11-17T17:57:01.773Z
+          version: 1
+      timestamp: 2026-11-17T17:57:01.787Z
+    rewritten: true
+  - sequence: 42
+    removedAt: 351
+    change:
+      type: add
+      elementId: api.responses.get-entity-version-responses
+      layerName: api
+      after:
+        id: 7e2ec249-56bf-42a6-b864-18a5494d90a4
+        path: api.responses.get-entity-version-responses
+        spec_node_id: api.responses
+        type: responses
+        layer_id: api
+        name: get-entity-version-responses
+        description: Responses map of the get-entity-version operation.
+        metadata:
+          created_at: 2026-11-17T17:57:02.060Z
+          updated_at: 2026-11-17T17:57:02.060Z
+          version: 1
+      timestamp: 2026-11-17T17:57:02.075Z
+    rewritten: true
+  - sequence: 43
+    removedAt: 352
+    change:
+      type: add
+      elementId: api.responses.get-graph-metrics-responses
+      layerName: api
+      after:
+        id: 6f29dd7d-5eda-4a34-821d-f6bbe3c97664
+        path: api.responses.get-graph-metrics-responses
+        spec_node_id: api.responses
+        type: responses
+        layer_id: api
+        name: get-graph-metrics-responses
+        description: Responses map of the get-graph-metrics operation.
+        metadata:
+          created_at: 2026-11-17T17:57:02.352Z
+          updated_at: 2026-11-17T17:57:02.352Z
+          version: 1
+      timestamp: 2026-11-17T17:57:02.373Z
+    rewritten: true
+  - sequence: 44
+    removedAt: 353
+    change:
+      type: add
+      elementId: api.responses.get-import-run-responses
+      layerName: api
+      after:
+        id: 6308a22c-bc7b-4790-8e7d-e74d03445cf6
+        path: api.responses.get-import-run-responses
+        spec_node_id: api.responses
+        type: responses
+        layer_id: api
+        name: get-import-run-responses
+        description: Responses map of the get-import-run operation.
+        metadata:
+          created_at: 2026-11-17T17:57:02.645Z
+          updated_at: 2026-11-17T17:57:02.645Z
+          version: 1
+      timestamp: 2026-11-17T17:57:02.661Z
+    rewritten: true
+  - sequence: 45
+    removedAt: 354
+    change:
+      type: add
+      elementId: api.responses.get-individual-responses
+      layerName: api
+      after:
+        id: 7e44517a-249b-42f0-b321-b81610daf07a
+        path: api.responses.get-individual-responses
+        spec_node_id: api.responses
+        type: responses
+        layer_id: api
+        name: get-individual-responses
+        description: Responses map of the get-individual operation.
+        metadata:
+          created_at: 2026-11-17T17:57:03.122Z
+          updated_at: 2026-11-17T17:57:03.122Z
+          version: 1
+      timestamp: 2026-11-17T17:57:03.186Z
+    rewritten: true
+  - sequence: 46
+    removedAt: 355
+    change:
+      type: add
+      elementId: api.responses.get-individual-inherited-properties-responses
+      layerName: api
+      after:
+        id: 33a294e1-95bd-480c-a13e-c98c99108687
+        path: api.responses.get-individual-inherited-properties-responses
+        spec_node_id: api.responses
+        type: responses
+        layer_id: api
+        name: get-individual-inherited-properties-responses
+        description: Responses map of the get-individual-inherited-properties operation.
+        metadata:
+          created_at: 2026-11-17T17:57:03.594Z
+          updated_at: 2026-11-17T17:57:03.594Z
+          version: 1
+      timestamp: 2026-11-17T17:57:03.622Z
+    rewritten: true
+  - sequence: 47
+    removedAt: 356
+    change:
+      type: add
+      elementId: api.responses.get-neighbors-responses
+      layerName: api
+      after:
+        id: fe52b57d-9fbc-442d-872c-dac3fb937e42
+        path: api.responses.get-neighbors-responses
+        spec_node_id: api.responses
+        type: responses
+        layer_id: api
+        name: get-neighbors-responses
+        description: Responses map of the get-neighbors operation.
+        metadata:
+          created_at: 2026-11-17T17:57:04.084Z
+          updated_at: 2026-11-17T17:57:04.084Z
+          version: 1
+      timestamp: 2026-11-17T17:57:04.101Z
+    rewritten: true
+  - sequence: 48
+    removedAt: 357
+    change:
+      type: add
+      elementId: api.responses.get-nlp-health-responses
+      layerName: api
+      after:
+        id: d5764d4e-618c-4144-b275-0f7c066b7733
+        path: api.responses.get-nlp-health-responses
+        spec_node_id: api.responses
+        type: responses
+        layer_id: api
+        name: get-nlp-health-responses
+        description: Responses map of the get-nlp-health operation.
+        metadata:
+          created_at: 2026-11-17T17:57:04.369Z
+          updated_at: 2026-11-17T17:57:04.369Z
+          version: 1
+      timestamp: 2026-11-17T17:57:04.384Z
+    rewritten: true
+  - sequence: 49
+    removedAt: 358
+    change:
+      type: add
+      elementId: api.responses.get-pipeline-configuration-responses
+      layerName: api
+      after:
+        id: ab1aa302-a8b9-422f-8cab-148b846ddbc4
+        path: api.responses.get-pipeline-configuration-responses
+        spec_node_id: api.responses
+        type: responses
+        layer_id: api
+        name: get-pipeline-configuration-responses
+        description: Responses map of the get-pipeline-configuration operation.
+        metadata:
+          created_at: 2026-11-17T17:57:04.657Z
+          updated_at: 2026-11-17T17:57:04.657Z
+          version: 1
+      timestamp: 2026-11-17T17:57:04.676Z
+    rewritten: true
+  - sequence: 50
+    removedAt: 359
+    change:
+      type: add
+      elementId: api.responses.get-pipeline-executions-responses
+      layerName: api
+      after:
+        id: fd63bdbf-a9ca-4e10-bddf-abf7af06e2f3
+        path: api.responses.get-pipeline-executions-responses
+        spec_node_id: api.responses
+        type: responses
+        layer_id: api
+        name: get-pipeline-executions-responses
+        description: Responses map of the get-pipeline-executions operation.
+        metadata:
+          created_at: 2026-11-17T17:57:04.944Z
+          updated_at: 2026-11-17T17:57:04.944Z
+          version: 1
+      timestamp: 2026-11-17T17:57:04.960Z
+    rewritten: true
+  - sequence: 51
+    removedAt: 360
+    change:
+      type: add
+      elementId: api.responses.get-property-definition-responses
+      layerName: api
+      after:
+        id: 59a641bb-7e7d-49a3-960d-4ad3bf4559f2
+        path: api.responses.get-property-definition-responses
+        spec_node_id: api.responses
+        type: responses
+        layer_id: api
+        name: get-property-definition-responses
+        description: Responses map of the get-property-definition operation.
+        metadata:
+          created_at: 2026-11-17T17:57:05.246Z
+          updated_at: 2026-11-17T17:57:05.246Z
+          version: 1
+      timestamp: 2026-11-17T17:57:05.266Z
+    rewritten: true
+  - sequence: 52
+    removedAt: 361
+    change:
+      type: add
+      elementId: api.responses.get-publish-diff-stats-responses
+      layerName: api
+      after:
+        id: 9a647afd-d513-4b2a-bcfe-0bcba0e4edd6
+        path: api.responses.get-publish-diff-stats-responses
+        spec_node_id: api.responses
+        type: responses
+        layer_id: api
+        name: get-publish-diff-stats-responses
+        description: Responses map of the get-publish-diff-stats operation.
+        metadata:
+          created_at: 2026-11-17T17:57:05.525Z
+          updated_at: 2026-11-17T17:57:05.525Z
+          version: 1
+      timestamp: 2026-11-17T17:57:05.542Z
+    rewritten: true
+  - sequence: 53
+    removedAt: 362
+    change:
+      type: add
+      elementId: api.responses.get-rdf-triple-count-responses
+      layerName: api
+      after:
+        id: dcb3ae74-1ee3-4707-b0b5-e5987d68f8b6
+        path: api.responses.get-rdf-triple-count-responses
+        spec_node_id: api.responses
+        type: responses
+        layer_id: api
+        name: get-rdf-triple-count-responses
+        description: Responses map of the get-rdf-triple-count operation.
+        metadata:
+          created_at: 2026-11-17T17:57:05.821Z
+          updated_at: 2026-11-17T17:57:05.821Z
+          version: 1
+      timestamp: 2026-11-17T17:57:05.838Z
+    rewritten: true
+  - sequence: 54
+    removedAt: 363
+    change:
+      type: add
+      elementId: api.responses.get-rdf-triples-responses
+      layerName: api
+      after:
+        id: 49e71168-0b86-43a7-b20f-152e2925b3a4
+        path: api.responses.get-rdf-triples-responses
+        spec_node_id: api.responses
+        type: responses
+        layer_id: api
+        name: get-rdf-triples-responses
+        description: Responses map of the get-rdf-triples operation.
+        metadata:
+          created_at: 2026-11-17T17:57:06.104Z
+          updated_at: 2026-11-17T17:57:06.104Z
+          version: 1
+      timestamp: 2026-11-17T17:57:06.123Z
+    rewritten: true
+  - sequence: 55
+    removedAt: 364
+    change:
+      type: add
+      elementId: api.responses.get-reference-relations-responses
+      layerName: api
+      after:
+        id: 997d8016-f0a0-424a-9a6e-f14b70a812e9
+        path: api.responses.get-reference-relations-responses
+        spec_node_id: api.responses
+        type: responses
+        layer_id: api
+        name: get-reference-relations-responses
+        description: Responses map of the get-reference-relations operation.
+        metadata:
+          created_at: 2026-11-17T17:57:06.381Z
+          updated_at: 2026-11-17T17:57:06.381Z
+          version: 1
+      timestamp: 2026-11-17T17:57:06.398Z
+    rewritten: true
+  - sequence: 56
+    removedAt: 365
+    change:
+      type: add
+      elementId: api.responses.get-reference-status-responses
+      layerName: api
+      after:
+        id: 797a533f-2c0f-4dd4-8e57-46a4dd62ca5f
+        path: api.responses.get-reference-status-responses
+        spec_node_id: api.responses
+        type: responses
+        layer_id: api
+        name: get-reference-status-responses
+        description: Responses map of the get-reference-status operation.
+        metadata:
+          created_at: 2026-11-17T17:57:06.662Z
+          updated_at: 2026-11-17T17:57:06.662Z
+          version: 1
+      timestamp: 2026-11-17T17:57:06.681Z
+    rewritten: true
+  - sequence: 57
+    removedAt: 366
+    change:
+      type: add
+      elementId: api.responses.get-relationship-responses
+      layerName: api
+      after:
+        id: 64a5f156-bce9-4b00-aac9-c2d22f6b691f
+        path: api.responses.get-relationship-responses
+        spec_node_id: api.responses
+        type: responses
+        layer_id: api
+        name: get-relationship-responses
+        description: Responses map of the get-relationship operation.
+        metadata:
+          created_at: 2026-11-17T17:57:06.980Z
+          updated_at: 2026-11-17T17:57:06.980Z
+          version: 1
+      timestamp: 2026-11-17T17:57:07.014Z
+    rewritten: true
+  - sequence: 58
+    removedAt: 367
+    change:
+      type: add
+      elementId: api.responses.get-run-change-events-responses
+      layerName: api
+      after:
+        id: f3d41991-f403-4364-8030-819fade5fec1
+        path: api.responses.get-run-change-events-responses
+        spec_node_id: api.responses
+        type: responses
+        layer_id: api
+        name: get-run-change-events-responses
+        description: Responses map of the get-run-change-events operation.
+        metadata:
+          created_at: 2026-11-17T17:57:07.357Z
+          updated_at: 2026-11-17T17:57:07.357Z
+          version: 1
+      timestamp: 2026-11-17T17:57:07.373Z
+    rewritten: true
+  - sequence: 59
+    removedAt: 368
+    change:
+      type: add
+      elementId: api.responses.get-service-metrics-responses
+      layerName: api
+      after:
+        id: 18b828fd-53e3-4656-8a2b-0f9966c7058a
+        path: api.responses.get-service-metrics-responses
+        spec_node_id: api.responses
+        type: responses
+        layer_id: api
+        name: get-service-metrics-responses
+        description: Responses map of the get-service-metrics operation.
+        metadata:
+          created_at: 2026-11-17T17:57:07.674Z
+          updated_at: 2026-11-17T17:57:07.674Z
+          version: 1
+      timestamp: 2026-11-17T17:57:07.695Z
+    rewritten: true
+  - sequence: 60
+    removedAt: 369
+    change:
+      type: add
+      elementId: api.responses.get-shortest-path-responses
+      layerName: api
+      after:
+        id: a018f433-6217-43a4-b592-e333ad82ce2e
+        path: api.responses.get-shortest-path-responses
+        spec_node_id: api.responses
+        type: responses
+        layer_id: api
+        name: get-shortest-path-responses
+        description: Responses map of the get-shortest-path operation.
+        metadata:
+          created_at: 2026-11-17T17:57:08.036Z
+          updated_at: 2026-11-17T17:57:08.036Z
+          version: 1
+      timestamp: 2026-11-17T17:57:08.060Z
+    rewritten: true
+  - sequence: 61
+    removedAt: 370
+    change:
+      type: add
+      elementId: api.responses.get-subgraph-responses
+      layerName: api
+      after:
+        id: afad80da-b03e-4cf4-9ce7-6f577e5a49f8
+        path: api.responses.get-subgraph-responses
+        spec_node_id: api.responses
+        type: responses
+        layer_id: api
+        name: get-subgraph-responses
+        description: Responses map of the get-subgraph operation.
+        metadata:
+          created_at: 2026-11-17T17:57:08.381Z
+          updated_at: 2026-11-17T17:57:08.381Z
+          version: 1
+      timestamp: 2026-11-17T17:57:08.403Z
+    rewritten: true
+  - sequence: 62
+    removedAt: 371
+    change:
+      type: add
+      elementId: api.responses.get-subgraph-by-depth-responses
+      layerName: api
+      after:
+        id: ad3accac-130d-48bf-a3dd-2cbcc0075f3e
+        path: api.responses.get-subgraph-by-depth-responses
+        spec_node_id: api.responses
+        type: responses
+        layer_id: api
+        name: get-subgraph-by-depth-responses
+        description: Responses map of the get-subgraph-by-depth operation.
+        metadata:
+          created_at: 2026-11-17T17:57:08.712Z
+          updated_at: 2026-11-17T17:57:08.712Z
+          version: 1
+      timestamp: 2026-11-17T17:57:08.733Z
+    rewritten: true
+  - sequence: 63
+    removedAt: 372
+    change:
+      type: add
+      elementId: api.responses.get-sync-status-responses
+      layerName: api
+      after:
+        id: fb3721eb-f89f-4846-abd8-f23e746a2c61
+        path: api.responses.get-sync-status-responses
+        spec_node_id: api.responses
+        type: responses
+        layer_id: api
+        name: get-sync-status-responses
+        description: Responses map of the get-sync-status operation.
+        metadata:
+          created_at: 2026-11-17T17:57:09.263Z
+          updated_at: 2026-11-17T17:57:09.263Z
+          version: 1
+      timestamp: 2026-11-17T17:57:09.293Z
+    rewritten: true
+  - sequence: 64
+    removedAt: 373
+    change:
+      type: add
+      elementId: api.responses.get-system-health-responses
+      layerName: api
+      after:
+        id: c0be9c16-5fcb-4b41-b95e-ff964077006c
+        path: api.responses.get-system-health-responses
+        spec_node_id: api.responses
+        type: responses
+        layer_id: api
+        name: get-system-health-responses
+        description: Responses map of the get-system-health operation.
+        metadata:
+          created_at: 2026-11-17T17:57:09.792Z
+          updated_at: 2026-11-17T17:57:09.792Z
+          version: 1
+      timestamp: 2026-11-17T17:57:09.820Z
+    rewritten: true
+  - sequence: 65
+    removedAt: 374
+    change:
+      type: add
+      elementId: api.responses.get-taxonomy-responses
+      layerName: api
+      after:
+        id: f5504415-b315-477c-a1e2-bf39d18be231
+        path: api.responses.get-taxonomy-responses
+        spec_node_id: api.responses
+        type: responses
+        layer_id: api
+        name: get-taxonomy-responses
+        description: Responses map of the get-taxonomy operation.
+        metadata:
+          created_at: 2026-11-17T17:57:10.178Z
+          updated_at: 2026-11-17T17:57:10.178Z
+          version: 1
+      timestamp: 2026-11-17T17:57:10.199Z
+    rewritten: true
+  - sequence: 66
+    removedAt: 375
+    change:
+      type: add
+      elementId: api.responses.import-ontology-responses
+      layerName: api
+      after:
+        id: a42a8688-4240-4adb-8d34-4cba72c594d6
+        path: api.responses.import-ontology-responses
+        spec_node_id: api.responses
+        type: responses
+        layer_id: api
+        name: import-ontology-responses
+        description: Responses map of the import-ontology operation.
+        metadata:
+          created_at: 2026-11-17T17:57:10.661Z
+          updated_at: 2026-11-17T17:57:10.661Z
+          version: 1
+      timestamp: 2026-11-17T17:57:10.692Z
+    rewritten: true
+  - sequence: 67
+    removedAt: 376
+    change:
+      type: add
+      elementId: api.responses.list-background-tasks-responses
+      layerName: api
+      after:
+        id: 7e6dabc1-e98d-49d4-8f6d-19c6a4bb5bb1
+        path: api.responses.list-background-tasks-responses
+        spec_node_id: api.responses
+        type: responses
+        layer_id: api
+        name: list-background-tasks-responses
+        description: Responses map of the list-background-tasks operation.
+        metadata:
+          created_at: 2026-11-17T17:57:11.158Z
+          updated_at: 2026-11-17T17:57:11.158Z
+          version: 1
+      timestamp: 2026-11-17T17:57:11.185Z
+    rewritten: true
+  - sequence: 68
+    removedAt: 377
+    change:
+      type: add
+      elementId: api.responses.list-classes-responses
+      layerName: api
+      after:
+        id: f6f5a959-7d69-4220-905c-5c4a5d4c0949
+        path: api.responses.list-classes-responses
+        spec_node_id: api.responses
+        type: responses
+        layer_id: api
+        name: list-classes-responses
+        description: Responses map of the list-classes operation.
+        metadata:
+          created_at: 2026-11-17T17:57:11.619Z
+          updated_at: 2026-11-17T17:57:11.619Z
+          version: 1
+      timestamp: 2026-11-17T17:57:11.642Z
+    rewritten: true
+  - sequence: 69
+    removedAt: 378
+    change:
+      type: add
+      elementId: api.responses.list-concept-schemes-responses
+      layerName: api
+      after:
+        id: 6f79d53f-ea97-410e-845b-c22f87b87bea
+        path: api.responses.list-concept-schemes-responses
+        spec_node_id: api.responses
+        type: responses
+        layer_id: api
+        name: list-concept-schemes-responses
+        description: Responses map of the list-concept-schemes operation.
+        metadata:
+          created_at: 2026-11-17T17:57:11.957Z
+          updated_at: 2026-11-17T17:57:11.957Z
+          version: 1
+      timestamp: 2026-11-17T17:57:11.975Z
+    rewritten: true
+  - sequence: 70
+    removedAt: 379
+    change:
+      type: add
+      elementId: api.responses.list-entity-versions-responses
+      layerName: api
+      after:
+        id: 25a255aa-9e67-4230-a313-df219935af0b
+        path: api.responses.list-entity-versions-responses
+        spec_node_id: api.responses
+        type: responses
+        layer_id: api
+        name: list-entity-versions-responses
+        description: Responses map of the list-entity-versions operation.
+        metadata:
+          created_at: 2026-11-17T17:57:12.243Z
+          updated_at: 2026-11-17T17:57:12.243Z
+          version: 1
+      timestamp: 2026-11-17T17:57:12.264Z
+    rewritten: true
+  - sequence: 71
+    removedAt: 380
+    change:
+      type: add
+      elementId: api.responses.list-import-runs-responses
+      layerName: api
+      after:
+        id: bdbea5aa-187b-4fb8-8ba1-5fdc0f85057d
+        path: api.responses.list-import-runs-responses
+        spec_node_id: api.responses
+        type: responses
+        layer_id: api
+        name: list-import-runs-responses
+        description: Responses map of the list-import-runs operation.
+        metadata:
+          created_at: 2026-11-17T17:57:12.616Z
+          updated_at: 2026-11-17T17:57:12.616Z
+          version: 1
+      timestamp: 2026-11-17T17:57:12.649Z
+    rewritten: true
+  - sequence: 72
+    removedAt: 381
+    change:
+      type: add
+      elementId: api.responses.list-individuals-responses
+      layerName: api
+      after:
+        id: 8454afa3-6980-4d62-9173-90d99a244376
+        path: api.responses.list-individuals-responses
+        spec_node_id: api.responses
+        type: responses
+        layer_id: api
+        name: list-individuals-responses
+        description: Responses map of the list-individuals operation.
+        metadata:
+          created_at: 2026-11-17T17:57:12.948Z
+          updated_at: 2026-11-17T17:57:12.948Z
+          version: 1
+      timestamp: 2026-11-17T17:57:12.968Z
+    rewritten: true
+  - sequence: 73
+    removedAt: 382
+    change:
+      type: add
+      elementId: api.responses.list-pipeline-configurations-responses
+      layerName: api
+      after:
+        id: ff54377f-5c69-4904-9dea-80a9827cbd17
+        path: api.responses.list-pipeline-configurations-responses
+        spec_node_id: api.responses
+        type: responses
+        layer_id: api
+        name: list-pipeline-configurations-responses
+        description: Responses map of the list-pipeline-configurations operation.
+        metadata:
+          created_at: 2026-11-17T17:57:13.283Z
+          updated_at: 2026-11-17T17:57:13.283Z
+          version: 1
+      timestamp: 2026-11-17T17:57:13.307Z
+    rewritten: true
+  - sequence: 74
+    removedAt: 383
+    change:
+      type: add
+      elementId: api.responses.list-property-definitions-responses
+      layerName: api
+      after:
+        id: 12808e6c-ce59-4350-9d00-8ce02aa5b666
+        path: api.responses.list-property-definitions-responses
+        spec_node_id: api.responses
+        type: responses
+        layer_id: api
+        name: list-property-definitions-responses
+        description: Responses map of the list-property-definitions operation.
+        metadata:
+          created_at: 2026-11-17T17:57:13.617Z
+          updated_at: 2026-11-17T17:57:13.617Z
+          version: 1
+      timestamp: 2026-11-17T17:57:13.638Z
+    rewritten: true
+  - sequence: 75
+    removedAt: 384
+    change:
+      type: add
+      elementId: api.responses.list-relationships-responses
+      layerName: api
+      after:
+        id: a8d20452-0fed-4d03-9ba0-32a4dbd74397
+        path: api.responses.list-relationships-responses
+        spec_node_id: api.responses
+        type: responses
+        layer_id: api
+        name: list-relationships-responses
+        description: Responses map of the list-relationships operation.
+        metadata:
+          created_at: 2026-11-17T17:57:13.948Z
+          updated_at: 2026-11-17T17:57:13.948Z
+          version: 1
+      timestamp: 2026-11-17T17:57:13.967Z
+    rewritten: true
+  - sequence: 76
+    removedAt: 385
+    change:
+      type: add
+      elementId: api.responses.list-taxonomies-responses
+      layerName: api
+      after:
+        id: dd01de00-cdeb-4c34-a855-49ff126a9b91
+        path: api.responses.list-taxonomies-responses
+        spec_node_id: api.responses
+        type: responses
+        layer_id: api
+        name: list-taxonomies-responses
+        description: Responses map of the list-taxonomies operation.
+        metadata:
+          created_at: 2026-11-17T17:57:14.270Z
+          updated_at: 2026-11-17T17:57:14.270Z
+          version: 1
+      timestamp: 2026-11-17T17:57:14.297Z
+    rewritten: true
+  - sequence: 77
+    removedAt: 386
+    change:
+      type: add
+      elementId: api.responses.merge-proposal-responses
+      layerName: api
+      after:
+        id: b64d105a-260e-4fec-a387-6be80e7abf63
+        path: api.responses.merge-proposal-responses
+        spec_node_id: api.responses
+        type: responses
+        layer_id: api
+        name: merge-proposal-responses
+        description: Responses map of the merge-proposal operation.
+        metadata:
+          created_at: 2026-11-17T17:57:14.601Z
+          updated_at: 2026-11-17T17:57:14.601Z
+          version: 1
+      timestamp: 2026-11-17T17:57:14.621Z
+    rewritten: true
+  - sequence: 78
+    removedAt: 387
+    change:
+      type: add
+      elementId: api.responses.move-class-responses
+      layerName: api
+      after:
+        id: 375b53d8-2cb6-459d-a301-ffac613c9797
+        path: api.responses.move-class-responses
+        spec_node_id: api.responses
+        type: responses
+        layer_id: api
+        name: move-class-responses
+        description: Responses map of the move-class operation.
+        metadata:
+          created_at: 2026-11-17T17:57:14.897Z
+          updated_at: 2026-11-17T17:57:14.897Z
+          version: 1
+      timestamp: 2026-11-17T17:57:14.916Z
+    rewritten: true
+  - sequence: 79
+    removedAt: 388
+    change:
+      type: add
+      elementId: api.responses.publish-taxonomy-responses
+      layerName: api
+      after:
+        id: 516b0c0d-74fa-4127-9b86-f0e141d6ea17
+        path: api.responses.publish-taxonomy-responses
+        spec_node_id: api.responses
+        type: responses
+        layer_id: api
+        name: publish-taxonomy-responses
+        description: Responses map of the publish-taxonomy operation.
+        metadata:
+          created_at: 2026-11-17T17:57:15.201Z
+          updated_at: 2026-11-17T17:57:15.201Z
+          version: 1
+      timestamp: 2026-11-17T17:57:15.222Z
+    rewritten: true
+  - sequence: 80
+    removedAt: 389
+    change:
+      type: add
+      elementId: api.responses.pull-changes-responses
+      layerName: api
+      after:
+        id: bd4526d5-eb66-41e9-a53c-643108135cb7
+        path: api.responses.pull-changes-responses
+        spec_node_id: api.responses
+        type: responses
+        layer_id: api
+        name: pull-changes-responses
+        description: Responses map of the pull-changes operation.
+        metadata:
+          created_at: 2026-11-17T17:57:15.497Z
+          updated_at: 2026-11-17T17:57:15.497Z
+          version: 1
+      timestamp: 2026-11-17T17:57:15.518Z
+    rewritten: true
+  - sequence: 81
+    removedAt: 390
+    change:
+      type: add
+      elementId: api.responses.push-changes-responses
+      layerName: api
+      after:
+        id: ad5c71da-016f-4845-88ee-cee782a09858
+        path: api.responses.push-changes-responses
+        spec_node_id: api.responses
+        type: responses
+        layer_id: api
+        name: push-changes-responses
+        description: Responses map of the push-changes operation.
+        metadata:
+          created_at: 2026-11-17T17:57:16.450Z
+          updated_at: 2026-11-17T17:57:16.450Z
+          version: 1
+      timestamp: 2026-11-17T17:57:16.492Z
+    rewritten: true
+  - sequence: 82
+    removedAt: 391
+    change:
+      type: add
+      elementId: api.responses.reject-proposal-responses
+      layerName: api
+      after:
+        id: a449fc5b-4605-4aed-8496-441438c62f3e
+        path: api.responses.reject-proposal-responses
+        spec_node_id: api.responses
+        type: responses
+        layer_id: api
+        name: reject-proposal-responses
+        description: Responses map of the reject-proposal operation.
+        metadata:
+          created_at: 2026-11-17T17:57:17.012Z
+          updated_at: 2026-11-17T17:57:17.012Z
+          version: 1
+      timestamp: 2026-11-17T17:57:17.043Z
+    rewritten: true
+  - sequence: 83
+    removedAt: 392
+    change:
+      type: add
+      elementId: api.responses.remove-parent-class-from-individual-responses
+      layerName: api
+      after:
+        id: d34f7e76-268f-404f-a2e4-ea24cf18e9d4
+        path: api.responses.remove-parent-class-from-individual-responses
+        spec_node_id: api.responses
+        type: responses
+        layer_id: api
+        name: remove-parent-class-from-individual-responses
+        description: Responses map of the remove-parent-class-from-individual operation.
+        metadata:
+          created_at: 2026-11-17T17:57:17.581Z
+          updated_at: 2026-11-17T17:57:17.581Z
+          version: 1
+      timestamp: 2026-11-17T17:57:17.626Z
+    rewritten: true
+  - sequence: 84
+    removedAt: 393
+    change:
+      type: add
+      elementId: api.responses.reorder-individual-classes-responses
+      layerName: api
+      after:
+        id: cf8fb386-afb7-4a80-ad3e-72f4b4992833
+        path: api.responses.reorder-individual-classes-responses
+        spec_node_id: api.responses
+        type: responses
+        layer_id: api
+        name: reorder-individual-classes-responses
+        description: Responses map of the reorder-individual-classes operation.
+        metadata:
+          created_at: 2026-11-17T17:57:18.094Z
+          updated_at: 2026-11-17T17:57:18.094Z
+          version: 1
+      timestamp: 2026-11-17T17:57:18.112Z
+    rewritten: true
+  - sequence: 85
+    removedAt: 394
+    change:
+      type: add
+      elementId: api.responses.reset-configuration-responses
+      layerName: api
+      after:
+        id: f0a2f548-2303-430e-906a-9592c1f33a79
+        path: api.responses.reset-configuration-responses
+        spec_node_id: api.responses
+        type: responses
+        layer_id: api
+        name: reset-configuration-responses
+        description: Responses map of the reset-configuration operation.
+        metadata:
+          created_at: 2026-11-17T17:57:18.395Z
+          updated_at: 2026-11-17T17:57:18.395Z
+          version: 1
+      timestamp: 2026-11-17T17:57:18.415Z
+    rewritten: true
+  - sequence: 86
+    removedAt: 395
+    change:
+      type: add
+      elementId: api.responses.resolve-conflicts-responses
+      layerName: api
+      after:
+        id: 52e15278-d824-44ac-b8aa-a851f5b49c02
+        path: api.responses.resolve-conflicts-responses
+        spec_node_id: api.responses
+        type: responses
+        layer_id: api
+        name: resolve-conflicts-responses
+        description: Responses map of the resolve-conflicts operation.
+        metadata:
+          created_at: 2026-11-17T17:57:18.938Z
+          updated_at: 2026-11-17T17:57:18.938Z
+          version: 1
+      timestamp: 2026-11-17T17:57:18.958Z
+    rewritten: true
+  - sequence: 87
+    removedAt: 396
+    change:
+      type: add
+      elementId: api.responses.search-references-responses
+      layerName: api
+      after:
+        id: 72012e04-a34f-4823-9f45-724bec0686f1
+        path: api.responses.search-references-responses
+        spec_node_id: api.responses
+        type: responses
+        layer_id: api
+        name: search-references-responses
+        description: Responses map of the search-references operation.
+        metadata:
+          created_at: 2026-11-17T17:57:19.368Z
+          updated_at: 2026-11-17T17:57:19.368Z
+          version: 1
+      timestamp: 2026-11-17T17:57:19.399Z
+    rewritten: true
+  - sequence: 88
+    removedAt: 397
+    change:
+      type: add
+      elementId: api.responses.stage-changeset-responses
+      layerName: api
+      after:
+        id: 003ca3ca-3db4-405c-aeb4-0e6385fae41d
+        path: api.responses.stage-changeset-responses
+        spec_node_id: api.responses
+        type: responses
+        layer_id: api
+        name: stage-changeset-responses
+        description: Responses map of the stage-changeset operation.
+        metadata:
+          created_at: 2026-11-17T17:57:19.797Z
+          updated_at: 2026-11-17T17:57:19.797Z
+          version: 1
+      timestamp: 2026-11-17T17:57:19.818Z
+    rewritten: true
+  - sequence: 89
+    removedAt: 398
+    change:
+      type: add
+      elementId: api.responses.submit-proposal-responses
+      layerName: api
+      after:
+        id: 2cf59709-9548-4bf2-8976-6ad84618a925
+        path: api.responses.submit-proposal-responses
+        spec_node_id: api.responses
+        type: responses
+        layer_id: api
+        name: submit-proposal-responses
+        description: Responses map of the submit-proposal operation.
+        metadata:
+          created_at: 2026-11-17T17:57:20.117Z
+          updated_at: 2026-11-17T17:57:20.117Z
+          version: 1
+      timestamp: 2026-11-17T17:57:20.141Z
+    rewritten: true
+  - sequence: 90
+    removedAt: 399
+    change:
+      type: add
+      elementId: api.responses.update-class-responses
+      layerName: api
+      after:
+        id: 5d556f80-ba1f-4397-8a69-61bac696c140
+        path: api.responses.update-class-responses
+        spec_node_id: api.responses
+        type: responses
+        layer_id: api
+        name: update-class-responses
+        description: Responses map of the update-class operation.
+        metadata:
+          created_at: 2026-11-17T17:57:20.459Z
+          updated_at: 2026-11-17T17:57:20.459Z
+          version: 1
+      timestamp: 2026-11-17T17:57:20.482Z
+    rewritten: true
+  - sequence: 91
+    removedAt: 400
+    change:
+      type: add
+      elementId: api.responses.update-concept-scheme-responses
+      layerName: api
+      after:
+        id: d68cdf7a-0110-472c-a609-0045c25fb12e
+        path: api.responses.update-concept-scheme-responses
+        spec_node_id: api.responses
+        type: responses
+        layer_id: api
+        name: update-concept-scheme-responses
+        description: Responses map of the update-concept-scheme operation.
+        metadata:
+          created_at: 2026-11-17T17:57:20.896Z
+          updated_at: 2026-11-17T17:57:20.896Z
+          version: 1
+      timestamp: 2026-11-17T17:57:20.917Z
+    rewritten: true
+  - sequence: 92
+    removedAt: 401
+    change:
+      type: add
+      elementId: api.responses.update-configuration-section-responses
+      layerName: api
+      after:
+        id: 358c5ed0-5411-436f-80f3-aa354898600e
+        path: api.responses.update-configuration-section-responses
+        spec_node_id: api.responses
+        type: responses
+        layer_id: api
+        name: update-configuration-section-responses
+        description: Responses map of the update-configuration-section operation.
+        metadata:
+          created_at: 2026-11-17T17:57:21.263Z
+          updated_at: 2026-11-17T17:57:21.263Z
+          version: 1
+      timestamp: 2026-11-17T17:57:21.287Z
+    rewritten: true
+  - sequence: 93
+    removedAt: 402
+    change:
+      type: add
+      elementId: api.responses.update-individual-responses
+      layerName: api
+      after:
+        id: bbca1d2c-4cf0-49b4-af28-0c0755d9d62b
+        path: api.responses.update-individual-responses
+        spec_node_id: api.responses
+        type: responses
+        layer_id: api
+        name: update-individual-responses
+        description: Responses map of the update-individual operation.
+        metadata:
+          created_at: 2026-11-17T17:57:21.604Z
+          updated_at: 2026-11-17T17:57:21.604Z
+          version: 1
+      timestamp: 2026-11-17T17:57:21.625Z
+    rewritten: true
+  - sequence: 94
+    removedAt: 403
+    change:
+      type: add
+      elementId: api.responses.update-pipeline-configuration-responses
+      layerName: api
+      after:
+        id: 4f9b5167-556a-4274-ab76-97593f5b7371
+        path: api.responses.update-pipeline-configuration-responses
+        spec_node_id: api.responses
+        type: responses
+        layer_id: api
+        name: update-pipeline-configuration-responses
+        description: Responses map of the update-pipeline-configuration operation.
+        metadata:
+          created_at: 2026-11-17T17:57:21.925Z
+          updated_at: 2026-11-17T17:57:21.925Z
+          version: 1
+      timestamp: 2026-11-17T17:57:21.947Z
+    rewritten: true
+  - sequence: 95
+    removedAt: 404
+    change:
+      type: add
+      elementId: api.responses.update-property-definition-responses
+      layerName: api
+      after:
+        id: 81ea75e7-e402-4e39-beab-1802b01586d4
+        path: api.responses.update-property-definition-responses
+        spec_node_id: api.responses
+        type: responses
+        layer_id: api
+        name: update-property-definition-responses
+        description: Responses map of the update-property-definition operation.
+        metadata:
+          created_at: 2026-11-17T17:57:22.277Z
+          updated_at: 2026-11-17T17:57:22.277Z
+          version: 1
+      timestamp: 2026-11-17T17:57:22.299Z
+    rewritten: true
+  - sequence: 96
+    removedAt: 405
+    change:
+      type: add
+      elementId: api.responses.update-taxonomy-responses
+      layerName: api
+      after:
+        id: 2026522e-0fee-46f9-b17d-bc5c21296640
+        path: api.responses.update-taxonomy-responses
+        spec_node_id: api.responses
+        type: responses
+        layer_id: api
+        name: update-taxonomy-responses
+        description: Responses map of the update-taxonomy operation.
+        metadata:
+          created_at: 2026-11-17T17:57:22.598Z
+          updated_at: 2026-11-17T17:57:22.598Z
+          version: 1
+      timestamp: 2026-11-17T17:57:22.623Z
+    rewritten: true

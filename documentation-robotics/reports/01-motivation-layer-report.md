@@ -1,5 +1,7 @@
 # Motivation
 
+[← Back to README](../README.md)
+
 Goals, requirements, drivers, and strategic outcomes of the architecture.
 
 ## Report Index
@@ -16,13 +18,13 @@ Goals, requirements, drivers, and strategic outcomes of the architecture.
 | ------------------------- | ----- |
 | Elements                  | 13    |
 | Intra-Layer Relationships | 12    |
-| Inter-Layer Relationships | 7     |
-| Inbound Relationships     | 7     |
+| Inter-Layer Relationships | 3     |
+| Inbound Relationships     | 3     |
 | Outbound Relationships    | 0     |
 
 **Cross-Layer References**:
 
-- **Upstream layers**: [API](./06-api-layer-report.md), [Data Store](./08-data-store-layer-report.md), [UX](./09-ux-layer-report.md)
+- **Upstream layers**: [API](./07-api-layer-report.md), [Data Store](./09-data-store-layer-report.md), [UX](./10-ux-layer-report.md)
 
 ## Intra-Layer Relationships
 
@@ -42,17 +44,17 @@ flowchart LR
     motivation_stakeholder_platform_developer["Platform Developer"]
     motivation_value_knowledge_reusability["Knowledge Reusability"]
     motivation_value_reduced_manual_curation_effort["Reduced Manual Curation Effort"]
-    motivation_assessment_security_posture_assessment -->|associated-with| motivation_constraint_python_3x_runtime
-    motivation_assessment_security_posture_assessment -->|associated-with| motivation_constraint_sqlite_only_persistence
-    motivation_assessment_security_posture_assessment -->|associated-with| motivation_outcome_curated_domain_ontology
+    motivation_assessment_security_posture_assessment -->|influence| motivation_outcome_curated_domain_ontology
+    motivation_constraint_python_3x_runtime -->|influence| motivation_assessment_security_posture_assessment
+    motivation_constraint_sqlite_only_persistence -->|influence| motivation_assessment_security_posture_assessment
     motivation_meaning_knowledge_as_infrastructure -->|associated-with| motivation_outcome_improved_ai_inference_quality
     motivation_meaning_knowledge_as_infrastructure -->|associated-with| motivation_value_knowledge_reusability
     motivation_outcome_curated_domain_ontology -->|associated-with| motivation_stakeholder_knowledge_manager
     motivation_outcome_improved_ai_inference_quality -->|associated-with| motivation_stakeholder_ai_agent_consumer
-    motivation_stakeholder_knowledge_manager -->|associated-with| motivation_stakeholder_desktop_application_user
-    motivation_stakeholder_platform_developer -->|associated-with| motivation_stakeholder_knowledge_manager
+    motivation_stakeholder_knowledge_manager -->|aggregates| motivation_stakeholder_desktop_application_user
+    motivation_stakeholder_platform_developer -->|aggregates| motivation_stakeholder_knowledge_manager
+    motivation_value_knowledge_reusability -->|aggregates| motivation_value_reduced_manual_curation_effort
     motivation_value_knowledge_reusability -->|associated-with| motivation_outcome_improved_ai_inference_quality
-    motivation_value_knowledge_reusability -->|associated-with| motivation_value_reduced_manual_curation_effort
     motivation_value_reduced_manual_curation_effort -->|associated-with| motivation_outcome_curated_domain_ontology
   end
 ```
@@ -64,6 +66,7 @@ flowchart TB
   classDef current fill:#f9f,stroke:#333,stroke-width:2px
   motivation["Motivation"]
   business["Business"]
+  product["Product"]
   security["Security"]
   application["Application"]
   technology["Technology"]
@@ -86,11 +89,7 @@ flowchart TB
 | ------------------------------------------------------------ | -------------------------------------------------------- | ------------------------------------------------------------- | ------------ | ----------- | ------------ | -------- |
 | `api.ratelimit.satisfies.motivation.constraint`              | `api.ratelimit.external-reference-api-rate-limit`        | `motivation.constraint.external-reference-source-rate-limits` | `motivation` | `satisfies` | many-to-many | medium   |
 | `data-store.retentionpolicy.satisfies.motivation.constraint` | `data-store.retentionpolicy.reference-api-cache-cleanup` | `motivation.constraint.external-reference-source-rate-limits` | `motivation` | `satisfies` | many-to-many | medium   |
-| `ux.view.serves.motivation.stakeholder`                      | `ux.view.admin-view`                                     | `motivation.stakeholder.platform-developer`                   | `motivation` | `serves`    | many-to-many | medium   |
-| `ux.view.serves.motivation.stakeholder`                      | `ux.view.configuration-view`                             | `motivation.stakeholder.platform-developer`                   | `motivation` | `serves`    | many-to-many | medium   |
-| `ux.view.serves.motivation.stakeholder`                      | `ux.view.datasets-view`                                  | `motivation.stakeholder.knowledge-manager`                    | `motivation` | `serves`    | many-to-many | medium   |
-| `ux.view.maps-to.motivation.outcome`                         | `ux.view.rag-experiments-view`                           | `motivation.outcome.improved-ai-inference-quality`            | `motivation` | `maps-to`   | many-to-many | medium   |
-| `ux.view.serves.motivation.stakeholder`                      | `ux.view.rag-experiments-view`                           | `motivation.stakeholder.ai-agent-consumer`                    | `motivation` | `serves`    | many-to-many | medium   |
+| `ux.view.supports.motivation.outcome`                        | `ux.view.rag-experiments-view`                           | `motivation.outcome.improved-ai-inference-quality`            | `motivation` | `supports`  | many-to-many | medium   |
 
 ## Element Reference
 
@@ -110,11 +109,11 @@ Security gap analysis: SQL injection prevention (SQLAlchemy ORM), optional API k
 
 #### Relationships
 
-| Type        | Related Element                                 | Predicate         | Direction |
-| ----------- | ----------------------------------------------- | ----------------- | --------- |
-| intra-layer | `motivation.constraint.python-3x-runtime`       | `associated-with` | outbound  |
-| intra-layer | `motivation.constraint.sqlite-only-persistence` | `associated-with` | outbound  |
-| intra-layer | `motivation.outcome.curated-domain-ontology`    | `associated-with` | outbound  |
+| Type        | Related Element                                 | Predicate   | Direction |
+| ----------- | ----------------------------------------------- | ----------- | --------- |
+| intra-layer | `motivation.outcome.curated-domain-ontology`    | `influence` | outbound  |
+| intra-layer | `motivation.constraint.python-3x-runtime`       | `influence` | inbound   |
+| intra-layer | `motivation.constraint.sqlite-only-persistence` | `influence` | inbound   |
 
 ### External Reference Source Rate Limits {#external-reference-source-rate-limits}
 
@@ -153,9 +152,9 @@ All server-side code runs on Python 3.x; no other server languages are in scope 
 
 #### Relationships
 
-| Type        | Related Element                                     | Predicate         | Direction |
-| ----------- | --------------------------------------------------- | ----------------- | --------- |
-| intra-layer | `motivation.assessment.security-posture-assessment` | `associated-with` | inbound   |
+| Type        | Related Element                                     | Predicate   | Direction |
+| ----------- | --------------------------------------------------- | ----------- | --------- |
+| intra-layer | `motivation.assessment.security-posture-assessment` | `influence` | outbound  |
 
 ### SQLite-Only Persistence {#sqlite-only-persistence}
 
@@ -173,9 +172,9 @@ The primary data store must be SQLite; no other RDBMS or cloud database is used 
 
 #### Relationships
 
-| Type        | Related Element                                     | Predicate         | Direction |
-| ----------- | --------------------------------------------------- | ----------------- | --------- |
-| intra-layer | `motivation.assessment.security-posture-assessment` | `associated-with` | inbound   |
+| Type        | Related Element                                     | Predicate   | Direction |
+| ----------- | --------------------------------------------------- | ----------- | --------- |
+| intra-layer | `motivation.assessment.security-posture-assessment` | `influence` | outbound  |
 
 ### Knowledge as Infrastructure {#knowledge-as-infrastructure}
 
@@ -210,7 +209,7 @@ The primary deliverable: a version-controlled, semantically enriched knowledge g
 
 | Type        | Related Element                                     | Predicate         | Direction |
 | ----------- | --------------------------------------------------- | ----------------- | --------- |
-| intra-layer | `motivation.assessment.security-posture-assessment` | `associated-with` | inbound   |
+| intra-layer | `motivation.assessment.security-posture-assessment` | `influence`       | inbound   |
 | intra-layer | `motivation.stakeholder.knowledge-manager`          | `associated-with` | outbound  |
 | intra-layer | `motivation.value.reduced-manual-curation-effort`   | `associated-with` | inbound   |
 
@@ -232,7 +231,7 @@ By grounding LLM calls in a curated ontology, the expected outcome is measurably
 
 | Type        | Related Element                                  | Predicate         | Direction |
 | ----------- | ------------------------------------------------ | ----------------- | --------- |
-| inter-layer | `ux.view.rag-experiments-view`                   | `maps-to`         | inbound   |
+| inter-layer | `ux.view.rag-experiments-view`                   | `supports`        | inbound   |
 | intra-layer | `motivation.meaning.knowledge-as-infrastructure` | `associated-with` | inbound   |
 | intra-layer | `motivation.stakeholder.ai-agent-consumer`       | `associated-with` | outbound  |
 | intra-layer | `motivation.value.knowledge-reusability`         | `associated-with` | inbound   |
@@ -255,7 +254,6 @@ System stakeholder: AI agents and RAG pipelines that query the knowledge graph v
 
 | Type        | Related Element                                    | Predicate         | Direction |
 | ----------- | -------------------------------------------------- | ----------------- | --------- |
-| inter-layer | `ux.view.rag-experiments-view`                     | `serves`          | inbound   |
 | intra-layer | `motivation.outcome.improved-ai-inference-quality` | `associated-with` | inbound   |
 
 ### Desktop Application User {#desktop-application-user}
@@ -274,9 +272,9 @@ End-user stakeholder: individuals running Context Studio as a local-first deskto
 
 #### Relationships
 
-| Type        | Related Element                            | Predicate         | Direction |
-| ----------- | ------------------------------------------ | ----------------- | --------- |
-| intra-layer | `motivation.stakeholder.knowledge-manager` | `associated-with` | inbound   |
+| Type        | Related Element                            | Predicate    | Direction |
+| ----------- | ------------------------------------------ | ------------ | --------- |
+| intra-layer | `motivation.stakeholder.knowledge-manager` | `aggregates` | inbound   |
 
 ### Knowledge Manager {#knowledge-manager}
 
@@ -296,10 +294,9 @@ Internal stakeholder: domain experts and ontology authors who create and curate 
 
 | Type        | Related Element                                   | Predicate         | Direction |
 | ----------- | ------------------------------------------------- | ----------------- | --------- |
-| inter-layer | `ux.view.datasets-view`                           | `serves`          | inbound   |
 | intra-layer | `motivation.outcome.curated-domain-ontology`      | `associated-with` | inbound   |
-| intra-layer | `motivation.stakeholder.desktop-application-user` | `associated-with` | outbound  |
-| intra-layer | `motivation.stakeholder.platform-developer`       | `associated-with` | inbound   |
+| intra-layer | `motivation.stakeholder.desktop-application-user` | `aggregates`      | outbound  |
+| intra-layer | `motivation.stakeholder.platform-developer`       | `aggregates`      | inbound   |
 
 ### Platform Developer {#platform-developer}
 
@@ -317,11 +314,9 @@ Internal stakeholder: developers extending or maintaining Context Studio and the
 
 #### Relationships
 
-| Type        | Related Element                            | Predicate         | Direction |
-| ----------- | ------------------------------------------ | ----------------- | --------- |
-| inter-layer | `ux.view.admin-view`                       | `serves`          | inbound   |
-| inter-layer | `ux.view.configuration-view`               | `serves`          | inbound   |
-| intra-layer | `motivation.stakeholder.knowledge-manager` | `associated-with` | outbound  |
+| Type        | Related Element                            | Predicate    | Direction |
+| ----------- | ------------------------------------------ | ------------ | --------- |
+| intra-layer | `motivation.stakeholder.knowledge-manager` | `aggregates` | outbound  |
 
 ### Knowledge Reusability {#knowledge-reusability}
 
@@ -342,8 +337,8 @@ A curated ontology graph is a reusable asset that accelerates both human reasoni
 | Type        | Related Element                                    | Predicate         | Direction |
 | ----------- | -------------------------------------------------- | ----------------- | --------- |
 | intra-layer | `motivation.meaning.knowledge-as-infrastructure`   | `associated-with` | inbound   |
+| intra-layer | `motivation.value.reduced-manual-curation-effort`  | `aggregates`      | outbound  |
 | intra-layer | `motivation.outcome.improved-ai-inference-quality` | `associated-with` | outbound  |
-| intra-layer | `motivation.value.reduced-manual-curation-effort`  | `associated-with` | outbound  |
 
 ### Reduced Manual Curation Effort {#reduced-manual-curation-effort}
 
@@ -363,9 +358,9 @@ Automated enrichment from multiple external knowledge bases significantly reduce
 
 | Type        | Related Element                              | Predicate         | Direction |
 | ----------- | -------------------------------------------- | ----------------- | --------- |
-| intra-layer | `motivation.value.knowledge-reusability`     | `associated-with` | inbound   |
+| intra-layer | `motivation.value.knowledge-reusability`     | `aggregates`      | inbound   |
 | intra-layer | `motivation.outcome.curated-domain-ontology` | `associated-with` | outbound  |
 
 ---
 
-Generated: 2026-05-11T12:06:42.607Z | Model Version: 0.1.0
+Generated: 2026-11-17T18:49:10.650Z | Model Version: 0.1.0
