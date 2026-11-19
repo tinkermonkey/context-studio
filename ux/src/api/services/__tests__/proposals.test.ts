@@ -73,6 +73,73 @@ describe("ProposalsService", () => {
     expect(offsets).toEqual(["0", "500"]);
   });
 
+  it("compares two proposals, decides a pair and accepts the rest", async () => {
+    const calls: { url: URL; body?: unknown }[] = [];
+    const comparison = {
+      a: { proposal_id: "pa", status: "open" },
+      b: { proposal_id: "pb", status: "open" },
+      taxonomy_id: "tax-1",
+      dataset_id: "ds-1",
+      source_id: "src-1",
+      pairs: [],
+      counts: { same_class: 0, class_differs: 0, only_a: 0, only_b: 0, open: 0 },
+      sample: { size: 0, checked: 0, changed: 0 },
+    };
+    server.use(
+      http.get("*/api/proposals/pa/compare/pb", ({ request }) => {
+        calls.push({ url: new URL(request.url) });
+        return HttpResponse.json(comparison);
+      }),
+      http.post("*/api/proposals/pa/compare/pb/decide", async ({ request }) => {
+        calls.push({ url: new URL(request.url), body: await request.json() });
+        return HttpResponse.json({ pair: {}, outcome: "landed", sample: comparison.sample });
+      }),
+      http.post("*/api/proposals/pa/compare/pb/accept-rest", async ({ request }) => {
+        calls.push({ url: new URL(request.url), body: await request.json() });
+        return HttpResponse.json({ landed: 3, failed: [], skipped: [], sample: comparison.sample });
+      }),
+    );
+
+    expect(await proposalsService.compareProposals("pa", "pb", 12)).toEqual(comparison);
+    const decided = await proposalsService.decidePair(
+      "pa",
+      "pb",
+      { a_operation_id: "oa", b_operation_id: "ob", verdict: "b_class", review_ms: 900 },
+      12,
+    );
+    const rest = await proposalsService.acceptRest("pa", "pb", 12);
+
+    expect(calls[0].url.searchParams.get("sample_size")).toBe("12");
+    expect(calls[1].url.searchParams.get("sample_size")).toBe("12");
+    expect(calls[1].body).toEqual({
+      a_operation_id: "oa",
+      b_operation_id: "ob",
+      verdict: "b_class",
+      review_ms: 900,
+    });
+    expect(decided.outcome).toBe("landed");
+    expect(calls[2].body).toEqual({ sample_size: 12 });
+    expect(rest.landed).toBe(3);
+  });
+
+  it("keeps a comparison refusal's code on the ApiError", async () => {
+    server.use(
+      http.post("*/api/proposals/pa/compare/pb/accept-rest", () =>
+        HttpResponse.json(
+          { detail: { code: "sample_unchecked", message: "3 sample pairs are open" } },
+          { status: 409 },
+        ),
+      ),
+    );
+    const error = await proposalsService.acceptRest("pa", "pb").catch((e: unknown) => e);
+    expect(error).toBeInstanceOf(ApiError);
+    expect(error).toMatchObject({
+      status: 409,
+      detail: "3 sample pairs are open",
+      body: { code: "sample_unchecked" },
+    });
+  });
+
   it("gets one proposal with stale flags", async () => {
     const proposal = createChangeProposal({
       operations: [createProposedOperation({ stale: true })],

@@ -9,14 +9,12 @@ import {
   type MouseEvent,
 } from "react";
 import { Button, Chip, ConfirmDialog, PageHeader, ProgressBar } from "@tinkermonkey/heimdall-ui";
-import { SCHEMA_PROPERTIES_LIMIT, SMALL_SET_LIMIT } from "@/api/config";
+import { SMALL_SET_LIMIT } from "@/api/config";
 import { ApiError } from "@/api/client/interceptors";
 import { useAddProposalIndividual, useChangeProposal } from "@/api/hooks/proposals";
 import { useTaxonomyClasses } from "@/api/hooks/ontology/useClasses";
 import { useDatasets } from "@/api/hooks/ontology/useDatasets";
 import { useIndividuals, useIndividualsByIds } from "@/api/hooks/ontology/useIndividuals";
-import { useTaxonomyPredicates } from "@/api/hooks/ontology/usePredicates";
-import { useProperties } from "@/api/hooks/ontology/useProperties";
 import { useSchemes } from "@/api/hooks/ontology/useSchemes";
 import { useSource, useSourceText } from "@/api/hooks/sources/useSource";
 import type { ProposedOperation, RejectionReason } from "@/api/services/proposals";
@@ -42,7 +40,8 @@ import { ReviewElementsPane, type ElementRow } from "./ReviewElementsPane";
 import { ReviewInspector, type ReviewNames } from "./ReviewInspector";
 import { ReviewPillsProvider, type OperationLink, type ReviewPillsValue } from "./ReviewPills";
 import type { EndCandidate, EndInfo } from "./ReviewRelationship";
-import { buildReviewSchema } from "./reviewSchema";
+import { useReviewSchema } from "./useReviewSchema";
+import { CompareEntry } from "../compare/CompareEntry";
 import { ReviewSourcePane, type PopoverAnchor } from "./ReviewSourcePane";
 import { AddElementPopover } from "./AddElementPopover";
 import {
@@ -190,6 +189,8 @@ interface ReviewPageProps {
   onSelect?: (operationId: string) => void;
   /** The href that opens an operation (a link can open it in a new tab). */
   hrefOf?: (operationId: string) => string;
+  /** Open the comparison with another open proposal for the same source. */
+  onCompare?: (otherId: string) => void;
 }
 
 /** A plain left click selects in place; a modified one is left to the browser (new tab). */
@@ -210,6 +211,7 @@ export function ReviewPage({
   selectedId: routeSelectedId,
   onSelect: routeOnSelect,
   hrefOf: routeHrefOf,
+  onCompare,
 }: ReviewPageProps) {
   const { toast } = useToasts();
   const { data: proposal, error, refetch } = useChangeProposal(id);
@@ -272,23 +274,7 @@ export function ReviewPage({
   );
 
   // The schema: every relationship type, with the taxonomy's predicate catalog.
-  const { data: propertyList, isError: propertiesFailed } = useProperties(
-    undefined,
-    { limit: SCHEMA_PROPERTIES_LIMIT },
-    { enabled: !!taxonomyId },
-  );
-  const { data: catalog } = useTaxonomyPredicates(taxonomyId || undefined);
-  const schema = useMemo(
-    () =>
-      buildReviewSchema({
-        classes: classes ?? [],
-        schemes: schemes?.items ?? [],
-        properties: propertyList?.items ?? [],
-        predicates: catalog ?? [],
-        loading: classesLoading || (!propertyList && !propertiesFailed),
-      }),
-    [classes, schemes, propertyList, catalog, classesLoading, propertiesFailed],
-  );
+  const schema = useReviewSchema(taxonomyId);
 
   // Individuals a relationship names by id (an existing end, or an edit's): titles and classes.
   const endIds = useMemo(
@@ -784,9 +770,18 @@ export function ReviewPage({
         eyebrow={eyebrow}
         title={gold ? `Gold check: ${gold.document}` : `Review extraction: ${sourceTitle}`}
         actions={
-          <Button variant="primary" size="sm" onClick={onFinish} data-testid="review-finish">
-            Finish review
-          </Button>
+          <span className="review-header-actions">
+            {onCompare && (
+              <CompareEntry
+                proposal={proposal}
+                onCompare={onCompare}
+                data-testid="review-compare"
+              />
+            )}
+            <Button variant="primary" size="sm" onClick={onFinish} data-testid="review-finish">
+              Finish review
+            </Button>
+          </span>
         }
         data-testid="review-header"
       />

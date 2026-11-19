@@ -14,3 +14,4 @@ export {
   useExportProposalDecisions,
 } from "./useProposalMutations";
 export { useApprovalPolicy, useSetApprovalPolicy } from "./useApprovalPolicy";
+export { useProposalComparison, useDecidePair, useAcceptRest } from "./useProposalComparison";

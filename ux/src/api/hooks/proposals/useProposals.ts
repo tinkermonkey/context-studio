@@ -5,11 +5,12 @@ import { proposalsService, type ChangeProposalListParams } from "@/api/services/
 /** `refetchInterval` (ms) polls, for counts that should notice proposals made over MCP. */
 export function useChangeProposals(
   params?: ChangeProposalListParams,
-  options?: { refetchInterval?: number },
+  options?: { refetchInterval?: number; enabled?: boolean },
 ) {
   return useQuery({
     queryKey: QUERY_KEYS.changeProposals(params),
     queryFn: () => proposalsService.listProposals(params),
+    enabled: options?.enabled ?? true,
     refetchInterval: options?.refetchInterval,
   });
 }

@@ -3471,6 +3471,107 @@ selectors:
     component: src/components/proposals/gold/BenchmarkGoldPage.tsx
     description: "Panel: the holdout rule and re-scoring"
 
+  # Compare two pipelines (/app/proposals/$proposalId/compare/$otherId, #1615)
+  - selector: proposal-compare
+    component: src/components/proposals/compare/CompareEntry.tsx
+    description: "\"Compare with another pipeline\" on the proposal page (CompareEntry): shown when another open extraction of the same source and dataset by another implementation exists"
+  - selector: review-compare
+    component: src/components/proposals/compare/CompareEntry.tsx
+    description: "\"Compare with another pipeline\" in the Review page header (CompareEntry)"
+  - selector: compare-entry
+    component: src/components/proposals/compare/CompareEntry.tsx
+    description: "CompareEntry default root: the button, or with several candidates the wrapper of its menu"
+  - selector: compare-entry-*
+    component: src/components/proposals/compare/CompareEntry.tsx
+    description: "CompareEntry parts: -toggle (aria-haspopup=menu) and -option-<proposalId> (role=menuitem); prefixed by the entry's own test id too (proposal-compare-*, review-compare-*)"
+  - selector: proposal-compare-*
+    component: src/components/proposals/compare/CompareEntry.tsx
+    description: "The proposal page entry's menu parts"
+  - selector: review-compare-*
+    component: src/components/proposals/compare/CompareEntry.tsx
+    description: "The Review page entry's menu parts"
+  - selector: compare-page
+    component: src/components/proposals/compare/ComparePage.tsx
+    description: "Root of the Compare page (/app/proposals/$proposalId/compare/$otherId)"
+  - selector: compare-header
+    component: src/components/proposals/compare/ComparePage.tsx
+    description: "PageHeader: \"SOURCE <title> · TWO OPEN PROPOSALS\", \"Compare pipelines\", the explanation, Finish comparison"
+  - selector: compare-finish
+    component: src/components/proposals/compare/ComparePage.tsx
+    description: "\"Finish comparison\": back to proposal A"
+  - selector: compare-load-error
+    component: src/components/proposals/compare/ComparePage.tsx
+    description: "Why the two proposals can't be compared (422 not_comparable, the server's message)"
+  - selector: compare-origin-*
+    component: src/components/proposals/compare/ComparePage.tsx
+    description: "Origin card per side (a violet, b cyan; aria-label \"Proposal A/B\"): origin chip (-chip), model if recorded, individuals, relationships, run date"
+  - selector: compare-counts
+    component: src/components/proposals/compare/ComparePage.tsx
+    description: "StatGrid of the four groups"
+  - selector: compare-count-*
+    component: src/components/proposals/compare/ComparePage.tsx
+    description: "StatTile per group: same_class (emerald), class_differs (violet), only_a (amber), only_b (cyan)"
+  - selector: compare-differences
+    component: src/components/proposals/compare/ComparePage.tsx
+    description: "Panel \"Where they differ\" (region) with the pair filter and table"
+  - selector: compare-filter
+    component: src/components/proposals/compare/ComparePage.tsx
+    description: "SegmentedControl: Differences / Agreements / Sample / All, each with its count"
+  - selector: compare-table
+    component: src/components/proposals/compare/ComparePage.tsx
+    description: "The pairs table: element, A class, B class, decision"
+  - selector: compare-empty
+    component: src/components/proposals/compare/ComparePage.tsx
+    description: "Empty row when the filter shows no pair"
+  - selector: compare-row-*
+    component: src/components/proposals/compare/ComparePage.tsx
+    description: "A pair's row by pair id: compare-row--<group> and --<state> (open, decided, partly_decided, failed), --sample when in the sample; time on the row runs from pointer enter or focus"
+  - selector: compare-sample-*
+    component: src/components/proposals/compare/ComparePage.tsx
+    description: "\"sample\" chip on a pair in the agreements' sample"
+  - selector: compare-decide-*
+    component: src/components/proposals/compare/ComparePage.tsx
+    description: "Decision button by pair id and verdict: a_class / b_class / not_element (Neither) for class_differs, keep / not_element otherwise; not_element opens the reasons"
+  - selector: compare-reasons-*
+    component: src/components/proposals/compare/ComparePage.tsx
+    description: "Reason buttons group (role=group \"Not an element, because\") for a pair"
+  - selector: compare-reason-*
+    component: src/components/proposals/compare/ComparePage.tsx
+    description: "A reason button by pair id and reason code: decides not_element with that reason_code"
+  - selector: compare-outcome-*
+    component: src/components/proposals/compare/ComparePage.tsx
+    description: "A decided pair, read-only: \"A class: <class>\" / \"Kept as <class>\" (--landed) or \"Not an element: <reason>\" (--rejected)"
+  - selector: compare-failed-*
+    component: src/components/proposals/compare/ComparePage.tsx
+    description: "A failed pair's reason (alert); its buttons stay to retry"
+  - selector: compare-error-*
+    component: src/components/proposals/compare/ComparePage.tsx
+    description: "A refused decision (422 invalid_decision, 409 already_decided) or failed landing, beside the pair (alert)"
+  - selector: compare-agreements
+    component: src/components/proposals/compare/ComparePage.tsx
+    description: "Aside \"Agreements\": count, the not-proof note, Check a sample, Accept the rest, sample progress"
+  - selector: compare-agreements-count
+    component: src/components/proposals/compare/ComparePage.tsx
+    description: "\"N elements both pipelines found with the same class.\""
+  - selector: compare-check-sample
+    component: src/components/proposals/compare/ComparePage.tsx
+    description: "\"Check a sample of N\": filters the table to the sample pairs"
+  - selector: compare-accept-rest
+    component: src/components/proposals/compare/ComparePage.tsx
+    description: "\"Accept the rest\": enabled once the server's sample stats say it is all checked and agreements remain open"
+  - selector: compare-sample-progress
+    component: src/components/proposals/compare/ComparePage.tsx
+    description: "\"Sample: checked / size checked · changed changed\""
+  - selector: compare-rest-result
+    component: src/components/proposals/compare/ComparePage.tsx
+    description: "What Accept the rest did (status): accepted, left for a person, failed"
+  - selector: compare-rest-error
+    component: src/components/proposals/compare/ComparePage.tsx
+    description: "A refused Accept the rest (409 sample_unchecked, 422 sample_too_small)"
+  - selector: compare-feeds
+    component: src/components/proposals/compare/ComparePage.tsx
+    description: "\"What this feeds\" note"
+
   # Review queue: decisions (#1361)
   - selector: proposal-actions
     component: src/components/proposals/ProposalDetailPage.tsx

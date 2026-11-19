@@ -6,6 +6,7 @@ import { QUERY_KEYS } from "@/api/config";
 import { ApiError } from "@/api/client/interceptors";
 import { proposalsService } from "@/api/services/proposals";
 import { createChangeProposal } from "@/api/services/__tests__/fixtures/proposals.fixtures";
+import { useAcceptRest, useDecidePair } from "../useProposalComparison";
 import {
   useAddProposalIndividual,
   useApplyChangeProposal,
@@ -156,6 +157,27 @@ describe("change proposal mutation invalidation", () => {
     await waitFor(() => expect(result.current.isError).toBe(true));
     for (const queryKey of [...PROPOSAL_QUERIES, ...ONTOLOGY_QUERIES]) {
       expect(invalidated(queryKey), JSON.stringify(queryKey)).toBe(true);
+    }
+  });
+
+  it("deciding a pair or accepting the rest marks the proposals and the ontology stale", async () => {
+    vi.spyOn(proposalsService, "decidePair").mockResolvedValue({} as never);
+    vi.spyOn(proposalsService, "acceptRest").mockRejectedValue(
+      new ApiError("x", 409, "3 sample pairs are open", { code: "sample_unchecked" }),
+    );
+    for (const run of ["decide", "rest"] as const) {
+      const { wrapper, invalidated } = setup();
+      const { result } = renderHook(
+        () => ({ decide: useDecidePair("pa", "pb"), rest: useAcceptRest("pa", "pb") }),
+        { wrapper },
+      );
+      if (run === "decide") result.current.decide.mutate({ verdict: "keep", a_operation_id: "o" });
+      else result.current.rest.mutate();
+      await waitFor(() => expect(result.current[run].isIdle).toBe(false));
+      await waitFor(() => expect(result.current[run].isPending).toBe(false));
+      for (const queryKey of [...PROPOSAL_QUERIES, ...ONTOLOGY_QUERIES]) {
+        expect(invalidated(queryKey), `${run} ${JSON.stringify(queryKey)}`).toBe(true);
+      }
     }
   });
 

@@ -34,6 +34,12 @@ function ProposalReviewRoute() {
         router.buildLocation({ to, params: { proposalId }, search: { selected: operationId } }).href
       }
       onFinish={() => navigate({ to: "/app/proposals/$proposalId", params: { proposalId } })}
+      onCompare={(otherId) =>
+        navigate({
+          to: "/app/proposals/$proposalId/compare/$otherId",
+          params: { proposalId, otherId },
+        })
+      }
     />
   );
 }

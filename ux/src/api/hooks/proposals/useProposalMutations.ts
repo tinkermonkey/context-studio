@@ -11,7 +11,7 @@ import {
 } from "@/api/services/proposals";
 
 /** Create (auto-apply), apply and revert change the ontology: refresh all a proposal can touch. */
-function invalidateOntology(queryClient: QueryClient) {
+export function invalidateOntology(queryClient: QueryClient) {
   for (const queryKey of [
     QUERY_KEYS.changeProposalsRoot,
     QUERY_KEYS.taxonomies,

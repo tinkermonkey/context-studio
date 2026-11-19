@@ -1,5 +1,12 @@
 @layer app {
   /* ============= Review an extraction against its source (#1611) ============= */
+  .review-header-actions {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+  }
+
   .review-page {
     display: flex;
     flex-direction: column;
