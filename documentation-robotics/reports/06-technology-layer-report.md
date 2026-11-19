@@ -16,15 +16,16 @@ Infrastructure, platforms, systems, and technology components.
 
 | Metric                    | Count |
 | ------------------------- | ----- |
-| Elements                  | 33    |
+| Elements                  | 41    |
 | Intra-Layer Relationships | 24    |
-| Inter-Layer Relationships | 17    |
-| Inbound Relationships     | 0     |
-| Outbound Relationships    | 17    |
+| Inter-Layer Relationships | 58    |
+| Inbound Relationships     | 19    |
+| Outbound Relationships    | 39    |
 
 **Cross-Layer References**:
 
-- **Downstream layers**: [Application](./05-application-layer-report.md)
+- **Upstream layers**: [APM](./12-apm-layer-report.md), [UX](./10-ux-layer-report.md)
+- **Downstream layers**: [Application](./05-application-layer-report.md), [Motivation](./01-motivation-layer-report.md), [Security](./04-security-layer-report.md)
 
 ## Intra-Layer Relationships
 
@@ -32,33 +33,41 @@ Infrastructure, platforms, systems, and technology components.
 
 | Element                                                             | Type                      | Relationships |
 | ------------------------------------------------------------------- | ------------------------- | ------------- |
-| `technology.communicationnetwork.localhost-lan`                     | `communicationnetwork`    | 0             |
+| `technology.communicationnetwork.localhost-lan`                     | `communicationnetwork`    | 1             |
+| `technology.node.local-workstation`                                 | `node`                    | 1             |
 | `technology.systemsoftware.alembic`                                 | `systemsoftware`          | 2             |
 | `technology.systemsoftware.anthropic-sdk`                           | `systemsoftware`          | 1             |
 | `technology.systemsoftware.axios`                                   | `systemsoftware`          | 0             |
 | `technology.systemsoftware.boto3`                                   | `systemsoftware`          | 1             |
 | `technology.systemsoftware.duck-db`                                 | `systemsoftware`          | 2             |
 | `technology.systemsoftware.fast-api`                                | `systemsoftware`          | 2             |
-| `technology.systemsoftware.flowbite-react`                          | `systemsoftware`          | 1             |
+| `technology.systemsoftware.git`                                     | `systemsoftware`          | 0             |
+| `technology.systemsoftware.heimdall-ui`                             | `systemsoftware`          | 0             |
 | `technology.systemsoftware.httpx`                                   | `systemsoftware`          | 1             |
-| `technology.systemsoftware.hugging-face-datasets`                   | `systemsoftware`          | 0             |
+| `technology.systemsoftware.mcp-python-sdk`                          | `systemsoftware`          | 0             |
 | `technology.systemsoftware.network-x`                               | `systemsoftware`          | 1             |
+| `technology.systemsoftware.open-telemetry-python-sdk`               | `systemsoftware`          | 0             |
+| `technology.systemsoftware.open-telemetry-web-sdk`                  | `systemsoftware`          | 0             |
 | `technology.systemsoftware.openai-sdk`                              | `systemsoftware`          | 1             |
 | `technology.systemsoftware.pyarrow`                                 | `systemsoftware`          | 1             |
 | `technology.systemsoftware.pydantic`                                | `systemsoftware`          | 1             |
+| `technology.systemsoftware.pypdf`                                   | `systemsoftware`          | 0             |
 | `technology.systemsoftware.python`                                  | `systemsoftware`          | 13            |
 | `technology.systemsoftware.python-multipart`                        | `systemsoftware`          | 0             |
 | `technology.systemsoftware.rdflib`                                  | `systemsoftware`          | 1             |
-| `technology.systemsoftware.react`                                   | `systemsoftware`          | 4             |
-| `technology.systemsoftware.reagraph`                                | `systemsoftware`          | 0             |
+| `technology.systemsoftware.react`                                   | `systemsoftware`          | 3             |
+| `technology.systemsoftware.reference-api-buddy`                     | `systemsoftware`          | 0             |
+| `technology.systemsoftware.scikit-learn`                            | `systemsoftware`          | 0             |
 | `technology.systemsoftware.sentence-transformers`                   | `systemsoftware`          | 1             |
 | `technology.systemsoftware.spa-cy`                                  | `systemsoftware`          | 1             |
 | `technology.systemsoftware.sqlalchemy`                              | `systemsoftware`          | 2             |
+| `technology.systemsoftware.sqlite`                                  | `systemsoftware`          | 0             |
 | `technology.systemsoftware.tailwind-css`                            | `systemsoftware`          | 1             |
 | `technology.systemsoftware.tan-stack-form`                          | `systemsoftware`          | 0             |
 | `technology.systemsoftware.tan-stack-query`                         | `systemsoftware`          | 1             |
 | `technology.systemsoftware.tan-stack-router`                        | `systemsoftware`          | 1             |
 | `technology.systemsoftware.tan-stack-table`                         | `systemsoftware`          | 0             |
+| `technology.systemsoftware.trafilatura`                             | `systemsoftware`          | 0             |
 | `technology.systemsoftware.uvicorn`                                 | `systemsoftware`          | 1             |
 | `technology.systemsoftware.vite`                                    | `systemsoftware`          | 2             |
 | `technology.systemsoftware.zustand`                                 | `systemsoftware`          | 0             |
@@ -84,31 +93,76 @@ flowchart TB
   navigation["Navigation"]
   apm["APM"]
   testing["Testing"]
+  apm --> technology
   technology --> application
+  technology --> motivation
+  technology --> security
+  ux --> technology
   class technology current
 ```
 
 ## Inter-Layer Relationships Table
 
-| Relationship ID                                                     | Source Node                                       | Dest Node                                                                 | Dest Layer    | Predicate | Cardinality  | Strength |
-| ------------------------------------------------------------------- | ------------------------------------------------- | ------------------------------------------------------------------------- | ------------- | --------- | ------------ | -------- |
-| `technology.systemsoftware.serves.application.applicationcomponent` | `technology.systemsoftware.alembic`               | `application.applicationcomponent.sqlite-persistence-adapter`             | `application` | `serves`  | many-to-many | medium   |
-| `technology.systemsoftware.serves.application.applicationcomponent` | `technology.systemsoftware.anthropic-sdk`         | `application.applicationcomponent.llm-provider-router`                    | `application` | `serves`  | many-to-many | medium   |
-| `technology.systemsoftware.serves.application.applicationcomponent` | `technology.systemsoftware.boto3`                 | `application.applicationcomponent.s3-sync-adapter`                        | `application` | `serves`  | many-to-many | medium   |
-| `technology.systemsoftware.serves.application.applicationcomponent` | `technology.systemsoftware.duck-db`               | `application.applicationcomponent.duck-db-sync-adapter`                   | `application` | `serves`  | many-to-many | medium   |
-| `technology.systemsoftware.serves.application.applicationcomponent` | `technology.systemsoftware.fast-api`              | `application.applicationcomponent.sqlite-persistence-adapter`             | `application` | `serves`  | many-to-many | medium   |
-| `technology.systemsoftware.serves.application.applicationcomponent` | `technology.systemsoftware.httpx`                 | `application.applicationcomponent.concept-net-reference-source`           | `application` | `serves`  | many-to-many | medium   |
-| `technology.systemsoftware.serves.application.applicationcomponent` | `technology.systemsoftware.httpx`                 | `application.applicationcomponent.dbpedia-reference-source`               | `application` | `serves`  | many-to-many | medium   |
-| `technology.systemsoftware.serves.application.applicationcomponent` | `technology.systemsoftware.httpx`                 | `application.applicationcomponent.schema-org-reference-source`            | `application` | `serves`  | many-to-many | medium   |
-| `technology.systemsoftware.serves.application.applicationcomponent` | `technology.systemsoftware.httpx`                 | `application.applicationcomponent.wikidata-reference-source`              | `application` | `serves`  | many-to-many | medium   |
-| `technology.systemsoftware.serves.application.applicationcomponent` | `technology.systemsoftware.network-x`             | `application.applicationcomponent.network-x-graph-engine-adapter`         | `application` | `serves`  | many-to-many | medium   |
-| `technology.systemsoftware.serves.application.applicationcomponent` | `technology.systemsoftware.openai-sdk`            | `application.applicationcomponent.llm-provider-router`                    | `application` | `serves`  | many-to-many | medium   |
-| `technology.systemsoftware.serves.application.applicationcomponent` | `technology.systemsoftware.pyarrow`               | `application.applicationcomponent.duck-db-sync-adapter`                   | `application` | `serves`  | many-to-many | medium   |
-| `technology.systemsoftware.serves.application.applicationcomponent` | `technology.systemsoftware.rdflib`                | `application.applicationcomponent.rdflib-query-engine-adapter`            | `application` | `serves`  | many-to-many | medium   |
-| `technology.systemsoftware.serves.application.applicationcomponent` | `technology.systemsoftware.sentence-transformers` | `application.applicationcomponent.sentence-transformer-embedding-adapter` | `application` | `serves`  | many-to-many | medium   |
-| `technology.systemsoftware.serves.application.applicationcomponent` | `technology.systemsoftware.spa-cy`                | `application.applicationcomponent.sentence-transformer-embedding-adapter` | `application` | `serves`  | many-to-many | medium   |
-| `technology.systemsoftware.serves.application.applicationcomponent` | `technology.systemsoftware.spa-cy`                | `application.applicationcomponent.spa-cy-nlp-processor`                   | `application` | `serves`  | many-to-many | medium   |
-| `technology.systemsoftware.serves.application.applicationcomponent` | `technology.systemsoftware.sqlalchemy`            | `application.applicationcomponent.sqlite-persistence-adapter`             | `application` | `serves`  | many-to-many | medium   |
+| Relationship ID                                                     | Source Node                                                           | Dest Node                                                                 | Dest Layer    | Predicate    | Cardinality  | Strength |
+| ------------------------------------------------------------------- | --------------------------------------------------------------------- | ------------------------------------------------------------------------- | ------------- | ------------ | ------------ | -------- |
+| `apm.instrumentationconfig.monitors.technology.systemsoftware`      | `apm.instrumentationconfig.fast-api-sqlalchemy-httpx-instrumentation` | `technology.systemsoftware.fast-api`                                      | `technology`  | `monitors`   | many-to-many | medium   |
+| `apm.instrumentationconfig.monitors.technology.systemsoftware`      | `apm.instrumentationconfig.fast-api-sqlalchemy-httpx-instrumentation` | `technology.systemsoftware.httpx`                                         | `technology`  | `monitors`   | many-to-many | medium   |
+| `apm.instrumentationconfig.monitors.technology.systemsoftware`      | `apm.instrumentationconfig.fast-api-sqlalchemy-httpx-instrumentation` | `technology.systemsoftware.sqlalchemy`                                    | `technology`  | `monitors`   | many-to-many | medium   |
+| `technology.systemsoftware.serves.application.applicationcomponent` | `technology.systemsoftware.alembic`                                   | `application.applicationcomponent.database-manager`                       | `application` | `serves`     | many-to-many | medium   |
+| `technology.systemsoftware.satisfies.motivation.constraint`         | `technology.systemsoftware.anthropic-sdk`                             | `motivation.constraint.external-llm-provider-required`                    | `motivation`  | `satisfies`  | many-to-many | medium   |
+| `technology.systemsoftware.serves.application.applicationcomponent` | `technology.systemsoftware.anthropic-sdk`                             | `application.applicationcomponent.anthropic-chat-model`                   | `application` | `serves`     | many-to-many | medium   |
+| `technology.systemsoftware.serves.application.applicationcomponent` | `technology.systemsoftware.anthropic-sdk`                             | `application.applicationcomponent.llm-provider-router`                    | `application` | `serves`     | many-to-many | medium   |
+| `technology.systemsoftware.serves.application.applicationcomponent` | `technology.systemsoftware.boto3`                                     | `application.applicationcomponent.s3-sync-adapter`                        | `application` | `serves`     | many-to-many | medium   |
+| `technology.systemsoftware.serves.application.applicationcomponent` | `technology.systemsoftware.duck-db`                                   | `application.applicationcomponent.duck-db-sync-adapter`                   | `application` | `serves`     | many-to-many | medium   |
+| `technology.systemsoftware.serves.application.applicationcomponent` | `technology.systemsoftware.fast-api`                                  | `application.applicationcomponent.request-guard`                          | `application` | `serves`     | many-to-many | medium   |
+| `technology.systemsoftware.serves.application.applicationcomponent` | `technology.systemsoftware.git`                                       | `application.applicationcomponent.dr-spec-reader`                         | `application` | `serves`     | many-to-many | medium   |
+| `technology.systemsoftware.serves.application.applicationcomponent` | `technology.systemsoftware.httpx`                                     | `application.applicationcomponent.concept-net-reference-source`           | `application` | `serves`     | many-to-many | medium   |
+| `technology.systemsoftware.serves.application.applicationcomponent` | `technology.systemsoftware.httpx`                                     | `application.applicationcomponent.dbpedia-reference-source`               | `application` | `serves`     | many-to-many | medium   |
+| `technology.systemsoftware.serves.application.applicationcomponent` | `technology.systemsoftware.httpx`                                     | `application.applicationcomponent.http-page-fetcher`                      | `application` | `serves`     | many-to-many | medium   |
+| `technology.systemsoftware.serves.application.applicationcomponent` | `technology.systemsoftware.httpx`                                     | `application.applicationcomponent.open-router-chat-model`                 | `application` | `serves`     | many-to-many | medium   |
+| `technology.systemsoftware.serves.application.applicationcomponent` | `technology.systemsoftware.httpx`                                     | `application.applicationcomponent.open-router-llm-provider`               | `application` | `serves`     | many-to-many | medium   |
+| `technology.systemsoftware.serves.application.applicationcomponent` | `technology.systemsoftware.httpx`                                     | `application.applicationcomponent.schema-org-reference-source`            | `application` | `serves`     | many-to-many | medium   |
+| `technology.systemsoftware.serves.application.applicationcomponent` | `technology.systemsoftware.httpx`                                     | `application.applicationcomponent.wikidata-reference-source`              | `application` | `serves`     | many-to-many | medium   |
+| `technology.systemsoftware.serves.application.applicationcomponent` | `technology.systemsoftware.mcp-python-sdk`                            | `application.applicationcomponent.mcp-server`                             | `application` | `serves`     | many-to-many | medium   |
+| `technology.systemsoftware.serves.application.applicationcomponent` | `technology.systemsoftware.network-x`                                 | `application.applicationcomponent.network-x-graph-engine-adapter`         | `application` | `serves`     | many-to-many | medium   |
+| `technology.systemsoftware.serves.application.applicationcomponent` | `technology.systemsoftware.open-telemetry-python-sdk`                 | `application.applicationcomponent.telemetry-lifecycle`                    | `application` | `serves`     | many-to-many | medium   |
+| `technology.systemsoftware.satisfies.motivation.constraint`         | `technology.systemsoftware.openai-sdk`                                | `motivation.constraint.external-llm-provider-required`                    | `motivation`  | `satisfies`  | many-to-many | medium   |
+| `technology.systemsoftware.serves.application.applicationcomponent` | `technology.systemsoftware.openai-sdk`                                | `application.applicationcomponent.llm-provider-router`                    | `application` | `serves`     | many-to-many | medium   |
+| `technology.systemsoftware.serves.application.applicationcomponent` | `technology.systemsoftware.pyarrow`                                   | `application.applicationcomponent.duck-db-sync-adapter`                   | `application` | `serves`     | many-to-many | medium   |
+| `technology.systemsoftware.serves.application.applicationcomponent` | `technology.systemsoftware.pypdf`                                     | `application.applicationcomponent.pdf-text-reader`                        | `application` | `serves`     | many-to-many | medium   |
+| `technology.systemsoftware.serves.application.applicationcomponent` | `technology.systemsoftware.python-multipart`                          | `application.applicationcomponent.local-source-file-store`                | `application` | `serves`     | many-to-many | medium   |
+| `technology.systemsoftware.satisfies.motivation.constraint`         | `technology.systemsoftware.python`                                    | `motivation.constraint.python-and-nodejs-runtime-versions`                | `motivation`  | `satisfies`  | many-to-many | medium   |
+| `technology.systemsoftware.serves.application.applicationcomponent` | `technology.systemsoftware.rdflib`                                    | `application.applicationcomponent.rdflib-query-engine-adapter`            | `application` | `serves`     | many-to-many | medium   |
+| `technology.systemsoftware.satisfies.motivation.constraint`         | `technology.systemsoftware.reference-api-buddy`                       | `motivation.constraint.external-reference-source-rate-limits`             | `motivation`  | `satisfies`  | many-to-many | medium   |
+| `technology.systemsoftware.serves.application.applicationcomponent` | `technology.systemsoftware.reference-api-buddy`                       | `application.applicationcomponent.cached-reference-source`                | `application` | `serves`     | many-to-many | medium   |
+| `technology.systemsoftware.serves.application.applicationcomponent` | `technology.systemsoftware.scikit-learn`                              | `application.applicationcomponent.sklearn-clusterer`                      | `application` | `serves`     | many-to-many | medium   |
+| `technology.systemsoftware.serves.application.applicationcomponent` | `technology.systemsoftware.sentence-transformers`                     | `application.applicationcomponent.sentence-transformer-embedding-adapter` | `application` | `serves`     | many-to-many | medium   |
+| `technology.systemsoftware.serves.application.applicationcomponent` | `technology.systemsoftware.spa-cy`                                    | `application.applicationcomponent.sentence-transformer-embedding-adapter` | `application` | `serves`     | many-to-many | medium   |
+| `technology.systemsoftware.serves.application.applicationcomponent` | `technology.systemsoftware.spa-cy`                                    | `application.applicationcomponent.spa-cy-nlp-processor`                   | `application` | `serves`     | many-to-many | medium   |
+| `technology.systemsoftware.realizes.security.countermeasure`        | `technology.systemsoftware.sqlalchemy`                                | `security.countermeasure.parameterized-queries-via-orm`                   | `security`    | `realizes`   | many-to-many | medium   |
+| `technology.systemsoftware.serves.application.applicationcomponent` | `technology.systemsoftware.sqlalchemy`                                | `application.applicationcomponent.database-manager`                       | `application` | `serves`     | many-to-many | medium   |
+| `technology.systemsoftware.serves.application.applicationcomponent` | `technology.systemsoftware.sqlalchemy`                                | `application.applicationcomponent.sqlite-ontology-repository`             | `application` | `serves`     | many-to-many | medium   |
+| `technology.systemsoftware.satisfies.motivation.constraint`         | `technology.systemsoftware.sqlite`                                    | `motivation.constraint.sqlite-only-persistence`                           | `motivation`  | `satisfies`  | many-to-many | medium   |
+| `technology.systemsoftware.serves.application.applicationcomponent` | `technology.systemsoftware.sqlite`                                    | `application.applicationcomponent.database-manager`                       | `application` | `serves`     | many-to-many | medium   |
+| `technology.systemsoftware.serves.application.applicationcomponent` | `technology.systemsoftware.trafilatura`                               | `application.applicationcomponent.html-reader`                            | `application` | `serves`     | many-to-many | medium   |
+| `technology.systemsoftware.satisfies.motivation.constraint`         | `technology.systemsoftware.uvicorn`                                   | `motivation.constraint.loopback-only-deployment`                          | `motivation`  | `satisfies`  | many-to-many | medium   |
+| `technology.systemsoftware.satisfies.motivation.constraint`         | `technology.systemsoftware.vite`                                      | `motivation.constraint.python-and-nodejs-runtime-versions`                | `motivation`  | `satisfies`  | many-to-many | medium   |
+| `ux.view.depends-on.technology.systemsoftware`                      | `ux.view.app-shell-view`                                              | `technology.systemsoftware.axios`                                         | `technology`  | `depends-on` | many-to-many | medium   |
+| `ux.view.depends-on.technology.systemsoftware`                      | `ux.view.app-shell-view`                                              | `technology.systemsoftware.heimdall-ui`                                   | `technology`  | `depends-on` | many-to-many | medium   |
+| `ux.view.depends-on.technology.systemsoftware`                      | `ux.view.app-shell-view`                                              | `technology.systemsoftware.open-telemetry-web-sdk`                        | `technology`  | `depends-on` | many-to-many | medium   |
+| `ux.view.depends-on.technology.systemsoftware`                      | `ux.view.app-shell-view`                                              | `technology.systemsoftware.react`                                         | `technology`  | `depends-on` | many-to-many | medium   |
+| `ux.view.depends-on.technology.systemsoftware`                      | `ux.view.app-shell-view`                                              | `technology.systemsoftware.tan-stack-query`                               | `technology`  | `depends-on` | many-to-many | medium   |
+| `ux.view.depends-on.technology.systemsoftware`                      | `ux.view.app-shell-view`                                              | `technology.systemsoftware.tan-stack-router`                              | `technology`  | `depends-on` | many-to-many | medium   |
+| `ux.view.depends-on.technology.systemsoftware`                      | `ux.view.app-shell-view`                                              | `technology.systemsoftware.zustand`                                       | `technology`  | `depends-on` | many-to-many | medium   |
+| `ux.view.depends-on.technology.systemsoftware`                      | `ux.view.class-drawer`                                                | `technology.systemsoftware.tan-stack-form`                                | `technology`  | `depends-on` | many-to-many | medium   |
+| `ux.view.depends-on.technology.systemsoftware`                      | `ux.view.command-palette`                                             | `technology.systemsoftware.heimdall-ui`                                   | `technology`  | `depends-on` | many-to-many | medium   |
+| `ux.view.depends-on.technology.systemsoftware`                      | `ux.view.grounding-workflow-drawer`                                   | `technology.systemsoftware.tan-stack-form`                                | `technology`  | `depends-on` | many-to-many | medium   |
+| `ux.view.depends-on.technology.systemsoftware`                      | `ux.view.individual-drawer`                                           | `technology.systemsoftware.tan-stack-form`                                | `technology`  | `depends-on` | many-to-many | medium   |
+| `ux.view.depends-on.technology.systemsoftware`                      | `ux.view.individuals-view`                                            | `technology.systemsoftware.tan-stack-table`                               | `technology`  | `depends-on` | many-to-many | medium   |
+| `ux.view.depends-on.technology.systemsoftware`                      | `ux.view.property-drawer`                                             | `technology.systemsoftware.tan-stack-form`                                | `technology`  | `depends-on` | many-to-many | medium   |
+| `ux.view.depends-on.technology.systemsoftware`                      | `ux.view.relationship-drawer`                                         | `technology.systemsoftware.tan-stack-form`                                | `technology`  | `depends-on` | many-to-many | medium   |
+| `ux.view.depends-on.technology.systemsoftware`                      | `ux.view.scheme-drawer`                                               | `technology.systemsoftware.tan-stack-form`                                | `technology`  | `depends-on` | many-to-many | medium   |
+| `ux.view.depends-on.technology.systemsoftware`                      | `ux.view.taxonomy-drawer`                                             | `technology.systemsoftware.tan-stack-form`                                | `technology`  | `depends-on` | many-to-many | medium   |
 
 ## Element Reference
 
@@ -127,6 +181,32 @@ The local loopback network over which the React SPA communicates with the FastAP
 | documentation | Localhost communication between UX and local-server |
 | networkType   | lan                                                 |
 
+#### Relationships
+
+| Type        | Related Element                     | Predicate  | Direction |
+| ----------- | ----------------------------------- | ---------- | --------- |
+| intra-layer | `technology.node.local-workstation` | `connects` | outbound  |
+
+### Local Workstation {#local-workstation}
+
+**ID**: `technology.node.local-workstation`
+
+**Type**: `node`
+
+The user's own machine as the deployment target: it runs the FastAPI back end, the React SPA (the Vite dev server today, the Tauri desktop app soon) and the local SQLite workspace databases.
+
+#### Attributes
+
+| Name     | Value      |
+| -------- | ---------- |
+| nodeType | bare-metal |
+
+#### Relationships
+
+| Type        | Related Element                                 | Predicate  | Direction |
+| ----------- | ----------------------------------------------- | ---------- | --------- |
+| intra-layer | `technology.communicationnetwork.localhost-lan` | `connects` | inbound   |
+
 ### Alembic {#alembic}
 
 **ID**: `technology.systemsoftware.alembic`
@@ -143,11 +223,11 @@ Database schema migration tool for SQLite — autogenerates migration scripts fr
 
 #### Relationships
 
-| Type        | Related Element                                               | Predicate    | Direction |
-| ----------- | ------------------------------------------------------------- | ------------ | --------- |
-| inter-layer | `application.applicationcomponent.sqlite-persistence-adapter` | `serves`     | outbound  |
-| intra-layer | `technology.systemsoftware.python`                            | `depends-on` | outbound  |
-| intra-layer | `technology.systemsoftware.sqlalchemy`                        | `depends-on` | outbound  |
+| Type        | Related Element                                     | Predicate    | Direction |
+| ----------- | --------------------------------------------------- | ------------ | --------- |
+| inter-layer | `application.applicationcomponent.database-manager` | `serves`     | outbound  |
+| intra-layer | `technology.systemsoftware.python`                  | `depends-on` | outbound  |
+| intra-layer | `technology.systemsoftware.sqlalchemy`              | `depends-on` | outbound  |
 
 ### anthropic-sdk {#anthropic-sdk}
 
@@ -165,10 +245,12 @@ Official Anthropic Python client library used by the Anthropic LLM provider adap
 
 #### Relationships
 
-| Type        | Related Element                                        | Predicate    | Direction |
-| ----------- | ------------------------------------------------------ | ------------ | --------- |
-| inter-layer | `application.applicationcomponent.llm-provider-router` | `serves`     | outbound  |
-| intra-layer | `technology.systemsoftware.python`                     | `depends-on` | outbound  |
+| Type        | Related Element                                         | Predicate    | Direction |
+| ----------- | ------------------------------------------------------- | ------------ | --------- |
+| inter-layer | `motivation.constraint.external-llm-provider-required`  | `satisfies`  | outbound  |
+| inter-layer | `application.applicationcomponent.anthropic-chat-model` | `serves`     | outbound  |
+| inter-layer | `application.applicationcomponent.llm-provider-router`  | `serves`     | outbound  |
+| intra-layer | `technology.systemsoftware.python`                      | `depends-on` | outbound  |
 
 ### Axios {#axios}
 
@@ -183,6 +265,12 @@ Promise-based HTTP client used by the type-safe API layer for communicating with
 | Name         | Value      |
 | ------------ | ---------- |
 | softwareType | middleware |
+
+#### Relationships
+
+| Type        | Related Element          | Predicate    | Direction |
+| ----------- | ------------------------ | ------------ | --------- |
+| inter-layer | `ux.view.app-shell-view` | `depends-on` | inbound   |
 
 ### boto3 {#boto3}
 
@@ -243,19 +331,20 @@ Python HTTP API framework — provides route declarations, dependency injection,
 
 #### Relationships
 
-| Type        | Related Element                                               | Predicate    | Direction |
-| ----------- | ------------------------------------------------------------- | ------------ | --------- |
-| inter-layer | `application.applicationcomponent.sqlite-persistence-adapter` | `serves`     | outbound  |
-| intra-layer | `technology.systemsoftware.python`                            | `depends-on` | outbound  |
-| intra-layer | `technology.systemsoftware.uvicorn`                           | `depends-on` | inbound   |
+| Type        | Related Element                                                       | Predicate    | Direction |
+| ----------- | --------------------------------------------------------------------- | ------------ | --------- |
+| inter-layer | `apm.instrumentationconfig.fast-api-sqlalchemy-httpx-instrumentation` | `monitors`   | inbound   |
+| inter-layer | `application.applicationcomponent.request-guard`                      | `serves`     | outbound  |
+| intra-layer | `technology.systemsoftware.python`                                    | `depends-on` | outbound  |
+| intra-layer | `technology.systemsoftware.uvicorn`                                   | `depends-on` | inbound   |
 
-### Flowbite React {#flowbite-react}
+### git {#git}
 
-**ID**: `technology.systemsoftware.flowbite-react`
+**ID**: `technology.systemsoftware.git`
 
 **Type**: `systemsoftware`
 
-Component library (v0.11) built on Tailwind CSS used for UX interface elements — buttons, modals, tables, and form controls
+Git CLI, launched by the DR spec reader to read the spec checkout's source revision.
 
 #### Attributes
 
@@ -265,9 +354,30 @@ Component library (v0.11) built on Tailwind CSS used for UX interface elements �
 
 #### Relationships
 
-| Type        | Related Element                   | Predicate    | Direction |
-| ----------- | --------------------------------- | ------------ | --------- |
-| intra-layer | `technology.systemsoftware.react` | `depends-on` | outbound  |
+| Type        | Related Element                                   | Predicate | Direction |
+| ----------- | ------------------------------------------------- | --------- | --------- |
+| inter-layer | `application.applicationcomponent.dr-spec-reader` | `serves`  | outbound  |
+
+### Heimdall UI {#heimdall-ui}
+
+**ID**: `technology.systemsoftware.heimdall-ui`
+
+**Type**: `systemsoftware`
+
+@tinkermonkey/heimdall-ui design system: shell, navigation, inputs, overlays, data display, graph and chat components for the UX.
+
+#### Attributes
+
+| Name         | Value      |
+| ------------ | ---------- |
+| softwareType | middleware |
+
+#### Relationships
+
+| Type        | Related Element           | Predicate    | Direction |
+| ----------- | ------------------------- | ------------ | --------- |
+| inter-layer | `ux.view.app-shell-view`  | `depends-on` | inbound   |
+| inter-layer | `ux.view.command-palette` | `depends-on` | inbound   |
 
 ### httpx {#httpx}
 
@@ -285,27 +395,37 @@ Async-capable HTTP client for Python. Used by the reference adapter and test inf
 
 #### Relationships
 
-| Type        | Related Element                                                 | Predicate    | Direction |
-| ----------- | --------------------------------------------------------------- | ------------ | --------- |
-| inter-layer | `application.applicationcomponent.concept-net-reference-source` | `serves`     | outbound  |
-| inter-layer | `application.applicationcomponent.dbpedia-reference-source`     | `serves`     | outbound  |
-| inter-layer | `application.applicationcomponent.schema-org-reference-source`  | `serves`     | outbound  |
-| inter-layer | `application.applicationcomponent.wikidata-reference-source`    | `serves`     | outbound  |
-| intra-layer | `technology.systemsoftware.python`                              | `depends-on` | outbound  |
+| Type        | Related Element                                                       | Predicate    | Direction |
+| ----------- | --------------------------------------------------------------------- | ------------ | --------- |
+| inter-layer | `apm.instrumentationconfig.fast-api-sqlalchemy-httpx-instrumentation` | `monitors`   | inbound   |
+| inter-layer | `application.applicationcomponent.concept-net-reference-source`       | `serves`     | outbound  |
+| inter-layer | `application.applicationcomponent.dbpedia-reference-source`           | `serves`     | outbound  |
+| inter-layer | `application.applicationcomponent.http-page-fetcher`                  | `serves`     | outbound  |
+| inter-layer | `application.applicationcomponent.open-router-chat-model`             | `serves`     | outbound  |
+| inter-layer | `application.applicationcomponent.open-router-llm-provider`           | `serves`     | outbound  |
+| inter-layer | `application.applicationcomponent.schema-org-reference-source`        | `serves`     | outbound  |
+| inter-layer | `application.applicationcomponent.wikidata-reference-source`          | `serves`     | outbound  |
+| intra-layer | `technology.systemsoftware.python`                                    | `depends-on` | outbound  |
 
-### HuggingFace Datasets {#huggingface-datasets}
+### MCP Python SDK {#mcp-python-sdk}
 
-**ID**: `technology.systemsoftware.hugging-face-datasets`
+**ID**: `technology.systemsoftware.mcp-python-sdk`
 
 **Type**: `systemsoftware`
 
-HuggingFace datasets library used for loading and processing reference datasets for ontology enrichment
+Model Context Protocol server SDK (mcp) behind the /mcp endpoint.
 
 #### Attributes
 
 | Name         | Value      |
 | ------------ | ---------- |
 | softwareType | middleware |
+
+#### Relationships
+
+| Type        | Related Element                               | Predicate | Direction |
+| ----------- | --------------------------------------------- | --------- | --------- |
+| inter-layer | `application.applicationcomponent.mcp-server` | `serves`  | outbound  |
 
 ### NetworkX {#networkx}
 
@@ -328,6 +448,46 @@ Python graph library (v3.1+) used by NetworkXGraphEngine adapter — provides di
 | inter-layer | `application.applicationcomponent.network-x-graph-engine-adapter` | `serves`     | outbound  |
 | intra-layer | `technology.systemsoftware.python`                                | `depends-on` | outbound  |
 
+### OpenTelemetry Python SDK {#opentelemetry-python-sdk}
+
+**ID**: `technology.systemsoftware.open-telemetry-python-sdk`
+
+**Type**: `systemsoftware`
+
+OpenTelemetry API/SDK, OTLP exporters and FastAPI/SQLAlchemy/httpx instrumentation for server traces and logs.
+
+#### Attributes
+
+| Name         | Value      |
+| ------------ | ---------- |
+| softwareType | middleware |
+
+#### Relationships
+
+| Type        | Related Element                                        | Predicate | Direction |
+| ----------- | ------------------------------------------------------ | --------- | --------- |
+| inter-layer | `application.applicationcomponent.telemetry-lifecycle` | `serves`  | outbound  |
+
+### OpenTelemetry Web SDK {#opentelemetry-web-sdk}
+
+**ID**: `technology.systemsoftware.open-telemetry-web-sdk`
+
+**Type**: `systemsoftware`
+
+Browser tracing (sdk-trace-web, OTLP HTTP exporter) for the UX.
+
+#### Attributes
+
+| Name         | Value      |
+| ------------ | ---------- |
+| softwareType | middleware |
+
+#### Relationships
+
+| Type        | Related Element          | Predicate    | Direction |
+| ----------- | ------------------------ | ------------ | --------- |
+| inter-layer | `ux.view.app-shell-view` | `depends-on` | inbound   |
+
 ### openai-sdk {#openai-sdk}
 
 **ID**: `technology.systemsoftware.openai-sdk`
@@ -346,6 +506,7 @@ Official OpenAI Python client library used by the OpenAI LLM provider adapter to
 
 | Type        | Related Element                                        | Predicate    | Direction |
 | ----------- | ------------------------------------------------------ | ------------ | --------- |
+| inter-layer | `motivation.constraint.external-llm-provider-required` | `satisfies`  | outbound  |
 | inter-layer | `application.applicationcomponent.llm-provider-router` | `serves`     | outbound  |
 | intra-layer | `technology.systemsoftware.python`                     | `depends-on` | outbound  |
 
@@ -390,6 +551,26 @@ Data validation library used exclusively in the adapter/web layer — Pydantic s
 | ----------- | ---------------------------------- | ------------ | --------- |
 | intra-layer | `technology.systemsoftware.python` | `depends-on` | outbound  |
 
+### pypdf {#pypdf}
+
+**ID**: `technology.systemsoftware.pypdf`
+
+**Type**: `systemsoftware`
+
+PDF text extraction for PDF sources.
+
+#### Attributes
+
+| Name         | Value      |
+| ------------ | ---------- |
+| softwareType | middleware |
+
+#### Relationships
+
+| Type        | Related Element                                    | Predicate | Direction |
+| ----------- | -------------------------------------------------- | --------- | --------- |
+| inter-layer | `application.applicationcomponent.pdf-text-reader` | `serves`  | outbound  |
+
 ### Python {#python}
 
 **ID**: `technology.systemsoftware.python`
@@ -406,21 +587,22 @@ Primary backend runtime for local-server — all domain services, adapters, and 
 
 #### Relationships
 
-| Type        | Related Element                                   | Predicate    | Direction |
-| ----------- | ------------------------------------------------- | ------------ | --------- |
-| intra-layer | `technology.systemsoftware.alembic`               | `depends-on` | inbound   |
-| intra-layer | `technology.systemsoftware.anthropic-sdk`         | `depends-on` | inbound   |
-| intra-layer | `technology.systemsoftware.boto3`                 | `depends-on` | inbound   |
-| intra-layer | `technology.systemsoftware.duck-db`               | `depends-on` | inbound   |
-| intra-layer | `technology.systemsoftware.fast-api`              | `depends-on` | inbound   |
-| intra-layer | `technology.systemsoftware.httpx`                 | `depends-on` | inbound   |
-| intra-layer | `technology.systemsoftware.network-x`             | `depends-on` | inbound   |
-| intra-layer | `technology.systemsoftware.openai-sdk`            | `depends-on` | inbound   |
-| intra-layer | `technology.systemsoftware.pydantic`              | `depends-on` | inbound   |
-| intra-layer | `technology.systemsoftware.rdflib`                | `depends-on` | inbound   |
-| intra-layer | `technology.systemsoftware.sentence-transformers` | `depends-on` | inbound   |
-| intra-layer | `technology.systemsoftware.spa-cy`                | `depends-on` | inbound   |
-| intra-layer | `technology.systemsoftware.sqlalchemy`            | `depends-on` | inbound   |
+| Type        | Related Element                                            | Predicate    | Direction |
+| ----------- | ---------------------------------------------------------- | ------------ | --------- |
+| inter-layer | `motivation.constraint.python-and-nodejs-runtime-versions` | `satisfies`  | outbound  |
+| intra-layer | `technology.systemsoftware.alembic`                        | `depends-on` | inbound   |
+| intra-layer | `technology.systemsoftware.anthropic-sdk`                  | `depends-on` | inbound   |
+| intra-layer | `technology.systemsoftware.boto3`                          | `depends-on` | inbound   |
+| intra-layer | `technology.systemsoftware.duck-db`                        | `depends-on` | inbound   |
+| intra-layer | `technology.systemsoftware.fast-api`                       | `depends-on` | inbound   |
+| intra-layer | `technology.systemsoftware.httpx`                          | `depends-on` | inbound   |
+| intra-layer | `technology.systemsoftware.network-x`                      | `depends-on` | inbound   |
+| intra-layer | `technology.systemsoftware.openai-sdk`                     | `depends-on` | inbound   |
+| intra-layer | `technology.systemsoftware.pydantic`                       | `depends-on` | inbound   |
+| intra-layer | `technology.systemsoftware.rdflib`                         | `depends-on` | inbound   |
+| intra-layer | `technology.systemsoftware.sentence-transformers`          | `depends-on` | inbound   |
+| intra-layer | `technology.systemsoftware.spa-cy`                         | `depends-on` | inbound   |
+| intra-layer | `technology.systemsoftware.sqlalchemy`                     | `depends-on` | inbound   |
 
 ### python-multipart {#python-multipart}
 
@@ -435,6 +617,12 @@ Python library providing multipart form data parsing, enabling FastAPI file uplo
 | Name         | Value      |
 | ------------ | ---------- |
 | softwareType | middleware |
+
+#### Relationships
+
+| Type        | Related Element                                            | Predicate | Direction |
+| ----------- | ---------------------------------------------------------- | --------- | --------- |
+| inter-layer | `application.applicationcomponent.local-source-file-store` | `serves`  | outbound  |
 
 ### RDFLib {#rdflib}
 
@@ -475,24 +663,51 @@ JavaScript UI library (v19.1) powering the Context Studio front-end — all UX c
 
 | Type        | Related Element                              | Predicate    | Direction |
 | ----------- | -------------------------------------------- | ------------ | --------- |
-| intra-layer | `technology.systemsoftware.flowbite-react`   | `depends-on` | inbound   |
+| inter-layer | `ux.view.app-shell-view`                     | `depends-on` | inbound   |
 | intra-layer | `technology.systemsoftware.tan-stack-query`  | `depends-on` | inbound   |
 | intra-layer | `technology.systemsoftware.tan-stack-router` | `depends-on` | inbound   |
 | intra-layer | `technology.systemsoftware.vite`             | `depends-on` | inbound   |
 
-### Reagraph {#reagraph}
+### reference-api-buddy {#reference-api-buddy}
 
-**ID**: `technology.systemsoftware.reagraph`
+**ID**: `technology.systemsoftware.reference-api-buddy`
 
 **Type**: `systemsoftware`
 
-React-based graph visualization library used for rendering knowledge graph network diagrams in the UX
+Caching HTTP proxy library behind the in-process reference proxy.
+
+#### Attributes
+
+| Name         | Value |
+| ------------ | ----- |
+| softwareType | cache |
+
+#### Relationships
+
+| Type        | Related Element                                               | Predicate   | Direction |
+| ----------- | ------------------------------------------------------------- | ----------- | --------- |
+| inter-layer | `motivation.constraint.external-reference-source-rate-limits` | `satisfies` | outbound  |
+| inter-layer | `application.applicationcomponent.cached-reference-source`    | `serves`    | outbound  |
+
+### scikit-learn {#scikit-learn}
+
+**ID**: `technology.systemsoftware.scikit-learn`
+
+**Type**: `systemsoftware`
+
+Clustering and similarity utilities for the clusterer and embedding adapters.
 
 #### Attributes
 
 | Name         | Value      |
 | ------------ | ---------- |
 | softwareType | middleware |
+
+#### Relationships
+
+| Type        | Related Element                                      | Predicate | Direction |
+| ----------- | ---------------------------------------------------- | --------- | --------- |
+| inter-layer | `application.applicationcomponent.sklearn-clusterer` | `serves`  | outbound  |
 
 ### sentence-transformers {#sentence-transformers}
 
@@ -553,11 +768,35 @@ Python ORM and SQL toolkit (v2.0+) used for all SQLite persistence — models, r
 
 #### Relationships
 
-| Type        | Related Element                                               | Predicate    | Direction |
-| ----------- | ------------------------------------------------------------- | ------------ | --------- |
-| inter-layer | `application.applicationcomponent.sqlite-persistence-adapter` | `serves`     | outbound  |
-| intra-layer | `technology.systemsoftware.alembic`                           | `depends-on` | inbound   |
-| intra-layer | `technology.systemsoftware.python`                            | `depends-on` | outbound  |
+| Type        | Related Element                                                       | Predicate    | Direction |
+| ----------- | --------------------------------------------------------------------- | ------------ | --------- |
+| inter-layer | `apm.instrumentationconfig.fast-api-sqlalchemy-httpx-instrumentation` | `monitors`   | inbound   |
+| inter-layer | `security.countermeasure.parameterized-queries-via-orm`               | `realizes`   | outbound  |
+| inter-layer | `application.applicationcomponent.database-manager`                   | `serves`     | outbound  |
+| inter-layer | `application.applicationcomponent.sqlite-ontology-repository`         | `serves`     | outbound  |
+| intra-layer | `technology.systemsoftware.alembic`                                   | `depends-on` | inbound   |
+| intra-layer | `technology.systemsoftware.python`                                    | `depends-on` | outbound  |
+
+### SQLite {#sqlite}
+
+**ID**: `technology.systemsoftware.sqlite`
+
+**Type**: `systemsoftware`
+
+Embedded database engine for local.db, operations.db, reference.db and the reference cache, with sqlite-vec for vectors.
+
+#### Attributes
+
+| Name         | Value |
+| ------------ | ----- |
+| softwareType | dbms  |
+
+#### Relationships
+
+| Type        | Related Element                                     | Predicate   | Direction |
+| ----------- | --------------------------------------------------- | ----------- | --------- |
+| inter-layer | `motivation.constraint.sqlite-only-persistence`     | `satisfies` | outbound  |
+| inter-layer | `application.applicationcomponent.database-manager` | `serves`    | outbound  |
 
 ### Tailwind CSS {#tailwind-css}
 
@@ -593,6 +832,18 @@ TanStack Form library used for type-safe form state management in Context Studio
 | ------------ | ---------- |
 | softwareType | middleware |
 
+#### Relationships
+
+| Type        | Related Element                     | Predicate    | Direction |
+| ----------- | ----------------------------------- | ------------ | --------- |
+| inter-layer | `ux.view.class-drawer`              | `depends-on` | inbound   |
+| inter-layer | `ux.view.grounding-workflow-drawer` | `depends-on` | inbound   |
+| inter-layer | `ux.view.individual-drawer`         | `depends-on` | inbound   |
+| inter-layer | `ux.view.property-drawer`           | `depends-on` | inbound   |
+| inter-layer | `ux.view.relationship-drawer`       | `depends-on` | inbound   |
+| inter-layer | `ux.view.scheme-drawer`             | `depends-on` | inbound   |
+| inter-layer | `ux.view.taxonomy-drawer`           | `depends-on` | inbound   |
+
 ### TanStack Query {#tanstack-query}
 
 **ID**: `technology.systemsoftware.tan-stack-query`
@@ -611,6 +862,7 @@ Server-state management library (v5.83) for the React UX — handles API data fe
 
 | Type        | Related Element                   | Predicate    | Direction |
 | ----------- | --------------------------------- | ------------ | --------- |
+| inter-layer | `ux.view.app-shell-view`          | `depends-on` | inbound   |
 | intra-layer | `technology.systemsoftware.react` | `depends-on` | outbound  |
 
 ### TanStack Router {#tanstack-router}
@@ -631,6 +883,7 @@ Type-safe file-based router (v1.116) for the React UX — manages all client-sid
 
 | Type        | Related Element                   | Predicate    | Direction |
 | ----------- | --------------------------------- | ------------ | --------- |
+| inter-layer | `ux.view.app-shell-view`          | `depends-on` | inbound   |
 | intra-layer | `technology.systemsoftware.react` | `depends-on` | outbound  |
 
 ### TanStack Table {#tanstack-table}
@@ -646,6 +899,32 @@ TanStack Table (formerly React Table) used for building data-intensive tables wi
 | Name         | Value      |
 | ------------ | ---------- |
 | softwareType | middleware |
+
+#### Relationships
+
+| Type        | Related Element            | Predicate    | Direction |
+| ----------- | -------------------------- | ------------ | --------- |
+| inter-layer | `ux.view.individuals-view` | `depends-on` | inbound   |
+
+### trafilatura {#trafilatura}
+
+**ID**: `technology.systemsoftware.trafilatura`
+
+**Type**: `systemsoftware`
+
+Main-text extraction from HTML pages for web sources.
+
+#### Attributes
+
+| Name         | Value      |
+| ------------ | ---------- |
+| softwareType | middleware |
+
+#### Relationships
+
+| Type        | Related Element                                | Predicate | Direction |
+| ----------- | ---------------------------------------------- | --------- | --------- |
+| inter-layer | `application.applicationcomponent.html-reader` | `serves`  | outbound  |
 
 ### uvicorn {#uvicorn}
 
@@ -663,9 +942,10 @@ ASGI server that serves the FastAPI application. Configured with standard extras
 
 #### Relationships
 
-| Type        | Related Element                      | Predicate    | Direction |
-| ----------- | ------------------------------------ | ------------ | --------- |
-| intra-layer | `technology.systemsoftware.fast-api` | `depends-on` | outbound  |
+| Type        | Related Element                                  | Predicate    | Direction |
+| ----------- | ------------------------------------------------ | ------------ | --------- |
+| inter-layer | `motivation.constraint.loopback-only-deployment` | `satisfies`  | outbound  |
+| intra-layer | `technology.systemsoftware.fast-api`             | `depends-on` | outbound  |
 
 ### Vite {#vite}
 
@@ -683,10 +963,11 @@ Frontend build tool (v6.2) for the React UX — handles TypeScript compilation, 
 
 #### Relationships
 
-| Type        | Related Element                          | Predicate    | Direction |
-| ----------- | ---------------------------------------- | ------------ | --------- |
-| intra-layer | `technology.systemsoftware.tailwind-css` | `depends-on` | inbound   |
-| intra-layer | `technology.systemsoftware.react`        | `depends-on` | outbound  |
+| Type        | Related Element                                            | Predicate    | Direction |
+| ----------- | ---------------------------------------------------------- | ------------ | --------- |
+| inter-layer | `motivation.constraint.python-and-nodejs-runtime-versions` | `satisfies`  | outbound  |
+| intra-layer | `technology.systemsoftware.tailwind-css`                   | `depends-on` | inbound   |
+| intra-layer | `technology.systemsoftware.react`                          | `depends-on` | outbound  |
 
 ### Zustand {#zustand}
 
@@ -701,6 +982,12 @@ Zustand lightweight state management library used for complex UI state in Contex
 | Name         | Value      |
 | ------------ | ---------- |
 | softwareType | middleware |
+
+#### Relationships
+
+| Type        | Related Element          | Predicate    | Direction |
+| ----------- | ------------------------ | ------------ | --------- |
+| inter-layer | `ux.view.app-shell-view` | `depends-on` | inbound   |
 
 ### External Knowledge Integration {#external-knowledge-integration}
 
@@ -756,4 +1043,4 @@ Technology interaction in which the sync adapter serializes the local knowledge 
 
 ---
 
-Generated: 2026-11-17T18:49:10.650Z | Model Version: 0.1.0
+Generated: 2026-11-19T16:49:39.982Z | Model Version: 0.1.0

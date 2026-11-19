@@ -1,0 +1,40 @@
+security.actor.local-operator:
+  id: b3bf64ba-11a7-4faf-9b79-5456ce7e1d16
+  path: security.actor.local-operator
+  spec_node_id: security.actor
+  type: actor
+  layer_id: security
+  name: Local Operator
+  description: The browser UI and any local process that reaches the REST port; it
+    has full read and write, including apply and revert.
+  attributes:
+    type: human
+    trustLevel: full
+  source_reference:
+    provenance: manual
+    locations:
+      - file: README.md
+  metadata:
+    created_at: 2026-11-19T16:18:36.730Z
+    updated_at: 2026-11-19T16:18:36.730Z
+    version: 1
+security.actor.mcp-client-agent:
+  id: 60ffa375-07c8-434e-97a0-c06a6a8929a1
+  path: security.actor.mcp-client-agent
+  spec_node_id: security.actor
+  type: actor
+  layer_id: security
+  name: MCP Client Agent
+  description: Claude Code or a client project's maintainer agent connected over
+    MCP with the bearer token.
+  attributes:
+    type: system
+    trustLevel: medium
+  source_reference:
+    provenance: manual
+    locations:
+      - file: README.md
+  metadata:
+    created_at: 2026-11-19T16:18:36.732Z
+    updated_at: 2026-11-19T16:18:36.732Z
+    version: 1

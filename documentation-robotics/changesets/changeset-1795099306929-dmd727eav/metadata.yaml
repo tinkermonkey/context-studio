@@ -1,0 +1,5772 @@
+id: changeset-1795099306929-dmd727eav
+name: rebuild-model-from-code
+description: "Rebuild Context Studio's DR model so it is complete and accurate
+  against the code at 2594d7a4 (2026-11-19), as the base for change management.
+  Code layers (application, api, data-model, data-store, technology, ux,
+  navigation, apm, testing) rebuilt from extraction: all 171 OpenAPI operations
+  plus /mcp with handlers that exist, request/response links checked against
+  openapi.json, 35 SQLAlchemy tables with FKs and unique keys, 51 hexagonal
+  ports, UX views bound to the API through 140 data configs, testing modelled at
+  suite level. Hand-written layers (motivation, business, product, security)
+  rewritten from an audit with the owner's answers (workbench goals and
+  principles, DR and House as separate clients, Tauri desktop goal, security
+  threats incl. #1655 LAN exposure and #1656 SSRF as requirements to fix). Done:
+  model_validate 0 errors and 0 orphans; a full extraction preview of the code
+  layers (testing aside) stages nothing and leaves no cards or candidate
+  deletes."
+created: 2026-11-19T14:41:46.931Z
+modified: 2026-11-19T16:49:30.704Z
+status: committed
+baseSnapshot: sha256:bc0fc7cad0f7665c1063fbe900c7a96dc7a2bb16fad68dd054f8d24dbc836e33
+origin:
+  kind: plan
+stats:
+  additions: 3252
+  modifications: 237
+  deletions: 294
+lastSequence: 4055
+unstagedPrunedThrough: 1670
+unstaged:
+  - sequence: 1528
+    removedAt: 1670
+    change:
+      type: add
+      elementId: api.operation.get-view
+      layerName: api
+      after:
+        id: 9b6426ec-80fc-457a-a670-acd20c2b2874
+        path: api.operation.get-view
+        spec_node_id: api.operation
+        type: operation
+        layer_id: api
+        name: GET /view
+        attributes:
+          operationId: get-view
+          summary: GET /view
+          tags: view
+          http_method: GET
+          http_path: /view
+        source_reference:
+          provenance: extracted
+          locations:
+            - file: local-server/adapters/web/graph_routes.py
+              symbol: GET /view
+        metadata:
+          created_at: 2026-11-19T15:22:08.293Z
+          updated_at: 2026-11-19T15:22:08.293Z
+          version: 1
+      timestamp: 2026-11-19T15:22:08.574Z
+      origin:
+        by: tier0
+        rule: node-mapping:Route
+  - sequence: 1529
+    removedAt: 1670
+    change:
+      type: add
+      elementId: api.operation.post-build
+      layerName: api
+      after:
+        id: e25bd77f-37ef-4a8e-94af-28f8ddcbaa8b
+        path: api.operation.post-build
+        spec_node_id: api.operation
+        type: operation
+        layer_id: api
+        name: POST /build
+        attributes:
+          operationId: post-build
+          summary: POST /build
+          tags: build
+          http_method: POST
+          http_path: /build
+        source_reference:
+          provenance: extracted
+          locations:
+            - file: local-server/adapters/web/graph_routes.py
+              symbol: POST /build
+        metadata:
+          created_at: 2026-11-19T15:22:08.293Z
+          updated_at: 2026-11-19T15:22:08.293Z
+          version: 1
+      timestamp: 2026-11-19T15:22:08.574Z
+      origin:
+        by: tier0
+        rule: node-mapping:Route
+  - sequence: 1530
+    removedAt: 1670
+    change:
+      type: add
+      elementId: api.operation.post-cycle-check
+      layerName: api
+      after:
+        id: 37710d8a-16f9-4a8a-be0b-0863d2e05ac2
+        path: api.operation.post-cycle-check
+        spec_node_id: api.operation
+        type: operation
+        layer_id: api
+        name: POST /cycle-check
+        attributes:
+          operationId: post-cycle-check
+          summary: POST /cycle-check
+          tags: cycle-check
+          http_method: POST
+          http_path: /cycle-check
+        source_reference:
+          provenance: extracted
+          locations:
+            - file: local-server/adapters/web/graph_routes.py
+              symbol: POST /cycle-check
+        metadata:
+          created_at: 2026-11-19T15:22:08.293Z
+          updated_at: 2026-11-19T15:22:08.293Z
+          version: 1
+      timestamp: 2026-11-19T15:22:08.574Z
+      origin:
+        by: tier0
+        rule: node-mapping:Route
+  - sequence: 1531
+    removedAt: 1670
+    change:
+      type: add
+      elementId: api.operation.post-sparql
+      layerName: api
+      after:
+        id: 76ea52ed-aec4-44d0-ad1a-2e07ee2a0c20
+        path: api.operation.post-sparql
+        spec_node_id: api.operation
+        type: operation
+        layer_id: api
+        name: POST /sparql
+        attributes:
+          operationId: post-sparql
+          summary: POST /sparql
+          tags: sparql
+          http_method: POST
+          http_path: /sparql
+        source_reference:
+          provenance: extracted
+          locations:
+            - file: local-server/adapters/web/graph_routes.py
+              symbol: POST /sparql
+        metadata:
+          created_at: 2026-11-19T15:22:08.293Z
+          updated_at: 2026-11-19T15:22:08.293Z
+          version: 1
+      timestamp: 2026-11-19T15:22:08.574Z
+      origin:
+        by: tier0
+        rule: node-mapping:Route
+  - sequence: 1532
+    removedAt: 1670
+    change:
+      type: add
+      elementId: api.operation.get-bundles-taxonomy-id
+      layerName: api
+      after:
+        id: f1f7a299-a767-45d4-a7ee-029dd56f9faa
+        path: api.operation.get-bundles-taxonomy-id
+        spec_node_id: api.operation
+        type: operation
+        layer_id: api
+        name: GET /bundles/{taxonomy_id}
+        attributes:
+          operationId: get-bundles-taxonomy-id
+          summary: GET /bundles/{taxonomy_id}
+          tags: bundles
+          http_method: GET
+          http_path: /bundles/{taxonomy_id}
+        source_reference:
+          provenance: extracted
+          locations:
+            - file: local-server/adapters/web/interchange_routes.py
+              symbol: GET /bundles/{taxonomy_id}
+        metadata:
+          created_at: 2026-11-19T15:22:08.293Z
+          updated_at: 2026-11-19T15:22:08.293Z
+          version: 1
+      timestamp: 2026-11-19T15:22:08.574Z
+      origin:
+        by: tier0
+        rule: node-mapping:Route
+  - sequence: 1533
+    removedAt: 1670
+    change:
+      type: add
+      elementId: api.operation.post-export
+      layerName: api
+      after:
+        id: 78f11055-5dc5-4711-8395-094c4c97d4f6
+        path: api.operation.post-export
+        spec_node_id: api.operation
+        type: operation
+        layer_id: api
+        name: POST /export
+        attributes:
+          operationId: post-export
+          summary: POST /export
+          tags: export
+          http_method: POST
+          http_path: /export
+        source_reference:
+          provenance: extracted
+          locations:
+            - file: local-server/adapters/web/interchange_routes.py
+              symbol: POST /export
+        metadata:
+          created_at: 2026-11-19T15:22:08.293Z
+          updated_at: 2026-11-19T15:22:08.293Z
+          version: 1
+      timestamp: 2026-11-19T15:22:08.574Z
+      origin:
+        by: tier0
+        rule: node-mapping:Route
+  - sequence: 1534
+    removedAt: 1670
+    change:
+      type: add
+      elementId: api.operation.post-import
+      layerName: api
+      after:
+        id: a462bdad-3442-43b9-a54a-d93520ffb194
+        path: api.operation.post-import
+        spec_node_id: api.operation
+        type: operation
+        layer_id: api
+        name: POST /import
+        attributes:
+          operationId: post-import
+          summary: POST /import
+          tags: import
+          http_method: POST
+          http_path: /import
+        source_reference:
+          provenance: extracted
+          locations:
+            - file: local-server/adapters/web/interchange_routes.py
+              symbol: POST /import
+        metadata:
+          created_at: 2026-11-19T15:22:08.293Z
+          updated_at: 2026-11-19T15:22:08.293Z
+          version: 1
+      timestamp: 2026-11-19T15:22:08.574Z
+      origin:
+        by: tier0
+        rule: node-mapping:Route
+  - sequence: 1535
+    removedAt: 1670
+    change:
+      type: add
+      elementId: api.operation.delete-attribute-definitions-attribute-definition-id
+      layerName: api
+      after:
+        id: 34841b9e-9646-44a9-bc25-d0d75fff3ab0
+        path: api.operation.delete-attribute-definitions-attribute-definition-id
+        spec_node_id: api.operation
+        type: operation
+        layer_id: api
+        name: DELETE /attribute-definitions/{attribute_definition_id}
+        attributes:
+          operationId: delete-attribute-definitions-attribute-definition-id
+          summary: DELETE /attribute-definitions/{attribute_definition_id}
+          tags: attribute-definitions
+          http_method: DELETE
+          http_path: /attribute-definitions/{attribute_definition_id}
+        source_reference:
+          provenance: extracted
+          locations:
+            - file: local-server/adapters/web/ontology_routes.py
+              symbol: DELETE /attribute-definitions/{attribute_definition_id}
+        metadata:
+          created_at: 2026-11-19T15:22:08.293Z
+          updated_at: 2026-11-19T15:22:08.293Z
+          version: 1
+      timestamp: 2026-11-19T15:22:08.574Z
+      origin:
+        by: tier0
+        rule: node-mapping:Route
+  - sequence: 1536
+    removedAt: 1670
+    change:
+      type: add
+      elementId: api.operation.delete-classes-class-id
+      layerName: api
+      after:
+        id: e59cb1f0-d20a-4ebf-98fe-e4a38ff5f6ff
+        path: api.operation.delete-classes-class-id
+        spec_node_id: api.operation
+        type: operation
+        layer_id: api
+        name: DELETE /classes/{class_id}
+        attributes:
+          operationId: delete-classes-class-id
+          summary: DELETE /classes/{class_id}
+          tags: classes
+          http_method: DELETE
+          http_path: /classes/{class_id}
+        source_reference:
+          provenance: extracted
+          locations:
+            - file: local-server/adapters/web/ontology_routes.py
+              symbol: DELETE /classes/{class_id}
+        metadata:
+          created_at: 2026-11-19T15:22:08.293Z
+          updated_at: 2026-11-19T15:22:08.293Z
+          version: 1
+      timestamp: 2026-11-19T15:22:08.574Z
+      origin:
+        by: tier0
+        rule: node-mapping:Route
+  - sequence: 1537
+    removedAt: 1670
+    change:
+      type: add
+      elementId: api.operation.delete-datasets-dataset-id
+      layerName: api
+      after:
+        id: 06ed61ec-8393-4b78-95bf-a17419f76cf1
+        path: api.operation.delete-datasets-dataset-id
+        spec_node_id: api.operation
+        type: operation
+        layer_id: api
+        name: DELETE /datasets/{dataset_id}
+        attributes:
+          operationId: delete-datasets-dataset-id
+          summary: DELETE /datasets/{dataset_id}
+          tags: datasets
+          http_method: DELETE
+          http_path: /datasets/{dataset_id}
+        source_reference:
+          provenance: extracted
+          locations:
+            - file: local-server/adapters/web/ontology_routes.py
+              symbol: DELETE /datasets/{dataset_id}
+        metadata:
+          created_at: 2026-11-19T15:22:08.293Z
+          updated_at: 2026-11-19T15:22:08.293Z
+          version: 1
+      timestamp: 2026-11-19T15:22:08.574Z
+      origin:
+        by: tier0
+        rule: node-mapping:Route
+  - sequence: 1538
+    removedAt: 1670
+    change:
+      type: add
+      elementId: api.operation.delete-individuals-individual-id
+      layerName: api
+      after:
+        id: 722b08ff-ba46-4fce-a530-399bfb6ff1ad
+        path: api.operation.delete-individuals-individual-id
+        spec_node_id: api.operation
+        type: operation
+        layer_id: api
+        name: DELETE /individuals/{individual_id}
+        attributes:
+          operationId: delete-individuals-individual-id
+          summary: DELETE /individuals/{individual_id}
+          tags: individuals
+          http_method: DELETE
+          http_path: /individuals/{individual_id}
+        source_reference:
+          provenance: extracted
+          locations:
+            - file: local-server/adapters/web/ontology_routes.py
+              symbol: DELETE /individuals/{individual_id}
+        metadata:
+          created_at: 2026-11-19T15:22:08.293Z
+          updated_at: 2026-11-19T15:22:08.293Z
+          version: 1
+      timestamp: 2026-11-19T15:22:08.574Z
+      origin:
+        by: tier0
+        rule: node-mapping:Route
+  - sequence: 1539
+    removedAt: 1670
+    change:
+      type: add
+      elementId: api.operation.delete-individuals-individual-id-classes-class-id
+      layerName: api
+      after:
+        id: 034df996-8c1f-4dd1-b0e6-c7f5ce92503f
+        path: api.operation.delete-individuals-individual-id-classes-class-id
+        spec_node_id: api.operation
+        type: operation
+        layer_id: api
+        name: DELETE /individuals/{individual_id}/classes/{class_id}
+        attributes:
+          operationId: delete-individuals-individual-id-classes-class-id
+          summary: DELETE /individuals/{individual_id}/classes/{class_id}
+          tags: individuals
+          http_method: DELETE
+          http_path: /individuals/{individual_id}/classes/{class_id}
+        source_reference:
+          provenance: extracted
+          locations:
+            - file: local-server/adapters/web/ontology_routes.py
+              symbol: DELETE /individuals/{individual_id}/classes/{class_id}
+        metadata:
+          created_at: 2026-11-19T15:22:08.293Z
+          updated_at: 2026-11-19T15:22:08.293Z
+          version: 1
+      timestamp: 2026-11-19T15:22:08.574Z
+      origin:
+        by: tier0
+        rule: node-mapping:Route
+  - sequence: 1540
+    removedAt: 1670
+    change:
+      type: add
+      elementId: api.operation.delete-properties-property-id
+      layerName: api
+      after:
+        id: 1e6642ea-055e-440a-86bc-730290095063
+        path: api.operation.delete-properties-property-id
+        spec_node_id: api.operation
+        type: operation
+        layer_id: api
+        name: DELETE /properties/{property_id}
+        attributes:
+          operationId: delete-properties-property-id
+          summary: DELETE /properties/{property_id}
+          tags: properties
+          http_method: DELETE
+          http_path: /properties/{property_id}
+        source_reference:
+          provenance: extracted
+          locations:
+            - file: local-server/adapters/web/ontology_routes.py
+              symbol: DELETE /properties/{property_id}
+        metadata:
+          created_at: 2026-11-19T15:22:08.293Z
+          updated_at: 2026-11-19T15:22:08.293Z
+          version: 1
+      timestamp: 2026-11-19T15:22:08.574Z
+      origin:
+        by: tier0
+        rule: node-mapping:Route
+  - sequence: 1541
+    removedAt: 1670
+    change:
+      type: add
+      elementId: api.operation.delete-relationships-relationship-id
+      layerName: api
+      after:
+        id: b8bdab11-de9e-4e83-9607-bec49a340235
+        path: api.operation.delete-relationships-relationship-id
+        spec_node_id: api.operation
+        type: operation
+        layer_id: api
+        name: DELETE /relationships/{relationship_id}
+        attributes:
+          operationId: delete-relationships-relationship-id
+          summary: DELETE /relationships/{relationship_id}
+          tags: relationships
+          http_method: DELETE
+          http_path: /relationships/{relationship_id}
+        source_reference:
+          provenance: extracted
+          locations:
+            - file: local-server/adapters/web/ontology_routes.py
+              symbol: DELETE /relationships/{relationship_id}
+        metadata:
+          created_at: 2026-11-19T15:22:08.293Z
+          updated_at: 2026-11-19T15:22:08.293Z
+          version: 1
+      timestamp: 2026-11-19T15:22:08.574Z
+      origin:
+        by: tier0
+        rule: node-mapping:Route
+  - sequence: 1542
+    removedAt: 1670
+    change:
+      type: add
+      elementId: api.operation.delete-schemes-scheme-id
+      layerName: api
+      after:
+        id: 0808c610-78d1-4828-8b61-e08738062c16
+        path: api.operation.delete-schemes-scheme-id
+        spec_node_id: api.operation
+        type: operation
+        layer_id: api
+        name: DELETE /schemes/{scheme_id}
+        attributes:
+          operationId: delete-schemes-scheme-id
+          summary: DELETE /schemes/{scheme_id}
+          tags: schemes
+          http_method: DELETE
+          http_path: /schemes/{scheme_id}
+        source_reference:
+          provenance: extracted
+          locations:
+            - file: local-server/adapters/web/ontology_routes.py
+              symbol: DELETE /schemes/{scheme_id}
+        metadata:
+          created_at: 2026-11-19T15:22:08.293Z
+          updated_at: 2026-11-19T15:22:08.293Z
+          version: 1
+      timestamp: 2026-11-19T15:22:08.574Z
+      origin:
+        by: tier0
+        rule: node-mapping:Route
+  - sequence: 1543
+    removedAt: 1670
+    change:
+      type: add
+      elementId: api.operation.delete-taxonomies-taxonomy-id
+      layerName: api
+      after:
+        id: 03cdb477-91a2-4e09-b859-cb10edd7d46b
+        path: api.operation.delete-taxonomies-taxonomy-id
+        spec_node_id: api.operation
+        type: operation
+        layer_id: api
+        name: DELETE /taxonomies/{taxonomy_id}
+        attributes:
+          operationId: delete-taxonomies-taxonomy-id
+          summary: DELETE /taxonomies/{taxonomy_id}
+          tags: taxonomies
+          http_method: DELETE
+          http_path: /taxonomies/{taxonomy_id}
+        source_reference:
+          provenance: extracted
+          locations:
+            - file: local-server/adapters/web/ontology_routes.py
+              symbol: DELETE /taxonomies/{taxonomy_id}
+        metadata:
+          created_at: 2026-11-19T15:22:08.293Z
+          updated_at: 2026-11-19T15:22:08.293Z
+          version: 1
+      timestamp: 2026-11-19T15:22:08.574Z
+      origin:
+        by: tier0
+        rule: node-mapping:Route
+  - sequence: 1544
+    removedAt: 1670
+    change:
+      type: add
+      elementId: api.operation.get-attribute-definitions-attribute-definition-id
+      layerName: api
+      after:
+        id: 8faf8d7f-bfc6-4f9f-851e-acae2d880daa
+        path: api.operation.get-attribute-definitions-attribute-definition-id
+        spec_node_id: api.operation
+        type: operation
+        layer_id: api
+        name: GET /attribute-definitions/{attribute_definition_id}
+        attributes:
+          operationId: get-attribute-definitions-attribute-definition-id
+          summary: GET /attribute-definitions/{attribute_definition_id}
+          tags: attribute-definitions
+          http_method: GET
+          http_path: /attribute-definitions/{attribute_definition_id}
+        source_reference:
+          provenance: extracted
+          locations:
+            - file: local-server/adapters/web/ontology_routes.py
+              symbol: GET /attribute-definitions/{attribute_definition_id}
+        metadata:
+          created_at: 2026-11-19T15:22:08.293Z
+          updated_at: 2026-11-19T15:22:08.293Z
+          version: 1
+      timestamp: 2026-11-19T15:22:08.574Z
+      origin:
+        by: tier0
+        rule: node-mapping:Route
+  - sequence: 1545
+    removedAt: 1670
+    change:
+      type: add
+      elementId: api.operation.get-classes
+      layerName: api
+      after:
+        id: 076d65fc-351e-49d0-b15a-721239a631fc
+        path: api.operation.get-classes
+        spec_node_id: api.operation
+        type: operation
+        layer_id: api
+        name: GET /classes
+        attributes:
+          operationId: get-classes
+          summary: GET /classes
+          tags: classes
+          http_method: GET
+          http_path: /classes
+        source_reference:
+          provenance: extracted
+          locations:
+            - file: local-server/adapters/web/ontology_routes.py
+              symbol: GET /classes
+        metadata:
+          created_at: 2026-11-19T15:22:08.293Z
+          updated_at: 2026-11-19T15:22:08.293Z
+          version: 1
+      timestamp: 2026-11-19T15:22:08.574Z
+      origin:
+        by: tier0
+        rule: node-mapping:Route
+  - sequence: 1546
+    removedAt: 1670
+    change:
+      type: add
+      elementId: api.operation.get-classes-class-id
+      layerName: api
+      after:
+        id: f91ca0e6-ff2a-4d4f-8a74-3fb8c96fd176
+        path: api.operation.get-classes-class-id
+        spec_node_id: api.operation
+        type: operation
+        layer_id: api
+        name: GET /classes/{class_id}
+        attributes:
+          operationId: get-classes-class-id
+          summary: GET /classes/{class_id}
+          tags: classes
+          http_method: GET
+          http_path: /classes/{class_id}
+        source_reference:
+          provenance: extracted
+          locations:
+            - file: local-server/adapters/web/ontology_routes.py
+              symbol: GET /classes/{class_id}
+        metadata:
+          created_at: 2026-11-19T15:22:08.293Z
+          updated_at: 2026-11-19T15:22:08.293Z
+          version: 1
+      timestamp: 2026-11-19T15:22:08.574Z
+      origin:
+        by: tier0
+        rule: node-mapping:Route
+  - sequence: 1547
+    removedAt: 1670
+    change:
+      type: add
+      elementId: api.operation.get-classes-class-id-attribute-definitions
+      layerName: api
+      after:
+        id: 10a9ce88-9cea-4042-8674-61cf6542d77a
+        path: api.operation.get-classes-class-id-attribute-definitions
+        spec_node_id: api.operation
+        type: operation
+        layer_id: api
+        name: GET /classes/{class_id}/attribute-definitions
+        attributes:
+          operationId: get-classes-class-id-attribute-definitions
+          summary: GET /classes/{class_id}/attribute-definitions
+          tags: classes
+          http_method: GET
+          http_path: /classes/{class_id}/attribute-definitions
+        source_reference:
+          provenance: extracted
+          locations:
+            - file: local-server/adapters/web/ontology_routes.py
+              symbol: GET /classes/{class_id}/attribute-definitions
+        metadata:
+          created_at: 2026-11-19T15:22:08.293Z
+          updated_at: 2026-11-19T15:22:08.293Z
+          version: 1
+      timestamp: 2026-11-19T15:22:08.574Z
+      origin:
+        by: tier0
+        rule: node-mapping:Route
+  - sequence: 1548
+    removedAt: 1670
+    change:
+      type: add
+      elementId: api.operation.get-datasets
+      layerName: api
+      after:
+        id: 724f01ba-f3fc-4c5a-b39c-acc1845919ad
+        path: api.operation.get-datasets
+        spec_node_id: api.operation
+        type: operation
+        layer_id: api
+        name: GET /datasets
+        attributes:
+          operationId: get-datasets
+          summary: GET /datasets
+          tags: datasets
+          http_method: GET
+          http_path: /datasets
+        source_reference:
+          provenance: extracted
+          locations:
+            - file: local-server/adapters/web/ontology_routes.py
+              symbol: GET /datasets
+        metadata:
+          created_at: 2026-11-19T15:22:08.293Z
+          updated_at: 2026-11-19T15:22:08.293Z
+          version: 1
+      timestamp: 2026-11-19T15:22:08.574Z
+      origin:
+        by: tier0
+        rule: node-mapping:Route
+  - sequence: 1549
+    removedAt: 1670
+    change:
+      type: add
+      elementId: api.operation.get-individuals
+      layerName: api
+      after:
+        id: 5ca00573-2e0a-4b23-9014-ce8b3b223386
+        path: api.operation.get-individuals
+        spec_node_id: api.operation
+        type: operation
+        layer_id: api
+        name: GET /individuals
+        attributes:
+          operationId: get-individuals
+          summary: GET /individuals
+          tags: individuals
+          http_method: GET
+          http_path: /individuals
+        source_reference:
+          provenance: extracted
+          locations:
+            - file: local-server/adapters/web/ontology_routes.py
+              symbol: GET /individuals
+        metadata:
+          created_at: 2026-11-19T15:22:08.293Z
+          updated_at: 2026-11-19T15:22:08.293Z
+          version: 1
+      timestamp: 2026-11-19T15:22:08.574Z
+      origin:
+        by: tier0
+        rule: node-mapping:Route
+  - sequence: 1550
+    removedAt: 1670
+    change:
+      type: add
+      elementId: api.operation.get-individuals-individual-id
+      layerName: api
+      after:
+        id: 4b9cc3ea-b6e5-4a1c-a885-28d45e78074a
+        path: api.operation.get-individuals-individual-id
+        spec_node_id: api.operation
+        type: operation
+        layer_id: api
+        name: GET /individuals/{individual_id}
+        attributes:
+          operationId: get-individuals-individual-id
+          summary: GET /individuals/{individual_id}
+          tags: individuals
+          http_method: GET
+          http_path: /individuals/{individual_id}
+        source_reference:
+          provenance: extracted
+          locations:
+            - file: local-server/adapters/web/ontology_routes.py
+              symbol: GET /individuals/{individual_id}
+        metadata:
+          created_at: 2026-11-19T15:22:08.293Z
+          updated_at: 2026-11-19T15:22:08.293Z
+          version: 1
+      timestamp: 2026-11-19T15:22:08.574Z
+      origin:
+        by: tier0
+        rule: node-mapping:Route
+  - sequence: 1551
+    removedAt: 1670
+    change:
+      type: add
+      elementId: api.operation.get-individuals-individual-id-inherited-properties
+      layerName: api
+      after:
+        id: abffffea-7313-4210-a24b-10a0c823cb86
+        path: api.operation.get-individuals-individual-id-inherited-properties
+        spec_node_id: api.operation
+        type: operation
+        layer_id: api
+        name: GET /individuals/{individual_id}/inherited-properties
+        attributes:
+          operationId: get-individuals-individual-id-inherited-properties
+          summary: GET /individuals/{individual_id}/inherited-properties
+          tags: individuals
+          http_method: GET
+          http_path: /individuals/{individual_id}/inherited-properties
+        source_reference:
+          provenance: extracted
+          locations:
+            - file: local-server/adapters/web/ontology_routes.py
+              symbol: GET /individuals/{individual_id}/inherited-properties
+        metadata:
+          created_at: 2026-11-19T15:22:08.293Z
+          updated_at: 2026-11-19T15:22:08.293Z
+          version: 1
+      timestamp: 2026-11-19T15:22:08.574Z
+      origin:
+        by: tier0
+        rule: node-mapping:Route
+  - sequence: 1552
+    removedAt: 1670
+    change:
+      type: add
+      elementId: api.operation.get-individuals-individual-id-sources
+      layerName: api
+      after:
+        id: 3e21794b-1ce7-4935-9edf-8664d44b4e53
+        path: api.operation.get-individuals-individual-id-sources
+        spec_node_id: api.operation
+        type: operation
+        layer_id: api
+        name: GET /individuals/{individual_id}/sources
+        attributes:
+          operationId: get-individuals-individual-id-sources
+          summary: GET /individuals/{individual_id}/sources
+          tags: individuals
+          http_method: GET
+          http_path: /individuals/{individual_id}/sources
+        source_reference:
+          provenance: extracted
+          locations:
+            - file: local-server/adapters/web/ontology_routes.py
+              symbol: GET /individuals/{individual_id}/sources
+        metadata:
+          created_at: 2026-11-19T15:22:08.293Z
+          updated_at: 2026-11-19T15:22:08.293Z
+          version: 1
+      timestamp: 2026-11-19T15:22:08.574Z
+      origin:
+        by: tier0
+        rule: node-mapping:Route
+  - sequence: 1553
+    removedAt: 1670
+    change:
+      type: add
+      elementId: api.operation.get-predicates
+      layerName: api
+      after:
+        id: 28aab202-6742-4504-be4d-39718e572e4b
+        path: api.operation.get-predicates
+        spec_node_id: api.operation
+        type: operation
+        layer_id: api
+        name: GET /predicates
+        attributes:
+          operationId: get-predicates
+          summary: GET /predicates
+          tags: predicates
+          http_method: GET
+          http_path: /predicates
+        source_reference:
+          provenance: extracted
+          locations:
+            - file: local-server/adapters/web/ontology_routes.py
+              symbol: GET /predicates
+        metadata:
+          created_at: 2026-11-19T15:22:08.293Z
+          updated_at: 2026-11-19T15:22:08.293Z
+          version: 1
+      timestamp: 2026-11-19T15:22:08.574Z
+      origin:
+        by: tier0
+        rule: node-mapping:Route
+  - sequence: 1554
+    removedAt: 1670
+    change:
+      type: add
+      elementId: api.operation.get-properties
+      layerName: api
+      after:
+        id: 16aace94-64dd-40d1-a22e-44e61549e854
+        path: api.operation.get-properties
+        spec_node_id: api.operation
+        type: operation
+        layer_id: api
+        name: GET /properties
+        attributes:
+          operationId: get-properties
+          summary: GET /properties
+          tags: properties
+          http_method: GET
+          http_path: /properties
+        source_reference:
+          provenance: extracted
+          locations:
+            - file: local-server/adapters/web/ontology_routes.py
+              symbol: GET /properties
+        metadata:
+          created_at: 2026-11-19T15:22:08.293Z
+          updated_at: 2026-11-19T15:22:08.293Z
+          version: 1
+      timestamp: 2026-11-19T15:22:08.574Z
+      origin:
+        by: tier0
+        rule: node-mapping:Route
+  - sequence: 1555
+    removedAt: 1670
+    change:
+      type: add
+      elementId: api.operation.get-properties-property-id
+      layerName: api
+      after:
+        id: 01dd6ef6-f083-4eb1-9007-62f521657754
+        path: api.operation.get-properties-property-id
+        spec_node_id: api.operation
+        type: operation
+        layer_id: api
+        name: GET /properties/{property_id}
+        attributes:
+          operationId: get-properties-property-id
+          summary: GET /properties/{property_id}
+          tags: properties
+          http_method: GET
+          http_path: /properties/{property_id}
+        source_reference:
+          provenance: extracted
+          locations:
+            - file: local-server/adapters/web/ontology_routes.py
+              symbol: GET /properties/{property_id}
+        metadata:
+          created_at: 2026-11-19T15:22:08.293Z
+          updated_at: 2026-11-19T15:22:08.293Z
+          version: 1
+      timestamp: 2026-11-19T15:22:08.574Z
+      origin:
+        by: tier0
+        rule: node-mapping:Route
+  - sequence: 1556
+    removedAt: 1670
+    change:
+      type: add
+      elementId: api.operation.get-properties-property-id-attributes
+      layerName: api
+      after:
+        id: ca331684-5235-4b1e-923f-deb915191e10
+        path: api.operation.get-properties-property-id-attributes
+        spec_node_id: api.operation
+        type: operation
+        layer_id: api
+        name: GET /properties/{property_id}/attributes
+        attributes:
+          operationId: get-properties-property-id-attributes
+          summary: GET /properties/{property_id}/attributes
+          tags: properties
+          http_method: GET
+          http_path: /properties/{property_id}/attributes
+        source_reference:
+          provenance: extracted
+          locations:
+            - file: local-server/adapters/web/ontology_routes.py
+              symbol: GET /properties/{property_id}/attributes
+        metadata:
+          created_at: 2026-11-19T15:22:08.293Z
+          updated_at: 2026-11-19T15:22:08.293Z
+          version: 1
+      timestamp: 2026-11-19T15:22:08.574Z
+      origin:
+        by: tier0
+        rule: node-mapping:Route
+  - sequence: 1557
+    removedAt: 1670
+    change:
+      type: add
+      elementId: api.operation.get-relationships
+      layerName: api
+      after:
+        id: 678de2c2-5c0d-4c4b-8680-20d5c35269d0
+        path: api.operation.get-relationships
+        spec_node_id: api.operation
+        type: operation
+        layer_id: api
+        name: GET /relationships
+        attributes:
+          operationId: get-relationships
+          summary: GET /relationships
+          tags: relationships
+          http_method: GET
+          http_path: /relationships
+        source_reference:
+          provenance: extracted
+          locations:
+            - file: local-server/adapters/web/ontology_routes.py
+              symbol: GET /relationships
+        metadata:
+          created_at: 2026-11-19T15:22:08.293Z
+          updated_at: 2026-11-19T15:22:08.293Z
+          version: 1
+      timestamp: 2026-11-19T15:22:08.574Z
+      origin:
+        by: tier0
+        rule: node-mapping:Route
+  - sequence: 1558
+    removedAt: 1670
+    change:
+      type: add
+      elementId: api.operation.get-relationships-relationship-id
+      layerName: api
+      after:
+        id: 9b3290b4-a1c1-40c2-9d3b-f26579cfbce7
+        path: api.operation.get-relationships-relationship-id
+        spec_node_id: api.operation
+        type: operation
+        layer_id: api
+        name: GET /relationships/{relationship_id}
+        attributes:
+          operationId: get-relationships-relationship-id
+          summary: GET /relationships/{relationship_id}
+          tags: relationships
+          http_method: GET
+          http_path: /relationships/{relationship_id}
+        source_reference:
+          provenance: extracted
+          locations:
+            - file: local-server/adapters/web/ontology_routes.py
+              symbol: GET /relationships/{relationship_id}
+        metadata:
+          created_at: 2026-11-19T15:22:08.293Z
+          updated_at: 2026-11-19T15:22:08.293Z
+          version: 1
+      timestamp: 2026-11-19T15:22:08.574Z
+      origin:
+        by: tier0
+        rule: node-mapping:Route
+  - sequence: 1559
+    removedAt: 1670
+    change:
+      type: add
+      elementId: api.operation.get-relationships-relationship-id-sources
+      layerName: api
+      after:
+        id: 449cb71e-99b1-428e-b9aa-29f81c63035d
+        path: api.operation.get-relationships-relationship-id-sources
+        spec_node_id: api.operation
+        type: operation
+        layer_id: api
+        name: GET /relationships/{relationship_id}/sources
+        attributes:
+          operationId: get-relationships-relationship-id-sources
+          summary: GET /relationships/{relationship_id}/sources
+          tags: relationships
+          http_method: GET
+          http_path: /relationships/{relationship_id}/sources
+        source_reference:
+          provenance: extracted
+          locations:
+            - file: local-server/adapters/web/ontology_routes.py
+              symbol: GET /relationships/{relationship_id}/sources
+        metadata:
+          created_at: 2026-11-19T15:22:08.293Z
+          updated_at: 2026-11-19T15:22:08.293Z
+          version: 1
+      timestamp: 2026-11-19T15:22:08.574Z
+      origin:
+        by: tier0
+        rule: node-mapping:Route
+  - sequence: 1560
+    removedAt: 1670
+    change:
+      type: add
+      elementId: api.operation.get-schemes
+      layerName: api
+      after:
+        id: 0c8d00b3-1e23-47fc-8a39-0e7271f015a2
+        path: api.operation.get-schemes
+        spec_node_id: api.operation
+        type: operation
+        layer_id: api
+        name: GET /schemes
+        attributes:
+          operationId: get-schemes
+          summary: GET /schemes
+          tags: schemes
+          http_method: GET
+          http_path: /schemes
+        source_reference:
+          provenance: extracted
+          locations:
+            - file: local-server/adapters/web/ontology_routes.py
+              symbol: GET /schemes
+        metadata:
+          created_at: 2026-11-19T15:22:08.293Z
+          updated_at: 2026-11-19T15:22:08.293Z
+          version: 1
+      timestamp: 2026-11-19T15:22:08.574Z
+      origin:
+        by: tier0
+        rule: node-mapping:Route
+  - sequence: 1561
+    removedAt: 1670
+    change:
+      type: add
+      elementId: api.operation.get-schemes-scheme-id
+      layerName: api
+      after:
+        id: 9a5441dc-1772-4a50-bd5c-961cec185d14
+        path: api.operation.get-schemes-scheme-id
+        spec_node_id: api.operation
+        type: operation
+        layer_id: api
+        name: GET /schemes/{scheme_id}
+        attributes:
+          operationId: get-schemes-scheme-id
+          summary: GET /schemes/{scheme_id}
+          tags: schemes
+          http_method: GET
+          http_path: /schemes/{scheme_id}
+        source_reference:
+          provenance: extracted
+          locations:
+            - file: local-server/adapters/web/ontology_routes.py
+              symbol: GET /schemes/{scheme_id}
+        metadata:
+          created_at: 2026-11-19T15:22:08.293Z
+          updated_at: 2026-11-19T15:22:08.293Z
+          version: 1
+      timestamp: 2026-11-19T15:22:08.574Z
+      origin:
+        by: tier0
+        rule: node-mapping:Route
+  - sequence: 1562
+    removedAt: 1670
+    change:
+      type: add
+      elementId: api.operation.get-schemes-scheme-id-class-counts
+      layerName: api
+      after:
+        id: a19de271-a8ea-4be7-acdc-da9c25faca36
+        path: api.operation.get-schemes-scheme-id-class-counts
+        spec_node_id: api.operation
+        type: operation
+        layer_id: api
+        name: GET /schemes/{scheme_id}/class-counts
+        attributes:
+          operationId: get-schemes-scheme-id-class-counts
+          summary: GET /schemes/{scheme_id}/class-counts
+          tags: schemes
+          http_method: GET
+          http_path: /schemes/{scheme_id}/class-counts
+        source_reference:
+          provenance: extracted
+          locations:
+            - file: local-server/adapters/web/ontology_routes.py
+              symbol: GET /schemes/{scheme_id}/class-counts
+        metadata:
+          created_at: 2026-11-19T15:22:08.293Z
+          updated_at: 2026-11-19T15:22:08.293Z
+          version: 1
+      timestamp: 2026-11-19T15:22:08.574Z
+      origin:
+        by: tier0
+        rule: node-mapping:Route
+  - sequence: 1563
+    removedAt: 1670
+    change:
+      type: add
+      elementId: api.operation.get-taxonomies
+      layerName: api
+      after:
+        id: be07d2a0-d9d8-4b07-8a11-447dd985e759
+        path: api.operation.get-taxonomies
+        spec_node_id: api.operation
+        type: operation
+        layer_id: api
+        name: GET /taxonomies
+        attributes:
+          operationId: get-taxonomies
+          summary: GET /taxonomies
+          tags: taxonomies
+          http_method: GET
+          http_path: /taxonomies
+        source_reference:
+          provenance: extracted
+          locations:
+            - file: local-server/adapters/web/ontology_routes.py
+              symbol: GET /taxonomies
+        metadata:
+          created_at: 2026-11-19T15:22:08.293Z
+          updated_at: 2026-11-19T15:22:08.293Z
+          version: 1
+      timestamp: 2026-11-19T15:22:08.574Z
+      origin:
+        by: tier0
+        rule: node-mapping:Route
+  - sequence: 1564
+    removedAt: 1670
+    change:
+      type: add
+      elementId: api.operation.get-taxonomies-taxonomy-id
+      layerName: api
+      after:
+        id: 3ace319f-0146-4351-9528-2124bc4c8ad4
+        path: api.operation.get-taxonomies-taxonomy-id
+        spec_node_id: api.operation
+        type: operation
+        layer_id: api
+        name: GET /taxonomies/{taxonomy_id}
+        attributes:
+          operationId: get-taxonomies-taxonomy-id
+          summary: GET /taxonomies/{taxonomy_id}
+          tags: taxonomies
+          http_method: GET
+          http_path: /taxonomies/{taxonomy_id}
+        source_reference:
+          provenance: extracted
+          locations:
+            - file: local-server/adapters/web/ontology_routes.py
+              symbol: GET /taxonomies/{taxonomy_id}
+        metadata:
+          created_at: 2026-11-19T15:22:08.293Z
+          updated_at: 2026-11-19T15:22:08.293Z
+          version: 1
+      timestamp: 2026-11-19T15:22:08.574Z
+      origin:
+        by: tier0
+        rule: node-mapping:Route
+  - sequence: 1565
+    removedAt: 1670
+    change:
+      type: add
+      elementId: api.operation.get-taxonomies-taxonomy-id-classes
+      layerName: api
+      after:
+        id: b4a7955a-3ceb-4968-b67b-11efd7b71395
+        path: api.operation.get-taxonomies-taxonomy-id-classes
+        spec_node_id: api.operation
+        type: operation
+        layer_id: api
+        name: GET /taxonomies/{taxonomy_id}/classes
+        attributes:
+          operationId: get-taxonomies-taxonomy-id-classes
+          summary: GET /taxonomies/{taxonomy_id}/classes
+          tags: taxonomies
+          http_method: GET
+          http_path: /taxonomies/{taxonomy_id}/classes
+        source_reference:
+          provenance: extracted
+          locations:
+            - file: local-server/adapters/web/ontology_routes.py
+              symbol: GET /taxonomies/{taxonomy_id}/classes
+        metadata:
+          created_at: 2026-11-19T15:22:08.293Z
+          updated_at: 2026-11-19T15:22:08.293Z
+          version: 1
+      timestamp: 2026-11-19T15:22:08.574Z
+      origin:
+        by: tier0
+        rule: node-mapping:Route
+  - sequence: 1566
+    removedAt: 1670
+    change:
+      type: add
+      elementId: api.operation.get-taxonomies-taxonomy-id-predicates
+      layerName: api
+      after:
+        id: 1abd24a5-5932-4691-8396-0e827f39056f
+        path: api.operation.get-taxonomies-taxonomy-id-predicates
+        spec_node_id: api.operation
+        type: operation
+        layer_id: api
+        name: GET /taxonomies/{taxonomy_id}/predicates
+        attributes:
+          operationId: get-taxonomies-taxonomy-id-predicates
+          summary: GET /taxonomies/{taxonomy_id}/predicates
+          tags: taxonomies
+          http_method: GET
+          http_path: /taxonomies/{taxonomy_id}/predicates
+        source_reference:
+          provenance: extracted
+          locations:
+            - file: local-server/adapters/web/ontology_routes.py
+              symbol: GET /taxonomies/{taxonomy_id}/predicates
+        metadata:
+          created_at: 2026-11-19T15:22:08.293Z
+          updated_at: 2026-11-19T15:22:08.293Z
+          version: 1
+      timestamp: 2026-11-19T15:22:08.574Z
+      origin:
+        by: tier0
+        rule: node-mapping:Route
+  - sequence: 1567
+    removedAt: 1670
+    change:
+      type: add
+      elementId: api.operation.get-taxonomies-taxonomy-id-publish-diff
+      layerName: api
+      after:
+        id: 332f646c-8f8b-4873-ab02-22d637b3a38b
+        path: api.operation.get-taxonomies-taxonomy-id-publish-diff
+        spec_node_id: api.operation
+        type: operation
+        layer_id: api
+        name: GET /taxonomies/{taxonomy_id}/publish-diff
+        attributes:
+          operationId: get-taxonomies-taxonomy-id-publish-diff
+          summary: GET /taxonomies/{taxonomy_id}/publish-diff
+          tags: taxonomies
+          http_method: GET
+          http_path: /taxonomies/{taxonomy_id}/publish-diff
+        source_reference:
+          provenance: extracted
+          locations:
+            - file: local-server/adapters/web/ontology_routes.py
+              symbol: GET /taxonomies/{taxonomy_id}/publish-diff
+        metadata:
+          created_at: 2026-11-19T15:22:08.293Z
+          updated_at: 2026-11-19T15:22:08.293Z
+          version: 1
+      timestamp: 2026-11-19T15:22:08.574Z
+      origin:
+        by: tier0
+        rule: node-mapping:Route
+  - sequence: 1568
+    removedAt: 1670
+    change:
+      type: add
+      elementId: api.operation.get-taxonomies-taxonomy-id-scheme-counts
+      layerName: api
+      after:
+        id: 33b4da55-2fd1-445d-8f33-79cfd3dbc102
+        path: api.operation.get-taxonomies-taxonomy-id-scheme-counts
+        spec_node_id: api.operation
+        type: operation
+        layer_id: api
+        name: GET /taxonomies/{taxonomy_id}/scheme-counts
+        attributes:
+          operationId: get-taxonomies-taxonomy-id-scheme-counts
+          summary: GET /taxonomies/{taxonomy_id}/scheme-counts
+          tags: taxonomies
+          http_method: GET
+          http_path: /taxonomies/{taxonomy_id}/scheme-counts
+        source_reference:
+          provenance: extracted
+          locations:
+            - file: local-server/adapters/web/ontology_routes.py
+              symbol: GET /taxonomies/{taxonomy_id}/scheme-counts
+        metadata:
+          created_at: 2026-11-19T15:22:08.293Z
+          updated_at: 2026-11-19T15:22:08.293Z
+          version: 1
+      timestamp: 2026-11-19T15:22:08.574Z
+      origin:
+        by: tier0
+        rule: node-mapping:Route
+  - sequence: 1569
+    removedAt: 1670
+    change:
+      type: add
+      elementId: api.operation.post-classes-class-id-attribute-definitions
+      layerName: api
+      after:
+        id: 22ee19f0-d741-4ae5-a551-89073c971970
+        path: api.operation.post-classes-class-id-attribute-definitions
+        spec_node_id: api.operation
+        type: operation
+        layer_id: api
+        name: POST /classes/{class_id}/attribute-definitions
+        attributes:
+          operationId: post-classes-class-id-attribute-definitions
+          summary: POST /classes/{class_id}/attribute-definitions
+          tags: classes
+          http_method: POST
+          http_path: /classes/{class_id}/attribute-definitions
+        source_reference:
+          provenance: extracted
+          locations:
+            - file: local-server/adapters/web/ontology_routes.py
+              symbol: POST /classes/{class_id}/attribute-definitions
+        metadata:
+          created_at: 2026-11-19T15:22:08.293Z
+          updated_at: 2026-11-19T15:22:08.293Z
+          version: 1
+      timestamp: 2026-11-19T15:22:08.574Z
+      origin:
+        by: tier0
+        rule: node-mapping:Route
+  - sequence: 1570
+    removedAt: 1670
+    change:
+      type: add
+      elementId: api.operation.post-classes-class-id-move
+      layerName: api
+      after:
+        id: 09449797-eed9-436b-b923-6029e09b67a2
+        path: api.operation.post-classes-class-id-move
+        spec_node_id: api.operation
+        type: operation
+        layer_id: api
+        name: POST /classes/{class_id}/move
+        attributes:
+          operationId: post-classes-class-id-move
+          summary: POST /classes/{class_id}/move
+          tags: classes
+          http_method: POST
+          http_path: /classes/{class_id}/move
+        source_reference:
+          provenance: extracted
+          locations:
+            - file: local-server/adapters/web/ontology_routes.py
+              symbol: POST /classes/{class_id}/move
+        metadata:
+          created_at: 2026-11-19T15:22:08.293Z
+          updated_at: 2026-11-19T15:22:08.293Z
+          version: 1
+      timestamp: 2026-11-19T15:22:08.574Z
+      origin:
+        by: tier0
+        rule: node-mapping:Route
+  - sequence: 1571
+    removedAt: 1670
+    change:
+      type: add
+      elementId: api.operation.post-datasets
+      layerName: api
+      after:
+        id: 64ec2682-136e-4810-80e0-edd50534a142
+        path: api.operation.post-datasets
+        spec_node_id: api.operation
+        type: operation
+        layer_id: api
+        name: POST /datasets
+        attributes:
+          operationId: post-datasets
+          summary: POST /datasets
+          tags: datasets
+          http_method: POST
+          http_path: /datasets
+        source_reference:
+          provenance: extracted
+          locations:
+            - file: local-server/adapters/web/ontology_routes.py
+              symbol: POST /datasets
+        metadata:
+          created_at: 2026-11-19T15:22:08.293Z
+          updated_at: 2026-11-19T15:22:08.293Z
+          version: 1
+      timestamp: 2026-11-19T15:22:08.574Z
+      origin:
+        by: tier0
+        rule: node-mapping:Route
+  - sequence: 1572
+    removedAt: 1670
+    change:
+      type: add
+      elementId: api.operation.post-individuals
+      layerName: api
+      after:
+        id: e2c3a4d4-331f-4e6f-bc37-fdce6173934a
+        path: api.operation.post-individuals
+        spec_node_id: api.operation
+        type: operation
+        layer_id: api
+        name: POST /individuals
+        attributes:
+          operationId: post-individuals
+          summary: POST /individuals
+          tags: individuals
+          http_method: POST
+          http_path: /individuals
+        source_reference:
+          provenance: extracted
+          locations:
+            - file: local-server/adapters/web/ontology_routes.py
+              symbol: POST /individuals
+        metadata:
+          created_at: 2026-11-19T15:22:08.293Z
+          updated_at: 2026-11-19T15:22:08.293Z
+          version: 1
+      timestamp: 2026-11-19T15:22:08.574Z
+      origin:
+        by: tier0
+        rule: node-mapping:Route
+  - sequence: 1573
+    removedAt: 1670
+    change:
+      type: add
+      elementId: api.operation.post-individuals-individual-id-classes
+      layerName: api
+      after:
+        id: 6547b3ad-c6ac-46ff-a8c6-ef176d7ca364
+        path: api.operation.post-individuals-individual-id-classes
+        spec_node_id: api.operation
+        type: operation
+        layer_id: api
+        name: POST /individuals/{individual_id}/classes
+        attributes:
+          operationId: post-individuals-individual-id-classes
+          summary: POST /individuals/{individual_id}/classes
+          tags: individuals
+          http_method: POST
+          http_path: /individuals/{individual_id}/classes
+        source_reference:
+          provenance: extracted
+          locations:
+            - file: local-server/adapters/web/ontology_routes.py
+              symbol: POST /individuals/{individual_id}/classes
+        metadata:
+          created_at: 2026-11-19T15:22:08.293Z
+          updated_at: 2026-11-19T15:22:08.293Z
+          version: 1
+      timestamp: 2026-11-19T15:22:08.574Z
+      origin:
+        by: tier0
+        rule: node-mapping:Route
+  - sequence: 1574
+    removedAt: 1670
+    change:
+      type: add
+      elementId: api.operation.post-properties
+      layerName: api
+      after:
+        id: 8a8fabfe-5ba7-4975-a7a3-4ed56f0d87c5
+        path: api.operation.post-properties
+        spec_node_id: api.operation
+        type: operation
+        layer_id: api
+        name: POST /properties
+        attributes:
+          operationId: post-properties
+          summary: POST /properties
+          tags: properties
+          http_method: POST
+          http_path: /properties
+        source_reference:
+          provenance: extracted
+          locations:
+            - file: local-server/adapters/web/ontology_routes.py
+              symbol: POST /properties
+        metadata:
+          created_at: 2026-11-19T15:22:08.293Z
+          updated_at: 2026-11-19T15:22:08.293Z
+          version: 1
+      timestamp: 2026-11-19T15:22:08.574Z
+      origin:
+        by: tier0
+        rule: node-mapping:Route
+  - sequence: 1575
+    removedAt: 1670
+    change:
+      type: add
+      elementId: api.operation.post-relationships
+      layerName: api
+      after:
+        id: 465df0ba-683d-4e83-93e2-bcbc146f6917
+        path: api.operation.post-relationships
+        spec_node_id: api.operation
+        type: operation
+        layer_id: api
+        name: POST /relationships
+        attributes:
+          operationId: post-relationships
+          summary: POST /relationships
+          tags: relationships
+          http_method: POST
+          http_path: /relationships
+        source_reference:
+          provenance: extracted
+          locations:
+            - file: local-server/adapters/web/ontology_routes.py
+              symbol: POST /relationships
+        metadata:
+          created_at: 2026-11-19T15:22:08.293Z
+          updated_at: 2026-11-19T15:22:08.293Z
+          version: 1
+      timestamp: 2026-11-19T15:22:08.574Z
+      origin:
+        by: tier0
+        rule: node-mapping:Route
+  - sequence: 1576
+    removedAt: 1670
+    change:
+      type: add
+      elementId: api.operation.post-schemes-scheme-id-classes
+      layerName: api
+      after:
+        id: 09adbe9b-1770-4b85-b7a9-dc733e00e14e
+        path: api.operation.post-schemes-scheme-id-classes
+        spec_node_id: api.operation
+        type: operation
+        layer_id: api
+        name: POST /schemes/{scheme_id}/classes
+        attributes:
+          operationId: post-schemes-scheme-id-classes
+          summary: POST /schemes/{scheme_id}/classes
+          tags: schemes
+          http_method: POST
+          http_path: /schemes/{scheme_id}/classes
+        source_reference:
+          provenance: extracted
+          locations:
+            - file: local-server/adapters/web/ontology_routes.py
+              symbol: POST /schemes/{scheme_id}/classes
+        metadata:
+          created_at: 2026-11-19T15:22:08.293Z
+          updated_at: 2026-11-19T15:22:08.293Z
+          version: 1
+      timestamp: 2026-11-19T15:22:08.574Z
+      origin:
+        by: tier0
+        rule: node-mapping:Route
+  - sequence: 1577
+    removedAt: 1670
+    change:
+      type: add
+      elementId: api.operation.post-taxonomies
+      layerName: api
+      after:
+        id: 965d05a9-d1c3-4e56-a1ab-e4e5af001413
+        path: api.operation.post-taxonomies
+        spec_node_id: api.operation
+        type: operation
+        layer_id: api
+        name: POST /taxonomies
+        attributes:
+          operationId: post-taxonomies
+          summary: POST /taxonomies
+          tags: taxonomies
+          http_method: POST
+          http_path: /taxonomies
+        source_reference:
+          provenance: extracted
+          locations:
+            - file: local-server/adapters/web/ontology_routes.py
+              symbol: POST /taxonomies
+        metadata:
+          created_at: 2026-11-19T15:22:08.293Z
+          updated_at: 2026-11-19T15:22:08.293Z
+          version: 1
+      timestamp: 2026-11-19T15:22:08.574Z
+      origin:
+        by: tier0
+        rule: node-mapping:Route
+  - sequence: 1578
+    removedAt: 1670
+    change:
+      type: add
+      elementId: api.operation.post-taxonomies-taxonomy-id-publish
+      layerName: api
+      after:
+        id: 44750782-da26-4e05-b2b7-687a184346d5
+        path: api.operation.post-taxonomies-taxonomy-id-publish
+        spec_node_id: api.operation
+        type: operation
+        layer_id: api
+        name: POST /taxonomies/{taxonomy_id}/publish
+        attributes:
+          operationId: post-taxonomies-taxonomy-id-publish
+          summary: POST /taxonomies/{taxonomy_id}/publish
+          tags: taxonomies
+          http_method: POST
+          http_path: /taxonomies/{taxonomy_id}/publish
+        source_reference:
+          provenance: extracted
+          locations:
+            - file: local-server/adapters/web/ontology_routes.py
+              symbol: POST /taxonomies/{taxonomy_id}/publish
+        metadata:
+          created_at: 2026-11-19T15:22:08.293Z
+          updated_at: 2026-11-19T15:22:08.293Z
+          version: 1
+      timestamp: 2026-11-19T15:22:08.574Z
+      origin:
+        by: tier0
+        rule: node-mapping:Route
+  - sequence: 1579
+    removedAt: 1670
+    change:
+      type: add
+      elementId: api.operation.post-taxonomies-taxonomy-id-schemes
+      layerName: api
+      after:
+        id: 39f00217-a1c7-4568-9b69-43d7c923304e
+        path: api.operation.post-taxonomies-taxonomy-id-schemes
+        spec_node_id: api.operation
+        type: operation
+        layer_id: api
+        name: POST /taxonomies/{taxonomy_id}/schemes
+        attributes:
+          operationId: post-taxonomies-taxonomy-id-schemes
+          summary: POST /taxonomies/{taxonomy_id}/schemes
+          tags: taxonomies
+          http_method: POST
+          http_path: /taxonomies/{taxonomy_id}/schemes
+        source_reference:
+          provenance: extracted
+          locations:
+            - file: local-server/adapters/web/ontology_routes.py
+              symbol: POST /taxonomies/{taxonomy_id}/schemes
+        metadata:
+          created_at: 2026-11-19T15:22:08.293Z
+          updated_at: 2026-11-19T15:22:08.293Z
+          version: 1
+      timestamp: 2026-11-19T15:22:08.574Z
+      origin:
+        by: tier0
+        rule: node-mapping:Route
+  - sequence: 1580
+    removedAt: 1670
+    change:
+      type: add
+      elementId: api.operation.put-attribute-definitions-attribute-definition-id
+      layerName: api
+      after:
+        id: 18251be1-3e9a-40cd-b5a8-5c9cf119d31e
+        path: api.operation.put-attribute-definitions-attribute-definition-id
+        spec_node_id: api.operation
+        type: operation
+        layer_id: api
+        name: PUT /attribute-definitions/{attribute_definition_id}
+        attributes:
+          operationId: put-attribute-definitions-attribute-definition-id
+          summary: PUT /attribute-definitions/{attribute_definition_id}
+          tags: attribute-definitions
+          http_method: PUT
+          http_path: /attribute-definitions/{attribute_definition_id}
+        source_reference:
+          provenance: extracted
+          locations:
+            - file: local-server/adapters/web/ontology_routes.py
+              symbol: PUT /attribute-definitions/{attribute_definition_id}
+        metadata:
+          created_at: 2026-11-19T15:22:08.293Z
+          updated_at: 2026-11-19T15:22:08.293Z
+          version: 1
+      timestamp: 2026-11-19T15:22:08.574Z
+      origin:
+        by: tier0
+        rule: node-mapping:Route
+  - sequence: 1581
+    removedAt: 1670
+    change:
+      type: add
+      elementId: api.operation.put-classes-class-id
+      layerName: api
+      after:
+        id: db81a80e-0ad4-43fc-aae9-7e84d896fd2d
+        path: api.operation.put-classes-class-id
+        spec_node_id: api.operation
+        type: operation
+        layer_id: api
+        name: PUT /classes/{class_id}
+        attributes:
+          operationId: put-classes-class-id
+          summary: PUT /classes/{class_id}
+          tags: classes
+          http_method: PUT
+          http_path: /classes/{class_id}
+        source_reference:
+          provenance: extracted
+          locations:
+            - file: local-server/adapters/web/ontology_routes.py
+              symbol: PUT /classes/{class_id}
+        metadata:
+          created_at: 2026-11-19T15:22:08.293Z
+          updated_at: 2026-11-19T15:22:08.293Z
+          version: 1
+      timestamp: 2026-11-19T15:22:08.574Z
+      origin:
+        by: tier0
+        rule: node-mapping:Route
+  - sequence: 1582
+    removedAt: 1670
+    change:
+      type: add
+      elementId: api.operation.put-individuals-individual-id
+      layerName: api
+      after:
+        id: 901c4634-5a79-4624-9195-cf148098ca74
+        path: api.operation.put-individuals-individual-id
+        spec_node_id: api.operation
+        type: operation
+        layer_id: api
+        name: PUT /individuals/{individual_id}
+        attributes:
+          operationId: put-individuals-individual-id
+          summary: PUT /individuals/{individual_id}
+          tags: individuals
+          http_method: PUT
+          http_path: /individuals/{individual_id}
+        source_reference:
+          provenance: extracted
+          locations:
+            - file: local-server/adapters/web/ontology_routes.py
+              symbol: PUT /individuals/{individual_id}
+        metadata:
+          created_at: 2026-11-19T15:22:08.293Z
+          updated_at: 2026-11-19T15:22:08.293Z
+          version: 1
+      timestamp: 2026-11-19T15:22:08.574Z
+      origin:
+        by: tier0
+        rule: node-mapping:Route
+  - sequence: 1583
+    removedAt: 1670
+    change:
+      type: add
+      elementId: api.operation.put-individuals-individual-id-classes
+      layerName: api
+      after:
+        id: c05c030d-910e-4c4d-bf68-553382640257
+        path: api.operation.put-individuals-individual-id-classes
+        spec_node_id: api.operation
+        type: operation
+        layer_id: api
+        name: PUT /individuals/{individual_id}/classes
+        attributes:
+          operationId: put-individuals-individual-id-classes
+          summary: PUT /individuals/{individual_id}/classes
+          tags: individuals
+          http_method: PUT
+          http_path: /individuals/{individual_id}/classes
+        source_reference:
+          provenance: extracted
+          locations:
+            - file: local-server/adapters/web/ontology_routes.py
+              symbol: PUT /individuals/{individual_id}/classes
+        metadata:
+          created_at: 2026-11-19T15:22:08.293Z
+          updated_at: 2026-11-19T15:22:08.293Z
+          version: 1
+      timestamp: 2026-11-19T15:22:08.574Z
+      origin:
+        by: tier0
+        rule: node-mapping:Route
+  - sequence: 1584
+    removedAt: 1670
+    change:
+      type: add
+      elementId: api.operation.put-properties-property-id
+      layerName: api
+      after:
+        id: 24b4a467-0ca1-4bf9-9a52-040dc5edf515
+        path: api.operation.put-properties-property-id
+        spec_node_id: api.operation
+        type: operation
+        layer_id: api
+        name: PUT /properties/{property_id}
+        attributes:
+          operationId: put-properties-property-id
+          summary: PUT /properties/{property_id}
+          tags: properties
+          http_method: PUT
+          http_path: /properties/{property_id}
+        source_reference:
+          provenance: extracted
+          locations:
+            - file: local-server/adapters/web/ontology_routes.py
+              symbol: PUT /properties/{property_id}
+        metadata:
+          created_at: 2026-11-19T15:22:08.293Z
+          updated_at: 2026-11-19T15:22:08.293Z
+          version: 1
+      timestamp: 2026-11-19T15:22:08.574Z
+      origin:
+        by: tier0
+        rule: node-mapping:Route
+  - sequence: 1585
+    removedAt: 1670
+    change:
+      type: add
+      elementId: api.operation.put-schemes-scheme-id
+      layerName: api
+      after:
+        id: b105ad76-c029-45ee-9b68-18a240b27af5
+        path: api.operation.put-schemes-scheme-id
+        spec_node_id: api.operation
+        type: operation
+        layer_id: api
+        name: PUT /schemes/{scheme_id}
+        attributes:
+          operationId: put-schemes-scheme-id
+          summary: PUT /schemes/{scheme_id}
+          tags: schemes
+          http_method: PUT
+          http_path: /schemes/{scheme_id}
+        source_reference:
+          provenance: extracted
+          locations:
+            - file: local-server/adapters/web/ontology_routes.py
+              symbol: PUT /schemes/{scheme_id}
+        metadata:
+          created_at: 2026-11-19T15:22:08.293Z
+          updated_at: 2026-11-19T15:22:08.293Z
+          version: 1
+      timestamp: 2026-11-19T15:22:08.574Z
+      origin:
+        by: tier0
+        rule: node-mapping:Route
+  - sequence: 1586
+    removedAt: 1670
+    change:
+      type: add
+      elementId: api.operation.put-taxonomies-taxonomy-id
+      layerName: api
+      after:
+        id: 204c38dc-446f-40c6-b584-ba68f5f5c879
+        path: api.operation.put-taxonomies-taxonomy-id
+        spec_node_id: api.operation
+        type: operation
+        layer_id: api
+        name: PUT /taxonomies/{taxonomy_id}
+        attributes:
+          operationId: put-taxonomies-taxonomy-id
+          summary: PUT /taxonomies/{taxonomy_id}
+          tags: taxonomies
+          http_method: PUT
+          http_path: /taxonomies/{taxonomy_id}
+        source_reference:
+          provenance: extracted
+          locations:
+            - file: local-server/adapters/web/ontology_routes.py
+              symbol: PUT /taxonomies/{taxonomy_id}
+        metadata:
+          created_at: 2026-11-19T15:22:08.293Z
+          updated_at: 2026-11-19T15:22:08.293Z
+          version: 1
+      timestamp: 2026-11-19T15:22:08.574Z
+      origin:
+        by: tier0
+        rule: node-mapping:Route
+  - sequence: 1587
+    removedAt: 1670
+    change:
+      type: add
+      elementId: api.operation.delete-config-id
+      layerName: api
+      after:
+        id: cfe89075-832b-449c-ad40-92e75dd402d1
+        path: api.operation.delete-config-id
+        spec_node_id: api.operation
+        type: operation
+        layer_id: api
+        name: DELETE /{config_id}
+        attributes:
+          operationId: delete-config-id
+          summary: DELETE /{config_id}
+          tags: default
+          http_method: DELETE
+          http_path: /{config_id}
+        source_reference:
+          provenance: extracted
+          locations:
+            - file: local-server/adapters/web/pipelines_routes.py
+              symbol: DELETE /{config_id}
+        metadata:
+          created_at: 2026-11-19T15:22:08.293Z
+          updated_at: 2026-11-19T15:22:08.293Z
+          version: 1
+      timestamp: 2026-11-19T15:22:08.574Z
+      origin:
+        by: tier0
+        rule: node-mapping:Route
+  - sequence: 1588
+    removedAt: 1670
+    change:
+      type: add
+      elementId: api.operation.get-config-id
+      layerName: api
+      after:
+        id: 3b7d9218-b5f1-4ea7-84aa-76fbc259c0f4
+        path: api.operation.get-config-id
+        spec_node_id: api.operation
+        type: operation
+        layer_id: api
+        name: GET /{config_id}
+        attributes:
+          operationId: get-config-id
+          summary: GET /{config_id}
+          tags: default
+          http_method: GET
+          http_path: /{config_id}
+        source_reference:
+          provenance: extracted
+          locations:
+            - file: local-server/adapters/web/pipelines_routes.py
+              symbol: GET /{config_id}
+        metadata:
+          created_at: 2026-11-19T15:22:08.293Z
+          updated_at: 2026-11-19T15:22:08.293Z
+          version: 1
+      timestamp: 2026-11-19T15:22:08.574Z
+      origin:
+        by: tier0
+        rule: node-mapping:Route
+  - sequence: 1589
+    removedAt: 1670
+    change:
+      type: add
+      elementId: api.operation.get-batches-batch-id
+      layerName: api
+      after:
+        id: e879be42-9f33-424f-a491-53ec10ea80f0
+        path: api.operation.get-batches-batch-id
+        spec_node_id: api.operation
+        type: operation
+        layer_id: api
+        name: GET /batches/{batch_id}
+        attributes:
+          operationId: get-batches-batch-id
+          summary: GET /batches/{batch_id}
+          tags: batches
+          http_method: GET
+          http_path: /batches/{batch_id}
+        source_reference:
+          provenance: extracted
+          locations:
+            - file: local-server/adapters/web/pipelines_routes.py
+              symbol: GET /batches/{batch_id}
+        metadata:
+          created_at: 2026-11-19T15:22:08.293Z
+          updated_at: 2026-11-19T15:22:08.293Z
+          version: 1
+      timestamp: 2026-11-19T15:22:08.574Z
+      origin:
+        by: tier0
+        rule: node-mapping:Route
+  - sequence: 1590
+    removedAt: 1670
+    change:
+      type: add
+      elementId: api.operation.get-extraction-examples
+      layerName: api
+      after:
+        id: 97a1c0cf-e3b2-4632-8c37-c72eb1aa8a62
+        path: api.operation.get-extraction-examples
+        spec_node_id: api.operation
+        type: operation
+        layer_id: api
+        name: GET /extraction-examples
+        attributes:
+          operationId: get-extraction-examples
+          summary: GET /extraction-examples
+          tags: extraction-examples
+          http_method: GET
+          http_path: /extraction-examples
+        source_reference:
+          provenance: extracted
+          locations:
+            - file: local-server/adapters/web/pipelines_routes.py
+              symbol: GET /extraction-examples
+        metadata:
+          created_at: 2026-11-19T15:22:08.293Z
+          updated_at: 2026-11-19T15:22:08.293Z
+          version: 1
+      timestamp: 2026-11-19T15:22:08.574Z
+      origin:
+        by: tier0
+        rule: node-mapping:Route
+  - sequence: 1591
+    removedAt: 1670
+    change:
+      type: add
+      elementId: api.operation.get-runs
+      layerName: api
+      after:
+        id: 4356c611-077b-4c55-aded-87f3616a5e2e
+        path: api.operation.get-runs
+        spec_node_id: api.operation
+        type: operation
+        layer_id: api
+        name: GET /runs
+        attributes:
+          operationId: get-runs
+          summary: GET /runs
+          tags: runs
+          http_method: GET
+          http_path: /runs
+        source_reference:
+          provenance: extracted
+          locations:
+            - file: local-server/adapters/web/pipelines_routes.py
+              symbol: GET /runs
+        metadata:
+          created_at: 2026-11-19T15:22:08.293Z
+          updated_at: 2026-11-19T15:22:08.293Z
+          version: 1
+      timestamp: 2026-11-19T15:22:08.574Z
+      origin:
+        by: tier0
+        rule: node-mapping:Route
+  - sequence: 1592
+    removedAt: 1670
+    change:
+      type: add
+      elementId: api.operation.get-runs-run-id
+      layerName: api
+      after:
+        id: fe8296a5-049d-4725-8b14-ff462cfca27f
+        path: api.operation.get-runs-run-id
+        spec_node_id: api.operation
+        type: operation
+        layer_id: api
+        name: GET /runs/{run_id}
+        attributes:
+          operationId: get-runs-run-id
+          summary: GET /runs/{run_id}
+          tags: runs
+          http_method: GET
+          http_path: /runs/{run_id}
+        source_reference:
+          provenance: extracted
+          locations:
+            - file: local-server/adapters/web/pipelines_routes.py
+              symbol: GET /runs/{run_id}
+        metadata:
+          created_at: 2026-11-19T15:22:08.293Z
+          updated_at: 2026-11-19T15:22:08.293Z
+          version: 1
+      timestamp: 2026-11-19T15:22:08.574Z
+      origin:
+        by: tier0
+        rule: node-mapping:Route
+  - sequence: 1593
+    removedAt: 1670
+    change:
+      type: add
+      elementId: api.operation.get-runs-run-id-candidates
+      layerName: api
+      after:
+        id: 00a4028c-17e5-4548-b4fc-ac4873257656
+        path: api.operation.get-runs-run-id-candidates
+        spec_node_id: api.operation
+        type: operation
+        layer_id: api
+        name: GET /runs/{run_id}/candidates
+        attributes:
+          operationId: get-runs-run-id-candidates
+          summary: GET /runs/{run_id}/candidates
+          tags: runs
+          http_method: GET
+          http_path: /runs/{run_id}/candidates
+        source_reference:
+          provenance: extracted
+          locations:
+            - file: local-server/adapters/web/pipelines_routes.py
+              symbol: GET /runs/{run_id}/candidates
+        metadata:
+          created_at: 2026-11-19T15:22:08.293Z
+          updated_at: 2026-11-19T15:22:08.293Z
+          version: 1
+      timestamp: 2026-11-19T15:22:08.574Z
+      origin:
+        by: tier0
+        rule: node-mapping:Route
+  - sequence: 1594
+    removedAt: 1670
+    change:
+      type: add
+      elementId: api.operation.get-runs-run-id-change-events
+      layerName: api
+      after:
+        id: f417fe07-c9ca-4728-aeac-537894724e9e
+        path: api.operation.get-runs-run-id-change-events
+        spec_node_id: api.operation
+        type: operation
+        layer_id: api
+        name: GET /runs/{run_id}/change-events
+        attributes:
+          operationId: get-runs-run-id-change-events
+          summary: GET /runs/{run_id}/change-events
+          tags: runs
+          http_method: GET
+          http_path: /runs/{run_id}/change-events
+        source_reference:
+          provenance: extracted
+          locations:
+            - file: local-server/adapters/web/pipelines_routes.py
+              symbol: GET /runs/{run_id}/change-events
+        metadata:
+          created_at: 2026-11-19T15:22:08.293Z
+          updated_at: 2026-11-19T15:22:08.293Z
+          version: 1
+      timestamp: 2026-11-19T15:22:08.574Z
+      origin:
+        by: tier0
+        rule: node-mapping:Route
+  - sequence: 1595
+    removedAt: 1670
+    change:
+      type: add
+      elementId: api.operation.get-runs-run-id-individual-extraction-candidates
+      layerName: api
+      after:
+        id: 57c05a46-cb38-4b5d-a39a-a6fa60e27120
+        path: api.operation.get-runs-run-id-individual-extraction-candidates
+        spec_node_id: api.operation
+        type: operation
+        layer_id: api
+        name: GET /runs/{run_id}/individual-extraction-candidates
+        attributes:
+          operationId: get-runs-run-id-individual-extraction-candidates
+          summary: GET /runs/{run_id}/individual-extraction-candidates
+          tags: runs
+          http_method: GET
+          http_path: /runs/{run_id}/individual-extraction-candidates
+        source_reference:
+          provenance: extracted
+          locations:
+            - file: local-server/adapters/web/pipelines_routes.py
+              symbol: GET /runs/{run_id}/individual-extraction-candidates
+        metadata:
+          created_at: 2026-11-19T15:22:08.293Z
+          updated_at: 2026-11-19T15:22:08.293Z
+          version: 1
+      timestamp: 2026-11-19T15:22:08.574Z
+      origin:
+        by: tier0
+        rule: node-mapping:Route
+  - sequence: 1596
+    removedAt: 1670
+    change:
+      type: add
+      elementId: api.operation.get-runs-run-id-schema-extraction-candidates
+      layerName: api
+      after:
+        id: de5f0cb1-ab99-4da4-be2e-9d5f684f4d55
+        path: api.operation.get-runs-run-id-schema-extraction-candidates
+        spec_node_id: api.operation
+        type: operation
+        layer_id: api
+        name: GET /runs/{run_id}/schema-extraction-candidates
+        attributes:
+          operationId: get-runs-run-id-schema-extraction-candidates
+          summary: GET /runs/{run_id}/schema-extraction-candidates
+          tags: runs
+          http_method: GET
+          http_path: /runs/{run_id}/schema-extraction-candidates
+        source_reference:
+          provenance: extracted
+          locations:
+            - file: local-server/adapters/web/pipelines_routes.py
+              symbol: GET /runs/{run_id}/schema-extraction-candidates
+        metadata:
+          created_at: 2026-11-19T15:22:08.293Z
+          updated_at: 2026-11-19T15:22:08.293Z
+          version: 1
+      timestamp: 2026-11-19T15:22:08.574Z
+      origin:
+        by: tier0
+        rule: node-mapping:Route
+  - sequence: 1597
+    removedAt: 1670
+    change:
+      type: add
+      elementId: api.operation.get-runs-run-id-schema-grounding-candidates
+      layerName: api
+      after:
+        id: e678b71e-9074-4d69-898d-6a082afb5f22
+        path: api.operation.get-runs-run-id-schema-grounding-candidates
+        spec_node_id: api.operation
+        type: operation
+        layer_id: api
+        name: GET /runs/{run_id}/schema-grounding-candidates
+        attributes:
+          operationId: get-runs-run-id-schema-grounding-candidates
+          summary: GET /runs/{run_id}/schema-grounding-candidates
+          tags: runs
+          http_method: GET
+          http_path: /runs/{run_id}/schema-grounding-candidates
+        source_reference:
+          provenance: extracted
+          locations:
+            - file: local-server/adapters/web/pipelines_routes.py
+              symbol: GET /runs/{run_id}/schema-grounding-candidates
+        metadata:
+          created_at: 2026-11-19T15:22:08.293Z
+          updated_at: 2026-11-19T15:22:08.293Z
+          version: 1
+      timestamp: 2026-11-19T15:22:08.574Z
+      origin:
+        by: tier0
+        rule: node-mapping:Route
+  - sequence: 1598
+    removedAt: 1670
+    change:
+      type: add
+      elementId: api.operation.get-runs-run-id-schema-refinement-candidates
+      layerName: api
+      after:
+        id: c322fbcd-f7da-4d5c-bec8-d33f9bfbf667
+        path: api.operation.get-runs-run-id-schema-refinement-candidates
+        spec_node_id: api.operation
+        type: operation
+        layer_id: api
+        name: GET /runs/{run_id}/schema-refinement-candidates
+        attributes:
+          operationId: get-runs-run-id-schema-refinement-candidates
+          summary: GET /runs/{run_id}/schema-refinement-candidates
+          tags: runs
+          http_method: GET
+          http_path: /runs/{run_id}/schema-refinement-candidates
+        source_reference:
+          provenance: extracted
+          locations:
+            - file: local-server/adapters/web/pipelines_routes.py
+              symbol: GET /runs/{run_id}/schema-refinement-candidates
+        metadata:
+          created_at: 2026-11-19T15:22:08.293Z
+          updated_at: 2026-11-19T15:22:08.293Z
+          version: 1
+      timestamp: 2026-11-19T15:22:08.574Z
+      origin:
+        by: tier0
+        rule: node-mapping:Route
+  - sequence: 1599
+    removedAt: 1670
+    change:
+      type: add
+      elementId: api.operation.get-types
+      layerName: api
+      after:
+        id: 47c7e6cc-f6ab-4cbf-94e0-b77b8e5587fd
+        path: api.operation.get-types
+        spec_node_id: api.operation
+        type: operation
+        layer_id: api
+        name: GET /types
+        attributes:
+          operationId: get-types
+          summary: GET /types
+          tags: types
+          http_method: GET
+          http_path: /types
+        source_reference:
+          provenance: extracted
+          locations:
+            - file: local-server/adapters/web/pipelines_routes.py
+              symbol: GET /types
+        metadata:
+          created_at: 2026-11-19T15:22:08.293Z
+          updated_at: 2026-11-19T15:22:08.293Z
+          version: 1
+      timestamp: 2026-11-19T15:22:08.574Z
+      origin:
+        by: tier0
+        rule: node-mapping:Route
+  - sequence: 1600
+    removedAt: 1670
+    change:
+      type: add
+      elementId: api.operation.get-types-pipeline-type-implementations
+      layerName: api
+      after:
+        id: 6453cded-5f90-4314-84f9-f02e7e08b3ed
+        path: api.operation.get-types-pipeline-type-implementations
+        spec_node_id: api.operation
+        type: operation
+        layer_id: api
+        name: GET /types/{pipeline_type}/implementations
+        attributes:
+          operationId: get-types-pipeline-type-implementations
+          summary: GET /types/{pipeline_type}/implementations
+          tags: types
+          http_method: GET
+          http_path: /types/{pipeline_type}/implementations
+        source_reference:
+          provenance: extracted
+          locations:
+            - file: local-server/adapters/web/pipelines_routes.py
+              symbol: GET /types/{pipeline_type}/implementations
+        metadata:
+          created_at: 2026-11-19T15:22:08.293Z
+          updated_at: 2026-11-19T15:22:08.293Z
+          version: 1
+      timestamp: 2026-11-19T15:22:08.574Z
+      origin:
+        by: tier0
+        rule: node-mapping:Route
+  - sequence: 1601
+    removedAt: 1670
+    change:
+      type: add
+      elementId: api.operation.get-types-pipeline-type-implementations-impl-id-configurations
+      layerName: api
+      after:
+        id: a26d05c9-3e01-4dbd-90b1-e9f90aa300d9
+        path: api.operation.get-types-pipeline-type-implementations-impl-id-configurations
+        spec_node_id: api.operation
+        type: operation
+        layer_id: api
+        name: GET /types/{pipeline_type}/implementations/{impl_id}/configurations
+        attributes:
+          operationId: get-types-pipeline-type-implementations-impl-id-configurations
+          summary: GET /types/{pipeline_type}/implementations/{impl_id}/configurations
+          tags: types
+          http_method: GET
+          http_path: /types/{pipeline_type}/implementations/{impl_id}/configurations
+        source_reference:
+          provenance: extracted
+          locations:
+            - file: local-server/adapters/web/pipelines_routes.py
+              symbol: GET /types/{pipeline_type}/implementations/{impl_id}/configurations
+        metadata:
+          created_at: 2026-11-19T15:22:08.293Z
+          updated_at: 2026-11-19T15:22:08.293Z
+          version: 1
+      timestamp: 2026-11-19T15:22:08.574Z
+      origin:
+        by: tier0
+        rule: node-mapping:Route
+  - sequence: 1602
+    removedAt: 1670
+    change:
+      type: add
+      elementId: api.operation.post-pipeline-type-run
+      layerName: api
+      after:
+        id: 0812631e-393a-4a37-9664-a00129674ccb
+        path: api.operation.post-pipeline-type-run
+        spec_node_id: api.operation
+        type: operation
+        layer_id: api
+        name: POST /{pipeline_type}/run
+        attributes:
+          operationId: post-pipeline-type-run
+          summary: POST /{pipeline_type}/run
+          tags: run
+          http_method: POST
+          http_path: /{pipeline_type}/run
+        source_reference:
+          provenance: extracted
+          locations:
+            - file: local-server/adapters/web/pipelines_routes.py
+              symbol: POST /{pipeline_type}/run
+        metadata:
+          created_at: 2026-11-19T15:22:08.293Z
+          updated_at: 2026-11-19T15:22:08.293Z
+          version: 1
+      timestamp: 2026-11-19T15:22:08.574Z
+      origin:
+        by: tier0
+        rule: node-mapping:Route
+  - sequence: 1603
+    removedAt: 1670
+    change:
+      type: add
+      elementId: api.operation.post-batches
+      layerName: api
+      after:
+        id: b64f4a5b-593a-4fa7-b858-6ad2c84f3b33
+        path: api.operation.post-batches
+        spec_node_id: api.operation
+        type: operation
+        layer_id: api
+        name: POST /batches
+        attributes:
+          operationId: post-batches
+          summary: POST /batches
+          tags: batches
+          http_method: POST
+          http_path: /batches
+        source_reference:
+          provenance: extracted
+          locations:
+            - file: local-server/adapters/web/pipelines_routes.py
+              symbol: POST /batches
+        metadata:
+          created_at: 2026-11-19T15:22:08.293Z
+          updated_at: 2026-11-19T15:22:08.293Z
+          version: 1
+      timestamp: 2026-11-19T15:22:08.574Z
+      origin:
+        by: tier0
+        rule: node-mapping:Route
+  - sequence: 1604
+    removedAt: 1670
+    change:
+      type: add
+      elementId: api.operation.post-batches-batch-id-cancel
+      layerName: api
+      after:
+        id: 39a34878-b920-4570-a01f-319b26af7f4a
+        path: api.operation.post-batches-batch-id-cancel
+        spec_node_id: api.operation
+        type: operation
+        layer_id: api
+        name: POST /batches/{batch_id}/cancel
+        attributes:
+          operationId: post-batches-batch-id-cancel
+          summary: POST /batches/{batch_id}/cancel
+          tags: batches
+          http_method: POST
+          http_path: /batches/{batch_id}/cancel
+        source_reference:
+          provenance: extracted
+          locations:
+            - file: local-server/adapters/web/pipelines_routes.py
+              symbol: POST /batches/{batch_id}/cancel
+        metadata:
+          created_at: 2026-11-19T15:22:08.293Z
+          updated_at: 2026-11-19T15:22:08.293Z
+          version: 1
+      timestamp: 2026-11-19T15:22:08.574Z
+      origin:
+        by: tier0
+        rule: node-mapping:Route
+  - sequence: 1605
+    removedAt: 1670
+    change:
+      type: add
+      elementId: api.operation.post-batches-batch-id-resume
+      layerName: api
+      after:
+        id: b2ed7dbb-8bc3-4360-95c9-b7c415f36759
+        path: api.operation.post-batches-batch-id-resume
+        spec_node_id: api.operation
+        type: operation
+        layer_id: api
+        name: POST /batches/{batch_id}/resume
+        attributes:
+          operationId: post-batches-batch-id-resume
+          summary: POST /batches/{batch_id}/resume
+          tags: batches
+          http_method: POST
+          http_path: /batches/{batch_id}/resume
+        source_reference:
+          provenance: extracted
+          locations:
+            - file: local-server/adapters/web/pipelines_routes.py
+              symbol: POST /batches/{batch_id}/resume
+        metadata:
+          created_at: 2026-11-19T15:22:08.293Z
+          updated_at: 2026-11-19T15:22:08.293Z
+          version: 1
+      timestamp: 2026-11-19T15:22:08.574Z
+      origin:
+        by: tier0
+        rule: node-mapping:Route
+  - sequence: 1606
+    removedAt: 1670
+    change:
+      type: add
+      elementId: api.operation.post-batches-batch-id-runs
+      layerName: api
+      after:
+        id: 50e931fa-c491-45b4-8167-61e33bbdc9d1
+        path: api.operation.post-batches-batch-id-runs
+        spec_node_id: api.operation
+        type: operation
+        layer_id: api
+        name: POST /batches/{batch_id}/runs
+        attributes:
+          operationId: post-batches-batch-id-runs
+          summary: POST /batches/{batch_id}/runs
+          tags: batches
+          http_method: POST
+          http_path: /batches/{batch_id}/runs
+        source_reference:
+          provenance: extracted
+          locations:
+            - file: local-server/adapters/web/pipelines_routes.py
+              symbol: POST /batches/{batch_id}/runs
+        metadata:
+          created_at: 2026-11-19T15:22:08.293Z
+          updated_at: 2026-11-19T15:22:08.293Z
+          version: 1
+      timestamp: 2026-11-19T15:22:08.574Z
+      origin:
+        by: tier0
+        rule: node-mapping:Route
+  - sequence: 1607
+    removedAt: 1670
+    change:
+      type: add
+      elementId: api.operation.post-runs-run-id-apply
+      layerName: api
+      after:
+        id: df2ef128-8e2a-4f0a-841a-644a65cfc669
+        path: api.operation.post-runs-run-id-apply
+        spec_node_id: api.operation
+        type: operation
+        layer_id: api
+        name: POST /runs/{run_id}/apply
+        attributes:
+          operationId: post-runs-run-id-apply
+          summary: POST /runs/{run_id}/apply
+          tags: runs
+          http_method: POST
+          http_path: /runs/{run_id}/apply
+        source_reference:
+          provenance: extracted
+          locations:
+            - file: local-server/adapters/web/pipelines_routes.py
+              symbol: POST /runs/{run_id}/apply
+        metadata:
+          created_at: 2026-11-19T15:22:08.293Z
+          updated_at: 2026-11-19T15:22:08.293Z
+          version: 1
+      timestamp: 2026-11-19T15:22:08.574Z
+      origin:
+        by: tier0
+        rule: node-mapping:Route
+  - sequence: 1608
+    removedAt: 1670
+    change:
+      type: add
+      elementId: api.operation.post-runs-run-id-cancel
+      layerName: api
+      after:
+        id: 01beaae4-c3fa-4fd2-a164-15ce648e3252
+        path: api.operation.post-runs-run-id-cancel
+        spec_node_id: api.operation
+        type: operation
+        layer_id: api
+        name: POST /runs/{run_id}/cancel
+        attributes:
+          operationId: post-runs-run-id-cancel
+          summary: POST /runs/{run_id}/cancel
+          tags: runs
+          http_method: POST
+          http_path: /runs/{run_id}/cancel
+        source_reference:
+          provenance: extracted
+          locations:
+            - file: local-server/adapters/web/pipelines_routes.py
+              symbol: POST /runs/{run_id}/cancel
+        metadata:
+          created_at: 2026-11-19T15:22:08.293Z
+          updated_at: 2026-11-19T15:22:08.293Z
+          version: 1
+      timestamp: 2026-11-19T15:22:08.574Z
+      origin:
+        by: tier0
+        rule: node-mapping:Route
+  - sequence: 1609
+    removedAt: 1670
+    change:
+      type: add
+      elementId: api.operation.post-runs-run-id-recognition-preview
+      layerName: api
+      after:
+        id: b6069b8e-4791-458b-a219-5c5df62c3478
+        path: api.operation.post-runs-run-id-recognition-preview
+        spec_node_id: api.operation
+        type: operation
+        layer_id: api
+        name: POST /runs/{run_id}/recognition-preview
+        attributes:
+          operationId: post-runs-run-id-recognition-preview
+          summary: POST /runs/{run_id}/recognition-preview
+          tags: runs
+          http_method: POST
+          http_path: /runs/{run_id}/recognition-preview
+        source_reference:
+          provenance: extracted
+          locations:
+            - file: local-server/adapters/web/pipelines_routes.py
+              symbol: POST /runs/{run_id}/recognition-preview
+        metadata:
+          created_at: 2026-11-19T15:22:08.293Z
+          updated_at: 2026-11-19T15:22:08.293Z
+          version: 1
+      timestamp: 2026-11-19T15:22:08.574Z
+      origin:
+        by: tier0
+        rule: node-mapping:Route
+  - sequence: 1610
+    removedAt: 1670
+    change:
+      type: add
+      elementId: api.operation.post-runs-run-id-revert
+      layerName: api
+      after:
+        id: 4b1fa5f8-d018-4fbc-8c3c-ac76bf19c1d2
+        path: api.operation.post-runs-run-id-revert
+        spec_node_id: api.operation
+        type: operation
+        layer_id: api
+        name: POST /runs/{run_id}/revert
+        attributes:
+          operationId: post-runs-run-id-revert
+          summary: POST /runs/{run_id}/revert
+          tags: runs
+          http_method: POST
+          http_path: /runs/{run_id}/revert
+        source_reference:
+          provenance: extracted
+          locations:
+            - file: local-server/adapters/web/pipelines_routes.py
+              symbol: POST /runs/{run_id}/revert
+        metadata:
+          created_at: 2026-11-19T15:22:08.293Z
+          updated_at: 2026-11-19T15:22:08.293Z
+          version: 1
+      timestamp: 2026-11-19T15:22:08.574Z
+      origin:
+        by: tier0
+        rule: node-mapping:Route
+  - sequence: 1611
+    removedAt: 1670
+    change:
+      type: add
+      elementId: api.operation.post-types-pipeline-type-implementations-impl-id-configurations
+      layerName: api
+      after:
+        id: 283e6ece-e1c3-4e63-9caf-650eb6fa0714
+        path: api.operation.post-types-pipeline-type-implementations-impl-id-configurations
+        spec_node_id: api.operation
+        type: operation
+        layer_id: api
+        name: POST /types/{pipeline_type}/implementations/{impl_id}/configurations
+        attributes:
+          operationId: post-types-pipeline-type-implementations-impl-id-configurations
+          summary: POST /types/{pipeline_type}/implementations/{impl_id}/configurations
+          tags: types
+          http_method: POST
+          http_path: /types/{pipeline_type}/implementations/{impl_id}/configurations
+        source_reference:
+          provenance: extracted
+          locations:
+            - file: local-server/adapters/web/pipelines_routes.py
+              symbol: POST /types/{pipeline_type}/implementations/{impl_id}/configurations
+        metadata:
+          created_at: 2026-11-19T15:22:08.293Z
+          updated_at: 2026-11-19T15:22:08.293Z
+          version: 1
+      timestamp: 2026-11-19T15:22:08.574Z
+      origin:
+        by: tier0
+        rule: node-mapping:Route
+  - sequence: 1612
+    removedAt: 1670
+    change:
+      type: add
+      elementId: api.operation.put-config-id
+      layerName: api
+      after:
+        id: c1ba9a2c-e358-4799-86e6-6eb19ecaa198
+        path: api.operation.put-config-id
+        spec_node_id: api.operation
+        type: operation
+        layer_id: api
+        name: PUT /{config_id}
+        attributes:
+          operationId: put-config-id
+          summary: PUT /{config_id}
+          tags: default
+          http_method: PUT
+          http_path: /{config_id}
+        source_reference:
+          provenance: extracted
+          locations:
+            - file: local-server/adapters/web/pipelines_routes.py
+              symbol: PUT /{config_id}
+        metadata:
+          created_at: 2026-11-19T15:22:08.293Z
+          updated_at: 2026-11-19T15:22:08.293Z
+          version: 1
+      timestamp: 2026-11-19T15:22:08.574Z
+      origin:
+        by: tier0
+        rule: node-mapping:Route
+  - sequence: 1613
+    removedAt: 1670
+    change:
+      type: add
+      elementId: api.operation.delete-proposals-proposal-id-landed
+      layerName: api
+      after:
+        id: 6a00b203-8760-4483-874d-bacf02a0129c
+        path: api.operation.delete-proposals-proposal-id-landed
+        spec_node_id: api.operation
+        type: operation
+        layer_id: api
+        name: DELETE /proposals/{proposal_id}/landed
+        attributes:
+          operationId: delete-proposals-proposal-id-landed
+          summary: DELETE /proposals/{proposal_id}/landed
+          tags: proposals
+          http_method: DELETE
+          http_path: /proposals/{proposal_id}/landed
+        source_reference:
+          provenance: extracted
+          locations:
+            - file: local-server/adapters/web/proposals_routes.py
+              symbol: DELETE /proposals/{proposal_id}/landed
+        metadata:
+          created_at: 2026-11-19T15:22:08.293Z
+          updated_at: 2026-11-19T15:22:08.293Z
+          version: 1
+      timestamp: 2026-11-19T15:22:08.574Z
+      origin:
+        by: tier0
+        rule: node-mapping:Route
+  - sequence: 1614
+    removedAt: 1670
+    change:
+      type: add
+      elementId: api.operation.get-proposals
+      layerName: api
+      after:
+        id: 70815de2-04a5-45eb-bf41-039ee698265a
+        path: api.operation.get-proposals
+        spec_node_id: api.operation
+        type: operation
+        layer_id: api
+        name: GET /proposals
+        attributes:
+          operationId: get-proposals
+          summary: GET /proposals
+          tags: proposals
+          http_method: GET
+          http_path: /proposals
+        source_reference:
+          provenance: extracted
+          locations:
+            - file: local-server/adapters/web/proposals_routes.py
+              symbol: GET /proposals
+        metadata:
+          created_at: 2026-11-19T15:22:08.293Z
+          updated_at: 2026-11-19T15:22:08.293Z
+          version: 1
+      timestamp: 2026-11-19T15:22:08.574Z
+      origin:
+        by: tier0
+        rule: node-mapping:Route
+  - sequence: 1615
+    removedAt: 1670
+    change:
+      type: add
+      elementId: api.operation.get-proposals-proposal-id
+      layerName: api
+      after:
+        id: e9eb36b3-1134-48c4-af84-152ef3325b0c
+        path: api.operation.get-proposals-proposal-id
+        spec_node_id: api.operation
+        type: operation
+        layer_id: api
+        name: GET /proposals/{proposal_id}
+        attributes:
+          operationId: get-proposals-proposal-id
+          summary: GET /proposals/{proposal_id}
+          tags: proposals
+          http_method: GET
+          http_path: /proposals/{proposal_id}
+        source_reference:
+          provenance: extracted
+          locations:
+            - file: local-server/adapters/web/proposals_routes.py
+              symbol: GET /proposals/{proposal_id}
+        metadata:
+          created_at: 2026-11-19T15:22:08.293Z
+          updated_at: 2026-11-19T15:22:08.293Z
+          version: 1
+      timestamp: 2026-11-19T15:22:08.574Z
+      origin:
+        by: tier0
+        rule: node-mapping:Route
+  - sequence: 1616
+    removedAt: 1670
+    change:
+      type: add
+      elementId: api.operation.get-proposals-proposal-id-decisions
+      layerName: api
+      after:
+        id: 162a97db-31ab-49f5-8738-402ff7f372e5
+        path: api.operation.get-proposals-proposal-id-decisions
+        spec_node_id: api.operation
+        type: operation
+        layer_id: api
+        name: GET /proposals/{proposal_id}/decisions
+        attributes:
+          operationId: get-proposals-proposal-id-decisions
+          summary: GET /proposals/{proposal_id}/decisions
+          tags: proposals
+          http_method: GET
+          http_path: /proposals/{proposal_id}/decisions
+        source_reference:
+          provenance: extracted
+          locations:
+            - file: local-server/adapters/web/proposals_routes.py
+              symbol: GET /proposals/{proposal_id}/decisions
+        metadata:
+          created_at: 2026-11-19T15:22:08.293Z
+          updated_at: 2026-11-19T15:22:08.293Z
+          version: 1
+      timestamp: 2026-11-19T15:22:08.574Z
+      origin:
+        by: tier0
+        rule: node-mapping:Route
+  - sequence: 1617
+    removedAt: 1670
+    change:
+      type: add
+      elementId: api.operation.get-taxonomies-taxonomy-id-approval-policy
+      layerName: api
+      after:
+        id: 803f9f64-e214-4869-8ff1-2d6476eb7053
+        path: api.operation.get-taxonomies-taxonomy-id-approval-policy
+        spec_node_id: api.operation
+        type: operation
+        layer_id: api
+        name: GET /taxonomies/{taxonomy_id}/approval-policy
+        attributes:
+          operationId: get-taxonomies-taxonomy-id-approval-policy
+          summary: GET /taxonomies/{taxonomy_id}/approval-policy
+          tags: taxonomies
+          http_method: GET
+          http_path: /taxonomies/{taxonomy_id}/approval-policy
+        source_reference:
+          provenance: extracted
+          locations:
+            - file: local-server/adapters/web/proposals_routes.py
+              symbol: GET /taxonomies/{taxonomy_id}/approval-policy
+        metadata:
+          created_at: 2026-11-19T15:22:08.293Z
+          updated_at: 2026-11-19T15:22:08.293Z
+          version: 1
+      timestamp: 2026-11-19T15:22:08.574Z
+      origin:
+        by: tier0
+        rule: node-mapping:Route
+  - sequence: 1618
+    removedAt: 1670
+    change:
+      type: add
+      elementId: api.operation.get-taxonomies-taxonomy-id-gold
+      layerName: api
+      after:
+        id: 2b5310aa-6986-4b2e-8e9b-fc7e7c4b79cb
+        path: api.operation.get-taxonomies-taxonomy-id-gold
+        spec_node_id: api.operation
+        type: operation
+        layer_id: api
+        name: GET /taxonomies/{taxonomy_id}/gold
+        attributes:
+          operationId: get-taxonomies-taxonomy-id-gold
+          summary: GET /taxonomies/{taxonomy_id}/gold
+          tags: taxonomies
+          http_method: GET
+          http_path: /taxonomies/{taxonomy_id}/gold
+        source_reference:
+          provenance: extracted
+          locations:
+            - file: local-server/adapters/web/proposals_routes.py
+              symbol: GET /taxonomies/{taxonomy_id}/gold
+        metadata:
+          created_at: 2026-11-19T15:22:08.293Z
+          updated_at: 2026-11-19T15:22:08.293Z
+          version: 1
+      timestamp: 2026-11-19T15:22:08.574Z
+      origin:
+        by: tier0
+        rule: node-mapping:Route
+  - sequence: 1619
+    removedAt: 1670
+    change:
+      type: add
+      elementId: api.operation.get-taxonomies-taxonomy-id-gold-export
+      layerName: api
+      after:
+        id: 3b9a3881-769f-4a22-89a4-19bc196a3425
+        path: api.operation.get-taxonomies-taxonomy-id-gold-export
+        spec_node_id: api.operation
+        type: operation
+        layer_id: api
+        name: GET /taxonomies/{taxonomy_id}/gold/export
+        attributes:
+          operationId: get-taxonomies-taxonomy-id-gold-export
+          summary: GET /taxonomies/{taxonomy_id}/gold/export
+          tags: taxonomies
+          http_method: GET
+          http_path: /taxonomies/{taxonomy_id}/gold/export
+        source_reference:
+          provenance: extracted
+          locations:
+            - file: local-server/adapters/web/proposals_routes.py
+              symbol: GET /taxonomies/{taxonomy_id}/gold/export
+        metadata:
+          created_at: 2026-11-19T15:22:08.293Z
+          updated_at: 2026-11-19T15:22:08.293Z
+          version: 1
+      timestamp: 2026-11-19T15:22:08.574Z
+      origin:
+        by: tier0
+        rule: node-mapping:Route
+  - sequence: 1620
+    removedAt: 1670
+    change:
+      type: add
+      elementId: api.operation.post-proposals
+      layerName: api
+      after:
+        id: 829bf5da-963f-4307-89d5-d3c88a3ccc1c
+        path: api.operation.post-proposals
+        spec_node_id: api.operation
+        type: operation
+        layer_id: api
+        name: POST /proposals
+        attributes:
+          operationId: post-proposals
+          summary: POST /proposals
+          tags: proposals
+          http_method: POST
+          http_path: /proposals
+        source_reference:
+          provenance: extracted
+          locations:
+            - file: local-server/adapters/web/proposals_routes.py
+              symbol: POST /proposals
+        metadata:
+          created_at: 2026-11-19T15:22:08.293Z
+          updated_at: 2026-11-19T15:22:08.293Z
+          version: 1
+      timestamp: 2026-11-19T15:22:08.574Z
+      origin:
+        by: tier0
+        rule: node-mapping:Route
+  - sequence: 1621
+    removedAt: 1670
+    change:
+      type: add
+      elementId: api.operation.post-proposals-proposal-id-apply
+      layerName: api
+      after:
+        id: 638e06c8-7f79-401b-8615-769dfdbdc9b5
+        path: api.operation.post-proposals-proposal-id-apply
+        spec_node_id: api.operation
+        type: operation
+        layer_id: api
+        name: POST /proposals/{proposal_id}/apply
+        attributes:
+          operationId: post-proposals-proposal-id-apply
+          summary: POST /proposals/{proposal_id}/apply
+          tags: proposals
+          http_method: POST
+          http_path: /proposals/{proposal_id}/apply
+        source_reference:
+          provenance: extracted
+          locations:
+            - file: local-server/adapters/web/proposals_routes.py
+              symbol: POST /proposals/{proposal_id}/apply
+        metadata:
+          created_at: 2026-11-19T15:22:08.293Z
+          updated_at: 2026-11-19T15:22:08.293Z
+          version: 1
+      timestamp: 2026-11-19T15:22:08.574Z
+      origin:
+        by: tier0
+        rule: node-mapping:Route
+  - sequence: 1622
+    removedAt: 1670
+    change:
+      type: add
+      elementId: api.operation.post-proposals-proposal-id-operations
+      layerName: api
+      after:
+        id: 4698885f-d6e4-41aa-aee7-afcda3707cc4
+        path: api.operation.post-proposals-proposal-id-operations
+        spec_node_id: api.operation
+        type: operation
+        layer_id: api
+        name: POST /proposals/{proposal_id}/operations
+        attributes:
+          operationId: post-proposals-proposal-id-operations
+          summary: POST /proposals/{proposal_id}/operations
+          tags: proposals
+          http_method: POST
+          http_path: /proposals/{proposal_id}/operations
+        source_reference:
+          provenance: extracted
+          locations:
+            - file: local-server/adapters/web/proposals_routes.py
+              symbol: POST /proposals/{proposal_id}/operations
+        metadata:
+          created_at: 2026-11-19T15:22:08.293Z
+          updated_at: 2026-11-19T15:22:08.293Z
+          version: 1
+      timestamp: 2026-11-19T15:22:08.574Z
+      origin:
+        by: tier0
+        rule: node-mapping:Route
+  - sequence: 1623
+    removedAt: 1670
+    change:
+      type: add
+      elementId: api.operation.post-proposals-proposal-id-reject
+      layerName: api
+      after:
+        id: 3ffcd083-728a-415a-9596-63944806bd09
+        path: api.operation.post-proposals-proposal-id-reject
+        spec_node_id: api.operation
+        type: operation
+        layer_id: api
+        name: POST /proposals/{proposal_id}/reject
+        attributes:
+          operationId: post-proposals-proposal-id-reject
+          summary: POST /proposals/{proposal_id}/reject
+          tags: proposals
+          http_method: POST
+          http_path: /proposals/{proposal_id}/reject
+        source_reference:
+          provenance: extracted
+          locations:
+            - file: local-server/adapters/web/proposals_routes.py
+              symbol: POST /proposals/{proposal_id}/reject
+        metadata:
+          created_at: 2026-11-19T15:22:08.293Z
+          updated_at: 2026-11-19T15:22:08.293Z
+          version: 1
+      timestamp: 2026-11-19T15:22:08.574Z
+      origin:
+        by: tier0
+        rule: node-mapping:Route
+  - sequence: 1624
+    removedAt: 1670
+    change:
+      type: add
+      elementId: api.operation.post-proposals-proposal-id-reopen
+      layerName: api
+      after:
+        id: e9c25b5a-8353-49a7-86b6-8b6a27711d7f
+        path: api.operation.post-proposals-proposal-id-reopen
+        spec_node_id: api.operation
+        type: operation
+        layer_id: api
+        name: POST /proposals/{proposal_id}/reopen
+        attributes:
+          operationId: post-proposals-proposal-id-reopen
+          summary: POST /proposals/{proposal_id}/reopen
+          tags: proposals
+          http_method: POST
+          http_path: /proposals/{proposal_id}/reopen
+        source_reference:
+          provenance: extracted
+          locations:
+            - file: local-server/adapters/web/proposals_routes.py
+              symbol: POST /proposals/{proposal_id}/reopen
+        metadata:
+          created_at: 2026-11-19T15:22:08.293Z
+          updated_at: 2026-11-19T15:22:08.293Z
+          version: 1
+      timestamp: 2026-11-19T15:22:08.574Z
+      origin:
+        by: tier0
+        rule: node-mapping:Route
+  - sequence: 1625
+    removedAt: 1670
+    change:
+      type: add
+      elementId: api.operation.post-proposals-proposal-id-revert
+      layerName: api
+      after:
+        id: 23aa5c1e-7be9-4878-9a78-28acea902189
+        path: api.operation.post-proposals-proposal-id-revert
+        spec_node_id: api.operation
+        type: operation
+        layer_id: api
+        name: POST /proposals/{proposal_id}/revert
+        attributes:
+          operationId: post-proposals-proposal-id-revert
+          summary: POST /proposals/{proposal_id}/revert
+          tags: proposals
+          http_method: POST
+          http_path: /proposals/{proposal_id}/revert
+        source_reference:
+          provenance: extracted
+          locations:
+            - file: local-server/adapters/web/proposals_routes.py
+              symbol: POST /proposals/{proposal_id}/revert
+        metadata:
+          created_at: 2026-11-19T15:22:08.293Z
+          updated_at: 2026-11-19T15:22:08.293Z
+          version: 1
+      timestamp: 2026-11-19T15:22:08.574Z
+      origin:
+        by: tier0
+        rule: node-mapping:Route
+  - sequence: 1626
+    removedAt: 1670
+    change:
+      type: add
+      elementId: api.operation.put-proposals-proposal-id-landed
+      layerName: api
+      after:
+        id: d886607b-46a1-4db2-bb9a-142fa84a0234
+        path: api.operation.put-proposals-proposal-id-landed
+        spec_node_id: api.operation
+        type: operation
+        layer_id: api
+        name: PUT /proposals/{proposal_id}/landed
+        attributes:
+          operationId: put-proposals-proposal-id-landed
+          summary: PUT /proposals/{proposal_id}/landed
+          tags: proposals
+          http_method: PUT
+          http_path: /proposals/{proposal_id}/landed
+        source_reference:
+          provenance: extracted
+          locations:
+            - file: local-server/adapters/web/proposals_routes.py
+              symbol: PUT /proposals/{proposal_id}/landed
+        metadata:
+          created_at: 2026-11-19T15:22:08.293Z
+          updated_at: 2026-11-19T15:22:08.293Z
+          version: 1
+      timestamp: 2026-11-19T15:22:08.574Z
+      origin:
+        by: tier0
+        rule: node-mapping:Route
+  - sequence: 1627
+    removedAt: 1670
+    change:
+      type: add
+      elementId: api.operation.put-taxonomies-taxonomy-id-approval-policy
+      layerName: api
+      after:
+        id: 4993d16b-e1d4-4176-98fd-87b2517e67ea
+        path: api.operation.put-taxonomies-taxonomy-id-approval-policy
+        spec_node_id: api.operation
+        type: operation
+        layer_id: api
+        name: PUT /taxonomies/{taxonomy_id}/approval-policy
+        attributes:
+          operationId: put-taxonomies-taxonomy-id-approval-policy
+          summary: PUT /taxonomies/{taxonomy_id}/approval-policy
+          tags: taxonomies
+          http_method: PUT
+          http_path: /taxonomies/{taxonomy_id}/approval-policy
+        source_reference:
+          provenance: extracted
+          locations:
+            - file: local-server/adapters/web/proposals_routes.py
+              symbol: PUT /taxonomies/{taxonomy_id}/approval-policy
+        metadata:
+          created_at: 2026-11-19T15:22:08.293Z
+          updated_at: 2026-11-19T15:22:08.293Z
+          version: 1
+      timestamp: 2026-11-19T15:22:08.574Z
+      origin:
+        by: tier0
+        rule: node-mapping:Route
+  - sequence: 1628
+    removedAt: 1670
+    change:
+      type: add
+      elementId: api.operation.delete-grounding-workflows-workflow-id
+      layerName: api
+      after:
+        id: d043705f-6566-4032-9d6e-4ed4fb782f1d
+        path: api.operation.delete-grounding-workflows-workflow-id
+        spec_node_id: api.operation
+        type: operation
+        layer_id: api
+        name: DELETE /grounding-workflows/{workflow_id}
+        attributes:
+          operationId: delete-grounding-workflows-workflow-id
+          summary: DELETE /grounding-workflows/{workflow_id}
+          tags: grounding-workflows
+          http_method: DELETE
+          http_path: /grounding-workflows/{workflow_id}
+        source_reference:
+          provenance: extracted
+          locations:
+            - file: local-server/adapters/web/reference_routes.py
+              symbol: DELETE /grounding-workflows/{workflow_id}
+        metadata:
+          created_at: 2026-11-19T15:22:08.293Z
+          updated_at: 2026-11-19T15:22:08.293Z
+          version: 1
+      timestamp: 2026-11-19T15:22:08.574Z
+      origin:
+        by: tier0
+        rule: node-mapping:Route
+  - sequence: 1629
+    removedAt: 1670
+    change:
+      type: add
+      elementId: api.operation.get-grounding-workflows
+      layerName: api
+      after:
+        id: 4cac5aea-10ab-4293-bc5b-5717884d7b9d
+        path: api.operation.get-grounding-workflows
+        spec_node_id: api.operation
+        type: operation
+        layer_id: api
+        name: GET /grounding-workflows
+        attributes:
+          operationId: get-grounding-workflows
+          summary: GET /grounding-workflows
+          tags: grounding-workflows
+          http_method: GET
+          http_path: /grounding-workflows
+        source_reference:
+          provenance: extracted
+          locations:
+            - file: local-server/adapters/web/reference_routes.py
+              symbol: GET /grounding-workflows
+        metadata:
+          created_at: 2026-11-19T15:22:08.293Z
+          updated_at: 2026-11-19T15:22:08.293Z
+          version: 1
+      timestamp: 2026-11-19T15:22:08.574Z
+      origin:
+        by: tier0
+        rule: node-mapping:Route
+  - sequence: 1630
+    removedAt: 1670
+    change:
+      type: add
+      elementId: api.operation.get-grounding-workflows-workflow-id
+      layerName: api
+      after:
+        id: 264631b7-5355-4f48-98c3-17ddd449d6c6
+        path: api.operation.get-grounding-workflows-workflow-id
+        spec_node_id: api.operation
+        type: operation
+        layer_id: api
+        name: GET /grounding-workflows/{workflow_id}
+        attributes:
+          operationId: get-grounding-workflows-workflow-id
+          summary: GET /grounding-workflows/{workflow_id}
+          tags: grounding-workflows
+          http_method: GET
+          http_path: /grounding-workflows/{workflow_id}
+        source_reference:
+          provenance: extracted
+          locations:
+            - file: local-server/adapters/web/reference_routes.py
+              symbol: GET /grounding-workflows/{workflow_id}
+        metadata:
+          created_at: 2026-11-19T15:22:08.293Z
+          updated_at: 2026-11-19T15:22:08.293Z
+          version: 1
+      timestamp: 2026-11-19T15:22:08.574Z
+      origin:
+        by: tier0
+        rule: node-mapping:Route
+  - sequence: 1631
+    removedAt: 1670
+    change:
+      type: add
+      elementId: api.operation.get-grounding-workflows-workflow-id-runs
+      layerName: api
+      after:
+        id: 3ae40d5a-ad55-45ea-b075-196a012321b5
+        path: api.operation.get-grounding-workflows-workflow-id-runs
+        spec_node_id: api.operation
+        type: operation
+        layer_id: api
+        name: GET /grounding-workflows/{workflow_id}/runs
+        attributes:
+          operationId: get-grounding-workflows-workflow-id-runs
+          summary: GET /grounding-workflows/{workflow_id}/runs
+          tags: grounding-workflows
+          http_method: GET
+          http_path: /grounding-workflows/{workflow_id}/runs
+        source_reference:
+          provenance: extracted
+          locations:
+            - file: local-server/adapters/web/reference_routes.py
+              symbol: GET /grounding-workflows/{workflow_id}/runs
+        metadata:
+          created_at: 2026-11-19T15:22:08.293Z
+          updated_at: 2026-11-19T15:22:08.293Z
+          version: 1
+      timestamp: 2026-11-19T15:22:08.574Z
+      origin:
+        by: tier0
+        rule: node-mapping:Route
+  - sequence: 1632
+    removedAt: 1670
+    change:
+      type: add
+      elementId: api.operation.get-status
+      layerName: api
+      after:
+        id: 3dca0da4-f6cc-4824-85a8-b003af071afe
+        path: api.operation.get-status
+        spec_node_id: api.operation
+        type: operation
+        layer_id: api
+        name: GET /status
+        attributes:
+          operationId: get-status
+          summary: GET /status
+          tags: status
+          http_method: GET
+          http_path: /status
+        source_reference:
+          provenance: extracted
+          locations:
+            - file: local-server/adapters/web/reference_routes.py
+              symbol: GET /status
+        metadata:
+          created_at: 2026-11-19T15:22:08.293Z
+          updated_at: 2026-11-19T15:22:08.293Z
+          version: 1
+      timestamp: 2026-11-19T15:22:08.574Z
+      origin:
+        by: tier0
+        rule: node-mapping:Route
+  - sequence: 1633
+    removedAt: 1670
+    change:
+      type: add
+      elementId: api.operation.post-grounding-workflows
+      layerName: api
+      after:
+        id: 67ac0709-0950-43dc-a00a-4f03ef29fb0a
+        path: api.operation.post-grounding-workflows
+        spec_node_id: api.operation
+        type: operation
+        layer_id: api
+        name: POST /grounding-workflows
+        attributes:
+          operationId: post-grounding-workflows
+          summary: POST /grounding-workflows
+          tags: grounding-workflows
+          http_method: POST
+          http_path: /grounding-workflows
+        source_reference:
+          provenance: extracted
+          locations:
+            - file: local-server/adapters/web/reference_routes.py
+              symbol: POST /grounding-workflows
+        metadata:
+          created_at: 2026-11-19T15:22:08.293Z
+          updated_at: 2026-11-19T15:22:08.293Z
+          version: 1
+      timestamp: 2026-11-19T15:22:08.574Z
+      origin:
+        by: tier0
+        rule: node-mapping:Route
+  - sequence: 1634
+    removedAt: 1670
+    change:
+      type: add
+      elementId: api.operation.post-grounding-workflows-workflow-id-run
+      layerName: api
+      after:
+        id: bad5d6dd-ad58-486d-86af-751ecb67662e
+        path: api.operation.post-grounding-workflows-workflow-id-run
+        spec_node_id: api.operation
+        type: operation
+        layer_id: api
+        name: POST /grounding-workflows/{workflow_id}/run
+        attributes:
+          operationId: post-grounding-workflows-workflow-id-run
+          summary: POST /grounding-workflows/{workflow_id}/run
+          tags: grounding-workflows
+          http_method: POST
+          http_path: /grounding-workflows/{workflow_id}/run
+        source_reference:
+          provenance: extracted
+          locations:
+            - file: local-server/adapters/web/reference_routes.py
+              symbol: POST /grounding-workflows/{workflow_id}/run
+        metadata:
+          created_at: 2026-11-19T15:22:08.293Z
+          updated_at: 2026-11-19T15:22:08.293Z
+          version: 1
+      timestamp: 2026-11-19T15:22:08.574Z
+      origin:
+        by: tier0
+        rule: node-mapping:Route
+  - sequence: 1635
+    removedAt: 1670
+    change:
+      type: add
+      elementId: api.operation.post-relations
+      layerName: api
+      after:
+        id: 5e35e4a2-4b68-42a7-9cd8-9ca109670f8b
+        path: api.operation.post-relations
+        spec_node_id: api.operation
+        type: operation
+        layer_id: api
+        name: POST /relations
+        attributes:
+          operationId: post-relations
+          summary: POST /relations
+          tags: relations
+          http_method: POST
+          http_path: /relations
+        source_reference:
+          provenance: extracted
+          locations:
+            - file: local-server/adapters/web/reference_routes.py
+              symbol: POST /relations
+        metadata:
+          created_at: 2026-11-19T15:22:08.293Z
+          updated_at: 2026-11-19T15:22:08.293Z
+          version: 1
+      timestamp: 2026-11-19T15:22:08.574Z
+      origin:
+        by: tier0
+        rule: node-mapping:Route
+  - sequence: 1636
+    removedAt: 1670
+    change:
+      type: add
+      elementId: api.operation.post-search
+      layerName: api
+      after:
+        id: 0133b24a-2d40-42a1-9eda-5ff2c138e020
+        path: api.operation.post-search
+        spec_node_id: api.operation
+        type: operation
+        layer_id: api
+        name: POST /search
+        attributes:
+          operationId: post-search
+          summary: POST /search
+          tags: search
+          http_method: POST
+          http_path: /search
+        source_reference:
+          provenance: extracted
+          locations:
+            - file: local-server/adapters/web/reference_routes.py
+              symbol: POST /search
+        metadata:
+          created_at: 2026-11-19T15:22:08.293Z
+          updated_at: 2026-11-19T15:22:08.293Z
+          version: 1
+      timestamp: 2026-11-19T15:22:08.574Z
+      origin:
+        by: tier0
+        rule: node-mapping:Route
+  - sequence: 1637
+    removedAt: 1670
+    change:
+      type: add
+      elementId: api.operation.put-grounding-workflows-workflow-id
+      layerName: api
+      after:
+        id: 674b4195-a2ed-49dc-97fc-e3eced6282aa
+        path: api.operation.put-grounding-workflows-workflow-id
+        spec_node_id: api.operation
+        type: operation
+        layer_id: api
+        name: PUT /grounding-workflows/{workflow_id}
+        attributes:
+          operationId: put-grounding-workflows-workflow-id
+          summary: PUT /grounding-workflows/{workflow_id}
+          tags: grounding-workflows
+          http_method: PUT
+          http_path: /grounding-workflows/{workflow_id}
+        source_reference:
+          provenance: extracted
+          locations:
+            - file: local-server/adapters/web/reference_routes.py
+              symbol: PUT /grounding-workflows/{workflow_id}
+        metadata:
+          created_at: 2026-11-19T15:22:08.293Z
+          updated_at: 2026-11-19T15:22:08.293Z
+          version: 1
+      timestamp: 2026-11-19T15:22:08.574Z
+      origin:
+        by: tier0
+        rule: node-mapping:Route
+  - sequence: 1638
+    removedAt: 1670
+    change:
+      type: add
+      elementId: api.operation.delete-sources-source-id
+      layerName: api
+      after:
+        id: 3432d3f9-d8d7-4c67-b33f-b7e4d96422da
+        path: api.operation.delete-sources-source-id
+        spec_node_id: api.operation
+        type: operation
+        layer_id: api
+        name: DELETE /sources/{source_id}
+        attributes:
+          operationId: delete-sources-source-id
+          summary: DELETE /sources/{source_id}
+          tags: sources
+          http_method: DELETE
+          http_path: /sources/{source_id}
+        source_reference:
+          provenance: extracted
+          locations:
+            - file: local-server/adapters/web/sources_routes.py
+              symbol: DELETE /sources/{source_id}
+        metadata:
+          created_at: 2026-11-19T15:22:08.293Z
+          updated_at: 2026-11-19T15:22:08.293Z
+          version: 1
+      timestamp: 2026-11-19T15:22:08.574Z
+      origin:
+        by: tier0
+        rule: node-mapping:Route
+  - sequence: 1639
+    removedAt: 1670
+    change:
+      type: add
+      elementId: api.operation.get-sources
+      layerName: api
+      after:
+        id: f7efa8a4-b3f9-42b5-ad82-60726d9d4cbb
+        path: api.operation.get-sources
+        spec_node_id: api.operation
+        type: operation
+        layer_id: api
+        name: GET /sources
+        attributes:
+          operationId: get-sources
+          summary: GET /sources
+          tags: sources
+          http_method: GET
+          http_path: /sources
+        source_reference:
+          provenance: extracted
+          locations:
+            - file: local-server/adapters/web/sources_routes.py
+              symbol: GET /sources
+        metadata:
+          created_at: 2026-11-19T15:22:08.293Z
+          updated_at: 2026-11-19T15:22:08.293Z
+          version: 1
+      timestamp: 2026-11-19T15:22:08.574Z
+      origin:
+        by: tier0
+        rule: node-mapping:Route
+  - sequence: 1640
+    removedAt: 1670
+    change:
+      type: add
+      elementId: api.operation.get-sources-source-id
+      layerName: api
+      after:
+        id: bf442b87-231b-413e-9c89-ffb8982a97ad
+        path: api.operation.get-sources-source-id
+        spec_node_id: api.operation
+        type: operation
+        layer_id: api
+        name: GET /sources/{source_id}
+        attributes:
+          operationId: get-sources-source-id
+          summary: GET /sources/{source_id}
+          tags: sources
+          http_method: GET
+          http_path: /sources/{source_id}
+        source_reference:
+          provenance: extracted
+          locations:
+            - file: local-server/adapters/web/sources_routes.py
+              symbol: GET /sources/{source_id}
+        metadata:
+          created_at: 2026-11-19T15:22:08.293Z
+          updated_at: 2026-11-19T15:22:08.293Z
+          version: 1
+      timestamp: 2026-11-19T15:22:08.574Z
+      origin:
+        by: tier0
+        rule: node-mapping:Route
+  - sequence: 1641
+    removedAt: 1670
+    change:
+      type: add
+      elementId: api.operation.get-sources-source-id-text
+      layerName: api
+      after:
+        id: 670e80a1-558f-4f0e-9985-7098d247ed14
+        path: api.operation.get-sources-source-id-text
+        spec_node_id: api.operation
+        type: operation
+        layer_id: api
+        name: GET /sources/{source_id}/text
+        attributes:
+          operationId: get-sources-source-id-text
+          summary: GET /sources/{source_id}/text
+          tags: sources
+          http_method: GET
+          http_path: /sources/{source_id}/text
+        source_reference:
+          provenance: extracted
+          locations:
+            - file: local-server/adapters/web/sources_routes.py
+              symbol: GET /sources/{source_id}/text
+        metadata:
+          created_at: 2026-11-19T15:22:08.293Z
+          updated_at: 2026-11-19T15:22:08.293Z
+          version: 1
+      timestamp: 2026-11-19T15:22:08.574Z
+      origin:
+        by: tier0
+        rule: node-mapping:Route
+  - sequence: 1642
+    removedAt: 1670
+    change:
+      type: add
+      elementId: api.operation.post-sources
+      layerName: api
+      after:
+        id: 21272314-d08e-4ce6-b10c-d9787bb0f23e
+        path: api.operation.post-sources
+        spec_node_id: api.operation
+        type: operation
+        layer_id: api
+        name: POST /sources
+        attributes:
+          operationId: post-sources
+          summary: POST /sources
+          tags: sources
+          http_method: POST
+          http_path: /sources
+        source_reference:
+          provenance: extracted
+          locations:
+            - file: local-server/adapters/web/sources_routes.py
+              symbol: POST /sources
+        metadata:
+          created_at: 2026-11-19T15:22:08.293Z
+          updated_at: 2026-11-19T15:22:08.293Z
+          version: 1
+      timestamp: 2026-11-19T15:22:08.574Z
+      origin:
+        by: tier0
+        rule: node-mapping:Route
+  - sequence: 1643
+    removedAt: 1670
+    change:
+      type: add
+      elementId: api.operation.post-sources-source-id-extract
+      layerName: api
+      after:
+        id: 7ddb520f-e510-4bc3-beaf-fd1c360f7ac5
+        path: api.operation.post-sources-source-id-extract
+        spec_node_id: api.operation
+        type: operation
+        layer_id: api
+        name: POST /sources/{source_id}/extract
+        attributes:
+          operationId: post-sources-source-id-extract
+          summary: POST /sources/{source_id}/extract
+          tags: sources
+          http_method: POST
+          http_path: /sources/{source_id}/extract
+        source_reference:
+          provenance: extracted
+          locations:
+            - file: local-server/adapters/web/sources_routes.py
+              symbol: POST /sources/{source_id}/extract
+        metadata:
+          created_at: 2026-11-19T15:22:08.293Z
+          updated_at: 2026-11-19T15:22:08.293Z
+          version: 1
+      timestamp: 2026-11-19T15:22:08.574Z
+      origin:
+        by: tier0
+        rule: node-mapping:Route
+  - sequence: 1644
+    removedAt: 1670
+    change:
+      type: add
+      elementId: api.operation.get-versioning-changes
+      layerName: api
+      after:
+        id: 66312ea9-2c80-49c5-bd46-790425b734fa
+        path: api.operation.get-versioning-changes
+        spec_node_id: api.operation
+        type: operation
+        layer_id: api
+        name: GET /versioning/changes
+        attributes:
+          operationId: get-versioning-changes
+          summary: GET /versioning/changes
+          tags: versioning
+          http_method: GET
+          http_path: /versioning/changes
+        source_reference:
+          provenance: extracted
+          locations:
+            - file: local-server/adapters/web/versioning_routes.py
+              symbol: GET /versioning/changes
+        metadata:
+          created_at: 2026-11-19T15:22:08.293Z
+          updated_at: 2026-11-19T15:22:08.293Z
+          version: 1
+      timestamp: 2026-11-19T15:22:08.574Z
+      origin:
+        by: tier0
+        rule: node-mapping:Route
+  - sequence: 1645
+    removedAt: 1670
+    change:
+      type: add
+      elementId: api.operation.get-versioning-changes-entity-id
+      layerName: api
+      after:
+        id: 74765cad-bdf4-4c2d-85a1-47e2827dfa0c
+        path: api.operation.get-versioning-changes-entity-id
+        spec_node_id: api.operation
+        type: operation
+        layer_id: api
+        name: GET /versioning/changes/{entity_id}
+        attributes:
+          operationId: get-versioning-changes-entity-id
+          summary: GET /versioning/changes/{entity_id}
+          tags: versioning
+          http_method: GET
+          http_path: /versioning/changes/{entity_id}
+        source_reference:
+          provenance: extracted
+          locations:
+            - file: local-server/adapters/web/versioning_routes.py
+              symbol: GET /versioning/changes/{entity_id}
+        metadata:
+          created_at: 2026-11-19T15:22:08.293Z
+          updated_at: 2026-11-19T15:22:08.293Z
+          version: 1
+      timestamp: 2026-11-19T15:22:08.574Z
+      origin:
+        by: tier0
+        rule: node-mapping:Route
+  - sequence: 1646
+    removedAt: 1670
+    change:
+      type: add
+      elementId: api.operation.get-versioning-sync-status
+      layerName: api
+      after:
+        id: 01003ad3-15ff-4b42-9362-cb5826f1e784
+        path: api.operation.get-versioning-sync-status
+        spec_node_id: api.operation
+        type: operation
+        layer_id: api
+        name: GET /versioning/sync/status
+        attributes:
+          operationId: get-versioning-sync-status
+          summary: GET /versioning/sync/status
+          tags: versioning
+          http_method: GET
+          http_path: /versioning/sync/status
+        source_reference:
+          provenance: extracted
+          locations:
+            - file: local-server/adapters/web/versioning_routes.py
+              symbol: GET /versioning/sync/status
+        metadata:
+          created_at: 2026-11-19T15:22:08.293Z
+          updated_at: 2026-11-19T15:22:08.293Z
+          version: 1
+      timestamp: 2026-11-19T15:22:08.574Z
+      origin:
+        by: tier0
+        rule: node-mapping:Route
+  - sequence: 1647
+    removedAt: 1670
+    change:
+      type: add
+      elementId: api.operation.post-versioning-sync-pull
+      layerName: api
+      after:
+        id: 6ad94f9b-9bdb-4eb3-ac55-67c4a1818bcf
+        path: api.operation.post-versioning-sync-pull
+        spec_node_id: api.operation
+        type: operation
+        layer_id: api
+        name: POST /versioning/sync/pull
+        attributes:
+          operationId: post-versioning-sync-pull
+          summary: POST /versioning/sync/pull
+          tags: versioning
+          http_method: POST
+          http_path: /versioning/sync/pull
+        source_reference:
+          provenance: extracted
+          locations:
+            - file: local-server/adapters/web/versioning_routes.py
+              symbol: POST /versioning/sync/pull
+        metadata:
+          created_at: 2026-11-19T15:22:08.293Z
+          updated_at: 2026-11-19T15:22:08.293Z
+          version: 1
+      timestamp: 2026-11-19T15:22:08.574Z
+      origin:
+        by: tier0
+        rule: node-mapping:Route
+  - sequence: 1648
+    removedAt: 1670
+    change:
+      type: add
+      elementId: api.operation.post-versioning-sync-push
+      layerName: api
+      after:
+        id: 0b831964-d7bb-4edb-acc3-2791343dace9
+        path: api.operation.post-versioning-sync-push
+        spec_node_id: api.operation
+        type: operation
+        layer_id: api
+        name: POST /versioning/sync/push
+        attributes:
+          operationId: post-versioning-sync-push
+          summary: POST /versioning/sync/push
+          tags: versioning
+          http_method: POST
+          http_path: /versioning/sync/push
+        source_reference:
+          provenance: extracted
+          locations:
+            - file: local-server/adapters/web/versioning_routes.py
+              symbol: POST /versioning/sync/push
+        metadata:
+          created_at: 2026-11-19T15:22:08.293Z
+          updated_at: 2026-11-19T15:22:08.293Z
+          version: 1
+      timestamp: 2026-11-19T15:22:08.574Z
+      origin:
+        by: tier0
+        rule: node-mapping:Route
+  - sequence: 1145
+    removedAt: 1756
+    change:
+      type: add
+      elementId: api.responses.get-tasks-health-responses
+      layerName: api
+      after:
+        id: 0669acb1-bc92-4fca-8df6-1f0d57ed6cca
+        path: api.responses.get-tasks-health-responses
+        spec_node_id: api.responses
+        type: responses
+        layer_id: api
+        name: get-tasks-health-responses
+        source_reference:
+          provenance: extracted
+          locations:
+            - file: local-server/adapters/web/admin_routes.py
+              symbol: get_task_summary
+        metadata:
+          created_at: 2026-11-19T15:11:21.428Z
+          updated_at: 2026-11-19T15:11:21.428Z
+          version: 1
+      timestamp: 2026-11-19T15:11:21.553Z
+    rewritten: true
+  - sequence: 578
+    removedAt: 1812
+    change:
+      type: add
+      elementId: ux.subview.chat-panel
+      layerName: ux
+      after:
+        id: 3587ee39-317c-4817-9f43-3b36a28ba96b
+        path: ux.subview.chat-panel
+        spec_node_id: ux.subview
+        type: subview
+        layer_id: ux
+        name: Chat Panel
+        description: "Chat with the workspace assistant: streamed turns, tool calls and
+          page context."
+        source_reference:
+          provenance: extracted
+          locations:
+            - file: ux/src/components/chat/ChatPanel.tsx
+              symbol: ChatPanel
+        metadata:
+          created_at: 2026-11-19T15:02:28.473Z
+          updated_at: 2026-11-19T15:02:28.473Z
+          version: 1
+      timestamp: 2026-11-19T15:02:28.564Z
+    rewritten: true
+  - sequence: 579
+    removedAt: 1813
+    change:
+      type: add
+      elementId: ux.subview.claim-inspector
+      layerName: ux
+      after:
+        id: beb9b141-8c04-4acf-827d-d3048d704ffb
+        path: ux.subview.claim-inspector
+        spec_node_id: ux.subview
+        type: subview
+        layer_id: ux
+        name: Claim Inspector
+        description: "Inspector for one claim: triage answers and verdict form."
+        source_reference:
+          provenance: extracted
+          locations:
+            - file: ux/src/components/claims/ClaimInspector.tsx
+              symbol: ClaimInspector
+        metadata:
+          created_at: 2026-11-19T15:02:28.473Z
+          updated_at: 2026-11-19T15:02:28.473Z
+          version: 1
+      timestamp: 2026-11-19T15:02:28.564Z
+    rewritten: true
+  - sequence: 618
+    removedAt: 1814
+    change:
+      type: add
+      elementId: ux.view.cascade-delete-dialog
+      layerName: ux
+      after:
+        id: 5cd54703-eb03-4e0b-8457-0175370c523d
+        path: ux.view.cascade-delete-dialog
+        spec_node_id: ux.view
+        type: view
+        layer_id: ux
+        name: Cascade Delete Dialog
+        description: Confirm a delete that cascades to dependent entities.
+        attributes:
+          type: dialog
+          routable: false
+        source_reference:
+          provenance: extracted
+          locations:
+            - file: ux/src/components/crud/CascadeDeleteDialog.tsx
+              symbol: CascadeDeleteDialog
+        metadata:
+          created_at: 2026-11-19T15:02:28.474Z
+          updated_at: 2026-11-19T15:02:28.474Z
+          version: 1
+      timestamp: 2026-11-19T15:02:28.564Z
+    rewritten: true
+  - sequence: 619
+    removedAt: 1815
+    change:
+      type: add
+      elementId: ux.view.create-drawer
+      layerName: ux
+      after:
+        id: b12f3949-3ff0-432f-be0c-d123a42973cd
+        path: ux.view.create-drawer
+        spec_node_id: ux.view
+        type: view
+        layer_id: ux
+        name: Create Drawer
+        description: Generic create drawer used by entity surfaces.
+        attributes:
+          type: drawer
+          routable: false
+        source_reference:
+          provenance: extracted
+          locations:
+            - file: ux/src/components/crud/CreateDrawer.tsx
+              symbol: CreateDrawer
+        metadata:
+          created_at: 2026-11-19T15:02:28.474Z
+          updated_at: 2026-11-19T15:02:28.474Z
+          version: 1
+      timestamp: 2026-11-19T15:02:28.564Z
+    rewritten: true
+  - sequence: 616
+    removedAt: 1816
+    change:
+      type: add
+      elementId: ux.view.create-dataset-modal
+      layerName: ux
+      after:
+        id: c433a045-1318-46cd-816a-d9d1dc61482e
+        path: ux.view.create-dataset-modal
+        spec_node_id: ux.view
+        type: view
+        layer_id: ux
+        name: Create Dataset Modal
+        description: Create a dataset over a taxonomy (datasets page).
+        attributes:
+          type: modal
+          routable: false
+        source_reference:
+          provenance: extracted
+          locations:
+            - file: ux/src/components/datasets/CreateDatasetModal.tsx
+              symbol: CreateDatasetModal
+        metadata:
+          created_at: 2026-11-19T15:02:28.474Z
+          updated_at: 2026-11-19T15:02:28.474Z
+          version: 1
+      timestamp: 2026-11-19T15:02:28.564Z
+    rewritten: true
+  - sequence: 617
+    removedAt: 1817
+    change:
+      type: add
+      elementId: ux.view.delete-dataset-dialog
+      layerName: ux
+      after:
+        id: e36b2be2-673e-4acf-9179-948c9380cf76
+        path: ux.view.delete-dataset-dialog
+        spec_node_id: ux.view
+        type: view
+        layer_id: ux
+        name: Delete Dataset Dialog
+        description: Confirm deleting a dataset with its individuals (datasets page).
+        attributes:
+          type: dialog
+          routable: false
+        source_reference:
+          provenance: extracted
+          locations:
+            - file: ux/src/components/datasets/DeleteDatasetDialog.tsx
+              symbol: DeleteDatasetDialog
+        metadata:
+          created_at: 2026-11-19T15:02:28.474Z
+          updated_at: 2026-11-19T15:02:28.474Z
+          version: 1
+      timestamp: 2026-11-19T15:02:28.564Z
+    rewritten: true
+  - sequence: 590
+    removedAt: 1818
+    change:
+      type: add
+      elementId: ux.subview.entity-navigator
+      layerName: ux
+      after:
+        id: 9c9b2276-3b4d-4d72-9881-ec504e72eab7
+        path: ux.subview.entity-navigator
+        spec_node_id: ux.subview
+        type: subview
+        layer_id: ux
+        name: Entity Navigator
+        description: Left-hand navigator over taxonomies, schemes, classes and individuals.
+        source_reference:
+          provenance: extracted
+          locations:
+            - file: ux/src/components/entity/EntityNavigator.tsx
+              symbol: EntityNavigator
+        metadata:
+          created_at: 2026-11-19T15:02:28.474Z
+          updated_at: 2026-11-19T15:02:28.474Z
+          version: 1
+      timestamp: 2026-11-19T15:02:28.564Z
+    rewritten: true
+  - sequence: 589
+    removedAt: 1819
+    change:
+      type: add
+      elementId: ux.subview.graph-node-inspector
+      layerName: ux
+      after:
+        id: 5947c5a2-f189-4d0a-83a7-a881a1f4430d
+        path: ux.subview.graph-node-inspector
+        spec_node_id: ux.subview
+        type: subview
+        layer_id: ux
+        name: Graph Node Inspector
+        description: Inspector for the selected graph node.
+        source_reference:
+          provenance: extracted
+          locations:
+            - file: ux/src/components/graph/GraphNodeInspector.tsx
+              symbol: GraphNodeInspector
+        metadata:
+          created_at: 2026-11-19T15:02:28.473Z
+          updated_at: 2026-11-19T15:02:28.473Z
+          version: 1
+      timestamp: 2026-11-19T15:02:28.564Z
+    rewritten: true
+  - sequence: 588
+    removedAt: 1820
+    change:
+      type: add
+      elementId: ux.subview.metrics-panel
+      layerName: ux
+      after:
+        id: e4903a13-355b-4a67-8e99-48a8a2af8275
+        path: ux.subview.metrics-panel
+        spec_node_id: ux.subview
+        type: subview
+        layer_id: ux
+        name: Metrics Panel
+        description: Graph metrics, centrality and communities.
+        source_reference:
+          provenance: extracted
+          locations:
+            - file: ux/src/components/graph/MetricsPanel.tsx
+              symbol: MetricsPanel
+        metadata:
+          created_at: 2026-11-19T15:02:28.473Z
+          updated_at: 2026-11-19T15:02:28.473Z
+          version: 1
+      timestamp: 2026-11-19T15:02:28.564Z
+    rewritten: true
+  - sequence: 587
+    removedAt: 1821
+    change:
+      type: add
+      elementId: ux.subview.path-finder
+      layerName: ux
+      after:
+        id: 5a482e00-bff4-48c6-9051-14200432a96c
+        path: ux.subview.path-finder
+        spec_node_id: ux.subview
+        type: subview
+        layer_id: ux
+        name: Path Finder
+        description: Shortest/all paths between two entities.
+        source_reference:
+          provenance: extracted
+          locations:
+            - file: ux/src/components/graph/PathFinder.tsx
+              symbol: PathFinder
+        metadata:
+          created_at: 2026-11-19T15:02:28.473Z
+          updated_at: 2026-11-19T15:02:28.473Z
+          version: 1
+      timestamp: 2026-11-19T15:02:28.564Z
+    rewritten: true
+  - sequence: 586
+    removedAt: 1822
+    change:
+      type: add
+      elementId: ux.subview.sparql-editor
+      layerName: ux
+      after:
+        id: 2b033829-98cd-4375-a9f8-052daaa181d4
+        path: ux.subview.sparql-editor
+        spec_node_id: ux.subview
+        type: subview
+        layer_id: ux
+        name: SPARQL Editor
+        description: SPARQL query editor and results.
+        source_reference:
+          provenance: extracted
+          locations:
+            - file: ux/src/components/graph/SparqlEditor.tsx
+              symbol: SparqlEditor
+        metadata:
+          created_at: 2026-11-19T15:02:28.473Z
+          updated_at: 2026-11-19T15:02:28.473Z
+          version: 1
+      timestamp: 2026-11-19T15:02:28.564Z
+    rewritten: true
+  - sequence: 605
+    removedAt: 1823
+    change:
+      type: add
+      elementId: ux.view.class-drawer
+      layerName: ux
+      after:
+        id: 331005e5-a1ab-4139-88a3-7f767e513bb1
+        path: ux.view.class-drawer
+        spec_node_id: ux.view
+        type: view
+        layer_id: ux
+        name: Class Drawer
+        description: Create/edit a class (opened from the classes page).
+        attributes:
+          type: drawer
+          routable: false
+        source_reference:
+          provenance: extracted
+          locations:
+            - file: ux/src/components/ontology/ClassDrawer.tsx
+              symbol: ClassDrawer
+        metadata:
+          created_at: 2026-11-19T15:02:28.474Z
+          updated_at: 2026-11-19T15:02:28.474Z
+          version: 1
+      timestamp: 2026-11-19T15:02:28.564Z
+    rewritten: true
+  - sequence: 591
+    removedAt: 1824
+    change:
+      type: add
+      elementId: ux.subview.hierarchy-tree
+      layerName: ux
+      after:
+        id: 52adcf2e-c737-49f1-957b-7e35f3da2bb2
+        path: ux.subview.hierarchy-tree
+        spec_node_id: ux.subview
+        type: subview
+        layer_id: ux
+        name: Hierarchy Tree
+        description: Taxonomy hierarchy tree with demo dataset picker.
+        source_reference:
+          provenance: extracted
+          locations:
+            - file: ux/src/components/ontology/HierarchyTree.tsx
+              symbol: HierarchyTree
+        metadata:
+          created_at: 2026-11-19T15:02:28.474Z
+          updated_at: 2026-11-19T15:02:28.474Z
+          version: 1
+      timestamp: 2026-11-19T15:02:28.564Z
+    rewritten: true
+  - sequence: 607
+    removedAt: 1825
+    change:
+      type: add
+      elementId: ux.view.property-drawer
+      layerName: ux
+      after:
+        id: c466b605-4c5e-4907-b20d-91be44958ae8
+        path: ux.view.property-drawer
+        spec_node_id: ux.view
+        type: view
+        layer_id: ux
+        name: Property Drawer
+        description: Create/edit a property definition (properties page).
+        attributes:
+          type: drawer
+          routable: false
+        source_reference:
+          provenance: extracted
+          locations:
+            - file: ux/src/components/ontology/PropertyDrawer.tsx
+              symbol: PropertyDrawer
+        metadata:
+          created_at: 2026-11-19T15:02:28.474Z
+          updated_at: 2026-11-19T15:02:28.474Z
+          version: 1
+      timestamp: 2026-11-19T15:02:28.564Z
+    rewritten: true
+  - sequence: 608
+    removedAt: 1826
+    change:
+      type: add
+      elementId: ux.view.relationship-drawer
+      layerName: ux
+      after:
+        id: 27c1e23c-10ed-4ad6-a111-2604d0c6f2ac
+        path: ux.view.relationship-drawer
+        spec_node_id: ux.view
+        type: view
+        layer_id: ux
+        name: Relationship Drawer
+        description: Create/edit a relationship (relationships page).
+        attributes:
+          type: drawer
+          routable: false
+        source_reference:
+          provenance: extracted
+          locations:
+            - file: ux/src/components/ontology/RelationshipDrawer.tsx
+              symbol: RelationshipDrawer
+        metadata:
+          created_at: 2026-11-19T15:02:28.474Z
+          updated_at: 2026-11-19T15:02:28.474Z
+          version: 1
+      timestamp: 2026-11-19T15:02:28.564Z
+    rewritten: true
+  - sequence: 609
+    removedAt: 1827
+    change:
+      type: add
+      elementId: ux.view.scheme-drawer
+      layerName: ux
+      after:
+        id: a0290e81-cfc5-410d-aa08-bf4baa7938eb
+        path: ux.view.scheme-drawer
+        spec_node_id: ux.view
+        type: view
+        layer_id: ux
+        name: Scheme Drawer
+        description: Create/edit a concept scheme (schemes page).
+        attributes:
+          type: drawer
+          routable: false
+        source_reference:
+          provenance: extracted
+          locations:
+            - file: ux/src/components/ontology/SchemeDrawer.tsx
+              symbol: SchemeDrawer
+        metadata:
+          created_at: 2026-11-19T15:02:28.474Z
+          updated_at: 2026-11-19T15:02:28.474Z
+          version: 1
+      timestamp: 2026-11-19T15:02:28.564Z
+    rewritten: true
+  - sequence: 610
+    removedAt: 1828
+    change:
+      type: add
+      elementId: ux.view.taxonomy-drawer
+      layerName: ux
+      after:
+        id: d932b09c-952b-4712-99e9-01448f6ca3ac
+        path: ux.view.taxonomy-drawer
+        spec_node_id: ux.view
+        type: view
+        layer_id: ux
+        name: Taxonomy Drawer
+        description: Create/edit a taxonomy (taxonomies page).
+        attributes:
+          type: drawer
+          routable: false
+        source_reference:
+          provenance: extracted
+          locations:
+            - file: ux/src/components/ontology/TaxonomyDrawer.tsx
+              symbol: TaxonomyDrawer
+        metadata:
+          created_at: 2026-11-19T15:02:28.474Z
+          updated_at: 2026-11-19T15:02:28.474Z
+          version: 1
+      timestamp: 2026-11-19T15:02:28.564Z
+    rewritten: true
+  - sequence: 611
+    removedAt: 1829
+    change:
+      type: add
+      elementId: ux.view.taxonomy-publish-dialog
+      layerName: ux
+      after:
+        id: 05e02dc7-e09b-4b16-acdb-ea8f5813fd44
+        path: ux.view.taxonomy-publish-dialog
+        spec_node_id: ux.view
+        type: view
+        layer_id: ux
+        name: Taxonomy Publish Dialog
+        description: Publish a taxonomy after reviewing its publish diff.
+        attributes:
+          type: dialog
+          routable: false
+        source_reference:
+          provenance: extracted
+          locations:
+            - file: ux/src/components/ontology/TaxonomyPublishDialog.tsx
+              symbol: TaxonomyPublishDialog
+        metadata:
+          created_at: 2026-11-19T15:02:28.474Z
+          updated_at: 2026-11-19T15:02:28.474Z
+          version: 1
+      timestamp: 2026-11-19T15:02:28.564Z
+    rewritten: true
+  - sequence: 592
+    removedAt: 1830
+    change:
+      type: add
+      elementId: ux.subview.individual-candidate-review
+      layerName: ux
+      after:
+        id: 9c4f8862-d463-44a1-bd29-a791b11a6d57
+        path: ux.subview.individual-candidate-review
+        spec_node_id: ux.subview
+        type: subview
+        layer_id: ux
+        name: Individual Candidate Review
+        description: Review individual-extraction candidates before accepting.
+        source_reference:
+          provenance: extracted
+          locations:
+            - file: ux/src/components/pipeline/extraction-review/IndividualCandidateReview.tsx
+              symbol: IndividualCandidateReview
+        metadata:
+          created_at: 2026-11-19T15:02:28.474Z
+          updated_at: 2026-11-19T15:02:28.474Z
+          version: 1
+      timestamp: 2026-11-19T15:02:28.564Z
+    rewritten: true
+  - sequence: 593
+    removedAt: 1831
+    change:
+      type: add
+      elementId: ux.subview.schema-candidate-review
+      layerName: ux
+      after:
+        id: 03ce9856-d679-4617-95bf-b6926d16a23c
+        path: ux.subview.schema-candidate-review
+        spec_node_id: ux.subview
+        type: subview
+        layer_id: ux
+        name: Schema Candidate Review
+        description: Review schema-extraction candidates before accepting.
+        source_reference:
+          provenance: extracted
+          locations:
+            - file: ux/src/components/pipeline/extraction-review/SchemaCandidateReview.tsx
+              symbol: SchemaCandidateReview
+        metadata:
+          created_at: 2026-11-19T15:02:28.474Z
+          updated_at: 2026-11-19T15:02:28.474Z
+          version: 1
+      timestamp: 2026-11-19T15:02:28.564Z
+    rewritten: true
+  - sequence: 604
+    removedAt: 1832
+    change:
+      type: add
+      elementId: ux.subview.connection-refinement-review
+      layerName: ux
+      after:
+        id: 4f93cc57-9e4c-44cf-b22c-ab5ae410af5c
+        path: ux.subview.connection-refinement-review
+        spec_node_id: ux.subview
+        type: subview
+        layer_id: ux
+        name: Connection Refinement Review
+        description: Review a connection-refinement run's candidates.
+        source_reference:
+          provenance: extracted
+          locations:
+            - file: ux/src/components/pipeline/review/ConnectionRefinementReview.tsx
+              symbol: ConnectionRefinementReview
+        metadata:
+          created_at: 2026-11-19T15:02:28.474Z
+          updated_at: 2026-11-19T15:02:28.474Z
+          version: 1
+      timestamp: 2026-11-19T15:02:28.564Z
+    rewritten: true
+  - sequence: 603
+    removedAt: 1833
+    change:
+      type: add
+      elementId: ux.subview.definition-refinement-review
+      layerName: ux
+      after:
+        id: 9c74786f-0916-428d-b855-3198dd6311fa
+        path: ux.subview.definition-refinement-review
+        spec_node_id: ux.subview
+        type: subview
+        layer_id: ux
+        name: Definition Refinement Review
+        description: Review a definition-refinement run's candidates.
+        source_reference:
+          provenance: extracted
+          locations:
+            - file: ux/src/components/pipeline/review/DefinitionRefinementReview.tsx
+              symbol: DefinitionRefinementReview
+        metadata:
+          created_at: 2026-11-19T15:02:28.474Z
+          updated_at: 2026-11-19T15:02:28.474Z
+          version: 1
+      timestamp: 2026-11-19T15:02:28.564Z
+    rewritten: true
+  - sequence: 602
+    removedAt: 1834
+    change:
+      type: add
+      elementId: ux.subview.grounding-review
+      layerName: ux
+      after:
+        id: 97051140-03e4-4009-b8a0-3dafa119c589
+        path: ux.subview.grounding-review
+        spec_node_id: ux.subview
+        type: subview
+        layer_id: ux
+        name: Grounding Review
+        description: Review a grounding run's candidates.
+        source_reference:
+          provenance: extracted
+          locations:
+            - file: ux/src/components/pipeline/review/GroundingReview.tsx
+              symbol: GroundingReview
+        metadata:
+          created_at: 2026-11-19T15:02:28.474Z
+          updated_at: 2026-11-19T15:02:28.474Z
+          version: 1
+      timestamp: 2026-11-19T15:02:28.564Z
+    rewritten: true
+  - sequence: 597
+    removedAt: 1835
+    change:
+      type: add
+      elementId: ux.subview.connection-refinement-wizard
+      layerName: ux
+      after:
+        id: e7b6007c-c093-46ac-aa30-ef591dcd0d46
+        path: ux.subview.connection-refinement-wizard
+        spec_node_id: ux.subview
+        type: subview
+        layer_id: ux
+        name: Connection Refinement Wizard
+        description: Run wizard step set for connection refinement.
+        source_reference:
+          provenance: extracted
+          locations:
+            - file: ux/src/components/pipeline/wizards/ConnectionRefinementWizard.tsx
+              symbol: ConnectionRefinementWizard
+        metadata:
+          created_at: 2026-11-19T15:02:28.474Z
+          updated_at: 2026-11-19T15:02:28.474Z
+          version: 1
+      timestamp: 2026-11-19T15:02:28.564Z
+    rewritten: true
+  - sequence: 598
+    removedAt: 1836
+    change:
+      type: add
+      elementId: ux.subview.definition-refinement-wizard
+      layerName: ux
+      after:
+        id: 5425e391-6ff6-4778-8a55-593ae982590d
+        path: ux.subview.definition-refinement-wizard
+        spec_node_id: ux.subview
+        type: subview
+        layer_id: ux
+        name: Definition Refinement Wizard
+        description: Run wizard step set for definition refinement.
+        source_reference:
+          provenance: extracted
+          locations:
+            - file: ux/src/components/pipeline/wizards/DefinitionRefinementWizard.tsx
+              symbol: DefinitionRefinementWizard
+        metadata:
+          created_at: 2026-11-19T15:02:28.474Z
+          updated_at: 2026-11-19T15:02:28.474Z
+          version: 1
+      timestamp: 2026-11-19T15:02:28.564Z
+    rewritten: true
+  - sequence: 594
+    removedAt: 1837
+    change:
+      type: add
+      elementId: ux.subview.individual-extraction-wizard
+      layerName: ux
+      after:
+        id: 53dd4e7b-04e9-4ed1-b4ec-403ebda6b55a
+        path: ux.subview.individual-extraction-wizard
+        spec_node_id: ux.subview
+        type: subview
+        layer_id: ux
+        name: Individual Extraction Wizard
+        description: Run wizard step set for individual extraction.
+        source_reference:
+          provenance: extracted
+          locations:
+            - file: ux/src/components/pipeline/wizards/IndividualExtractionWizard.tsx
+              symbol: IndividualExtractionWizard
+        metadata:
+          created_at: 2026-11-19T15:02:28.474Z
+          updated_at: 2026-11-19T15:02:28.474Z
+          version: 1
+      timestamp: 2026-11-19T15:02:28.564Z
+    rewritten: true
+  - sequence: 595
+    removedAt: 1838
+    change:
+      type: add
+      elementId: ux.subview.schema-extraction-wizard
+      layerName: ux
+      after:
+        id: dcbac334-5827-48d4-a2d9-24ca2a6e68e3
+        path: ux.subview.schema-extraction-wizard
+        spec_node_id: ux.subview
+        type: subview
+        layer_id: ux
+        name: Schema Extraction Wizard
+        description: Run wizard step set for schema extraction.
+        source_reference:
+          provenance: extracted
+          locations:
+            - file: ux/src/components/pipeline/wizards/SchemaExtractionWizard.tsx
+              symbol: SchemaExtractionWizard
+        metadata:
+          created_at: 2026-11-19T15:02:28.474Z
+          updated_at: 2026-11-19T15:02:28.474Z
+          version: 1
+      timestamp: 2026-11-19T15:02:28.564Z
+    rewritten: true
+  - sequence: 596
+    removedAt: 1839
+    change:
+      type: add
+      elementId: ux.subview.schema-grounding-wizard
+      layerName: ux
+      after:
+        id: 85fa5d2f-5cba-44fe-ae51-b48cbd901dce
+        path: ux.subview.schema-grounding-wizard
+        spec_node_id: ux.subview
+        type: subview
+        layer_id: ux
+        name: Schema Grounding Wizard
+        description: Run wizard step set for schema-node grounding.
+        source_reference:
+          provenance: extracted
+          locations:
+            - file: ux/src/components/pipeline/wizards/SchemaGroundingWizard.tsx
+              symbol: SchemaGroundingWizard
+        metadata:
+          created_at: 2026-11-19T15:02:28.474Z
+          updated_at: 2026-11-19T15:02:28.474Z
+          version: 1
+      timestamp: 2026-11-19T15:02:28.564Z
+    rewritten: true
+  - sequence: 583
+    removedAt: 1840
+    change:
+      type: add
+      elementId: ux.subview.in-use-resolver
+      layerName: ux
+      after:
+        id: 3883b32b-7467-44b2-b41f-64d403977e7b
+        path: ux.subview.in-use-resolver
+        spec_node_id: ux.subview
+        type: subview
+        layer_id: ux
+        name: In Use Resolver
+        description: Resolves in-use blockers before a delete or retype operation is
+          applied.
+        source_reference:
+          provenance: extracted
+          locations:
+            - file: ux/src/components/proposals/InUseResolver.tsx
+              symbol: InUseResolver
+        metadata:
+          created_at: 2026-11-19T15:02:28.473Z
+          updated_at: 2026-11-19T15:02:28.473Z
+          version: 1
+      timestamp: 2026-11-19T15:02:28.564Z
+    rewritten: true
+  - sequence: 582
+    removedAt: 1841
+    change:
+      type: add
+      elementId: ux.subview.operation-inspector
+      layerName: ux
+      after:
+        id: f8e8425c-edf7-494b-8044-292e4c1e797b
+        path: ux.subview.operation-inspector
+        spec_node_id: ux.subview
+        type: subview
+        layer_id: ux
+        name: Operation Inspector
+        description: "Inspector for one proposal operation: diff, decision and in-use
+          resolution."
+        source_reference:
+          provenance: extracted
+          locations:
+            - file: ux/src/components/proposals/OperationInspector.tsx
+              symbol: OperationInspector
+        metadata:
+          created_at: 2026-11-19T15:02:28.473Z
+          updated_at: 2026-11-19T15:02:28.473Z
+          version: 1
+      timestamp: 2026-11-19T15:02:28.564Z
+    rewritten: true
+  - sequence: 584
+    removedAt: 1842
+    change:
+      type: add
+      elementId: ux.subview.review-inspector
+      layerName: ux
+      after:
+        id: 25b893eb-3207-4db1-8dc7-69b518c028c3
+        path: ux.subview.review-inspector
+        spec_node_id: ux.subview
+        type: subview
+        layer_id: ux
+        name: Review Inspector
+        description: "Inspector for one reviewed element: class, relationship, decision
+          and reason code."
+        source_reference:
+          provenance: extracted
+          locations:
+            - file: ux/src/components/proposals/review/ReviewInspector.tsx
+              symbol: ReviewInspector
+        metadata:
+          created_at: 2026-11-19T15:02:28.473Z
+          updated_at: 2026-11-19T15:02:28.473Z
+          version: 1
+      timestamp: 2026-11-19T15:02:28.564Z
+    rewritten: true
+  - sequence: 615
+    removedAt: 1843
+    change:
+      type: add
+      elementId: ux.view.grounding-workflow-drawer
+      layerName: ux
+      after:
+        id: de5efb12-94ac-4151-a19b-65141487b23d
+        path: ux.view.grounding-workflow-drawer
+        spec_node_id: ux.view
+        type: view
+        layer_id: ux
+        name: Grounding Workflow Drawer
+        description: Create/edit a grounding workflow and run it (workflows page).
+        attributes:
+          type: drawer
+          routable: false
+        source_reference:
+          provenance: extracted
+          locations:
+            - file: ux/src/components/reference/GroundingWorkflowDrawer.tsx
+              symbol: GroundingWorkflowDrawer
+        metadata:
+          created_at: 2026-11-19T15:02:28.474Z
+          updated_at: 2026-11-19T15:02:28.474Z
+          version: 1
+      timestamp: 2026-11-19T15:02:28.564Z
+    rewritten: true
+  - sequence: 614
+    removedAt: 1844
+    change:
+      type: add
+      elementId: ux.view.reference-source-drawer
+      layerName: ux
+      after:
+        id: ce3b4a8c-f741-4af3-a9fc-c8a01332af79
+        path: ux.view.reference-source-drawer
+        spec_node_id: ux.view
+        type: view
+        layer_id: ux
+        name: Reference Source Drawer
+        description: One external reference source with status and search (reference
+          sources page).
+        attributes:
+          type: drawer
+          routable: false
+        source_reference:
+          provenance: extracted
+          locations:
+            - file: ux/src/components/reference/ReferenceSourceDrawer.tsx
+              symbol: ReferenceSourceDrawer
+        metadata:
+          created_at: 2026-11-19T15:02:28.474Z
+          updated_at: 2026-11-19T15:02:28.474Z
+          version: 1
+      timestamp: 2026-11-19T15:02:28.564Z
+    rewritten: true
+  - sequence: 620
+    removedAt: 1845
+    change:
+      type: add
+      elementId: ux.view.command-palette
+      layerName: ux
+      after:
+        id: 5bc2cbb7-0e95-4eb7-9ab4-9263117fd6a6
+        path: ux.view.command-palette
+        spec_node_id: ux.view
+        type: view
+        layer_id: ux
+        name: Command Palette
+        description: "Command palette: navigation and actions (global)."
+        attributes:
+          type: overlay
+          routable: false
+        source_reference:
+          provenance: extracted
+          locations:
+            - file: ux/src/components/shell/CommandPalette.tsx
+              symbol: CommandPalette
+        metadata:
+          created_at: 2026-11-19T15:02:28.474Z
+          updated_at: 2026-11-19T15:02:28.474Z
+          version: 1
+      timestamp: 2026-11-19T15:02:28.564Z
+    rewritten: true
+  - sequence: 580
+    removedAt: 1846
+    change:
+      type: add
+      elementId: ux.subview.add-source-panel
+      layerName: ux
+      after:
+        id: 3e84bbcb-cfa6-4d2c-8714-0a134545c301
+        path: ux.subview.add-source-panel
+        spec_node_id: ux.subview
+        type: subview
+        layer_id: ux
+        name: Add Source Panel
+        description: Add a file, web page or text as a source.
+        source_reference:
+          provenance: extracted
+          locations:
+            - file: ux/src/components/sources/AddSourcePanel.tsx
+              symbol: AddSourcePanel
+        metadata:
+          created_at: 2026-11-19T15:02:28.473Z
+          updated_at: 2026-11-19T15:02:28.473Z
+          version: 1
+      timestamp: 2026-11-19T15:02:28.564Z
+    rewritten: true
+  - sequence: 581
+    removedAt: 1847
+    change:
+      type: add
+      elementId: ux.subview.extract-run-panel
+      layerName: ux
+      after:
+        id: eb58db68-1b59-4466-afc1-b27a4d8410ce
+        path: ux.subview.extract-run-panel
+        spec_node_id: ux.subview
+        type: subview
+        layer_id: ux
+        name: Extract Run Panel
+        description: Pick a pipeline and configuration and start the extraction of a source.
+        source_reference:
+          provenance: extracted
+          locations:
+            - file: ux/src/components/sources/ExtractRunPanel.tsx
+              symbol: ExtractRunPanel
+        metadata:
+          created_at: 2026-11-19T15:02:28.473Z
+          updated_at: 2026-11-19T15:02:28.473Z
+          version: 1
+      timestamp: 2026-11-19T15:02:28.564Z
+    rewritten: true
+  - sequence: 660
+    removedAt: 1848
+    change:
+      type: add
+      elementId: ux.librarycomponent.app-ui-primitives
+      layerName: ux
+      after:
+        id: bfba5119-1a93-49a4-a326-33cf1e15d6d4
+        path: ux.librarycomponent.app-ui-primitives
+        spec_node_id: ux.librarycomponent
+        type: librarycomponent
+        layer_id: ux
+        name: App UI Primitives
+        description: "The app's own UI primitives over Heimdall: Drawer,
+          InlineInspector, TypeToConfirmDialog, Toast, EmptyState, ErrorBanner,
+          EditableField, ErrorBoundary."
+        attributes:
+          type: display
+          category: ui-primitives
+        source_reference:
+          provenance: extracted
+          locations:
+            - file: ux/src/components/ui/Drawer.tsx
+              symbol: Drawer
+        metadata:
+          created_at: 2026-11-19T15:02:45.110Z
+          updated_at: 2026-11-19T15:02:45.110Z
+          version: 1
+      timestamp: 2026-11-19T15:02:45.204Z
+    rewritten: true
+  - sequence: 600
+    removedAt: 1849
+    change:
+      type: add
+      elementId: ux.subview.change-history-list
+      layerName: ux
+      after:
+        id: 872c6ab1-6c83-4db5-ad93-02f0e3519c7e
+        path: ux.subview.change-history-list
+        spec_node_id: ux.subview
+        type: subview
+        layer_id: ux
+        name: Change History List
+        description: Change event history, filterable by entity.
+        source_reference:
+          provenance: extracted
+          locations:
+            - file: ux/src/components/versioning/ChangeHistoryList.tsx
+              symbol: ChangeHistoryList
+        metadata:
+          created_at: 2026-11-19T15:02:28.474Z
+          updated_at: 2026-11-19T15:02:28.474Z
+          version: 1
+      timestamp: 2026-11-19T15:02:28.564Z
+    rewritten: true
+  - sequence: 660
+    removedAt: 1850
+    change:
+      type: add
+      elementId: ux.librarycomponent.app-ui-primitives
+      layerName: ux
+      after:
+        id: bfba5119-1a93-49a4-a326-33cf1e15d6d4
+        path: ux.librarycomponent.app-ui-primitives
+        spec_node_id: ux.librarycomponent
+        type: librarycomponent
+        layer_id: ux
+        name: App UI Primitives
+        description: "The app's own UI primitives over Heimdall: Drawer,
+          InlineInspector, TypeToConfirmDialog, Toast, EmptyState, ErrorBanner,
+          EditableField, ErrorBoundary."
+        attributes:
+          type: display
+          category: ui-primitives
+        source_reference:
+          provenance: extracted
+          locations:
+            - file: ux/src/components/ui/Drawer.tsx
+              symbol: Drawer
+            - file: ux/src/components/ui/Drawer.tsx
+              symbol: ux.src.components.ui.Drawer
+        metadata:
+          created_at: 2026-11-19T15:02:45.110Z
+          updated_at: 2026-11-19T15:02:45.110Z
+          version: 1
+      timestamp: 2026-11-19T15:42:08.539Z
+    rewritten: true
+  - sequence: 660
+    removedAt: 1851
+    change:
+      type: add
+      elementId: ux.librarycomponent.app-ui-primitives
+      layerName: ux
+      after:
+        id: bfba5119-1a93-49a4-a326-33cf1e15d6d4
+        path: ux.librarycomponent.app-ui-primitives
+        spec_node_id: ux.librarycomponent
+        type: librarycomponent
+        layer_id: ux
+        name: App UI Primitives
+        description: "The app's own UI primitives over Heimdall: Drawer,
+          InlineInspector, TypeToConfirmDialog, Toast, EmptyState, ErrorBanner,
+          EditableField, ErrorBoundary."
+        attributes:
+          type: display
+          category: ui-primitives
+        source_reference:
+          provenance: extracted
+          locations:
+            - file: ux/src/components/ui/EmptyState.tsx
+              symbol: EmptyState
+        metadata:
+          created_at: 2026-11-19T15:02:45.110Z
+          updated_at: 2026-11-19T15:02:45.110Z
+          version: 1
+      timestamp: 2026-11-19T15:42:25.427Z
+    rewritten: true
+  - sequence: 660
+    removedAt: 1852
+    change:
+      type: add
+      elementId: ux.librarycomponent.app-ui-primitives
+      layerName: ux
+      after:
+        id: bfba5119-1a93-49a4-a326-33cf1e15d6d4
+        path: ux.librarycomponent.app-ui-primitives
+        spec_node_id: ux.librarycomponent
+        type: librarycomponent
+        layer_id: ux
+        name: App UI Primitives
+        description: "The app's own UI primitives over Heimdall: Drawer,
+          InlineInspector, TypeToConfirmDialog, Toast, EmptyState, ErrorBanner,
+          EditableField, ErrorBoundary."
+        attributes:
+          type: display
+          category: ui-primitives
+        source_reference:
+          provenance: extracted
+          locations:
+            - file: ux/src/components/ui/Drawer.tsx
+              symbol: Drawer
+        metadata:
+          created_at: 2026-11-19T15:02:45.110Z
+          updated_at: 2026-11-19T15:02:45.110Z
+          version: 1
+      timestamp: 2026-11-19T15:42:35.196Z
+    rewritten: true
+  - sequence: 1201
+    removedAt: 1914
+    change:
+      type: add
+      elementId: api.response.list-of-attribute-definition-response
+      layerName: api
+      after:
+        id: 942c68f7-9f14-4d39-a3fe-cc6b0549478f
+        path: api.response.list-of-attribute-definition-response
+        spec_node_id: api.response
+        type: response
+        layer_id: api
+        name: List of AttributeDefinitionResponse
+        attributes:
+          description: Paged list of AttributeDefinitionResponse
+        source_reference:
+          provenance: extracted
+          locations:
+            - file: local-server/adapters/web/schemas/ontology.py
+              symbol: ListResponse
+        metadata:
+          created_at: 2026-11-19T15:15:02.501Z
+          updated_at: 2026-11-19T15:15:02.501Z
+          version: 1
+      timestamp: 2026-11-19T15:15:02.625Z
+  - sequence: 1202
+    removedAt: 1914
+    change:
+      type: add
+      elementId: api.response.list-of-change-proposal-response
+      layerName: api
+      after:
+        id: df41db9f-b5c7-4bd5-9eb7-c417316d8e60
+        path: api.response.list-of-change-proposal-response
+        spec_node_id: api.response
+        type: response
+        layer_id: api
+        name: List of ChangeProposalResponse
+        attributes:
+          description: Paged list of ChangeProposalResponse
+        source_reference:
+          provenance: extracted
+          locations:
+            - file: local-server/adapters/web/schemas/ontology.py
+              symbol: ListResponse
+        metadata:
+          created_at: 2026-11-19T15:15:02.501Z
+          updated_at: 2026-11-19T15:15:02.501Z
+          version: 1
+      timestamp: 2026-11-19T15:15:02.625Z
+  - sequence: 1203
+    removedAt: 1914
+    change:
+      type: add
+      elementId: api.response.list-of-claim-response
+      layerName: api
+      after:
+        id: 62d36619-72ca-4cb3-997b-a44f80ecda3c
+        path: api.response.list-of-claim-response
+        spec_node_id: api.response
+        type: response
+        layer_id: api
+        name: List of ClaimResponse
+        attributes:
+          description: Paged list of ClaimResponse
+        source_reference:
+          provenance: extracted
+          locations:
+            - file: local-server/adapters/web/schemas/ontology.py
+              symbol: ListResponse
+        metadata:
+          created_at: 2026-11-19T15:15:02.501Z
+          updated_at: 2026-11-19T15:15:02.501Z
+          version: 1
+      timestamp: 2026-11-19T15:15:02.625Z
+  - sequence: 1204
+    removedAt: 1914
+    change:
+      type: add
+      elementId: api.response.list-of-gold-decision-response
+      layerName: api
+      after:
+        id: 54674908-ce8a-45fd-803a-2564b2112e29
+        path: api.response.list-of-gold-decision-response
+        spec_node_id: api.response
+        type: response
+        layer_id: api
+        name: List of GoldDecisionResponse
+        attributes:
+          description: Paged list of GoldDecisionResponse
+        source_reference:
+          provenance: extracted
+          locations:
+            - file: local-server/adapters/web/schemas/ontology.py
+              symbol: ListResponse
+        metadata:
+          created_at: 2026-11-19T15:15:02.501Z
+          updated_at: 2026-11-19T15:15:02.501Z
+          version: 1
+      timestamp: 2026-11-19T15:15:02.625Z
+  - sequence: 1205
+    removedAt: 1914
+    change:
+      type: add
+      elementId: api.response.list-of-source-response
+      layerName: api
+      after:
+        id: 22007a5c-a22d-49d4-ad67-6ca6940b481c
+        path: api.response.list-of-source-response
+        spec_node_id: api.response
+        type: response
+        layer_id: api
+        name: List of SourceResponse
+        attributes:
+          description: Paged list of SourceResponse
+        source_reference:
+          provenance: extracted
+          locations:
+            - file: local-server/adapters/web/schemas/ontology.py
+              symbol: ListResponse
+        metadata:
+          created_at: 2026-11-19T15:15:02.501Z
+          updated_at: 2026-11-19T15:15:02.501Z
+          version: 1
+      timestamp: 2026-11-19T15:15:02.625Z
+  - sequence: 1206
+    removedAt: 1914
+    change:
+      type: add
+      elementId: api.response.list-of-versioning-change-event-response
+      layerName: api
+      after:
+        id: 285595ff-573d-45ad-9d69-37667d8b69c9
+        path: api.response.list-of-versioning-change-event-response
+        spec_node_id: api.response
+        type: response
+        layer_id: api
+        name: List of VersioningChangeEventResponse
+        attributes:
+          description: Paged list of VersioningChangeEventResponse
+        source_reference:
+          provenance: extracted
+          locations:
+            - file: local-server/adapters/web/schemas/ontology.py
+              symbol: ListResponse
+        metadata:
+          created_at: 2026-11-19T15:15:02.501Z
+          updated_at: 2026-11-19T15:15:02.501Z
+          version: 1
+      timestamp: 2026-11-19T15:15:02.625Z
+  - sequence: 1335
+    removedAt: 1914
+    change:
+      type: relationship-add
+      elementId: api.responses.list-class-attribute-definitions-responses::composes::api.response.list-of-attribute-definition-response
+      layerName: api
+      after:
+        source: api.responses.list-class-attribute-definitions-responses
+        target: api.response.list-of-attribute-definition-response
+        predicate: composes
+        layer: api
+        category: structural
+      timestamp: 2026-11-19T15:16:15.307Z
+  - sequence: 1361
+    removedAt: 1914
+    change:
+      type: relationship-add
+      elementId: api.responses.get-pipeline-run-change-events-responses::composes::api.response.list-of-versioning-change-event-response
+      layerName: api
+      after:
+        source: api.responses.get-pipeline-run-change-events-responses
+        target: api.response.list-of-versioning-change-event-response
+        predicate: composes
+        layer: api
+        category: structural
+      timestamp: 2026-11-19T15:16:15.307Z
+  - sequence: 1415
+    removedAt: 1914
+    change:
+      type: relationship-add
+      elementId: api.responses.list-proposals-responses::composes::api.response.list-of-change-proposal-response
+      layerName: api
+      after:
+        source: api.responses.list-proposals-responses
+        target: api.response.list-of-change-proposal-response
+        predicate: composes
+        layer: api
+        category: structural
+      timestamp: 2026-11-19T15:16:15.307Z
+  - sequence: 1440
+    removedAt: 1914
+    change:
+      type: relationship-add
+      elementId: api.responses.list-gold-responses::composes::api.response.list-of-gold-decision-response
+      layerName: api
+      after:
+        source: api.responses.list-gold-responses
+        target: api.response.list-of-gold-decision-response
+        predicate: composes
+        layer: api
+        category: structural
+      timestamp: 2026-11-19T15:16:15.307Z
+  - sequence: 1455
+    removedAt: 1914
+    change:
+      type: relationship-add
+      elementId: api.responses.list-claims-responses::composes::api.response.list-of-claim-response
+      layerName: api
+      after:
+        source: api.responses.list-claims-responses
+        target: api.response.list-of-claim-response
+        predicate: composes
+        layer: api
+        category: structural
+      timestamp: 2026-11-19T15:16:15.307Z
+  - sequence: 1469
+    removedAt: 1914
+    change:
+      type: relationship-add
+      elementId: api.responses.list-sources-responses::composes::api.response.list-of-source-response
+      layerName: api
+      after:
+        source: api.responses.list-sources-responses
+        target: api.response.list-of-source-response
+        predicate: composes
+        layer: api
+        category: structural
+      timestamp: 2026-11-19T15:16:15.307Z
+  - sequence: 2760
+    removedAt: 2764
+    change:
+      type: add
+      elementId: api.operation.get-status
+      layerName: api
+      after:
+        id: bf111e3f-9bf7-4bb7-a968-6e78d723583e
+        path: api.operation.get-status
+        spec_node_id: api.operation
+        type: operation
+        layer_id: api
+        name: GET /status
+        attributes:
+          operationId: get-status
+          summary: GET /status
+          tags: status
+          http_method: GET
+          http_path: /status
+        source_reference:
+          provenance: extracted
+          locations:
+            - file: local-server/adapters/web/chat_routes.py
+              symbol: GET /status
+        metadata:
+          created_at: 2026-11-19T15:57:35.502Z
+          updated_at: 2026-11-19T15:57:35.502Z
+          version: 1
+      timestamp: 2026-11-19T15:57:35.835Z
+      origin:
+        by: tier0
+        rule: node-mapping:Route
+  - sequence: 2761
+    removedAt: 2765
+    change:
+      type: add
+      elementId: api.operation.get-runs
+      layerName: api
+      after:
+        id: ff8b38db-9f27-479b-9c8a-752f52a34c24
+        path: api.operation.get-runs
+        spec_node_id: api.operation
+        type: operation
+        layer_id: api
+        name: GET /runs
+        attributes:
+          operationId: get-runs
+          summary: GET /runs
+          tags: runs
+          http_method: GET
+          http_path: /runs
+        source_reference:
+          provenance: extracted
+          locations:
+            - file: local-server/adapters/web/interchange_routes.py
+              symbol: GET /runs
+        metadata:
+          created_at: 2026-11-19T15:57:35.502Z
+          updated_at: 2026-11-19T15:57:35.502Z
+          version: 1
+      timestamp: 2026-11-19T15:57:35.835Z
+      origin:
+        by: tier0
+        rule: node-mapping:Route
+  - sequence: 2762
+    removedAt: 2766
+    change:
+      type: add
+      elementId: api.operation.get-runs-run-id
+      layerName: api
+      after:
+        id: ab5c5788-3d8b-48b0-83b1-7debad40ff44
+        path: api.operation.get-runs-run-id
+        spec_node_id: api.operation
+        type: operation
+        layer_id: api
+        name: GET /runs/{run_id}
+        attributes:
+          operationId: get-runs-run-id
+          summary: GET /runs/{run_id}
+          tags: runs
+          http_method: GET
+          http_path: /runs/{run_id}
+        source_reference:
+          provenance: extracted
+          locations:
+            - file: local-server/adapters/web/interchange_routes.py
+              symbol: GET /runs/{run_id}
+        metadata:
+          created_at: 2026-11-19T15:57:35.502Z
+          updated_at: 2026-11-19T15:57:35.502Z
+          version: 1
+      timestamp: 2026-11-19T15:57:35.835Z
+      origin:
+        by: tier0
+        rule: node-mapping:Route
+  - sequence: 2763
+    removedAt: 2767
+    change:
+      type: add
+      elementId: api.operation.get-runs-run-id-change-events
+      layerName: api
+      after:
+        id: b37fae56-e989-430f-be70-a2ca51848a18
+        path: api.operation.get-runs-run-id-change-events
+        spec_node_id: api.operation
+        type: operation
+        layer_id: api
+        name: GET /runs/{run_id}/change-events
+        attributes:
+          operationId: get-runs-run-id-change-events
+          summary: GET /runs/{run_id}/change-events
+          tags: runs
+          http_method: GET
+          http_path: /runs/{run_id}/change-events
+        source_reference:
+          provenance: extracted
+          locations:
+            - file: local-server/adapters/web/interchange_routes.py
+              symbol: GET /runs/{run_id}/change-events
+        metadata:
+          created_at: 2026-11-19T15:57:35.502Z
+          updated_at: 2026-11-19T15:57:35.502Z
+          version: 1
+      timestamp: 2026-11-19T15:57:35.835Z
+      origin:
+        by: tier0
+        rule: node-mapping:Route
+  - sequence: 2703
+    removedAt: 2768
+    change:
+      type: add
+      elementId: data-store.collection.references
+      layerName: data-store
+      after:
+        id: 4b10530a-3418-49eb-94cd-b574a3cac198
+        path: data-store.collection.references
+        spec_node_id: data-store.collection
+        type: collection
+        layer_id: data-store
+        name: references
+        description: "reference.db table of imported reference entities (ConceptNet,
+          DBpedia, schema.org): uri (unique), label, description, source.
+          Created by LocalReferenceRepository on first use; no migrations."
+        attributes:
+          collectionType: TABLE
+        source_reference:
+          provenance: manual
+          locations:
+            - file: local-server/adapters/persistence/sqlite/reference_repo.py
+              symbol: LocalReferenceRepository._init_schema
+        metadata:
+          created_at: 2026-11-19T15:57:11.230Z
+          updated_at: 2026-11-19T15:57:11.230Z
+          version: 1
+      timestamp: 2026-11-19T15:57:11.496Z
+    rewritten: true
+  - sequence: 2704
+    removedAt: 2769
+    change:
+      type: add
+      elementId: data-store.collection.reference-relations
+      layerName: data-store
+      after:
+        id: fc8cdb6a-512c-4c41-b071-2d83237fca2b
+        path: data-store.collection.reference-relations
+        spec_node_id: data-store.collection
+        type: collection
+        layer_id: data-store
+        name: reference_relations
+        description: "reference.db table of imported reference triples: subject_uri,
+          predicate, object_uri, source. Created by LocalReferenceRepository on
+          first use; no migrations."
+        attributes:
+          collectionType: TABLE
+        source_reference:
+          provenance: manual
+          locations:
+            - file: local-server/adapters/persistence/sqlite/reference_repo.py
+              symbol: LocalReferenceRepository._init_schema
+        metadata:
+          created_at: 2026-11-19T15:57:11.230Z
+          updated_at: 2026-11-19T15:57:11.230Z
+          version: 1
+      timestamp: 2026-11-19T15:57:11.496Z
+    rewritten: true
+  - sequence: 3624
+    removedAt: 3852
+    change:
+      type: relationship-add
+      elementId: application.applicationcomponent.change-event-recorder::realizes::application.applicationservice.change-record-port
+      layerName: application
+      after:
+        source: application.applicationcomponent.change-event-recorder
+        target: application.applicationservice.change-record-port
+        predicate: realizes
+        layer: application
+        category: structural
+      timestamp: 2026-11-19T16:27:53.323Z
+  - sequence: 3858
+    removedAt: 3859
+    change:
+      type: relationship-add
+      elementId: business.businessprocess.sync-workspace-changes::accesses::business.businessobject.change-proposal
+      layerName: business
+      after:
+        source: business.businessprocess.sync-workspace-changes
+        target: business.businessobject.change-proposal
+        predicate: accesses
+        layer: business
+        category: structural
+      timestamp: 2026-11-19T16:31:12.427Z
+  - sequence: 3905
+    removedAt: 3906
+    change:
+      type: relationship-add
+      elementId: navigation.route.contact-sheet-route::satisfies::motivation.requirement.local-api-refuses-foreign-origins
+      layerName: navigation
+      after:
+        source: navigation.route.contact-sheet-route
+        target: motivation.requirement.local-api-refuses-foreign-origins
+        predicate: satisfies
+        layer: navigation
+        targetLayer: motivation
+        category: structural
+      timestamp: 2026-11-19T16:34:19.850Z
+  - sequence: 3048
+    removedAt: 4038
+    change:
+      type: add
+      elementId: security.threat.lan-exposure-via-the-vite-dev-server
+      layerName: security
+      after:
+        id: 27eab9a2-e886-4205-8dc9-ad793fe8fcf0
+        path: security.threat.lan-exposure-via-the-vite-dev-server
+        spec_node_id: security.threat
+        type: threat
+        layer_id: security
+        name: LAN Exposure via the Vite Dev Server
+        description: "npm run dev listens on all interfaces and proxies /api, including
+          the endpoint that returns the MCP token, so another machine on the
+          network can read and change the workspace. Not accepted: to fix under
+          #1655."
+        attributes:
+          threatens: api
+          likelihood: moderate
+          impact: high
+          criticality: high
+          description: Dev server exposes the API and MCP token to the LAN (#1655)
+        source_reference:
+          provenance: manual
+          locations:
+            - file: README.md
+        metadata:
+          created_at: 2026-11-19T16:18:36.733Z
+          updated_at: 2026-11-19T16:18:36.733Z
+          version: 1
+      timestamp: 2026-11-19T16:18:37.027Z
+    rewritten: true
+  - sequence: 3049
+    removedAt: 4039
+    change:
+      type: add
+      elementId: security.threat.server-side-request-forgery-via-url-sources
+      layerName: security
+      after:
+        id: 8e630d6a-17a8-44a7-acc4-f35291bccb71
+        path: security.threat.server-side-request-forgery-via-url-sources
+        spec_node_id: security.threat
+        type: threat
+        layer_id: security
+        name: Server-Side Request Forgery via URL Sources
+        description: "Adding a URL source fetches any http(s) URL and follows redirects
+          with no private-address check, so the server can be made to reach
+          internal services. Not accepted: to fix under #1656."
+        attributes:
+          threatens: api
+          likelihood: low
+          impact: moderate
+          criticality: medium
+          description: URL sources can reach private addresses (#1656)
+        source_reference:
+          provenance: manual
+          locations:
+            - file: local-server/adapters/sources/fetcher.py
+        metadata:
+          created_at: 2026-11-19T16:18:36.733Z
+          updated_at: 2026-11-19T16:18:36.733Z
+          version: 1
+      timestamp: 2026-11-19T16:18:37.027Z
+    rewritten: true
+  - sequence: 3049
+    removedAt: 4040
+    change:
+      type: add
+      elementId: security.threat.server-side-request-forgery-via-url-sources
+      layerName: security
+      after:
+        id: 8e630d6a-17a8-44a7-acc4-f35291bccb71
+        path: security.threat.server-side-request-forgery-via-url-sources
+        spec_node_id: security.threat
+        type: threat
+        layer_id: security
+        name: Server-Side Request Forgery via URL Sources
+        description: "Adding a URL source fetches any http(s) URL and follows redirects
+          with no private-address check, so the server can be made to reach
+          internal services. Not accepted: to fix under #1656."
+        attributes:
+          threatens: api
+          likelihood: low
+          impact: moderate
+          criticality: medium
+          description: URL sources can reach private addresses (#1656)
+        source_reference:
+          provenance: manual
+          locations:
+            - file: local-server/adapters/sources/fetcher.py
+        metadata:
+          created_at: 2026-11-19T16:18:36.733Z
+          updated_at: 2026-11-19T16:18:36.733Z
+          version: 1
+        accepted_gaps:
+          - direction: incoming
+            predicate: mitigates
+            other_spec_node_id: security.countermeasure
+            reason: "Unmitigated today (check_url checks the scheme only); the fix is
+              tracked as requirement
+              url-sources-refuse-private-network-addresses and GitHub issue
+              #1656."
+            decided_by: agent
+            decided_at: 2026-11-19T16:36:30.945Z
+            changeset: changeset-1795099306929-dmd727eav
+      timestamp: 2026-11-19T16:36:31.290Z
+    rewritten: true
+  - sequence: 3052
+    removedAt: 4041
+    change:
+      type: add
+      elementId: security.threat.workspace-data-sent-to-llm-providers
+      layerName: security
+      after:
+        id: f22d390b-c708-4255-af6c-d65597b61440
+        path: security.threat.workspace-data-sent-to-llm-providers
+        spec_node_id: security.threat
+        type: threat
+        layer_id: security
+        name: Workspace Data Sent to LLM Providers
+        description: Source text, ontology content and chat go to Anthropic, OpenAI,
+          OpenRouter or Cloudflare during extraction, chat, refinement and
+          triage.
+        attributes:
+          threatens: data
+          likelihood: high
+          impact: moderate
+          criticality: medium
+          description: Workspace content leaves the machine for LLM calls
+        source_reference:
+          provenance: manual
+          locations:
+            - file: README.md
+        metadata:
+          created_at: 2026-11-19T16:18:36.733Z
+          updated_at: 2026-11-19T16:18:36.733Z
+          version: 1
+      timestamp: 2026-11-19T16:18:37.027Z
+    rewritten: true
+  - sequence: 538
+    removedAt: 4055
+    change:
+      type: relationship-add
+      elementId: ux.view.pipelines-view::supports::motivation.outcome.improved-ai-inference-quality
+      layerName: ux
+      after:
+        source: ux.view.pipelines-view
+        target: motivation.outcome.improved-ai-inference-quality
+        predicate: supports
+        layer: ux
+        targetLayer: motivation
+        category: structural
+      timestamp: 2026-11-19T15:00:03.170Z
+  - sequence: 539
+    removedAt: 4055
+    change:
+      type: relationship-add
+      elementId: ux.view.settings-view::requires::security.role.administrator
+      layerName: ux
+      after:
+        source: ux.view.settings-view
+        target: security.role.administrator
+        predicate: requires
+        layer: ux
+        targetLayer: security
+        category: structural
+      timestamp: 2026-11-19T15:00:03.170Z
+  - sequence: 540
+    removedAt: 4055
+    change:
+      type: relationship-add
+      elementId: apm.metricinstrument.rag-processing-time::monitors::navigation.route.pipelines-route
+      layerName: apm
+      after:
+        source: apm.metricinstrument.rag-processing-time
+        target: navigation.route.pipelines-route
+        predicate: monitors
+        layer: apm
+        targetLayer: navigation
+        category: structural
+      timestamp: 2026-11-19T15:00:03.170Z
+  - sequence: 541
+    removedAt: 4055
+    change:
+      type: relationship-add
+      elementId: apm.metricinstrument.rag-processing-time::monitors::ux.view.pipelines-view
+      layerName: apm
+      after:
+        source: apm.metricinstrument.rag-processing-time
+        target: ux.view.pipelines-view
+        predicate: monitors
+        layer: apm
+        targetLayer: ux
+        category: structural
+      timestamp: 2026-11-19T15:00:03.170Z
+  - sequence: 542
+    removedAt: 4055
+    change:
+      type: relationship-add
+      elementId: apm.metricinstrument.llm-execution-tracker::monitors::navigation.route.pipeline-runs-route
+      layerName: apm
+      after:
+        source: apm.metricinstrument.llm-execution-tracker
+        target: navigation.route.pipeline-runs-route
+        predicate: monitors
+        layer: apm
+        targetLayer: navigation
+        category: structural
+      timestamp: 2026-11-19T15:00:03.170Z
+  - sequence: 543
+    removedAt: 4055
+    change:
+      type: relationship-add
+      elementId: apm.metricinstrument.background-task-queue-depth::monitors::navigation.route.settings-route
+      layerName: apm
+      after:
+        source: apm.metricinstrument.background-task-queue-depth
+        target: navigation.route.settings-route
+        predicate: monitors
+        layer: apm
+        targetLayer: navigation
+        category: structural
+      timestamp: 2026-11-19T15:00:03.170Z
+  - sequence: 683
+    removedAt: 4055
+    change:
+      type: relationship-delete
+      elementId: apm.metricinstrument.rag-processing-time::monitors::navigation.route.pipelines-route
+      layerName: apm
+      before:
+        source: apm.metricinstrument.rag-processing-time
+        target: navigation.route.pipelines-route
+        predicate: monitors
+        layer: apm
+        targetLayer: navigation
+      timestamp: 2026-11-19T15:03:57.325Z
+  - sequence: 684
+    removedAt: 4055
+    change:
+      type: relationship-delete
+      elementId: apm.metricinstrument.rag-processing-time::monitors::ux.view.pipelines-view
+      layerName: apm
+      before:
+        source: apm.metricinstrument.rag-processing-time
+        target: ux.view.pipelines-view
+        predicate: monitors
+        layer: apm
+        targetLayer: ux
+      timestamp: 2026-11-19T15:03:57.575Z
+  - sequence: 686
+    removedAt: 4055
+    change:
+      type: relationship-delete
+      elementId: apm.metricinstrument.llm-execution-tracker::monitors::navigation.route.pipeline-runs-route
+      layerName: apm
+      before:
+        source: apm.metricinstrument.llm-execution-tracker
+        target: navigation.route.pipeline-runs-route
+        predicate: monitors
+        layer: apm
+        targetLayer: navigation
+      timestamp: 2026-11-19T15:03:59.389Z
+  - sequence: 688
+    removedAt: 4055
+    change:
+      type: relationship-delete
+      elementId: apm.metricinstrument.background-task-queue-depth::monitors::navigation.route.settings-route
+      layerName: apm
+      before:
+        source: apm.metricinstrument.background-task-queue-depth
+        target: navigation.route.settings-route
+        predicate: monitors
+        layer: apm
+        targetLayer: navigation
+      timestamp: 2026-11-19T15:04:01.219Z
+  - sequence: 2904
+    removedAt: 4055
+    change:
+      type: relationship-delete
+      elementId: ux.view.pipelines-view::supports::motivation.outcome.improved-ai-inference-quality
+      layerName: ux
+      before:
+        source: ux.view.pipelines-view
+        target: motivation.outcome.improved-ai-inference-quality
+        predicate: supports
+        layer: ux
+        targetLayer: motivation
+      timestamp: 2026-11-19T16:15:21.631Z
+  - sequence: 3169
+    removedAt: 4055
+    change:
+      type: relationship-delete
+      elementId: ux.view.settings-view::requires::security.role.administrator
+      layerName: ux
+      before:
+        source: ux.view.settings-view
+        target: security.role.administrator
+        predicate: requires
+        layer: ux
+        targetLayer: security
+      timestamp: 2026-11-19T16:19:05.337Z

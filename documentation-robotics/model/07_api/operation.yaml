@@ -8,9 +8,9 @@ api.operation.create-taxonomy:
   description: POST /api/taxonomies — create a new taxonomy in the ontology
     management context
   attributes:
-    operationId: createTaxonomy
+    operationId: create_taxonomy_api_taxonomies_post
     summary: Create Taxonomy
-    tags: taxonomies
+    tags: ontology
     http_method: POST
     http_path: /api/taxonomies
   source_reference:
@@ -31,9 +31,9 @@ api.operation.list-taxonomies:
   name: List Taxonomies
   description: GET /api/taxonomies — list all taxonomies with optional filtering
   attributes:
-    operationId: listTaxonomies
+    operationId: list_taxonomies_api_taxonomies_get
     summary: List Taxonomies
-    tags: taxonomies
+    tags: ontology
     http_method: GET
     http_path: /api/taxonomies
   source_reference:
@@ -54,9 +54,9 @@ api.operation.get-taxonomy:
   name: Get Taxonomy
   description: GET /api/taxonomies/{taxonomy_id} — retrieve a single taxonomy by ID
   attributes:
-    operationId: getTaxonomy
+    operationId: get_taxonomy_api_taxonomies__taxonomy_id__get
     summary: Get Taxonomy
-    tags: taxonomies
+    tags: ontology
     http_method: GET
     http_path: /api/taxonomies/{taxonomy_id}
   source_reference:
@@ -77,9 +77,9 @@ api.operation.update-taxonomy:
   name: Update Taxonomy
   description: PUT /api/taxonomies/{taxonomy_id} — update an existing taxonomy
   attributes:
-    operationId: updateTaxonomy
+    operationId: update_taxonomy_api_taxonomies__taxonomy_id__put
     summary: Update Taxonomy
-    tags: taxonomies
+    tags: ontology
     http_method: PUT
     http_path: /api/taxonomies/{taxonomy_id}
   source_reference:
@@ -101,9 +101,9 @@ api.operation.delete-taxonomy:
   description: DELETE /api/taxonomies/{taxonomy_id} — delete a taxonomy and
     cascade to child entities
   attributes:
-    operationId: deleteTaxonomy
+    operationId: delete_taxonomy_api_taxonomies__taxonomy_id__delete
     summary: Delete Taxonomy
-    tags: taxonomies
+    tags: ontology
     http_method: DELETE
     http_path: /api/taxonomies/{taxonomy_id}
   source_reference:
@@ -125,9 +125,9 @@ api.operation.create-concept-scheme:
   description: POST /api/taxonomies/{taxonomy_id}/schemes — create a concept
     scheme within a taxonomy
   attributes:
-    operationId: createConceptScheme
+    operationId: create_concept_scheme_api_taxonomies__taxonomy_id__schemes_post
     summary: Create Concept Scheme
-    tags: taxonomies
+    tags: ontology
     http_method: POST
     http_path: /api/taxonomies/{taxonomy_id}/schemes
   source_reference:
@@ -148,9 +148,9 @@ api.operation.list-concept-schemes:
   name: List Concept Schemes
   description: GET /api/schemes — list all concept schemes with optional taxonomy filter
   attributes:
-    operationId: listConceptSchemes
+    operationId: list_concept_schemes_api_schemes_get
     summary: List Concept Schemes
-    tags: schemes
+    tags: ontology
     http_method: GET
     http_path: /api/schemes
   source_reference:
@@ -171,9 +171,9 @@ api.operation.get-concept-scheme:
   name: Get Concept Scheme
   description: GET /api/schemes/{scheme_id} — retrieve a single concept scheme by ID
   attributes:
-    operationId: getConceptScheme
+    operationId: get_concept_scheme_api_schemes__scheme_id__get
     summary: Get Concept Scheme
-    tags: schemes
+    tags: ontology
     http_method: GET
     http_path: /api/schemes/{scheme_id}
   source_reference:
@@ -194,9 +194,9 @@ api.operation.update-concept-scheme:
   name: Update Concept Scheme
   description: PUT /api/schemes/{scheme_id} — update an existing concept scheme
   attributes:
-    operationId: updateConceptScheme
+    operationId: update_concept_scheme_api_schemes__scheme_id__put
     summary: Update Concept Scheme
-    tags: schemes
+    tags: ontology
     http_method: PUT
     http_path: /api/schemes/{scheme_id}
   source_reference:
@@ -217,9 +217,9 @@ api.operation.delete-concept-scheme:
   name: Delete Concept Scheme
   description: DELETE /api/schemes/{scheme_id} — delete a concept scheme and its classes
   attributes:
-    operationId: deleteConceptScheme
+    operationId: delete_concept_scheme_api_schemes__scheme_id__delete
     summary: Delete Concept Scheme
-    tags: schemes
+    tags: ontology
     http_method: DELETE
     http_path: /api/schemes/{scheme_id}
   source_reference:
@@ -241,9 +241,9 @@ api.operation.create-class:
   description: POST /api/schemes/{scheme_id}/classes — create a class within a
     concept scheme
   attributes:
-    operationId: createClass
+    operationId: create_class_api_schemes__scheme_id__classes_post
     summary: Create Class
-    tags: schemes
+    tags: ontology
     http_method: POST
     http_path: /api/schemes/{scheme_id}/classes
   source_reference:
@@ -265,9 +265,9 @@ api.operation.list-classes:
   description: GET /api/classes — list all classes with optional filtering by
     scheme, parent, search
   attributes:
-    operationId: listClasses
+    operationId: list_classes_api_classes_get
     summary: List Classes
-    tags: classes
+    tags: ontology
     http_method: GET
     http_path: /api/classes
   source_reference:
@@ -288,9 +288,9 @@ api.operation.get-class:
   name: Get Class
   description: GET /api/classes/{class_id} — retrieve a single ontology class by ID
   attributes:
-    operationId: getClass
+    operationId: get_class_api_classes__class_id__get
     summary: Get Class
-    tags: classes
+    tags: ontology
     http_method: GET
     http_path: /api/classes/{class_id}
   source_reference:
@@ -311,9 +311,9 @@ api.operation.update-class:
   name: Update Class
   description: PUT /api/classes/{class_id} — update an existing ontology class
   attributes:
-    operationId: updateClass
+    operationId: update_class_api_classes__class_id__put
     summary: Update Class
-    tags: classes
+    tags: ontology
     http_method: PUT
     http_path: /api/classes/{class_id}
   source_reference:
@@ -335,9 +335,9 @@ api.operation.move-class:
   description: POST /api/classes/{class_id}/move — move a class to a different
     parent within the hierarchy
   attributes:
-    operationId: moveClass
+    operationId: move_class_api_classes__class_id__move_post
     summary: Move Class
-    tags: classes
+    tags: ontology
     http_method: POST
     http_path: /api/classes/{class_id}/move
   source_reference:
@@ -358,9 +358,9 @@ api.operation.delete-class:
   name: Delete Class
   description: DELETE /api/classes/{class_id} — delete a class and cascade to subclasses
   attributes:
-    operationId: deleteClass
+    operationId: delete_class_api_classes__class_id__delete
     summary: Delete Class
-    tags: classes
+    tags: ontology
     http_method: DELETE
     http_path: /api/classes/{class_id}
   source_reference:
@@ -382,9 +382,9 @@ api.operation.create-relationship:
   description: POST /api/relationships — create a typed directed relationship
     between two ontology entities
   attributes:
-    operationId: createRelationship
+    operationId: create_relationship_api_relationships_post
     summary: Create Relationship
-    tags: relationships
+    tags: ontology
     http_method: POST
     http_path: /api/relationships
   source_reference:
@@ -406,9 +406,9 @@ api.operation.list-relationships:
   description: GET /api/relationships — list relationships with optional
     source/target/type filtering
   attributes:
-    operationId: listRelationships
+    operationId: list_relationships_api_relationships_get
     summary: List Relationships
-    tags: relationships
+    tags: ontology
     http_method: GET
     http_path: /api/relationships
   source_reference:
@@ -430,9 +430,9 @@ api.operation.get-relationship:
   description: GET /api/relationships/{relationship_id} — retrieve a single
     relationship by ID
   attributes:
-    operationId: getRelationship
+    operationId: get_relationship_api_relationships__relationship_id__get
     summary: Get Relationship
-    tags: relationships
+    tags: ontology
     http_method: GET
     http_path: /api/relationships/{relationship_id}
   source_reference:
@@ -454,9 +454,9 @@ api.operation.delete-relationship:
   description: DELETE /api/relationships/{relationship_id} — remove a typed
     relationship between ontology entities
   attributes:
-    operationId: deleteRelationship
+    operationId: delete_relationship_api_relationships__relationship_id__delete
     summary: Delete Relationship
-    tags: relationships
+    tags: ontology
     http_method: DELETE
     http_path: /api/relationships/{relationship_id}
   source_reference:
@@ -478,9 +478,9 @@ api.operation.create-property-definition:
   description: POST /api/properties — define a new relationship type (object
     property) in the ontology
   attributes:
-    operationId: createPropertyDefinition
+    operationId: create_property_definition_api_properties_post
     summary: Create Property Definition
-    tags: properties
+    tags: ontology
     http_method: POST
     http_path: /api/properties
   source_reference:
@@ -501,9 +501,9 @@ api.operation.list-property-definitions:
   name: List Property Definitions
   description: GET /api/properties — list all property definitions (relationship types)
   attributes:
-    operationId: listPropertyDefinitions
+    operationId: list_property_definitions_api_properties_get
     summary: List Property Definitions
-    tags: properties
+    tags: ontology
     http_method: GET
     http_path: /api/properties
   source_reference:
@@ -525,9 +525,9 @@ api.operation.get-property-definition:
   description: GET /api/properties/{property_id} — retrieve a single property
     definition by ID
   attributes:
-    operationId: getPropertyDefinition
+    operationId: get_property_definition_api_properties__property_id__get
     summary: Get Property Definition
-    tags: properties
+    tags: ontology
     http_method: GET
     http_path: /api/properties/{property_id}
   source_reference:
@@ -548,9 +548,9 @@ api.operation.update-property-definition:
   name: Update Property Definition
   description: PUT /api/properties/{property_id} — update an existing property definition
   attributes:
-    operationId: updatePropertyDefinition
+    operationId: update_property_definition_api_properties__property_id__put
     summary: Update Property Definition
-    tags: properties
+    tags: ontology
     http_method: PUT
     http_path: /api/properties/{property_id}
   source_reference:
@@ -571,9 +571,9 @@ api.operation.delete-property-definition:
   name: Delete Property Definition
   description: DELETE /api/properties/{property_id} — delete a property definition
   attributes:
-    operationId: deletePropertyDefinition
+    operationId: delete_property_definition_api_properties__property_id__delete
     summary: Delete Property Definition
-    tags: properties
+    tags: ontology
     http_method: DELETE
     http_path: /api/properties/{property_id}
   source_reference:
@@ -595,9 +595,9 @@ api.operation.create-individual:
   description: POST /api/individuals — create an individual (named instance) of
     one or more classes
   attributes:
-    operationId: createIndividual
+    operationId: create_individual_api_individuals_post
     summary: Create Individual
-    tags: individuals
+    tags: ontology
     http_method: POST
     http_path: /api/individuals
   source_reference:
@@ -619,9 +619,9 @@ api.operation.list-individuals:
   description: GET /api/individuals — list all individuals with optional
     class/scheme filtering
   attributes:
-    operationId: listIndividuals
+    operationId: list_individuals_api_individuals_get
     summary: List Individuals
-    tags: individuals
+    tags: ontology
     http_method: GET
     http_path: /api/individuals
   source_reference:
@@ -642,9 +642,9 @@ api.operation.get-individual:
   name: Get Individual
   description: GET /api/individuals/{individual_id} — retrieve a single individual by ID
   attributes:
-    operationId: getIndividual
+    operationId: get_individual_api_individuals__individual_id__get
     summary: Get Individual
-    tags: individuals
+    tags: ontology
     http_method: GET
     http_path: /api/individuals/{individual_id}
   source_reference:
@@ -665,9 +665,9 @@ api.operation.update-individual:
   name: Update Individual
   description: PUT /api/individuals/{individual_id} — update an existing individual
   attributes:
-    operationId: updateIndividual
+    operationId: update_individual_api_individuals__individual_id__put
     summary: Update Individual
-    tags: individuals
+    tags: ontology
     http_method: PUT
     http_path: /api/individuals/{individual_id}
   source_reference:
@@ -688,9 +688,9 @@ api.operation.delete-individual:
   name: Delete Individual
   description: DELETE /api/individuals/{individual_id} — delete an individual
   attributes:
-    operationId: deleteIndividual
+    operationId: delete_individual_api_individuals__individual_id__delete
     summary: Delete Individual
-    tags: individuals
+    tags: ontology
     http_method: DELETE
     http_path: /api/individuals/{individual_id}
   source_reference:
@@ -712,9 +712,9 @@ api.operation.add-parent-class-to-individual:
   description: POST /api/individuals/{individual_id}/classes — add a parent class
     assignment to an individual
   attributes:
-    operationId: addParentClassToIndividual
+    operationId: add_parent_class_to_individual_api_individuals__individual_id__classes_post
     summary: Add Parent Class To Individual
-    tags: individuals
+    tags: ontology
     http_method: POST
     http_path: /api/individuals/{individual_id}/classes
   source_reference:
@@ -736,9 +736,9 @@ api.operation.remove-parent-class-from-individual:
   description: DELETE /api/individuals/{individual_id}/classes/{class_id} — remove
     a class assignment from an individual
   attributes:
-    operationId: removeParentClassFromIndividual
+    operationId: remove_parent_class_from_individual_api_individuals__individual_id__classes__class_id__delete
     summary: Remove Parent Class From Individual
-    tags: individuals
+    tags: ontology
     http_method: DELETE
     http_path: /api/individuals/{individual_id}/classes/{class_id}
   source_reference:
@@ -760,9 +760,9 @@ api.operation.reorder-individual-classes:
   description: PUT /api/individuals/{individual_id}/classes — reorder the class
     assignments on an individual
   attributes:
-    operationId: reorderIndividualClasses
+    operationId: reorder_individual_classes_api_individuals__individual_id__classes_put
     summary: Reorder Individual Classes
-    tags: individuals
+    tags: ontology
     http_method: PUT
     http_path: /api/individuals/{individual_id}/classes
   source_reference:
@@ -784,9 +784,9 @@ api.operation.get-individual-inherited-properties:
   description: GET /api/individuals/{individual_id}/inherited-properties —
     retrieve data properties inherited from parent classes
   attributes:
-    operationId: getIndividualInheritedProperties
+    operationId: get_individual_inherited_properties_api_individuals__individual_id__inherited_properties_get
     summary: Get Individual Inherited Properties
-    tags: individuals
+    tags: ontology
     http_method: GET
     http_path: /api/individuals/{individual_id}/inherited-properties
   source_reference:
@@ -798,30 +798,6 @@ api.operation.get-individual-inherited-properties:
     created_at: 2026-05-08T09:44:59.396Z
     updated_at: 2026-05-08T09:44:59.396Z
     version: 1
-api.operation.build-knowledge-graph:
-  id: 0ea9c252-7048-486d-b02e-ab189fbc0e96
-  path: api.operation.build-knowledge-graph
-  spec_node_id: api.operation
-  type: operation
-  layer_id: api
-  name: Build Knowledge Graph
-  description: POST /api/graph/build — build an in-memory knowledge graph from
-    persisted ontology entities and relationships
-  attributes:
-    operationId: buildKnowledgeGraph
-    summary: Build Knowledge Graph
-    tags: graph
-    http_method: POST
-    http_path: /api/graph/build
-  source_reference:
-    provenance: extracted
-    locations:
-      - file: local-server/adapters/web/graph_routes.py
-        symbol: build_graph
-  metadata:
-    created_at: 2026-05-08T09:45:12.490Z
-    updated_at: 2026-05-08T09:45:12.490Z
-    version: 1
 api.operation.get-graph-metrics:
   id: a549f8dd-e104-4c29-a346-3a02abee36fa
   path: api.operation.get-graph-metrics
@@ -832,7 +808,7 @@ api.operation.get-graph-metrics:
   description: GET /api/graph/metrics — retrieve global graph statistics (node
     count, edge count, density, diameter)
   attributes:
-    operationId: getGraphMetrics
+    operationId: get_metrics_api_graph_metrics_get
     summary: Get Graph Metrics
     tags: graph
     http_method: GET
@@ -856,7 +832,7 @@ api.operation.get-degree-distribution:
   description: GET /api/graph/degree-distribution — retrieve node degree
     distribution histogram
   attributes:
-    operationId: getDegreeDistribution
+    operationId: get_degree_distribution_api_graph_degree_distribution_get
     summary: Get Degree Distribution
     tags: graph
     http_method: GET
@@ -879,7 +855,7 @@ api.operation.get-shortest-path:
   name: Get Shortest Path
   description: GET /api/graph/paths/shortest — find shortest path between two graph nodes
   attributes:
-    operationId: getShortestPath
+    operationId: get_shortest_path_api_graph_paths_shortest_get
     summary: Get Shortest Path
     tags: graph
     http_method: GET
@@ -903,7 +879,7 @@ api.operation.get-all-paths:
   description: GET /api/graph/paths/all — find all paths between two graph nodes
     up to a maximum depth
   attributes:
-    operationId: getAllPaths
+    operationId: get_all_paths_api_graph_paths_all_get
     summary: Get All Paths
     tags: graph
     http_method: GET
@@ -927,7 +903,7 @@ api.operation.get-centrality:
   description: GET /api/graph/centrality — compute node centrality scores
     (betweenness, pagerank, closeness, degree)
   attributes:
-    operationId: getCentrality
+    operationId: get_centrality_api_graph_centrality_get
     summary: Get Centrality
     tags: graph
     http_method: GET
@@ -951,7 +927,7 @@ api.operation.get-communities:
   description: GET /api/graph/communities — detect communities/clusters in the
     knowledge graph
   attributes:
-    operationId: getCommunities
+    operationId: get_communities_api_graph_communities_get
     summary: Get Communities
     tags: graph
     http_method: GET
@@ -975,7 +951,7 @@ api.operation.get-neighbors:
   description: GET /api/graph/nodes/{node_id}/neighbors — retrieve immediate
     neighbors of a graph node
   attributes:
-    operationId: getNeighbors
+    operationId: get_neighbors_api_graph_nodes__node_id__neighbors_get
     summary: Get Neighbors
     tags: graph
     http_method: GET
@@ -998,7 +974,7 @@ api.operation.get-subgraph:
   name: Get Subgraph
   description: GET /api/graph/subgraph — extract a subgraph for a set of root node IDs
   attributes:
-    operationId: getSubgraph
+    operationId: get_subgraph_api_graph_subgraph_get
     summary: Get Subgraph
     tags: graph
     http_method: GET
@@ -1022,7 +998,7 @@ api.operation.get-subgraph-by-depth:
   description: GET /api/graph/nodes/{node_id}/subgraph — extract a depth-bounded
     subgraph rooted at a node
   attributes:
-    operationId: getSubgraphByDepth
+    operationId: get_subgraph_by_depth_api_graph_nodes__node_id__subgraph_get
     summary: Get Subgraph By Depth
     tags: graph
     http_method: GET
@@ -1046,7 +1022,7 @@ api.operation.check-cycle:
   description: POST /api/graph/cycle-check — detect if adding a directed edge
     would create a cycle
   attributes:
-    operationId: checkCycle
+    operationId: check_cycle_api_graph_cycle_check_post
     summary: Check Cycle
     tags: graph
     http_method: POST
@@ -1070,7 +1046,7 @@ api.operation.execute-sparql:
   description: POST /api/graph/sparql — execute a SPARQL SELECT query over the
     in-memory RDF graph
   attributes:
-    operationId: executeSparql
+    operationId: execute_sparql_api_graph_sparql_post
     summary: Execute SPARQL
     tags: graph
     http_method: POST
@@ -1094,8 +1070,8 @@ api.operation.get-rdf-triples:
   description: GET /api/graph/rdf/triples — retrieve all RDF triples from the
     knowledge graph
   attributes:
-    operationId: getRdfTriples
-    summary: Get RDF Triples
+    operationId: get_rdf_triples_api_graph_rdf_triples_get
+    summary: Get Rdf Triples
     tags: graph
     http_method: GET
     http_path: /api/graph/rdf/triples
@@ -1118,8 +1094,8 @@ api.operation.get-rdf-triple-count:
   description: GET /api/graph/rdf/count — get the count of RDF triples in the
     knowledge graph
   attributes:
-    operationId: getRdfTripleCount
-    summary: Get RDF Triple Count
+    operationId: get_rdf_triple_count_api_graph_rdf_count_get
+    summary: Get Rdf Triple Count
     tags: graph
     http_method: GET
     http_path: /api/graph/rdf/count
@@ -1142,9 +1118,9 @@ api.operation.extract-entities:
   description: POST /api/extract — extract ontology entities from a text corpus
     using NLP and LLM pipelines
   attributes:
-    operationId: extractEntities
+    operationId: extract_entities_api_extract_post
     summary: Extract Entities
-    tags: extract
+    tags: extraction
     http_method: POST
     http_path: /api/extract
   source_reference:
@@ -1166,9 +1142,9 @@ api.operation.analyze-text:
   description: POST /api/analyze_text — analyze text for entities, concepts, and
     relationships without persisting
   attributes:
-    operationId: analyzeText
+    operationId: analyze_text_api_analyze_text_post
     summary: Analyze Text
-    tags: analyze_text
+    tags: extraction
     http_method: POST
     http_path: /api/analyze_text
   source_reference:
@@ -1190,9 +1166,9 @@ api.operation.enrich-from-references:
   description: POST /api/enrich_from_references — enrich existing ontology
     entities with data from external reference sources
   attributes:
-    operationId: enrichFromReferences
+    operationId: enrich_from_references_api_enrich_from_references_post
     summary: Enrich From References
-    tags: enrich_from_references
+    tags: extraction
     http_method: POST
     http_path: /api/enrich_from_references
   source_reference:
@@ -1214,8 +1190,8 @@ api.operation.get-system-health:
   description: GET /api/v1/admin/health — retrieve overall system health status
     across all services
   attributes:
-    operationId: getSystemHealth
-    summary: Get System Health
+    operationId: check_health_api_v1_admin_health_get
+    summary: Check Health
     tags: admin
     http_method: GET
     http_path: /api/v1/admin/health
@@ -1223,7 +1199,7 @@ api.operation.get-system-health:
     provenance: extracted
     locations:
       - file: local-server/adapters/web/admin_routes.py
-        symbol: get_system_health
+        symbol: check_health
   metadata:
     created_at: 2026-05-08T09:45:39.941Z
     updated_at: 2026-05-08T09:45:39.941Z
@@ -1238,7 +1214,7 @@ api.operation.get-database-health:
   description: GET /api/v1/admin/health/database — check database connectivity and
     integrity for local.db and operations.db
   attributes:
-    operationId: getDatabaseHealth
+    operationId: get_database_health_api_v1_admin_health_database_get
     summary: Get Database Health
     tags: admin
     http_method: GET
@@ -1262,7 +1238,7 @@ api.operation.get-service-metrics:
   description: GET /api/v1/admin/health/services — retrieve per-service metrics
     and uptime statistics
   attributes:
-    operationId: getServiceMetrics
+    operationId: get_service_metrics_api_v1_admin_health_services_get
     summary: Get Service Metrics
     tags: admin
     http_method: GET
@@ -1286,8 +1262,8 @@ api.operation.get-embedding-health:
   description: GET /api/v1/admin/health/embedding — check embedding model
     availability and readiness
   attributes:
-    operationId: getEmbeddingHealth
-    summary: Get Embedding Health
+    operationId: get_embedding_status_api_v1_admin_health_embedding_get
+    summary: Get Embedding Status
     tags: admin
     http_method: GET
     http_path: /api/v1/admin/health/embedding
@@ -1295,7 +1271,7 @@ api.operation.get-embedding-health:
     provenance: extracted
     locations:
       - file: local-server/adapters/web/admin_routes.py
-        symbol: get_embedding_health
+        symbol: get_embedding_status
   metadata:
     created_at: 2026-05-08T09:45:41.060Z
     updated_at: 2026-05-08T09:45:41.060Z
@@ -1310,8 +1286,8 @@ api.operation.get-nlp-health:
   description: GET /api/v1/admin/health/nlp — check spaCy NLP processor
     availability and readiness
   attributes:
-    operationId: getNlpHealth
-    summary: Get NLP Health
+    operationId: get_nlp_status_api_v1_admin_health_nlp_get
+    summary: Get Nlp Status
     tags: admin
     http_method: GET
     http_path: /api/v1/admin/health/nlp
@@ -1319,34 +1295,10 @@ api.operation.get-nlp-health:
     provenance: extracted
     locations:
       - file: local-server/adapters/web/admin_routes.py
-        symbol: get_nlp_health
+        symbol: get_nlp_status
   metadata:
     created_at: 2026-05-08T09:45:41.441Z
     updated_at: 2026-05-08T09:45:41.441Z
-    version: 1
-api.operation.get-background-tasks-summary:
-  id: 4161e295-71ff-482c-ba4b-60ec9887cc2d
-  path: api.operation.get-background-tasks-summary
-  spec_node_id: api.operation
-  type: operation
-  layer_id: api
-  name: Get Background Tasks Summary
-  description: GET /api/v1/admin/health/tasks — retrieve background task queue
-    summary and counts
-  attributes:
-    operationId: getBackgroundTasksSummary
-    summary: Get Background Tasks Summary
-    tags: admin
-    http_method: GET
-    http_path: /api/v1/admin/health/tasks
-  source_reference:
-    provenance: extracted
-    locations:
-      - file: local-server/adapters/web/admin_routes.py
-        symbol: get_background_tasks_summary
-  metadata:
-    created_at: 2026-05-08T09:45:47.065Z
-    updated_at: 2026-05-08T09:45:47.065Z
     version: 1
 api.operation.get-configuration:
   id: 514271f4-201b-4683-b4f3-f9fefb7ebb66
@@ -1357,7 +1309,7 @@ api.operation.get-configuration:
   name: Get Configuration
   description: GET /api/v1/admin/configuration — retrieve current application configuration
   attributes:
-    operationId: getConfiguration
+    operationId: get_configuration_api_v1_admin_configuration_get
     summary: Get Configuration
     tags: admin
     http_method: GET
@@ -1381,16 +1333,16 @@ api.operation.update-configuration-section:
   description: PATCH /api/v1/admin/configuration — update a section of the
     application configuration
   attributes:
-    operationId: updateConfigurationSection
-    summary: Update Configuration Section
+    operationId: update_configuration_api_v1_admin_configuration__section__patch
+    summary: Update Configuration
     tags: admin
     http_method: PATCH
-    http_path: /api/v1/admin/configuration
+    http_path: /api/v1/admin/configuration/{section}
   source_reference:
     provenance: extracted
     locations:
       - file: local-server/adapters/web/admin_routes.py
-        symbol: update_configuration_section
+        symbol: update_configuration
   metadata:
     created_at: 2026-05-08T09:45:47.959Z
     updated_at: 2026-05-08T09:45:47.959Z
@@ -1405,7 +1357,7 @@ api.operation.reset-configuration:
   description: POST /api/v1/admin/configuration/reset — reset configuration to
     defaults from config.json
   attributes:
-    operationId: resetConfiguration
+    operationId: reset_configuration_api_v1_admin_configuration_reset_post
     summary: Reset Configuration
     tags: admin
     http_method: POST
@@ -1428,8 +1380,8 @@ api.operation.list-background-tasks:
   name: List Background Tasks
   description: GET /api/v1/admin/tasks — list all background tasks with status
   attributes:
-    operationId: listBackgroundTasks
-    summary: List Background Tasks
+    operationId: list_tasks_api_v1_admin_tasks_get
+    summary: List Tasks
     tags: admin
     http_method: GET
     http_path: /api/v1/admin/tasks
@@ -1437,7 +1389,7 @@ api.operation.list-background-tasks:
     provenance: extracted
     locations:
       - file: local-server/adapters/web/admin_routes.py
-        symbol: list_background_tasks
+        symbol: list_tasks
   metadata:
     created_at: 2026-05-08T09:45:48.738Z
     updated_at: 2026-05-08T09:45:48.738Z
@@ -1451,8 +1403,8 @@ api.operation.get-background-task:
   name: Get Background Task
   description: GET /api/v1/admin/tasks/{task_id} — retrieve a single background task by ID
   attributes:
-    operationId: getBackgroundTask
-    summary: Get Background Task
+    operationId: get_task_api_v1_admin_tasks__task_id__get
+    summary: Get Task
     tags: admin
     http_method: GET
     http_path: /api/v1/admin/tasks/{task_id}
@@ -1460,7 +1412,7 @@ api.operation.get-background-task:
     provenance: extracted
     locations:
       - file: local-server/adapters/web/admin_routes.py
-        symbol: get_background_task
+        symbol: get_task
   metadata:
     created_at: 2026-05-08T09:45:54.231Z
     updated_at: 2026-05-08T09:45:54.231Z
@@ -1475,8 +1427,8 @@ api.operation.get-reference-status:
   description: GET /api/reference/status — check availability and status of
     external reference sources (ConceptNet, DBpedia, Wikidata, schema.org)
   attributes:
-    operationId: getReferenceStatus
-    summary: Get Reference Status
+    operationId: reference_status_api_reference_status_get
+    summary: Reference Status
     tags: reference
     http_method: GET
     http_path: /api/reference/status
@@ -1499,7 +1451,7 @@ api.operation.search-references:
   description: POST /api/reference/search — search external reference sources for
     concepts matching a query
   attributes:
-    operationId: searchReferences
+    operationId: search_references_api_reference_search_post
     summary: Search References
     tags: reference
     http_method: POST
@@ -1523,7 +1475,7 @@ api.operation.get-reference-relations:
   description: POST /api/reference/relations — retrieve semantic relations for a
     concept from external reference sources
   attributes:
-    operationId: getReferenceRelations
+    operationId: get_reference_relations_api_reference_relations_post
     summary: Get Reference Relations
     tags: reference
     http_method: POST
@@ -1547,7 +1499,7 @@ api.operation.export-ontology:
   description: POST /api/v1/interchange/export — export ontology in SKOS, OWL, or
     GraphML format as streaming response
   attributes:
-    operationId: exportOntology
+    operationId: export_ontology_api_v1_interchange_export_post
     summary: Export Ontology
     tags: interchange
     http_method: POST
@@ -1571,7 +1523,7 @@ api.operation.import-ontology:
   description: POST /api/v1/interchange/import — import ontology from SKOS, OWL,
     or GraphML file; creates ImportRun record
   attributes:
-    operationId: importOntology
+    operationId: import_ontology_api_v1_interchange_import_post
     summary: Import Ontology
     tags: interchange
     http_method: POST
@@ -1595,7 +1547,7 @@ api.operation.list-import-runs:
   description: GET /api/v1/interchange/runs — list all import run records with
     status and metadata
   attributes:
-    operationId: listImportRuns
+    operationId: list_import_runs_api_v1_interchange_runs_get
     summary: List Import Runs
     tags: interchange
     http_method: GET
@@ -1619,7 +1571,7 @@ api.operation.get-import-run:
   description: GET /api/v1/interchange/runs/{run_id} — retrieve a single import
     run record by ID
   attributes:
-    operationId: getImportRun
+    operationId: get_import_run_api_v1_interchange_runs__run_id__get
     summary: Get Import Run
     tags: interchange
     http_method: GET
@@ -1643,7 +1595,7 @@ api.operation.get-run-change-events:
   description: GET /api/v1/interchange/runs/{run_id}/change-events — retrieve all
     change events generated by an import run
   attributes:
-    operationId: getRunChangeEvents
+    operationId: get_run_change_events_api_v1_interchange_runs__run_id__change_events_get
     summary: Get Run Change Events
     tags: interchange
     http_method: GET
@@ -1667,7 +1619,7 @@ api.operation.get-change-history-all:
   description: GET /api/v1/versioning/changes — retrieve full change history for
     all entities
   attributes:
-    operationId: getChangeHistoryAll
+    operationId: get_change_history_all_api_v1_versioning_changes_get
     summary: Get Change History All
     tags: versioning
     http_method: GET
@@ -1691,7 +1643,7 @@ api.operation.get-change-history-by-entity:
   description: GET /api/v1/versioning/changes/{entity_id} — retrieve change
     history for a specific entity
   attributes:
-    operationId: getChangeHistoryByEntity
+    operationId: get_change_history_by_entity_api_v1_versioning_changes__entity_id__get
     summary: Get Change History By Entity
     tags: versioning
     http_method: GET
@@ -1705,174 +1657,6 @@ api.operation.get-change-history-by-entity:
     created_at: 2026-05-08T09:46:11.311Z
     updated_at: 2026-05-08T09:46:11.311Z
     version: 1
-api.operation.list-entity-versions:
-  id: d2b3e3df-f074-4935-b530-7f183a58ea4b
-  path: api.operation.list-entity-versions
-  spec_node_id: api.operation
-  type: operation
-  layer_id: api
-  name: List Entity Versions
-  description: GET /api/v1/versioning/versions/{entity_id} — list all stored
-    versions of an entity
-  attributes:
-    operationId: listEntityVersions
-    summary: List Entity Versions
-    tags: versioning
-    http_method: GET
-    http_path: /api/v1/versioning/versions/{entity_id}
-  source_reference:
-    provenance: extracted
-    locations:
-      - file: local-server/adapters/web/versioning_routes.py
-        symbol: list_versions
-  metadata:
-    created_at: 2026-05-08T09:46:11.949Z
-    updated_at: 2026-05-08T09:46:11.949Z
-    version: 1
-api.operation.get-entity-version:
-  id: bc0e23cb-fafa-4ceb-ab2e-074670f0beff
-  path: api.operation.get-entity-version
-  spec_node_id: api.operation
-  type: operation
-  layer_id: api
-  name: Get Entity Version
-  description: GET /api/v1/versioning/versions/{entity_id}/{version} — retrieve a
-    specific historical version of an entity
-  attributes:
-    operationId: getEntityVersion
-    summary: Get Entity Version
-    tags: versioning
-    http_method: GET
-    http_path: /api/v1/versioning/versions/{entity_id}/{version}
-  source_reference:
-    provenance: extracted
-    locations:
-      - file: local-server/adapters/web/versioning_routes.py
-        symbol: get_entity_version
-  metadata:
-    created_at: 2026-05-08T09:46:12.375Z
-    updated_at: 2026-05-08T09:46:12.375Z
-    version: 1
-api.operation.create-changeset:
-  id: 11d6e3a0-f37b-4393-936f-1a3faf794f07
-  path: api.operation.create-changeset
-  spec_node_id: api.operation
-  type: operation
-  layer_id: api
-  name: Create Changeset
-  description: POST /api/v1/versioning/changesets — create a new versioning
-    changeset for grouping changes
-  attributes:
-    operationId: createChangeset
-    summary: Create Changeset
-    tags: versioning
-    http_method: POST
-    http_path: /api/v1/versioning/changesets
-  source_reference:
-    provenance: extracted
-    locations:
-      - file: local-server/adapters/web/versioning_routes.py
-        symbol: create_changeset
-  metadata:
-    created_at: 2026-05-08T09:46:12.821Z
-    updated_at: 2026-05-08T09:46:12.821Z
-    version: 1
-api.operation.get-changeset:
-  id: eefff472-4192-4e15-bf89-9b420ae7be1d
-  path: api.operation.get-changeset
-  spec_node_id: api.operation
-  type: operation
-  layer_id: api
-  name: Get Changeset
-  description: GET /api/v1/versioning/changesets/{changeset_id} — retrieve a
-    versioning changeset by ID
-  attributes:
-    operationId: getChangeset
-    summary: Get Changeset
-    tags: versioning
-    http_method: GET
-    http_path: /api/v1/versioning/changesets/{changeset_id}
-  source_reference:
-    provenance: extracted
-    locations:
-      - file: local-server/adapters/web/versioning_routes.py
-        symbol: get_changeset
-  metadata:
-    created_at: 2026-05-08T09:46:18.182Z
-    updated_at: 2026-05-08T09:46:18.182Z
-    version: 1
-api.operation.stage-changeset:
-  id: 232444b8-5d30-4619-84dc-a56179f614da
-  path: api.operation.stage-changeset
-  spec_node_id: api.operation
-  type: operation
-  layer_id: api
-  name: Stage Changeset
-  description: POST /api/v1/versioning/changesets/{changeset_id}/stage — mark a
-    changeset as staged for review
-  attributes:
-    operationId: stageChangeset
-    summary: Stage Changeset
-    tags: versioning
-    http_method: POST
-    http_path: /api/v1/versioning/changesets/{changeset_id}/stage
-  source_reference:
-    provenance: extracted
-    locations:
-      - file: local-server/adapters/web/versioning_routes.py
-        symbol: stage_changeset
-  metadata:
-    created_at: 2026-05-08T09:46:18.606Z
-    updated_at: 2026-05-08T09:46:18.606Z
-    version: 1
-api.operation.submit-proposal:
-  id: 0f305fa0-7e4d-48b5-b5df-974a98633269
-  path: api.operation.submit-proposal
-  spec_node_id: api.operation
-  type: operation
-  layer_id: api
-  name: Submit Proposal
-  description: POST /api/v1/versioning/changesets/{changeset_id}/submit — submit a
-    changeset as a merge proposal
-  attributes:
-    operationId: submitProposal
-    summary: Submit Proposal
-    tags: versioning
-    http_method: POST
-    http_path: /api/v1/versioning/changesets/{changeset_id}/submit
-  source_reference:
-    provenance: extracted
-    locations:
-      - file: local-server/adapters/web/versioning_routes.py
-        symbol: submit_proposal
-  metadata:
-    created_at: 2026-05-08T09:46:19.022Z
-    updated_at: 2026-05-08T09:46:19.022Z
-    version: 1
-api.operation.approve-proposal:
-  id: 79fbc927-57cd-4102-bb1b-8ae507d15300
-  path: api.operation.approve-proposal
-  spec_node_id: api.operation
-  type: operation
-  layer_id: api
-  name: Approve Proposal
-  description: POST /api/v1/versioning/proposals/{proposal_id}/approve — approve a
-    merge proposal
-  attributes:
-    operationId: approveProposal
-    summary: Approve Proposal
-    tags: versioning
-    http_method: POST
-    http_path: /api/v1/versioning/proposals/{proposal_id}/approve
-  source_reference:
-    provenance: extracted
-    locations:
-      - file: local-server/adapters/web/versioning_routes.py
-        symbol: approve_proposal
-  metadata:
-    created_at: 2026-05-08T09:46:19.445Z
-    updated_at: 2026-05-08T09:46:19.445Z
-    version: 1
 api.operation.reject-proposal:
   id: 19d891df-4b26-41aa-a6b7-eee2c7fe6373
   path: api.operation.reject-proposal
@@ -1880,118 +1664,22 @@ api.operation.reject-proposal:
   type: operation
   layer_id: api
   name: Reject Proposal
-  description: POST /api/v1/versioning/proposals/{proposal_id}/reject — reject a
-    merge proposal
+  description: "Reject a proposal: its pending operations are decided rejected
+    with a reason."
   attributes:
-    operationId: rejectProposal
+    operationId: reject_proposal_api_proposals__proposal_id__reject_post
     summary: Reject Proposal
-    tags: versioning
+    tags: proposals
     http_method: POST
-    http_path: /api/v1/versioning/proposals/{proposal_id}/reject
+    http_path: /api/proposals/{proposal_id}/reject
   source_reference:
     provenance: extracted
     locations:
-      - file: local-server/adapters/web/versioning_routes.py
+      - file: local-server/adapters/web/proposals_routes.py
         symbol: reject_proposal
   metadata:
     created_at: 2026-05-08T09:46:19.864Z
     updated_at: 2026-05-08T09:46:19.864Z
-    version: 1
-api.operation.detect-conflicts:
-  id: 5abff700-5b70-4bf1-a631-06d48f153372
-  path: api.operation.detect-conflicts
-  spec_node_id: api.operation
-  type: operation
-  layer_id: api
-  name: Detect Conflicts
-  description: GET /api/v1/versioning/proposals/{proposal_id}/conflicts — detect
-    merge conflicts in a proposal
-  attributes:
-    operationId: detectConflicts
-    summary: Detect Conflicts
-    tags: versioning
-    http_method: GET
-    http_path: /api/v1/versioning/proposals/{proposal_id}/conflicts
-  source_reference:
-    provenance: extracted
-    locations:
-      - file: local-server/adapters/web/versioning_routes.py
-        symbol: detect_conflicts
-  metadata:
-    created_at: 2026-05-08T09:46:26.312Z
-    updated_at: 2026-05-08T09:46:26.312Z
-    version: 1
-api.operation.auto-resolve-conflicts:
-  id: f647936a-1745-4af7-9fa5-3a9c2999ba11
-  path: api.operation.auto-resolve-conflicts
-  spec_node_id: api.operation
-  type: operation
-  layer_id: api
-  name: Auto Resolve Conflicts
-  description: POST /api/v1/versioning/proposals/{proposal_id}/auto-resolve —
-    automatically resolve merge conflicts using default strategies
-  attributes:
-    operationId: autoResolveConflicts
-    summary: Auto Resolve Conflicts
-    tags: versioning
-    http_method: POST
-    http_path: /api/v1/versioning/proposals/{proposal_id}/auto-resolve
-  source_reference:
-    provenance: extracted
-    locations:
-      - file: local-server/adapters/web/versioning_routes.py
-        symbol: auto_resolve_conflicts
-  metadata:
-    created_at: 2026-05-08T09:46:26.734Z
-    updated_at: 2026-05-08T09:46:26.734Z
-    version: 1
-api.operation.resolve-conflicts:
-  id: 8d1f510e-a30b-4b68-8ce1-db37146056d0
-  path: api.operation.resolve-conflicts
-  spec_node_id: api.operation
-  type: operation
-  layer_id: api
-  name: Resolve Conflicts
-  description: POST /api/v1/versioning/proposals/{proposal_id}/resolve — manually
-    resolve merge conflicts with explicit resolutions
-  attributes:
-    operationId: resolveConflicts
-    summary: Resolve Conflicts
-    tags: versioning
-    http_method: POST
-    http_path: /api/v1/versioning/proposals/{proposal_id}/resolve
-  source_reference:
-    provenance: extracted
-    locations:
-      - file: local-server/adapters/web/versioning_routes.py
-        symbol: resolve_conflicts
-  metadata:
-    created_at: 2026-05-08T09:46:27.160Z
-    updated_at: 2026-05-08T09:46:27.160Z
-    version: 1
-api.operation.merge-proposal:
-  id: c8903eed-8fd7-46fb-abe5-2e5cf9115ed7
-  path: api.operation.merge-proposal
-  spec_node_id: api.operation
-  type: operation
-  layer_id: api
-  name: Merge Proposal
-  description: POST /api/v1/versioning/proposals/{proposal_id}/merge — merge an
-    approved proposal into the main ontology
-  attributes:
-    operationId: mergeProposal
-    summary: Merge Proposal
-    tags: versioning
-    http_method: POST
-    http_path: /api/v1/versioning/proposals/{proposal_id}/merge
-  source_reference:
-    provenance: extracted
-    locations:
-      - file: local-server/adapters/web/versioning_routes.py
-        symbol: merge_proposal
-  metadata:
-    created_at: 2026-05-08T09:46:27.595Z
-    updated_at: 2026-05-08T09:46:27.595Z
     version: 1
 api.operation.get-sync-status:
   id: 77f6db28-e0b9-4eaf-9e07-0df5935329f0
@@ -2003,7 +1691,7 @@ api.operation.get-sync-status:
   description: GET /api/v1/versioning/sync/status — retrieve current remote sync
     status and last sync timestamps
   attributes:
-    operationId: getSyncStatus
+    operationId: get_sync_status_api_v1_versioning_sync_status_get
     summary: Get Sync Status
     tags: versioning
     http_method: GET
@@ -2027,7 +1715,7 @@ api.operation.push-changes:
   description: POST /api/v1/versioning/sync/push — push local changes to remote
     sync target (S3/DuckDB)
   attributes:
-    operationId: pushChanges
+    operationId: push_changes_api_v1_versioning_sync_push_post
     summary: Push Changes
     tags: versioning
     http_method: POST
@@ -2051,7 +1739,7 @@ api.operation.pull-changes:
   description: POST /api/v1/versioning/sync/pull — pull remote changes from sync
     target into local ontology
   attributes:
-    operationId: pullChanges
+    operationId: pull_changes_api_v1_versioning_sync_pull_post
     summary: Pull Changes
     tags: versioning
     http_method: POST
@@ -2072,18 +1760,18 @@ api.operation.create-pipeline-configuration:
   type: operation
   layer_id: api
   name: Create Pipeline Configuration
-  description: POST /api/pipelines — create a new LLM pipeline configuration
+  description: Create a user configuration for a pipeline type's implementation.
   attributes:
-    operationId: createPipelineConfiguration
-    summary: Create Pipeline Configuration
+    operationId: create_configuration_api_pipelines_types__pipeline_type__implementations__impl_id__configurations_post
+    summary: Create Configuration
     tags: pipelines
     http_method: POST
-    http_path: /api/pipelines
+    http_path: /api/pipelines/types/{pipeline_type}/implementations/{impl_id}/configurations
   source_reference:
     provenance: extracted
     locations:
-      - file: local-server/adapters/web/pipeline_routes.py
-        symbol: create_pipeline_configuration
+      - file: local-server/adapters/web/pipelines_routes.py
+        symbol: create_configuration
   metadata:
     created_at: 2026-05-08T09:46:37.383Z
     updated_at: 2026-05-08T09:46:37.383Z
@@ -2095,18 +1783,19 @@ api.operation.list-pipeline-configurations:
   type: operation
   layer_id: api
   name: List Pipeline Configurations
-  description: GET /api/pipelines — list all LLM pipeline configurations
+  description: List the built-in and user configurations of a pipeline type's
+    implementation.
   attributes:
-    operationId: listPipelineConfigurations
-    summary: List Pipeline Configurations
+    operationId: list_configurations_api_pipelines_types__pipeline_type__implementations__impl_id__configurations_get
+    summary: List Configurations
     tags: pipelines
     http_method: GET
-    http_path: /api/pipelines
+    http_path: /api/pipelines/types/{pipeline_type}/implementations/{impl_id}/configurations
   source_reference:
     provenance: extracted
     locations:
-      - file: local-server/adapters/web/pipeline_routes.py
-        symbol: list_pipeline_configurations
+      - file: local-server/adapters/web/pipelines_routes.py
+        symbol: list_configurations
   metadata:
     created_at: 2026-05-08T09:46:37.855Z
     updated_at: 2026-05-08T09:46:37.855Z
@@ -2118,19 +1807,18 @@ api.operation.get-pipeline-configuration:
   type: operation
   layer_id: api
   name: Get Pipeline Configuration
-  description: GET /api/pipelines/{pipeline_id} — retrieve a single pipeline
-    configuration by ID
+  description: Get one user-created pipeline configuration.
   attributes:
-    operationId: getPipelineConfiguration
-    summary: Get Pipeline Configuration
+    operationId: get_configuration_api_pipeline_configurations__config_id__get
+    summary: Get Configuration
     tags: pipelines
     http_method: GET
-    http_path: /api/pipelines/{pipeline_id}
+    http_path: /api/pipeline_configurations/{config_id}
   source_reference:
     provenance: extracted
     locations:
-      - file: local-server/adapters/web/pipeline_routes.py
-        symbol: get_pipeline_configuration
+      - file: local-server/adapters/web/pipelines_routes.py
+        symbol: get_configuration
   metadata:
     created_at: 2026-05-08T09:46:38.306Z
     updated_at: 2026-05-08T09:46:38.306Z
@@ -2142,18 +1830,18 @@ api.operation.update-pipeline-configuration:
   type: operation
   layer_id: api
   name: Update Pipeline Configuration
-  description: PUT /api/pipelines/{pipeline_id} — update an existing pipeline configuration
+  description: Update a user-created pipeline configuration (a new version).
   attributes:
-    operationId: updatePipelineConfiguration
-    summary: Update Pipeline Configuration
+    operationId: update_configuration_api_pipeline_configurations__config_id__put
+    summary: Update Configuration
     tags: pipelines
     http_method: PUT
-    http_path: /api/pipelines/{pipeline_id}
+    http_path: /api/pipeline_configurations/{config_id}
   source_reference:
     provenance: extracted
     locations:
-      - file: local-server/adapters/web/pipeline_routes.py
-        symbol: update_pipeline_configuration
+      - file: local-server/adapters/web/pipelines_routes.py
+        symbol: update_configuration
   metadata:
     created_at: 2026-05-08T09:46:38.765Z
     updated_at: 2026-05-08T09:46:38.765Z
@@ -2165,18 +1853,18 @@ api.operation.delete-pipeline-configuration:
   type: operation
   layer_id: api
   name: Delete Pipeline Configuration
-  description: DELETE /api/pipelines/{pipeline_id} — delete a pipeline configuration
+  description: Delete a user-created pipeline configuration.
   attributes:
-    operationId: deletePipelineConfiguration
-    summary: Delete Pipeline Configuration
+    operationId: delete_configuration_api_pipeline_configurations__config_id__delete
+    summary: Delete Configuration
     tags: pipelines
     http_method: DELETE
-    http_path: /api/pipelines/{pipeline_id}
+    http_path: /api/pipeline_configurations/{config_id}
   source_reference:
     provenance: extracted
     locations:
-      - file: local-server/adapters/web/pipeline_routes.py
-        symbol: delete_pipeline_configuration
+      - file: local-server/adapters/web/pipelines_routes.py
+        symbol: delete_configuration
   metadata:
     created_at: 2026-05-08T09:46:39.215Z
     updated_at: 2026-05-08T09:46:39.215Z
@@ -2188,19 +1876,19 @@ api.operation.execute-pipeline:
   type: operation
   layer_id: api
   name: Execute Pipeline
-  description: POST /api/pipelines/{pipeline_id}/execute — execute a pipeline
-    configuration with optional input overrides
+  description: Start a pipeline run of the given type (implementation and
+    configuration resolved by the registry); runs in the background.
   attributes:
-    operationId: executePipeline
-    summary: Execute Pipeline
+    operationId: run_pipeline_api_pipelines__pipeline_type__run_post
+    summary: Run Pipeline
     tags: pipelines
     http_method: POST
-    http_path: /api/pipelines/{pipeline_id}/execute
+    http_path: /api/pipelines/{pipeline_type}/run
   source_reference:
     provenance: extracted
     locations:
-      - file: local-server/adapters/web/pipeline_routes.py
-        symbol: execute_pipeline
+      - file: local-server/adapters/web/pipelines_routes.py
+        symbol: run_pipeline
   metadata:
     created_at: 2026-05-08T09:46:42.924Z
     updated_at: 2026-05-08T09:46:42.924Z
@@ -2212,19 +1900,18 @@ api.operation.get-pipeline-executions:
   type: operation
   layer_id: api
   name: Get Pipeline Executions
-  description: GET /api/pipelines/{pipeline_id}/executions — list all execution
-    records for a pipeline
+  description: List pipeline runs, newest first, filterable by type, status and batch.
   attributes:
-    operationId: getPipelineExecutions
-    summary: Get Pipeline Executions
+    operationId: list_pipeline_runs_api_pipelines_runs_get
+    summary: List Pipeline Runs
     tags: pipelines
     http_method: GET
-    http_path: /api/pipelines/{pipeline_id}/executions
+    http_path: /api/pipelines/runs
   source_reference:
     provenance: extracted
     locations:
-      - file: local-server/adapters/web/pipeline_routes.py
-        symbol: get_pipeline_executions
+      - file: local-server/adapters/web/pipelines_routes.py
+        symbol: list_pipeline_runs
   metadata:
     created_at: 2026-05-08T09:46:43.386Z
     updated_at: 2026-05-08T09:46:43.386Z
@@ -2240,7 +1927,7 @@ api.operation.build-graph:
     allows on-demand graph refresh and validates that construction succeeds
     without errors
   attributes:
-    operationId: buildGraph
+    operationId: build_graph_api_graph_build_post
     summary: Build Graph
     tags: graph
     http_method: POST
@@ -2254,53 +1941,6 @@ api.operation.build-graph:
     created_at: 2026-05-09T10:23:39.064Z
     updated_at: 2026-05-09T10:23:39.064Z
     version: 1
-api.operation.add-class-to-scheme:
-  id: 8e6a1762-b936-4a8a-96b3-d394e43c3fd4
-  path: api.operation.add-class-to-scheme
-  spec_node_id: api.operation
-  type: operation
-  layer_id: api
-  name: Add Class To Scheme
-  description: Add an existing class to a concept scheme
-  attributes:
-    operationId: addClassToScheme
-    summary: Add Class To Scheme
-    tags: schemes
-    http_method: POST
-    http_path: /api/schemes/{scheme_id}/classes/{class_id}
-  source_reference:
-    provenance: extracted
-    locations:
-      - file: local-server/adapters/web/ontology_routes.py
-        symbol: create_concept_scheme
-  metadata:
-    created_at: 2026-05-09T10:23:39.578Z
-    updated_at: 2026-05-09T10:23:39.578Z
-    version: 1
-api.operation.get-services-health:
-  id: b53b00cf-2907-470e-a79f-245a2981535f
-  path: api.operation.get-services-health
-  spec_node_id: api.operation
-  type: operation
-  layer_id: api
-  name: Get Services Health
-  description: Get service-level metrics including system uptime and list of
-    available LLM providers
-  attributes:
-    operationId: getServicesHealth
-    summary: Get Services Health
-    tags: admin
-    http_method: GET
-    http_path: /api/v1/admin/health/services
-  source_reference:
-    provenance: extracted
-    locations:
-      - file: local-server/adapters/web/admin_routes.py
-        symbol: get_service_metrics
-  metadata:
-    created_at: 2026-05-09T10:23:40.096Z
-    updated_at: 2026-05-09T10:23:40.096Z
-    version: 1
 api.operation.get-tasks-health:
   id: 077d7e6c-ab8f-473e-8311-a0956cd795f2
   path: api.operation.get-tasks-health
@@ -2311,8 +1951,8 @@ api.operation.get-tasks-health:
   description: Get summary of background task execution status with counts grouped
     by status (pending, running, completed, failed)
   attributes:
-    operationId: getTasksHealth
-    summary: Get Tasks Health
+    operationId: get_task_summary_api_v1_admin_health_tasks_get
+    summary: Get Task Summary
     tags: admin
     http_method: GET
     http_path: /api/v1/admin/health/tasks
@@ -2334,11 +1974,11 @@ api.operation.get-publish-diff-stats:
   name: Get Publish Diff Stats
   description: Get statistics about changes between draft and published state of a taxonomy
   attributes:
-    operationId: getPublishDiffStats
-    summary: Get taxonomy publish diff statistics
-    tags: taxonomies
+    operationId: get_publish_diff_stats_api_taxonomies__taxonomy_id__publish_diff_get
+    summary: Get Publish Diff Stats
+    tags: ontology
     http_method: GET
-    http_path: /taxonomies/{taxonomy_id}/publish-diff
+    http_path: /api/taxonomies/{taxonomy_id}/publish-diff
   source_reference:
     provenance: extracted
     locations:
@@ -2357,11 +1997,11 @@ api.operation.publish-taxonomy:
   name: Publish Taxonomy
   description: Publish a taxonomy draft, committing staged changes to the published state
   attributes:
-    operationId: publishTaxonomy
-    summary: Publish a taxonomy
-    tags: taxonomies
+    operationId: publish_taxonomy_api_taxonomies__taxonomy_id__publish_post
+    summary: Publish Taxonomy
+    tags: ontology
     http_method: POST
-    http_path: /taxonomies/{taxonomy_id}/publish
+    http_path: /api/taxonomies/{taxonomy_id}/publish
   source_reference:
     provenance: extracted
     locations:
@@ -2371,27 +2011,2009 @@ api.operation.publish-taxonomy:
     created_at: 2026-05-11T12:02:46.084Z
     updated_at: 2026-05-11T12:02:46.084Z
     version: 1
-api.operation.extract-triples:
-  id: 4312fd1b-4535-4e2f-aec7-6c946943fd0a
-  path: api.operation.extract-triples
+api.operation.list-taxonomy-predicates:
+  id: 8ef87f6d-3210-4121-a599-2d6cc7e9ccb0
+  path: api.operation.list-taxonomy-predicates
   spec_node_id: api.operation
   type: operation
   layer_id: api
-  name: Extract Triples
-  description: Extract subject-predicate-object triples from text using NLP and
-    ontology context
+  name: List Taxonomy Predicates
+  description: "The taxonomy's predicate catalog: the relation verbs its
+    relationship types use."
   attributes:
-    operationId: extractTriples
-    summary: Extract RDF triples from text
-    tags: extraction
-    http_method: POST
-    http_path: /extraction/triples
+    operationId: list_taxonomy_predicates_api_taxonomies__taxonomy_id__predicates_get
+    summary: List Taxonomy Predicates
+    tags: ontology
+    http_method: GET
+    http_path: /api/taxonomies/{taxonomy_id}/predicates
   source_reference:
     provenance: extracted
     locations:
-      - file: local-server/adapters/web/extraction_routes.py
-        symbol: extract_triples
+      - file: local-server/adapters/web/ontology_routes.py
+        symbol: list_taxonomy_predicates
   metadata:
-    created_at: 2026-05-11T12:02:46.656Z
-    updated_at: 2026-05-11T12:02:46.656Z
+    created_at: 2026-11-19T14:45:28.696Z
+    updated_at: 2026-11-19T14:45:28.696Z
+    version: 1
+api.operation.list-taxonomy-classes:
+  id: 7bd99fa9-54e1-4dc6-aa92-11161907e24b
+  path: api.operation.list-taxonomy-classes
+  spec_node_id: api.operation
+  type: operation
+  layer_id: api
+  name: List Taxonomy Classes
+  description: Every class of the taxonomy, across its concept schemes, by title,
+    in one request.
+  attributes:
+    operationId: list_taxonomy_classes_api_taxonomies__taxonomy_id__classes_get
+    summary: List Taxonomy Classes
+    tags: ontology
+    http_method: GET
+    http_path: /api/taxonomies/{taxonomy_id}/classes
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/ontology_routes.py
+        symbol: list_taxonomy_classes
+  metadata:
+    created_at: 2026-11-19T14:45:28.696Z
+    updated_at: 2026-11-19T14:45:28.696Z
+    version: 1
+api.operation.list-predicates-by-ids:
+  id: b4c9d99f-ba23-498d-aed0-bdb11e3a7cff
+  path: api.operation.list-predicates-by-ids
+  spec_node_id: api.operation
+  type: operation
+  layer_id: api
+  name: List Predicates By Ids
+  description: The predicates with these IDs, in any taxonomy; unknown IDs are left out.
+  attributes:
+    operationId: list_predicates_by_ids_api_predicates_get
+    summary: List Predicates By Ids
+    tags: ontology
+    http_method: GET
+    http_path: /api/predicates
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/ontology_routes.py
+        symbol: list_predicates_by_ids
+  metadata:
+    created_at: 2026-11-19T14:45:28.696Z
+    updated_at: 2026-11-19T14:45:28.696Z
+    version: 1
+api.operation.get-taxonomy-scheme-counts:
+  id: c2c5ab60-28a5-4060-a713-d8e62fa8a2a2
+  path: api.operation.get-taxonomy-scheme-counts
+  spec_node_id: api.operation
+  type: operation
+  layer_id: api
+  name: Get Taxonomy Scheme Counts
+  description: Count the classes, individuals and property definitions of each
+    scheme in a taxonomy.
+  attributes:
+    operationId: get_taxonomy_scheme_counts_api_taxonomies__taxonomy_id__scheme_counts_get
+    summary: Get Taxonomy Scheme Counts
+    tags: ontology
+    http_method: GET
+    http_path: /api/taxonomies/{taxonomy_id}/scheme-counts
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/ontology_routes.py
+        symbol: get_taxonomy_scheme_counts
+  metadata:
+    created_at: 2026-11-19T14:45:28.697Z
+    updated_at: 2026-11-19T14:45:28.697Z
+    version: 1
+api.operation.get-scheme-class-counts:
+  id: 7183373e-6cfe-4132-98ba-db27fa2d19ec
+  path: api.operation.get-scheme-class-counts
+  spec_node_id: api.operation
+  type: operation
+  layer_id: api
+  name: Get Scheme Class Counts
+  description: Count the individuals, domain property definitions and outgoing
+    relationships per class.
+  attributes:
+    operationId: get_scheme_class_counts_api_schemes__scheme_id__class_counts_get
+    summary: Get Scheme Class Counts
+    tags: ontology
+    http_method: GET
+    http_path: /api/schemes/{scheme_id}/class-counts
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/ontology_routes.py
+        symbol: get_scheme_class_counts
+  metadata:
+    created_at: 2026-11-19T14:45:28.697Z
+    updated_at: 2026-11-19T14:45:28.697Z
+    version: 1
+api.operation.get-relationship-sources:
+  id: 049db810-5bce-42f7-922e-d82abb83e623
+  path: api.operation.get-relationship-sources
+  spec_node_id: api.operation
+  type: operation
+  layer_id: api
+  name: Get Relationship Sources
+  description: The source passages a relationship was extracted from (its provenance).
+  attributes:
+    operationId: get_relationship_sources_api_relationships__relationship_id__sources_get
+    summary: Get Relationship Sources
+    tags: ontology
+    http_method: GET
+    http_path: /api/relationships/{relationship_id}/sources
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/ontology_routes.py
+        symbol: get_relationship_sources
+  metadata:
+    created_at: 2026-11-19T14:45:28.697Z
+    updated_at: 2026-11-19T14:45:28.697Z
+    version: 1
+api.operation.list-edge-attributes:
+  id: 9a02de17-49b5-4ccf-a1d7-d2dd4221c43d
+  path: api.operation.list-edge-attributes
+  spec_node_id: api.operation
+  type: operation
+  layer_id: api
+  name: List Edge Attributes
+  description: "The relationship type's edge attributes: the values its
+    relationships may carry."
+  attributes:
+    operationId: list_edge_attributes_api_properties__property_id__attributes_get
+    summary: List Edge Attributes
+    tags: ontology
+    http_method: GET
+    http_path: /api/properties/{property_id}/attributes
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/ontology_routes.py
+        symbol: list_edge_attributes
+  metadata:
+    created_at: 2026-11-19T14:45:28.697Z
+    updated_at: 2026-11-19T14:45:28.697Z
+    version: 1
+api.operation.create-attribute-definition:
+  id: 0f547652-b4ee-47af-9536-93cbb0325f11
+  path: api.operation.create-attribute-definition
+  spec_node_id: api.operation
+  type: operation
+  layer_id: api
+  name: Create Attribute Definition
+  description: Create a new attribute definition scoped to a class.
+  attributes:
+    operationId: create_attribute_definition_api_classes__class_id__attribute_definitions_post
+    summary: Create Attribute Definition
+    tags: ontology
+    http_method: POST
+    http_path: /api/classes/{class_id}/attribute-definitions
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/ontology_routes.py
+        symbol: create_attribute_definition
+  metadata:
+    created_at: 2026-11-19T14:45:28.697Z
+    updated_at: 2026-11-19T14:45:28.697Z
+    version: 1
+api.operation.list-class-attribute-definitions:
+  id: 801cf2db-39fd-4275-9284-20c27e8d2709
+  path: api.operation.list-class-attribute-definitions
+  spec_node_id: api.operation
+  type: operation
+  layer_id: api
+  name: List Class Attribute Definitions
+  description: Retrieve attribute definitions for a class with pagination.
+  attributes:
+    operationId: list_class_attribute_definitions_api_classes__class_id__attribute_definitions_get
+    summary: List Class Attribute Definitions
+    tags: ontology
+    http_method: GET
+    http_path: /api/classes/{class_id}/attribute-definitions
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/ontology_routes.py
+        symbol: list_class_attribute_definitions
+  metadata:
+    created_at: 2026-11-19T14:45:28.697Z
+    updated_at: 2026-11-19T14:45:28.697Z
+    version: 1
+api.operation.get-attribute-definition:
+  id: 3cf4bab7-df2a-4b86-9063-dc18f40c2917
+  path: api.operation.get-attribute-definition
+  spec_node_id: api.operation
+  type: operation
+  layer_id: api
+  name: Get Attribute Definition
+  attributes:
+    operationId: get_attribute_definition_api_attribute_definitions__attribute_definition_id__get
+    summary: Get Attribute Definition
+    tags: ontology
+    http_method: GET
+    http_path: /api/attribute-definitions/{attribute_definition_id}
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/ontology_routes.py
+        symbol: get_attribute_definition
+  metadata:
+    created_at: 2026-11-19T14:45:28.697Z
+    updated_at: 2026-11-19T14:45:28.697Z
+    version: 1
+api.operation.update-attribute-definition:
+  id: 2697dce3-af02-4c07-a66b-efd606088c8d
+  path: api.operation.update-attribute-definition
+  spec_node_id: api.operation
+  type: operation
+  layer_id: api
+  name: Update Attribute Definition
+  description: Update an attribute definition (partial update).
+  attributes:
+    operationId: update_attribute_definition_api_attribute_definitions__attribute_definition_id__put
+    summary: Update Attribute Definition
+    tags: ontology
+    http_method: PUT
+    http_path: /api/attribute-definitions/{attribute_definition_id}
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/ontology_routes.py
+        symbol: update_attribute_definition
+  metadata:
+    created_at: 2026-11-19T14:45:28.697Z
+    updated_at: 2026-11-19T14:45:28.697Z
+    version: 1
+api.operation.delete-attribute-definition:
+  id: 5b1f7dc9-5e87-46a2-b70c-669b1074337f
+  path: api.operation.delete-attribute-definition
+  spec_node_id: api.operation
+  type: operation
+  layer_id: api
+  name: Delete Attribute Definition
+  attributes:
+    operationId: delete_attribute_definition_api_attribute_definitions__attribute_definition_id__delete
+    summary: Delete Attribute Definition
+    tags: ontology
+    http_method: DELETE
+    http_path: /api/attribute-definitions/{attribute_definition_id}
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/ontology_routes.py
+        symbol: delete_attribute_definition
+  metadata:
+    created_at: 2026-11-19T14:45:28.697Z
+    updated_at: 2026-11-19T14:45:28.697Z
+    version: 1
+api.operation.get-individual-sources:
+  id: e249b991-1139-4200-bb27-7240a08db26f
+  path: api.operation.get-individual-sources
+  spec_node_id: api.operation
+  type: operation
+  layer_id: api
+  name: Get Individual Sources
+  description: The source passages an individual was extracted from (its provenance).
+  attributes:
+    operationId: get_individual_sources_api_individuals__individual_id__sources_get
+    summary: Get Individual Sources
+    tags: ontology
+    http_method: GET
+    http_path: /api/individuals/{individual_id}/sources
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/ontology_routes.py
+        symbol: get_individual_sources
+  metadata:
+    created_at: 2026-11-19T14:45:28.697Z
+    updated_at: 2026-11-19T14:45:28.697Z
+    version: 1
+api.operation.list-datasets:
+  id: 79f985f3-2a82-4182-b3a1-2d866480248d
+  path: api.operation.list-datasets
+  spec_node_id: api.operation
+  type: operation
+  layer_id: api
+  name: List Datasets
+  description: List datasets (named bodies of data over a taxonomy's schema), by
+    title, with their size.
+  attributes:
+    operationId: list_datasets_api_datasets_get
+    summary: List Datasets
+    tags: ontology
+    http_method: GET
+    http_path: /api/datasets
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/ontology_routes.py
+        symbol: list_datasets
+  metadata:
+    created_at: 2026-11-19T14:45:28.697Z
+    updated_at: 2026-11-19T14:45:28.697Z
+    version: 1
+api.operation.create-dataset:
+  id: 9f6eec9a-e25a-4c09-a953-e1ddff1f5402
+  path: api.operation.create-dataset
+  spec_node_id: api.operation
+  type: operation
+  layer_id: api
+  name: Create Dataset
+  description: Create a dataset over a taxonomy's schema. A direct action, not a proposal.
+  attributes:
+    operationId: create_dataset_api_datasets_post
+    summary: Create Dataset
+    tags: ontology
+    http_method: POST
+    http_path: /api/datasets
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/ontology_routes.py
+        symbol: create_dataset
+  metadata:
+    created_at: 2026-11-19T14:45:28.697Z
+    updated_at: 2026-11-19T14:45:28.697Z
+    version: 1
+api.operation.delete-dataset:
+  id: 59135294-40b7-4db7-bad6-601cc647b8aa
+  path: api.operation.delete-dataset
+  spec_node_id: api.operation
+  type: operation
+  layer_id: api
+  name: Delete Dataset
+  description: Delete a dataset with its individuals and their relationships. A
+    direct action, not a proposal.
+  attributes:
+    operationId: delete_dataset_api_datasets__dataset_id__delete
+    summary: Delete Dataset
+    tags: ontology
+    http_method: DELETE
+    http_path: /api/datasets/{dataset_id}
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/ontology_routes.py
+        symbol: delete_dataset
+  metadata:
+    created_at: 2026-11-19T14:45:28.697Z
+    updated_at: 2026-11-19T14:45:28.697Z
+    version: 1
+api.operation.get-graph-view:
+  id: c38a328a-7507-4e29-aac4-d86c3070112e
+  path: api.operation.get-graph-view
+  spec_node_id: api.operation
+  type: operation
+  layer_id: api
+  name: Get Graph View
+  description: Get a labelled read model of the ontology graph for visualization.
+  attributes:
+    operationId: get_graph_view_api_graph_view_get
+    summary: Get Graph View
+    tags: graph
+    http_method: GET
+    http_path: /api/graph/view
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/graph_routes.py
+        symbol: get_graph_view
+  metadata:
+    created_at: 2026-11-19T14:45:28.697Z
+    updated_at: 2026-11-19T14:45:28.697Z
+    version: 1
+api.operation.list-pipeline-types:
+  id: 04134774-10d6-471f-9b2f-1dbcb4f8025e
+  path: api.operation.list-pipeline-types
+  spec_node_id: api.operation
+  type: operation
+  layer_id: api
+  name: List Pipeline Types
+  description: List all registered pipeline types with input/output contracts.
+  attributes:
+    operationId: list_pipeline_types_api_pipelines_types_get
+    summary: List Pipeline Types
+    tags: pipelines
+    http_method: GET
+    http_path: /api/pipelines/types
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/pipelines_routes.py
+        symbol: list_pipeline_types
+  metadata:
+    created_at: 2026-11-19T14:45:28.697Z
+    updated_at: 2026-11-19T14:45:28.697Z
+    version: 1
+api.operation.list-implementations:
+  id: 4ffbdc49-dc72-4fc3-a719-1529e072b9ca
+  path: api.operation.list-implementations
+  spec_node_id: api.operation
+  type: operation
+  layer_id: api
+  name: List Implementations
+  description: List all registered implementations for a pipeline type.
+  attributes:
+    operationId: list_implementations_api_pipelines_types__pipeline_type__implementations_get
+    summary: List Implementations
+    tags: pipelines
+    http_method: GET
+    http_path: /api/pipelines/types/{pipeline_type}/implementations
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/pipelines_routes.py
+        symbol: list_implementations
+  metadata:
+    created_at: 2026-11-19T14:45:28.697Z
+    updated_at: 2026-11-19T14:45:28.697Z
+    version: 1
+api.operation.get-pipeline-run:
+  id: dffd6b85-3241-438d-9fbd-656d34c04eff
+  path: api.operation.get-pipeline-run
+  spec_node_id: api.operation
+  type: operation
+  layer_id: api
+  name: Get Pipeline Run
+  description: Fetch a PipelineRun by ID.
+  attributes:
+    operationId: get_pipeline_run_api_pipelines_runs__run_id__get
+    summary: Get Pipeline Run
+    tags: pipelines
+    http_method: GET
+    http_path: /api/pipelines/runs/{run_id}
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/pipelines_routes.py
+        symbol: get_pipeline_run
+  metadata:
+    created_at: 2026-11-19T14:45:28.697Z
+    updated_at: 2026-11-19T14:45:28.697Z
+    version: 1
+api.operation.cancel-pipeline-run:
+  id: 7015f853-1f2c-4933-a5ac-ac99d72641cc
+  path: api.operation.cancel-pipeline-run
+  spec_node_id: api.operation
+  type: operation
+  layer_id: api
+  name: Cancel Pipeline Run
+  attributes:
+    operationId: cancel_pipeline_run_api_pipelines_runs__run_id__cancel_post
+    summary: Cancel Pipeline Run
+    tags: pipelines
+    http_method: POST
+    http_path: /api/pipelines/runs/{run_id}/cancel
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/pipelines_routes.py
+        symbol: cancel_pipeline_run
+  metadata:
+    created_at: 2026-11-19T14:45:28.697Z
+    updated_at: 2026-11-19T14:45:28.697Z
+    version: 1
+api.operation.get-pipeline-candidates-generic:
+  id: 33148f1d-1b53-44db-b92d-6d08999470c4
+  path: api.operation.get-pipeline-candidates-generic
+  spec_node_id: api.operation
+  type: operation
+  layer_id: api
+  name: Get Pipeline Candidates Generic
+  description: Retrieve candidates from a completed pipeline run (generic endpoint).
+  attributes:
+    operationId: get_pipeline_candidates_generic_api_pipelines_runs__run_id__candidates_get
+    summary: Get Pipeline Candidates Generic
+    tags: pipelines
+    http_method: GET
+    http_path: /api/pipelines/runs/{run_id}/candidates
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/pipelines_routes.py
+        symbol: get_pipeline_candidates_generic
+  metadata:
+    created_at: 2026-11-19T14:45:28.697Z
+    updated_at: 2026-11-19T14:45:28.697Z
+    version: 1
+api.operation.get-schema-extraction-candidates:
+  id: bac2445c-f396-4f85-ae7e-5af1b7a910d4
+  path: api.operation.get-schema-extraction-candidates
+  spec_node_id: api.operation
+  type: operation
+  layer_id: api
+  name: Get Schema Extraction Candidates
+  description: Retrieve candidates from a schema_extraction pipeline run.
+  attributes:
+    operationId: get_schema_extraction_candidates_api_pipelines_runs__run_id__schema_extraction_candidates_get
+    summary: Get Schema Extraction Candidates
+    tags: pipelines
+    http_method: GET
+    http_path: /api/pipelines/runs/{run_id}/schema-extraction-candidates
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/pipelines_routes.py
+        symbol: get_schema_extraction_candidates
+  metadata:
+    created_at: 2026-11-19T14:45:28.697Z
+    updated_at: 2026-11-19T14:45:28.697Z
+    version: 1
+api.operation.get-individual-extraction-candidates:
+  id: b1aa9e2f-f70f-4bad-9296-5b18e79f92a2
+  path: api.operation.get-individual-extraction-candidates
+  spec_node_id: api.operation
+  type: operation
+  layer_id: api
+  name: Get Individual Extraction Candidates
+  description: Retrieve candidates from an individual_extraction pipeline run.
+  attributes:
+    operationId: get_individual_extraction_candidates_api_pipelines_runs__run_id__individual_extraction_candidates_get
+    summary: Get Individual Extraction Candidates
+    tags: pipelines
+    http_method: GET
+    http_path: /api/pipelines/runs/{run_id}/individual-extraction-candidates
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/pipelines_routes.py
+        symbol: get_individual_extraction_candidates
+  metadata:
+    created_at: 2026-11-19T14:45:28.697Z
+    updated_at: 2026-11-19T14:45:28.697Z
+    version: 1
+api.operation.get-schema-grounding-candidates:
+  id: cc0f5546-b933-46aa-8c24-4a43c6b4b568
+  path: api.operation.get-schema-grounding-candidates
+  spec_node_id: api.operation
+  type: operation
+  layer_id: api
+  name: Get Schema Grounding Candidates
+  description: Retrieve candidates from a schema_node_grounding pipeline run.
+  attributes:
+    operationId: get_schema_grounding_candidates_api_pipelines_runs__run_id__schema_grounding_candidates_get
+    summary: Get Schema Grounding Candidates
+    tags: pipelines
+    http_method: GET
+    http_path: /api/pipelines/runs/{run_id}/schema-grounding-candidates
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/pipelines_routes.py
+        symbol: get_schema_grounding_candidates
+  metadata:
+    created_at: 2026-11-19T14:45:28.697Z
+    updated_at: 2026-11-19T14:45:28.697Z
+    version: 1
+api.operation.get-schema-refinement-candidates:
+  id: 5f54ccba-5466-4a18-af38-8c959f95faf0
+  path: api.operation.get-schema-refinement-candidates
+  spec_node_id: api.operation
+  type: operation
+  layer_id: api
+  name: Get Schema Refinement Candidates
+  description: Retrieve candidates from schema refinement pipeline runs.
+  attributes:
+    operationId: get_schema_refinement_candidates_api_pipelines_runs__run_id__schema_refinement_candidates_get
+    summary: Get Schema Refinement Candidates
+    tags: pipelines
+    http_method: GET
+    http_path: /api/pipelines/runs/{run_id}/schema-refinement-candidates
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/pipelines_routes.py
+        symbol: get_schema_refinement_candidates
+  metadata:
+    created_at: 2026-11-19T14:45:28.697Z
+    updated_at: 2026-11-19T14:45:28.697Z
+    version: 1
+api.operation.get-pipeline-run-change-events:
+  id: ba2d021c-5332-4757-8e1f-3da8223fe953
+  path: api.operation.get-pipeline-run-change-events
+  spec_node_id: api.operation
+  type: operation
+  layer_id: api
+  name: Get Pipeline Run Change Events
+  description: Get change events produced by applying a pipeline run.
+  attributes:
+    operationId: get_pipeline_run_change_events_api_pipelines_runs__run_id__change_events_get
+    summary: Get Pipeline Run Change Events
+    tags: pipelines
+    http_method: GET
+    http_path: /api/pipelines/runs/{run_id}/change-events
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/pipelines_routes.py
+        symbol: get_pipeline_run_change_events
+  metadata:
+    created_at: 2026-11-19T14:45:28.698Z
+    updated_at: 2026-11-19T14:45:28.698Z
+    version: 1
+api.operation.list-extraction-examples:
+  id: 69221fa4-9239-4680-b426-b315916c847b
+  path: api.operation.list-extraction-examples
+  spec_node_id: api.operation
+  type: operation
+  layer_id: api
+  name: List Extraction Examples
+  description: The library of example paragraphs for trying the extraction pipelines.
+  attributes:
+    operationId: list_extraction_examples_api_pipelines_extraction_examples_get
+    summary: List Extraction Examples
+    tags: pipelines
+    http_method: GET
+    http_path: /api/pipelines/extraction-examples
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/pipelines_routes.py
+        symbol: list_extraction_examples
+  metadata:
+    created_at: 2026-11-19T14:45:28.698Z
+    updated_at: 2026-11-19T14:45:28.698Z
+    version: 1
+api.operation.apply-pipeline-run:
+  id: 1ec26000-5e40-4f78-b900-7fa95ef129a2
+  path: api.operation.apply-pipeline-run
+  spec_node_id: api.operation
+  type: operation
+  layer_id: api
+  name: Apply Pipeline Run
+  description: Apply a completed pipeline run's output to the ontology.
+  attributes:
+    operationId: apply_pipeline_run_api_pipelines_runs__run_id__apply_post
+    summary: Apply Pipeline Run
+    tags: pipelines
+    http_method: POST
+    http_path: /api/pipelines/runs/{run_id}/apply
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/pipelines_routes.py
+        symbol: apply_pipeline_run
+  metadata:
+    created_at: 2026-11-19T14:45:28.698Z
+    updated_at: 2026-11-19T14:45:28.698Z
+    version: 1
+api.operation.preview-recognition:
+  id: ccd7c267-5f24-4251-b153-e29ee174e783
+  path: api.operation.preview-recognition
+  spec_node_id: api.operation
+  type: operation
+  layer_id: api
+  name: Preview Recognition
+  description: Preview which extracted candidates would match existing ontology entities.
+  attributes:
+    operationId: preview_recognition_api_pipelines_runs__run_id__recognition_preview_post
+    summary: Preview Recognition
+    tags: pipelines
+    http_method: POST
+    http_path: /api/pipelines/runs/{run_id}/recognition-preview
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/pipelines_routes.py
+        symbol: preview_recognition
+  metadata:
+    created_at: 2026-11-19T14:45:28.698Z
+    updated_at: 2026-11-19T14:45:28.698Z
+    version: 1
+api.operation.revert-pipeline-run:
+  id: f3260847-a346-4505-834c-764d0c270d13
+  path: api.operation.revert-pipeline-run
+  spec_node_id: api.operation
+  type: operation
+  layer_id: api
+  name: Revert Pipeline Run
+  description: Revert all changes made by a specific pipeline run.
+  attributes:
+    operationId: revert_pipeline_run_api_pipelines_runs__run_id__revert_post
+    summary: Revert Pipeline Run
+    tags: pipelines
+    http_method: POST
+    http_path: /api/pipelines/runs/{run_id}/revert
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/pipelines_routes.py
+        symbol: revert_pipeline_run
+  metadata:
+    created_at: 2026-11-19T14:45:28.698Z
+    updated_at: 2026-11-19T14:45:28.698Z
+    version: 1
+api.operation.create-batch:
+  id: eaf3f89e-3188-4bf1-9de3-fe591ab52f7a
+  path: api.operation.create-batch
+  spec_node_id: api.operation
+  type: operation
+  layer_id: api
+  name: Create Batch
+  attributes:
+    operationId: create_batch_api_pipelines_batches_post
+    summary: Create Batch
+    tags: pipelines
+    http_method: POST
+    http_path: /api/pipelines/batches
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/pipelines_routes.py
+        symbol: create_batch
+  metadata:
+    created_at: 2026-11-19T14:45:28.698Z
+    updated_at: 2026-11-19T14:45:28.698Z
+    version: 1
+api.operation.get-batch:
+  id: b440f661-b3ea-4134-91f7-85b78e781f1c
+  path: api.operation.get-batch
+  spec_node_id: api.operation
+  type: operation
+  layer_id: api
+  name: Get Batch
+  description: Get batch info and aggregate status over child runs.
+  attributes:
+    operationId: get_batch_api_pipelines_batches__batch_id__get
+    summary: Get Batch
+    tags: pipelines
+    http_method: GET
+    http_path: /api/pipelines/batches/{batch_id}
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/pipelines_routes.py
+        symbol: get_batch
+  metadata:
+    created_at: 2026-11-19T14:45:28.698Z
+    updated_at: 2026-11-19T14:45:28.698Z
+    version: 1
+api.operation.enqueue-batch-runs:
+  id: d7db9ea9-3a57-49d5-bc45-36dbec8fc13b
+  path: api.operation.enqueue-batch-runs
+  spec_node_id: api.operation
+  type: operation
+  layer_id: api
+  name: Enqueue Batch Runs
+  description: Enqueue multiple runs in a batch.
+  attributes:
+    operationId: enqueue_batch_runs_api_pipelines_batches__batch_id__runs_post
+    summary: Enqueue Batch Runs
+    tags: pipelines
+    http_method: POST
+    http_path: /api/pipelines/batches/{batch_id}/runs
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/pipelines_routes.py
+        symbol: enqueue_batch_runs
+  metadata:
+    created_at: 2026-11-19T14:45:28.698Z
+    updated_at: 2026-11-19T14:45:28.698Z
+    version: 1
+api.operation.cancel-batch-runs:
+  id: 3e79a144-e14d-4b9a-ac86-5bb6c71ff891
+  path: api.operation.cancel-batch-runs
+  spec_node_id: api.operation
+  type: operation
+  layer_id: api
+  name: Cancel Batch Runs
+  description: Cancel a batch's pending runs, and those executing in the background.
+  attributes:
+    operationId: cancel_batch_runs_api_pipelines_batches__batch_id__cancel_post
+    summary: Cancel Batch Runs
+    tags: pipelines
+    http_method: POST
+    http_path: /api/pipelines/batches/{batch_id}/cancel
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/pipelines_routes.py
+        symbol: cancel_batch_runs
+  metadata:
+    created_at: 2026-11-19T14:45:28.698Z
+    updated_at: 2026-11-19T14:45:28.698Z
+    version: 1
+api.operation.resume-batch-runs:
+  id: 429f80bc-0fde-44c6-b527-9886213d651d
+  path: api.operation.resume-batch-runs
+  spec_node_id: api.operation
+  type: operation
+  layer_id: api
+  name: Resume Batch Runs
+  description: Re-queue a batch's cancelled, failed or interrupted runs that carry
+    a stored input.
+  attributes:
+    operationId: resume_batch_runs_api_pipelines_batches__batch_id__resume_post
+    summary: Resume Batch Runs
+    tags: pipelines
+    http_method: POST
+    http_path: /api/pipelines/batches/{batch_id}/resume
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/pipelines_routes.py
+        symbol: resume_batch_runs
+  metadata:
+    created_at: 2026-11-19T14:45:28.698Z
+    updated_at: 2026-11-19T14:45:28.698Z
+    version: 1
+api.operation.list-grounding-workflows:
+  id: 569464e7-4f18-4775-aed6-aff7a00ea099
+  path: api.operation.list-grounding-workflows
+  spec_node_id: api.operation
+  type: operation
+  layer_id: api
+  name: List Grounding Workflows
+  attributes:
+    operationId: list_grounding_workflows_api_reference_grounding_workflows_get
+    summary: List Grounding Workflows
+    tags: reference
+    http_method: GET
+    http_path: /api/reference/grounding-workflows
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/reference_routes.py
+        symbol: list_grounding_workflows
+  metadata:
+    created_at: 2026-11-19T14:45:28.698Z
+    updated_at: 2026-11-19T14:45:28.698Z
+    version: 1
+api.operation.create-grounding-workflow:
+  id: 6d5cf748-4331-48bb-bcf9-08268cb206d7
+  path: api.operation.create-grounding-workflow
+  spec_node_id: api.operation
+  type: operation
+  layer_id: api
+  name: Create Grounding Workflow
+  attributes:
+    operationId: create_grounding_workflow_api_reference_grounding_workflows_post
+    summary: Create Grounding Workflow
+    tags: reference
+    http_method: POST
+    http_path: /api/reference/grounding-workflows
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/reference_routes.py
+        symbol: create_grounding_workflow
+  metadata:
+    created_at: 2026-11-19T14:45:28.698Z
+    updated_at: 2026-11-19T14:45:28.698Z
+    version: 1
+api.operation.get-grounding-workflow:
+  id: 714c1166-9626-4e20-b162-2deed28b4856
+  path: api.operation.get-grounding-workflow
+  spec_node_id: api.operation
+  type: operation
+  layer_id: api
+  name: Get Grounding Workflow
+  attributes:
+    operationId: get_grounding_workflow_api_reference_grounding_workflows__workflow_id__get
+    summary: Get Grounding Workflow
+    tags: reference
+    http_method: GET
+    http_path: /api/reference/grounding-workflows/{workflow_id}
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/reference_routes.py
+        symbol: get_grounding_workflow
+  metadata:
+    created_at: 2026-11-19T14:45:28.698Z
+    updated_at: 2026-11-19T14:45:28.698Z
+    version: 1
+api.operation.update-grounding-workflow:
+  id: e7c7e4e0-29bb-4ee3-9ad7-0f2b0e596c54
+  path: api.operation.update-grounding-workflow
+  spec_node_id: api.operation
+  type: operation
+  layer_id: api
+  name: Update Grounding Workflow
+  attributes:
+    operationId: update_grounding_workflow_api_reference_grounding_workflows__workflow_id__put
+    summary: Update Grounding Workflow
+    tags: reference
+    http_method: PUT
+    http_path: /api/reference/grounding-workflows/{workflow_id}
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/reference_routes.py
+        symbol: update_grounding_workflow
+  metadata:
+    created_at: 2026-11-19T14:45:28.698Z
+    updated_at: 2026-11-19T14:45:28.698Z
+    version: 1
+api.operation.delete-grounding-workflow:
+  id: 4f815764-b88e-4100-a7a2-aa873474cd61
+  path: api.operation.delete-grounding-workflow
+  spec_node_id: api.operation
+  type: operation
+  layer_id: api
+  name: Delete Grounding Workflow
+  description: Delete a grounding workflow and all its runs.
+  attributes:
+    operationId: delete_grounding_workflow_api_reference_grounding_workflows__workflow_id__delete
+    summary: Delete Grounding Workflow
+    tags: reference
+    http_method: DELETE
+    http_path: /api/reference/grounding-workflows/{workflow_id}
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/reference_routes.py
+        symbol: delete_grounding_workflow
+  metadata:
+    created_at: 2026-11-19T14:45:28.698Z
+    updated_at: 2026-11-19T14:45:28.698Z
+    version: 1
+api.operation.run-grounding-workflow:
+  id: 875d2f98-543f-49aa-b4ac-3cb5e158a2b8
+  path: api.operation.run-grounding-workflow
+  spec_node_id: api.operation
+  type: operation
+  layer_id: api
+  name: Run Grounding Workflow
+  description: Trigger a grounding workflow run.
+  attributes:
+    operationId: run_grounding_workflow_api_reference_grounding_workflows__workflow_id__run_post
+    summary: Run Grounding Workflow
+    tags: reference
+    http_method: POST
+    http_path: /api/reference/grounding-workflows/{workflow_id}/run
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/reference_routes.py
+        symbol: run_grounding_workflow
+  metadata:
+    created_at: 2026-11-19T14:45:28.698Z
+    updated_at: 2026-11-19T14:45:28.698Z
+    version: 1
+api.operation.list-workflow-runs:
+  id: 52278164-883d-4efa-991c-326bc86e9631
+  path: api.operation.list-workflow-runs
+  spec_node_id: api.operation
+  type: operation
+  layer_id: api
+  name: List Workflow Runs
+  description: List all runs for a grounding workflow.
+  attributes:
+    operationId: list_workflow_runs_api_reference_grounding_workflows__workflow_id__runs_get
+    summary: List Workflow Runs
+    tags: reference
+    http_method: GET
+    http_path: /api/reference/grounding-workflows/{workflow_id}/runs
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/reference_routes.py
+        symbol: list_workflow_runs
+  metadata:
+    created_at: 2026-11-19T14:45:28.698Z
+    updated_at: 2026-11-19T14:45:28.698Z
+    version: 1
+api.operation.get-mcp-connection-details:
+  id: f5596072-5a47-49f2-bfa7-780d0544ff9e
+  path: api.operation.get-mcp-connection-details
+  spec_node_id: api.operation
+  type: operation
+  layer_id: api
+  name: Get Mcp Connection Details
+  description: Return the MCP endpoint URL and bearer token for the settings page.
+  attributes:
+    operationId: get_mcp_connection_details_api_v1_admin_mcp_get
+    summary: Get Mcp Connection Details
+    tags: admin
+    http_method: GET
+    http_path: /api/v1/admin/mcp
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/admin_routes.py
+        symbol: get_mcp_connection_details
+  metadata:
+    created_at: 2026-11-19T14:45:28.698Z
+    updated_at: 2026-11-19T14:45:28.698Z
+    version: 1
+api.operation.get-stats-trends:
+  id: a8b4fcd3-e28c-4617-9fb3-9c77d5051c8d
+  path: api.operation.get-stats-trends
+  spec_node_id: api.operation
+  type: operation
+  layer_id: api
+  name: Get Stats Trends
+  description: Get rolling daily creation counts per entity type.
+  attributes:
+    operationId: get_stats_trends_api_v1_admin_stats_trends_get
+    summary: Get Stats Trends
+    tags: admin
+    http_method: GET
+    http_path: /api/v1/admin/stats/trends
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/admin_routes.py
+        symbol: get_stats_trends
+  metadata:
+    created_at: 2026-11-19T14:46:21.104Z
+    updated_at: 2026-11-19T14:46:21.104Z
+    version: 1
+api.operation.list-demo-datasets:
+  id: df0d7e74-b54b-4c55-a54e-c73851da0494
+  path: api.operation.list-demo-datasets
+  spec_node_id: api.operation
+  type: operation
+  layer_id: api
+  name: List Demo Datasets
+  description: List demo datasets available to load.
+  attributes:
+    operationId: list_demo_datasets_api_v1_admin_demo_datasets_get
+    summary: List Demo Datasets
+    tags: admin
+    http_method: GET
+    http_path: /api/v1/admin/demo-datasets
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/admin_routes.py
+        symbol: list_demo_datasets
+  metadata:
+    created_at: 2026-11-19T14:46:21.105Z
+    updated_at: 2026-11-19T14:46:21.105Z
+    version: 1
+api.operation.load-demo-dataset:
+  id: 10191db1-6948-41ce-ae46-44d9d948b37e
+  path: api.operation.load-demo-dataset
+  spec_node_id: api.operation
+  type: operation
+  layer_id: api
+  name: Load Demo Dataset
+  description: Load a demo dataset into the ontology repository.
+  attributes:
+    operationId: load_demo_dataset_api_v1_admin_demo_datasets__name__load_post
+    summary: Load Demo Dataset
+    tags: admin
+    http_method: POST
+    http_path: /api/v1/admin/demo-datasets/{name}/load
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/admin_routes.py
+        symbol: load_demo_dataset
+  metadata:
+    created_at: 2026-11-19T14:46:21.105Z
+    updated_at: 2026-11-19T14:46:21.105Z
+    version: 1
+api.operation.export-bundle:
+  id: 4589ecf5-8333-4350-acfd-ea32a33423d3
+  path: api.operation.export-bundle
+  spec_node_id: api.operation
+  type: operation
+  layer_id: api
+  name: Export Bundle
+  description: Export one taxonomy as a Context Studio bundle (v1).
+  attributes:
+    operationId: export_bundle_api_v1_interchange_bundles__taxonomy_id__get
+    summary: Export Bundle
+    tags: interchange
+    http_method: GET
+    http_path: /api/v1/interchange/bundles/{taxonomy_id}
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/interchange_routes.py
+        symbol: export_bundle
+  metadata:
+    created_at: 2026-11-19T14:46:21.105Z
+    updated_at: 2026-11-19T14:46:21.105Z
+    version: 1
+api.operation.get-chat-status:
+  id: a9bafeb6-60ca-429f-8b7a-1baeb568d92d
+  path: api.operation.get-chat-status
+  spec_node_id: api.operation
+  type: operation
+  layer_id: api
+  name: Get Chat Status
+  description: Report the configured chat model and whether a configured provider serves it.
+  attributes:
+    operationId: get_status_api_chat_status_get
+    summary: Get Status
+    tags: chat
+    http_method: GET
+    http_path: /api/chat/status
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/chat_routes.py
+        symbol: get_status
+  metadata:
+    created_at: 2026-11-19T14:46:21.105Z
+    updated_at: 2026-11-19T14:46:21.105Z
+    version: 1
+api.operation.create-conversation:
+  id: 4e0a41f5-69b9-4659-b177-74bb3d5a5c5b
+  path: api.operation.create-conversation
+  spec_node_id: api.operation
+  type: operation
+  layer_id: api
+  name: Create Conversation
+  description: Start an empty conversation.
+  attributes:
+    operationId: create_conversation_api_chat_conversations_post
+    summary: Create Conversation
+    tags: chat
+    http_method: POST
+    http_path: /api/chat/conversations
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/chat_routes.py
+        symbol: create_conversation
+  metadata:
+    created_at: 2026-11-19T14:46:21.105Z
+    updated_at: 2026-11-19T14:46:21.105Z
+    version: 1
+api.operation.list-conversations:
+  id: bb1f92be-b484-4a31-9276-2b14f23178e8
+  path: api.operation.list-conversations
+  spec_node_id: api.operation
+  type: operation
+  layer_id: api
+  name: List Conversations
+  description: List conversations, most recently updated first.
+  attributes:
+    operationId: list_conversations_api_chat_conversations_get
+    summary: List Conversations
+    tags: chat
+    http_method: GET
+    http_path: /api/chat/conversations
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/chat_routes.py
+        symbol: list_conversations
+  metadata:
+    created_at: 2026-11-19T14:46:21.105Z
+    updated_at: 2026-11-19T14:46:21.105Z
+    version: 1
+api.operation.get-conversation:
+  id: 7310d362-c382-4f79-a2ae-a860acbb4aff
+  path: api.operation.get-conversation
+  spec_node_id: api.operation
+  type: operation
+  layer_id: api
+  name: Get Conversation
+  description: Return a conversation with its messages, for resuming it.
+  attributes:
+    operationId: get_conversation_api_chat_conversations__conversation_id__get
+    summary: Get Conversation
+    tags: chat
+    http_method: GET
+    http_path: /api/chat/conversations/{conversation_id}
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/chat_routes.py
+        symbol: get_conversation
+  metadata:
+    created_at: 2026-11-19T14:46:21.105Z
+    updated_at: 2026-11-19T14:46:21.105Z
+    version: 1
+api.operation.delete-conversation:
+  id: cd1e2099-3128-47a3-b672-30be6aceab98
+  path: api.operation.delete-conversation
+  spec_node_id: api.operation
+  type: operation
+  layer_id: api
+  name: Delete Conversation
+  description: Delete a conversation and its messages.
+  attributes:
+    operationId: delete_conversation_api_chat_conversations__conversation_id__delete
+    summary: Delete Conversation
+    tags: chat
+    http_method: DELETE
+    http_path: /api/chat/conversations/{conversation_id}
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/chat_routes.py
+        symbol: delete_conversation
+  metadata:
+    created_at: 2026-11-19T14:46:21.105Z
+    updated_at: 2026-11-19T14:46:21.105Z
+    version: 1
+api.operation.send-message:
+  id: daca6a3a-0cf4-457c-98a8-f23fb6405eca
+  path: api.operation.send-message
+  spec_node_id: api.operation
+  type: operation
+  layer_id: api
+  name: Send Message
+  description: Send a user message and stream the assistant's turn as Server-Sent Events.
+  attributes:
+    operationId: send_message_api_chat_conversations__conversation_id__messages_post
+    summary: Send Message
+    tags: chat
+    http_method: POST
+    http_path: /api/chat/conversations/{conversation_id}/messages
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/chat_routes.py
+        symbol: send_message
+  metadata:
+    created_at: 2026-11-19T14:46:21.105Z
+    updated_at: 2026-11-19T14:46:21.105Z
+    version: 1
+api.operation.list-proposals:
+  id: b744441c-2bc3-4858-9a50-1355d63027e5
+  path: api.operation.list-proposals
+  spec_node_id: api.operation
+  type: operation
+  layer_id: api
+  name: List Proposals
+  description: List proposals, newest first, each operation with its stale flag.
+  attributes:
+    operationId: list_proposals_api_proposals_get
+    summary: List Proposals
+    tags: proposals
+    http_method: GET
+    http_path: /api/proposals
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/proposals_routes.py
+        symbol: list_proposals
+  metadata:
+    created_at: 2026-11-19T14:46:21.105Z
+    updated_at: 2026-11-19T14:46:21.105Z
+    version: 1
+api.operation.create-proposal:
+  id: 2badf872-9c51-402b-9748-8ad7e28c0127
+  path: api.operation.create-proposal
+  spec_node_id: api.operation
+  type: operation
+  layer_id: api
+  name: Create Proposal
+  description: Propose changes to a taxonomy; every operation starts pending.
+  attributes:
+    operationId: create_proposal_api_proposals_post
+    summary: Create Proposal
+    tags: proposals
+    http_method: POST
+    http_path: /api/proposals
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/proposals_routes.py
+        symbol: create_proposal
+  metadata:
+    created_at: 2026-11-19T14:46:21.105Z
+    updated_at: 2026-11-19T14:46:21.105Z
+    version: 1
+api.operation.get-proposal:
+  id: 405fa393-fe82-4c27-b8a5-4854369c8b6a
+  path: api.operation.get-proposal
+  spec_node_id: api.operation
+  type: operation
+  layer_id: api
+  name: Get Proposal
+  description: A proposal; each pending or failed operation says whether it is stale.
+  attributes:
+    operationId: get_proposal_api_proposals__proposal_id__get
+    summary: Get Proposal
+    tags: proposals
+    http_method: GET
+    http_path: /api/proposals/{proposal_id}
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/proposals_routes.py
+        symbol: get_proposal
+  metadata:
+    created_at: 2026-11-19T14:46:21.105Z
+    updated_at: 2026-11-19T14:46:21.105Z
+    version: 1
+api.operation.get-proposal-decisions:
+  id: 8a552d3c-45ec-420b-afff-d47e4bb52849
+  path: api.operation.get-proposal-decisions
+  spec_node_id: api.operation
+  type: operation
+  layer_id: api
+  name: Get Proposal Decisions
+  description: The decisions on a DR reflection-plan proposal, for DR's client.
+  attributes:
+    operationId: get_proposal_decisions_api_proposals__proposal_id__decisions_get
+    summary: Get Proposal Decisions
+    tags: proposals
+    http_method: GET
+    http_path: /api/proposals/{proposal_id}/decisions
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/proposals_routes.py
+        symbol: get_proposal_decisions
+  metadata:
+    created_at: 2026-11-19T14:46:21.105Z
+    updated_at: 2026-11-19T14:46:21.105Z
+    version: 1
+api.operation.add-proposal-operations:
+  id: 8f301186-a5e8-4103-9a81-b568f70483e4
+  path: api.operation.add-proposal-operations
+  spec_node_id: api.operation
+  type: operation
+  layer_id: api
+  name: Add Proposal Operations
+  description: Add an individual the extraction missed, as the reviewer found it
+    in the source.
+  attributes:
+    operationId: add_individual_api_proposals__proposal_id__operations_post
+    summary: Add Individual
+    tags: proposals
+    http_method: POST
+    http_path: /api/proposals/{proposal_id}/operations
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/proposals_routes.py
+        symbol: add_individual
+  metadata:
+    created_at: 2026-11-19T14:46:21.105Z
+    updated_at: 2026-11-19T14:46:21.105Z
+    version: 1
+api.operation.apply-proposal:
+  id: d2a03ddd-99ef-4f8f-817a-76fd543a3f88
+  path: api.operation.apply-proposal
+  spec_node_id: api.operation
+  type: operation
+  layer_id: api
+  name: Apply Proposal
+  description: Apply the chosen operations in seq order under the proposal's run.
+  attributes:
+    operationId: apply_proposal_api_proposals__proposal_id__apply_post
+    summary: Apply Proposal
+    tags: proposals
+    http_method: POST
+    http_path: /api/proposals/{proposal_id}/apply
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/proposals_routes.py
+        symbol: apply_proposal
+  metadata:
+    created_at: 2026-11-19T14:46:21.105Z
+    updated_at: 2026-11-19T14:46:21.105Z
+    version: 1
+api.operation.reopen-operations:
+  id: d9d8a6dc-4b39-4e60-aeeb-f437448a2b39
+  path: api.operation.reopen-operations
+  spec_node_id: api.operation
+  type: operation
+  layer_id: api
+  name: Reopen Operations
+  description: Reopen decided individual and relationship creates, to decide them again.
+  attributes:
+    operationId: reopen_operations_api_proposals__proposal_id__reopen_post
+    summary: Reopen Operations
+    tags: proposals
+    http_method: POST
+    http_path: /api/proposals/{proposal_id}/reopen
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/proposals_routes.py
+        symbol: reopen_operations
+  metadata:
+    created_at: 2026-11-19T14:46:21.105Z
+    updated_at: 2026-11-19T14:46:21.105Z
+    version: 1
+api.operation.revert-proposal:
+  id: 2acd9814-ff1e-47fa-b015-5edea590df0d
+  path: api.operation.revert-proposal
+  spec_node_id: api.operation
+  type: operation
+  layer_id: api
+  name: Revert Proposal
+  description: Undo everything applied from the proposal and mark it reverted.
+  attributes:
+    operationId: revert_proposal_api_proposals__proposal_id__revert_post
+    summary: Revert Proposal
+    tags: proposals
+    http_method: POST
+    http_path: /api/proposals/{proposal_id}/revert
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/proposals_routes.py
+        symbol: revert_proposal
+  metadata:
+    created_at: 2026-11-19T14:46:21.105Z
+    updated_at: 2026-11-19T14:46:21.105Z
+    version: 1
+api.operation.mark-proposal-landed:
+  id: ff196842-a1b3-448e-ab5b-f6fac846ad2e
+  path: api.operation.mark-proposal-landed
+  spec_node_id: api.operation
+  type: operation
+  layer_id: api
+  name: Mark Proposal Landed
+  description: Record that the client landed this decided proposal in the taxonomy's source.
+  attributes:
+    operationId: mark_proposal_landed_api_proposals__proposal_id__landed_put
+    summary: Mark Proposal Landed
+    tags: proposals
+    http_method: PUT
+    http_path: /api/proposals/{proposal_id}/landed
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/proposals_routes.py
+        symbol: mark_proposal_landed
+  metadata:
+    created_at: 2026-11-19T14:46:21.105Z
+    updated_at: 2026-11-19T14:46:21.105Z
+    version: 1
+api.operation.clear-proposal-landed:
+  id: 9bff5c5a-415b-45b9-9874-a1e5891db0c8
+  path: api.operation.clear-proposal-landed
+  spec_node_id: api.operation
+  type: operation
+  layer_id: api
+  name: Clear Proposal Landed
+  description: Forget that the proposal landed, to correct a wrong mark.
+  attributes:
+    operationId: clear_proposal_landed_api_proposals__proposal_id__landed_delete
+    summary: Clear Proposal Landed
+    tags: proposals
+    http_method: DELETE
+    http_path: /api/proposals/{proposal_id}/landed
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/proposals_routes.py
+        symbol: clear_proposal_landed
+  metadata:
+    created_at: 2026-11-19T14:46:21.105Z
+    updated_at: 2026-11-19T14:46:21.105Z
+    version: 1
+api.operation.list-gold:
+  id: c6d7b7b2-d33e-4c57-af93-82bb97fea55e
+  path: api.operation.list-gold
+  spec_node_id: api.operation
+  type: operation
+  layer_id: api
+  name: List Gold
+  description: "The taxonomy's gold: every reviewer or policy decision on its proposals."
+  attributes:
+    operationId: list_gold_api_taxonomies__taxonomy_id__gold_get
+    summary: List Gold
+    tags: proposals
+    http_method: GET
+    http_path: /api/taxonomies/{taxonomy_id}/gold
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/proposals_routes.py
+        symbol: list_gold
+  metadata:
+    created_at: 2026-11-19T14:46:21.105Z
+    updated_at: 2026-11-19T14:46:21.105Z
+    version: 1
+api.operation.export-gold:
+  id: 76177e18-3c49-486a-a705-a94284f7bf5d
+  path: api.operation.export-gold
+  spec_node_id: api.operation
+  type: operation
+  layer_id: api
+  name: Export Gold
+  description: The taxonomy's gold as JSONL.
+  attributes:
+    operationId: export_gold_api_taxonomies__taxonomy_id__gold_export_get
+    summary: Export Gold
+    tags: proposals
+    http_method: GET
+    http_path: /api/taxonomies/{taxonomy_id}/gold/export
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/proposals_routes.py
+        symbol: export_gold
+  metadata:
+    created_at: 2026-11-19T14:46:21.105Z
+    updated_at: 2026-11-19T14:46:21.105Z
+    version: 1
+api.operation.get-approval-policy:
+  id: bf0311cf-4a59-483f-867b-6834c7acee18
+  path: api.operation.get-approval-policy
+  spec_node_id: api.operation
+  type: operation
+  layer_id: api
+  name: Get Approval Policy
+  description: The taxonomy's approval policy; empty (nothing auto-applies) if none is set.
+  attributes:
+    operationId: get_approval_policy_api_taxonomies__taxonomy_id__approval_policy_get
+    summary: Get Approval Policy
+    tags: proposals
+    http_method: GET
+    http_path: /api/taxonomies/{taxonomy_id}/approval-policy
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/proposals_routes.py
+        symbol: get_approval_policy
+  metadata:
+    created_at: 2026-11-19T14:46:21.105Z
+    updated_at: 2026-11-19T14:46:21.105Z
+    version: 1
+api.operation.set-approval-policy:
+  id: dba71026-48fa-417c-aabe-dc813be1f2eb
+  path: api.operation.set-approval-policy
+  spec_node_id: api.operation
+  type: operation
+  layer_id: api
+  name: Set Approval Policy
+  description: Replace the taxonomy's approval policy.
+  attributes:
+    operationId: set_approval_policy_api_taxonomies__taxonomy_id__approval_policy_put
+    summary: Set Approval Policy
+    tags: proposals
+    http_method: PUT
+    http_path: /api/taxonomies/{taxonomy_id}/approval-policy
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/proposals_routes.py
+        symbol: set_approval_policy
+  metadata:
+    created_at: 2026-11-19T14:46:21.105Z
+    updated_at: 2026-11-19T14:46:21.105Z
+    version: 1
+api.operation.compare-proposals:
+  id: aa7ebcb0-5154-4b93-9f00-23d5620b7fb7
+  path: api.operation.compare-proposals
+  spec_node_id: api.operation
+  type: operation
+  layer_id: api
+  name: Compare Proposals
+  description: Two individual extractions of one source, their individual creates paired.
+  attributes:
+    operationId: compare_proposals_api_proposals__a_id__compare__b_id__get
+    summary: Compare Proposals
+    tags: proposals
+    http_method: GET
+    http_path: /api/proposals/{a_id}/compare/{b_id}
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/proposal_comparison_routes.py
+        symbol: compare_proposals
+  metadata:
+    created_at: 2026-11-19T14:46:21.105Z
+    updated_at: 2026-11-19T14:46:21.105Z
+    version: 1
+api.operation.decide-comparison-pair:
+  id: dd3eb15d-461f-438d-9798-ae07ae551a84
+  path: api.operation.decide-comparison-pair
+  spec_node_id: api.operation
+  type: operation
+  layer_id: api
+  name: Decide Comparison Pair
+  description: Decide one pair once for both proposals.
+  attributes:
+    operationId: decide_pair_api_proposals__a_id__compare__b_id__decide_post
+    summary: Decide Pair
+    tags: proposals
+    http_method: POST
+    http_path: /api/proposals/{a_id}/compare/{b_id}/decide
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/proposal_comparison_routes.py
+        symbol: decide_pair
+  metadata:
+    created_at: 2026-11-19T14:46:21.105Z
+    updated_at: 2026-11-19T14:46:21.105Z
+    version: 1
+api.operation.accept-rest-of-comparison:
+  id: 5952f631-ea8d-4ee7-8bc4-afa15bf7ec96
+  path: api.operation.accept-rest-of-comparison
+  spec_node_id: api.operation
+  type: operation
+  layer_id: api
+  name: Accept Rest Of Comparison
+  description: Accept every same-class pair outside the sample whose copies are
+    both pending.
+  attributes:
+    operationId: accept_rest_api_proposals__a_id__compare__b_id__accept_rest_post
+    summary: Accept Rest
+    tags: proposals
+    http_method: POST
+    http_path: /api/proposals/{a_id}/compare/{b_id}/accept-rest
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/proposal_comparison_routes.py
+        symbol: accept_rest
+  metadata:
+    created_at: 2026-11-19T14:46:21.105Z
+    updated_at: 2026-11-19T14:46:21.105Z
+    version: 1
+api.operation.list-claims:
+  id: c101123f-d8c1-4d00-971f-fde76ec73eac
+  path: api.operation.list-claims
+  spec_node_id: api.operation
+  type: operation
+  layer_id: api
+  name: List Claims
+  description: The taxonomy's claims, oldest first.
+  attributes:
+    operationId: list_claims_api_taxonomies__taxonomy_id__claims_get
+    summary: List Claims
+    tags: claims
+    http_method: GET
+    http_path: /api/taxonomies/{taxonomy_id}/claims
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/claims_routes.py
+        symbol: list_claims
+  metadata:
+    created_at: 2026-11-19T14:46:21.105Z
+    updated_at: 2026-11-19T14:46:21.105Z
+    version: 1
+api.operation.submit-claims:
+  id: 89e3419c-2f24-4a0f-b762-84761464d25b
+  path: api.operation.submit-claims
+  spec_node_id: api.operation
+  type: operation
+  layer_id: api
+  name: Submit Claims
+  description: Add claims, or replace those whose key the taxonomy already has.
+  attributes:
+    operationId: submit_claims_api_taxonomies__taxonomy_id__claims_post
+    summary: Submit Claims
+    tags: claims
+    http_method: POST
+    http_path: /api/taxonomies/{taxonomy_id}/claims
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/claims_routes.py
+        symbol: submit_claims
+  metadata:
+    created_at: 2026-11-19T14:46:21.105Z
+    updated_at: 2026-11-19T14:46:21.105Z
+    version: 1
+api.operation.export-claims:
+  id: a82b7911-1ac8-4cf7-8757-94ad87d38161
+  path: api.operation.export-claims
+  spec_node_id: api.operation
+  type: operation
+  layer_id: api
+  name: Export Claims
+  description: The taxonomy's claims as JSONL.
+  attributes:
+    operationId: export_claims_api_taxonomies__taxonomy_id__claims_export_get
+    summary: Export Claims
+    tags: claims
+    http_method: GET
+    http_path: /api/taxonomies/{taxonomy_id}/claims/export
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/claims_routes.py
+        symbol: export_claims
+  metadata:
+    created_at: 2026-11-19T14:46:21.105Z
+    updated_at: 2026-11-19T14:46:21.105Z
+    version: 1
+api.operation.get-claim:
+  id: 44b2515e-6c36-4958-af09-b3f97f2b80d2
+  path: api.operation.get-claim
+  spec_node_id: api.operation
+  type: operation
+  layer_id: api
+  name: Get Claim
+  description: One claim, with its triage and verdict.
+  attributes:
+    operationId: get_claim_api_claims__claim_id__get
+    summary: Get Claim
+    tags: claims
+    http_method: GET
+    http_path: /api/claims/{claim_id}
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/claims_routes.py
+        symbol: get_claim
+  metadata:
+    created_at: 2026-11-19T14:46:21.105Z
+    updated_at: 2026-11-19T14:46:21.105Z
+    version: 1
+api.operation.set-claim-verdict:
+  id: 72d97f77-4021-4ec4-afc3-fcaf1854230f
+  path: api.operation.set-claim-verdict
+  spec_node_id: api.operation
+  type: operation
+  layer_id: api
+  name: Set Claim Verdict
+  description: Record a person's verdict on a claim, replacing any earlier one.
+  attributes:
+    operationId: set_claim_verdict_api_claims__claim_id__verdict_put
+    summary: Set Claim Verdict
+    tags: claims
+    http_method: PUT
+    http_path: /api/claims/{claim_id}/verdict
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/claims_routes.py
+        symbol: set_claim_verdict
+  metadata:
+    created_at: 2026-11-19T14:46:21.105Z
+    updated_at: 2026-11-19T14:46:21.105Z
+    version: 1
+api.operation.clear-claim-verdict:
+  id: 45673314-1a8a-4e19-b1c5-27d5b20a0572
+  path: api.operation.clear-claim-verdict
+  spec_node_id: api.operation
+  type: operation
+  layer_id: api
+  name: Clear Claim Verdict
+  attributes:
+    operationId: clear_claim_verdict_api_claims__claim_id__verdict_delete
+    summary: Clear Claim Verdict
+    tags: claims
+    http_method: DELETE
+    http_path: /api/claims/{claim_id}/verdict
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/claims_routes.py
+        symbol: clear_claim_verdict
+  metadata:
+    created_at: 2026-11-19T14:46:21.105Z
+    updated_at: 2026-11-19T14:46:21.105Z
+    version: 1
+api.operation.add-source:
+  id: b082ad7a-2fcc-4178-833a-e853d43d8c0d
+  path: api.operation.add-source
+  spec_node_id: api.operation
+  type: operation
+  layer_id: api
+  name: Add Source
+  description: "Add a source: a multipart file (PDF, Markdown, HTML or plain
+    text), or JSON URL/text."
+  attributes:
+    operationId: add_source_api_sources_post
+    summary: Add Source
+    tags: sources
+    http_method: POST
+    http_path: /api/sources
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/sources_routes.py
+        symbol: add_source
+  metadata:
+    created_at: 2026-11-19T14:46:21.105Z
+    updated_at: 2026-11-19T14:46:21.105Z
+    version: 1
+api.operation.list-sources:
+  id: ef8b2dec-aa62-4075-b9c8-40ca25941f54
+  path: api.operation.list-sources
+  spec_node_id: api.operation
+  type: operation
+  layer_id: api
+  name: List Sources
+  description: A taxonomy's sources, newest first, each with its last extraction.
+  attributes:
+    operationId: list_sources_api_sources_get
+    summary: List Sources
+    tags: sources
+    http_method: GET
+    http_path: /api/sources
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/sources_routes.py
+        symbol: list_sources
+  metadata:
+    created_at: 2026-11-19T14:46:21.105Z
+    updated_at: 2026-11-19T14:46:21.105Z
+    version: 1
+api.operation.get-source:
+  id: 8218ab7e-bf5a-40d7-92f4-877fc9f6e624
+  path: api.operation.get-source
+  spec_node_id: api.operation
+  type: operation
+  layer_id: api
+  name: Get Source
+  description: One source, without its text, with its last extraction.
+  attributes:
+    operationId: get_source_api_sources__source_id__get
+    summary: Get Source
+    tags: sources
+    http_method: GET
+    http_path: /api/sources/{source_id}
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/sources_routes.py
+        symbol: get_source
+  metadata:
+    created_at: 2026-11-19T14:46:21.105Z
+    updated_at: 2026-11-19T14:46:21.105Z
+    version: 1
+api.operation.remove-source:
+  id: a23d1b43-ede6-416d-9669-2d00ab17a260
+  path: api.operation.remove-source
+  spec_node_id: api.operation
+  type: operation
+  layer_id: api
+  name: Remove Source
+  description: "Remove a source: it leaves the list and its original file is deleted."
+  attributes:
+    operationId: remove_source_api_sources__source_id__delete
+    summary: Remove Source
+    tags: sources
+    http_method: DELETE
+    http_path: /api/sources/{source_id}
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/sources_routes.py
+        symbol: remove_source
+  metadata:
+    created_at: 2026-11-19T14:46:21.105Z
+    updated_at: 2026-11-19T14:46:21.105Z
+    version: 1
+api.operation.get-source-text:
+  id: 2052a532-3654-4948-8a09-e7f685337e00
+  path: api.operation.get-source-text
+  spec_node_id: api.operation
+  type: operation
+  layer_id: api
+  name: Get Source Text
+  description: A source's text, one page or all of it, with its offsets in the whole text.
+  attributes:
+    operationId: get_source_text_api_sources__source_id__text_get
+    summary: Get Source Text
+    tags: sources
+    http_method: GET
+    http_path: /api/sources/{source_id}/text
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/sources_routes.py
+        symbol: get_source_text
+  metadata:
+    created_at: 2026-11-19T14:46:21.105Z
+    updated_at: 2026-11-19T14:46:21.105Z
+    version: 1
+api.operation.extract-source:
+  id: 247a54b2-7665-4942-9a9d-9b0ec8712f52
+  path: api.operation.extract-source
+  spec_node_id: api.operation
+  type: operation
+  layer_id: api
+  name: Extract Source
+  description: Extract a ready source into proposals, in the background.
+  attributes:
+    operationId: extract_source_api_sources__source_id__extract_post
+    summary: Extract Source
+    tags: sources
+    http_method: POST
+    http_path: /api/sources/{source_id}/extract
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/sources_routes.py
+        symbol: extract_source
+  metadata:
+    created_at: 2026-11-19T14:46:21.105Z
+    updated_at: 2026-11-19T14:46:21.105Z
+    version: 1
+api.operation.import-bundle:
+  id: 2dc5a0e5-2dbf-4886-a6ac-2aac8c926c01
+  path: api.operation.import-bundle
+  spec_node_id: api.operation
+  type: operation
+  layer_id: api
+  name: Import Bundle
+  description: Plan a Context Studio bundle and propose it.
+  attributes:
+    operationId: import_bundle_api_v1_interchange_bundles_post
+    summary: Import Bundle
+    tags: interchange
+    http_method: POST
+    http_path: /api/v1/interchange/bundles
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/bundle_routes.py
+        symbol: import_bundle
+  metadata:
+    created_at: 2026-11-19T14:46:21.105Z
+    updated_at: 2026-11-19T14:46:21.105Z
+    version: 1
+api.operation.dr-spec-drift:
+  id: 8d72630e-9d66-4bc6-b49d-68390599f130
+  path: api.operation.dr-spec-drift
+  spec_node_id: api.operation
+  type: operation
+  layer_id: api
+  name: Dr Spec Drift
+  description: Report, or propose, the drift between the DR spec and its taxonomy.
+  attributes:
+    operationId: dr_spec_drift_api_v1_interchange_dr_spec_drift_post
+    summary: Dr Spec Drift
+    tags: interchange
+    http_method: POST
+    http_path: /api/v1/interchange/dr-spec/drift
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/drift_routes.py
+        symbol: dr_spec_drift
+  metadata:
+    created_at: 2026-11-19T14:46:21.105Z
+    updated_at: 2026-11-19T14:46:21.105Z
+    version: 1
+api.operation.list-decision-models:
+  id: 1523ae38-0266-48b0-930d-58cc37e00398
+  path: api.operation.list-decision-models
+  spec_node_id: api.operation
+  type: operation
+  layer_id: api
+  name: List Decision Models
+  description: "List the configured decision-model instances: name, adapter,
+    model, configured."
+  attributes:
+    operationId: list_decision_models_api_decision_models_get
+    summary: List Decision Models
+    tags: decision-models
+    http_method: GET
+    http_path: /api/decision-models
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/decision_routes.py
+        symbol: list_decision_models
+  metadata:
+    created_at: 2026-11-19T14:46:21.106Z
+    updated_at: 2026-11-19T14:46:21.106Z
+    version: 1
+api.operation.mcp-endpoint:
+  id: 73715328-11a5-4e0d-8537-3f8bc56271a7
+  path: api.operation.mcp-endpoint
+  spec_node_id: api.operation
+  type: operation
+  layer_id: api
+  name: MCP Endpoint
+  description: Streamable-HTTP MCP endpoint mounted on the FastAPI app; agent
+    clients (DR, House) call the chat and proposal tools through it with a
+    bearer token.
+  attributes:
+    operationId: mcp_endpoint
+    summary: MCP server endpoint (streamable HTTP)
+    tags: mcp
+    http_method: POST
+    http_path: /mcp
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/app.py
+        symbol: mcp_endpoint
+  metadata:
+    created_at: 2026-11-19T14:46:21.106Z
+    updated_at: 2026-11-19T14:46:21.106Z
     version: 1

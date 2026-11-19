@@ -21,7 +21,8 @@ apm.span.api-request-span:
   source_reference:
     provenance: extracted
     locations:
-      - file: local-server/app.py
+      - file: local-server/adapters/telemetry/instrumentors.py
+        symbol: instrument_fastapi
   metadata:
     created_at: 2026-03-24T09:18:18.812Z
     updated_at: 2026-03-24T09:18:18.813Z
@@ -49,8 +50,176 @@ apm.span.database-query-span:
   source_reference:
     provenance: extracted
     locations:
-      - file: local-server/adapters/persistence/sqlite
+      - file: local-server/adapters/telemetry/instrumentors.py
+        symbol: instrument_sqlalchemy
   metadata:
     created_at: 2026-03-24T09:18:23.146Z
     updated_at: 2026-03-24T09:18:23.146Z
+    version: 1
+apm.span.llm-completion-span:
+  id: 6e1a34c0-d1fe-496d-bf45-90ae23af60c0
+  path: apm.span.llm-completion-span
+  spec_node_id: apm.span
+  type: span
+  layer_id: apm
+  name: LLM Completion Span
+  description: Span around each LLM completion call (llm.complete.anthropic,
+    llm.complete.openai) with model and token attributes.
+  attributes:
+    traceId: ""
+    spanId: ""
+    traceState: ""
+    parentSpanId: ""
+    spanKind: CLIENT
+    startTimeUnixNano: "0"
+    endTimeUnixNano: "0"
+    droppedAttributesCount: 0
+    droppedEventsCount: "0"
+    droppedLinksCount: "0"
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/llm/anthropic_provider.py
+        symbol: AnthropicProvider
+  metadata:
+    created_at: 2026-11-19T15:03:42.144Z
+    updated_at: 2026-11-19T15:03:42.144Z
+    version: 1
+apm.span.embedding-encode-span:
+  id: 0176aaa6-8fd4-4e76-95cc-4c3db6035a1b
+  path: apm.span.embedding-encode-span
+  spec_node_id: apm.span
+  type: span
+  layer_id: apm
+  name: Embedding Encode Span
+  description: Span around sentence-transformer encoding (embedding.encode).
+  attributes:
+    traceId: ""
+    spanId: ""
+    traceState: ""
+    parentSpanId: ""
+    spanKind: INTERNAL
+    startTimeUnixNano: "0"
+    endTimeUnixNano: "0"
+    droppedAttributesCount: 0
+    droppedEventsCount: "0"
+    droppedLinksCount: "0"
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/embedding/sentence_transformer.py
+        symbol: SentenceTransformerEmbedding
+  metadata:
+    created_at: 2026-11-19T15:03:42.144Z
+    updated_at: 2026-11-19T15:03:42.144Z
+    version: 1
+apm.span.nlp-process-span:
+  id: 52cdd5f6-7ade-4548-b83c-7b17f014d410
+  path: apm.span.nlp-process-span
+  spec_node_id: apm.span
+  type: span
+  layer_id: apm
+  name: NLP Process Span
+  description: Span around spaCy processing (nlp.process, nlp.process_open).
+  attributes:
+    traceId: ""
+    spanId: ""
+    traceState: ""
+    parentSpanId: ""
+    spanKind: INTERNAL
+    startTimeUnixNano: "0"
+    endTimeUnixNano: "0"
+    droppedAttributesCount: 0
+    droppedEventsCount: "0"
+    droppedLinksCount: "0"
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/nlp/spacy_processor.py
+        symbol: SpacyNLPProcessor
+  metadata:
+    created_at: 2026-11-19T15:03:42.144Z
+    updated_at: 2026-11-19T15:03:42.144Z
+    version: 1
+apm.span.sync-span:
+  id: ff5de496-3ff5-45ae-827b-d430da9b329a
+  path: apm.span.sync-span
+  spec_node_id: apm.span
+  type: span
+  layer_id: apm
+  name: Sync Span
+  description: Spans around sync push and pull (sync.push/pull.duckdb, sync.push/pull.s3).
+  attributes:
+    traceId: ""
+    spanId: ""
+    traceState: ""
+    parentSpanId: ""
+    spanKind: CLIENT
+    startTimeUnixNano: "0"
+    endTimeUnixNano: "0"
+    droppedAttributesCount: 0
+    droppedEventsCount: "0"
+    droppedLinksCount: "0"
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/sync/duckdb_sync.py
+        symbol: DuckDBSyncAdapter
+  metadata:
+    created_at: 2026-11-19T15:03:42.144Z
+    updated_at: 2026-11-19T15:03:42.144Z
+    version: 1
+apm.span.browser-navigation-span:
+  id: 443decbb-e3ec-46d9-9ff2-94ef53686c70
+  path: apm.span.browser-navigation-span
+  spec_node_id: apm.span
+  type: span
+  layer_id: apm
+  name: Browser Navigation Span
+  description: "UX span per router navigation (Navigation: <pathname>)."
+  attributes:
+    traceId: ""
+    spanId: ""
+    traceState: ""
+    parentSpanId: ""
+    spanKind: INTERNAL
+    startTimeUnixNano: "0"
+    endTimeUnixNano: "0"
+    droppedAttributesCount: 0
+    droppedEventsCount: "0"
+    droppedLinksCount: "0"
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/telemetry/router.ts
+  metadata:
+    created_at: 2026-11-19T15:03:42.144Z
+    updated_at: 2026-11-19T15:03:42.144Z
+    version: 1
+apm.span.browser-http-client-span:
+  id: d819062e-ced0-4561-9240-c5ad1d3e37d5
+  path: apm.span.browser-http-client-span
+  spec_node_id: apm.span
+  type: span
+  layer_id: apm
+  name: Browser HTTP Client Span
+  description: UX span per API request made through the axios client (HTTP <method> <url>).
+  attributes:
+    traceId: ""
+    spanId: ""
+    traceState: ""
+    parentSpanId: ""
+    spanKind: CLIENT
+    startTimeUnixNano: "0"
+    endTimeUnixNano: "0"
+    droppedAttributesCount: 0
+    droppedEventsCount: "0"
+    droppedLinksCount: "0"
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/api/client/interceptors.ts
+  metadata:
+    created_at: 2026-11-19T15:03:42.144Z
+    updated_at: 2026-11-19T15:03:42.144Z
     version: 1

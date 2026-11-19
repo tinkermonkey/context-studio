@@ -4,10 +4,10 @@
 
 | Metric              | Value                    |
 | ------------------- | ------------------------ |
-| Total Elements      | 547                      |
-| Total Relationships | 615                      |
-| Populated Layers    | 12                       |
-| Last Updated        | 2026-11-17T18:49:10.647Z |
+| Total Elements      | 1313                     |
+| Total Relationships | 2807                     |
+| Populated Layers    | 13                       |
+| Last Updated        | 2026-11-19T16:49:34.787Z |
 | CLI Version         | 0.5.0                    |
 | Spec Version        | 0.13.0                   |
 
@@ -19,6 +19,7 @@ Local-first knowledge graph application for RAG and communication
 
 - Motivation
 - Business
+- Product
 - Security
 - Application
 - Technology
@@ -56,20 +57,20 @@ Each layer is independently managed but interconnected, allowing elements in hig
 
 | Layer       | Elements | Report                                                                     |
 | ----------- | -------- | -------------------------------------------------------------------------- |
-| Motivation  | 13       | [01-motivation-layer-report.md](./reports/01-motivation-layer-report.md)   |
-| Business    | 9        | [02-business-layer-report.md](./reports/02-business-layer-report.md)       |
-| Product     | 0        | —                                                                          |
-| Security    | 8        | [04-security-layer-report.md](./reports/04-security-layer-report.md)       |
-| Application | 54       | [05-application-layer-report.md](./reports/05-application-layer-report.md) |
-| Technology  | 33       | [06-technology-layer-report.md](./reports/06-technology-layer-report.md)   |
-| API         | 295      | [07-api-layer-report.md](./reports/07-api-layer-report.md)                 |
-| Data Model  | 47       | [08-data-model-layer-report.md](./reports/08-data-model-layer-report.md)   |
-| Data Store  | 25       | [09-data-store-layer-report.md](./reports/09-data-store-layer-report.md)   |
-| UX          | 17       | [10-ux-layer-report.md](./reports/10-ux-layer-report.md)                   |
-| Navigation  | 13       | [11-navigation-layer-report.md](./reports/11-navigation-layer-report.md)   |
-| APM         | 10       | [12-apm-layer-report.md](./reports/12-apm-layer-report.md)                 |
-| Testing     | 23       | [13-testing-layer-report.md](./reports/13-testing-layer-report.md)         |
+| Motivation  | 56       | [01-motivation-layer-report.md](./reports/01-motivation-layer-report.md)   |
+| Business    | 34       | [02-business-layer-report.md](./reports/02-business-layer-report.md)       |
+| Product     | 67       | [03-product-layer-report.md](./reports/03-product-layer-report.md)         |
+| Security    | 30       | [04-security-layer-report.md](./reports/04-security-layer-report.md)       |
+| Application | 190      | [05-application-layer-report.md](./reports/05-application-layer-report.md) |
+| Technology  | 41       | [06-technology-layer-report.md](./reports/06-technology-layer-report.md)   |
+| API         | 477      | [07-api-layer-report.md](./reports/07-api-layer-report.md)                 |
+| Data Model  | 49       | [08-data-model-layer-report.md](./reports/08-data-model-layer-report.md)   |
+| Data Store  | 54       | [09-data-store-layer-report.md](./reports/09-data-store-layer-report.md)   |
+| UX          | 230      | [10-ux-layer-report.md](./reports/10-ux-layer-report.md)                   |
+| Navigation  | 37       | [11-navigation-layer-report.md](./reports/11-navigation-layer-report.md)   |
+| APM         | 17       | [12-apm-layer-report.md](./reports/12-apm-layer-report.md)                 |
+| Testing     | 31       | [13-testing-layer-report.md](./reports/13-testing-layer-report.md)         |
 
 ---
 
-Generated: 2026-11-17T18:49:10.650Z | Model Version: 0.1.0
+Generated: 2026-11-19T16:49:39.982Z | Model Version: 0.1.0

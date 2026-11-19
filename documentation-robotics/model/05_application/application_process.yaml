@@ -30,8 +30,8 @@ application.applicationprocess.alembic-migration-runner:
   source_reference:
     provenance: extracted
     locations:
-      - file: local-server/adapters/persistence/sqlite/alembic.ini
-        symbol: alembic_upgrade
+      - file: local-server/scripts/run_migrations.py
+        symbol: run_migrations
   metadata:
     created_at: 2026-05-11T12:03:34.066Z
     updated_at: 2026-05-11T12:03:34.066Z
@@ -53,4 +53,234 @@ application.applicationprocess.reference-data-import-process:
   metadata:
     created_at: 2026-05-11T12:03:34.585Z
     updated_at: 2026-05-11T12:03:34.585Z
+    version: 1
+application.applicationprocess.individual-extraction-pipeline:
+  id: 7756d8ae-9dcf-4773-8afb-25afc5d5552e
+  path: application.applicationprocess.individual-extraction-pipeline
+  spec_node_id: application.applicationprocess
+  type: applicationprocess
+  layer_id: application
+  name: Individual Extraction Pipeline
+  description: "Default individual-extraction orchestration: mentions, typing
+    against the taxonomy, recognition, proposal."
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/domain/pipelines/individual_extraction/orchestrator.py
+        symbol: IndividualExtractionOrchestrator
+  metadata:
+    created_at: 2026-11-19T14:52:22.373Z
+    updated_at: 2026-11-19T14:52:22.373Z
+    version: 1
+application.applicationprocess.find-then-type-individual-extraction:
+  id: 0982339b-1409-41fc-8625-1b52d743c780
+  path: application.applicationprocess.find-then-type-individual-extraction
+  spec_node_id: application.applicationprocess
+  type: applicationprocess
+  layer_id: application
+  name: Find-Then-Type Individual Extraction
+  description: Individual extraction that finds mentions first, then types them
+    against the full cached class catalog.
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/domain/pipelines/individual_extraction/find_then_type.py
+        symbol: FindThenTypeOrchestrator
+  metadata:
+    created_at: 2026-11-19T14:52:22.373Z
+    updated_at: 2026-11-19T14:52:22.373Z
+    version: 1
+application.applicationprocess.single-call-individual-extraction:
+  id: 7b421a66-d698-4248-9862-36f2ab759ac9
+  path: application.applicationprocess.single-call-individual-extraction
+  spec_node_id: application.applicationprocess
+  type: applicationprocess
+  layer_id: application
+  name: Single-Call Individual Extraction
+  description: Individual extraction in one LLM call over the source and catalog
+    (the default implementation).
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/domain/pipelines/individual_extraction/single_call.py
+        symbol: SingleCallOrchestrator
+  metadata:
+    created_at: 2026-11-19T14:52:22.373Z
+    updated_at: 2026-11-19T14:52:22.373Z
+    version: 1
+application.applicationprocess.open-individual-extraction:
+  id: 943a26be-45d6-473f-a986-cc6e068a9fc3
+  path: application.applicationprocess.open-individual-extraction
+  spec_node_id: application.applicationprocess
+  type: applicationprocess
+  layer_id: application
+  name: Open Individual Extraction
+  description: spaCy-driven open individual extraction (open_v1) without a fixed catalog.
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/domain/pipelines/individual_extraction/open_orchestrator.py
+        symbol: OpenIndividualExtractionOrchestrator
+  metadata:
+    created_at: 2026-11-19T14:52:22.373Z
+    updated_at: 2026-11-19T14:52:22.373Z
+    version: 1
+application.applicationprocess.schema-extraction-pipeline:
+  id: f861ba0b-001e-4b23-80a6-842b68a695b5
+  path: application.applicationprocess.schema-extraction-pipeline
+  spec_node_id: application.applicationprocess
+  type: applicationprocess
+  layer_id: application
+  name: Schema Extraction Pipeline
+  description: Extracts candidate classes, attributes, property definitions and
+    connections from text, with disambiguation and placement.
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/domain/pipelines/schema_extraction/orchestrator.py
+        symbol: SchemaExtractionOrchestrator
+  metadata:
+    created_at: 2026-11-19T14:52:22.373Z
+    updated_at: 2026-11-19T14:52:22.373Z
+    version: 1
+application.applicationprocess.open-schema-extraction:
+  id: 5521f7df-bf7d-4920-80c4-93334e64f8ce
+  path: application.applicationprocess.open-schema-extraction
+  spec_node_id: application.applicationprocess
+  type: applicationprocess
+  layer_id: application
+  name: Open Schema Extraction
+  description: spaCy-driven open schema extraction (open_v1).
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/domain/pipelines/schema_extraction/open_orchestrator.py
+        symbol: OpenSchemaExtractionOrchestrator
+  metadata:
+    created_at: 2026-11-19T14:52:22.373Z
+    updated_at: 2026-11-19T14:52:22.373Z
+    version: 1
+application.applicationprocess.schema-node-grounding-pipeline:
+  id: 494b8ad3-5cf3-4177-8065-2299ea91bc79
+  path: application.applicationprocess.schema-node-grounding-pipeline
+  spec_node_id: application.applicationprocess
+  type: applicationprocess
+  layer_id: application
+  name: Schema Node Grounding Pipeline
+  description: Grounds schema nodes in external references (Wikidata, DBpedia,
+    ConceptNet, schema.org) and scores candidates.
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/domain/pipelines/schema_node_grounding/orchestrator.py
+        symbol: SchemaGroundingOrchestrator
+  metadata:
+    created_at: 2026-11-19T14:52:22.373Z
+    updated_at: 2026-11-19T14:52:22.373Z
+    version: 1
+application.applicationprocess.schema-definition-refinement-pipeline:
+  id: 484141fc-9b20-46c8-82e0-498a21a4579a
+  path: application.applicationprocess.schema-definition-refinement-pipeline
+  spec_node_id: application.applicationprocess
+  type: applicationprocess
+  layer_id: application
+  name: Schema Definition Refinement Pipeline
+  description: Proposes improved definitions for schema nodes from their
+    neighborhood and enrichment.
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/domain/pipelines/schema_node_definition_refinement/orchestrator.py
+        symbol: DefinitionRefinementOrchestrator
+  metadata:
+    created_at: 2026-11-19T14:52:22.373Z
+    updated_at: 2026-11-19T14:52:22.373Z
+    version: 1
+application.applicationprocess.schema-connection-refinement-pipeline:
+  id: b976cd80-8ad0-42c5-8220-12e5e0ed0e09
+  path: application.applicationprocess.schema-connection-refinement-pipeline
+  spec_node_id: application.applicationprocess
+  type: applicationprocess
+  layer_id: application
+  name: Schema Connection Refinement Pipeline
+  description: Proposes missing or better connections between schema nodes.
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/domain/pipelines/schema_node_connection_refinement/orchestrator.py
+        symbol: ConnectionRefinementOrchestrator
+  metadata:
+    created_at: 2026-11-19T14:52:22.373Z
+    updated_at: 2026-11-19T14:52:22.373Z
+    version: 1
+application.applicationprocess.schema-relationship-reflection-pipeline:
+  id: b9b93a95-ee5f-4a63-96f5-44b66e245928
+  path: application.applicationprocess.schema-relationship-reflection-pipeline
+  spec_node_id: application.applicationprocess
+  type: applicationprocess
+  layer_id: application
+  name: Schema Relationship Reflection Pipeline
+  description: Asks the decision model sorting questions about relationship types
+    and proposes the planned changes.
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/domain/pipelines/schema_relationship_reflection/orchestrator.py
+        symbol: RelationshipReflectionOrchestrator
+  metadata:
+    created_at: 2026-11-19T14:52:22.373Z
+    updated_at: 2026-11-19T14:52:22.373Z
+    version: 1
+application.applicationprocess.claim-triage-pipeline:
+  id: 43d8b20d-9c0d-4ef4-b230-794ab2378dc5
+  path: application.applicationprocess.claim-triage-pipeline
+  spec_node_id: application.applicationprocess
+  type: applicationprocess
+  layer_id: application
+  name: Claim Triage Pipeline
+  description: Triages a taxonomy's claims with decision-model questions and saves
+    each claim's answers.
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/domain/pipelines/claim_triage/orchestrator.py
+        symbol: ClaimTriageOrchestrator
+  metadata:
+    created_at: 2026-11-19T14:52:22.373Z
+    updated_at: 2026-11-19T14:52:22.373Z
+    version: 1
+application.applicationprocess.notes-to-claims-pipeline:
+  id: 79efbaf9-5554-49b4-8aa5-6fd74aec19f2
+  path: application.applicationprocess.notes-to-claims-pipeline
+  spec_node_id: application.applicationprocess
+  type: applicationprocess
+  layer_id: application
+  name: Notes To Claims Pipeline
+  description: Splits notes into claims against the taxonomy and stores them,
+    keeping verdicts on rerun.
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/domain/pipelines/notes_to_claims/orchestrator.py
+        symbol: NotesToClaimsOrchestrator
+  metadata:
+    created_at: 2026-11-19T14:52:22.373Z
+    updated_at: 2026-11-19T14:52:22.373Z
+    version: 1
+application.applicationprocess.no-op-pipeline:
+  id: 8e4b53f4-b7c1-4cb4-8aba-9facc3669517
+  path: application.applicationprocess.no-op-pipeline
+  spec_node_id: application.applicationprocess
+  type: applicationprocess
+  layer_id: application
+  name: No-Op Pipeline
+  description: A pipeline that does nothing, registered for exercising the run lifecycle.
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/domain/pipelines/orchestration/noop.py
+        symbol: NoOpPipelineOrchestrator
+  metadata:
+    created_at: 2026-11-19T14:52:22.373Z
+    updated_at: 2026-11-19T14:52:22.373Z
     version: 1

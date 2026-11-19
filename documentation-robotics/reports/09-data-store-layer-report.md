@@ -16,54 +16,77 @@ Databases, data stores, and persistence mechanisms.
 
 | Metric                    | Count |
 | ------------------------- | ----- |
-| Elements                  | 25    |
-| Intra-Layer Relationships | 5     |
-| Inter-Layer Relationships | 24    |
-| Inbound Relationships     | 19    |
-| Outbound Relationships    | 5     |
+| Elements                  | 54    |
+| Intra-Layer Relationships | 82    |
+| Inter-Layer Relationships | 91    |
+| Inbound Relationships     | 71    |
+| Outbound Relationships    | 20    |
 
 **Cross-Layer References**:
 
-- **Upstream layers**: [Application](./05-application-layer-report.md), [Testing](./13-testing-layer-report.md)
-- **Downstream layers**: [Application](./05-application-layer-report.md), [Motivation](./01-motivation-layer-report.md)
+- **Upstream layers**: [Application](./05-application-layer-report.md), [Data Model](./08-data-model-layer-report.md), [Testing](./13-testing-layer-report.md)
+- **Downstream layers**: [Application](./05-application-layer-report.md), [Business](./02-business-layer-report.md), [Motivation](./01-motivation-layer-report.md), [Security](./04-security-layer-report.md)
 
 ## Intra-Layer Relationships
 
-```mermaid
-flowchart LR
-  subgraph data_store
-    data_store_accesspattern_entity_by_parent_range_scan["entity_by_parent RANGE_SCAN"]
-    data_store_accesspattern_vector_similarity_search["vector_similarity_search"]
-    data_store_collection_batch_runs["batch_runs"]
-    data_store_collection_change_events["change_events"]
-    data_store_collection_changeset_events_table["changeset_events table"]
-    data_store_collection_changesets_table["changesets table"]
-    data_store_collection_conflict_resolutions_table["conflict_resolutions table"]
-    data_store_collection_entity_versions_table["entity_versions table"]
-    data_store_collection_extraction_results_table["extraction_results table"]
-    data_store_collection_extraction_runs["extraction_runs"]
-    data_store_collection_import_runs_table["import_runs table"]
-    data_store_collection_individual_classes_table["individual_classes table"]
-    data_store_collection_ontology_entities["ontology_entities"]
-    data_store_collection_pipeline_configurations_table["pipeline_configurations table"]
-    data_store_collection_pipeline_executions_table["pipeline_executions table"]
-    data_store_collection_property_definitions_table["property_definitions table"]
-    data_store_collection_proposals_table["proposals table"]
-    data_store_collection_relationships["relationships"]
-    data_store_database_localdb["local.db"]
-    data_store_database_operationsdb["operations.db"]
-    data_store_database_reference_api_cachedb["reference_api_cache.db"]
-    data_store_database_referencedb["reference.db"]
-    data_store_retentionpolicy_reference_api_cache_cleanup["reference_api_cache cleanup"]
-    data_store_storedlogic_sqlite_vec_cosine_similarity["sqlite-vec cosine similarity"]
-    data_store_validationrule_entity_cascade_delete["entity_cascade_delete"]
-    data_store_accesspattern_entity_by_parent_range_scan -->|triggers| data_store_storedlogic_sqlite_vec_cosine_similarity
-    data_store_database_localdb -->|composes| data_store_collection_change_events
-    data_store_database_localdb -->|composes| data_store_collection_ontology_entities
-    data_store_database_localdb -->|composes| data_store_collection_relationships
-    data_store_retentionpolicy_reference_api_cache_cleanup -->|triggers| data_store_storedlogic_sqlite_vec_cosine_similarity
-  end
-```
+*This layer has >30 elements. Summary table shown instead of diagram.*
+
+| Element                                                        | Type              | Relationships |
+| -------------------------------------------------------------- | ----------------- | ------------- |
+| `data-store.accesspattern.entity-by-parent-range-scan`         | `accesspattern`   | 1             |
+| `data-store.accesspattern.vector-similarity-search`            | `accesspattern`   | 1             |
+| `data-store.collection.approval-policies`                      | `collection`      | 2             |
+| `data-store.collection.attribute-definitions`                  | `collection`      | 4             |
+| `data-store.collection.batch-runs`                             | `collection`      | 7             |
+| `data-store.collection.batches`                                | `collection`      | 2             |
+| `data-store.collection.change-events`                          | `collection`      | 2             |
+| `data-store.collection.chat-conversations`                     | `collection`      | 2             |
+| `data-store.collection.chat-messages`                          | `collection`      | 3             |
+| `data-store.collection.claim-triage-runs`                      | `collection`      | 2             |
+| `data-store.collection.claims`                                 | `collection`      | 3             |
+| `data-store.collection.datasets`                               | `collection`      | 5             |
+| `data-store.collection.entity-sources`                         | `collection`      | 2             |
+| `data-store.collection.extraction-results-table`               | `collection`      | 1             |
+| `data-store.collection.extraction-runs`                        | `collection`      | 2             |
+| `data-store.collection.grounding-workflows`                    | `collection`      | 2             |
+| `data-store.collection.import-runs-table`                      | `collection`      | 2             |
+| `data-store.collection.individual-classes-table`               | `collection`      | 3             |
+| `data-store.collection.individual-extraction-runs`             | `collection`      | 2             |
+| `data-store.collection.no-op-runs`                             | `collection`      | 2             |
+| `data-store.collection.notes-to-claims-runs`                   | `collection`      | 2             |
+| `data-store.collection.ontology-entities`                      | `collection`      | 15            |
+| `data-store.collection.pipeline-configurations-table`          | `collection`      | 1             |
+| `data-store.collection.pipeline-runs`                          | `collection`      | 11            |
+| `data-store.collection.predicates`                             | `collection`      | 4             |
+| `data-store.collection.property-definitions-table`             | `collection`      | 2             |
+| `data-store.collection.proposal-decisions`                     | `collection`      | 3             |
+| `data-store.collection.proposal-operations`                    | `collection`      | 4             |
+| `data-store.collection.proposals-table`                        | `collection`      | 5             |
+| `data-store.collection.reference-relations`                    | `collection`      | 1             |
+| `data-store.collection.references`                             | `collection`      | 1             |
+| `data-store.collection.relationships`                          | `collection`      | 3             |
+| `data-store.collection.schema-extraction-runs`                 | `collection`      | 2             |
+| `data-store.collection.schema-node-connection-refinement-runs` | `collection`      | 2             |
+| `data-store.collection.schema-node-definition-refinement-runs` | `collection`      | 2             |
+| `data-store.collection.schema-node-grounding-runs`             | `collection`      | 2             |
+| `data-store.collection.schema-relationship-reflection-runs`    | `collection`      | 2             |
+| `data-store.collection.sources`                                | `collection`      | 3             |
+| `data-store.collection.workflow-runs`                          | `collection`      | 2             |
+| `data-store.database.localdb`                                  | `database`        | 32            |
+| `data-store.database.operationsdb`                             | `database`        | 3             |
+| `data-store.database.reference-api-cachedb`                    | `database`        | 0             |
+| `data-store.database.referencedb`                              | `database`        | 2             |
+| `data-store.retentionpolicy.reference-api-cache-cleanup`       | `retentionpolicy` | 0             |
+| `data-store.validationrule.entity-cascade-delete`              | `validationrule`  | 1             |
+| `data-store.validationrule.uk-attribute-class-identifier`      | `validationrule`  | 1             |
+| `data-store.validationrule.uk-attribute-property-identifier`   | `validationrule`  | 1             |
+| `data-store.validationrule.uk-chat-message-seq`                | `validationrule`  | 1             |
+| `data-store.validationrule.uk-dataset-taxonomy-identifier`     | `validationrule`  | 1             |
+| `data-store.validationrule.uk-individual-position`             | `validationrule`  | 1             |
+| `data-store.validationrule.uk-predicate-taxonomy-identifier`   | `validationrule`  | 1             |
+| `data-store.validationrule.uk-relationship-triple`             | `validationrule`  | 1             |
+| `data-store.validationrule.uq-claim-taxonomy-key`              | `validationrule`  | 1             |
+| `data-store.validationrule.uq-proposal-operation-seq`          | `validationrule`  | 1             |
 
 ## Inter-Layer Dependencies
 
@@ -84,40 +107,110 @@ flowchart TB
   apm["APM"]
   testing["Testing"]
   application --> data_store
+  data_model --> data_store
   data_store --> application
+  data_store --> business
   data_store --> motivation
+  data_store --> security
   testing --> data_store
   class data_store current
 ```
 
 ## Inter-Layer Relationships Table
 
-| Relationship ID                                                   | Source Node                                                      | Dest Node                                                     | Dest Layer    | Predicate   | Cardinality  | Strength |
-| ----------------------------------------------------------------- | ---------------------------------------------------------------- | ------------------------------------------------------------- | ------------- | ----------- | ------------ | -------- |
-| `application.applicationcomponent.accesses.data-store.collection` | `application.applicationcomponent.sqlite-change-repository`      | `data-store.collection.change-events`                         | `data-store`  | `accesses`  | many-to-many | medium   |
-| `application.applicationcomponent.accesses.data-store.collection` | `application.applicationcomponent.sqlite-change-repository`      | `data-store.collection.changeset-events-table`                | `data-store`  | `accesses`  | many-to-many | medium   |
-| `application.applicationcomponent.accesses.data-store.collection` | `application.applicationcomponent.sqlite-change-repository`      | `data-store.collection.changesets-table`                      | `data-store`  | `accesses`  | many-to-many | medium   |
-| `application.applicationcomponent.accesses.data-store.collection` | `application.applicationcomponent.sqlite-change-repository`      | `data-store.collection.conflict-resolutions-table`            | `data-store`  | `accesses`  | many-to-many | medium   |
-| `application.applicationcomponent.accesses.data-store.collection` | `application.applicationcomponent.sqlite-change-repository`      | `data-store.collection.entity-versions-table`                 | `data-store`  | `accesses`  | many-to-many | medium   |
-| `application.applicationcomponent.accesses.data-store.collection` | `application.applicationcomponent.sqlite-change-repository`      | `data-store.collection.proposals-table`                       | `data-store`  | `accesses`  | many-to-many | medium   |
-| `application.applicationcomponent.accesses.data-store.collection` | `application.applicationcomponent.sqlite-extraction-repository`  | `data-store.collection.extraction-results-table`              | `data-store`  | `accesses`  | many-to-many | medium   |
-| `application.applicationcomponent.accesses.data-store.collection` | `application.applicationcomponent.sqlite-extraction-repository`  | `data-store.collection.extraction-runs`                       | `data-store`  | `accesses`  | many-to-many | medium   |
-| `application.applicationcomponent.accesses.data-store.collection` | `application.applicationcomponent.sqlite-interchange-repository` | `data-store.collection.batch-runs`                            | `data-store`  | `accesses`  | many-to-many | medium   |
-| `application.applicationcomponent.accesses.data-store.collection` | `application.applicationcomponent.sqlite-interchange-repository` | `data-store.collection.import-runs-table`                     | `data-store`  | `accesses`  | many-to-many | medium   |
-| `application.applicationcomponent.accesses.data-store.collection` | `application.applicationcomponent.sqlite-ontology-repository`    | `data-store.collection.individual-classes-table`              | `data-store`  | `accesses`  | many-to-many | medium   |
-| `application.applicationcomponent.accesses.data-store.collection` | `application.applicationcomponent.sqlite-ontology-repository`    | `data-store.collection.ontology-entities`                     | `data-store`  | `accesses`  | many-to-many | medium   |
-| `application.applicationcomponent.accesses.data-store.collection` | `application.applicationcomponent.sqlite-ontology-repository`    | `data-store.collection.property-definitions-table`            | `data-store`  | `accesses`  | many-to-many | medium   |
-| `application.applicationcomponent.accesses.data-store.collection` | `application.applicationcomponent.sqlite-pipeline-repository`    | `data-store.collection.pipeline-configurations-table`         | `data-store`  | `accesses`  | many-to-many | medium   |
-| `application.applicationcomponent.accesses.data-store.collection` | `application.applicationcomponent.sqlite-pipeline-repository`    | `data-store.collection.pipeline-executions-table`             | `data-store`  | `accesses`  | many-to-many | medium   |
-| `data-store.accesspattern.serves.application.applicationfunction` | `data-store.accesspattern.entity-by-parent-range-scan`           | `application.applicationfunction.sparql-query-function`       | `application` | `serves`    | many-to-many | medium   |
-| `data-store.accesspattern.serves.application.applicationfunction` | `data-store.accesspattern.vector-similarity-search`              | `application.applicationfunction.embedding-generation`        | `application` | `serves`    | many-to-many | medium   |
-| `data-store.retentionpolicy.satisfies.motivation.constraint`      | `data-store.retentionpolicy.reference-api-cache-cleanup`         | `motivation.constraint.external-reference-source-rate-limits` | `motivation`  | `satisfies` | many-to-many | medium   |
-| `data-store.storedlogic.realizes.application.applicationfunction` | `data-store.storedlogic.sqlite-vec-cosine-similarity`            | `application.applicationfunction.embedding-generation`        | `application` | `realizes`  | many-to-many | medium   |
-| `data-store.storedlogic.serves.application.applicationservice`    | `data-store.storedlogic.sqlite-vec-cosine-similarity`            | `application.applicationservice.extraction-service`           | `application` | `serves`    | many-to-many | medium   |
-| `testing.testcoveragetarget.covers.data-store.collection`         | `testing.testcoveragetarget.e2e-test-suite`                      | `data-store.collection.ontology-entities`                     | `data-store`  | `covers`    | many-to-many | medium   |
-| `testing.testcoveragetarget.covers.data-store.storedlogic`        | `testing.testcoveragetarget.extraction-pipeline`                 | `data-store.storedlogic.sqlite-vec-cosine-similarity`         | `data-store`  | `covers`    | many-to-many | medium   |
-| `testing.testcoveragetarget.covers.data-store.storedlogic`        | `testing.testcoveragetarget.ontology-crud`                       | `data-store.storedlogic.sqlite-vec-cosine-similarity`         | `data-store`  | `covers`    | many-to-many | medium   |
-| `testing.testcoveragetarget.covers.data-store.collection`         | `testing.testcoveragetarget.performance-test-suite`              | `data-store.collection.ontology-entities`                     | `data-store`  | `covers`    | many-to-many | medium   |
+| Relationship ID                                                   | Source Node                                                                 | Dest Node                                                            | Dest Layer    | Predicate    | Cardinality  | Strength |
+| ----------------------------------------------------------------- | --------------------------------------------------------------------------- | -------------------------------------------------------------------- | ------------- | ------------ | ------------ | -------- |
+| `application.applicationcomponent.accesses.data-store.collection` | `application.applicationcomponent.sqlite-approval-policy-repository`        | `data-store.collection.approval-policies`                            | `data-store`  | `accesses`   | many-to-many | medium   |
+| `application.applicationcomponent.accesses.data-store.collection` | `application.applicationcomponent.sqlite-batch-repository`                  | `data-store.collection.batches`                                      | `data-store`  | `accesses`   | many-to-many | medium   |
+| `application.applicationcomponent.accesses.data-store.collection` | `application.applicationcomponent.sqlite-change-proposal-repository`        | `data-store.collection.proposal-decisions`                           | `data-store`  | `accesses`   | many-to-many | medium   |
+| `application.applicationcomponent.accesses.data-store.collection` | `application.applicationcomponent.sqlite-change-proposal-repository`        | `data-store.collection.proposal-operations`                          | `data-store`  | `accesses`   | many-to-many | medium   |
+| `application.applicationcomponent.accesses.data-store.collection` | `application.applicationcomponent.sqlite-change-proposal-repository`        | `data-store.collection.proposals-table`                              | `data-store`  | `accesses`   | many-to-many | medium   |
+| `application.applicationcomponent.accesses.data-store.collection` | `application.applicationcomponent.sqlite-change-repository`                 | `data-store.collection.change-events`                                | `data-store`  | `accesses`   | many-to-many | medium   |
+| `application.applicationcomponent.accesses.data-store.collection` | `application.applicationcomponent.sqlite-claim-repository`                  | `data-store.collection.claims`                                       | `data-store`  | `accesses`   | many-to-many | medium   |
+| `application.applicationcomponent.accesses.data-store.collection` | `application.applicationcomponent.sqlite-conversation-repository`           | `data-store.collection.chat-conversations`                           | `data-store`  | `accesses`   | many-to-many | medium   |
+| `application.applicationcomponent.accesses.data-store.collection` | `application.applicationcomponent.sqlite-conversation-repository`           | `data-store.collection.chat-messages`                                | `data-store`  | `accesses`   | many-to-many | medium   |
+| `application.applicationcomponent.accesses.data-store.collection` | `application.applicationcomponent.sqlite-entity-source-repository`          | `data-store.collection.entity-sources`                               | `data-store`  | `accesses`   | many-to-many | medium   |
+| `application.applicationcomponent.accesses.data-store.collection` | `application.applicationcomponent.sqlite-extraction-repository`             | `data-store.collection.extraction-results-table`                     | `data-store`  | `accesses`   | many-to-many | medium   |
+| `application.applicationcomponent.accesses.data-store.collection` | `application.applicationcomponent.sqlite-extraction-repository`             | `data-store.collection.extraction-runs`                              | `data-store`  | `accesses`   | many-to-many | medium   |
+| `application.applicationcomponent.accesses.data-store.collection` | `application.applicationcomponent.sqlite-extraction-run-repository`         | `data-store.collection.extraction-runs`                              | `data-store`  | `accesses`   | many-to-many | medium   |
+| `application.applicationcomponent.accesses.data-store.collection` | `application.applicationcomponent.sqlite-individual-vector-index`           | `data-store.collection.ontology-entities`                            | `data-store`  | `accesses`   | many-to-many | medium   |
+| `application.applicationcomponent.accesses.data-store.collection` | `application.applicationcomponent.sqlite-interchange-repository`            | `data-store.collection.batch-runs`                                   | `data-store`  | `accesses`   | many-to-many | medium   |
+| `application.applicationcomponent.accesses.data-store.collection` | `application.applicationcomponent.sqlite-interchange-repository`            | `data-store.collection.import-runs-table`                            | `data-store`  | `accesses`   | many-to-many | medium   |
+| `application.applicationcomponent.accesses.data-store.collection` | `application.applicationcomponent.sqlite-ontology-repository`               | `data-store.collection.attribute-definitions`                        | `data-store`  | `accesses`   | many-to-many | medium   |
+| `application.applicationcomponent.accesses.data-store.collection` | `application.applicationcomponent.sqlite-ontology-repository`               | `data-store.collection.datasets`                                     | `data-store`  | `accesses`   | many-to-many | medium   |
+| `application.applicationcomponent.accesses.data-store.collection` | `application.applicationcomponent.sqlite-ontology-repository`               | `data-store.collection.individual-classes-table`                     | `data-store`  | `accesses`   | many-to-many | medium   |
+| `application.applicationcomponent.accesses.data-store.collection` | `application.applicationcomponent.sqlite-ontology-repository`               | `data-store.collection.ontology-entities`                            | `data-store`  | `accesses`   | many-to-many | medium   |
+| `application.applicationcomponent.accesses.data-store.collection` | `application.applicationcomponent.sqlite-ontology-repository`               | `data-store.collection.predicates`                                   | `data-store`  | `accesses`   | many-to-many | medium   |
+| `application.applicationcomponent.accesses.data-store.collection` | `application.applicationcomponent.sqlite-ontology-repository`               | `data-store.collection.property-definitions-table`                   | `data-store`  | `accesses`   | many-to-many | medium   |
+| `application.applicationcomponent.accesses.data-store.collection` | `application.applicationcomponent.sqlite-ontology-repository`               | `data-store.collection.relationships`                                | `data-store`  | `accesses`   | many-to-many | medium   |
+| `application.applicationcomponent.accesses.data-store.collection` | `application.applicationcomponent.sqlite-pipeline-configuration-repository` | `data-store.collection.pipeline-configurations-table`                | `data-store`  | `accesses`   | many-to-many | medium   |
+| `application.applicationcomponent.accesses.data-store.collection` | `application.applicationcomponent.sqlite-pipeline-repository`               | `data-store.collection.batch-runs`                                   | `data-store`  | `accesses`   | many-to-many | medium   |
+| `application.applicationcomponent.accesses.data-store.collection` | `application.applicationcomponent.sqlite-pipeline-repository`               | `data-store.collection.claim-triage-runs`                            | `data-store`  | `accesses`   | many-to-many | medium   |
+| `application.applicationcomponent.accesses.data-store.collection` | `application.applicationcomponent.sqlite-pipeline-repository`               | `data-store.collection.individual-extraction-runs`                   | `data-store`  | `accesses`   | many-to-many | medium   |
+| `application.applicationcomponent.accesses.data-store.collection` | `application.applicationcomponent.sqlite-pipeline-repository`               | `data-store.collection.no-op-runs`                                   | `data-store`  | `accesses`   | many-to-many | medium   |
+| `application.applicationcomponent.accesses.data-store.collection` | `application.applicationcomponent.sqlite-pipeline-repository`               | `data-store.collection.notes-to-claims-runs`                         | `data-store`  | `accesses`   | many-to-many | medium   |
+| `application.applicationcomponent.accesses.data-store.collection` | `application.applicationcomponent.sqlite-pipeline-repository`               | `data-store.collection.pipeline-runs`                                | `data-store`  | `accesses`   | many-to-many | medium   |
+| `application.applicationcomponent.accesses.data-store.collection` | `application.applicationcomponent.sqlite-pipeline-repository`               | `data-store.collection.schema-extraction-runs`                       | `data-store`  | `accesses`   | many-to-many | medium   |
+| `application.applicationcomponent.accesses.data-store.collection` | `application.applicationcomponent.sqlite-pipeline-repository`               | `data-store.collection.schema-node-connection-refinement-runs`       | `data-store`  | `accesses`   | many-to-many | medium   |
+| `application.applicationcomponent.accesses.data-store.collection` | `application.applicationcomponent.sqlite-pipeline-repository`               | `data-store.collection.schema-node-definition-refinement-runs`       | `data-store`  | `accesses`   | many-to-many | medium   |
+| `application.applicationcomponent.accesses.data-store.collection` | `application.applicationcomponent.sqlite-pipeline-repository`               | `data-store.collection.schema-node-grounding-runs`                   | `data-store`  | `accesses`   | many-to-many | medium   |
+| `application.applicationcomponent.accesses.data-store.collection` | `application.applicationcomponent.sqlite-pipeline-repository`               | `data-store.collection.schema-relationship-reflection-runs`          | `data-store`  | `accesses`   | many-to-many | medium   |
+| `application.applicationcomponent.accesses.data-store.collection` | `application.applicationcomponent.sqlite-schema-vector-index`               | `data-store.collection.ontology-entities`                            | `data-store`  | `accesses`   | many-to-many | medium   |
+| `application.applicationcomponent.accesses.data-store.collection` | `application.applicationcomponent.sqlite-source-repository`                 | `data-store.collection.sources`                                      | `data-store`  | `accesses`   | many-to-many | medium   |
+| `data-model.objectschema.maps-to.data-store.collection`           | `data-model.objectschema.approval-policy-entity`                            | `data-store.collection.approval-policies`                            | `data-store`  | `maps-to`    | many-to-many | medium   |
+| `data-model.objectschema.maps-to.data-store.collection`           | `data-model.objectschema.attribute-definition-entity`                       | `data-store.collection.attribute-definitions`                        | `data-store`  | `maps-to`    | many-to-many | medium   |
+| `data-model.objectschema.maps-to.data-store.collection`           | `data-model.objectschema.batch-entity`                                      | `data-store.collection.batches`                                      | `data-store`  | `maps-to`    | many-to-many | medium   |
+| `data-model.objectschema.maps-to.data-store.collection`           | `data-model.objectschema.change-event-entity`                               | `data-store.collection.change-events`                                | `data-store`  | `maps-to`    | many-to-many | medium   |
+| `data-model.objectschema.maps-to.data-store.collection`           | `data-model.objectschema.change-event`                                      | `data-store.collection.change-events`                                | `data-store`  | `maps-to`    | many-to-many | medium   |
+| `data-model.objectschema.maps-to.data-store.collection`           | `data-model.objectschema.chat-message-entity`                               | `data-store.collection.chat-messages`                                | `data-store`  | `maps-to`    | many-to-many | medium   |
+| `data-model.objectschema.maps-to.data-store.collection`           | `data-model.objectschema.claim-entity`                                      | `data-store.collection.claims`                                       | `data-store`  | `maps-to`    | many-to-many | medium   |
+| `data-model.objectschema.maps-to.data-store.collection`           | `data-model.objectschema.concept-scheme-entity`                             | `data-store.collection.ontology-entities`                            | `data-store`  | `maps-to`    | many-to-many | medium   |
+| `data-model.objectschema.maps-to.data-store.collection`           | `data-model.objectschema.conversation-entity`                               | `data-store.collection.chat-conversations`                           | `data-store`  | `maps-to`    | many-to-many | medium   |
+| `data-model.objectschema.maps-to.data-store.collection`           | `data-model.objectschema.dataset-entity`                                    | `data-store.collection.datasets`                                     | `data-store`  | `maps-to`    | many-to-many | medium   |
+| `data-model.objectschema.maps-to.data-store.collection`           | `data-model.objectschema.entity-source-entity`                              | `data-store.collection.entity-sources`                               | `data-store`  | `maps-to`    | many-to-many | medium   |
+| `data-model.objectschema.maps-to.data-store.collection`           | `data-model.objectschema.extraction-result`                                 | `data-store.collection.extraction-results-table`                     | `data-store`  | `maps-to`    | many-to-many | medium   |
+| `data-model.objectschema.maps-to.data-store.collection`           | `data-model.objectschema.extraction-run`                                    | `data-store.collection.extraction-runs`                              | `data-store`  | `maps-to`    | many-to-many | medium   |
+| `data-model.objectschema.maps-to.data-store.collection`           | `data-model.objectschema.import-run-entity`                                 | `data-store.collection.import-runs-table`                            | `data-store`  | `maps-to`    | many-to-many | medium   |
+| `data-model.objectschema.maps-to.data-store.collection`           | `data-model.objectschema.import-run`                                        | `data-store.collection.import-runs-table`                            | `data-store`  | `maps-to`    | many-to-many | medium   |
+| `data-model.objectschema.maps-to.data-store.collection`           | `data-model.objectschema.individual-class`                                  | `data-store.collection.individual-classes-table`                     | `data-store`  | `maps-to`    | many-to-many | medium   |
+| `data-model.objectschema.maps-to.data-store.collection`           | `data-model.objectschema.individual-entity`                                 | `data-store.collection.ontology-entities`                            | `data-store`  | `maps-to`    | many-to-many | medium   |
+| `data-model.objectschema.maps-to.data-store.collection`           | `data-model.objectschema.ontology-class-entity`                             | `data-store.collection.ontology-entities`                            | `data-store`  | `maps-to`    | many-to-many | medium   |
+| `data-model.objectschema.maps-to.data-store.collection`           | `data-model.objectschema.ontology-entity`                                   | `data-store.collection.ontology-entities`                            | `data-store`  | `maps-to`    | many-to-many | medium   |
+| `data-model.objectschema.maps-to.data-store.collection`           | `data-model.objectschema.pipeline-configuration`                            | `data-store.collection.pipeline-configurations-table`                | `data-store`  | `maps-to`    | many-to-many | medium   |
+| `data-model.objectschema.maps-to.data-store.collection`           | `data-model.objectschema.pipeline-run-entity`                               | `data-store.collection.pipeline-runs`                                | `data-store`  | `maps-to`    | many-to-many | medium   |
+| `data-model.objectschema.maps-to.data-store.collection`           | `data-model.objectschema.predicate-entity`                                  | `data-store.collection.predicates`                                   | `data-store`  | `maps-to`    | many-to-many | medium   |
+| `data-model.objectschema.maps-to.data-store.collection`           | `data-model.objectschema.property-definition-entity`                        | `data-store.collection.property-definitions-table`                   | `data-store`  | `maps-to`    | many-to-many | medium   |
+| `data-model.objectschema.maps-to.data-store.collection`           | `data-model.objectschema.property-definition`                               | `data-store.collection.property-definitions-table`                   | `data-store`  | `maps-to`    | many-to-many | medium   |
+| `data-model.objectschema.maps-to.data-store.collection`           | `data-model.objectschema.proposal-decision-entity`                          | `data-store.collection.proposal-decisions`                           | `data-store`  | `maps-to`    | many-to-many | medium   |
+| `data-model.objectschema.maps-to.data-store.collection`           | `data-model.objectschema.proposal-entity`                                   | `data-store.collection.proposals-table`                              | `data-store`  | `maps-to`    | many-to-many | medium   |
+| `data-model.objectschema.maps-to.data-store.collection`           | `data-model.objectschema.proposal`                                          | `data-store.collection.proposals-table`                              | `data-store`  | `maps-to`    | many-to-many | medium   |
+| `data-model.objectschema.maps-to.data-store.collection`           | `data-model.objectschema.proposed-operation`                                | `data-store.collection.proposal-operations`                          | `data-store`  | `maps-to`    | many-to-many | medium   |
+| `data-model.objectschema.maps-to.data-store.collection`           | `data-model.objectschema.relationship-entity`                               | `data-store.collection.relationships`                                | `data-store`  | `maps-to`    | many-to-many | medium   |
+| `data-model.objectschema.maps-to.data-store.collection`           | `data-model.objectschema.relationship`                                      | `data-store.collection.relationships`                                | `data-store`  | `maps-to`    | many-to-many | medium   |
+| `data-model.objectschema.maps-to.data-store.collection`           | `data-model.objectschema.source-entity`                                     | `data-store.collection.sources`                                      | `data-store`  | `maps-to`    | many-to-many | medium   |
+| `data-model.objectschema.maps-to.data-store.collection`           | `data-model.objectschema.taxonomy-entity`                                   | `data-store.collection.ontology-entities`                            | `data-store`  | `maps-to`    | many-to-many | medium   |
+| `data-store.accesspattern.serves.application.applicationfunction` | `data-store.accesspattern.entity-by-parent-range-scan`                      | `application.applicationfunction.sparql-query-function`              | `application` | `serves`     | many-to-many | medium   |
+| `data-store.accesspattern.serves.application.applicationfunction` | `data-store.accesspattern.vector-similarity-search`                         | `application.applicationfunction.embedding-generation`               | `application` | `serves`     | many-to-many | medium   |
+| `data-store.collection.satisfies.motivation.requirement`          | `data-store.collection.approval-policies`                                   | `motivation.requirement.breaking-changes-never-auto-apply`           | `motivation`  | `satisfies`  | many-to-many | medium   |
+| `data-store.collection.satisfies.motivation.requirement`          | `data-store.collection.change-events`                                       | `motivation.requirement.every-applied-proposal-is-revertible`        | `motivation`  | `satisfies`  | many-to-many | medium   |
+| `data-store.collection.references.security.dataclassification`    | `data-store.collection.chat-messages`                                       | `security.dataclassification.internal-knowledge-graph-data`          | `security`    | `references` | many-to-many | medium   |
+| `data-store.collection.realizes.business.businessobject`          | `data-store.collection.claims`                                              | `business.businessobject.claim`                                      | `business`    | `realizes`   | many-to-many | medium   |
+| `data-store.collection.satisfies.motivation.requirement`          | `data-store.collection.datasets`                                            | `motivation.requirement.individuals-belong-to-one-dataset`           | `motivation`  | `satisfies`  | many-to-many | medium   |
+| `data-store.collection.satisfies.motivation.requirement`          | `data-store.collection.entity-sources`                                      | `motivation.requirement.extracted-facts-cite-their-source`           | `motivation`  | `satisfies`  | many-to-many | medium   |
+| `data-store.collection.references.security.dataclassification`    | `data-store.collection.ontology-entities`                                   | `security.dataclassification.internal-knowledge-graph-data`          | `security`    | `references` | many-to-many | medium   |
+| `data-store.collection.satisfies.motivation.requirement`          | `data-store.collection.predicates`                                          | `motivation.requirement.relationships-limited-to-allowed-types`      | `motivation`  | `satisfies`  | many-to-many | medium   |
+| `data-store.collection.references.security.dataclassification`    | `data-store.collection.proposals-table`                                     | `security.dataclassification.internal-knowledge-graph-data`          | `security`    | `references` | many-to-many | medium   |
+| `data-store.collection.satisfies.motivation.requirement`          | `data-store.collection.proposals-table`                                     | `motivation.requirement.proposals-record-their-pipeline-and-version` | `motivation`  | `satisfies`  | many-to-many | medium   |
+| `data-store.collection.references.security.dataclassification`    | `data-store.collection.sources`                                             | `security.dataclassification.internal-knowledge-graph-data`          | `security`    | `references` | many-to-many | medium   |
+| `data-store.database.satisfies.motivation.constraint`             | `data-store.database.localdb`                                               | `motivation.constraint.sqlite-only-persistence`                      | `motivation`  | `satisfies`  | many-to-many | medium   |
+| `data-store.database.satisfies.motivation.constraint`             | `data-store.database.operationsdb`                                          | `motivation.constraint.sqlite-only-persistence`                      | `motivation`  | `satisfies`  | many-to-many | medium   |
+| `data-store.database.satisfies.motivation.constraint`             | `data-store.database.reference-api-cachedb`                                 | `motivation.constraint.sqlite-only-persistence`                      | `motivation`  | `satisfies`  | many-to-many | medium   |
+| `data-store.database.satisfies.motivation.constraint`             | `data-store.database.referencedb`                                           | `motivation.constraint.sqlite-only-persistence`                      | `motivation`  | `satisfies`  | many-to-many | medium   |
+| `data-store.retentionpolicy.satisfies.motivation.constraint`      | `data-store.retentionpolicy.reference-api-cache-cleanup`                    | `motivation.constraint.external-reference-source-rate-limits`        | `motivation`  | `satisfies`  | many-to-many | medium   |
+| `data-store.validationrule.satisfies.motivation.requirement`      | `data-store.validationrule.uk-dataset-taxonomy-identifier`                  | `motivation.requirement.individuals-belong-to-one-dataset`           | `motivation`  | `satisfies`  | many-to-many | medium   |
+| `data-store.validationrule.satisfies.motivation.requirement`      | `data-store.validationrule.uk-relationship-triple`                          | `motivation.requirement.relationships-limited-to-allowed-types`      | `motivation`  | `satisfies`  | many-to-many | medium   |
+| `testing.testcoveragetarget.covers.data-store.collection`         | `testing.testcoveragetarget.e2e-test-suite`                                 | `data-store.collection.ontology-entities`                            | `data-store`  | `covers`     | many-to-many | medium   |
+| `testing.testcoveragetarget.covers.data-store.collection`         | `testing.testcoveragetarget.performance-test-suite`                         | `data-store.collection.ontology-entities`                            | `data-store`  | `covers`     | many-to-many | medium   |
 
 ## Element Reference
 
@@ -144,7 +237,7 @@ Range scan access pattern for retrieving all ontology entities with a specific p
 | Type        | Related Element                                         | Predicate  | Direction |
 | ----------- | ------------------------------------------------------- | ---------- | --------- |
 | inter-layer | `application.applicationfunction.sparql-query-function` | `serves`   | outbound  |
-| intra-layer | `data-store.storedlogic.sqlite-vec-cosine-similarity`   | `triggers` | outbound  |
+| intra-layer | `data-store.collection.ontology-entities`               | `accesses` | outbound  |
 
 ### vector_similarity_search {#vector-similarity-search}
 
@@ -152,23 +245,73 @@ Range scan access pattern for retrieving all ontology entities with a specific p
 
 **Type**: `accesspattern`
 
-Vector similarity search access pattern using SQLiteVector cosine similarity — retrieves top-k semantically similar ontology entities by embedding
+Vector similarity search over ontology_entities: brute-force cosine (numpy) over the title/definition embedding columns stored on each row, read through the same SQLAlchemy session as the structured data (no sqlite-vec extension yet).
 
 #### Attributes
 
-| Name                   | Value                              |
-| ---------------------- | ---------------------------------- |
-| consistencyRequirement | EVENTUAL                           |
-| expectedFrequency      | FREQUENT                           |
-| keyCondition           | embedding_vector ANN :query_vector |
-| patternType            | VECTOR_SIMILARITY                  |
-| targetCollection       | ontology_entities                  |
+| Name                   | Value                                                                |
+| ---------------------- | -------------------------------------------------------------------- |
+| consistencyRequirement | EVENTUAL                                                             |
+| expectedFrequency      | FREQUENT                                                             |
+| keyCondition           | cosine(title_embedding \| definition_embedding, :query_vector) top-k |
+| patternType            | VECTOR_SIMILARITY                                                    |
+| targetCollection       | ontology_entities                                                    |
 
 #### Relationships
 
-| Type        | Related Element                                        | Predicate | Direction |
-| ----------- | ------------------------------------------------------ | --------- | --------- |
-| inter-layer | `application.applicationfunction.embedding-generation` | `serves`  | outbound  |
+| Type        | Related Element                                        | Predicate  | Direction |
+| ----------- | ------------------------------------------------------ | ---------- | --------- |
+| inter-layer | `application.applicationfunction.embedding-generation` | `serves`   | outbound  |
+| intra-layer | `data-store.collection.ontology-entities`              | `accesses` | outbound  |
+
+### approval_policies {#approval-policies}
+
+**ID**: `data-store.collection.approval-policies`
+
+**Type**: `collection`
+
+One approval policy per taxonomy (local.db).
+
+#### Attributes
+
+| Name           | Value |
+| -------------- | ----- |
+| collectionType | TABLE |
+
+#### Relationships
+
+| Type        | Related Element                                                      | Predicate    | Direction |
+| ----------- | -------------------------------------------------------------------- | ------------ | --------- |
+| inter-layer | `application.applicationcomponent.sqlite-approval-policy-repository` | `accesses`   | inbound   |
+| inter-layer | `data-model.objectschema.approval-policy-entity`                     | `maps-to`    | inbound   |
+| inter-layer | `motivation.requirement.breaking-changes-never-auto-apply`           | `satisfies`  | outbound  |
+| intra-layer | `data-store.collection.ontology-entities`                            | `references` | outbound  |
+| intra-layer | `data-store.database.localdb`                                        | `composes`   | inbound   |
+
+### attribute_definitions {#attribute-definitions}
+
+**ID**: `data-store.collection.attribute-definitions`
+
+**Type**: `collection`
+
+Attribute definitions scoped to classes (local.db).
+
+#### Attributes
+
+| Name           | Value |
+| -------------- | ----- |
+| collectionType | TABLE |
+
+#### Relationships
+
+| Type        | Related Element                                               | Predicate    | Direction |
+| ----------- | ------------------------------------------------------------- | ------------ | --------- |
+| inter-layer | `application.applicationcomponent.sqlite-ontology-repository` | `accesses`   | inbound   |
+| inter-layer | `data-model.objectschema.attribute-definition-entity`         | `maps-to`    | inbound   |
+| intra-layer | `data-store.validationrule.uk-attribute-class-identifier`     | `composes`   | outbound  |
+| intra-layer | `data-store.validationrule.uk-attribute-property-identifier`  | `composes`   | outbound  |
+| intra-layer | `data-store.collection.ontology-entities`                     | `references` | outbound  |
+| intra-layer | `data-store.database.localdb`                                 | `composes`   | inbound   |
 
 ### batch_runs {#batch-runs}
 
@@ -176,13 +319,44 @@ Vector similarity search access pattern using SQLiteVector cosine similarity —
 
 **Type**: `collection`
 
-Tracks batch processing runs for ontology import operations. Created in local.db via Alembic migration. Contains parent/discriminator for import_runs inheritance.
+Base table for every run (joined-table inheritance): import runs, extraction runs, pipeline runs and change proposals share its id, status and timestamps.
 
 #### Relationships
 
-| Type        | Related Element                                                  | Predicate  | Direction |
-| ----------- | ---------------------------------------------------------------- | ---------- | --------- |
-| inter-layer | `application.applicationcomponent.sqlite-interchange-repository` | `accesses` | inbound   |
+| Type        | Related Element                                                  | Predicate    | Direction |
+| ----------- | ---------------------------------------------------------------- | ------------ | --------- |
+| inter-layer | `application.applicationcomponent.sqlite-interchange-repository` | `accesses`   | inbound   |
+| inter-layer | `application.applicationcomponent.sqlite-pipeline-repository`    | `accesses`   | inbound   |
+| intra-layer | `data-store.collection.batches`                                  | `references` | outbound  |
+| intra-layer | `data-store.collection.change-events`                            | `references` | inbound   |
+| intra-layer | `data-store.collection.extraction-runs`                          | `references` | inbound   |
+| intra-layer | `data-store.collection.import-runs-table`                        | `references` | inbound   |
+| intra-layer | `data-store.collection.pipeline-runs`                            | `references` | inbound   |
+| intra-layer | `data-store.collection.proposals-table`                          | `references` | inbound   |
+| intra-layer | `data-store.database.localdb`                                    | `composes`   | inbound   |
+
+### batches {#batches}
+
+**ID**: `data-store.collection.batches`
+
+**Type**: `collection`
+
+Batches of pipeline runs (local.db).
+
+#### Attributes
+
+| Name           | Value |
+| -------------- | ----- |
+| collectionType | TABLE |
+
+#### Relationships
+
+| Type        | Related Element                                            | Predicate    | Direction |
+| ----------- | ---------------------------------------------------------- | ------------ | --------- |
+| inter-layer | `application.applicationcomponent.sqlite-batch-repository` | `accesses`   | inbound   |
+| inter-layer | `data-model.objectschema.batch-entity`                     | `maps-to`    | inbound   |
+| intra-layer | `data-store.collection.batch-runs`                         | `references` | inbound   |
+| intra-layer | `data-store.database.localdb`                              | `composes`   | inbound   |
 
 ### change_events {#change-events}
 
@@ -200,18 +374,22 @@ Audit trail of all entity changes — stores entity_id, entity_type, event_type,
 
 #### Relationships
 
-| Type        | Related Element                                             | Predicate  | Direction |
-| ----------- | ----------------------------------------------------------- | ---------- | --------- |
-| inter-layer | `application.applicationcomponent.sqlite-change-repository` | `accesses` | inbound   |
-| intra-layer | `data-store.database.localdb`                               | `composes` | inbound   |
+| Type        | Related Element                                               | Predicate    | Direction |
+| ----------- | ------------------------------------------------------------- | ------------ | --------- |
+| inter-layer | `application.applicationcomponent.sqlite-change-repository`   | `accesses`   | inbound   |
+| inter-layer | `data-model.objectschema.change-event-entity`                 | `maps-to`    | inbound   |
+| inter-layer | `data-model.objectschema.change-event`                        | `maps-to`    | inbound   |
+| inter-layer | `motivation.requirement.every-applied-proposal-is-revertible` | `satisfies`  | outbound  |
+| intra-layer | `data-store.collection.batch-runs`                            | `references` | outbound  |
+| intra-layer | `data-store.database.localdb`                                 | `composes`   | inbound   |
 
-### changeset_events table {#changeset-events-table}
+### chat_conversations {#chat-conversations}
 
-**ID**: `data-store.collection.changeset-events-table`
+**ID**: `data-store.collection.chat-conversations`
 
 **Type**: `collection`
 
-SQLite table: changeset_events — stores individual entity-level changes within a changeset (operation, entity_id, before/after snapshots); in local.db
+Chat conversations (operations.db).
 
 #### Attributes
 
@@ -221,17 +399,20 @@ SQLite table: changeset_events — stores individual entity-level changes within
 
 #### Relationships
 
-| Type        | Related Element                                             | Predicate  | Direction |
-| ----------- | ----------------------------------------------------------- | ---------- | --------- |
-| inter-layer | `application.applicationcomponent.sqlite-change-repository` | `accesses` | inbound   |
+| Type        | Related Element                                                   | Predicate    | Direction |
+| ----------- | ----------------------------------------------------------------- | ------------ | --------- |
+| inter-layer | `application.applicationcomponent.sqlite-conversation-repository` | `accesses`   | inbound   |
+| inter-layer | `data-model.objectschema.conversation-entity`                     | `maps-to`    | inbound   |
+| intra-layer | `data-store.collection.chat-messages`                             | `references` | inbound   |
+| intra-layer | `data-store.database.operationsdb`                                | `composes`   | inbound   |
 
-### changesets table {#changesets-table}
+### chat_messages {#chat-messages}
 
-**ID**: `data-store.collection.changesets-table`
+**ID**: `data-store.collection.chat-messages`
 
 **Type**: `collection`
 
-SQLite table: changesets — groups related change events into a reviewable unit with state machine (draft/staged/submitted/merged); in local.db
+Chat messages with their content blocks (operations.db).
 
 #### Attributes
 
@@ -241,17 +422,22 @@ SQLite table: changesets — groups related change events into a reviewable unit
 
 #### Relationships
 
-| Type        | Related Element                                             | Predicate  | Direction |
-| ----------- | ----------------------------------------------------------- | ---------- | --------- |
-| inter-layer | `application.applicationcomponent.sqlite-change-repository` | `accesses` | inbound   |
+| Type        | Related Element                                                   | Predicate    | Direction |
+| ----------- | ----------------------------------------------------------------- | ------------ | --------- |
+| inter-layer | `application.applicationcomponent.sqlite-conversation-repository` | `accesses`   | inbound   |
+| inter-layer | `data-model.objectschema.chat-message-entity`                     | `maps-to`    | inbound   |
+| inter-layer | `security.dataclassification.internal-knowledge-graph-data`       | `references` | outbound  |
+| intra-layer | `data-store.validationrule.uk-chat-message-seq`                   | `composes`   | outbound  |
+| intra-layer | `data-store.collection.chat-conversations`                        | `references` | outbound  |
+| intra-layer | `data-store.database.operationsdb`                                | `composes`   | inbound   |
 
-### conflict_resolutions table {#conflict-resolutions-table}
+### claim_triage_runs {#claim-triage-runs}
 
-**ID**: `data-store.collection.conflict-resolutions-table`
+**ID**: `data-store.collection.claim-triage-runs`
 
 **Type**: `collection`
 
-SQLite table: conflict_resolutions — stores manual conflict resolution decisions with chosen resolution strategy per entity conflict; in local.db
+Claim-triage pipeline runs (pipeline_runs subtype).
 
 #### Attributes
 
@@ -261,17 +447,19 @@ SQLite table: conflict_resolutions — stores manual conflict resolution decisio
 
 #### Relationships
 
-| Type        | Related Element                                             | Predicate  | Direction |
-| ----------- | ----------------------------------------------------------- | ---------- | --------- |
-| inter-layer | `application.applicationcomponent.sqlite-change-repository` | `accesses` | inbound   |
+| Type        | Related Element                                               | Predicate    | Direction |
+| ----------- | ------------------------------------------------------------- | ------------ | --------- |
+| inter-layer | `application.applicationcomponent.sqlite-pipeline-repository` | `accesses`   | inbound   |
+| intra-layer | `data-store.collection.pipeline-runs`                         | `references` | outbound  |
+| intra-layer | `data-store.database.localdb`                                 | `composes`   | inbound   |
 
-### entity_versions table {#entity-versions-table}
+### claims {#claims}
 
-**ID**: `data-store.collection.entity-versions-table`
+**ID**: `data-store.collection.claims`
 
 **Type**: `collection`
 
-SQLite table: entity_versions — stores JSON snapshots of entity state at each version for point-in-time recovery; in local.db
+A taxonomy's claims, with triage answers and verdicts (local.db).
 
 #### Attributes
 
@@ -281,9 +469,65 @@ SQLite table: entity_versions — stores JSON snapshots of entity state at each 
 
 #### Relationships
 
-| Type        | Related Element                                             | Predicate  | Direction |
-| ----------- | ----------------------------------------------------------- | ---------- | --------- |
-| inter-layer | `application.applicationcomponent.sqlite-change-repository` | `accesses` | inbound   |
+| Type        | Related Element                                            | Predicate    | Direction |
+| ----------- | ---------------------------------------------------------- | ------------ | --------- |
+| inter-layer | `application.applicationcomponent.sqlite-claim-repository` | `accesses`   | inbound   |
+| inter-layer | `data-model.objectschema.claim-entity`                     | `maps-to`    | inbound   |
+| inter-layer | `business.businessobject.claim`                            | `realizes`   | outbound  |
+| intra-layer | `data-store.validationrule.uq-claim-taxonomy-key`          | `composes`   | outbound  |
+| intra-layer | `data-store.collection.ontology-entities`                  | `references` | outbound  |
+| intra-layer | `data-store.database.localdb`                              | `composes`   | inbound   |
+
+### datasets {#datasets}
+
+**ID**: `data-store.collection.datasets`
+
+**Type**: `collection`
+
+Datasets: named bodies of data over a taxonomy's schema (local.db).
+
+#### Attributes
+
+| Name           | Value |
+| -------------- | ----- |
+| collectionType | TABLE |
+
+#### Relationships
+
+| Type        | Related Element                                               | Predicate    | Direction |
+| ----------- | ------------------------------------------------------------- | ------------ | --------- |
+| inter-layer | `application.applicationcomponent.sqlite-ontology-repository` | `accesses`   | inbound   |
+| inter-layer | `data-model.objectschema.dataset-entity`                      | `maps-to`    | inbound   |
+| inter-layer | `motivation.requirement.individuals-belong-to-one-dataset`    | `satisfies`  | outbound  |
+| intra-layer | `data-store.validationrule.uk-dataset-taxonomy-identifier`    | `composes`   | outbound  |
+| intra-layer | `data-store.collection.ontology-entities`                     | `references` | outbound  |
+| intra-layer | `data-store.collection.ontology-entities`                     | `references` | inbound   |
+| intra-layer | `data-store.collection.sources`                               | `references` | inbound   |
+| intra-layer | `data-store.database.localdb`                                 | `composes`   | inbound   |
+
+### entity_sources {#entity-sources}
+
+**ID**: `data-store.collection.entity-sources`
+
+**Type**: `collection`
+
+Provenance: which source passage each entity or relationship was extracted from (local.db).
+
+#### Attributes
+
+| Name           | Value |
+| -------------- | ----- |
+| collectionType | TABLE |
+
+#### Relationships
+
+| Type        | Related Element                                                    | Predicate    | Direction |
+| ----------- | ------------------------------------------------------------------ | ------------ | --------- |
+| inter-layer | `application.applicationcomponent.sqlite-entity-source-repository` | `accesses`   | inbound   |
+| inter-layer | `data-model.objectschema.entity-source-entity`                     | `maps-to`    | inbound   |
+| inter-layer | `motivation.requirement.extracted-facts-cite-their-source`         | `satisfies`  | outbound  |
+| intra-layer | `data-store.collection.proposals-table`                            | `references` | outbound  |
+| intra-layer | `data-store.database.localdb`                                      | `composes`   | inbound   |
 
 ### extraction_results table {#extraction-results-table}
 
@@ -304,6 +548,8 @@ SQLite table: extraction_results — stores NLP/LLM extraction run outputs, sour
 | Type        | Related Element                                                 | Predicate  | Direction |
 | ----------- | --------------------------------------------------------------- | ---------- | --------- |
 | inter-layer | `application.applicationcomponent.sqlite-extraction-repository` | `accesses` | inbound   |
+| inter-layer | `data-model.objectschema.extraction-result`                     | `maps-to`  | inbound   |
+| intra-layer | `data-store.database.localdb`                                   | `composes` | inbound   |
 
 ### extraction_runs {#extraction-runs}
 
@@ -315,9 +561,34 @@ Tracks individual extraction pipeline runs, including NLP and LLM extraction pha
 
 #### Relationships
 
-| Type        | Related Element                                                 | Predicate  | Direction |
-| ----------- | --------------------------------------------------------------- | ---------- | --------- |
-| inter-layer | `application.applicationcomponent.sqlite-extraction-repository` | `accesses` | inbound   |
+| Type        | Related Element                                                     | Predicate    | Direction |
+| ----------- | ------------------------------------------------------------------- | ------------ | --------- |
+| inter-layer | `application.applicationcomponent.sqlite-extraction-repository`     | `accesses`   | inbound   |
+| inter-layer | `application.applicationcomponent.sqlite-extraction-run-repository` | `accesses`   | inbound   |
+| inter-layer | `data-model.objectschema.extraction-run`                            | `maps-to`    | inbound   |
+| intra-layer | `data-store.collection.batch-runs`                                  | `references` | outbound  |
+| intra-layer | `data-store.database.localdb`                                       | `composes`   | inbound   |
+
+### grounding_workflows {#grounding-workflows}
+
+**ID**: `data-store.collection.grounding-workflows`
+
+**Type**: `collection`
+
+Saved grounding workflows (local.db).
+
+#### Attributes
+
+| Name           | Value |
+| -------------- | ----- |
+| collectionType | TABLE |
+
+#### Relationships
+
+| Type        | Related Element                       | Predicate    | Direction |
+| ----------- | ------------------------------------- | ------------ | --------- |
+| intra-layer | `data-store.collection.workflow-runs` | `references` | inbound   |
+| intra-layer | `data-store.database.localdb`         | `composes`   | inbound   |
 
 ### import_runs table {#import-runs-table}
 
@@ -335,9 +606,13 @@ SQLite table: import_runs — stores interchange import run metadata (format, st
 
 #### Relationships
 
-| Type        | Related Element                                                  | Predicate  | Direction |
-| ----------- | ---------------------------------------------------------------- | ---------- | --------- |
-| inter-layer | `application.applicationcomponent.sqlite-interchange-repository` | `accesses` | inbound   |
+| Type        | Related Element                                                  | Predicate    | Direction |
+| ----------- | ---------------------------------------------------------------- | ------------ | --------- |
+| inter-layer | `application.applicationcomponent.sqlite-interchange-repository` | `accesses`   | inbound   |
+| inter-layer | `data-model.objectschema.import-run-entity`                      | `maps-to`    | inbound   |
+| inter-layer | `data-model.objectschema.import-run`                             | `maps-to`    | inbound   |
+| intra-layer | `data-store.collection.batch-runs`                               | `references` | outbound  |
+| intra-layer | `data-store.database.localdb`                                    | `composes`   | inbound   |
 
 ### individual_classes table {#individual-classes-table}
 
@@ -355,9 +630,79 @@ SQLite table: individual_classes — association table mapping individual instan
 
 #### Relationships
 
-| Type        | Related Element                                               | Predicate  | Direction |
-| ----------- | ------------------------------------------------------------- | ---------- | --------- |
-| inter-layer | `application.applicationcomponent.sqlite-ontology-repository` | `accesses` | inbound   |
+| Type        | Related Element                                               | Predicate    | Direction |
+| ----------- | ------------------------------------------------------------- | ------------ | --------- |
+| inter-layer | `application.applicationcomponent.sqlite-ontology-repository` | `accesses`   | inbound   |
+| inter-layer | `data-model.objectschema.individual-class`                    | `maps-to`    | inbound   |
+| intra-layer | `data-store.validationrule.uk-individual-position`            | `composes`   | outbound  |
+| intra-layer | `data-store.collection.ontology-entities`                     | `references` | outbound  |
+| intra-layer | `data-store.database.localdb`                                 | `composes`   | inbound   |
+
+### individual_extraction_runs {#individual-extraction-runs}
+
+**ID**: `data-store.collection.individual-extraction-runs`
+
+**Type**: `collection`
+
+Individual-extraction pipeline runs (pipeline_runs subtype).
+
+#### Attributes
+
+| Name           | Value |
+| -------------- | ----- |
+| collectionType | TABLE |
+
+#### Relationships
+
+| Type        | Related Element                                               | Predicate    | Direction |
+| ----------- | ------------------------------------------------------------- | ------------ | --------- |
+| inter-layer | `application.applicationcomponent.sqlite-pipeline-repository` | `accesses`   | inbound   |
+| intra-layer | `data-store.collection.pipeline-runs`                         | `references` | outbound  |
+| intra-layer | `data-store.database.localdb`                                 | `composes`   | inbound   |
+
+### no_op_runs {#no-op-runs}
+
+**ID**: `data-store.collection.no-op-runs`
+
+**Type**: `collection`
+
+No-op pipeline runs (pipeline_runs subtype).
+
+#### Attributes
+
+| Name           | Value |
+| -------------- | ----- |
+| collectionType | TABLE |
+
+#### Relationships
+
+| Type        | Related Element                                               | Predicate    | Direction |
+| ----------- | ------------------------------------------------------------- | ------------ | --------- |
+| inter-layer | `application.applicationcomponent.sqlite-pipeline-repository` | `accesses`   | inbound   |
+| intra-layer | `data-store.collection.pipeline-runs`                         | `references` | outbound  |
+| intra-layer | `data-store.database.localdb`                                 | `composes`   | inbound   |
+
+### notes_to_claims_runs {#notes-to-claims-runs}
+
+**ID**: `data-store.collection.notes-to-claims-runs`
+
+**Type**: `collection`
+
+Notes-to-claims pipeline runs (pipeline_runs subtype).
+
+#### Attributes
+
+| Name           | Value |
+| -------------- | ----- |
+| collectionType | TABLE |
+
+#### Relationships
+
+| Type        | Related Element                                               | Predicate    | Direction |
+| ----------- | ------------------------------------------------------------- | ------------ | --------- |
+| inter-layer | `application.applicationcomponent.sqlite-pipeline-repository` | `accesses`   | inbound   |
+| intra-layer | `data-store.collection.pipeline-runs`                         | `references` | outbound  |
+| intra-layer | `data-store.database.localdb`                                 | `composes`   | inbound   |
 
 ### ontology_entities {#ontology-entities}
 
@@ -375,12 +720,34 @@ Unified table for all ontology entities (Taxonomy, ConceptScheme, Class, Individ
 
 #### Relationships
 
-| Type        | Related Element                                               | Predicate  | Direction |
-| ----------- | ------------------------------------------------------------- | ---------- | --------- |
-| inter-layer | `application.applicationcomponent.sqlite-ontology-repository` | `accesses` | inbound   |
-| inter-layer | `testing.testcoveragetarget.e2e-test-suite`                   | `covers`   | inbound   |
-| inter-layer | `testing.testcoveragetarget.performance-test-suite`           | `covers`   | inbound   |
-| intra-layer | `data-store.database.localdb`                                 | `composes` | inbound   |
+| Type        | Related Element                                                   | Predicate    | Direction |
+| ----------- | ----------------------------------------------------------------- | ------------ | --------- |
+| inter-layer | `application.applicationcomponent.sqlite-individual-vector-index` | `accesses`   | inbound   |
+| inter-layer | `application.applicationcomponent.sqlite-ontology-repository`     | `accesses`   | inbound   |
+| inter-layer | `application.applicationcomponent.sqlite-schema-vector-index`     | `accesses`   | inbound   |
+| inter-layer | `data-model.objectschema.concept-scheme-entity`                   | `maps-to`    | inbound   |
+| inter-layer | `data-model.objectschema.individual-entity`                       | `maps-to`    | inbound   |
+| inter-layer | `data-model.objectschema.ontology-class-entity`                   | `maps-to`    | inbound   |
+| inter-layer | `data-model.objectschema.ontology-entity`                         | `maps-to`    | inbound   |
+| inter-layer | `data-model.objectschema.taxonomy-entity`                         | `maps-to`    | inbound   |
+| inter-layer | `security.dataclassification.internal-knowledge-graph-data`       | `references` | outbound  |
+| inter-layer | `testing.testcoveragetarget.e2e-test-suite`                       | `covers`     | inbound   |
+| inter-layer | `testing.testcoveragetarget.performance-test-suite`               | `covers`     | inbound   |
+| intra-layer | `data-store.accesspattern.entity-by-parent-range-scan`            | `accesses`   | inbound   |
+| intra-layer | `data-store.accesspattern.vector-similarity-search`               | `accesses`   | inbound   |
+| intra-layer | `data-store.collection.approval-policies`                         | `references` | inbound   |
+| intra-layer | `data-store.collection.attribute-definitions`                     | `references` | inbound   |
+| intra-layer | `data-store.collection.claims`                                    | `references` | inbound   |
+| intra-layer | `data-store.collection.datasets`                                  | `references` | inbound   |
+| intra-layer | `data-store.collection.individual-classes-table`                  | `references` | inbound   |
+| intra-layer | `data-store.validationrule.entity-cascade-delete`                 | `composes`   | outbound  |
+| intra-layer | `data-store.collection.datasets`                                  | `references` | outbound  |
+| intra-layer | `data-store.collection.predicates`                                | `references` | outbound  |
+| intra-layer | `data-store.collection.predicates`                                | `references` | inbound   |
+| intra-layer | `data-store.collection.property-definitions-table`                | `references` | inbound   |
+| intra-layer | `data-store.collection.relationships`                             | `references` | inbound   |
+| intra-layer | `data-store.collection.sources`                                   | `references` | inbound   |
+| intra-layer | `data-store.database.localdb`                                     | `composes`   | inbound   |
 
 ### pipeline_configurations table {#pipeline-configurations-table}
 
@@ -398,17 +765,19 @@ SQLite table: pipeline_configurations — stores LLM pipeline definitions (provi
 
 #### Relationships
 
-| Type        | Related Element                                               | Predicate  | Direction |
-| ----------- | ------------------------------------------------------------- | ---------- | --------- |
-| inter-layer | `application.applicationcomponent.sqlite-pipeline-repository` | `accesses` | inbound   |
+| Type        | Related Element                                                             | Predicate  | Direction |
+| ----------- | --------------------------------------------------------------------------- | ---------- | --------- |
+| inter-layer | `application.applicationcomponent.sqlite-pipeline-configuration-repository` | `accesses` | inbound   |
+| inter-layer | `data-model.objectschema.pipeline-configuration`                            | `maps-to`  | inbound   |
+| intra-layer | `data-store.database.operationsdb`                                          | `composes` | inbound   |
 
-### pipeline_executions table {#pipeline-executions-table}
+### pipeline_runs {#pipeline-runs}
 
-**ID**: `data-store.collection.pipeline-executions-table`
+**ID**: `data-store.collection.pipeline-runs`
 
 **Type**: `collection`
 
-SQLite table: pipeline_executions — stores LLM pipeline execution records (status, input/output, LLM traceability log, timing) in operations.db
+Pipeline runs (a batch_runs subtype): type, implementation, configuration version, input, candidates and LLM metadata; specialized by one table per pipeline type.
 
 #### Attributes
 
@@ -418,9 +787,47 @@ SQLite table: pipeline_executions — stores LLM pipeline execution records (sta
 
 #### Relationships
 
-| Type        | Related Element                                               | Predicate  | Direction |
-| ----------- | ------------------------------------------------------------- | ---------- | --------- |
-| inter-layer | `application.applicationcomponent.sqlite-pipeline-repository` | `accesses` | inbound   |
+| Type        | Related Element                                                | Predicate    | Direction |
+| ----------- | -------------------------------------------------------------- | ------------ | --------- |
+| inter-layer | `application.applicationcomponent.sqlite-pipeline-repository`  | `accesses`   | inbound   |
+| inter-layer | `data-model.objectschema.pipeline-run-entity`                  | `maps-to`    | inbound   |
+| intra-layer | `data-store.collection.claim-triage-runs`                      | `references` | inbound   |
+| intra-layer | `data-store.collection.individual-extraction-runs`             | `references` | inbound   |
+| intra-layer | `data-store.collection.no-op-runs`                             | `references` | inbound   |
+| intra-layer | `data-store.collection.notes-to-claims-runs`                   | `references` | inbound   |
+| intra-layer | `data-store.collection.batch-runs`                             | `references` | outbound  |
+| intra-layer | `data-store.collection.schema-extraction-runs`                 | `references` | inbound   |
+| intra-layer | `data-store.collection.schema-node-connection-refinement-runs` | `references` | inbound   |
+| intra-layer | `data-store.collection.schema-node-definition-refinement-runs` | `references` | inbound   |
+| intra-layer | `data-store.collection.schema-node-grounding-runs`             | `references` | inbound   |
+| intra-layer | `data-store.collection.schema-relationship-reflection-runs`    | `references` | inbound   |
+| intra-layer | `data-store.database.localdb`                                  | `composes`   | inbound   |
+
+### predicates {#predicates}
+
+**ID**: `data-store.collection.predicates`
+
+**Type**: `collection`
+
+A taxonomy's predicate catalog: relation verbs used by property definitions (local.db).
+
+#### Attributes
+
+| Name           | Value |
+| -------------- | ----- |
+| collectionType | TABLE |
+
+#### Relationships
+
+| Type        | Related Element                                                 | Predicate    | Direction |
+| ----------- | --------------------------------------------------------------- | ------------ | --------- |
+| inter-layer | `application.applicationcomponent.sqlite-ontology-repository`   | `accesses`   | inbound   |
+| inter-layer | `data-model.objectschema.predicate-entity`                      | `maps-to`    | inbound   |
+| inter-layer | `motivation.requirement.relationships-limited-to-allowed-types` | `satisfies`  | outbound  |
+| intra-layer | `data-store.collection.ontology-entities`                       | `references` | inbound   |
+| intra-layer | `data-store.validationrule.uk-predicate-taxonomy-identifier`    | `composes`   | outbound  |
+| intra-layer | `data-store.collection.ontology-entities`                       | `references` | outbound  |
+| intra-layer | `data-store.database.localdb`                                   | `composes`   | inbound   |
 
 ### property_definitions table {#property-definitions-table}
 
@@ -438,17 +845,21 @@ SQLite table: property_definitions — stores relationship type definitions (obj
 
 #### Relationships
 
-| Type        | Related Element                                               | Predicate  | Direction |
-| ----------- | ------------------------------------------------------------- | ---------- | --------- |
-| inter-layer | `application.applicationcomponent.sqlite-ontology-repository` | `accesses` | inbound   |
+| Type        | Related Element                                               | Predicate    | Direction |
+| ----------- | ------------------------------------------------------------- | ------------ | --------- |
+| inter-layer | `application.applicationcomponent.sqlite-ontology-repository` | `accesses`   | inbound   |
+| inter-layer | `data-model.objectschema.property-definition-entity`          | `maps-to`    | inbound   |
+| inter-layer | `data-model.objectschema.property-definition`                 | `maps-to`    | inbound   |
+| intra-layer | `data-store.collection.ontology-entities`                     | `references` | outbound  |
+| intra-layer | `data-store.database.localdb`                                 | `composes`   | inbound   |
 
-### proposals table {#proposals-table}
+### proposal_decisions {#proposal-decisions}
 
-**ID**: `data-store.collection.proposals-table`
+**ID**: `data-store.collection.proposal-decisions`
 
 **Type**: `collection`
 
-SQLite table: proposals — stores merge proposals linking changesets to review workflow (status, reviewer, timestamps, conflict state); in local.db
+Reviewer and policy decisions on proposal operations, with reason codes and timing: the gold record (local.db).
 
 #### Attributes
 
@@ -458,9 +869,107 @@ SQLite table: proposals — stores merge proposals linking changesets to review 
 
 #### Relationships
 
-| Type        | Related Element                                             | Predicate  | Direction |
-| ----------- | ----------------------------------------------------------- | ---------- | --------- |
-| inter-layer | `application.applicationcomponent.sqlite-change-repository` | `accesses` | inbound   |
+| Type        | Related Element                                                      | Predicate    | Direction |
+| ----------- | -------------------------------------------------------------------- | ------------ | --------- |
+| inter-layer | `application.applicationcomponent.sqlite-change-proposal-repository` | `accesses`   | inbound   |
+| inter-layer | `data-model.objectschema.proposal-decision-entity`                   | `maps-to`    | inbound   |
+| intra-layer | `data-store.collection.proposal-operations`                          | `references` | outbound  |
+| intra-layer | `data-store.collection.proposals-table`                              | `references` | outbound  |
+| intra-layer | `data-store.database.localdb`                                        | `composes`   | inbound   |
+
+### proposal_operations {#proposal-operations}
+
+**ID**: `data-store.collection.proposal-operations`
+
+**Type**: `collection`
+
+The ordered operations of each change proposal, with status and payload (local.db).
+
+#### Attributes
+
+| Name           | Value |
+| -------------- | ----- |
+| collectionType | TABLE |
+
+#### Relationships
+
+| Type        | Related Element                                                      | Predicate    | Direction |
+| ----------- | -------------------------------------------------------------------- | ------------ | --------- |
+| inter-layer | `application.applicationcomponent.sqlite-change-proposal-repository` | `accesses`   | inbound   |
+| inter-layer | `data-model.objectschema.proposed-operation`                         | `maps-to`    | inbound   |
+| intra-layer | `data-store.collection.proposal-decisions`                           | `references` | inbound   |
+| intra-layer | `data-store.validationrule.uq-proposal-operation-seq`                | `composes`   | outbound  |
+| intra-layer | `data-store.collection.proposals-table`                              | `references` | outbound  |
+| intra-layer | `data-store.database.localdb`                                        | `composes`   | inbound   |
+
+### change_proposals {#change-proposals}
+
+**ID**: `data-store.collection.proposals-table`
+
+**Type**: `collection`
+
+Change proposals (a batch_runs subtype): taxonomy, origin, status and landing of each proposal.
+
+#### Attributes
+
+| Name           | Value |
+| -------------- | ----- |
+| collectionType | TABLE |
+
+#### Relationships
+
+| Type        | Related Element                                                      | Predicate    | Direction |
+| ----------- | -------------------------------------------------------------------- | ------------ | --------- |
+| inter-layer | `application.applicationcomponent.sqlite-change-proposal-repository` | `accesses`   | inbound   |
+| inter-layer | `data-model.objectschema.proposal-entity`                            | `maps-to`    | inbound   |
+| inter-layer | `data-model.objectschema.proposal`                                   | `maps-to`    | inbound   |
+| inter-layer | `security.dataclassification.internal-knowledge-graph-data`          | `references` | outbound  |
+| inter-layer | `motivation.requirement.proposals-record-their-pipeline-and-version` | `satisfies`  | outbound  |
+| intra-layer | `data-store.collection.entity-sources`                               | `references` | inbound   |
+| intra-layer | `data-store.collection.proposal-decisions`                           | `references` | inbound   |
+| intra-layer | `data-store.collection.proposal-operations`                          | `references` | inbound   |
+| intra-layer | `data-store.collection.batch-runs`                                   | `references` | outbound  |
+| intra-layer | `data-store.database.localdb`                                        | `composes`   | inbound   |
+
+### reference_relations {#reference-relations}
+
+**ID**: `data-store.collection.reference-relations`
+
+**Type**: `collection`
+
+reference.db table of imported reference triples: subject_uri, predicate, object_uri, source. Created by LocalReferenceRepository on first use; no migrations.
+
+#### Attributes
+
+| Name           | Value |
+| -------------- | ----- |
+| collectionType | TABLE |
+
+#### Relationships
+
+| Type        | Related Element                   | Predicate  | Direction |
+| ----------- | --------------------------------- | ---------- | --------- |
+| intra-layer | `data-store.database.referencedb` | `composes` | inbound   |
+
+### references {#references}
+
+**ID**: `data-store.collection.references`
+
+**Type**: `collection`
+
+reference.db table of imported reference entities (ConceptNet, DBpedia, schema.org): uri (unique), label, description, source. Created by LocalReferenceRepository on first use; no migrations.
+
+#### Attributes
+
+| Name           | Value |
+| -------------- | ----- |
+| collectionType | TABLE |
+
+#### Relationships
+
+| Type        | Related Element                   | Predicate  | Direction |
+| ----------- | --------------------------------- | ---------- | --------- |
+| intra-layer | `data-store.database.referencedb` | `composes` | inbound   |
 
 ### relationships {#relationships}
 
@@ -478,9 +987,170 @@ Typed directed edges between ontology entities — stores source/target entity r
 
 #### Relationships
 
-| Type        | Related Element               | Predicate  | Direction |
-| ----------- | ----------------------------- | ---------- | --------- |
-| intra-layer | `data-store.database.localdb` | `composes` | inbound   |
+| Type        | Related Element                                               | Predicate    | Direction |
+| ----------- | ------------------------------------------------------------- | ------------ | --------- |
+| inter-layer | `application.applicationcomponent.sqlite-ontology-repository` | `accesses`   | inbound   |
+| inter-layer | `data-model.objectschema.relationship-entity`                 | `maps-to`    | inbound   |
+| inter-layer | `data-model.objectschema.relationship`                        | `maps-to`    | inbound   |
+| intra-layer | `data-store.validationrule.uk-relationship-triple`            | `composes`   | outbound  |
+| intra-layer | `data-store.collection.ontology-entities`                     | `references` | outbound  |
+| intra-layer | `data-store.database.localdb`                                 | `composes`   | inbound   |
+
+### schema_extraction_runs {#schema-extraction-runs}
+
+**ID**: `data-store.collection.schema-extraction-runs`
+
+**Type**: `collection`
+
+Schema-extraction pipeline runs (pipeline_runs subtype).
+
+#### Attributes
+
+| Name           | Value |
+| -------------- | ----- |
+| collectionType | TABLE |
+
+#### Relationships
+
+| Type        | Related Element                                               | Predicate    | Direction |
+| ----------- | ------------------------------------------------------------- | ------------ | --------- |
+| inter-layer | `application.applicationcomponent.sqlite-pipeline-repository` | `accesses`   | inbound   |
+| intra-layer | `data-store.collection.pipeline-runs`                         | `references` | outbound  |
+| intra-layer | `data-store.database.localdb`                                 | `composes`   | inbound   |
+
+### schema_node_connection_refinement_runs {#schema-node-connection-refinement-runs}
+
+**ID**: `data-store.collection.schema-node-connection-refinement-runs`
+
+**Type**: `collection`
+
+Connection-refinement pipeline runs (pipeline_runs subtype).
+
+#### Attributes
+
+| Name           | Value |
+| -------------- | ----- |
+| collectionType | TABLE |
+
+#### Relationships
+
+| Type        | Related Element                                               | Predicate    | Direction |
+| ----------- | ------------------------------------------------------------- | ------------ | --------- |
+| inter-layer | `application.applicationcomponent.sqlite-pipeline-repository` | `accesses`   | inbound   |
+| intra-layer | `data-store.collection.pipeline-runs`                         | `references` | outbound  |
+| intra-layer | `data-store.database.localdb`                                 | `composes`   | inbound   |
+
+### schema_node_definition_refinement_runs {#schema-node-definition-refinement-runs}
+
+**ID**: `data-store.collection.schema-node-definition-refinement-runs`
+
+**Type**: `collection`
+
+Definition-refinement pipeline runs (pipeline_runs subtype).
+
+#### Attributes
+
+| Name           | Value |
+| -------------- | ----- |
+| collectionType | TABLE |
+
+#### Relationships
+
+| Type        | Related Element                                               | Predicate    | Direction |
+| ----------- | ------------------------------------------------------------- | ------------ | --------- |
+| inter-layer | `application.applicationcomponent.sqlite-pipeline-repository` | `accesses`   | inbound   |
+| intra-layer | `data-store.collection.pipeline-runs`                         | `references` | outbound  |
+| intra-layer | `data-store.database.localdb`                                 | `composes`   | inbound   |
+
+### schema_node_grounding_runs {#schema-node-grounding-runs}
+
+**ID**: `data-store.collection.schema-node-grounding-runs`
+
+**Type**: `collection`
+
+Schema-node grounding pipeline runs (pipeline_runs subtype).
+
+#### Attributes
+
+| Name           | Value |
+| -------------- | ----- |
+| collectionType | TABLE |
+
+#### Relationships
+
+| Type        | Related Element                                               | Predicate    | Direction |
+| ----------- | ------------------------------------------------------------- | ------------ | --------- |
+| inter-layer | `application.applicationcomponent.sqlite-pipeline-repository` | `accesses`   | inbound   |
+| intra-layer | `data-store.collection.pipeline-runs`                         | `references` | outbound  |
+| intra-layer | `data-store.database.localdb`                                 | `composes`   | inbound   |
+
+### schema_relationship_reflection_runs {#schema-relationship-reflection-runs}
+
+**ID**: `data-store.collection.schema-relationship-reflection-runs`
+
+**Type**: `collection`
+
+Relationship-reflection pipeline runs (pipeline_runs subtype).
+
+#### Attributes
+
+| Name           | Value |
+| -------------- | ----- |
+| collectionType | TABLE |
+
+#### Relationships
+
+| Type        | Related Element                                               | Predicate    | Direction |
+| ----------- | ------------------------------------------------------------- | ------------ | --------- |
+| inter-layer | `application.applicationcomponent.sqlite-pipeline-repository` | `accesses`   | inbound   |
+| intra-layer | `data-store.collection.pipeline-runs`                         | `references` | outbound  |
+| intra-layer | `data-store.database.localdb`                                 | `composes`   | inbound   |
+
+### sources {#sources}
+
+**ID**: `data-store.collection.sources`
+
+**Type**: `collection`
+
+Source documents of a taxonomy's dataset: kind, status, text and pages (local.db).
+
+#### Attributes
+
+| Name           | Value |
+| -------------- | ----- |
+| collectionType | TABLE |
+
+#### Relationships
+
+| Type        | Related Element                                             | Predicate    | Direction |
+| ----------- | ----------------------------------------------------------- | ------------ | --------- |
+| inter-layer | `application.applicationcomponent.sqlite-source-repository` | `accesses`   | inbound   |
+| inter-layer | `data-model.objectschema.source-entity`                     | `maps-to`    | inbound   |
+| inter-layer | `security.dataclassification.internal-knowledge-graph-data` | `references` | outbound  |
+| intra-layer | `data-store.collection.datasets`                            | `references` | outbound  |
+| intra-layer | `data-store.collection.ontology-entities`                   | `references` | outbound  |
+| intra-layer | `data-store.database.localdb`                               | `composes`   | inbound   |
+
+### workflow_runs {#workflow-runs}
+
+**ID**: `data-store.collection.workflow-runs`
+
+**Type**: `collection`
+
+Runs of grounding workflows (local.db).
+
+#### Attributes
+
+| Name           | Value |
+| -------------- | ----- |
+| collectionType | TABLE |
+
+#### Relationships
+
+| Type        | Related Element                             | Predicate    | Direction |
+| ----------- | ------------------------------------------- | ------------ | --------- |
+| intra-layer | `data-store.collection.grounding-workflows` | `references` | outbound  |
+| intra-layer | `data-store.database.localdb`               | `composes`   | inbound   |
 
 ### local.db {#local-db}
 
@@ -499,11 +1169,41 @@ Primary workspace database (Alembic-managed SQLite) — stores ontology entities
 
 #### Relationships
 
-| Type        | Related Element                           | Predicate  | Direction |
-| ----------- | ----------------------------------------- | ---------- | --------- |
-| intra-layer | `data-store.collection.change-events`     | `composes` | outbound  |
-| intra-layer | `data-store.collection.ontology-entities` | `composes` | outbound  |
-| intra-layer | `data-store.collection.relationships`     | `composes` | outbound  |
+| Type        | Related Element                                                | Predicate   | Direction |
+| ----------- | -------------------------------------------------------------- | ----------- | --------- |
+| inter-layer | `motivation.constraint.sqlite-only-persistence`                | `satisfies` | outbound  |
+| intra-layer | `data-store.collection.approval-policies`                      | `composes`  | outbound  |
+| intra-layer | `data-store.collection.attribute-definitions`                  | `composes`  | outbound  |
+| intra-layer | `data-store.collection.batch-runs`                             | `composes`  | outbound  |
+| intra-layer | `data-store.collection.batches`                                | `composes`  | outbound  |
+| intra-layer | `data-store.collection.change-events`                          | `composes`  | outbound  |
+| intra-layer | `data-store.collection.claim-triage-runs`                      | `composes`  | outbound  |
+| intra-layer | `data-store.collection.claims`                                 | `composes`  | outbound  |
+| intra-layer | `data-store.collection.datasets`                               | `composes`  | outbound  |
+| intra-layer | `data-store.collection.entity-sources`                         | `composes`  | outbound  |
+| intra-layer | `data-store.collection.extraction-results-table`               | `composes`  | outbound  |
+| intra-layer | `data-store.collection.extraction-runs`                        | `composes`  | outbound  |
+| intra-layer | `data-store.collection.grounding-workflows`                    | `composes`  | outbound  |
+| intra-layer | `data-store.collection.import-runs-table`                      | `composes`  | outbound  |
+| intra-layer | `data-store.collection.individual-classes-table`               | `composes`  | outbound  |
+| intra-layer | `data-store.collection.individual-extraction-runs`             | `composes`  | outbound  |
+| intra-layer | `data-store.collection.no-op-runs`                             | `composes`  | outbound  |
+| intra-layer | `data-store.collection.notes-to-claims-runs`                   | `composes`  | outbound  |
+| intra-layer | `data-store.collection.ontology-entities`                      | `composes`  | outbound  |
+| intra-layer | `data-store.collection.pipeline-runs`                          | `composes`  | outbound  |
+| intra-layer | `data-store.collection.predicates`                             | `composes`  | outbound  |
+| intra-layer | `data-store.collection.property-definitions-table`             | `composes`  | outbound  |
+| intra-layer | `data-store.collection.proposal-decisions`                     | `composes`  | outbound  |
+| intra-layer | `data-store.collection.proposal-operations`                    | `composes`  | outbound  |
+| intra-layer | `data-store.collection.proposals-table`                        | `composes`  | outbound  |
+| intra-layer | `data-store.collection.relationships`                          | `composes`  | outbound  |
+| intra-layer | `data-store.collection.schema-extraction-runs`                 | `composes`  | outbound  |
+| intra-layer | `data-store.collection.schema-node-connection-refinement-runs` | `composes`  | outbound  |
+| intra-layer | `data-store.collection.schema-node-definition-refinement-runs` | `composes`  | outbound  |
+| intra-layer | `data-store.collection.schema-node-grounding-runs`             | `composes`  | outbound  |
+| intra-layer | `data-store.collection.schema-relationship-reflection-runs`    | `composes`  | outbound  |
+| intra-layer | `data-store.collection.sources`                                | `composes`  | outbound  |
+| intra-layer | `data-store.collection.workflow-runs`                          | `composes`  | outbound  |
 
 ### operations.db {#operations-db}
 
@@ -520,13 +1220,22 @@ Operational database (Alembic-managed SQLite) — stores pipeline configurations
 | engine   | SQLite     |
 | paradigm | RELATIONAL |
 
+#### Relationships
+
+| Type        | Related Element                                       | Predicate   | Direction |
+| ----------- | ----------------------------------------------------- | ----------- | --------- |
+| inter-layer | `motivation.constraint.sqlite-only-persistence`       | `satisfies` | outbound  |
+| intra-layer | `data-store.collection.chat-conversations`            | `composes`  | outbound  |
+| intra-layer | `data-store.collection.chat-messages`                 | `composes`  | outbound  |
+| intra-layer | `data-store.collection.pipeline-configurations-table` | `composes`  | outbound  |
+
 ### reference_api_cache.db {#reference-api-cache-db}
 
 **ID**: `data-store.database.reference-api-cachedb`
 
 **Type**: `database`
 
-Cached responses from external knowledge source APIs (ConceptNet, DBpedia, Wikidata, schema.org) — no Alembic migrations, can be dropped and rebuilt
+SQLite cache database of the in-process reference proxy (cache_db_path): successful upstream responses from ConceptNet, DBpedia, Wikidata and schema.org. Can be dropped and rebuilt.
 
 #### Attributes
 
@@ -534,6 +1243,12 @@ Cached responses from external knowledge source APIs (ConceptNet, DBpedia, Wikid
 | -------- | ---------- |
 | engine   | SQLite     |
 | paradigm | RELATIONAL |
+
+#### Relationships
+
+| Type        | Related Element                                 | Predicate   | Direction |
+| ----------- | ----------------------------------------------- | ----------- | --------- |
+| inter-layer | `motivation.constraint.sqlite-only-persistence` | `satisfies` | outbound  |
 
 ### reference.db {#reference-db}
 
@@ -550,13 +1265,21 @@ Imported reference data from ConceptNet, DBpedia, Wikidata, and schema.org — n
 | engine   | SQLite     |
 | paradigm | RELATIONAL |
 
+#### Relationships
+
+| Type        | Related Element                                 | Predicate   | Direction |
+| ----------- | ----------------------------------------------- | ----------- | --------- |
+| inter-layer | `motivation.constraint.sqlite-only-persistence` | `satisfies` | outbound  |
+| intra-layer | `data-store.collection.reference-relations`     | `composes`  | outbound  |
+| intra-layer | `data-store.collection.references`              | `composes`  | outbound  |
+
 ### reference_api_cache cleanup {#reference-api-cache-cleanup}
 
 **ID**: `data-store.retentionpolicy.reference-api-cache-cleanup`
 
 **Type**: `retentionpolicy`
 
-7-day TTL retention policy for the reference_api_cache.db — cached responses from ConceptNet, DBpedia, Wikidata, and schema.org are dropped and rebuilt on demand
+TTL on the reference API proxy's response cache (reference_api_cache.db, schema owned by reference-api-buddy): entries expire after reference.proxy.cache_ttl_hours (default 7 days) and the cache is capped at 100,000 entries; only successful upstream answers are cached.
 
 #### Attributes
 
@@ -572,36 +1295,6 @@ Imported reference data from ConceptNet, DBpedia, Wikidata, and schema.org — n
 | Type        | Related Element                                               | Predicate   | Direction |
 | ----------- | ------------------------------------------------------------- | ----------- | --------- |
 | inter-layer | `motivation.constraint.external-reference-source-rate-limits` | `satisfies` | outbound  |
-| intra-layer | `data-store.storedlogic.sqlite-vec-cosine-similarity`         | `triggers`  | outbound  |
-
-### sqlite-vec cosine similarity {#sqlite-vec-cosine-similarity}
-
-**ID**: `data-store.storedlogic.sqlite-vec-cosine-similarity`
-
-**Type**: `storedlogic`
-
-SQLite user-defined function provided by the sqlite-vec extension that computes cosine similarity between two embedding vectors for ANN search
-
-#### Attributes
-
-| Name          | Value |
-| ------------- | ----- |
-| deterministic | true  |
-| language      | C     |
-| logicType     | UDF   |
-| returnType    | FLOAT |
-| sideEffects   | false |
-
-#### Relationships
-
-| Type        | Related Element                                          | Predicate  | Direction |
-| ----------- | -------------------------------------------------------- | ---------- | --------- |
-| inter-layer | `application.applicationfunction.embedding-generation`   | `realizes` | outbound  |
-| inter-layer | `application.applicationservice.extraction-service`      | `serves`   | outbound  |
-| inter-layer | `testing.testcoveragetarget.extraction-pipeline`         | `covers`   | inbound   |
-| inter-layer | `testing.testcoveragetarget.ontology-crud`               | `covers`   | inbound   |
-| intra-layer | `data-store.accesspattern.entity-by-parent-range-scan`   | `triggers` | inbound   |
-| intra-layer | `data-store.retentionpolicy.reference-api-cache-cleanup` | `triggers` | inbound   |
 
 ### entity_cascade_delete {#entity-cascade-delete}
 
@@ -623,6 +1316,212 @@ Foreign key cascade delete rule on parent_entity_id in ontology_entities — del
 | ruleType             | FOREIGN_KEY       |
 | targetFields         | parent_entity_id  |
 
+#### Relationships
+
+| Type        | Related Element                           | Predicate  | Direction |
+| ----------- | ----------------------------------------- | ---------- | --------- |
+| intra-layer | `data-store.collection.ontology-entities` | `composes` | inbound   |
+
+### uk_attribute_class_identifier {#uk-attribute-class-identifier}
+
+**ID**: `data-store.validationrule.uk-attribute-class-identifier`
+
+**Type**: `validationrule`
+
+An attribute definition's identifier is unique within its class.
+
+#### Attributes
+
+| Name         | Value                |
+| ------------ | -------------------- |
+| enforcement  | STRICT               |
+| ruleType     | UNIQUE               |
+| targetFields | class_id, identifier |
+
+#### Relationships
+
+| Type        | Related Element                               | Predicate  | Direction |
+| ----------- | --------------------------------------------- | ---------- | --------- |
+| intra-layer | `data-store.collection.attribute-definitions` | `composes` | inbound   |
+
+### uk_attribute_property_identifier {#uk-attribute-property-identifier}
+
+**ID**: `data-store.validationrule.uk-attribute-property-identifier`
+
+**Type**: `validationrule`
+
+An edge attribute's identifier is unique within its property definition.
+
+#### Attributes
+
+| Name         | Value                              |
+| ------------ | ---------------------------------- |
+| enforcement  | STRICT                             |
+| ruleType     | UNIQUE                             |
+| targetFields | property_definition_id, identifier |
+
+#### Relationships
+
+| Type        | Related Element                               | Predicate  | Direction |
+| ----------- | --------------------------------------------- | ---------- | --------- |
+| intra-layer | `data-store.collection.attribute-definitions` | `composes` | inbound   |
+
+### uk_chat_message_seq {#uk-chat-message-seq}
+
+**ID**: `data-store.validationrule.uk-chat-message-seq`
+
+**Type**: `validationrule`
+
+A conversation's messages have distinct sequence numbers.
+
+#### Attributes
+
+| Name         | Value                |
+| ------------ | -------------------- |
+| enforcement  | STRICT               |
+| ruleType     | UNIQUE               |
+| targetFields | conversation_id, seq |
+
+#### Relationships
+
+| Type        | Related Element                       | Predicate  | Direction |
+| ----------- | ------------------------------------- | ---------- | --------- |
+| intra-layer | `data-store.collection.chat-messages` | `composes` | inbound   |
+
+### uk_dataset_taxonomy_identifier {#uk-dataset-taxonomy-identifier}
+
+**ID**: `data-store.validationrule.uk-dataset-taxonomy-identifier`
+
+**Type**: `validationrule`
+
+A dataset's identifier is unique within its taxonomy.
+
+#### Attributes
+
+| Name         | Value                   |
+| ------------ | ----------------------- |
+| enforcement  | STRICT                  |
+| ruleType     | UNIQUE                  |
+| targetFields | taxonomy_id, identifier |
+
+#### Relationships
+
+| Type        | Related Element                                            | Predicate   | Direction |
+| ----------- | ---------------------------------------------------------- | ----------- | --------- |
+| inter-layer | `motivation.requirement.individuals-belong-to-one-dataset` | `satisfies` | outbound  |
+| intra-layer | `data-store.collection.datasets`                           | `composes`  | inbound   |
+
+### uk_individual_position {#uk-individual-position}
+
+**ID**: `data-store.validationrule.uk-individual-position`
+
+**Type**: `validationrule`
+
+An individual's class memberships have distinct positions (ordered parent classes).
+
+#### Attributes
+
+| Name         | Value                   |
+| ------------ | ----------------------- |
+| enforcement  | STRICT                  |
+| ruleType     | UNIQUE                  |
+| targetFields | individual_id, position |
+
+#### Relationships
+
+| Type        | Related Element                                  | Predicate  | Direction |
+| ----------- | ------------------------------------------------ | ---------- | --------- |
+| intra-layer | `data-store.collection.individual-classes-table` | `composes` | inbound   |
+
+### uk_predicate_taxonomy_identifier {#uk-predicate-taxonomy-identifier}
+
+**ID**: `data-store.validationrule.uk-predicate-taxonomy-identifier`
+
+**Type**: `validationrule`
+
+A predicate's identifier is unique within its taxonomy.
+
+#### Attributes
+
+| Name         | Value                   |
+| ------------ | ----------------------- |
+| enforcement  | STRICT                  |
+| ruleType     | UNIQUE                  |
+| targetFields | taxonomy_id, identifier |
+
+#### Relationships
+
+| Type        | Related Element                    | Predicate  | Direction |
+| ----------- | ---------------------------------- | ---------- | --------- |
+| intra-layer | `data-store.collection.predicates` | `composes` | inbound   |
+
+### uk_relationship_triple {#uk-relationship-triple}
+
+**ID**: `data-store.validationrule.uk-relationship-triple`
+
+**Type**: `validationrule`
+
+At most one relationship per (source, target, property definition) triple.
+
+#### Attributes
+
+| Name         | Value                                        |
+| ------------ | -------------------------------------------- |
+| enforcement  | STRICT                                       |
+| ruleType     | UNIQUE                                       |
+| targetFields | source_id, target_id, property_definition_id |
+
+#### Relationships
+
+| Type        | Related Element                                                 | Predicate   | Direction |
+| ----------- | --------------------------------------------------------------- | ----------- | --------- |
+| inter-layer | `motivation.requirement.relationships-limited-to-allowed-types` | `satisfies` | outbound  |
+| intra-layer | `data-store.collection.relationships`                           | `composes`  | inbound   |
+
+### uq_claim_taxonomy_key {#uq-claim-taxonomy-key}
+
+**ID**: `data-store.validationrule.uq-claim-taxonomy-key`
+
+**Type**: `validationrule`
+
+A claim's key is unique within its taxonomy (resubmitting a claim updates it).
+
+#### Attributes
+
+| Name         | Value            |
+| ------------ | ---------------- |
+| enforcement  | STRICT           |
+| ruleType     | UNIQUE           |
+| targetFields | taxonomy_id, key |
+
+#### Relationships
+
+| Type        | Related Element                | Predicate  | Direction |
+| ----------- | ------------------------------ | ---------- | --------- |
+| intra-layer | `data-store.collection.claims` | `composes` | inbound   |
+
+### uq_proposal_operation_seq {#uq-proposal-operation-seq}
+
+**ID**: `data-store.validationrule.uq-proposal-operation-seq`
+
+**Type**: `validationrule`
+
+A proposal's operations have distinct sequence numbers.
+
+#### Attributes
+
+| Name         | Value            |
+| ------------ | ---------------- |
+| enforcement  | STRICT           |
+| ruleType     | UNIQUE           |
+| targetFields | proposal_id, seq |
+
+#### Relationships
+
+| Type        | Related Element                             | Predicate  | Direction |
+| ----------- | ------------------------------------------- | ---------- | --------- |
+| intra-layer | `data-store.collection.proposal-operations` | `composes` | inbound   |
+
 ---
 
-Generated: 2026-11-17T18:49:10.650Z | Model Version: 0.1.0
+Generated: 2026-11-19T16:49:39.982Z | Model Version: 0.1.0

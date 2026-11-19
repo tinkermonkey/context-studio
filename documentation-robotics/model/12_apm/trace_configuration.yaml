@@ -1,0 +1,37 @@
+apm.traceconfiguration.server-trace-configuration:
+  id: 2949387c-e9c0-49b5-a6d9-3257e985cca2
+  path: apm.traceconfiguration.server-trace-configuration
+  spec_node_id: apm.traceconfiguration
+  type: traceconfiguration
+  layer_id: apm
+  name: Server Trace Configuration
+  description: "OpenTelemetry TracerProvider for local-server: resource, batch
+    span processor and OTLP exporter, set up when telemetry is enabled in
+    config.json."
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/telemetry/provider_setup.py
+        symbol: TelemetryProvider
+  metadata:
+    created_at: 2026-11-19T15:03:42.139Z
+    updated_at: 2026-11-19T15:03:42.139Z
+    version: 1
+apm.traceconfiguration.browser-trace-configuration:
+  id: ff9596d4-58d3-4294-b01c-b8a1c6ddef87
+  path: apm.traceconfiguration.browser-trace-configuration
+  spec_node_id: apm.traceconfiguration
+  type: traceconfiguration
+  layer_id: apm
+  name: Browser Trace Configuration
+  description: Web TracerProvider for the UX with an OTLP HTTP exporter
+    (VITE_OTLP_ENDPOINT, default localhost:4318).
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/telemetry/tracer.ts
+        symbol: initializeTracing
+  metadata:
+    created_at: 2026-11-19T15:03:42.142Z
+    updated_at: 2026-11-19T15:03:42.142Z
+    version: 1

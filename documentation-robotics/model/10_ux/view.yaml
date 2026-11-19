@@ -14,72 +14,11 @@ ux.view.datasets-view:
   source_reference:
     provenance: extracted
     locations:
-      - file: ux/src/routes/app/datasets.tsx
+      - file: ux/src/routes/app/data/datasets.tsx
+        symbol: DatasetsRoute
   metadata:
     created_at: 2026-03-24T09:19:26.218Z
     updated_at: 2026-03-24T09:19:26.218Z
-    version: 1
-ux.view.configuration-view:
-  id: 71859964-b49e-4217-b1cf-988bb8565ee1
-  path: ux.view.configuration-view
-  spec_node_id: ux.view
-  type: view
-  layer_id: ux
-  name: Configuration View
-  description: Page view for server configuration management and LLM pipeline settings
-  attributes:
-    type: page
-    title: Configuration
-    routable: true
-  source_reference:
-    provenance: extracted
-    locations:
-      - file: ux/src/routes/app/config.tsx
-  metadata:
-    created_at: 2026-03-24T09:19:32.639Z
-    updated_at: 2026-03-24T09:19:32.639Z
-    version: 1
-ux.view.rag-experiments-view:
-  id: 0236cfda-c306-45fc-beb4-949c06a0e6a8
-  path: ux.view.rag-experiments-view
-  spec_node_id: ux.view
-  type: view
-  layer_id: ux
-  name: RAG Experiments View
-  description: View for managing RAG test paragraphs, running experiments, and
-    comparing pipeline results
-  attributes:
-    type: page
-    title: RAG Experiments
-    routable: true
-  source_reference:
-    provenance: extracted
-    locations:
-      - file: ux/src/routes/app
-  metadata:
-    created_at: 2026-03-24T09:19:32.942Z
-    updated_at: 2026-03-24T09:19:32.942Z
-    version: 1
-ux.view.admin-view:
-  id: e41b761f-d5be-4939-9d12-c5449106028c
-  path: ux.view.admin-view
-  spec_node_id: ux.view
-  type: view
-  layer_id: ux
-  name: Admin View
-  description: Administrative view for system health monitoring, background task
-    management, and schema migration
-  attributes:
-    type: page
-    title: Admin
-    routable: true
-  source_reference:
-    provenance: extracted
-    locations:
-      - file: ux/src/routes/app
-  metadata:
-    created_at: 2026-03-24T09:19:33.250Z
-    updated_at: 2026-03-24T09:19:33.250Z
     version: 1
 ux.view.taxonomies-view:
   id: 3740dde3-77d7-4bb3-a8c6-ea3ba159776e
@@ -94,8 +33,8 @@ ux.view.taxonomies-view:
   source_reference:
     provenance: extracted
     locations:
-      - file: ux/src/routes/app/taxonomies.tsx
-        symbol: Route
+      - file: ux/src/routes/app/schema/taxonomies.tsx
+        symbol: TaxonomiesPage
   metadata:
     created_at: 2026-05-08T10:03:04.512Z
     updated_at: 2026-05-08T10:03:04.513Z
@@ -113,8 +52,8 @@ ux.view.concept-schemes-view:
   source_reference:
     provenance: extracted
     locations:
-      - file: ux/src/routes/app/concept-schemes.tsx
-        symbol: Route
+      - file: ux/src/routes/app/schema/schemes.tsx
+        symbol: SchemesLayout
   metadata:
     created_at: 2026-05-08T10:03:07.096Z
     updated_at: 2026-05-08T10:03:07.096Z
@@ -132,8 +71,8 @@ ux.view.classes-view:
   source_reference:
     provenance: extracted
     locations:
-      - file: ux/src/routes/app/classes.tsx
-        symbol: Route
+      - file: ux/src/routes/app/schema/classes.tsx
+        symbol: ClassesPage
   metadata:
     created_at: 2026-05-08T10:03:12.091Z
     updated_at: 2026-05-08T10:03:12.092Z
@@ -151,8 +90,8 @@ ux.view.individuals-view:
   source_reference:
     provenance: extracted
     locations:
-      - file: ux/src/routes/app/individuals.tsx
-        symbol: Route
+      - file: ux/src/routes/app/data/individuals.tsx
+        symbol: IndividualsPage
   metadata:
     created_at: 2026-05-08T10:03:12.399Z
     updated_at: 2026-05-08T10:03:12.399Z
@@ -170,7 +109,7 @@ ux.view.properties-view:
   source_reference:
     provenance: extracted
     locations:
-      - file: ux/src/routes/app/properties.tsx
+      - file: ux/src/routes/app/schema/properties.tsx
         symbol: PropertiesPage
   metadata:
     created_at: 2026-05-08T10:03:12.700Z
@@ -189,28 +128,900 @@ ux.view.relationships-view:
   source_reference:
     provenance: extracted
     locations:
-      - file: ux/src/routes/app/relationships.tsx
+      - file: ux/src/routes/app/schema/relationships.tsx
         symbol: RelationshipsPage
   metadata:
     created_at: 2026-05-08T10:03:13.003Z
     updated_at: 2026-05-08T10:03:13.003Z
     version: 1
-ux.view.interchange-view:
-  id: 30e7e1b9-c770-4d1d-902c-def8422d9936
-  path: ux.view.interchange-view
+ux.view.app-shell-view:
+  id: 18067f4c-35d4-45c0-934f-c0fb45ce014b
+  path: ux.view.app-shell-view
   spec_node_id: ux.view
   type: view
   layer_id: ux
-  name: Interchange View
-  description: Import and export ontology in SKOS, OWL, and GraphML formats
+  name: App Shell View
+  description: "Application shell: titlebar, sidebar navigation, command palette,
+    chat panel and the outlet for /app pages."
   attributes:
-    type: page
+    type: full-screen
+    routable: true
   source_reference:
     provenance: extracted
     locations:
-      - file: ux/src/routes/app/interchange.tsx
-        symbol: InterchangeLayout
+      - file: ux/src/routes/app.tsx
+        symbol: AppShell
   metadata:
-    created_at: 2026-05-08T10:03:13.330Z
-    updated_at: 2026-05-08T10:03:13.330Z
+    created_at: 2026-11-19T14:59:11.248Z
+    updated_at: 2026-11-19T14:59:11.248Z
+    version: 1
+ux.view.claims-view:
+  id: 42b7743f-d101-415a-a34b-eb43ef5cf37e
+  path: ux.view.claims-view
+  spec_node_id: ux.view
+  type: view
+  layer_id: ux
+  name: Claims View
+  description: A taxonomy's claims with triage and verdicts.
+  attributes:
+    type: page
+    routable: true
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/routes/app/claims.tsx
+        symbol: ClaimsRoute
+  metadata:
+    created_at: 2026-11-19T14:59:11.248Z
+    updated_at: 2026-11-19T14:59:11.248Z
+    version: 1
+ux.view.contact-sheet-view:
+  id: adaa5f33-d92c-4fc2-9ef4-f0746f1ce9a8
+  path: ux.view.contact-sheet-view
+  spec_node_id: ux.view
+  type: view
+  layer_id: ux
+  name: Contact Sheet View
+  description: Developer contact sheet of design-system components.
+  attributes:
+    type: page
+    routable: true
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/routes/app/contact-sheet.tsx
+        symbol: ContactSheet
+  metadata:
+    created_at: 2026-11-19T14:59:11.248Z
+    updated_at: 2026-11-19T14:59:11.248Z
+    version: 1
+ux.view.individual-detail-view:
+  id: 144cd083-6221-4947-a586-01ac6f16bf3f
+  path: ux.view.individual-detail-view
+  spec_node_id: ux.view
+  type: view
+  layer_id: ux
+  name: Individual Detail View
+  description: One individual with its classes, attributes, relationships and sources.
+  attributes:
+    type: page
+    routable: true
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/routes/app/data/individuals_.$id.tsx
+        symbol: IndividualRoute
+  metadata:
+    created_at: 2026-11-19T14:59:11.248Z
+    updated_at: 2026-11-19T14:59:11.248Z
+    version: 1
+ux.view.sources-view:
+  id: 6340719f-f12b-4405-9436-8ac1f158bfb8
+  path: ux.view.sources-view
+  spec_node_id: ux.view
+  type: view
+  layer_id: ux
+  name: Sources View
+  description: "A taxonomy's source documents: add, list, remove and start extraction."
+  attributes:
+    type: page
+    routable: true
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/routes/app/data/sources.tsx
+        symbol: SourcesRoute
+  metadata:
+    created_at: 2026-11-19T14:59:11.248Z
+    updated_at: 2026-11-19T14:59:11.248Z
+    version: 1
+ux.view.extract-source-view:
+  id: fbc3199b-621b-4956-af8d-6a02485cc527
+  path: ux.view.extract-source-view
+  spec_node_id: ux.view
+  type: view
+  layer_id: ux
+  name: Extract Source View
+  description: Choose a pipeline and extract one source into proposals.
+  attributes:
+    type: page
+    routable: true
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/routes/app/data/sources_.$sourceId.extract.tsx
+        symbol: ExtractRoute
+  metadata:
+    created_at: 2026-11-19T14:59:11.248Z
+    updated_at: 2026-11-19T14:59:11.248Z
+    version: 1
+ux.view.graph-view:
+  id: bf0c9c52-8f9a-4606-85ae-fee560821db0
+  path: ux.view.graph-view
+  spec_node_id: ux.view
+  type: view
+  layer_id: ux
+  name: Graph View
+  description: Graph view of the ontology (Heimdall GraphCanvas).
+  attributes:
+    type: page
+    routable: true
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/routes/app/graph/index.tsx
+        symbol: GraphRoute
+  metadata:
+    created_at: 2026-11-19T14:59:11.248Z
+    updated_at: 2026-11-19T14:59:11.248Z
+    version: 1
+ux.view.dashboard-view:
+  id: d8ff000f-87f7-49ee-b74e-25c7796a9dea
+  path: ux.view.dashboard-view
+  spec_node_id: ux.view
+  type: view
+  layer_id: ux
+  name: Dashboard View
+  description: "Workspace dashboard: stats, trends, recent activity and quick access."
+  attributes:
+    type: page
+    routable: true
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/routes/app/index.tsx
+        symbol: Dashboard
+  metadata:
+    created_at: 2026-11-19T14:59:11.248Z
+    updated_at: 2026-11-19T14:59:11.248Z
+    version: 1
+ux.view.batch-detail-view:
+  id: b7c4d786-5d52-405c-a445-8975f2c36806
+  path: ux.view.batch-detail-view
+  spec_node_id: ux.view
+  type: view
+  layer_id: ux
+  name: Batch Detail View
+  description: A batch of pipeline runs with aggregate status, cancel and resume.
+  attributes:
+    type: page
+    routable: true
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/routes/app/pipelines/batches/$batchId.tsx
+        symbol: BatchDetailPage
+  metadata:
+    created_at: 2026-11-19T14:59:11.248Z
+    updated_at: 2026-11-19T14:59:11.248Z
+    version: 1
+ux.view.benchmark-gold-view:
+  id: e7cb7d49-44ab-47a0-9484-c64c11f071b3
+  path: ux.view.benchmark-gold-view
+  spec_node_id: ux.view
+  type: view
+  layer_id: ux
+  name: Benchmark Gold View
+  description: Decisions recorded as benchmark gold, filterable and exportable.
+  attributes:
+    type: page
+    routable: true
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/routes/app/pipelines/gold.tsx
+        symbol: BenchmarkGoldRoute
+  metadata:
+    created_at: 2026-11-19T14:59:11.248Z
+    updated_at: 2026-11-19T14:59:11.248Z
+    version: 1
+ux.view.pipelines-view:
+  id: 99674c49-1cf2-4a7f-b12a-39f18248e055
+  path: ux.view.pipelines-view
+  spec_node_id: ux.view
+  type: view
+  layer_id: ux
+  name: Pipelines View
+  description: Pipeline types, implementations and configurations; start runs.
+  attributes:
+    type: page
+    routable: true
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/routes/app/pipelines/index.tsx
+        symbol: PipelinesRoute
+  metadata:
+    created_at: 2026-11-19T14:59:11.248Z
+    updated_at: 2026-11-19T14:59:11.248Z
+    version: 1
+ux.view.extraction-review-view:
+  id: 4cf104e2-51bd-4036-864c-cb5b9b2bb75b
+  path: ux.view.extraction-review-view
+  spec_node_id: ux.view
+  type: view
+  layer_id: ux
+  name: Extraction Review View
+  description: Paste text, run extraction and review the result before accepting.
+  attributes:
+    type: page
+    routable: true
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/routes/app/pipelines/review.tsx
+        symbol: ExtractionReviewRoute
+  metadata:
+    created_at: 2026-11-19T14:59:11.248Z
+    updated_at: 2026-11-19T14:59:11.248Z
+    version: 1
+ux.view.pipeline-runs-view:
+  id: 6e559f76-4050-4240-831e-912de647125f
+  path: ux.view.pipeline-runs-view
+  spec_node_id: ux.view
+  type: view
+  layer_id: ux
+  name: Pipeline Runs View
+  description: Pipeline runs with status, progress and the proposals they produced.
+  attributes:
+    type: page
+    routable: true
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/routes/app/pipelines/runs.tsx
+        symbol: RunsPage
+  metadata:
+    created_at: 2026-11-19T14:59:11.248Z
+    updated_at: 2026-11-19T14:59:11.248Z
+    version: 1
+ux.view.run-wizard-view:
+  id: e29cd496-8762-4d3e-8186-26be85aa7e9d
+  path: ux.view.run-wizard-view
+  spec_node_id: ux.view
+  type: view
+  layer_id: ux
+  name: Run Wizard View
+  description: Configure and start a run of one pipeline type.
+  attributes:
+    type: page
+    routable: true
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/routes/app/pipelines/types/$type/run.tsx
+        symbol: RunWizardPage
+  metadata:
+    created_at: 2026-11-19T14:59:11.248Z
+    updated_at: 2026-11-19T14:59:11.248Z
+    version: 1
+ux.view.proposals-view:
+  id: 1b0c9187-8eaa-43fd-a227-c26de47376e1
+  path: ux.view.proposals-view
+  spec_node_id: ux.view
+  type: view
+  layer_id: ux
+  name: Proposals View
+  description: Change proposals by status, origin and taxonomy.
+  attributes:
+    type: page
+    routable: true
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/routes/app/proposals.tsx
+        symbol: ProposalsRoute
+  metadata:
+    created_at: 2026-11-19T14:59:11.248Z
+    updated_at: 2026-11-19T14:59:11.248Z
+    version: 1
+ux.view.proposal-detail-view:
+  id: 9a118408-168a-47e0-8dd8-7035f15fe854
+  path: ux.view.proposal-detail-view
+  spec_node_id: ux.view
+  type: view
+  layer_id: ux
+  name: Proposal Detail View
+  description: One proposal's operations with decide, apply, reject, reopen and revert.
+  attributes:
+    type: page
+    routable: true
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/routes/app/proposals_.$proposalId.tsx
+        symbol: ProposalRoute
+  metadata:
+    created_at: 2026-11-19T14:59:11.248Z
+    updated_at: 2026-11-19T14:59:11.248Z
+    version: 1
+ux.view.proposal-compare-view:
+  id: 0dea9096-7244-4b54-9940-5fed4ddd9b22
+  path: ux.view.proposal-compare-view
+  spec_node_id: ux.view
+  type: view
+  layer_id: ux
+  name: Proposal Compare View
+  description: Two pipelines' proposals for one source, decided once for both.
+  attributes:
+    type: page
+    routable: true
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/routes/app/proposals_.$proposalId_.compare.$otherId.tsx
+        symbol: ProposalCompareRoute
+  metadata:
+    created_at: 2026-11-19T14:59:11.248Z
+    updated_at: 2026-11-19T14:59:11.248Z
+    version: 1
+ux.view.proposal-review-view:
+  id: 5c4d5894-ea25-4f7f-b304-c7ea451aa4bb
+  path: ux.view.proposal-review-view
+  spec_node_id: ux.view
+  type: view
+  layer_id: ux
+  name: Proposal Review View
+  description: Review an extraction proposal against its source text, with
+    highlights and reason codes.
+  attributes:
+    type: page
+    routable: true
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/routes/app/proposals_.$proposalId_.review.tsx
+        symbol: ProposalReviewRoute
+  metadata:
+    created_at: 2026-11-19T14:59:11.248Z
+    updated_at: 2026-11-19T14:59:11.248Z
+    version: 1
+ux.view.reference-sources-view:
+  id: 8d13e75a-3eb2-48d0-bb58-2d15356012f1
+  path: ux.view.reference-sources-view
+  spec_node_id: ux.view
+  type: view
+  layer_id: ux
+  name: Reference Sources View
+  description: External reference sources and their status; search references.
+  attributes:
+    type: page
+    routable: true
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/routes/app/reference/sources.tsx
+        symbol: SourcesPage
+  metadata:
+    created_at: 2026-11-19T14:59:11.248Z
+    updated_at: 2026-11-19T14:59:11.248Z
+    version: 1
+ux.view.grounding-workflows-view:
+  id: c3680c42-9893-498e-b8da-13e7fb28f8db
+  path: ux.view.grounding-workflows-view
+  spec_node_id: ux.view
+  type: view
+  layer_id: ux
+  name: Grounding Workflows View
+  description: Saved grounding workflows and their runs.
+  attributes:
+    type: page
+    routable: true
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/routes/app/reference/workflows.tsx
+        symbol: WorkflowsPage
+  metadata:
+    created_at: 2026-11-19T14:59:11.248Z
+    updated_at: 2026-11-19T14:59:11.248Z
+    version: 1
+ux.view.class-detail-view:
+  id: 6187f47a-6bf4-48b1-884d-372e6db99001
+  path: ux.view.class-detail-view
+  spec_node_id: ux.view
+  type: view
+  layer_id: ux
+  name: Class Detail View
+  description: One class with attributes, individuals, relationships and in-use checks.
+  attributes:
+    type: page
+    routable: true
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/routes/app/schema/classes_.$id.tsx
+        symbol: ClassRoute
+  metadata:
+    created_at: 2026-11-19T14:59:11.248Z
+    updated_at: 2026-11-19T14:59:11.248Z
+    version: 1
+ux.view.concept-schemes-index-view:
+  id: 74d6a680-324a-4f2f-ac7b-f34a8514ffad
+  path: ux.view.concept-schemes-index-view
+  spec_node_id: ux.view
+  type: view
+  layer_id: ux
+  name: Concept Schemes Index View
+  description: Index page under the concept-schemes layout.
+  attributes:
+    type: embedded
+    routable: true
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/routes/app/schema/schemes.index.tsx
+        symbol: SchemesIndexPage
+  metadata:
+    created_at: 2026-11-19T14:59:11.248Z
+    updated_at: 2026-11-19T14:59:11.248Z
+    version: 1
+ux.view.concept-scheme-detail-view:
+  id: a7e5dff8-7402-473b-b25a-7d0797f4e76f
+  path: ux.view.concept-scheme-detail-view
+  spec_node_id: ux.view
+  type: view
+  layer_id: ux
+  name: Concept Scheme Detail View
+  description: One concept scheme with its classes and counts.
+  attributes:
+    type: page
+    routable: true
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/routes/app/schema/schemes_.$id.tsx
+        symbol: SchemeRoute
+  metadata:
+    created_at: 2026-11-19T14:59:11.248Z
+    updated_at: 2026-11-19T14:59:11.248Z
+    version: 1
+ux.view.taxonomy-detail-view:
+  id: fe0de312-7dc6-4fcc-a8a9-b892fd4b13c5
+  path: ux.view.taxonomy-detail-view
+  spec_node_id: ux.view
+  type: view
+  layer_id: ux
+  name: Taxonomy Detail View
+  description: One taxonomy with schemes, predicates, publish diff and approval policy.
+  attributes:
+    type: page
+    routable: true
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/routes/app/schema/taxonomies_.$id.tsx
+        symbol: TaxonomyRoute
+  metadata:
+    created_at: 2026-11-19T14:59:11.248Z
+    updated_at: 2026-11-19T14:59:11.248Z
+    version: 1
+ux.view.settings-view:
+  id: 1a5ffa9f-7c25-42c5-bb98-3d570eea5139
+  path: ux.view.settings-view
+  spec_node_id: ux.view
+  type: view
+  layer_id: ux
+  name: Settings View
+  description: Configuration sections, MCP connection details and demo datasets.
+  attributes:
+    type: page
+    routable: true
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/routes/app/settings.tsx
+        symbol: SettingsPage
+  metadata:
+    created_at: 2026-11-19T14:59:11.248Z
+    updated_at: 2026-11-19T14:59:11.248Z
+    version: 1
+ux.view.versioning-view:
+  id: fb7c2039-50c5-4518-961e-9310f7d8eb29
+  path: ux.view.versioning-view
+  spec_node_id: ux.view
+  type: view
+  layer_id: ux
+  name: Versioning View
+  description: Change history and sync status.
+  attributes:
+    type: page
+    routable: true
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/routes/app/versioning.tsx
+        symbol: VersioningPage
+  metadata:
+    created_at: 2026-11-19T14:59:11.248Z
+    updated_at: 2026-11-19T14:59:11.248Z
+    version: 1
+ux.view.welcome-view:
+  id: bda2dbe7-1578-4721-a4ba-bdb0459d99a3
+  path: ux.view.welcome-view
+  spec_node_id: ux.view
+  type: view
+  layer_id: ux
+  name: Welcome View
+  description: First-run welcome page.
+  attributes:
+    type: page
+    routable: true
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/routes/welcome.tsx
+        symbol: WelcomePage
+  metadata:
+    created_at: 2026-11-19T14:59:11.248Z
+    updated_at: 2026-11-19T14:59:11.248Z
+    version: 1
+ux.view.class-drawer:
+  id: 331005e5-a1ab-4139-88a3-7f767e513bb1
+  path: ux.view.class-drawer
+  spec_node_id: ux.view
+  type: view
+  layer_id: ux
+  name: Class Drawer
+  description: Create/edit a class (opened from the classes page).
+  attributes:
+    type: drawer
+    routable: false
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/components/ontology/ClassDrawer.tsx
+        symbol: ClassDrawer
+      - file: ux/src/components/ontology/ClassDrawer.tsx
+        symbol: ux.src.components.ontology.ClassDrawer
+  metadata:
+    created_at: 2026-11-19T15:02:28.474Z
+    updated_at: 2026-11-19T15:02:28.474Z
+    version: 1
+ux.view.individual-drawer:
+  id: efcc9679-f648-44e6-8c30-b0eede27f9ac
+  path: ux.view.individual-drawer
+  spec_node_id: ux.view
+  type: view
+  layer_id: ux
+  name: Individual Drawer
+  description: Create/edit an individual, its classes and attributes (individuals page).
+  attributes:
+    type: drawer
+    routable: false
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/components/ontology/IndividualDrawer.tsx
+        symbol: IndividualDrawer
+  metadata:
+    created_at: 2026-11-19T15:02:28.474Z
+    updated_at: 2026-11-19T15:02:28.474Z
+    version: 1
+ux.view.property-drawer:
+  id: c466b605-4c5e-4907-b20d-91be44958ae8
+  path: ux.view.property-drawer
+  spec_node_id: ux.view
+  type: view
+  layer_id: ux
+  name: Property Drawer
+  description: Create/edit a property definition (properties page).
+  attributes:
+    type: drawer
+    routable: false
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/components/ontology/PropertyDrawer.tsx
+        symbol: PropertyDrawer
+      - file: ux/src/components/ontology/PropertyDrawer.tsx
+        symbol: ux.src.components.ontology.PropertyDrawer
+  metadata:
+    created_at: 2026-11-19T15:02:28.474Z
+    updated_at: 2026-11-19T15:02:28.474Z
+    version: 1
+ux.view.relationship-drawer:
+  id: 27c1e23c-10ed-4ad6-a111-2604d0c6f2ac
+  path: ux.view.relationship-drawer
+  spec_node_id: ux.view
+  type: view
+  layer_id: ux
+  name: Relationship Drawer
+  description: Create/edit a relationship (relationships page).
+  attributes:
+    type: drawer
+    routable: false
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/components/ontology/RelationshipDrawer.tsx
+        symbol: RelationshipDrawer
+      - file: ux/src/components/ontology/RelationshipDrawer.tsx
+        symbol: ux.src.components.ontology.RelationshipDrawer
+  metadata:
+    created_at: 2026-11-19T15:02:28.474Z
+    updated_at: 2026-11-19T15:02:28.474Z
+    version: 1
+ux.view.scheme-drawer:
+  id: a0290e81-cfc5-410d-aa08-bf4baa7938eb
+  path: ux.view.scheme-drawer
+  spec_node_id: ux.view
+  type: view
+  layer_id: ux
+  name: Scheme Drawer
+  description: Create/edit a concept scheme (schemes page).
+  attributes:
+    type: drawer
+    routable: false
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/components/ontology/SchemeDrawer.tsx
+        symbol: SchemeDrawer
+      - file: ux/src/components/ontology/SchemeDrawer.tsx
+        symbol: ux.src.components.ontology.SchemeDrawer
+  metadata:
+    created_at: 2026-11-19T15:02:28.474Z
+    updated_at: 2026-11-19T15:02:28.474Z
+    version: 1
+ux.view.taxonomy-drawer:
+  id: d932b09c-952b-4712-99e9-01448f6ca3ac
+  path: ux.view.taxonomy-drawer
+  spec_node_id: ux.view
+  type: view
+  layer_id: ux
+  name: Taxonomy Drawer
+  description: Create/edit a taxonomy (taxonomies page).
+  attributes:
+    type: drawer
+    routable: false
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/components/ontology/TaxonomyDrawer.tsx
+        symbol: TaxonomyDrawer
+      - file: ux/src/components/ontology/TaxonomyDrawer.tsx
+        symbol: ux.src.components.ontology.TaxonomyDrawer
+  metadata:
+    created_at: 2026-11-19T15:02:28.474Z
+    updated_at: 2026-11-19T15:02:28.474Z
+    version: 1
+ux.view.taxonomy-publish-dialog:
+  id: 05e02dc7-e09b-4b16-acdb-ea8f5813fd44
+  path: ux.view.taxonomy-publish-dialog
+  spec_node_id: ux.view
+  type: view
+  layer_id: ux
+  name: Taxonomy Publish Dialog
+  description: Publish a taxonomy after reviewing its publish diff.
+  attributes:
+    type: dialog
+    routable: false
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/components/ontology/TaxonomyPublishDialog.tsx
+        symbol: TaxonomyPublishDialog
+      - file: ux/src/components/ontology/TaxonomyPublishDialog.tsx
+        symbol: ux.src.components.ontology.TaxonomyPublishDialog
+  metadata:
+    created_at: 2026-11-19T15:02:28.474Z
+    updated_at: 2026-11-19T15:02:28.474Z
+    version: 1
+ux.view.dr-spec-drift-dialog:
+  id: eee98deb-bcc3-4bee-96ec-5b0128784b30
+  path: ux.view.dr-spec-drift-dialog
+  spec_node_id: ux.view
+  type: view
+  layer_id: ux
+  name: DR Spec Drift Dialog
+  description: Report or propose drift between the DR spec and its taxonomy
+    (taxonomy detail).
+  attributes:
+    type: dialog
+    routable: false
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/components/ontology/DrSpecDriftDialog.tsx
+        symbol: DrSpecDriftDialog
+  metadata:
+    created_at: 2026-11-19T15:02:28.474Z
+    updated_at: 2026-11-19T15:02:28.474Z
+    version: 1
+ux.view.run-detail-drawer:
+  id: 87ad4958-57b1-453b-878f-61e32986a99b
+  path: ux.view.run-detail-drawer
+  spec_node_id: ux.view
+  type: view
+  layer_id: ux
+  name: Run Detail Drawer
+  description: "One pipeline run: status, stages, candidates review, apply and
+    revert (runs page)."
+  attributes:
+    type: drawer
+    routable: false
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/components/pipeline/RunDetailDrawer.tsx
+        symbol: RunDetailDrawer
+  metadata:
+    created_at: 2026-11-19T15:02:28.474Z
+    updated_at: 2026-11-19T15:02:28.474Z
+    version: 1
+ux.view.reference-source-drawer:
+  id: ce3b4a8c-f741-4af3-a9fc-c8a01332af79
+  path: ux.view.reference-source-drawer
+  spec_node_id: ux.view
+  type: view
+  layer_id: ux
+  name: Reference Source Drawer
+  description: One external reference source with status and search (reference
+    sources page).
+  attributes:
+    type: drawer
+    routable: false
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/components/reference/ReferenceSourceDrawer.tsx
+        symbol: ReferenceSourceDrawer
+      - file: ux/src/components/reference/ReferenceSourceDrawer.tsx
+        symbol: ux.src.components.reference.ReferenceSourceDrawer
+  metadata:
+    created_at: 2026-11-19T15:02:28.474Z
+    updated_at: 2026-11-19T15:02:28.474Z
+    version: 1
+ux.view.grounding-workflow-drawer:
+  id: de5efb12-94ac-4151-a19b-65141487b23d
+  path: ux.view.grounding-workflow-drawer
+  spec_node_id: ux.view
+  type: view
+  layer_id: ux
+  name: Grounding Workflow Drawer
+  description: Create/edit a grounding workflow and run it (workflows page).
+  attributes:
+    type: drawer
+    routable: false
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/components/reference/GroundingWorkflowDrawer.tsx
+        symbol: GroundingWorkflowDrawer
+      - file: ux/src/components/reference/GroundingWorkflowDrawer.tsx
+        symbol: ux.src.components.reference.GroundingWorkflowDrawer
+  metadata:
+    created_at: 2026-11-19T15:02:28.474Z
+    updated_at: 2026-11-19T15:02:28.474Z
+    version: 1
+ux.view.create-dataset-modal:
+  id: c433a045-1318-46cd-816a-d9d1dc61482e
+  path: ux.view.create-dataset-modal
+  spec_node_id: ux.view
+  type: view
+  layer_id: ux
+  name: Create Dataset Modal
+  description: Create a dataset over a taxonomy (datasets page).
+  attributes:
+    type: modal
+    routable: false
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/components/datasets/CreateDatasetModal.tsx
+        symbol: CreateDatasetModal
+      - file: ux/src/components/datasets/CreateDatasetModal.tsx
+        symbol: ux.src.components.datasets.CreateDatasetModal
+  metadata:
+    created_at: 2026-11-19T15:02:28.474Z
+    updated_at: 2026-11-19T15:02:28.474Z
+    version: 1
+ux.view.delete-dataset-dialog:
+  id: e36b2be2-673e-4acf-9179-948c9380cf76
+  path: ux.view.delete-dataset-dialog
+  spec_node_id: ux.view
+  type: view
+  layer_id: ux
+  name: Delete Dataset Dialog
+  description: Confirm deleting a dataset with its individuals (datasets page).
+  attributes:
+    type: dialog
+    routable: false
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/components/datasets/DeleteDatasetDialog.tsx
+        symbol: DeleteDatasetDialog
+      - file: ux/src/components/datasets/DeleteDatasetDialog.tsx
+        symbol: ux.src.components.datasets.DeleteDatasetDialog
+  metadata:
+    created_at: 2026-11-19T15:02:28.474Z
+    updated_at: 2026-11-19T15:02:28.474Z
+    version: 1
+ux.view.cascade-delete-dialog:
+  id: 5cd54703-eb03-4e0b-8457-0175370c523d
+  path: ux.view.cascade-delete-dialog
+  spec_node_id: ux.view
+  type: view
+  layer_id: ux
+  name: Cascade Delete Dialog
+  description: Confirm a delete that cascades to dependent entities.
+  attributes:
+    type: dialog
+    routable: false
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/components/crud/CascadeDeleteDialog.tsx
+        symbol: CascadeDeleteDialog
+      - file: ux/src/components/crud/CascadeDeleteDialog.tsx
+        symbol: ux.src.components.crud.CascadeDeleteDialog
+  metadata:
+    created_at: 2026-11-19T15:02:28.474Z
+    updated_at: 2026-11-19T15:02:28.474Z
+    version: 1
+ux.view.create-drawer:
+  id: b12f3949-3ff0-432f-be0c-d123a42973cd
+  path: ux.view.create-drawer
+  spec_node_id: ux.view
+  type: view
+  layer_id: ux
+  name: Create Drawer
+  description: Generic create drawer used by entity surfaces.
+  attributes:
+    type: drawer
+    routable: false
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/components/crud/CreateDrawer.tsx
+        symbol: CreateDrawer
+      - file: ux/src/components/crud/CreateDrawer.tsx
+        symbol: ux.src.components.crud.CreateDrawer
+  metadata:
+    created_at: 2026-11-19T15:02:28.474Z
+    updated_at: 2026-11-19T15:02:28.474Z
+    version: 1
+ux.view.command-palette:
+  id: 5bc2cbb7-0e95-4eb7-9ab4-9263117fd6a6
+  path: ux.view.command-palette
+  spec_node_id: ux.view
+  type: view
+  layer_id: ux
+  name: Command Palette
+  description: "Command palette: navigation and actions (global)."
+  attributes:
+    type: overlay
+    routable: false
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/components/shell/CommandPalette.tsx
+        symbol: CommandPalette
+      - file: ux/src/components/shell/CommandPalette.tsx
+        symbol: ux.src.components.shell.CommandPalette
+  metadata:
+    created_at: 2026-11-19T15:02:28.474Z
+    updated_at: 2026-11-19T15:02:28.474Z
     version: 1

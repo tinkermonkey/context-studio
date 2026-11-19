@@ -1,0 +1,226 @@
+product.softwarecapability.proposal-review-and-apply:
+  id: 77fe8d5b-fc42-434a-a8e5-a7977abafdbd
+  path: product.softwarecapability.proposal-review-and-apply
+  spec_node_id: product.softwarecapability
+  type: softwarecapability
+  layer_id: product
+  name: Proposal Review and Apply
+  description: Tiered review, edit-then-accept, reject with reason, apply, revert
+    and gold recording.
+  attributes:
+    status: delivered
+  metadata:
+    created_at: 2026-11-19T16:21:41.306Z
+    updated_at: 2026-11-19T16:21:41.306Z
+    version: 1
+product.softwarecapability.schema-and-data-curation:
+  id: 22cdbc24-1b16-4ded-af9b-aad8b3c7773c
+  path: product.softwarecapability.schema-and-data-curation
+  spec_node_id: product.softwarecapability
+  type: softwarecapability
+  layer_id: product
+  name: Schema and Data Curation
+  description: Taxonomies, concept schemes, classes, relationship types, datasets,
+    individuals and their provenance.
+  attributes:
+    status: delivered
+  metadata:
+    created_at: 2026-11-19T16:21:41.306Z
+    updated_at: 2026-11-19T16:21:41.306Z
+    version: 1
+product.softwarecapability.source-extraction:
+  id: 786701ae-142e-480f-a40e-f5bfd9bdb3b3
+  path: product.softwarecapability.source-extraction
+  spec_node_id: product.softwarecapability
+  type: softwarecapability
+  layer_id: product
+  name: Source Extraction
+  description: Files, web pages and text turned into proposals of cited
+    individuals and relationships.
+  attributes:
+    status: delivered
+  metadata:
+    created_at: 2026-11-19T16:21:41.306Z
+    updated_at: 2026-11-19T16:21:41.306Z
+    version: 1
+product.softwarecapability.pipeline-configuration-and-selection:
+  id: ccc1c62b-1b2e-44ff-b401-0fb308d7878a
+  path: product.softwarecapability.pipeline-configuration-and-selection
+  spec_node_id: product.softwarecapability
+  type: softwarecapability
+  layer_id: product
+  name: Pipeline Configuration and Selection
+  description: Pipeline types, implementations and configurations; registry
+    defaults; runs and their audit.
+  attributes:
+    status: delivered
+  metadata:
+    created_at: 2026-11-19T16:21:41.306Z
+    updated_at: 2026-11-19T16:21:41.306Z
+    version: 1
+product.softwarecapability.decision-models:
+  id: ae4aba04-bd3b-41d6-a765-8a522a5309b4
+  path: product.softwarecapability.decision-models
+  spec_node_id: product.softwarecapability
+  type: softwarecapability
+  layer_id: product
+  name: Decision Models
+  description: Choice, score and yes/no probabilities through a port (clef on
+    Workers AI, with an LLM fallback).
+  attributes:
+    status: delivered
+  metadata:
+    created_at: 2026-11-19T16:21:41.306Z
+    updated_at: 2026-11-19T16:21:41.306Z
+    version: 1
+product.softwarecapability.claims-triage:
+  id: 5c8853a6-42a4-43e3-b766-97c841ded05e
+  path: product.softwarecapability.claims-triage
+  spec_node_id: product.softwarecapability
+  type: softwarecapability
+  layer_id: product
+  name: Claims Triage
+  description: Notes to atomic claims, decision-model triage and reviewer verdicts.
+  attributes:
+    status: delivered
+  metadata:
+    created_at: 2026-11-19T16:21:41.306Z
+    updated_at: 2026-11-19T16:21:41.306Z
+    version: 1
+product.softwarecapability.agent-access-over-mcp:
+  id: 451cb9f0-5c5b-460b-9345-d702fb61d4a8
+  path: product.softwarecapability.agent-access-over-mcp
+  spec_node_id: product.softwarecapability
+  type: softwarecapability
+  layer_id: product
+  name: Agent Access over MCP
+  description: MCP tools and resources behind a bearer token, from the same
+    registry the chat uses.
+  attributes:
+    status: delivered
+  metadata:
+    created_at: 2026-11-19T16:21:41.306Z
+    updated_at: 2026-11-19T16:21:41.306Z
+    version: 1
+product.softwarecapability.chat-assistant:
+  id: e96bcb87-9841-4f0f-a055-f830989aada6
+  path: product.softwarecapability.chat-assistant
+  spec_node_id: product.softwarecapability
+  type: softwarecapability
+  layer_id: product
+  name: Chat Assistant
+  description: In-app agent over the same tools; drafts proposals as cards.
+  attributes:
+    status: delivered
+  metadata:
+    created_at: 2026-11-19T16:21:41.306Z
+    updated_at: 2026-11-19T16:21:41.306Z
+    version: 1
+product.softwarecapability.graph-exploration:
+  id: 687dd805-5ade-4ba9-b472-21de0d0cee70
+  path: product.softwarecapability.graph-exploration
+  spec_node_id: product.softwarecapability
+  type: softwarecapability
+  layer_id: product
+  name: Graph Exploration
+  description: Layered and clustered layouts, focus, metrics, path finding and
+    SPARQL over the ontology graph.
+  attributes:
+    status: delivered
+  metadata:
+    created_at: 2026-11-19T16:21:41.306Z
+    updated_at: 2026-11-19T16:21:41.306Z
+    version: 1
+product.softwarecapability.client-interchange:
+  id: 67c30149-722f-42b7-9a30-9d268e4b4cc7
+  path: product.softwarecapability.client-interchange
+  spec_node_id: product.softwarecapability
+  type: softwarecapability
+  layer_id: product
+  name: Client Interchange
+  description: Bundle import and export, DR reflection plans, drift checks,
+    decisions, spec changes and landing records.
+  attributes:
+    status: delivered
+  metadata:
+    created_at: 2026-11-19T16:21:41.306Z
+    updated_at: 2026-11-19T16:21:41.306Z
+    version: 1
+product.softwarecapability.extraction-benchmarking:
+  id: cbb78907-7bd6-44ea-bf90-292daec66b22
+  path: product.softwarecapability.extraction-benchmarking
+  spec_node_id: product.softwarecapability
+  type: softwarecapability
+  layer_id: product
+  name: Extraction Benchmarking
+  description: Benchmark replay, gold check and write-back, and comparing two
+    pipelines' proposals.
+  attributes:
+    status: delivered
+  metadata:
+    created_at: 2026-11-19T16:21:41.306Z
+    updated_at: 2026-11-19T16:21:41.306Z
+    version: 1
+product.softwarecapability.reference-grounding:
+  id: 694f8cf5-3e17-4aa9-b68f-1298e214719d
+  path: product.softwarecapability.reference-grounding
+  spec_node_id: product.softwarecapability
+  type: softwarecapability
+  layer_id: product
+  name: Reference Grounding
+  description: ConceptNet, DBpedia, Wikidata and schema.org lookups through the
+    caching proxy, used by refinement pipelines and suggesters.
+  attributes:
+    status: delivered
+  metadata:
+    created_at: 2026-11-19T16:21:41.306Z
+    updated_at: 2026-11-19T16:21:41.306Z
+    version: 1
+product.softwarecapability.workspace-sync:
+  id: a7b2c4d8-568b-4810-a3ae-dc52e3c05ae6
+  path: product.softwarecapability.workspace-sync
+  spec_node_id: product.softwarecapability
+  type: softwarecapability
+  layer_id: product
+  name: Workspace Sync
+  description: Optional push and pull of change events to S3 or DuckDB/Parquet.
+  attributes:
+    status: delivered
+  metadata:
+    created_at: 2026-11-19T16:21:41.306Z
+    updated_at: 2026-11-19T16:21:41.306Z
+    version: 1
+product.softwarecapability.desktop-application-packaging:
+  id: 0cdb7434-103b-4ab1-80ea-0cc9edebde6e
+  path: product.softwarecapability.desktop-application-packaging
+  spec_node_id: product.softwarecapability
+  type: softwarecapability
+  layer_id: product
+  name: Desktop Application Packaging
+  description: Context Studio packaged as an installable Tauri desktop app (/app).
+    Planned; not built.
+  attributes:
+    status: planned
+  source_reference:
+    provenance: manual
+    locations:
+      - file: app/README.md
+  metadata:
+    created_at: 2026-11-19T16:21:41.306Z
+    updated_at: 2026-11-19T16:21:41.306Z
+    version: 1
+product.softwarecapability.workspace-administration:
+  id: 5cb9f28d-14bd-4449-8be6-de1748cb7892
+  path: product.softwarecapability.workspace-administration
+  spec_node_id: product.softwarecapability
+  type: softwarecapability
+  layer_id: product
+  name: Workspace Administration
+  description: Configuration sections, system and service health, statistics and
+    background tasks for the local workspace.
+  attributes:
+    status: delivered
+  metadata:
+    created_at: 2026-11-19T16:34:19.519Z
+    updated_at: 2026-11-19T16:34:19.519Z
+    version: 1

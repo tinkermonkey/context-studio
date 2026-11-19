@@ -5,36 +5,77 @@ motivation.outcome.curated-domain-ontology:
   type: outcome
   layer_id: motivation
   name: Curated Domain Ontology
-  description: "The primary deliverable: a version-controlled, semantically
-    enriched knowledge graph ready for use in RAG pipelines, documentation, and
-    agent reasoning"
+  description: Reviewed, versioned schemas and datasets for the client projects
+    (the DR spec as the mirrored taxonomy dr_spec, House, CS's own DR model as
+    dataset context-studio), every change traceable to a proposal, a decision
+    and, for extracted facts, a source passage.
   attributes:
-    status: in-progress
+    status: achieved
   source_reference:
-    provenance: extracted
+    provenance: manual
     locations:
-      - file: local-server/domain/ontology/entities.py
-        symbol: Taxonomy
+      - file: rearchitecture/ontology_workbench_proposal.md
   metadata:
     created_at: 2026-03-24T09:21:01.655Z
     updated_at: 2026-03-24T09:21:01.655Z
     version: 1
-motivation.outcome.improved-ai-inference-quality:
-  id: e85ecbd2-7155-4075-8bef-ae8114e2f82a
-  path: motivation.outcome.improved-ai-inference-quality
+motivation.outcome.client-changes-land-without-hand-edited-specs:
+  id: 29c74cd4-e164-4447-8be7-84ac866d757d
+  path: motivation.outcome.client-changes-land-without-hand-edited-specs
   spec_node_id: motivation.outcome
   type: outcome
   layer_id: motivation
-  name: Improved AI Inference Quality
-  description: By grounding LLM calls in a curated ontology, the expected outcome
-    is measurably higher accuracy and relevance in RAG pipeline outputs
+  name: Client Changes Land Without Hand-Edited Specs
+  description: "Gate C: 221/221 DR ops accepted unchanged and landed from CS's
+    export; House pulls its structure from CS bundles instead of hand-copying
+    the schema."
   attributes:
-    status: planned
+    status: achieved
   source_reference:
-    provenance: extracted
+    provenance: manual
     locations:
-      - file: local-server/domain/extraction/services.py
+      - file: documentation/field-guide/index.html
   metadata:
-    created_at: 2026-03-24T09:21:01.967Z
-    updated_at: 2026-03-24T09:21:01.967Z
+    created_at: 2026-11-19T16:14:23.185Z
+    updated_at: 2026-11-19T16:14:23.185Z
+    version: 1
+motivation.outcome.agents-use-the-curated-vocabulary:
+  id: 99134672-67cd-4d08-a993-173a91b75499
+  path: motivation.outcome.agents-use-the-curated-vocabulary
+  spec_node_id: motivation.outcome
+  type: outcome
+  layer_id: motivation
+  name: Agents Use the Curated Vocabulary
+  description: Agents answer with the model's class and relationship names and
+    propose new ones instead of inventing them.
+  attributes:
+    status: in-progress
+  source_reference:
+    provenance: manual
+    locations:
+      - file: documentation/field-guide/index.html
+  metadata:
+    created_at: 2026-11-19T16:14:23.185Z
+    updated_at: 2026-11-19T16:14:23.185Z
+    version: 1
+motivation.outcome.extraction-proposals-worth-a-reviewers-time:
+  id: 004042aa-5154-4592-a0d0-b8802e47e7f6
+  path: motivation.outcome.extraction-proposals-worth-a-reviewers-time
+  spec_node_id: motivation.outcome
+  type: outcome
+  layer_id: motivation
+  name: Extraction Proposals Worth a Reviewer's Time
+  description: "Extraction proposals are good enough that a reviewer's time on
+    them is well spent: most candidates are quick accepts. Judged by the
+    reviewer, with no numeric target (owner decision 2026-11-19); the benchmark
+    numbers in the extraction README are context, not the target."
+  attributes:
+    status: in-progress
+  source_reference:
+    provenance: manual
+    locations:
+      - file: documentation/extraction/README.md
+  metadata:
+    created_at: 2026-11-19T16:14:23.185Z
+    updated_at: 2026-11-19T16:14:23.185Z
     version: 1

@@ -1,0 +1,99 @@
+business.businessobject.change-proposal:
+  id: dd33a8f5-d7ba-4198-b0f2-b5ce474c4933
+  path: business.businessobject.change-proposal
+  spec_node_id: business.businessobject
+  type: businessobject
+  layer_id: business
+  name: Change Proposal
+  description: Pending typed operations with source, rationale, evidence,
+    probability, scope, dataset and the pipeline that produced them.
+  source_reference:
+    provenance: manual
+    locations:
+      - file: documentation/field-guide/index.html
+  metadata:
+    created_at: 2026-11-19T16:16:28.348Z
+    updated_at: 2026-11-19T16:16:28.348Z
+    version: 1
+business.businessobject.decision-gold:
+  id: b1c7f550-1958-4a58-a746-f2f4cbf687e5
+  path: business.businessobject.decision-gold
+  spec_node_id: business.businessobject
+  type: businessobject
+  layer_id: business
+  name: Decision (Gold)
+  description: A reviewer's or approval policy's verdict on one operation, kept as
+    benchmark gold.
+  source_reference:
+    provenance: manual
+    locations:
+      - file: documentation/field-guide/index.html
+  metadata:
+    created_at: 2026-11-19T16:16:28.348Z
+    updated_at: 2026-11-19T16:16:28.348Z
+    version: 1
+business.businessobject.source-document:
+  id: c4a475e6-da74-455b-ac95-311ff02b6f5c
+  path: business.businessobject.source-document
+  spec_node_id: business.businessobject
+  type: businessobject
+  layer_id: business
+  name: Source Document
+  description: A document (PDF, Markdown, HTML, text or URL) that extraction
+    reads; kept for citations.
+  source_reference:
+    provenance: manual
+    locations:
+      - file: documentation/field-guide/index.html
+  metadata:
+    created_at: 2026-11-19T16:16:28.348Z
+    updated_at: 2026-11-19T16:16:28.348Z
+    version: 1
+business.businessobject.dataset:
+  id: 97d12086-64b4-410b-8f73-36644583007d
+  path: business.businessobject.dataset
+  spec_node_id: business.businessobject
+  type: businessobject
+  layer_id: business
+  name: Dataset
+  description: A named body of individuals over one taxonomy.
+  source_reference:
+    provenance: manual
+    locations:
+      - file: documentation/field-guide/index.html
+  metadata:
+    created_at: 2026-11-19T16:16:28.348Z
+    updated_at: 2026-11-19T16:16:28.348Z
+    version: 1
+business.businessobject.taxonomy-charter:
+  id: 768288ed-9878-4576-becb-50fda946a65c
+  path: business.businessobject.taxonomy-charter
+  spec_node_id: business.businessobject
+  type: businessobject
+  layer_id: business
+  name: Taxonomy Charter
+  description: The taxonomy's vision and summary, which agents and pipelines read first.
+  source_reference:
+    provenance: manual
+    locations:
+      - file: documentation/field-guide/index.html
+  metadata:
+    created_at: 2026-11-19T16:16:28.348Z
+    updated_at: 2026-11-19T16:16:28.348Z
+    version: 1
+business.businessobject.claim:
+  id: 2af06d0a-aed2-4544-bfeb-74092df05328
+  path: business.businessobject.claim
+  spec_node_id: business.businessobject
+  type: businessobject
+  layer_id: business
+  name: Claim
+  description: An atomic review note with a triage result and a reviewer verdict.
+  source_reference:
+    provenance: manual
+    locations:
+      - file: documentation/field-guide/index.html
+  metadata:
+    created_at: 2026-11-19T16:16:28.348Z
+    updated_at: 2026-11-19T16:16:28.348Z
+    version: 1

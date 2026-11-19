@@ -1,0 +1,79 @@
+motivation.driver.client-ontologies-refined-by-hand:
+  id: bac44789-f65a-4c72-97a0-5eea7a9e9dcb
+  path: motivation.driver.client-ontologies-refined-by-hand
+  spec_node_id: motivation.driver
+  type: driver
+  layer_id: motivation
+  name: Client Ontologies Refined by Hand
+  description: DR's spec was refined with scripts, JSONL and markdown reports, and
+    House's schema was hand-copied into about seven code locations with visible
+    drift; nothing was reusable across ontologies.
+  attributes:
+    category: operational
+  source_reference:
+    provenance: manual
+    locations:
+      - file: rearchitecture/ontology_workbench_proposal.md
+  metadata:
+    created_at: 2026-11-19T16:14:23.184Z
+    updated_at: 2026-11-19T16:14:23.184Z
+    version: 1
+motivation.driver.agents-invent-vocabulary:
+  id: b3bb6031-852a-4a2d-8d60-90f77f330bb5
+  path: motivation.driver.agents-invent-vocabulary
+  spec_node_id: motivation.driver
+  type: driver
+  layer_id: motivation
+  name: Agents Invent Vocabulary
+  description: Without a shared, queryable model, each agent learns the vocabulary
+    from whatever was pasted into its prompt and invents names.
+  attributes:
+    category: technical
+  source_reference:
+    provenance: manual
+    locations:
+      - file: documentation/field-guide/index.html
+  metadata:
+    created_at: 2026-11-19T16:14:23.185Z
+    updated_at: 2026-11-19T16:14:23.185Z
+    version: 1
+motivation.driver.review-is-the-normal-workflow:
+  id: 751de78d-1ecc-46e9-abcf-36a900de8d76
+  path: motivation.driver.review-is-the-normal-workflow
+  spec_node_id: motivation.driver
+  type: driver
+  layer_id: motivation
+  name: Review Is the Normal Workflow
+  description: "Review is the key workflow for the maintainer: every agent, chat
+    and pipeline change arrives as a proposal, and model-made extraction gold
+    had never been checked by a person."
+  attributes:
+    category: business
+  source_reference:
+    provenance: manual
+    locations:
+      - file: documentation/extraction/README.md
+  metadata:
+    created_at: 2026-11-19T16:14:23.185Z
+    updated_at: 2026-11-19T16:14:23.185Z
+    version: 1
+motivation.driver.unauthenticated-local-workspace-api:
+  id: fbf96c9f-f2ac-4fce-b51b-af3723995de9
+  path: motivation.driver.unauthenticated-local-workspace-api
+  spec_node_id: motivation.driver
+  type: driver
+  layer_id: motivation
+  name: Unauthenticated Local Workspace API
+  description: "The REST API has no login: anything that can reach the port can
+    read and change the workspace. Safety rests on loopback binding, request
+    checks, a bearer token for MCP and the human review gate for agent writes."
+  attributes:
+    category: technical
+  source_reference:
+    provenance: manual
+    locations:
+      - file: README.md
+  metadata:
+    created_at: 2026-11-19T16:14:23.185Z
+    updated_at: 2026-11-19T16:14:23.185Z
+    version: 1

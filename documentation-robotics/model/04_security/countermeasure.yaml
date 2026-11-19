@@ -20,26 +20,159 @@ security.countermeasure.parameterized-queries-via-orm:
     created_at: 2026-03-24T09:17:53.270Z
     updated_at: 2026-03-24T09:17:53.270Z
     version: 1
-security.countermeasure.global-exception-handler-sanitization:
-  id: 802b8726-a272-4d12-91c4-8d1b77afe9e1
-  path: security.countermeasure.global-exception-handler-sanitization
+security.countermeasure.origin-and-host-request-guard:
+  id: 45b3574a-56ea-41d0-8a91-eef77402cb0b
+  path: security.countermeasure.origin-and-host-request-guard
   spec_node_id: security.countermeasure
   type: countermeasure
   layer_id: security
-  name: Global Exception Handler Sanitization
-  description: FastAPI global exception handler in local-server/app.py strips file
-    paths and internal info from error responses before returning to clients
+  name: Origin and Host Request Guard
+  description: RequestGuard refuses requests with a foreign Origin and, on
+    loopback, a non-loopback Host header; the CORS allowlist ignores '*'.
   attributes:
     type: technical
-    description: Exception handler sanitizes internal paths from error responses
     effectiveness: high
     implemented: true
+    description: Origin/Host checks on the REST API
   source_reference:
-    provenance: extracted
+    provenance: manual
     locations:
-      - file: local-server/app.py
-        symbol: global_exception_handler
+      - file: local-server/adapters/web/request_guard.py
   metadata:
-    created_at: 2026-03-24T09:17:57.139Z
-    updated_at: 2026-03-24T09:17:57.139Z
+    created_at: 2026-11-19T16:18:36.733Z
+    updated_at: 2026-11-19T16:18:36.733Z
+    version: 1
+security.countermeasure.loopback-only-mcp-startup:
+  id: 8c27e9fa-4646-4a46-89eb-cf8e83258b5c
+  path: security.countermeasure.loopback-only-mcp-startup
+  spec_node_id: security.countermeasure
+  type: countermeasure
+  layer_id: security
+  name: Loopback-Only MCP Startup
+  description: MCP is not started when server.host is not a loopback address, and
+    its transport accepts only loopback Host and Origin headers.
+  attributes:
+    type: technical
+    effectiveness: high
+    implemented: true
+    description: MCP only on loopback, with DNS-rebinding protection
+  source_reference:
+    provenance: manual
+    locations:
+      - file: local-server/adapters/mcp/server.py
+  metadata:
+    created_at: 2026-11-19T16:18:36.733Z
+    updated_at: 2026-11-19T16:18:36.733Z
+    version: 1
+security.countermeasure.mcp-bearer-token-check:
+  id: 982e3a30-fd29-4295-86b5-afb955fa0e6f
+  path: security.countermeasure.mcp-bearer-token-check
+  spec_node_id: security.countermeasure
+  type: countermeasure
+  layer_id: security
+  name: MCP Bearer Token Check
+  description: Each MCP request's bearer token is compared to the configured token
+    in constant time; requests without it are refused.
+  attributes:
+    type: technical
+    effectiveness: high
+    implemented: true
+    description: Constant-time bearer token check on /mcp
+  source_reference:
+    provenance: manual
+    locations:
+      - file: local-server/adapters/mcp/server.py
+  metadata:
+    created_at: 2026-11-19T16:18:36.733Z
+    updated_at: 2026-11-19T16:18:36.733Z
+    version: 1
+security.countermeasure.source-path-allowlist:
+  id: 49545a53-3a50-4d50-ba23-6f6bcf7e3995
+  path: security.countermeasure.source-path-allowlist
+  spec_node_id: security.countermeasure
+  type: countermeasure
+  layer_id: security
+  name: Source Path Allowlist
+  description: MCP and chat file sources are read only from under absolute
+    sources.allowed_roots (empty by default), resolving the real path and
+    checking it on the open file descriptor.
+  attributes:
+    type: technical
+    effectiveness: high
+    implemented: true
+    description: Agent file sources limited to allowed roots
+  source_reference:
+    provenance: manual
+    locations:
+      - file: local-server/adapters/chat/source_tools.py
+  metadata:
+    created_at: 2026-11-19T16:18:36.733Z
+    updated_at: 2026-11-19T16:18:36.733Z
+    version: 1
+security.countermeasure.human-review-gate-for-agent-writes:
+  id: 5db00645-276d-4b5e-8e11-14633f9b5fbf
+  path: security.countermeasure.human-review-gate-for-agent-writes
+  spec_node_id: security.countermeasure
+  type: countermeasure
+  layer_id: security
+  name: Human Review Gate for Agent Writes
+  description: Agent, chat and pipeline writes are proposals a person decides; the
+    approval policy never auto-applies breaking or no-passage operations, and
+    there is no apply tool over MCP.
+  attributes:
+    type: operational
+    effectiveness: high
+    implemented: true
+    description: Agent writes need a human decision
+  source_reference:
+    provenance: manual
+    locations:
+      - file: local-server/domain/versioning/approval_policy.py
+  metadata:
+    created_at: 2026-11-19T16:18:36.733Z
+    updated_at: 2026-11-19T16:18:36.733Z
+    version: 1
+security.countermeasure.source-size-limit:
+  id: 36b0d350-7a55-4572-9ce4-da5dbca513b3
+  path: security.countermeasure.source-size-limit
+  spec_node_id: security.countermeasure
+  type: countermeasure
+  layer_id: security
+  name: Source Size Limit
+  description: Uploads and fetched pages are capped at sources.max_bytes (50 MB by default).
+  attributes:
+    type: technical
+    effectiveness: medium
+    implemented: true
+    description: Uploads and fetched pages capped in size
+  source_reference:
+    provenance: manual
+    locations:
+      - file: local-server/adapters/sources/fetcher.py
+  metadata:
+    created_at: 2026-11-19T16:18:36.733Z
+    updated_at: 2026-11-19T16:18:36.733Z
+    version: 1
+security.countermeasure.secret-safe-configuration:
+  id: 8abde7a2-27bf-4f75-bde9-afd4daf8860e
+  path: security.countermeasure.secret-safe-configuration
+  spec_node_id: security.countermeasure
+  type: countermeasure
+  layer_id: security
+  name: Secret-Safe Configuration
+  description: config.json is untracked (config.example.json is the template);
+    keys derived from the environment are not written back; configuration models
+    that may hold credentials hide input values in validation errors.
+  attributes:
+    type: technical
+    effectiveness: medium
+    implemented: true
+    description: Secrets kept out of the repo and out of error messages
+  source_reference:
+    provenance: manual
+    locations:
+      - file: local-server/config.py
+  metadata:
+    created_at: 2026-11-19T16:18:36.733Z
+    updated_at: 2026-11-19T16:18:36.733Z
     version: 1

@@ -5,9 +5,11 @@ motivation.constraint.sqlite-only-persistence:
   type: constraint
   layer_id: motivation
   name: SQLite-Only Persistence
-  description: The primary data store must be SQLite; no other RDBMS or cloud
-    database is used for the core workspace to maintain the local-first,
-    zero-config guarantee
+  description: "SQLite files only: local.db for the workspace, operations.db for
+    pipeline runs, executions and chat, plus the droppable caches
+    reference_api_cache.db and reference.db. Vector similarity is brute-force
+    numpy cosine over embeddings stored in SQLite, not the SQLiteVector
+    extension. S3/DuckDB sync is an optional export, not a store."
   attributes:
     constraintType: technical
   source_reference:
@@ -18,25 +20,6 @@ motivation.constraint.sqlite-only-persistence:
     created_at: 2026-03-24T09:20:49.338Z
     updated_at: 2026-03-24T09:20:49.338Z
     version: 1
-motivation.constraint.python-3x-runtime:
-  id: 48ad8ea6-9244-4d73-9c1b-6e1b2ecf6af6
-  path: motivation.constraint.python-3x-runtime
-  spec_node_id: motivation.constraint
-  type: constraint
-  layer_id: motivation
-  name: Python 3.x Runtime
-  description: All server-side code runs on Python 3.x; no other server languages
-    are in scope for the back-end
-  attributes:
-    constraintType: technical
-  source_reference:
-    provenance: extracted
-    locations:
-      - file: local-server/requirements.txt
-  metadata:
-    created_at: 2026-03-24T09:20:49.643Z
-    updated_at: 2026-03-24T09:20:49.643Z
-    version: 1
 motivation.constraint.external-reference-source-rate-limits:
   id: a43eb63f-e655-48db-8bb0-bd1c1ac9b986
   path: motivation.constraint.external-reference-source-rate-limits
@@ -44,16 +27,114 @@ motivation.constraint.external-reference-source-rate-limits:
   type: constraint
   layer_id: motivation
   name: External Reference Source Rate Limits
-  description: All calls to external knowledge sources (ConceptNet, DBpedia,
-    Wikidata, schema.org) are constrained by per-source rate limits defined in
-    config.json
+  description: "The built-in caching proxy (reference-api-buddy) enforces
+    per-upstream limits: requests_per_hour for each source in config.json
+    reference.proxy.sources (ConceptNet, DBpedia, Wikidata, and Wikipedia pages
+    fetched as sources), with responses cached for 168 h."
   attributes:
     constraintType: external
   source_reference:
-    provenance: extracted
+    provenance: manual
     locations:
-      - file: local-server/adapters/reference
+      - file: local-server/adapters/reference/proxy.py
   metadata:
     created_at: 2026-03-24T09:20:49.947Z
     updated_at: 2026-03-24T09:20:49.947Z
+    version: 1
+motivation.constraint.configuration-only-through-the-config-file:
+  id: 5e5809f0-45f5-4c02-8c7a-e3d1d1f70305
+  path: motivation.constraint.configuration-only-through-the-config-file
+  spec_node_id: motivation.constraint
+  type: constraint
+  layer_id: motivation
+  name: Configuration Only Through the Config File
+  description: Settings live in config.json (or the file CONFIG_PATH names); no
+    environment overrides of app settings. The LLM key environment fallback is a
+    development convenience and is never written back.
+  attributes:
+    constraintType: technical
+  source_reference:
+    provenance: manual
+    locations:
+      - file: CLAUDE.md
+  metadata:
+    created_at: 2026-11-19T16:14:23.186Z
+    updated_at: 2026-11-19T16:14:23.186Z
+    version: 1
+motivation.constraint.loopback-only-deployment:
+  id: 6d66f806-1e82-4950-92e9-3f1e913b2209
+  path: motivation.constraint.loopback-only-deployment
+  spec_node_id: motivation.constraint
+  type: constraint
+  layer_id: motivation
+  name: Loopback-Only Deployment
+  description: The server binds 127.0.0.1 by default and MCP refuses to start on a
+    non-loopback host; remote access is out of scope.
+  attributes:
+    constraintType: technical
+  source_reference:
+    provenance: manual
+    locations:
+      - file: README.md
+  metadata:
+    created_at: 2026-11-19T16:14:23.186Z
+    updated_at: 2026-11-19T16:14:23.186Z
+    version: 1
+motivation.constraint.external-llm-provider-required:
+  id: 9be80690-c775-4f4b-9b2a-f50c68715fc1
+  path: motivation.constraint.external-llm-provider-required
+  spec_node_id: motivation.constraint
+  type: constraint
+  layer_id: motivation
+  name: External LLM Provider Required
+  description: Extraction, chat and refinement need an Anthropic, OpenAI or
+    OpenRouter key (decision models optionally Cloudflare Workers AI); the
+    default extraction costs about $0.7-1.5 per document.
+  attributes:
+    constraintType: external
+  source_reference:
+    provenance: manual
+    locations:
+      - file: README.md
+  metadata:
+    created_at: 2026-11-19T16:14:23.186Z
+    updated_at: 2026-11-19T16:14:23.186Z
+    version: 1
+motivation.constraint.no-backwards-compatibility-with-legacy-server:
+  id: 2bac7516-47ff-476f-b309-a11790c58c6e
+  path: motivation.constraint.no-backwards-compatibility-with-legacy-server
+  spec_node_id: motivation.constraint
+  type: constraint
+  layer_id: motivation
+  name: No Backwards Compatibility with Legacy Server
+  description: The new server defines its own API contracts and database schema;
+    nothing in legacy-server constrains it.
+  attributes:
+    constraintType: technical
+  source_reference:
+    provenance: manual
+    locations:
+      - file: CLAUDE.md
+  metadata:
+    created_at: 2026-11-19T16:14:23.186Z
+    updated_at: 2026-11-19T16:14:23.186Z
+    version: 1
+motivation.constraint.python-and-nodejs-runtime-versions:
+  id: 64ebaa6e-4fd0-4aab-a712-01fdee16601f
+  path: motivation.constraint.python-and-nodejs-runtime-versions
+  spec_node_id: motivation.constraint
+  type: constraint
+  layer_id: motivation
+  name: Python and Node.js Runtime Versions
+  description: The back end runs on Python 3.11 or later; the front-end toolchain
+    needs Node.js 24.
+  attributes:
+    constraintType: technical
+  source_reference:
+    provenance: manual
+    locations:
+      - file: README.md
+  metadata:
+    created_at: 2026-11-19T16:14:23.186Z
+    updated_at: 2026-11-19T16:14:23.186Z
     version: 1

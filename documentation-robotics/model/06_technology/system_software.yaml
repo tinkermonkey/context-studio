@@ -266,25 +266,6 @@ technology.systemsoftware.tan-stack-query:
     created_at: 2026-05-07T22:14:54.922Z
     updated_at: 2026-05-07T22:14:54.922Z
     version: 1
-technology.systemsoftware.flowbite-react:
-  id: b0271a62-58a0-4d6d-bc50-b37d03f4b1f9
-  path: technology.systemsoftware.flowbite-react
-  spec_node_id: technology.systemsoftware
-  type: systemsoftware
-  layer_id: technology
-  name: Flowbite React
-  description: Component library (v0.11) built on Tailwind CSS used for UX
-    interface elements — buttons, modals, tables, and form controls
-  attributes:
-    softwareType: middleware
-  source_reference:
-    provenance: extracted
-    locations:
-      - file: ux/package.json
-  metadata:
-    created_at: 2026-05-07T22:14:56.652Z
-    updated_at: 2026-05-07T22:14:56.652Z
-    version: 1
 technology.systemsoftware.tailwind-css:
   id: f812888a-4e4c-4846-b635-aafd756f2939
   path: technology.systemsoftware.tailwind-css
@@ -445,26 +426,6 @@ technology.systemsoftware.python-multipart:
     created_at: 2026-05-11T12:07:53.872Z
     updated_at: 2026-05-11T12:07:53.872Z
     version: 1
-technology.systemsoftware.hugging-face-datasets:
-  id: d712f26d-1084-4f08-a92c-44424d757b30
-  path: technology.systemsoftware.hugging-face-datasets
-  spec_node_id: technology.systemsoftware
-  type: systemsoftware
-  layer_id: technology
-  name: HuggingFace Datasets
-  description: HuggingFace datasets library used for loading and processing
-    reference datasets for ontology enrichment
-  attributes:
-    softwareType: middleware
-  source_reference:
-    provenance: extracted
-    locations:
-      - file: local-server/requirements.txt
-        symbol: datasets
-  metadata:
-    created_at: 2026-05-11T12:07:54.411Z
-    updated_at: 2026-05-11T12:07:54.411Z
-    version: 1
 technology.systemsoftware.tan-stack-table:
   id: 2e9d4f1e-09af-4095-a03f-0650c60234b1
   path: technology.systemsoftware.tan-stack-table
@@ -546,23 +507,197 @@ technology.systemsoftware.axios:
     created_at: 2026-05-11T12:08:04.567Z
     updated_at: 2026-05-11T12:08:04.567Z
     version: 1
-technology.systemsoftware.reagraph:
-  id: 3ece0446-5e2a-4bb7-a2ec-3c61db772999
-  path: technology.systemsoftware.reagraph
+technology.systemsoftware.git:
+  id: 29a0dafd-0e07-4515-b88b-b806c67e135c
+  path: technology.systemsoftware.git
   spec_node_id: technology.systemsoftware
   type: systemsoftware
   layer_id: technology
-  name: Reagraph
-  description: React-based graph visualization library used for rendering
-    knowledge graph network diagrams in the UX
+  name: git
+  description: Git CLI, launched by the DR spec reader to read the spec checkout's
+    source revision.
+  attributes:
+    softwareType: middleware
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/interchange/dr_spec.py
+        symbol: read_source_revision
+  metadata:
+    created_at: 2026-11-19T14:56:29.491Z
+    updated_at: 2026-11-19T14:56:29.491Z
+    version: 1
+technology.systemsoftware.mcp-python-sdk:
+  id: 2e001e07-d3db-4e2d-a20b-26cb512c774b
+  path: technology.systemsoftware.mcp-python-sdk
+  spec_node_id: technology.systemsoftware
+  type: systemsoftware
+  layer_id: technology
+  name: MCP Python SDK
+  description: Model Context Protocol server SDK (mcp) behind the /mcp endpoint.
+  attributes:
+    softwareType: middleware
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/requirements.txt
+        symbol: mcp
+  metadata:
+    created_at: 2026-11-19T14:57:00.157Z
+    updated_at: 2026-11-19T14:57:00.157Z
+    version: 1
+technology.systemsoftware.scikit-learn:
+  id: 3a51c212-fc58-4473-8ca9-19c20ca804c9
+  path: technology.systemsoftware.scikit-learn
+  spec_node_id: technology.systemsoftware
+  type: systemsoftware
+  layer_id: technology
+  name: scikit-learn
+  description: Clustering and similarity utilities for the clusterer and embedding adapters.
+  attributes:
+    softwareType: middleware
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/requirements.txt
+        symbol: scikit-learn
+  metadata:
+    created_at: 2026-11-19T14:57:00.157Z
+    updated_at: 2026-11-19T14:57:00.157Z
+    version: 1
+technology.systemsoftware.reference-api-buddy:
+  id: 8f8bc68b-4ef5-4ab8-bb05-20093ce51358
+  path: technology.systemsoftware.reference-api-buddy
+  spec_node_id: technology.systemsoftware
+  type: systemsoftware
+  layer_id: technology
+  name: reference-api-buddy
+  description: Caching HTTP proxy library behind the in-process reference proxy.
+  attributes:
+    softwareType: cache
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/requirements.txt
+        symbol: reference-api-buddy
+  metadata:
+    created_at: 2026-11-19T14:57:00.157Z
+    updated_at: 2026-11-19T14:57:00.157Z
+    version: 1
+technology.systemsoftware.pypdf:
+  id: a8ef27c7-e311-4061-baea-47478ec474f4
+  path: technology.systemsoftware.pypdf
+  spec_node_id: technology.systemsoftware
+  type: systemsoftware
+  layer_id: technology
+  name: pypdf
+  description: PDF text extraction for PDF sources.
+  attributes:
+    softwareType: middleware
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/requirements.txt
+        symbol: pypdf
+  metadata:
+    created_at: 2026-11-19T14:57:00.157Z
+    updated_at: 2026-11-19T14:57:00.157Z
+    version: 1
+technology.systemsoftware.trafilatura:
+  id: b35798e6-fb2b-4c04-9c56-7090b904e59a
+  path: technology.systemsoftware.trafilatura
+  spec_node_id: technology.systemsoftware
+  type: systemsoftware
+  layer_id: technology
+  name: trafilatura
+  description: Main-text extraction from HTML pages for web sources.
+  attributes:
+    softwareType: middleware
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/requirements.txt
+        symbol: trafilatura
+  metadata:
+    created_at: 2026-11-19T14:57:00.157Z
+    updated_at: 2026-11-19T14:57:00.157Z
+    version: 1
+technology.systemsoftware.open-telemetry-python-sdk:
+  id: 04a6548d-1ec9-40b5-8603-7e3eaf35aa7f
+  path: technology.systemsoftware.open-telemetry-python-sdk
+  spec_node_id: technology.systemsoftware
+  type: systemsoftware
+  layer_id: technology
+  name: OpenTelemetry Python SDK
+  description: OpenTelemetry API/SDK, OTLP exporters and FastAPI/SQLAlchemy/httpx
+    instrumentation for server traces and logs.
+  attributes:
+    softwareType: middleware
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/requirements.txt
+        symbol: opentelemetry-sdk
+  metadata:
+    created_at: 2026-11-19T14:57:00.157Z
+    updated_at: 2026-11-19T14:57:00.157Z
+    version: 1
+technology.systemsoftware.open-telemetry-web-sdk:
+  id: beaabb46-e143-4ea4-b1e1-2b78ad236ea7
+  path: technology.systemsoftware.open-telemetry-web-sdk
+  spec_node_id: technology.systemsoftware
+  type: systemsoftware
+  layer_id: technology
+  name: OpenTelemetry Web SDK
+  description: Browser tracing (sdk-trace-web, OTLP HTTP exporter) for the UX.
   attributes:
     softwareType: middleware
   source_reference:
     provenance: extracted
     locations:
       - file: ux/package.json
-        symbol: reagraph
+        symbol: "@opentelemetry/sdk-trace-web"
   metadata:
-    created_at: 2026-05-11T12:08:05.439Z
-    updated_at: 2026-05-11T12:08:05.439Z
+    created_at: 2026-11-19T14:57:00.157Z
+    updated_at: 2026-11-19T14:57:00.157Z
+    version: 1
+technology.systemsoftware.heimdall-ui:
+  id: 000b2711-2fd9-43b7-8fcf-06726919d200
+  path: technology.systemsoftware.heimdall-ui
+  spec_node_id: technology.systemsoftware
+  type: systemsoftware
+  layer_id: technology
+  name: Heimdall UI
+  description: "@tinkermonkey/heimdall-ui design system: shell, navigation,
+    inputs, overlays, data display, graph and chat components for the UX."
+  attributes:
+    softwareType: middleware
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/package.json
+        symbol: "@tinkermonkey/heimdall-ui"
+  metadata:
+    created_at: 2026-11-19T14:57:00.157Z
+    updated_at: 2026-11-19T14:57:00.157Z
+    version: 1
+technology.systemsoftware.sqlite:
+  id: 9c2027e2-136a-41aa-8e07-30f9f18364fa
+  path: technology.systemsoftware.sqlite
+  spec_node_id: technology.systemsoftware
+  type: systemsoftware
+  layer_id: technology
+  name: SQLite
+  description: Embedded database engine for local.db, operations.db, reference.db
+    and the reference cache, with sqlite-vec for vectors.
+  attributes:
+    softwareType: dbms
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/persistence/sqlite/connection.py
+        symbol: DatabaseManager
+  metadata:
+    created_at: 2026-11-19T14:57:00.157Z
+    updated_at: 2026-11-19T14:57:00.157Z
     version: 1

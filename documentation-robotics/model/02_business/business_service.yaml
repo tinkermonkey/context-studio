@@ -1,19 +1,88 @@
-business.businessservice.rest-api-gateway-service:
-  id: 0045b725-2a72-4347-9997-bad0a00be48d
-  path: business.businessservice.rest-api-gateway-service
+business.businessservice.proposal-adjudication-service:
+  id: 2d0b4022-b685-4a35-8c5f-debbc53c3f6c
+  path: business.businessservice.proposal-adjudication-service
   spec_node_id: business.businessservice
   type: businessservice
   layer_id: business
-  name: REST API Gateway Service
-  description: The RESTful API surface of the Context Studio local server,
-    implemented as FastAPI routes in the web adapter layer. Provides all HTTP
-    endpoints for ontology management, graph analysis, knowledge extraction, LLM
-    pipeline management, versioning, and system administration.
+  name: Proposal Adjudication Service
+  description: Review, edit-then-accept, reject with reason, apply, revert and
+    gold recording for every proposed change, with tiered review and a
+    per-taxonomy approval policy.
   source_reference:
-    provenance: extracted
+    provenance: manual
     locations:
-      - file: local-server/adapters/web/
+      - file: documentation/field-guide/index.html
   metadata:
-    created_at: 2026-03-24T10:43:06.585Z
-    updated_at: 2026-03-24T10:43:06.585Z
+    created_at: 2026-11-19T16:16:28.347Z
+    updated_at: 2026-11-19T16:16:28.347Z
+    version: 1
+business.businessservice.agent-context-service:
+  id: 281fdb92-80a4-400d-ba59-fc33c7cdb844
+  path: business.businessservice.agent-context-service
+  spec_node_id: business.businessservice
+  type: businessservice
+  layer_id: business
+  name: Agent Context Service
+  description: "Read access to the curated model for agents: search, neighbours,
+    paths, taxonomy vision and bundle resources over MCP and the in-app chat."
+  source_reference:
+    provenance: manual
+    locations:
+      - file: README.md
+  metadata:
+    created_at: 2026-11-19T16:16:28.347Z
+    updated_at: 2026-11-19T16:16:28.347Z
+    version: 1
+business.businessservice.source-extraction-service:
+  id: 4765f17e-6fed-4558-a9fc-7de7e085a521
+  path: business.businessservice.source-extraction-service
+  spec_node_id: business.businessservice
+  type: businessservice
+  layer_id: business
+  name: Source Extraction Service
+  description: Turn a file, web page or text into one proposal of cited
+    individuals and relationships in a dataset (optionally a schema proposal).
+  source_reference:
+    provenance: manual
+    locations:
+      - file: documentation/extraction/README.md
+  metadata:
+    created_at: 2026-11-19T16:16:28.347Z
+    updated_at: 2026-11-19T16:16:28.347Z
+    version: 1
+business.businessservice.client-interchange-service:
+  id: 822b6d06-60a3-413e-8458-14078a93a231
+  path: business.businessservice.client-interchange-service
+  spec_node_id: business.businessservice
+  type: businessservice
+  layer_id: business
+  name: Client Interchange Service
+  description: Import client plans and bundles as proposals, run drift checks
+    against a client spec, export decisions, spec changes and bundles, and
+    record landings.
+  source_reference:
+    provenance: manual
+    locations:
+      - file: documentation/field-guide/index.html
+  metadata:
+    created_at: 2026-11-19T16:16:28.347Z
+    updated_at: 2026-11-19T16:16:28.347Z
+    version: 1
+business.businessservice.pipeline-benchmarking-service:
+  id: 83e3a46b-e8d1-4965-8702-ba182176c058
+  path: business.businessservice.pipeline-benchmarking-service
+  spec_node_id: business.businessservice
+  type: businessservice
+  layer_id: business
+  name: Pipeline Benchmarking Service
+  description: Score pipeline implementations on the extraction benchmark against
+    human-checked gold, and compare two pipelines' proposals for the same
+    source.
+  source_reference:
+    provenance: manual
+    locations:
+      - file: documentation/extraction/README.md
+  metadata:
+    created_at: 2026-11-19T16:16:28.347Z
+    updated_at: 2026-11-19T16:16:28.347Z
     version: 1

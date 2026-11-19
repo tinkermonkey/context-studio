@@ -16,55 +16,53 @@ Test strategies, test cases, test data, and test coverage.
 
 | Metric                    | Count |
 | ------------------------- | ----- |
-| Elements                  | 23    |
-| Intra-Layer Relationships | 9     |
-| Inter-Layer Relationships | 15    |
+| Elements                  | 31    |
+| Intra-Layer Relationships | 29    |
+| Inter-Layer Relationships | 43    |
 | Inbound Relationships     | 0     |
-| Outbound Relationships    | 15    |
+| Outbound Relationships    | 43    |
 
 **Cross-Layer References**:
 
-- **Downstream layers**: [Application](./05-application-layer-report.md), [Data Store](./09-data-store-layer-report.md), [UX](./10-ux-layer-report.md)
+- **Downstream layers**: [Application](./05-application-layer-report.md), [Business](./02-business-layer-report.md), [Data Store](./09-data-store-layer-report.md), [UX](./10-ux-layer-report.md)
 
 ## Intra-Layer Relationships
 
-```mermaid
-flowchart LR
-  subgraph testing
-    testing_coverageexclusion_llm_api_live_call_tests["LLM API Live Call Tests"]
-    testing_coveragegap_s3_sync_e2e_coverage["S3 Sync E2E Coverage"]
-    testing_coveragerequirement_domain_unit_test_coverage["Domain Unit Test Coverage"]
-    testing_coveragerequirement_e2e_test_coverage["E2E Test Coverage"]
-    testing_coveragerequirement_route_integration_test_coverage["Route Integration Test Coverage"]
-    testing_inputspacepartition_entity_node_type_discriminator["Entity node_type Discriminator"]
-    testing_outcomecategory_entity_creation_success["Entity Creation Success"]
-    testing_outcomecategory_validation_error["Validation Error"]
-    testing_testcoveragemodel_context_studio_backend_test_coverage_model["Context Studio Backend Test Coverage Model"]
-    testing_testcoveragetarget_adapter_unit_tests["Adapter Unit Tests"]
-    testing_testcoveragetarget_admin_health["Admin Health"]
-    testing_testcoveragetarget_domain_unit_tests["Domain Unit Tests"]
-    testing_testcoveragetarget_e2e_test_suite["E2E Test Suite"]
-    testing_testcoveragetarget_extraction_pipeline["Extraction Pipeline"]
-    testing_testcoveragetarget_graph_analysis["Graph Analysis"]
-    testing_testcoveragetarget_interchange_integration_tests["Interchange Integration Tests"]
-    testing_testcoveragetarget_interchange_round_trip_tests["Interchange Round-Trip Tests"]
-    testing_testcoveragetarget_llm_pipeline_execution["LLM Pipeline Execution"]
-    testing_testcoveragetarget_ontology_crud["Ontology CRUD"]
-    testing_testcoveragetarget_performance_test_suite["Performance Test Suite"]
-    testing_testcoveragetarget_route_integration_tests["Route Integration Tests"]
-    testing_testcoveragetarget_versioning_integration_tests["Versioning Integration Tests"]
-    testing_testcoveragetarget_versioning_workflow["Versioning Workflow"]
-    testing_coverageexclusion_llm_api_live_call_tests -->|references| testing_testcoveragetarget_llm_pipeline_execution
-    testing_coveragegap_s3_sync_e2e_coverage -->|references| testing_testcoveragetarget_versioning_workflow
-    testing_testcoveragemodel_context_studio_backend_test_coverage_model -->|composes| testing_testcoveragetarget_domain_unit_tests
-    testing_testcoveragemodel_context_studio_backend_test_coverage_model -->|composes| testing_testcoveragetarget_e2e_test_suite
-    testing_testcoveragemodel_context_studio_backend_test_coverage_model -->|composes| testing_testcoveragetarget_graph_analysis
-    testing_testcoveragemodel_context_studio_backend_test_coverage_model -->|composes| testing_testcoveragetarget_ontology_crud
-    testing_testcoveragemodel_context_studio_backend_test_coverage_model -->|composes| testing_testcoveragetarget_route_integration_tests
-    testing_testcoveragetarget_ontology_crud -->|composes| testing_outcomecategory_entity_creation_success
-    testing_testcoveragetarget_ontology_crud -->|composes| testing_outcomecategory_validation_error
-  end
-```
+*This layer has >30 elements. Summary table shown instead of diagram.*
+
+| Element                                                                | Type                  | Relationships |
+| ---------------------------------------------------------------------- | --------------------- | ------------- |
+| `testing.coverageexclusion.llm-api-live-call-tests`                    | `coverageexclusion`   | 1             |
+| `testing.coveragegap.s3-sync-e2e-coverage`                             | `coveragegap`         | 1             |
+| `testing.coveragerequirement.domain-unit-test-coverage`                | `coveragerequirement` | 1             |
+| `testing.coveragerequirement.e2e-test-coverage`                        | `coveragerequirement` | 1             |
+| `testing.coveragerequirement.route-integration-test-coverage`          | `coveragerequirement` | 1             |
+| `testing.inputspacepartition.entity-node-type-discriminator`           | `inputspacepartition` | 1             |
+| `testing.outcomecategory.entity-creation-success`                      | `outcomecategory`     | 1             |
+| `testing.outcomecategory.validation-error`                             | `outcomecategory`     | 1             |
+| `testing.testcoveragemodel.context-studio-backend-test-coverage-model` | `testcoveragemodel`   | 18            |
+| `testing.testcoveragemodel.context-studio-ux-test-coverage-model`      | `testcoveragemodel`   | 4             |
+| `testing.testcoveragetarget.adapter-integration-tests`                 | `testcoveragetarget`  | 1             |
+| `testing.testcoveragetarget.adapter-unit-tests`                        | `testcoveragetarget`  | 1             |
+| `testing.testcoveragetarget.admin-health`                              | `testcoveragetarget`  | 1             |
+| `testing.testcoveragetarget.chat-and-mcp-integration-tests`            | `testcoveragetarget`  | 1             |
+| `testing.testcoveragetarget.domain-unit-tests`                         | `testcoveragetarget`  | 2             |
+| `testing.testcoveragetarget.e2e-test-suite`                            | `testcoveragetarget`  | 2             |
+| `testing.testcoveragetarget.extraction-pipeline`                       | `testcoveragetarget`  | 1             |
+| `testing.testcoveragetarget.graph-analysis`                            | `testcoveragetarget`  | 1             |
+| `testing.testcoveragetarget.interchange-integration-tests`             | `testcoveragetarget`  | 1             |
+| `testing.testcoveragetarget.llm-pipeline-execution`                    | `testcoveragetarget`  | 2             |
+| `testing.testcoveragetarget.ontology-crud`                             | `testcoveragetarget`  | 3             |
+| `testing.testcoveragetarget.performance-test-suite`                    | `testcoveragetarget`  | 1             |
+| `testing.testcoveragetarget.pipeline-integration-tests`                | `testcoveragetarget`  | 1             |
+| `testing.testcoveragetarget.playwright-e2e-tests`                      | `testcoveragetarget`  | 1             |
+| `testing.testcoveragetarget.route-integration-tests`                   | `testcoveragetarget`  | 2             |
+| `testing.testcoveragetarget.source-integration-tests`                  | `testcoveragetarget`  | 1             |
+| `testing.testcoveragetarget.ux-api-client-tests`                       | `testcoveragetarget`  | 1             |
+| `testing.testcoveragetarget.ux-component-tests`                        | `testcoveragetarget`  | 1             |
+| `testing.testcoveragetarget.ux-route-tests`                            | `testcoveragetarget`  | 1             |
+| `testing.testcoveragetarget.versioning-integration-tests`              | `testcoveragetarget`  | 1             |
+| `testing.testcoveragetarget.versioning-workflow`                       | `testcoveragetarget`  | 2             |
 
 ## Inter-Layer Dependencies
 
@@ -85,6 +83,7 @@ flowchart TB
   apm["APM"]
   testing["Testing"]
   testing --> application
+  testing --> business
   testing --> data_store
   testing --> ux
   class testing current
@@ -92,23 +91,51 @@ flowchart TB
 
 ## Inter-Layer Relationships Table
 
-| Relationship ID                                                      | Source Node                                                | Dest Node                                                        | Dest Layer    | Predicate | Cardinality  | Strength |
-| -------------------------------------------------------------------- | ---------------------------------------------------------- | ---------------------------------------------------------------- | ------------- | --------- | ------------ | -------- |
-| `testing.testcoveragetarget.covers.application.applicationcomponent` | `testing.testcoveragetarget.adapter-unit-tests`            | `application.applicationcomponent.spa-cy-nlp-processor`          | `application` | `covers`  | many-to-many | medium   |
-| `testing.testcoveragetarget.covers.ux.view`                          | `testing.testcoveragetarget.admin-health`                  | `ux.view.admin-view`                                             | `ux`          | `covers`  | many-to-many | medium   |
-| `testing.testcoveragetarget.covers.application.applicationcomponent` | `testing.testcoveragetarget.domain-unit-tests`             | `application.applicationcomponent.sqlite-ontology-repository`    | `application` | `covers`  | many-to-many | medium   |
-| `testing.testcoveragetarget.covers.data-store.collection`            | `testing.testcoveragetarget.e2e-test-suite`                | `data-store.collection.ontology-entities`                        | `data-store`  | `covers`  | many-to-many | medium   |
-| `testing.testcoveragetarget.covers.data-store.storedlogic`           | `testing.testcoveragetarget.extraction-pipeline`           | `data-store.storedlogic.sqlite-vec-cosine-similarity`            | `data-store`  | `covers`  | many-to-many | medium   |
-| `testing.testcoveragetarget.covers.ux.view`                          | `testing.testcoveragetarget.extraction-pipeline`           | `ux.view.rag-experiments-view`                                   | `ux`          | `covers`  | many-to-many | medium   |
-| `testing.testcoveragetarget.covers.ux.view`                          | `testing.testcoveragetarget.graph-analysis`                | `ux.view.rag-experiments-view`                                   | `ux`          | `covers`  | many-to-many | medium   |
-| `testing.testcoveragetarget.covers.application.applicationcomponent` | `testing.testcoveragetarget.interchange-integration-tests` | `application.applicationcomponent.sqlite-interchange-repository` | `application` | `covers`  | many-to-many | medium   |
-| `testing.testcoveragetarget.covers.application.applicationcomponent` | `testing.testcoveragetarget.interchange-round-trip-tests`  | `application.applicationcomponent.skos-interchange-adapter`      | `application` | `covers`  | many-to-many | medium   |
-| `testing.testcoveragetarget.covers.ux.view`                          | `testing.testcoveragetarget.llm-pipeline-execution`        | `ux.view.rag-experiments-view`                                   | `ux`          | `covers`  | many-to-many | medium   |
-| `testing.testcoveragetarget.covers.data-store.storedlogic`           | `testing.testcoveragetarget.ontology-crud`                 | `data-store.storedlogic.sqlite-vec-cosine-similarity`            | `data-store`  | `covers`  | many-to-many | medium   |
-| `testing.testcoveragetarget.covers.data-store.collection`            | `testing.testcoveragetarget.performance-test-suite`        | `data-store.collection.ontology-entities`                        | `data-store`  | `covers`  | many-to-many | medium   |
-| `testing.testcoveragetarget.covers.application.applicationcomponent` | `testing.testcoveragetarget.route-integration-tests`       | `application.applicationcomponent.sqlite-ontology-repository`    | `application` | `covers`  | many-to-many | medium   |
-| `testing.testcoveragetarget.covers.application.applicationcomponent` | `testing.testcoveragetarget.versioning-integration-tests`  | `application.applicationcomponent.sqlite-change-repository`      | `application` | `covers`  | many-to-many | medium   |
-| `testing.testcoveragetarget.covers.ux.view`                          | `testing.testcoveragetarget.versioning-workflow`           | `ux.view.datasets-view`                                          | `ux`          | `covers`  | many-to-many | medium   |
+| Relationship ID                                                      | Source Node                                                       | Dest Node                                                            | Dest Layer    | Predicate | Cardinality  | Strength |
+| -------------------------------------------------------------------- | ----------------------------------------------------------------- | -------------------------------------------------------------------- | ------------- | --------- | ------------ | -------- |
+| `testing.testcoveragemodel.covers.ux.uxapplication`                  | `testing.testcoveragemodel.context-studio-ux-test-coverage-model` | `ux.uxapplication.context-studio-spa`                                | `ux`          | `covers`  | many-to-many | medium   |
+| `testing.testcoveragetarget.covers.application.applicationcomponent` | `testing.testcoveragetarget.adapter-integration-tests`            | `application.applicationcomponent.sqlite-change-proposal-repository` | `application` | `covers`  | many-to-many | medium   |
+| `testing.testcoveragetarget.covers.application.applicationcomponent` | `testing.testcoveragetarget.adapter-integration-tests`            | `application.applicationcomponent.sqlite-ontology-repository`        | `application` | `covers`  | many-to-many | medium   |
+| `testing.testcoveragetarget.covers.application.applicationcomponent` | `testing.testcoveragetarget.adapter-integration-tests`            | `application.applicationcomponent.sqlite-pipeline-repository`        | `application` | `covers`  | many-to-many | medium   |
+| `testing.testcoveragetarget.covers.application.applicationcomponent` | `testing.testcoveragetarget.adapter-unit-tests`                   | `application.applicationcomponent.spa-cy-nlp-processor`              | `application` | `covers`  | many-to-many | medium   |
+| `testing.testcoveragetarget.covers.ux.view`                          | `testing.testcoveragetarget.admin-health`                         | `ux.view.settings-view`                                              | `ux`          | `covers`  | many-to-many | medium   |
+| `testing.testcoveragetarget.covers.application.applicationcomponent` | `testing.testcoveragetarget.chat-and-mcp-integration-tests`       | `application.applicationcomponent.mcp-server`                        | `application` | `covers`  | many-to-many | medium   |
+| `testing.testcoveragetarget.covers.application.applicationservice`   | `testing.testcoveragetarget.chat-and-mcp-integration-tests`       | `application.applicationservice.chat-service`                        | `application` | `covers`  | many-to-many | medium   |
+| `testing.testcoveragetarget.covers.application.applicationcomponent` | `testing.testcoveragetarget.domain-unit-tests`                    | `application.applicationcomponent.sqlite-ontology-repository`        | `application` | `covers`  | many-to-many | medium   |
+| `testing.testcoveragetarget.covers.application.applicationservice`   | `testing.testcoveragetarget.domain-unit-tests`                    | `application.applicationservice.ontology-service`                    | `application` | `covers`  | many-to-many | medium   |
+| `testing.testcoveragetarget.covers.application.applicationservice`   | `testing.testcoveragetarget.domain-unit-tests`                    | `application.applicationservice.proposal-service`                    | `application` | `covers`  | many-to-many | medium   |
+| `testing.testcoveragetarget.covers.business.businessprocess`         | `testing.testcoveragetarget.domain-unit-tests`                    | `business.businessprocess.adjudicate-a-proposal`                     | `business`    | `covers`  | many-to-many | medium   |
+| `testing.testcoveragetarget.covers.data-store.collection`            | `testing.testcoveragetarget.e2e-test-suite`                       | `data-store.collection.ontology-entities`                            | `data-store`  | `covers`  | many-to-many | medium   |
+| `testing.testcoveragetarget.covers.ux.view`                          | `testing.testcoveragetarget.extraction-pipeline`                  | `ux.view.pipelines-view`                                             | `ux`          | `covers`  | many-to-many | medium   |
+| `testing.testcoveragetarget.covers.ux.view`                          | `testing.testcoveragetarget.graph-analysis`                       | `ux.view.graph-view`                                                 | `ux`          | `covers`  | many-to-many | medium   |
+| `testing.testcoveragetarget.covers.application.applicationcomponent` | `testing.testcoveragetarget.interchange-integration-tests`        | `application.applicationcomponent.skos-interchange-adapter`          | `application` | `covers`  | many-to-many | medium   |
+| `testing.testcoveragetarget.covers.application.applicationcomponent` | `testing.testcoveragetarget.interchange-integration-tests`        | `application.applicationcomponent.sqlite-interchange-repository`     | `application` | `covers`  | many-to-many | medium   |
+| `testing.testcoveragetarget.covers.application.applicationservice`   | `testing.testcoveragetarget.interchange-integration-tests`        | `application.applicationservice.bundle-import-service`               | `application` | `covers`  | many-to-many | medium   |
+| `testing.testcoveragetarget.covers.business.businessprocess`         | `testing.testcoveragetarget.interchange-integration-tests`        | `business.businessprocess.client-round-trip`                         | `business`    | `covers`  | many-to-many | medium   |
+| `testing.testcoveragetarget.covers.ux.view`                          | `testing.testcoveragetarget.llm-pipeline-execution`               | `ux.view.pipeline-runs-view`                                         | `ux`          | `covers`  | many-to-many | medium   |
+| `testing.testcoveragetarget.covers.data-store.collection`            | `testing.testcoveragetarget.performance-test-suite`               | `data-store.collection.ontology-entities`                            | `data-store`  | `covers`  | many-to-many | medium   |
+| `testing.testcoveragetarget.covers.application.applicationservice`   | `testing.testcoveragetarget.pipeline-integration-tests`           | `application.applicationservice.pipeline-selection-service`          | `application` | `covers`  | many-to-many | medium   |
+| `testing.testcoveragetarget.covers.application.applicationservice`   | `testing.testcoveragetarget.pipeline-integration-tests`           | `application.applicationservice.source-extraction-service`           | `application` | `covers`  | many-to-many | medium   |
+| `testing.testcoveragetarget.covers.business.businessprocess`         | `testing.testcoveragetarget.pipeline-integration-tests`           | `business.businessprocess.extract-a-source-into-a-dataset`           | `business`    | `covers`  | many-to-many | medium   |
+| `testing.testcoveragetarget.covers.ux.view`                          | `testing.testcoveragetarget.playwright-e2e-tests`                 | `ux.view.classes-view`                                               | `ux`          | `covers`  | many-to-many | medium   |
+| `testing.testcoveragetarget.covers.ux.view`                          | `testing.testcoveragetarget.playwright-e2e-tests`                 | `ux.view.extraction-review-view`                                     | `ux`          | `covers`  | many-to-many | medium   |
+| `testing.testcoveragetarget.covers.ux.view`                          | `testing.testcoveragetarget.playwright-e2e-tests`                 | `ux.view.graph-view`                                                 | `ux`          | `covers`  | many-to-many | medium   |
+| `testing.testcoveragetarget.covers.ux.view`                          | `testing.testcoveragetarget.playwright-e2e-tests`                 | `ux.view.proposals-view`                                             | `ux`          | `covers`  | many-to-many | medium   |
+| `testing.testcoveragetarget.covers.application.applicationcomponent` | `testing.testcoveragetarget.route-integration-tests`              | `application.applicationcomponent.sqlite-ontology-repository`        | `application` | `covers`  | many-to-many | medium   |
+| `testing.testcoveragetarget.covers.business.businessprocess`         | `testing.testcoveragetarget.route-integration-tests`              | `business.businessprocess.adjudicate-a-proposal`                     | `business`    | `covers`  | many-to-many | medium   |
+| `testing.testcoveragetarget.covers.application.applicationservice`   | `testing.testcoveragetarget.source-integration-tests`             | `application.applicationservice.source-service`                      | `application` | `covers`  | many-to-many | medium   |
+| `testing.testcoveragetarget.covers.business.businessprocess`         | `testing.testcoveragetarget.source-integration-tests`             | `business.businessprocess.extract-a-source-into-a-dataset`           | `business`    | `covers`  | many-to-many | medium   |
+| `testing.testcoveragetarget.covers.ux.librarycomponent`              | `testing.testcoveragetarget.ux-component-tests`                   | `ux.librarycomponent.app-ui-primitives`                              | `ux`          | `covers`  | many-to-many | medium   |
+| `testing.testcoveragetarget.covers.ux.view`                          | `testing.testcoveragetarget.ux-component-tests`                   | `ux.view.proposal-detail-view`                                       | `ux`          | `covers`  | many-to-many | medium   |
+| `testing.testcoveragetarget.covers.ux.view`                          | `testing.testcoveragetarget.ux-component-tests`                   | `ux.view.proposal-review-view`                                       | `ux`          | `covers`  | many-to-many | medium   |
+| `testing.testcoveragetarget.covers.ux.view`                          | `testing.testcoveragetarget.ux-component-tests`                   | `ux.view.run-detail-drawer`                                          | `ux`          | `covers`  | many-to-many | medium   |
+| `testing.testcoveragetarget.covers.ux.view`                          | `testing.testcoveragetarget.ux-route-tests`                       | `ux.view.dashboard-view`                                             | `ux`          | `covers`  | many-to-many | medium   |
+| `testing.testcoveragetarget.covers.ux.view`                          | `testing.testcoveragetarget.ux-route-tests`                       | `ux.view.individuals-view`                                           | `ux`          | `covers`  | many-to-many | medium   |
+| `testing.testcoveragetarget.covers.application.applicationcomponent` | `testing.testcoveragetarget.versioning-integration-tests`         | `application.applicationcomponent.sqlite-change-repository`          | `application` | `covers`  | many-to-many | medium   |
+| `testing.testcoveragetarget.covers.application.applicationservice`   | `testing.testcoveragetarget.versioning-integration-tests`         | `application.applicationservice.claim-service`                       | `application` | `covers`  | many-to-many | medium   |
+| `testing.testcoveragetarget.covers.application.applicationservice`   | `testing.testcoveragetarget.versioning-integration-tests`         | `application.applicationservice.proposal-service`                    | `application` | `covers`  | many-to-many | medium   |
+| `testing.testcoveragetarget.covers.business.businessprocess`         | `testing.testcoveragetarget.versioning-integration-tests`         | `business.businessprocess.adjudicate-a-proposal`                     | `business`    | `covers`  | many-to-many | medium   |
+| `testing.testcoveragetarget.covers.ux.view`                          | `testing.testcoveragetarget.versioning-workflow`                  | `ux.view.datasets-view`                                              | `ux`          | `covers`  | many-to-many | medium   |
 
 ## Element Reference
 
@@ -173,6 +200,12 @@ Coverage requirement for domain layer pure unit tests: all domain entities, serv
 | coverageCriteria | all-partitions |
 | priority         | critical       |
 
+#### Relationships
+
+| Type        | Related Element                                | Predicate  | Direction |
+| ----------- | ---------------------------------------------- | ---------- | --------- |
+| intra-layer | `testing.testcoveragetarget.domain-unit-tests` | `composes` | inbound   |
+
 ### E2E Test Coverage {#e2e-test-coverage}
 
 **ID**: `testing.coveragerequirement.e2e-test-coverage`
@@ -187,6 +220,12 @@ Coverage requirement for end-to-end workflow tests: key multi-bounded-context fl
 | ---------------- | ------------- |
 | coverageCriteria | path-coverage |
 | priority         | high          |
+
+#### Relationships
+
+| Type        | Related Element                             | Predicate  | Direction |
+| ----------- | ------------------------------------------- | ---------- | --------- |
+| intra-layer | `testing.testcoveragetarget.e2e-test-suite` | `composes` | inbound   |
 
 ### Route Integration Test Coverage {#route-integration-test-coverage}
 
@@ -203,6 +242,12 @@ Coverage requirement for FastAPI route integration tests: all CRUD endpoints mus
 | coverageCriteria | each-choice |
 | priority         | high        |
 
+#### Relationships
+
+| Type        | Related Element                                      | Predicate  | Direction |
+| ----------- | ---------------------------------------------------- | ---------- | --------- |
+| intra-layer | `testing.testcoveragetarget.route-integration-tests` | `composes` | inbound   |
+
 ### Entity node_type Discriminator {#entity-node-type-discriminator}
 
 **ID**: `testing.inputspacepartition.entity-node-type-discriminator`
@@ -217,6 +262,12 @@ Input space partition for node_type discriminator: covers Taxonomy, ConceptSchem
 | ------------ | --------------------------------------------------------------------- |
 | description  | node_type discriminator partition for unified ontology_entities table |
 | presenceRule | required                                                              |
+
+#### Relationships
+
+| Type        | Related Element                                                        | Predicate  | Direction |
+| ----------- | ---------------------------------------------------------------------- | ---------- | --------- |
+| intra-layer | `testing.testcoveragemodel.context-studio-backend-test-coverage-model` | `composes` | inbound   |
 
 ### Entity Creation Success {#entity-creation-success}
 
@@ -277,13 +328,75 @@ ISP-based test coverage model for the Context Studio local-server backend, cover
 
 #### Relationships
 
-| Type        | Related Element                                      | Predicate  | Direction |
-| ----------- | ---------------------------------------------------- | ---------- | --------- |
-| intra-layer | `testing.testcoveragetarget.domain-unit-tests`       | `composes` | outbound  |
-| intra-layer | `testing.testcoveragetarget.e2e-test-suite`          | `composes` | outbound  |
-| intra-layer | `testing.testcoveragetarget.graph-analysis`          | `composes` | outbound  |
-| intra-layer | `testing.testcoveragetarget.ontology-crud`           | `composes` | outbound  |
-| intra-layer | `testing.testcoveragetarget.route-integration-tests` | `composes` | outbound  |
+| Type        | Related Element                                              | Predicate  | Direction |
+| ----------- | ------------------------------------------------------------ | ---------- | --------- |
+| intra-layer | `testing.inputspacepartition.entity-node-type-discriminator` | `composes` | outbound  |
+| intra-layer | `testing.testcoveragetarget.adapter-integration-tests`       | `composes` | outbound  |
+| intra-layer | `testing.testcoveragetarget.adapter-unit-tests`              | `composes` | outbound  |
+| intra-layer | `testing.testcoveragetarget.admin-health`                    | `composes` | outbound  |
+| intra-layer | `testing.testcoveragetarget.chat-and-mcp-integration-tests`  | `composes` | outbound  |
+| intra-layer | `testing.testcoveragetarget.domain-unit-tests`               | `composes` | outbound  |
+| intra-layer | `testing.testcoveragetarget.e2e-test-suite`                  | `composes` | outbound  |
+| intra-layer | `testing.testcoveragetarget.extraction-pipeline`             | `composes` | outbound  |
+| intra-layer | `testing.testcoveragetarget.graph-analysis`                  | `composes` | outbound  |
+| intra-layer | `testing.testcoveragetarget.interchange-integration-tests`   | `composes` | outbound  |
+| intra-layer | `testing.testcoveragetarget.llm-pipeline-execution`          | `composes` | outbound  |
+| intra-layer | `testing.testcoveragetarget.ontology-crud`                   | `composes` | outbound  |
+| intra-layer | `testing.testcoveragetarget.performance-test-suite`          | `composes` | outbound  |
+| intra-layer | `testing.testcoveragetarget.pipeline-integration-tests`      | `composes` | outbound  |
+| intra-layer | `testing.testcoveragetarget.route-integration-tests`         | `composes` | outbound  |
+| intra-layer | `testing.testcoveragetarget.source-integration-tests`        | `composes` | outbound  |
+| intra-layer | `testing.testcoveragetarget.versioning-integration-tests`    | `composes` | outbound  |
+| intra-layer | `testing.testcoveragetarget.versioning-workflow`             | `composes` | outbound  |
+
+### Context Studio UX Test Coverage Model {#context-studio-ux-test-coverage-model}
+
+**ID**: `testing.testcoveragemodel.context-studio-ux-test-coverage-model`
+
+**Type**: `testcoveragemodel`
+
+Suite-level coverage model for the React UX: vitest component/route/API-client suites and the Playwright end-to-end suite. Test functions are not modelled one by one.
+
+#### Attributes
+
+| Name        | Value             |
+| ----------- | ----------------- |
+| application | context-studio-ux |
+| version     | 1.0               |
+
+#### Relationships
+
+| Type        | Related Element                                   | Predicate  | Direction |
+| ----------- | ------------------------------------------------- | ---------- | --------- |
+| inter-layer | `ux.uxapplication.context-studio-spa`             | `covers`   | outbound  |
+| intra-layer | `testing.testcoveragetarget.playwright-e2e-tests` | `composes` | outbound  |
+| intra-layer | `testing.testcoveragetarget.ux-api-client-tests`  | `composes` | outbound  |
+| intra-layer | `testing.testcoveragetarget.ux-component-tests`   | `composes` | outbound  |
+| intra-layer | `testing.testcoveragetarget.ux-route-tests`       | `composes` | outbound  |
+
+### Adapter Integration Tests {#adapter-integration-tests}
+
+**ID**: `testing.testcoveragetarget.adapter-integration-tests`
+
+**Type**: `testcoveragetarget`
+
+Adapter suites against real SQLite and providers: repositories, vector indexes, transaction scope.
+
+#### Attributes
+
+| Name       | Value                 |
+| ---------- | --------------------- |
+| priority   | high                  |
+| targetType | application-component |
+
+#### Relationships
+
+| Type        | Related Element                                                        | Predicate  | Direction |
+| ----------- | ---------------------------------------------------------------------- | ---------- | --------- |
+| inter-layer | `application.applicationcomponent.sqlite-change-proposal-repository`   | `covers`   | outbound  |
+| inter-layer | `application.applicationcomponent.sqlite-ontology-repository`          | `covers`   | outbound  |
+| inter-layer | `application.applicationcomponent.sqlite-pipeline-repository`          | `covers`   | outbound  |
+| intra-layer | `testing.testcoveragemodel.context-studio-backend-test-coverage-model` | `composes` | inbound   |
 
 ### Adapter Unit Tests {#adapter-unit-tests}
 
@@ -291,7 +404,7 @@ ISP-based test coverage model for the Context Studio local-server backend, cover
 
 **Type**: `testcoveragetarget`
 
-Unit tests for adapter-layer components using fakes: LLM provider routing, change recorder, in-process event publisher, NLP processor, cached reference source, and web schema validation. Located in tests/unit/adapters/.
+Unit suites for adapters with fakes: LLM providers and router, decision models, chat tools, interchange (DR) adapters, request guard, events, NLP (40 test files).
 
 #### Attributes
 
@@ -302,9 +415,10 @@ Unit tests for adapter-layer components using fakes: LLM provider routing, chang
 
 #### Relationships
 
-| Type        | Related Element                                         | Predicate | Direction |
-| ----------- | ------------------------------------------------------- | --------- | --------- |
-| inter-layer | `application.applicationcomponent.spa-cy-nlp-processor` | `covers`  | outbound  |
+| Type        | Related Element                                                        | Predicate  | Direction |
+| ----------- | ---------------------------------------------------------------------- | ---------- | --------- |
+| inter-layer | `application.applicationcomponent.spa-cy-nlp-processor`                | `covers`   | outbound  |
+| intra-layer | `testing.testcoveragemodel.context-studio-backend-test-coverage-model` | `composes` | inbound   |
 
 ### Admin Health {#admin-health}
 
@@ -324,9 +438,33 @@ Coverage target for health checks, background task management, and configuration
 
 #### Relationships
 
-| Type        | Related Element      | Predicate | Direction |
-| ----------- | -------------------- | --------- | --------- |
-| inter-layer | `ux.view.admin-view` | `covers`  | outbound  |
+| Type        | Related Element                                                        | Predicate  | Direction |
+| ----------- | ---------------------------------------------------------------------- | ---------- | --------- |
+| inter-layer | `ux.view.settings-view`                                                | `covers`   | outbound  |
+| intra-layer | `testing.testcoveragemodel.context-studio-backend-test-coverage-model` | `composes` | inbound   |
+
+### Chat And MCP Integration Tests {#chat-and-mcp-integration-tests}
+
+**ID**: `testing.testcoveragetarget.chat-and-mcp-integration-tests`
+
+**Type**: `testcoveragetarget`
+
+Integration suites for the chat service, chat routes, tool parity between chat and MCP, and the MCP endpoint.
+
+#### Attributes
+
+| Name       | Value            |
+| ---------- | ---------------- |
+| priority   | high             |
+| targetType | integration-flow |
+
+#### Relationships
+
+| Type        | Related Element                                                        | Predicate  | Direction |
+| ----------- | ---------------------------------------------------------------------- | ---------- | --------- |
+| inter-layer | `application.applicationcomponent.mcp-server`                          | `covers`   | outbound  |
+| inter-layer | `application.applicationservice.chat-service`                          | `covers`   | outbound  |
+| intra-layer | `testing.testcoveragemodel.context-studio-backend-test-coverage-model` | `composes` | inbound   |
 
 ### Domain Unit Tests {#domain-unit-tests}
 
@@ -334,7 +472,7 @@ Coverage target for health checks, background task management, and configuration
 
 **Type**: `testcoveragetarget`
 
-Pure unit tests for all 6 bounded context domain services using fake port implementations. Tests span ontology, graph, extraction, pipeline, versioning, admin, and interchange domains. Located in tests/unit/domain/.
+Pure unit suites for the domain contexts (ontology, graph, extraction, pipelines, versioning, chat, decision, interchange, admin) with fake ports (96 test files).
 
 #### Attributes
 
@@ -348,7 +486,11 @@ Pure unit tests for all 6 bounded context domain services using fake port implem
 | Type        | Related Element                                                        | Predicate  | Direction |
 | ----------- | ---------------------------------------------------------------------- | ---------- | --------- |
 | inter-layer | `application.applicationcomponent.sqlite-ontology-repository`          | `covers`   | outbound  |
+| inter-layer | `application.applicationservice.ontology-service`                      | `covers`   | outbound  |
+| inter-layer | `application.applicationservice.proposal-service`                      | `covers`   | outbound  |
+| inter-layer | `business.businessprocess.adjudicate-a-proposal`                       | `covers`   | outbound  |
 | intra-layer | `testing.testcoveragemodel.context-studio-backend-test-coverage-model` | `composes` | inbound   |
+| intra-layer | `testing.coveragerequirement.domain-unit-test-coverage`                | `composes` | outbound  |
 
 ### E2E Test Suite {#e2e-test-suite}
 
@@ -371,6 +513,7 @@ End-to-end tests covering full-stack service interaction across ontology, graph,
 | ----------- | ---------------------------------------------------------------------- | ---------- | --------- |
 | inter-layer | `data-store.collection.ontology-entities`                              | `covers`   | outbound  |
 | intra-layer | `testing.testcoveragemodel.context-studio-backend-test-coverage-model` | `composes` | inbound   |
+| intra-layer | `testing.coveragerequirement.e2e-test-coverage`                        | `composes` | outbound  |
 
 ### Extraction Pipeline {#extraction-pipeline}
 
@@ -390,10 +533,10 @@ Coverage target for the RAG pipeline: text input -&gt; NLP extraction -&gt; embe
 
 #### Relationships
 
-| Type        | Related Element                                       | Predicate | Direction |
-| ----------- | ----------------------------------------------------- | --------- | --------- |
-| inter-layer | `data-store.storedlogic.sqlite-vec-cosine-similarity` | `covers`  | outbound  |
-| inter-layer | `ux.view.rag-experiments-view`                        | `covers`  | outbound  |
+| Type        | Related Element                                                        | Predicate  | Direction |
+| ----------- | ---------------------------------------------------------------------- | ---------- | --------- |
+| inter-layer | `ux.view.pipelines-view`                                               | `covers`   | outbound  |
+| intra-layer | `testing.testcoveragemodel.context-studio-backend-test-coverage-model` | `composes` | inbound   |
 
 ### Graph Analysis {#graph-analysis}
 
@@ -415,7 +558,7 @@ Coverage target for in-memory graph construction, traversal, SPARQL query execut
 
 | Type        | Related Element                                                        | Predicate  | Direction |
 | ----------- | ---------------------------------------------------------------------- | ---------- | --------- |
-| inter-layer | `ux.view.rag-experiments-view`                                         | `covers`   | outbound  |
+| inter-layer | `ux.view.graph-view`                                                   | `covers`   | outbound  |
 | intra-layer | `testing.testcoveragemodel.context-studio-backend-test-coverage-model` | `composes` | inbound   |
 
 ### Interchange Integration Tests {#interchange-integration-tests}
@@ -435,30 +578,13 @@ Integration test suite for SKOS/OWL/GraphML round-trip serialization, import run
 
 #### Relationships
 
-| Type        | Related Element                                                  | Predicate | Direction |
-| ----------- | ---------------------------------------------------------------- | --------- | --------- |
-| inter-layer | `application.applicationcomponent.sqlite-interchange-repository` | `covers`  | outbound  |
-
-### Interchange Round-Trip Tests {#interchange-round-trip-tests}
-
-**ID**: `testing.testcoveragetarget.interchange-round-trip-tests`
-
-**Type**: `testcoveragetarget`
-
-Integration tests verifying lossless round-trips across SKOS, OWL, and GraphML serialization formats. Located in tests/integration/interchange/. Covers cross-format round-trips and lossiness documentation.
-
-#### Attributes
-
-| Name       | Value            |
-| ---------- | ---------------- |
-| priority   | high             |
-| targetType | integration-flow |
-
-#### Relationships
-
-| Type        | Related Element                                             | Predicate | Direction |
-| ----------- | ----------------------------------------------------------- | --------- | --------- |
-| inter-layer | `application.applicationcomponent.skos-interchange-adapter` | `covers`  | outbound  |
+| Type        | Related Element                                                        | Predicate  | Direction |
+| ----------- | ---------------------------------------------------------------------- | ---------- | --------- |
+| inter-layer | `application.applicationcomponent.skos-interchange-adapter`            | `covers`   | outbound  |
+| inter-layer | `application.applicationcomponent.sqlite-interchange-repository`       | `covers`   | outbound  |
+| inter-layer | `application.applicationservice.bundle-import-service`                 | `covers`   | outbound  |
+| inter-layer | `business.businessprocess.client-round-trip`                           | `covers`   | outbound  |
+| intra-layer | `testing.testcoveragemodel.context-studio-backend-test-coverage-model` | `composes` | inbound   |
 
 ### LLM Pipeline Execution {#llm-pipeline-execution}
 
@@ -466,7 +592,7 @@ Integration tests verifying lossless round-trips across SKOS, OWL, and GraphML s
 
 **Type**: `testcoveragetarget`
 
-Coverage target for pipeline configuration and execution tracking in the LLMPipelineManagement bounded context — traces stored in operations.db
+Coverage target for pipeline execution: registry and selection, background run executor, run lifecycle (pending, running, cancel, resume, apply, revert) and LLM metadata on runs.
 
 #### Attributes
 
@@ -478,10 +604,11 @@ Coverage target for pipeline configuration and execution tracking in the LLMPipe
 
 #### Relationships
 
-| Type        | Related Element                                     | Predicate    | Direction |
-| ----------- | --------------------------------------------------- | ------------ | --------- |
-| inter-layer | `ux.view.rag-experiments-view`                      | `covers`     | outbound  |
-| intra-layer | `testing.coverageexclusion.llm-api-live-call-tests` | `references` | inbound   |
+| Type        | Related Element                                                        | Predicate    | Direction |
+| ----------- | ---------------------------------------------------------------------- | ------------ | --------- |
+| inter-layer | `ux.view.pipeline-runs-view`                                           | `covers`     | outbound  |
+| intra-layer | `testing.coverageexclusion.llm-api-live-call-tests`                    | `references` | inbound   |
+| intra-layer | `testing.testcoveragemodel.context-studio-backend-test-coverage-model` | `composes`   | inbound   |
 
 ### Ontology CRUD {#ontology-crud}
 
@@ -503,7 +630,6 @@ Coverage target for the full CRUD lifecycle of ontology entities (Taxonomy, Conc
 
 | Type        | Related Element                                                        | Predicate  | Direction |
 | ----------- | ---------------------------------------------------------------------- | ---------- | --------- |
-| inter-layer | `data-store.storedlogic.sqlite-vec-cosine-similarity`                  | `covers`   | outbound  |
 | intra-layer | `testing.testcoveragemodel.context-studio-backend-test-coverage-model` | `composes` | inbound   |
 | intra-layer | `testing.outcomecategory.entity-creation-success`                      | `composes` | outbound  |
 | intra-layer | `testing.outcomecategory.validation-error`                             | `composes` | outbound  |
@@ -525,9 +651,59 @@ Performance tests covering scalability and throughput for ontology operations, g
 
 #### Relationships
 
-| Type        | Related Element                           | Predicate | Direction |
-| ----------- | ----------------------------------------- | --------- | --------- |
-| inter-layer | `data-store.collection.ontology-entities` | `covers`  | outbound  |
+| Type        | Related Element                                                        | Predicate  | Direction |
+| ----------- | ---------------------------------------------------------------------- | ---------- | --------- |
+| inter-layer | `data-store.collection.ontology-entities`                              | `covers`   | outbound  |
+| intra-layer | `testing.testcoveragemodel.context-studio-backend-test-coverage-model` | `composes` | inbound   |
+
+### Pipeline Integration Tests {#pipeline-integration-tests}
+
+**ID**: `testing.testcoveragetarget.pipeline-integration-tests`
+
+**Type**: `testcoveragetarget`
+
+Integration suites for every pipeline type (extraction, grounding, refinement, reflection, claims) with recorded LLM cassettes and quality floors.
+
+#### Attributes
+
+| Name       | Value             |
+| ---------- | ----------------- |
+| priority   | critical          |
+| targetType | business-workflow |
+
+#### Relationships
+
+| Type        | Related Element                                                        | Predicate  | Direction |
+| ----------- | ---------------------------------------------------------------------- | ---------- | --------- |
+| inter-layer | `application.applicationservice.pipeline-selection-service`            | `covers`   | outbound  |
+| inter-layer | `application.applicationservice.source-extraction-service`             | `covers`   | outbound  |
+| inter-layer | `business.businessprocess.extract-a-source-into-a-dataset`             | `covers`   | outbound  |
+| intra-layer | `testing.testcoveragemodel.context-studio-backend-test-coverage-model` | `composes` | inbound   |
+
+### Playwright E2E Tests {#playwright-e2e-tests}
+
+**ID**: `testing.testcoveragetarget.playwright-e2e-tests`
+
+**Type**: `testcoveragetarget`
+
+Playwright end-to-end specs over the running stack: data, design, graph, ontology management, pipelines, proposals, schema and shell.
+
+#### Attributes
+
+| Name       | Value             |
+| ---------- | ----------------- |
+| priority   | high              |
+| targetType | business-workflow |
+
+#### Relationships
+
+| Type        | Related Element                                                   | Predicate  | Direction |
+| ----------- | ----------------------------------------------------------------- | ---------- | --------- |
+| inter-layer | `ux.view.classes-view`                                            | `covers`   | outbound  |
+| inter-layer | `ux.view.extraction-review-view`                                  | `covers`   | outbound  |
+| inter-layer | `ux.view.graph-view`                                              | `covers`   | outbound  |
+| inter-layer | `ux.view.proposals-view`                                          | `covers`   | outbound  |
+| intra-layer | `testing.testcoveragemodel.context-studio-ux-test-coverage-model` | `composes` | inbound   |
 
 ### Route Integration Tests {#route-integration-tests}
 
@@ -535,7 +711,7 @@ Performance tests covering scalability and throughput for ontology operations, g
 
 **Type**: `testcoveragetarget`
 
-Route-level integration tests covering all 8 FastAPI route modules (ontology, graph, extraction, admin, reference, interchange, versioning, pipeline) against real SQLite (7 test files)
+Route-level integration suites for the FastAPI routers (ontology, datasets, graph, pipelines, proposals, comparison, claims, sources, admin, decision models, provenance) against real SQLite (21 test files).
 
 #### Attributes
 
@@ -549,15 +725,17 @@ Route-level integration tests covering all 8 FastAPI route modules (ontology, gr
 | Type        | Related Element                                                        | Predicate  | Direction |
 | ----------- | ---------------------------------------------------------------------- | ---------- | --------- |
 | inter-layer | `application.applicationcomponent.sqlite-ontology-repository`          | `covers`   | outbound  |
+| inter-layer | `business.businessprocess.adjudicate-a-proposal`                       | `covers`   | outbound  |
 | intra-layer | `testing.testcoveragemodel.context-studio-backend-test-coverage-model` | `composes` | inbound   |
+| intra-layer | `testing.coveragerequirement.route-integration-test-coverage`          | `composes` | outbound  |
 
-### Versioning Integration Tests {#versioning-integration-tests}
+### Source Integration Tests {#source-integration-tests}
 
-**ID**: `testing.testcoveragetarget.versioning-integration-tests`
+**ID**: `testing.testcoveragetarget.source-integration-tests`
 
 **Type**: `testcoveragetarget`
 
-Integration test suite for the versioning bounded context — change event persistence, entity versions, changeset lifecycle, and proposal workflows (3 test files)
+Integration suites for sources: readers, fetching, file store and source routes.
 
 #### Attributes
 
@@ -568,9 +746,105 @@ Integration test suite for the versioning bounded context — change event persi
 
 #### Relationships
 
-| Type        | Related Element                                             | Predicate | Direction |
-| ----------- | ----------------------------------------------------------- | --------- | --------- |
-| inter-layer | `application.applicationcomponent.sqlite-change-repository` | `covers`  | outbound  |
+| Type        | Related Element                                                        | Predicate  | Direction |
+| ----------- | ---------------------------------------------------------------------- | ---------- | --------- |
+| inter-layer | `application.applicationservice.source-service`                        | `covers`   | outbound  |
+| inter-layer | `business.businessprocess.extract-a-source-into-a-dataset`             | `covers`   | outbound  |
+| intra-layer | `testing.testcoveragemodel.context-studio-backend-test-coverage-model` | `composes` | inbound   |
+
+### UX API Client Tests {#ux-api-client-tests}
+
+**ID**: `testing.testcoveragetarget.ux-api-client-tests`
+
+**Type**: `testcoveragetarget`
+
+Vitest (and MSW) suites for API services, TanStack Query hooks and mutation error handling.
+
+#### Attributes
+
+| Name       | Value            |
+| ---------- | ---------------- |
+| priority   | medium           |
+| targetType | integration-flow |
+
+#### Relationships
+
+| Type        | Related Element                                                   | Predicate  | Direction |
+| ----------- | ----------------------------------------------------------------- | ---------- | --------- |
+| intra-layer | `testing.testcoveragemodel.context-studio-ux-test-coverage-model` | `composes` | inbound   |
+
+### UX Component Tests {#ux-component-tests}
+
+**ID**: `testing.testcoveragetarget.ux-component-tests`
+
+**Type**: `testcoveragetarget`
+
+Vitest + React Testing Library suites for components (proposals, pipeline, ontology, ui, entity, crud, graph, sources, shell, schema, chat, datasets, claims, settings, reference) and hooks.
+
+#### Attributes
+
+| Name       | Value        |
+| ---------- | ------------ |
+| priority   | high         |
+| targetType | ui-component |
+
+#### Relationships
+
+| Type        | Related Element                                                   | Predicate  | Direction |
+| ----------- | ----------------------------------------------------------------- | ---------- | --------- |
+| inter-layer | `ux.librarycomponent.app-ui-primitives`                           | `covers`   | outbound  |
+| inter-layer | `ux.view.proposal-detail-view`                                    | `covers`   | outbound  |
+| inter-layer | `ux.view.proposal-review-view`                                    | `covers`   | outbound  |
+| inter-layer | `ux.view.run-detail-drawer`                                       | `covers`   | outbound  |
+| intra-layer | `testing.testcoveragemodel.context-studio-ux-test-coverage-model` | `composes` | inbound   |
+
+### UX Route Tests {#ux-route-tests}
+
+**ID**: `testing.testcoveragetarget.ux-route-tests`
+
+**Type**: `testcoveragetarget`
+
+Vitest suites rendering the /app route pages (populated, empty and error states).
+
+#### Attributes
+
+| Name       | Value        |
+| ---------- | ------------ |
+| priority   | high         |
+| targetType | ui-component |
+
+#### Relationships
+
+| Type        | Related Element                                                   | Predicate  | Direction |
+| ----------- | ----------------------------------------------------------------- | ---------- | --------- |
+| inter-layer | `ux.view.dashboard-view`                                          | `covers`   | outbound  |
+| inter-layer | `ux.view.individuals-view`                                        | `covers`   | outbound  |
+| intra-layer | `testing.testcoveragemodel.context-studio-ux-test-coverage-model` | `composes` | inbound   |
+
+### Versioning Integration Tests {#versioning-integration-tests}
+
+**ID**: `testing.testcoveragetarget.versioning-integration-tests`
+
+**Type**: `testcoveragetarget`
+
+Integration suites for the versioning context against real SQLite: proposals and their operations, decisions and gold, claims, approval policy, bundle and drift import, provenance, change events (18 test files).
+
+#### Attributes
+
+| Name       | Value            |
+| ---------- | ---------------- |
+| priority   | high             |
+| targetType | integration-flow |
+
+#### Relationships
+
+| Type        | Related Element                                                        | Predicate  | Direction |
+| ----------- | ---------------------------------------------------------------------- | ---------- | --------- |
+| inter-layer | `application.applicationcomponent.sqlite-change-repository`            | `covers`   | outbound  |
+| inter-layer | `application.applicationservice.claim-service`                         | `covers`   | outbound  |
+| inter-layer | `application.applicationservice.proposal-service`                      | `covers`   | outbound  |
+| inter-layer | `business.businessprocess.adjudicate-a-proposal`                       | `covers`   | outbound  |
+| intra-layer | `testing.testcoveragemodel.context-studio-backend-test-coverage-model` | `composes` | inbound   |
 
 ### Versioning Workflow {#versioning-workflow}
 
@@ -578,7 +852,7 @@ Integration test suite for the versioning bounded context — change event persi
 
 **Type**: `testcoveragetarget`
 
-Coverage target for the complete version control workflow: change events, changesets, proposals, and conflict resolution in the VersionControl bounded context
+Coverage target for change management: change proposals (create, decide, apply, reject, reopen, revert, land), approval policies, claims, gold decisions, change events and sync.
 
 #### Attributes
 
@@ -590,11 +864,12 @@ Coverage target for the complete version control workflow: change events, change
 
 #### Relationships
 
-| Type        | Related Element                            | Predicate    | Direction |
-| ----------- | ------------------------------------------ | ------------ | --------- |
-| inter-layer | `ux.view.datasets-view`                    | `covers`     | outbound  |
-| intra-layer | `testing.coveragegap.s3-sync-e2e-coverage` | `references` | inbound   |
+| Type        | Related Element                                                        | Predicate    | Direction |
+| ----------- | ---------------------------------------------------------------------- | ------------ | --------- |
+| inter-layer | `ux.view.datasets-view`                                                | `covers`     | outbound  |
+| intra-layer | `testing.coveragegap.s3-sync-e2e-coverage`                             | `references` | inbound   |
+| intra-layer | `testing.testcoveragemodel.context-studio-backend-test-coverage-model` | `composes`   | inbound   |
 
 ---
 
-Generated: 2026-11-17T18:49:10.650Z | Model Version: 0.1.0
+Generated: 2026-11-19T16:49:39.982Z | Model Version: 0.1.0

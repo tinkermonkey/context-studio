@@ -1,0 +1,20 @@
+apm.instrumentationconfig.fast-api-sqlalchemy-httpx-instrumentation:
+  id: 95792174-0868-4763-bd0f-a0627871cf26
+  path: apm.instrumentationconfig.fast-api-sqlalchemy-httpx-instrumentation
+  spec_node_id: apm.instrumentationconfig
+  type: instrumentationconfig
+  layer_id: apm
+  name: FastAPI SQLAlchemy httpx Instrumentation
+  description: Auto-instrumentation of FastAPI requests, SQLAlchemy queries and
+    httpx client calls.
+  attributes:
+    type: auto
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/telemetry/instrumentors.py
+        symbol: instrument_fastapi
+  metadata:
+    created_at: 2026-11-19T15:03:42.143Z
+    updated_at: 2026-11-19T15:03:42.143Z
+    version: 1

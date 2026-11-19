@@ -1,0 +1,104 @@
+business.businessprocess.adjudicate-a-proposal:
+  id: 99e00e98-adbb-4d62-b841-70fb3b11d575
+  path: business.businessprocess.adjudicate-a-proposal
+  spec_node_id: business.businessprocess
+  type: businessprocess
+  layer_id: business
+  name: Adjudicate a Proposal
+  description: Proposed, then classified (editorial, additive, breaking), decided
+    per operation, applied (change events and gold written), and later landed by
+    the client or reverted.
+  source_reference:
+    provenance: manual
+    locations:
+      - file: documentation/field-guide/index.html
+  metadata:
+    created_at: 2026-11-19T16:16:28.347Z
+    updated_at: 2026-11-19T16:16:28.347Z
+    version: 1
+business.businessprocess.client-round-trip:
+  id: 7f24c54d-17bd-4f67-b197-159744c89843
+  path: business.businessprocess.client-round-trip
+  spec_node_id: business.businessprocess
+  type: businessprocess
+  layer_id: business
+  name: Client Round Trip
+  description: A client submits a plan, the reviewer adjudicates it in CS, the
+    client reads decisions and spec changes, lands them in its repo and marks
+    the proposal landed.
+  source_reference:
+    provenance: manual
+    locations:
+      - file: rearchitecture/ontology_workbench_proposal.md
+  metadata:
+    created_at: 2026-11-19T16:16:28.348Z
+    updated_at: 2026-11-19T16:16:28.348Z
+    version: 1
+business.businessprocess.extract-a-source-into-a-dataset:
+  id: a8c59ae5-4f76-4db5-93cc-ce7a0b7d1320
+  path: business.businessprocess.extract-a-source-into-a-dataset
+  spec_node_id: business.businessprocess
+  type: businessprocess
+  layer_id: business
+  name: Extract a Source into a Dataset
+  description: Add a source, chunk it, extract, receive one proposal, review it
+    and apply it with provenance.
+  source_reference:
+    provenance: manual
+    locations:
+      - file: documentation/extraction/README.md
+  metadata:
+    created_at: 2026-11-19T16:16:28.348Z
+    updated_at: 2026-11-19T16:16:28.348Z
+    version: 1
+business.businessprocess.check-benchmark-gold:
+  id: 4f6c053b-9947-4a1e-a944-ea19d6ddb327
+  path: business.businessprocess.check-benchmark-gold
+  spec_node_id: business.businessprocess
+  type: businessprocess
+  layer_id: business
+  name: Check Benchmark Gold
+  description: Open a gold-check proposal for a benchmark document, review it in
+    the Review page's gold mode, write the gold back and replay to re-score.
+  source_reference:
+    provenance: manual
+    locations:
+      - file: documentation/extraction/README.md
+  metadata:
+    created_at: 2026-11-19T16:16:28.348Z
+    updated_at: 2026-11-19T16:16:28.348Z
+    version: 1
+business.businessprocess.triage-claims:
+  id: db848fb2-9d7f-4d32-91bd-6df4cc3e90aa
+  path: business.businessprocess.triage-claims
+  spec_node_id: business.businessprocess
+  type: businessprocess
+  layer_id: business
+  name: Triage Claims
+  description: Notes become atomic claims, a decision model triages them, the
+    reviewer gives a verdict, and fixes go back as proposals.
+  source_reference:
+    provenance: manual
+    locations:
+      - file: documentation/field-guide/index.html
+  metadata:
+    created_at: 2026-11-19T16:16:28.348Z
+    updated_at: 2026-11-19T16:16:28.348Z
+    version: 1
+business.businessprocess.sync-workspace-changes:
+  id: 649a957c-ce8f-4967-b0a7-24b6f02bbaa7
+  path: business.businessprocess.sync-workspace-changes
+  spec_node_id: business.businessprocess
+  type: businessprocess
+  layer_id: business
+  name: Sync Workspace Changes
+  description: Optionally push the workspace's change events to S3 or
+    DuckDB/Parquet (and pull them back), from the Versioning page's Sync tab.
+  source_reference:
+    provenance: manual
+    locations:
+      - file: documentation/field-guide/index.html
+  metadata:
+    created_at: 2026-11-19T16:31:12.093Z
+    updated_at: 2026-11-19T16:31:12.093Z
+    version: 1

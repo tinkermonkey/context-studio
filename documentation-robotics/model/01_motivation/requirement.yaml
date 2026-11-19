@@ -1,0 +1,291 @@
+motivation.requirement.breaking-changes-never-auto-apply:
+  id: b9f351db-f277-47b3-99b5-659d7378234d
+  path: motivation.requirement.breaking-changes-never-auto-apply
+  spec_node_id: motivation.requirement
+  type: requirement
+  layer_id: motivation
+  name: Breaking Changes Never Auto-Apply
+  description: Breaking operations (deletes included), taxonomy creates, vision
+    edits and extraction operations without a source passage are never applied
+    by an approval policy.
+  attributes:
+    requirementType: functional
+    priority: critical
+  source_reference:
+    provenance: manual
+    locations:
+      - file: local-server/domain/versioning/approval_policy.py
+  metadata:
+    created_at: 2026-11-19T16:14:23.186Z
+    updated_at: 2026-11-19T16:14:23.186Z
+    version: 1
+motivation.requirement.every-applied-proposal-is-revertible:
+  id: e8b053a1-07e6-4ab5-865e-5ec866e2267d
+  path: motivation.requirement.every-applied-proposal-is-revertible
+  spec_node_id: motivation.requirement
+  type: requirement
+  layer_id: motivation
+  name: Every Applied Proposal Is Revertible
+  description: An applied proposal reverts in one transaction, with conflicts
+    explained before anything is undone.
+  attributes:
+    requirementType: functional
+    priority: high
+  source_reference:
+    provenance: manual
+    locations:
+      - file: local-server/domain/versioning/revert_service.py
+  metadata:
+    created_at: 2026-11-19T16:14:23.186Z
+    updated_at: 2026-11-19T16:14:23.186Z
+    version: 1
+motivation.requirement.extracted-facts-cite-their-source:
+  id: f87408a4-fcea-4570-81d6-06807f416b1b
+  path: motivation.requirement.extracted-facts-cite-their-source
+  spec_node_id: motivation.requirement
+  type: requirement
+  layer_id: motivation
+  name: Extracted Facts Cite Their Source
+  description: Each extracted individual and relationship keeps source, page and
+    quote; citations survive source removal.
+  attributes:
+    requirementType: functional
+    priority: high
+  source_reference:
+    provenance: manual
+    locations:
+      - file: documentation/extraction/README.md
+  metadata:
+    created_at: 2026-11-19T16:14:23.186Z
+    updated_at: 2026-11-19T16:14:23.186Z
+    version: 1
+motivation.requirement.proposals-record-their-pipeline-and-version:
+  id: 6b70b601-80e8-48cc-9d70-3fd9333f4e87
+  path: motivation.requirement.proposals-record-their-pipeline-and-version
+  spec_node_id: motivation.requirement
+  type: requirement
+  layer_id: motivation
+  name: Proposals Record Their Pipeline and Version
+  description: Every proposal records the pipeline implementation and version that
+    produced it; supersession is per implementation.
+  attributes:
+    requirementType: functional
+    priority: high
+  source_reference:
+    provenance: manual
+    locations:
+      - file: documentation/extraction/README.md
+  metadata:
+    created_at: 2026-11-19T16:14:23.186Z
+    updated_at: 2026-11-19T16:14:23.186Z
+    version: 1
+motivation.requirement.relationships-limited-to-allowed-types:
+  id: 64d5f63d-07d4-4ada-a718-997b80e28462
+  path: motivation.requirement.relationships-limited-to-allowed-types
+  spec_node_id: motivation.requirement
+  type: requirement
+  layer_id: motivation
+  name: Relationships Limited to Allowed Types
+  description: Extraction proposes only relationships whose (source class,
+    predicate, target class) is an allowed relationship type; domain and range
+    are enforced on write.
+  attributes:
+    requirementType: functional
+    priority: high
+  source_reference:
+    provenance: manual
+    locations:
+      - file: documentation/extraction/README.md
+  metadata:
+    created_at: 2026-11-19T16:14:23.186Z
+    updated_at: 2026-11-19T16:14:23.186Z
+    version: 1
+motivation.requirement.individuals-belong-to-one-dataset:
+  id: 1a4a8dea-5c49-4cba-8b7c-47ea565f1d2b
+  path: motivation.requirement.individuals-belong-to-one-dataset
+  spec_node_id: motivation.requirement
+  type: requirement
+  layer_id: motivation
+  name: Individuals Belong to One Dataset
+  description: Every individual belongs to one dataset of one taxonomy;
+    cross-dataset edges are refused.
+  attributes:
+    requirementType: functional
+    priority: high
+  source_reference:
+    provenance: manual
+    locations:
+      - file: local-server/domain/ontology/datasets.py
+  metadata:
+    created_at: 2026-11-19T16:14:23.186Z
+    updated_at: 2026-11-19T16:14:23.186Z
+    version: 1
+motivation.requirement.mirrored-taxonomies-accept-schema-changes-only-from-their-client:
+  id: 6533a1aa-d47f-45de-a070-35a325c73d5b
+  path: motivation.requirement.mirrored-taxonomies-accept-schema-changes-only-from-their-client
+  spec_node_id: motivation.requirement
+  type: requirement
+  layer_id: motivation
+  name: Mirrored Taxonomies Accept Schema Changes Only from Their Client
+  description: A mirrored taxonomy (dr_spec) takes schema proposals and refinement
+    runs only from its client (DR over MCP); landed proposals there cannot be
+    reverted.
+  attributes:
+    requirementType: functional
+    priority: medium
+  source_reference:
+    provenance: manual
+    locations:
+      - file: documentation/field-guide/index.html
+  metadata:
+    created_at: 2026-11-19T16:14:23.186Z
+    updated_at: 2026-11-19T16:14:23.186Z
+    version: 1
+motivation.requirement.one-way-to-select-a-pipeline:
+  id: 761c2a3c-1f5c-4adc-a7b4-d98b9b7320d6
+  path: motivation.requirement.one-way-to-select-a-pipeline
+  spec_node_id: motivation.requirement
+  type: requirement
+  layer_id: motivation
+  name: One Way to Select a Pipeline
+  description: Every entry point selects a pipeline by (type, implementation,
+    configuration) through one resolver; the registry owns defaults; the
+    configuration owns the model.
+  attributes:
+    requirementType: functional
+    priority: medium
+  source_reference:
+    provenance: manual
+    locations:
+      - file: local-server/domain/pipelines/selection.py
+  metadata:
+    created_at: 2026-11-19T16:14:23.186Z
+    updated_at: 2026-11-19T16:14:23.186Z
+    version: 1
+motivation.requirement.dev-server-not-reachable-from-the-lan:
+  id: 04d3b841-aff4-4cf2-986e-a37754cf48e5
+  path: motivation.requirement.dev-server-not-reachable-from-the-lan
+  spec_node_id: motivation.requirement
+  type: requirement
+  layer_id: motivation
+  name: Dev Server Not Reachable from the LAN
+  description: "The Vite dev server must not expose /api (including the endpoint
+    that returns the MCP token) to other machines on the network. Open: GitHub
+    issue #1655."
+  attributes:
+    requirementType: non-functional
+    priority: high
+    documentation: "To fix: tinkermonkey/context-studio#1655 (LAN exposure via the
+      Vite dev server)."
+  source_reference:
+    provenance: manual
+    locations:
+      - file: README.md
+  metadata:
+    created_at: 2026-11-19T16:14:23.186Z
+    updated_at: 2026-11-19T16:14:23.186Z
+    version: 1
+motivation.requirement.url-sources-refuse-private-network-addresses:
+  id: 76e3ac0a-91b3-442d-ac94-b97c93064e3a
+  path: motivation.requirement.url-sources-refuse-private-network-addresses
+  spec_node_id: motivation.requirement
+  type: requirement
+  layer_id: motivation
+  name: URL Sources Refuse Private Network Addresses
+  description: "Adding a URL source must refuse private, loopback and link-local
+    addresses, including after redirects, so the server cannot be used to reach
+    internal services (SSRF). Open: GitHub issue #1656."
+  attributes:
+    requirementType: non-functional
+    priority: high
+    documentation: "To fix: tinkermonkey/context-studio#1656 (SSRF via URL sources)."
+  source_reference:
+    provenance: manual
+    locations:
+      - file: local-server/domain/extraction/sources.py
+  metadata:
+    created_at: 2026-11-19T16:14:23.186Z
+    updated_at: 2026-11-19T16:14:23.186Z
+    version: 1
+motivation.requirement.mcp-requires-a-bearer-token-on-loopback:
+  id: 7f0729ea-16fe-4dbb-a3ca-e552e10b80eb
+  path: motivation.requirement.mcp-requires-a-bearer-token-on-loopback
+  spec_node_id: motivation.requirement
+  type: requirement
+  layer_id: motivation
+  name: MCP Requires a Bearer Token on Loopback
+  description: The MCP endpoint starts only on a loopback host and every request
+    must carry the configured bearer token.
+  attributes:
+    requirementType: non-functional
+    priority: high
+  source_reference:
+    provenance: manual
+    locations:
+      - file: README.md
+  metadata:
+    created_at: 2026-11-19T16:14:23.186Z
+    updated_at: 2026-11-19T16:14:23.186Z
+    version: 1
+motivation.requirement.local-api-refuses-foreign-origins:
+  id: aa8004d1-9099-44ad-8088-5a6bf783b7fc
+  path: motivation.requirement.local-api-refuses-foreign-origins
+  spec_node_id: motivation.requirement
+  type: requirement
+  layer_id: motivation
+  name: Local API Refuses Foreign Origins
+  description: The unauthenticated REST API refuses requests with a foreign Origin
+    and, on loopback, a non-loopback Host header (cross-site requests and DNS
+    rebinding).
+  attributes:
+    requirementType: non-functional
+    priority: high
+  source_reference:
+    provenance: manual
+    locations:
+      - file: README.md
+  metadata:
+    created_at: 2026-11-19T16:14:23.186Z
+    updated_at: 2026-11-19T16:14:23.186Z
+    version: 1
+motivation.requirement.agent-file-sources-limited-to-allowed-roots:
+  id: 204bdf67-9121-4a9f-b195-8db7c41889fe
+  path: motivation.requirement.agent-file-sources-limited-to-allowed-roots
+  spec_node_id: motivation.requirement
+  type: requirement
+  layer_id: motivation
+  name: Agent File Sources Limited to Allowed Roots
+  description: An agent may add a local file as a source only from under the
+    configured absolute sources.allowed_roots (empty by default).
+  attributes:
+    requirementType: non-functional
+    priority: high
+  source_reference:
+    provenance: manual
+    locations:
+      - file: README.md
+  metadata:
+    created_at: 2026-11-19T16:14:23.186Z
+    updated_at: 2026-11-19T16:14:23.186Z
+    version: 1
+motivation.requirement.secrets-stay-in-the-configuration-file:
+  id: 2308da43-9ade-4c9d-9263-aa391d219481
+  path: motivation.requirement.secrets-stay-in-the-configuration-file
+  spec_node_id: motivation.requirement
+  type: requirement
+  layer_id: motivation
+  name: Secrets Stay in the Configuration File
+  description: API keys and tokens live only in the untracked config.json; keys
+    read from the environment are never written back, and validation errors
+    never echo secret values.
+  attributes:
+    requirementType: non-functional
+    priority: high
+  source_reference:
+    provenance: manual
+    locations:
+      - file: README.md
+  metadata:
+    created_at: 2026-11-19T16:14:23.186Z
+    updated_at: 2026-11-19T16:14:23.186Z
+    version: 1

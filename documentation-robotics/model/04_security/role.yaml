@@ -1,23 +1,45 @@
-security.role.administrator:
-  id: d20dee6d-c39a-4239-8c06-8c8d6345d634
-  path: security.role.administrator
+security.role.local-operator:
+  id: 41bdb7a8-ec47-42da-a8fd-0a89a0d9317c
+  path: security.role.local-operator
   spec_node_id: security.role
   type: role
   layer_id: security
-  name: Administrator
-  description: Full administrator role — has unrestricted access to all ontology
-    entities, datasets, pipelines, and configuration in the new hexagonal
-    architecture
+  name: Local Operator
+  description: "No RBAC: whoever reaches the REST port (the UI or local processes)
+    has full read and write, including apply and revert."
   attributes:
-    displayName: Administrator
+    displayName: Local Operator
     level: 1
     inheritsFrom: ""
-    description: Full system access
+    description: Full workspace access through the unauthenticated loopback REST API
   source_reference:
-    provenance: extracted
+    provenance: manual
     locations:
-      - file: local-server/app.py
+      - file: README.md
   metadata:
-    created_at: 2026-03-24T09:17:35.935Z
-    updated_at: 2026-03-24T09:17:35.935Z
+    created_at: 2026-11-19T16:18:36.732Z
+    updated_at: 2026-11-19T16:18:36.732Z
+    version: 1
+security.role.mcp-agent:
+  id: d9eac88e-e21f-4f41-885b-61f101d9aa2f
+  path: security.role.mcp-agent
+  spec_node_id: security.role
+  type: role
+  layer_id: security
+  name: MCP Agent
+  description: Read, propose, extract, run, triage and landing tools over MCP;
+    there is no apply or revert tool, so an agent cannot change the workspace
+    without a person deciding.
+  attributes:
+    displayName: MCP Agent
+    level: 2
+    inheritsFrom: ""
+    description: Reads and proposes over MCP; cannot apply or revert
+  source_reference:
+    provenance: manual
+    locations:
+      - file: documentation/field-guide/index.html
+  metadata:
+    created_at: 2026-11-19T16:18:36.732Z
+    updated_at: 2026-11-19T16:18:36.732Z
     version: 1

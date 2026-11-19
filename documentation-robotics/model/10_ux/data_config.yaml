@@ -1,0 +1,2809 @@
+ux.dataconfig.use-accept-rest:
+  id: f292237a-eb95-4af6-9012-a296c905e221
+  path: ux.dataconfig.use-accept-rest
+  spec_node_id: ux.dataconfig
+  type: dataconfig
+  layer_id: ux
+  name: useAcceptRest
+  description: POST /api/proposals/{a_id}/compare/{b_id}/accept-rest.
+  attributes:
+    source: api
+    target: api.operation.accept-rest-of-comparison
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/api/hooks/proposals/useProposalComparison.ts
+        symbol: useAcceptRest
+  metadata:
+    created_at: 2026-11-19T15:50:49.276Z
+    updated_at: 2026-11-19T15:50:49.276Z
+    version: 1
+ux.dataconfig.use-add-class-to-individual:
+  id: a10b94a8-0d26-44c3-a7f6-25ff4e20190d
+  path: ux.dataconfig.use-add-class-to-individual
+  spec_node_id: ux.dataconfig
+  type: dataconfig
+  layer_id: ux
+  name: useAddClassToIndividual
+  description: POST /api/individuals/{individual_id}/classes.
+  attributes:
+    source: api
+    target: api.operation.add-parent-class-to-individual
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/api/hooks/ontology/useIndividuals.ts
+        symbol: useAddClassToIndividual
+  metadata:
+    created_at: 2026-11-19T15:50:49.276Z
+    updated_at: 2026-11-19T15:50:49.276Z
+    version: 1
+ux.dataconfig.use-add-proposal-individual:
+  id: 76616b56-7db6-4bc0-a5bd-01d17db0b7bb
+  path: ux.dataconfig.use-add-proposal-individual
+  spec_node_id: ux.dataconfig
+  type: dataconfig
+  layer_id: ux
+  name: useAddProposalIndividual
+  description: POST /api/proposals/{proposal_id}/operations.
+  attributes:
+    source: api
+    target: api.operation.add-proposal-operations
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/api/hooks/proposals/useProposalMutations.ts
+        symbol: useAddProposalIndividual
+  metadata:
+    created_at: 2026-11-19T15:50:49.276Z
+    updated_at: 2026-11-19T15:50:49.276Z
+    version: 1
+ux.dataconfig.use-add-source:
+  id: c23ef5f4-a6ae-4285-8783-8f4f181c8007
+  path: ux.dataconfig.use-add-source
+  spec_node_id: ux.dataconfig
+  type: dataconfig
+  layer_id: ux
+  name: useAddSource
+  description: POST /api/sources.
+  attributes:
+    source: api
+    target: api.operation.add-source
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/api/hooks/sources/useAddSource.ts
+        symbol: useAddSource
+  metadata:
+    created_at: 2026-11-19T15:50:49.276Z
+    updated_at: 2026-11-19T15:50:49.276Z
+    version: 1
+ux.dataconfig.use-all-change-proposals:
+  id: 5320183c-c548-41af-b1bf-00525851d229
+  path: ux.dataconfig.use-all-change-proposals
+  spec_node_id: ux.dataconfig
+  type: dataconfig
+  layer_id: ux
+  name: useAllChangeProposals
+  description: GET /api/proposals.
+  attributes:
+    source: api
+    target: api.operation.list-proposals
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/api/hooks/proposals/useProposals.ts
+        symbol: useAllChangeProposals
+  metadata:
+    created_at: 2026-11-19T15:50:49.276Z
+    updated_at: 2026-11-19T15:50:49.276Z
+    version: 1
+ux.dataconfig.use-apply-change-proposal:
+  id: 7fc6e0ab-5211-4764-9e26-19f4b7df27b9
+  path: ux.dataconfig.use-apply-change-proposal
+  spec_node_id: ux.dataconfig
+  type: dataconfig
+  layer_id: ux
+  name: useApplyChangeProposal
+  description: POST /api/proposals/{proposal_id}/apply.
+  attributes:
+    source: api
+    target: api.operation.apply-proposal
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/api/hooks/proposals/useProposalMutations.ts
+        symbol: useApplyChangeProposal
+  metadata:
+    created_at: 2026-11-19T15:50:49.276Z
+    updated_at: 2026-11-19T15:50:49.276Z
+    version: 1
+ux.dataconfig.use-apply-reviewed-run:
+  id: 654ea64d-d9bf-4160-8029-844d02923b7e
+  path: ux.dataconfig.use-apply-reviewed-run
+  spec_node_id: ux.dataconfig
+  type: dataconfig
+  layer_id: ux
+  name: useApplyReviewedRun
+  description: POST /api/pipelines/runs/{run_id}/apply.
+  attributes:
+    source: api
+    target: api.operation.apply-pipeline-run
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/api/hooks/pipeline/useApplyReviewedRun.ts
+        symbol: useApplyReviewedRun
+  metadata:
+    created_at: 2026-11-19T15:50:49.276Z
+    updated_at: 2026-11-19T15:50:49.276Z
+    version: 1
+ux.dataconfig.use-apply-run:
+  id: ad3419ab-e3ce-491d-9024-00b66960e622
+  path: ux.dataconfig.use-apply-run
+  spec_node_id: ux.dataconfig
+  type: dataconfig
+  layer_id: ux
+  name: useApplyRun
+  description: POST /api/pipelines/runs/{run_id}/apply.
+  attributes:
+    source: api
+    target: api.operation.apply-pipeline-run
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/api/hooks/pipeline/usePipelineMutations.ts
+        symbol: useApplyRun
+  metadata:
+    created_at: 2026-11-19T15:50:49.276Z
+    updated_at: 2026-11-19T15:50:49.276Z
+    version: 1
+ux.dataconfig.use-attribute-definitions-by-ids:
+  id: aa2565c0-061d-44a6-864f-0189c6e1f32b
+  path: ux.dataconfig.use-attribute-definitions-by-ids
+  spec_node_id: ux.dataconfig
+  type: dataconfig
+  layer_id: ux
+  name: useAttributeDefinitionsByIds
+  description: GET /api/attribute-definitions/{attribute_definition_id}.
+  attributes:
+    source: api
+    target: api.operation.get-attribute-definition
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/api/hooks/ontology/useClasses.ts
+        symbol: useAttributeDefinitionsByIds
+  metadata:
+    created_at: 2026-11-19T15:50:49.276Z
+    updated_at: 2026-11-19T15:50:49.276Z
+    version: 1
+ux.dataconfig.use-build-graph:
+  id: e6ad4fdf-9530-4644-b999-2ac52df61f65
+  path: ux.dataconfig.use-build-graph
+  spec_node_id: ux.dataconfig
+  type: dataconfig
+  layer_id: ux
+  name: useBuildGraph
+  description: POST /api/graph/build.
+  attributes:
+    source: api
+    target: api.operation.build-graph
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/api/hooks/graph/index.ts
+        symbol: useBuildGraph
+  metadata:
+    created_at: 2026-11-19T15:50:49.276Z
+    updated_at: 2026-11-19T15:50:49.276Z
+    version: 1
+ux.dataconfig.use-cancel-extraction-run:
+  id: 35bd6e07-9a36-47af-903b-710c76712c35
+  path: ux.dataconfig.use-cancel-extraction-run
+  spec_node_id: ux.dataconfig
+  type: dataconfig
+  layer_id: ux
+  name: useCancelExtractionRun
+  description: POST /api/pipelines/runs/{run_id}/cancel.
+  attributes:
+    source: api
+    target: api.operation.cancel-pipeline-run
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/api/hooks/sources/useExtractionRun.ts
+        symbol: useCancelExtractionRun
+  metadata:
+    created_at: 2026-11-19T15:50:49.276Z
+    updated_at: 2026-11-19T15:50:49.276Z
+    version: 1
+ux.dataconfig.use-change-proposal:
+  id: 78bee692-8bb0-4fcb-918e-b474e1b7df14
+  path: ux.dataconfig.use-change-proposal
+  spec_node_id: ux.dataconfig
+  type: dataconfig
+  layer_id: ux
+  name: useChangeProposal
+  description: GET /api/proposals/{proposal_id}.
+  attributes:
+    source: api
+    target: api.operation.get-proposal
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/api/hooks/proposals/useProposals.ts
+        symbol: useChangeProposal
+  metadata:
+    created_at: 2026-11-19T15:50:49.276Z
+    updated_at: 2026-11-19T15:50:49.276Z
+    version: 1
+ux.dataconfig.use-change-proposals:
+  id: 7417907d-d0a1-4cbe-88a8-a24c1ecbf8b7
+  path: ux.dataconfig.use-change-proposals
+  spec_node_id: ux.dataconfig
+  type: dataconfig
+  layer_id: ux
+  name: useChangeProposals
+  description: GET /api/proposals.
+  attributes:
+    source: api
+    target: api.operation.list-proposals
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/api/hooks/proposals/useProposals.ts
+        symbol: useChangeProposals
+  metadata:
+    created_at: 2026-11-19T15:50:49.276Z
+    updated_at: 2026-11-19T15:50:49.276Z
+    version: 1
+ux.dataconfig.use-changes:
+  id: 762c47f9-8883-445a-bdcd-7c69733e98bd
+  path: ux.dataconfig.use-changes
+  spec_node_id: ux.dataconfig
+  type: dataconfig
+  layer_id: ux
+  name: useChanges
+  description: GET /api/v1/versioning/changes.
+  attributes:
+    source: api
+    target: api.operation.get-change-history-all
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/api/hooks/versioning/index.ts
+        symbol: useChanges
+  metadata:
+    created_at: 2026-11-19T15:50:49.276Z
+    updated_at: 2026-11-19T15:50:49.276Z
+    version: 1
+ux.dataconfig.use-chat-session:
+  id: f60c7211-8375-42ee-b875-9464c095e61b
+  path: ux.dataconfig.use-chat-session
+  spec_node_id: ux.dataconfig
+  type: dataconfig
+  layer_id: ux
+  name: useChatSession
+  description: GET /api/chat/status, GET /api/chat/conversations, GET
+    /api/chat/conversations/{conversation_id}, POST /api/chat/conversations,
+    POST /api/chat/conversations/{conversation_id}/messages.
+  attributes:
+    source: api
+    target: api.operation.get-chat-status
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/api/hooks/chat/useChatSession.ts
+        symbol: useChatSession
+  metadata:
+    created_at: 2026-11-19T15:50:49.276Z
+    updated_at: 2026-11-19T15:50:49.276Z
+    version: 1
+ux.dataconfig.use-chat-status:
+  id: 9f6bd449-0f39-4e85-a229-a519805514c0
+  path: ux.dataconfig.use-chat-status
+  spec_node_id: ux.dataconfig
+  type: dataconfig
+  layer_id: ux
+  name: useChatStatus
+  description: GET /api/chat/status.
+  attributes:
+    source: api
+    target: api.operation.get-chat-status
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/api/hooks/chat/useChatSession.ts
+        symbol: useChatStatus
+  metadata:
+    created_at: 2026-11-19T15:50:49.276Z
+    updated_at: 2026-11-19T15:50:49.276Z
+    version: 1
+ux.dataconfig.use-claim:
+  id: ed428175-65da-4eb3-bc3a-22e5ef057863
+  path: ux.dataconfig.use-claim
+  spec_node_id: ux.dataconfig
+  type: dataconfig
+  layer_id: ux
+  name: useClaim
+  description: GET /api/claims/{claim_id}.
+  attributes:
+    source: api
+    target: api.operation.get-claim
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/api/hooks/claims/useClaims.ts
+        symbol: useClaim
+  metadata:
+    created_at: 2026-11-19T15:50:49.276Z
+    updated_at: 2026-11-19T15:50:49.276Z
+    version: 1
+ux.dataconfig.use-claims:
+  id: 17350d8a-430a-425d-ab8d-9c984e974e71
+  path: ux.dataconfig.use-claims
+  spec_node_id: ux.dataconfig
+  type: dataconfig
+  layer_id: ux
+  name: useClaims
+  description: GET /api/taxonomies/{taxonomy_id}/claims.
+  attributes:
+    source: api
+    target: api.operation.list-claims
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/api/hooks/claims/useClaims.ts
+        symbol: useClaims
+  metadata:
+    created_at: 2026-11-19T15:50:49.276Z
+    updated_at: 2026-11-19T15:50:49.276Z
+    version: 1
+ux.dataconfig.use-class:
+  id: 976aaa68-c6ee-48b9-adca-5c8a2e0f0096
+  path: ux.dataconfig.use-class
+  spec_node_id: ux.dataconfig
+  type: dataconfig
+  layer_id: ux
+  name: useClass
+  description: GET /api/classes/{class_id}.
+  attributes:
+    source: api
+    target: api.operation.get-class
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/api/hooks/ontology/useClasses.ts
+        symbol: useClass
+  metadata:
+    created_at: 2026-11-19T15:50:49.276Z
+    updated_at: 2026-11-19T15:50:49.276Z
+    version: 1
+ux.dataconfig.use-class-attribute-definitions:
+  id: 17662b90-3cfa-4843-ad47-47b81295fe1a
+  path: ux.dataconfig.use-class-attribute-definitions
+  spec_node_id: ux.dataconfig
+  type: dataconfig
+  layer_id: ux
+  name: useClassAttributeDefinitions
+  description: GET /api/classes/{class_id}/attribute-definitions.
+  attributes:
+    source: api
+    target: api.operation.list-class-attribute-definitions
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/api/hooks/ontology/useClasses.ts
+        symbol: useClassAttributeDefinitions
+  metadata:
+    created_at: 2026-11-19T15:50:49.276Z
+    updated_at: 2026-11-19T15:50:49.276Z
+    version: 1
+ux.dataconfig.use-class-counts:
+  id: a4c0ee8c-c3a8-4066-8434-908b41c34c1c
+  path: ux.dataconfig.use-class-counts
+  spec_node_id: ux.dataconfig
+  type: dataconfig
+  layer_id: ux
+  name: useClassCounts
+  description: GET /api/schemes/{scheme_id}/class-counts.
+  attributes:
+    source: api
+    target: api.operation.get-scheme-class-counts
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/api/hooks/ontology/useContentCounts.ts
+        symbol: useClassCounts
+  metadata:
+    created_at: 2026-11-19T15:50:49.276Z
+    updated_at: 2026-11-19T15:50:49.276Z
+    version: 1
+ux.dataconfig.use-class-counts-by-scheme:
+  id: b4571f60-7953-4408-9d09-b054e890b09e
+  path: ux.dataconfig.use-class-counts-by-scheme
+  spec_node_id: ux.dataconfig
+  type: dataconfig
+  layer_id: ux
+  name: useClassCountsByScheme
+  description: GET /api/classes.
+  attributes:
+    source: api
+    target: api.operation.list-classes
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/api/hooks/ontology/useClasses.ts
+        symbol: useClassCountsByScheme
+  metadata:
+    created_at: 2026-11-19T15:50:49.276Z
+    updated_at: 2026-11-19T15:50:49.276Z
+    version: 1
+ux.dataconfig.use-class-search:
+  id: faa5d823-2737-448b-861f-96caf795afdd
+  path: ux.dataconfig.use-class-search
+  spec_node_id: ux.dataconfig
+  type: dataconfig
+  layer_id: ux
+  name: useClassSearch
+  description: GET /api/classes.
+  attributes:
+    source: api
+    target: api.operation.list-classes
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/api/hooks/ontology/useEntitySearch.ts
+        symbol: useClassSearch
+  metadata:
+    created_at: 2026-11-19T15:50:49.276Z
+    updated_at: 2026-11-19T15:50:49.276Z
+    version: 1
+ux.dataconfig.use-classes:
+  id: 5874290f-1258-4faa-b0a3-5769a25be0ae
+  path: ux.dataconfig.use-classes
+  spec_node_id: ux.dataconfig
+  type: dataconfig
+  layer_id: ux
+  name: useClasses
+  description: GET /api/classes.
+  attributes:
+    source: api
+    target: api.operation.list-classes
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/api/hooks/ontology/useClasses.ts
+        symbol: useClasses
+  metadata:
+    created_at: 2026-11-19T15:50:49.276Z
+    updated_at: 2026-11-19T15:50:49.276Z
+    version: 1
+ux.dataconfig.use-classes-by-ids:
+  id: cc96e1ed-a8f3-495a-874c-af6648967e74
+  path: ux.dataconfig.use-classes-by-ids
+  spec_node_id: ux.dataconfig
+  type: dataconfig
+  layer_id: ux
+  name: useClassesByIds
+  description: GET /api/classes.
+  attributes:
+    source: api
+    target: api.operation.list-classes
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/api/hooks/ontology/useClasses.ts
+        symbol: useClassesByIds
+  metadata:
+    created_at: 2026-11-19T15:50:49.276Z
+    updated_at: 2026-11-19T15:50:49.276Z
+    version: 1
+ux.dataconfig.use-clear-claim-verdict:
+  id: 863bff58-e250-439e-ab8b-02aab40df2b4
+  path: ux.dataconfig.use-clear-claim-verdict
+  spec_node_id: ux.dataconfig
+  type: dataconfig
+  layer_id: ux
+  name: useClearClaimVerdict
+  description: DELETE /api/claims/{claim_id}/verdict.
+  attributes:
+    source: api
+    target: api.operation.clear-claim-verdict
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/api/hooks/claims/useClaimMutations.ts
+        symbol: useClearClaimVerdict
+  metadata:
+    created_at: 2026-11-19T15:50:49.276Z
+    updated_at: 2026-11-19T15:50:49.276Z
+    version: 1
+ux.dataconfig.use-config:
+  id: 4b90669d-2b40-453a-a428-89129fb60f3e
+  path: ux.dataconfig.use-config
+  spec_node_id: ux.dataconfig
+  type: dataconfig
+  layer_id: ux
+  name: useConfig
+  description: GET /api/v1/admin/configuration.
+  attributes:
+    source: api
+    target: api.operation.get-configuration
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/api/hooks/admin/useConfig.ts
+        symbol: useConfig
+  metadata:
+    created_at: 2026-11-19T15:50:49.276Z
+    updated_at: 2026-11-19T15:50:49.276Z
+    version: 1
+ux.dataconfig.use-create-class:
+  id: def8f477-4a42-4a36-8571-2af6a1186e1d
+  path: ux.dataconfig.use-create-class
+  spec_node_id: ux.dataconfig
+  type: dataconfig
+  layer_id: ux
+  name: useCreateClass
+  description: POST /api/schemes/{scheme_id}/classes.
+  attributes:
+    source: api
+    target: api.operation.create-class
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/api/hooks/ontology/useClasses.ts
+        symbol: useCreateClass
+  metadata:
+    created_at: 2026-11-19T15:50:49.276Z
+    updated_at: 2026-11-19T15:50:49.276Z
+    version: 1
+ux.dataconfig.use-create-configuration:
+  id: 985ad702-6b9e-45d5-b7db-6f2f5a90aada
+  path: ux.dataconfig.use-create-configuration
+  spec_node_id: ux.dataconfig
+  type: dataconfig
+  layer_id: ux
+  name: useCreateConfiguration
+  description: POST
+    /api/pipelines/types/{pipeline_type}/implementations/{impl_id}/configurations.
+  attributes:
+    source: api
+    target: api.operation.create-pipeline-configuration
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/api/hooks/pipeline/useConfigurationMutations.ts
+        symbol: useCreateConfiguration
+  metadata:
+    created_at: 2026-11-19T15:50:49.276Z
+    updated_at: 2026-11-19T15:50:49.276Z
+    version: 1
+ux.dataconfig.use-create-dataset:
+  id: eb192301-b15a-45d4-b100-012dfd452605
+  path: ux.dataconfig.use-create-dataset
+  spec_node_id: ux.dataconfig
+  type: dataconfig
+  layer_id: ux
+  name: useCreateDataset
+  description: POST /api/datasets.
+  attributes:
+    source: api
+    target: api.operation.create-dataset
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/api/hooks/ontology/useDatasets.ts
+        symbol: useCreateDataset
+  metadata:
+    created_at: 2026-11-19T15:50:49.276Z
+    updated_at: 2026-11-19T15:50:49.276Z
+    version: 1
+ux.dataconfig.use-create-grounding-workflow:
+  id: a7adc22e-8be3-49c6-8f39-df664713b57c
+  path: ux.dataconfig.use-create-grounding-workflow
+  spec_node_id: ux.dataconfig
+  type: dataconfig
+  layer_id: ux
+  name: useCreateGroundingWorkflow
+  description: POST /api/reference/grounding-workflows.
+  attributes:
+    source: api
+    target: api.operation.create-grounding-workflow
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/api/hooks/reference/index.ts
+        symbol: useCreateGroundingWorkflow
+  metadata:
+    created_at: 2026-11-19T15:50:49.276Z
+    updated_at: 2026-11-19T15:50:49.276Z
+    version: 1
+ux.dataconfig.use-create-individual:
+  id: 2bd7467f-26e0-4b0d-b179-772f9d0deb04
+  path: ux.dataconfig.use-create-individual
+  spec_node_id: ux.dataconfig
+  type: dataconfig
+  layer_id: ux
+  name: useCreateIndividual
+  description: POST /api/individuals.
+  attributes:
+    source: api
+    target: api.operation.create-individual
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/api/hooks/ontology/useIndividuals.ts
+        symbol: useCreateIndividual
+  metadata:
+    created_at: 2026-11-19T15:50:49.276Z
+    updated_at: 2026-11-19T15:50:49.276Z
+    version: 1
+ux.dataconfig.use-create-property:
+  id: 7230101b-ff4e-4442-93e9-4e11d7abf279
+  path: ux.dataconfig.use-create-property
+  spec_node_id: ux.dataconfig
+  type: dataconfig
+  layer_id: ux
+  name: useCreateProperty
+  description: POST /api/properties.
+  attributes:
+    source: api
+    target: api.operation.create-property-definition
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/api/hooks/ontology/useProperties.ts
+        symbol: useCreateProperty
+  metadata:
+    created_at: 2026-11-19T15:50:49.276Z
+    updated_at: 2026-11-19T15:50:49.276Z
+    version: 1
+ux.dataconfig.use-create-relationship:
+  id: 152b1063-5e86-4f38-9cbf-b35d93a06d0c
+  path: ux.dataconfig.use-create-relationship
+  spec_node_id: ux.dataconfig
+  type: dataconfig
+  layer_id: ux
+  name: useCreateRelationship
+  description: POST /api/relationships.
+  attributes:
+    source: api
+    target: api.operation.create-relationship
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/api/hooks/ontology/useRelationships.ts
+        symbol: useCreateRelationship
+  metadata:
+    created_at: 2026-11-19T15:50:49.276Z
+    updated_at: 2026-11-19T15:50:49.276Z
+    version: 1
+ux.dataconfig.use-create-scheme:
+  id: f3d5462e-c32b-4b19-8aa1-453bb3017369
+  path: ux.dataconfig.use-create-scheme
+  spec_node_id: ux.dataconfig
+  type: dataconfig
+  layer_id: ux
+  name: useCreateScheme
+  description: POST /api/taxonomies/{taxonomy_id}/schemes.
+  attributes:
+    source: api
+    target: api.operation.create-concept-scheme
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/api/hooks/ontology/useSchemes.ts
+        symbol: useCreateScheme
+  metadata:
+    created_at: 2026-11-19T15:50:49.276Z
+    updated_at: 2026-11-19T15:50:49.276Z
+    version: 1
+ux.dataconfig.use-create-taxonomy:
+  id: 8bf69aab-c245-4952-bd28-e60d7dbff770
+  path: ux.dataconfig.use-create-taxonomy
+  spec_node_id: ux.dataconfig
+  type: dataconfig
+  layer_id: ux
+  name: useCreateTaxonomy
+  description: POST /api/taxonomies.
+  attributes:
+    source: api
+    target: api.operation.create-taxonomy
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/api/hooks/ontology/useTaxonomies.ts
+        symbol: useCreateTaxonomy
+  metadata:
+    created_at: 2026-11-19T15:50:49.276Z
+    updated_at: 2026-11-19T15:50:49.276Z
+    version: 1
+ux.dataconfig.use-datasets:
+  id: fc429cb9-9c4a-46ed-993a-7344a383da66
+  path: ux.dataconfig.use-datasets
+  spec_node_id: ux.dataconfig
+  type: dataconfig
+  layer_id: ux
+  name: useDatasets
+  description: GET /api/datasets.
+  attributes:
+    source: api
+    target: api.operation.list-datasets
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/api/hooks/ontology/useDatasets.ts
+        symbol: useDatasets
+  metadata:
+    created_at: 2026-11-19T15:50:49.276Z
+    updated_at: 2026-11-19T15:50:49.276Z
+    version: 1
+ux.dataconfig.use-decide-pair:
+  id: 55074c3b-7070-4d84-abfa-029186058a3d
+  path: ux.dataconfig.use-decide-pair
+  spec_node_id: ux.dataconfig
+  type: dataconfig
+  layer_id: ux
+  name: useDecidePair
+  description: POST /api/proposals/{a_id}/compare/{b_id}/decide.
+  attributes:
+    source: api
+    target: api.operation.decide-comparison-pair
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/api/hooks/proposals/useProposalComparison.ts
+        symbol: useDecidePair
+  metadata:
+    created_at: 2026-11-19T15:50:49.276Z
+    updated_at: 2026-11-19T15:50:49.276Z
+    version: 1
+ux.dataconfig.use-delete-class:
+  id: 896c3b67-ca4f-4f75-a45d-75346de4c803
+  path: ux.dataconfig.use-delete-class
+  spec_node_id: ux.dataconfig
+  type: dataconfig
+  layer_id: ux
+  name: useDeleteClass
+  description: DELETE /api/classes/{class_id}.
+  attributes:
+    source: api
+    target: api.operation.delete-class
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/api/hooks/ontology/useClasses.ts
+        symbol: useDeleteClass
+  metadata:
+    created_at: 2026-11-19T15:50:49.276Z
+    updated_at: 2026-11-19T15:50:49.276Z
+    version: 1
+ux.dataconfig.use-delete-configuration:
+  id: d5204d7d-d8a1-4b43-9453-639a2ea48213
+  path: ux.dataconfig.use-delete-configuration
+  spec_node_id: ux.dataconfig
+  type: dataconfig
+  layer_id: ux
+  name: useDeleteConfiguration
+  description: DELETE /api/pipeline_configurations/{config_id}.
+  attributes:
+    source: api
+    target: api.operation.delete-pipeline-configuration
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/api/hooks/pipeline/useConfigurationMutations.ts
+        symbol: useDeleteConfiguration
+  metadata:
+    created_at: 2026-11-19T15:50:49.277Z
+    updated_at: 2026-11-19T15:50:49.277Z
+    version: 1
+ux.dataconfig.use-delete-dataset:
+  id: ea0e5b90-36e4-4d3a-bd10-418279518ecf
+  path: ux.dataconfig.use-delete-dataset
+  spec_node_id: ux.dataconfig
+  type: dataconfig
+  layer_id: ux
+  name: useDeleteDataset
+  description: DELETE /api/datasets/{dataset_id}.
+  attributes:
+    source: api
+    target: api.operation.delete-dataset
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/api/hooks/ontology/useDatasets.ts
+        symbol: useDeleteDataset
+  metadata:
+    created_at: 2026-11-19T15:50:49.277Z
+    updated_at: 2026-11-19T15:50:49.277Z
+    version: 1
+ux.dataconfig.use-delete-grounding-workflow:
+  id: 8c0f2df0-e36b-4013-abf5-ae1758b088bd
+  path: ux.dataconfig.use-delete-grounding-workflow
+  spec_node_id: ux.dataconfig
+  type: dataconfig
+  layer_id: ux
+  name: useDeleteGroundingWorkflow
+  description: DELETE /api/reference/grounding-workflows/{workflow_id}.
+  attributes:
+    source: api
+    target: api.operation.delete-grounding-workflow
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/api/hooks/reference/index.ts
+        symbol: useDeleteGroundingWorkflow
+  metadata:
+    created_at: 2026-11-19T15:50:49.277Z
+    updated_at: 2026-11-19T15:50:49.277Z
+    version: 1
+ux.dataconfig.use-delete-individual:
+  id: 03e47ba0-f37e-43a1-94a2-07c1d1f79ff3
+  path: ux.dataconfig.use-delete-individual
+  spec_node_id: ux.dataconfig
+  type: dataconfig
+  layer_id: ux
+  name: useDeleteIndividual
+  description: DELETE /api/individuals/{individual_id}.
+  attributes:
+    source: api
+    target: api.operation.delete-individual
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/api/hooks/ontology/useIndividuals.ts
+        symbol: useDeleteIndividual
+  metadata:
+    created_at: 2026-11-19T15:50:49.277Z
+    updated_at: 2026-11-19T15:50:49.277Z
+    version: 1
+ux.dataconfig.use-delete-property:
+  id: efcbee0b-2c1b-4428-b377-0170f0ddef6c
+  path: ux.dataconfig.use-delete-property
+  spec_node_id: ux.dataconfig
+  type: dataconfig
+  layer_id: ux
+  name: useDeleteProperty
+  description: DELETE /api/properties/{property_id}.
+  attributes:
+    source: api
+    target: api.operation.delete-property-definition
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/api/hooks/ontology/useProperties.ts
+        symbol: useDeleteProperty
+  metadata:
+    created_at: 2026-11-19T15:50:49.277Z
+    updated_at: 2026-11-19T15:50:49.277Z
+    version: 1
+ux.dataconfig.use-delete-relationship:
+  id: 08a5ee84-801e-4e91-8a6f-a119e416eb20
+  path: ux.dataconfig.use-delete-relationship
+  spec_node_id: ux.dataconfig
+  type: dataconfig
+  layer_id: ux
+  name: useDeleteRelationship
+  description: DELETE /api/relationships/{relationship_id}.
+  attributes:
+    source: api
+    target: api.operation.delete-relationship
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/api/hooks/ontology/useRelationships.ts
+        symbol: useDeleteRelationship
+  metadata:
+    created_at: 2026-11-19T15:50:49.277Z
+    updated_at: 2026-11-19T15:50:49.277Z
+    version: 1
+ux.dataconfig.use-delete-scheme:
+  id: 8cb899ff-1699-4865-a789-4c86d79e2529
+  path: ux.dataconfig.use-delete-scheme
+  spec_node_id: ux.dataconfig
+  type: dataconfig
+  layer_id: ux
+  name: useDeleteScheme
+  description: DELETE /api/schemes/{scheme_id}.
+  attributes:
+    source: api
+    target: api.operation.delete-concept-scheme
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/api/hooks/ontology/useSchemes.ts
+        symbol: useDeleteScheme
+  metadata:
+    created_at: 2026-11-19T15:50:49.277Z
+    updated_at: 2026-11-19T15:50:49.277Z
+    version: 1
+ux.dataconfig.use-delete-taxonomy:
+  id: 46197b1e-481a-4e6a-82e2-33a463d54e11
+  path: ux.dataconfig.use-delete-taxonomy
+  spec_node_id: ux.dataconfig
+  type: dataconfig
+  layer_id: ux
+  name: useDeleteTaxonomy
+  description: DELETE /api/taxonomies/{taxonomy_id}.
+  attributes:
+    source: api
+    target: api.operation.delete-taxonomy
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/api/hooks/ontology/useTaxonomies.ts
+        symbol: useDeleteTaxonomy
+  metadata:
+    created_at: 2026-11-19T15:50:49.277Z
+    updated_at: 2026-11-19T15:50:49.277Z
+    version: 1
+ux.dataconfig.use-demo-datasets:
+  id: 61db2acf-a852-4996-9aaf-1b676865f249
+  path: ux.dataconfig.use-demo-datasets
+  spec_node_id: ux.dataconfig
+  type: dataconfig
+  layer_id: ux
+  name: useDemoDatasets
+  description: GET /api/v1/admin/demo-datasets.
+  attributes:
+    source: api
+    target: api.operation.list-demo-datasets
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/api/hooks/admin/useDemoDataset.ts
+        symbol: useDemoDatasets
+  metadata:
+    created_at: 2026-11-19T15:50:49.277Z
+    updated_at: 2026-11-19T15:50:49.277Z
+    version: 1
+ux.dataconfig.use-dr-spec-drift:
+  id: 0bdc826e-680d-412a-9358-6e526c4d2040
+  path: ux.dataconfig.use-dr-spec-drift
+  spec_node_id: ux.dataconfig
+  type: dataconfig
+  layer_id: ux
+  name: useDrSpecDrift
+  description: POST /api/v1/interchange/dr-spec/drift.
+  attributes:
+    source: api
+    target: api.operation.dr-spec-drift
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/api/hooks/interchange/useDrSpecDrift.ts
+        symbol: useDrSpecDrift
+  metadata:
+    created_at: 2026-11-19T15:50:49.277Z
+    updated_at: 2026-11-19T15:50:49.277Z
+    version: 1
+ux.dataconfig.use-edge-attributes:
+  id: ad521533-f0e3-4612-a5da-e5b1f40e18d9
+  path: ux.dataconfig.use-edge-attributes
+  spec_node_id: ux.dataconfig
+  type: dataconfig
+  layer_id: ux
+  name: useEdgeAttributes
+  description: GET /api/properties/{property_id}/attributes.
+  attributes:
+    source: api
+    target: api.operation.list-edge-attributes
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/api/hooks/ontology/useProperties.ts
+        symbol: useEdgeAttributes
+  metadata:
+    created_at: 2026-11-19T15:50:49.277Z
+    updated_at: 2026-11-19T15:50:49.277Z
+    version: 1
+ux.dataconfig.use-entities-by-id:
+  id: e8e8eb89-b97a-4a18-a708-12a63e3422dd
+  path: ux.dataconfig.use-entities-by-id
+  spec_node_id: ux.dataconfig
+  type: dataconfig
+  layer_id: ux
+  name: useEntitiesById
+  description: GET /api/classes, GET /api/individuals, GET /api/properties, GET
+    /api/taxonomies, GET /api/schemes.
+  attributes:
+    source: api
+    target: api.operation.list-classes
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/api/hooks/ontology/useEntityTypeQuery.ts
+        symbol: useEntitiesById
+  metadata:
+    created_at: 2026-11-19T15:50:49.277Z
+    updated_at: 2026-11-19T15:50:49.277Z
+    version: 1
+ux.dataconfig.use-entity-counts:
+  id: 30a791ef-83ac-4861-ac76-ec77f31cffcb
+  path: ux.dataconfig.use-entity-counts
+  spec_node_id: ux.dataconfig
+  type: dataconfig
+  layer_id: ux
+  name: useEntityCounts
+  description: GET /api/taxonomies, GET /api/schemes, GET /api/classes, GET
+    /api/individuals, GET /api/properties, GET /api/relationships.
+  attributes:
+    source: api
+    target: api.operation.list-taxonomies
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/api/hooks/ontology/useEntityCounts.ts
+        symbol: useEntityCounts
+  metadata:
+    created_at: 2026-11-19T15:50:49.277Z
+    updated_at: 2026-11-19T15:50:49.277Z
+    version: 1
+ux.dataconfig.use-entity-sources:
+  id: e22d4d9a-caf8-4ad9-a09d-06d2e0789d61
+  path: ux.dataconfig.use-entity-sources
+  spec_node_id: ux.dataconfig
+  type: dataconfig
+  layer_id: ux
+  name: useEntitySources
+  description: GET /api/individuals/{individual_id}/sources, GET
+    /api/relationships/{relationship_id}/sources.
+  attributes:
+    source: api
+    target: api.operation.get-individual-sources
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/api/hooks/ontology/useEntitySources.ts
+        symbol: useEntitySources
+  metadata:
+    created_at: 2026-11-19T15:50:49.277Z
+    updated_at: 2026-11-19T15:50:49.277Z
+    version: 1
+ux.dataconfig.use-entity-type-query:
+  id: ecd0cee5-a476-4d3e-9fab-a7154206d8d8
+  path: ux.dataconfig.use-entity-type-query
+  spec_node_id: ux.dataconfig
+  type: dataconfig
+  layer_id: ux
+  name: useEntityTypeQuery
+  description: GET /api/classes, GET /api/individuals, GET /api/properties, GET
+    /api/taxonomies, GET /api/schemes.
+  attributes:
+    source: api
+    target: api.operation.list-classes
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/api/hooks/ontology/useEntityTypeQuery.ts
+        symbol: useEntityTypeQuery
+  metadata:
+    created_at: 2026-11-19T15:50:49.277Z
+    updated_at: 2026-11-19T15:50:49.277Z
+    version: 1
+ux.dataconfig.use-export-bundle:
+  id: f2d12aa0-73a8-4e81-88ba-7b44674f884f
+  path: ux.dataconfig.use-export-bundle
+  spec_node_id: ux.dataconfig
+  type: dataconfig
+  layer_id: ux
+  name: useExportBundle
+  description: GET /api/v1/interchange/bundles/{taxonomy_id}.
+  attributes:
+    source: api
+    target: api.operation.export-bundle
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/api/hooks/interchange/useExportBundle.ts
+        symbol: useExportBundle
+  metadata:
+    created_at: 2026-11-19T15:50:49.277Z
+    updated_at: 2026-11-19T15:50:49.277Z
+    version: 1
+ux.dataconfig.use-export-claims:
+  id: f5e9a2ef-12d1-46d2-9417-af8de32721f7
+  path: ux.dataconfig.use-export-claims
+  spec_node_id: ux.dataconfig
+  type: dataconfig
+  layer_id: ux
+  name: useExportClaims
+  description: GET /api/taxonomies/{taxonomy_id}/claims/export.
+  attributes:
+    source: api
+    target: api.operation.export-claims
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/api/hooks/claims/useClaimMutations.ts
+        symbol: useExportClaims
+  metadata:
+    created_at: 2026-11-19T15:50:49.277Z
+    updated_at: 2026-11-19T15:50:49.277Z
+    version: 1
+ux.dataconfig.use-export-proposal-decisions:
+  id: 235804c4-42f5-42d6-9de6-96fbbe0f5d9d
+  path: ux.dataconfig.use-export-proposal-decisions
+  spec_node_id: ux.dataconfig
+  type: dataconfig
+  layer_id: ux
+  name: useExportProposalDecisions
+  description: GET /api/proposals/{proposal_id}/decisions.
+  attributes:
+    source: api
+    target: api.operation.get-proposal-decisions
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/api/hooks/proposals/useProposalMutations.ts
+        symbol: useExportProposalDecisions
+  metadata:
+    created_at: 2026-11-19T15:50:49.277Z
+    updated_at: 2026-11-19T15:50:49.277Z
+    version: 1
+ux.dataconfig.use-extract-source:
+  id: 6598619a-677a-4390-8d2a-77d06caa14da
+  path: ux.dataconfig.use-extract-source
+  spec_node_id: ux.dataconfig
+  type: dataconfig
+  layer_id: ux
+  name: useExtractSource
+  description: POST /api/sources/{source_id}/extract.
+  attributes:
+    source: api
+    target: api.operation.extract-source
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/api/hooks/sources/useExtractSource.ts
+        symbol: useExtractSource
+  metadata:
+    created_at: 2026-11-19T15:50:49.277Z
+    updated_at: 2026-11-19T15:50:49.277Z
+    version: 1
+ux.dataconfig.use-extraction-examples:
+  id: b2acfec0-23ff-44e3-82c5-5e052118c4ff
+  path: ux.dataconfig.use-extraction-examples
+  spec_node_id: ux.dataconfig
+  type: dataconfig
+  layer_id: ux
+  name: useExtractionExamples
+  description: GET /api/pipelines/extraction-examples.
+  attributes:
+    source: api
+    target: api.operation.list-extraction-examples
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/api/hooks/pipeline/useExtractionExamples.ts
+        symbol: useExtractionExamples
+  metadata:
+    created_at: 2026-11-19T15:50:49.277Z
+    updated_at: 2026-11-19T15:50:49.277Z
+    version: 1
+ux.dataconfig.use-extraction-review-runs:
+  id: b7560ca2-657a-4a93-9234-686fd2ec4b45
+  path: ux.dataconfig.use-extraction-review-runs
+  spec_node_id: ux.dataconfig
+  type: dataconfig
+  layer_id: ux
+  name: useExtractionReviewRuns
+  description: POST /api/pipelines/{pipeline_type}/run, GET /api/pipelines/runs/{run_id}.
+  attributes:
+    source: api
+    target: api.operation.execute-pipeline
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/api/hooks/pipeline/useExtractionReviewRuns.ts
+        symbol: useExtractionReviewRuns
+  metadata:
+    created_at: 2026-11-19T15:50:49.277Z
+    updated_at: 2026-11-19T15:50:49.277Z
+    version: 1
+ux.dataconfig.use-extraction-run:
+  id: 0705a15d-3998-4319-8289-14a7b5cd1795
+  path: ux.dataconfig.use-extraction-run
+  spec_node_id: ux.dataconfig
+  type: dataconfig
+  layer_id: ux
+  name: useExtractionRun
+  description: GET /api/pipelines/runs/{run_id}.
+  attributes:
+    source: api
+    target: api.operation.get-pipeline-run
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/api/hooks/sources/useExtractionRun.ts
+        symbol: useExtractionRun
+  metadata:
+    created_at: 2026-11-19T15:50:49.277Z
+    updated_at: 2026-11-19T15:50:49.277Z
+    version: 1
+ux.dataconfig.use-graph-metrics:
+  id: f00876d5-296e-4453-8887-2432f26c25eb
+  path: ux.dataconfig.use-graph-metrics
+  spec_node_id: ux.dataconfig
+  type: dataconfig
+  layer_id: ux
+  name: useGraphMetrics
+  description: GET /api/graph/metrics.
+  attributes:
+    source: api
+    target: api.operation.get-graph-metrics
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/api/hooks/graph/index.ts
+        symbol: useGraphMetrics
+  metadata:
+    created_at: 2026-11-19T15:50:49.277Z
+    updated_at: 2026-11-19T15:50:49.277Z
+    version: 1
+ux.dataconfig.use-graph-view:
+  id: 11b49127-319b-45ad-ade8-4642aab30270
+  path: ux.dataconfig.use-graph-view
+  spec_node_id: ux.dataconfig
+  type: dataconfig
+  layer_id: ux
+  name: useGraphView
+  description: GET /api/graph/view.
+  attributes:
+    source: api
+    target: api.operation.get-graph-view
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/api/hooks/graph/index.ts
+        symbol: useGraphView
+  metadata:
+    created_at: 2026-11-19T15:50:49.277Z
+    updated_at: 2026-11-19T15:50:49.277Z
+    version: 1
+ux.dataconfig.use-grounding-workflow:
+  id: 787aa5ca-8def-44e0-9a5d-eda445e4e757
+  path: ux.dataconfig.use-grounding-workflow
+  spec_node_id: ux.dataconfig
+  type: dataconfig
+  layer_id: ux
+  name: useGroundingWorkflow
+  description: GET /api/reference/grounding-workflows/{workflow_id}.
+  attributes:
+    source: api
+    target: api.operation.get-grounding-workflow
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/api/hooks/reference/index.ts
+        symbol: useGroundingWorkflow
+  metadata:
+    created_at: 2026-11-19T15:50:49.277Z
+    updated_at: 2026-11-19T15:50:49.277Z
+    version: 1
+ux.dataconfig.use-grounding-workflow-runs:
+  id: 80bdba5e-b98e-43e1-85ec-dc83e855798e
+  path: ux.dataconfig.use-grounding-workflow-runs
+  spec_node_id: ux.dataconfig
+  type: dataconfig
+  layer_id: ux
+  name: useGroundingWorkflowRuns
+  description: GET /api/reference/grounding-workflows/{workflow_id}/runs.
+  attributes:
+    source: api
+    target: api.operation.list-workflow-runs
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/api/hooks/reference/index.ts
+        symbol: useGroundingWorkflowRuns
+  metadata:
+    created_at: 2026-11-19T15:50:49.277Z
+    updated_at: 2026-11-19T15:50:49.277Z
+    version: 1
+ux.dataconfig.use-grounding-workflows:
+  id: caa49b6a-b393-4400-ab9a-4ec9777d32da
+  path: ux.dataconfig.use-grounding-workflows
+  spec_node_id: ux.dataconfig
+  type: dataconfig
+  layer_id: ux
+  name: useGroundingWorkflows
+  description: GET /api/reference/grounding-workflows.
+  attributes:
+    source: api
+    target: api.operation.list-grounding-workflows
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/api/hooks/reference/index.ts
+        symbol: useGroundingWorkflows
+  metadata:
+    created_at: 2026-11-19T15:50:49.277Z
+    updated_at: 2026-11-19T15:50:49.277Z
+    version: 1
+ux.dataconfig.use-health:
+  id: a9599a43-b1ac-404f-8738-92f7690e6e79
+  path: ux.dataconfig.use-health
+  spec_node_id: ux.dataconfig
+  type: dataconfig
+  layer_id: ux
+  name: useHealth
+  description: GET /api/v1/admin/health.
+  attributes:
+    source: api
+    target: api.operation.get-system-health
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/api/hooks/admin/useHealth.ts
+        symbol: useHealth
+  metadata:
+    created_at: 2026-11-19T15:50:49.277Z
+    updated_at: 2026-11-19T15:50:49.277Z
+    version: 1
+ux.dataconfig.use-individual:
+  id: 109b03b2-02d2-47f3-b1a9-1dced62022aa
+  path: ux.dataconfig.use-individual
+  spec_node_id: ux.dataconfig
+  type: dataconfig
+  layer_id: ux
+  name: useIndividual
+  description: GET /api/individuals/{individual_id}.
+  attributes:
+    source: api
+    target: api.operation.get-individual
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/api/hooks/ontology/useIndividuals.ts
+        symbol: useIndividual
+  metadata:
+    created_at: 2026-11-19T15:50:49.277Z
+    updated_at: 2026-11-19T15:50:49.277Z
+    version: 1
+ux.dataconfig.use-individual-extraction-candidates:
+  id: 83cc29c8-145c-4bf7-b3ff-f8b4674a3aac
+  path: ux.dataconfig.use-individual-extraction-candidates
+  spec_node_id: ux.dataconfig
+  type: dataconfig
+  layer_id: ux
+  name: useIndividualExtractionCandidates
+  description: GET /api/pipelines/runs/{run_id}/individual-extraction-candidates.
+  attributes:
+    source: api
+    target: api.operation.get-individual-extraction-candidates
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/api/hooks/pipeline/useExtractionCandidates.ts
+        symbol: useIndividualExtractionCandidates
+  metadata:
+    created_at: 2026-11-19T15:50:49.277Z
+    updated_at: 2026-11-19T15:50:49.277Z
+    version: 1
+ux.dataconfig.use-individual-inherited-properties:
+  id: e28112cf-2126-4173-971e-3809e0b915f3
+  path: ux.dataconfig.use-individual-inherited-properties
+  spec_node_id: ux.dataconfig
+  type: dataconfig
+  layer_id: ux
+  name: useIndividualInheritedProperties
+  description: GET /api/individuals/{individual_id}/inherited-properties.
+  attributes:
+    source: api
+    target: api.operation.get-individual-inherited-properties
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/api/hooks/ontology/useIndividuals.ts
+        symbol: useIndividualInheritedProperties
+  metadata:
+    created_at: 2026-11-19T15:50:49.277Z
+    updated_at: 2026-11-19T15:50:49.277Z
+    version: 1
+ux.dataconfig.use-individual-search:
+  id: 6b1e0f11-3a1d-415f-8f1d-68eb2de9a27a
+  path: ux.dataconfig.use-individual-search
+  spec_node_id: ux.dataconfig
+  type: dataconfig
+  layer_id: ux
+  name: useIndividualSearch
+  description: GET /api/individuals.
+  attributes:
+    source: api
+    target: api.operation.list-individuals
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/api/hooks/ontology/useEntitySearch.ts
+        symbol: useIndividualSearch
+  metadata:
+    created_at: 2026-11-19T15:52:25.263Z
+    updated_at: 2026-11-19T15:52:25.263Z
+    version: 1
+ux.dataconfig.use-individuals:
+  id: e132d163-2ec9-4ea1-bce0-74b7a1270089
+  path: ux.dataconfig.use-individuals
+  spec_node_id: ux.dataconfig
+  type: dataconfig
+  layer_id: ux
+  name: useIndividuals
+  description: GET /api/individuals.
+  attributes:
+    source: api
+    target: api.operation.list-individuals
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/api/hooks/ontology/useIndividuals.ts
+        symbol: useIndividuals
+  metadata:
+    created_at: 2026-11-19T15:52:25.263Z
+    updated_at: 2026-11-19T15:52:25.263Z
+    version: 1
+ux.dataconfig.use-individuals-by-ids:
+  id: 79000418-b002-41c5-8161-144e726cd1c3
+  path: ux.dataconfig.use-individuals-by-ids
+  spec_node_id: ux.dataconfig
+  type: dataconfig
+  layer_id: ux
+  name: useIndividualsByIds
+  description: GET /api/individuals.
+  attributes:
+    source: api
+    target: api.operation.list-individuals
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/api/hooks/ontology/useIndividuals.ts
+        symbol: useIndividualsByIds
+  metadata:
+    created_at: 2026-11-19T15:52:25.263Z
+    updated_at: 2026-11-19T15:52:25.263Z
+    version: 1
+ux.dataconfig.use-individuals-in-classes:
+  id: a466dc17-7ca5-4a83-98f5-317930dfdb08
+  path: ux.dataconfig.use-individuals-in-classes
+  spec_node_id: ux.dataconfig
+  type: dataconfig
+  layer_id: ux
+  name: useIndividualsInClasses
+  description: GET /api/individuals.
+  attributes:
+    source: api
+    target: api.operation.list-individuals
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/api/hooks/ontology/useIndividuals.ts
+        symbol: useIndividualsInClasses
+  metadata:
+    created_at: 2026-11-19T15:52:25.263Z
+    updated_at: 2026-11-19T15:52:25.263Z
+    version: 1
+ux.dataconfig.use-load-demo-dataset:
+  id: b0cbbc41-b561-47f8-b341-db93e11e3347
+  path: ux.dataconfig.use-load-demo-dataset
+  spec_node_id: ux.dataconfig
+  type: dataconfig
+  layer_id: ux
+  name: useLoadDemoDataset
+  description: POST /api/v1/admin/demo-datasets/{name}/load.
+  attributes:
+    source: api
+    target: api.operation.load-demo-dataset
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/api/hooks/admin/useDemoDataset.ts
+        symbol: useLoadDemoDataset
+  metadata:
+    created_at: 2026-11-19T15:52:25.263Z
+    updated_at: 2026-11-19T15:52:25.263Z
+    version: 1
+ux.dataconfig.use-mcp-connection:
+  id: b0caae85-ad52-4b39-b744-3f7c36ac6854
+  path: ux.dataconfig.use-mcp-connection
+  spec_node_id: ux.dataconfig
+  type: dataconfig
+  layer_id: ux
+  name: useMcpConnection
+  description: GET /api/v1/admin/mcp.
+  attributes:
+    source: api
+    target: api.operation.get-mcp-connection-details
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/api/hooks/admin/useMcpConnection.ts
+        symbol: useMcpConnection
+  metadata:
+    created_at: 2026-11-19T15:52:25.263Z
+    updated_at: 2026-11-19T15:52:25.263Z
+    version: 1
+ux.dataconfig.use-move-class:
+  id: 2b269727-930d-4f1c-ad2b-cca7cae10220
+  path: ux.dataconfig.use-move-class
+  spec_node_id: ux.dataconfig
+  type: dataconfig
+  layer_id: ux
+  name: useMoveClass
+  description: POST /api/classes/{class_id}/move.
+  attributes:
+    source: api
+    target: api.operation.move-class
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/api/hooks/ontology/useClasses.ts
+        symbol: useMoveClass
+  metadata:
+    created_at: 2026-11-19T15:52:25.263Z
+    updated_at: 2026-11-19T15:52:25.263Z
+    version: 1
+ux.dataconfig.use-move-scheme:
+  id: ea7f9b30-86ad-4144-83d1-35ec49e2e56a
+  path: ux.dataconfig.use-move-scheme
+  spec_node_id: ux.dataconfig
+  type: dataconfig
+  layer_id: ux
+  name: useMoveScheme
+  description: PUT /api/schemes/{scheme_id}.
+  attributes:
+    source: api
+    target: api.operation.update-concept-scheme
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/api/hooks/ontology/useSchemes.ts
+        symbol: useMoveScheme
+  metadata:
+    created_at: 2026-11-19T15:52:25.263Z
+    updated_at: 2026-11-19T15:52:25.263Z
+    version: 1
+ux.dataconfig.use-parameter-bounds:
+  id: d8002ba5-79ee-4260-8a28-afad71ea4031
+  path: ux.dataconfig.use-parameter-bounds
+  spec_node_id: ux.dataconfig
+  type: dataconfig
+  layer_id: ux
+  name: useParameterBounds
+  description: Reads the parameter ranges from the served OpenAPI document (/openapi.json).
+  attributes:
+    source: api
+    target: api.openapidocument.context-studio-open-api-spec
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/api/hooks/pipeline/useParameterBounds.ts
+        symbol: useParameterBounds
+  metadata:
+    created_at: 2026-11-19T15:52:25.263Z
+    updated_at: 2026-11-19T15:52:25.263Z
+    version: 1
+ux.dataconfig.use-pipeline-candidates:
+  id: 04684f54-8b33-4430-be96-234f694a456f
+  path: ux.dataconfig.use-pipeline-candidates
+  spec_node_id: ux.dataconfig
+  type: dataconfig
+  layer_id: ux
+  name: usePipelineCandidates
+  description: GET /api/pipelines/runs/{run_id}/candidates.
+  attributes:
+    source: api
+    target: api.operation.get-pipeline-candidates-generic
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/api/hooks/pipeline/usePipelineRuns.ts
+        symbol: usePipelineCandidates
+  metadata:
+    created_at: 2026-11-19T15:52:25.263Z
+    updated_at: 2026-11-19T15:52:25.263Z
+    version: 1
+ux.dataconfig.use-pipeline-configurations:
+  id: b26a7e6d-28c4-4e9c-a53b-1de658580399
+  path: ux.dataconfig.use-pipeline-configurations
+  spec_node_id: ux.dataconfig
+  type: dataconfig
+  layer_id: ux
+  name: usePipelineConfigurations
+  description: GET
+    /api/pipelines/types/{pipeline_type}/implementations/{impl_id}/configurations.
+  attributes:
+    source: api
+    target: api.operation.list-pipeline-configurations
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/api/hooks/pipeline/usePipelineConfigurations.ts
+        symbol: usePipelineConfigurations
+  metadata:
+    created_at: 2026-11-19T15:52:25.263Z
+    updated_at: 2026-11-19T15:52:25.263Z
+    version: 1
+ux.dataconfig.use-pipeline-implementations:
+  id: 0e3299da-f668-45a8-ba4b-679a45228651
+  path: ux.dataconfig.use-pipeline-implementations
+  spec_node_id: ux.dataconfig
+  type: dataconfig
+  layer_id: ux
+  name: usePipelineImplementations
+  description: GET /api/pipelines/types/{pipeline_type}/implementations.
+  attributes:
+    source: api
+    target: api.operation.list-implementations
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/api/hooks/pipeline/usePipelineImplementations.ts
+        symbol: usePipelineImplementations
+  metadata:
+    created_at: 2026-11-19T15:52:25.263Z
+    updated_at: 2026-11-19T15:52:25.263Z
+    version: 1
+ux.dataconfig.use-pipeline-run:
+  id: 4d744760-74b9-4e69-8219-c7b136d4d484
+  path: ux.dataconfig.use-pipeline-run
+  spec_node_id: ux.dataconfig
+  type: dataconfig
+  layer_id: ux
+  name: usePipelineRun
+  description: GET /api/pipelines/runs/{run_id}.
+  attributes:
+    source: api
+    target: api.operation.get-pipeline-run
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/api/hooks/pipeline/usePipelineRuns.ts
+        symbol: usePipelineRun
+  metadata:
+    created_at: 2026-11-19T15:52:25.263Z
+    updated_at: 2026-11-19T15:52:25.263Z
+    version: 1
+ux.dataconfig.use-pipeline-run-change-events:
+  id: 625741e1-ad05-484f-971c-25c065ad8d70
+  path: ux.dataconfig.use-pipeline-run-change-events
+  spec_node_id: ux.dataconfig
+  type: dataconfig
+  layer_id: ux
+  name: usePipelineRunChangeEvents
+  description: GET /api/pipelines/runs/{run_id}/change-events.
+  attributes:
+    source: api
+    target: api.operation.get-pipeline-run-change-events
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/api/hooks/pipeline/usePipelineRuns.ts
+        symbol: usePipelineRunChangeEvents
+  metadata:
+    created_at: 2026-11-19T15:52:25.263Z
+    updated_at: 2026-11-19T15:52:25.263Z
+    version: 1
+ux.dataconfig.use-pipeline-runs:
+  id: b1b9862e-7cb5-432a-bd0e-8864d59a2bc2
+  path: ux.dataconfig.use-pipeline-runs
+  spec_node_id: ux.dataconfig
+  type: dataconfig
+  layer_id: ux
+  name: usePipelineRuns
+  description: GET /api/pipelines/runs.
+  attributes:
+    source: api
+    target: api.operation.get-pipeline-executions
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/api/hooks/pipeline/usePipelineRuns.ts
+        symbol: usePipelineRuns
+  metadata:
+    created_at: 2026-11-19T15:52:25.263Z
+    updated_at: 2026-11-19T15:52:25.263Z
+    version: 1
+ux.dataconfig.use-pipeline-types:
+  id: 18e99f93-4756-4fb5-ae2b-1d76f1f92d46
+  path: ux.dataconfig.use-pipeline-types
+  spec_node_id: ux.dataconfig
+  type: dataconfig
+  layer_id: ux
+  name: usePipelineTypes
+  description: GET /api/pipelines/types.
+  attributes:
+    source: api
+    target: api.operation.list-pipeline-types
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/api/hooks/pipeline/usePipelineTypes.ts
+        symbol: usePipelineTypes
+  metadata:
+    created_at: 2026-11-19T15:52:25.263Z
+    updated_at: 2026-11-19T15:52:25.263Z
+    version: 1
+ux.dataconfig.use-predicates-by-ids:
+  id: 1063c258-40e9-42b4-aa4d-76d33802d2cc
+  path: ux.dataconfig.use-predicates-by-ids
+  spec_node_id: ux.dataconfig
+  type: dataconfig
+  layer_id: ux
+  name: usePredicatesByIds
+  description: GET /api/predicates.
+  attributes:
+    source: api
+    target: api.operation.list-predicates-by-ids
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/api/hooks/ontology/usePredicates.ts
+        symbol: usePredicatesByIds
+  metadata:
+    created_at: 2026-11-19T15:52:25.263Z
+    updated_at: 2026-11-19T15:52:25.263Z
+    version: 1
+ux.dataconfig.use-properties:
+  id: db41ed6f-a423-4ddb-9440-038be4946d7f
+  path: ux.dataconfig.use-properties
+  spec_node_id: ux.dataconfig
+  type: dataconfig
+  layer_id: ux
+  name: useProperties
+  description: GET /api/properties.
+  attributes:
+    source: api
+    target: api.operation.list-property-definitions
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/api/hooks/ontology/useProperties.ts
+        symbol: useProperties
+  metadata:
+    created_at: 2026-11-19T15:52:25.263Z
+    updated_at: 2026-11-19T15:52:25.263Z
+    version: 1
+ux.dataconfig.use-properties-by-ids:
+  id: 43f46518-514a-4783-b4e8-437036b7b56a
+  path: ux.dataconfig.use-properties-by-ids
+  spec_node_id: ux.dataconfig
+  type: dataconfig
+  layer_id: ux
+  name: usePropertiesByIds
+  description: GET /api/properties.
+  attributes:
+    source: api
+    target: api.operation.list-property-definitions
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/api/hooks/ontology/useProperties.ts
+        symbol: usePropertiesByIds
+  metadata:
+    created_at: 2026-11-19T15:52:25.263Z
+    updated_at: 2026-11-19T15:52:25.263Z
+    version: 1
+ux.dataconfig.use-proposal-comparison:
+  id: 888b58e7-ffe0-4a67-9c21-e1ef1d97d676
+  path: ux.dataconfig.use-proposal-comparison
+  spec_node_id: ux.dataconfig
+  type: dataconfig
+  layer_id: ux
+  name: useProposalComparison
+  description: GET /api/proposals/{a_id}/compare/{b_id}.
+  attributes:
+    source: api
+    target: api.operation.compare-proposals
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/api/hooks/proposals/useProposalComparison.ts
+        symbol: useProposalComparison
+  metadata:
+    created_at: 2026-11-19T15:52:25.263Z
+    updated_at: 2026-11-19T15:52:25.263Z
+    version: 1
+ux.dataconfig.use-proposal-decisions:
+  id: f4dc7e4c-91fc-464b-beda-e6b880ff3474
+  path: ux.dataconfig.use-proposal-decisions
+  spec_node_id: ux.dataconfig
+  type: dataconfig
+  layer_id: ux
+  name: useProposalDecisions
+  description: GET /api/taxonomies/{taxonomy_id}/gold.
+  attributes:
+    source: api
+    target: api.operation.list-gold
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/api/hooks/proposals/useProposals.ts
+        symbol: useProposalDecisions
+  metadata:
+    created_at: 2026-11-19T15:52:25.263Z
+    updated_at: 2026-11-19T15:52:25.263Z
+    version: 1
+ux.dataconfig.use-publish-diff-stats:
+  id: 7778cad7-5277-494c-94af-3e65979f8664
+  path: ux.dataconfig.use-publish-diff-stats
+  spec_node_id: ux.dataconfig
+  type: dataconfig
+  layer_id: ux
+  name: usePublishDiffStats
+  description: GET /api/taxonomies/{taxonomy_id}/publish-diff.
+  attributes:
+    source: api
+    target: api.operation.get-publish-diff-stats
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/api/hooks/ontology/useTaxonomies.ts
+        symbol: usePublishDiffStats
+  metadata:
+    created_at: 2026-11-19T15:52:25.263Z
+    updated_at: 2026-11-19T15:52:25.263Z
+    version: 1
+ux.dataconfig.use-publish-taxonomy:
+  id: b80812ac-92f3-44d7-a176-a788659702ac
+  path: ux.dataconfig.use-publish-taxonomy
+  spec_node_id: ux.dataconfig
+  type: dataconfig
+  layer_id: ux
+  name: usePublishTaxonomy
+  description: POST /api/taxonomies/{taxonomy_id}/publish.
+  attributes:
+    source: api
+    target: api.operation.publish-taxonomy
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/api/hooks/ontology/useTaxonomies.ts
+        symbol: usePublishTaxonomy
+  metadata:
+    created_at: 2026-11-19T15:52:25.263Z
+    updated_at: 2026-11-19T15:52:25.263Z
+    version: 1
+ux.dataconfig.use-pull-sync:
+  id: 4938ed01-d2f5-4d6f-a441-005afbfee97c
+  path: ux.dataconfig.use-pull-sync
+  spec_node_id: ux.dataconfig
+  type: dataconfig
+  layer_id: ux
+  name: usePullSync
+  description: POST /api/v1/versioning/sync/pull.
+  attributes:
+    source: api
+    target: api.operation.pull-changes
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/api/hooks/versioning/index.ts
+        symbol: usePullSync
+  metadata:
+    created_at: 2026-11-19T15:52:25.263Z
+    updated_at: 2026-11-19T15:52:25.263Z
+    version: 1
+ux.dataconfig.use-push-sync:
+  id: 2faa5553-9fbb-41a8-b24e-b7ddfdd68e4a
+  path: ux.dataconfig.use-push-sync
+  spec_node_id: ux.dataconfig
+  type: dataconfig
+  layer_id: ux
+  name: usePushSync
+  description: POST /api/v1/versioning/sync/push.
+  attributes:
+    source: api
+    target: api.operation.push-changes
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/api/hooks/versioning/index.ts
+        symbol: usePushSync
+  metadata:
+    created_at: 2026-11-19T15:52:25.263Z
+    updated_at: 2026-11-19T15:52:25.263Z
+    version: 1
+ux.dataconfig.use-recognition-preview:
+  id: 64bb9b63-0300-4705-82dd-5a8f41c7821a
+  path: ux.dataconfig.use-recognition-preview
+  spec_node_id: ux.dataconfig
+  type: dataconfig
+  layer_id: ux
+  name: useRecognitionPreview
+  description: POST /api/pipelines/runs/{run_id}/recognition-preview.
+  attributes:
+    source: api
+    target: api.operation.preview-recognition
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/api/hooks/pipeline/useExtractionCandidates.ts
+        symbol: useRecognitionPreview
+  metadata:
+    created_at: 2026-11-19T15:52:25.263Z
+    updated_at: 2026-11-19T15:52:25.263Z
+    version: 1
+ux.dataconfig.use-reference-status:
+  id: 266fb09b-b463-4bb8-a718-7dc398424027
+  path: ux.dataconfig.use-reference-status
+  spec_node_id: ux.dataconfig
+  type: dataconfig
+  layer_id: ux
+  name: useReferenceStatus
+  description: GET /api/reference/status.
+  attributes:
+    source: api
+    target: api.operation.get-reference-status
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/api/hooks/reference/index.ts
+        symbol: useReferenceStatus
+  metadata:
+    created_at: 2026-11-19T15:52:25.263Z
+    updated_at: 2026-11-19T15:52:25.263Z
+    version: 1
+ux.dataconfig.use-registered-models:
+  id: 5fb72ba9-b0d8-49a8-b4f6-e42bc9438fc4
+  path: ux.dataconfig.use-registered-models
+  spec_node_id: ux.dataconfig
+  type: dataconfig
+  layer_id: ux
+  name: useRegisteredModels
+  description: GET
+    /api/pipelines/types/{pipeline_type}/implementations/{impl_id}/configurations.
+  attributes:
+    source: api
+    target: api.operation.list-pipeline-configurations
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/api/hooks/pipeline/useRegisteredModels.ts
+        symbol: useRegisteredModels
+  metadata:
+    created_at: 2026-11-19T15:52:25.263Z
+    updated_at: 2026-11-19T15:52:25.263Z
+    version: 1
+ux.dataconfig.use-reject-change-proposal:
+  id: 7756cb4d-9b1c-4d7c-8bbd-f72ae6de699d
+  path: ux.dataconfig.use-reject-change-proposal
+  spec_node_id: ux.dataconfig
+  type: dataconfig
+  layer_id: ux
+  name: useRejectChangeProposal
+  description: POST /api/proposals/{proposal_id}/reject.
+  attributes:
+    source: api
+    target: api.operation.reject-proposal
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/api/hooks/proposals/useProposalMutations.ts
+        symbol: useRejectChangeProposal
+  metadata:
+    created_at: 2026-11-19T15:52:25.263Z
+    updated_at: 2026-11-19T15:52:25.263Z
+    version: 1
+ux.dataconfig.use-relationships:
+  id: 1999d62a-13e9-42cb-af5d-3ad22a519247
+  path: ux.dataconfig.use-relationships
+  spec_node_id: ux.dataconfig
+  type: dataconfig
+  layer_id: ux
+  name: useRelationships
+  description: GET /api/relationships.
+  attributes:
+    source: api
+    target: api.operation.list-relationships
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/api/hooks/ontology/useRelationships.ts
+        symbol: useRelationships
+  metadata:
+    created_at: 2026-11-19T15:52:25.263Z
+    updated_at: 2026-11-19T15:52:25.263Z
+    version: 1
+ux.dataconfig.use-relationships-by-ids:
+  id: 29ac2091-2312-459f-8e93-8811a1dbccd5
+  path: ux.dataconfig.use-relationships-by-ids
+  spec_node_id: ux.dataconfig
+  type: dataconfig
+  layer_id: ux
+  name: useRelationshipsByIds
+  description: GET /api/relationships/{relationship_id}.
+  attributes:
+    source: api
+    target: api.operation.get-relationship
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/api/hooks/ontology/useRelationships.ts
+        symbol: useRelationshipsByIds
+  metadata:
+    created_at: 2026-11-19T15:52:25.263Z
+    updated_at: 2026-11-19T15:52:25.263Z
+    version: 1
+ux.dataconfig.use-relationships-touching:
+  id: 7ffeb947-849f-49f9-9b39-bf742e376c72
+  path: ux.dataconfig.use-relationships-touching
+  spec_node_id: ux.dataconfig
+  type: dataconfig
+  layer_id: ux
+  name: useRelationshipsTouching
+  description: GET /api/relationships.
+  attributes:
+    source: api
+    target: api.operation.list-relationships
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/api/hooks/ontology/useRelationships.ts
+        symbol: useRelationshipsTouching
+  metadata:
+    created_at: 2026-11-19T15:52:25.263Z
+    updated_at: 2026-11-19T15:52:25.263Z
+    version: 1
+ux.dataconfig.use-remove-class-from-individual:
+  id: 27f7af42-ab21-42a3-b05c-981d855fcba0
+  path: ux.dataconfig.use-remove-class-from-individual
+  spec_node_id: ux.dataconfig
+  type: dataconfig
+  layer_id: ux
+  name: useRemoveClassFromIndividual
+  description: DELETE /api/individuals/{individual_id}/classes/{class_id}.
+  attributes:
+    source: api
+    target: api.operation.remove-parent-class-from-individual
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/api/hooks/ontology/useIndividuals.ts
+        symbol: useRemoveClassFromIndividual
+  metadata:
+    created_at: 2026-11-19T15:52:25.263Z
+    updated_at: 2026-11-19T15:52:25.263Z
+    version: 1
+ux.dataconfig.use-remove-source:
+  id: f48f7d06-b299-437b-84c4-10f637894992
+  path: ux.dataconfig.use-remove-source
+  spec_node_id: ux.dataconfig
+  type: dataconfig
+  layer_id: ux
+  name: useRemoveSource
+  description: DELETE /api/sources/{source_id}.
+  attributes:
+    source: api
+    target: api.operation.remove-source
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/api/hooks/sources/useRemoveSource.ts
+        symbol: useRemoveSource
+  metadata:
+    created_at: 2026-11-19T15:52:25.263Z
+    updated_at: 2026-11-19T15:52:25.263Z
+    version: 1
+ux.dataconfig.use-reopen-proposal-operations:
+  id: c707fb65-94ce-474a-888a-74681ad2a56c
+  path: ux.dataconfig.use-reopen-proposal-operations
+  spec_node_id: ux.dataconfig
+  type: dataconfig
+  layer_id: ux
+  name: useReopenProposalOperations
+  description: POST /api/proposals/{proposal_id}/reopen.
+  attributes:
+    source: api
+    target: api.operation.reopen-operations
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/api/hooks/proposals/useProposalMutations.ts
+        symbol: useReopenProposalOperations
+  metadata:
+    created_at: 2026-11-19T15:52:25.263Z
+    updated_at: 2026-11-19T15:52:25.263Z
+    version: 1
+ux.dataconfig.use-reorder-individual-classes:
+  id: 6463ba5e-1604-4897-8cd6-96e300d7a000
+  path: ux.dataconfig.use-reorder-individual-classes
+  spec_node_id: ux.dataconfig
+  type: dataconfig
+  layer_id: ux
+  name: useReorderIndividualClasses
+  description: PUT /api/individuals/{individual_id}/classes.
+  attributes:
+    source: api
+    target: api.operation.reorder-individual-classes
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/api/hooks/ontology/useIndividuals.ts
+        symbol: useReorderIndividualClasses
+  metadata:
+    created_at: 2026-11-19T15:52:25.263Z
+    updated_at: 2026-11-19T15:52:25.263Z
+    version: 1
+ux.dataconfig.use-revert-change-proposal:
+  id: a5c7a49c-5445-41c5-8cf1-239c7ac5d41a
+  path: ux.dataconfig.use-revert-change-proposal
+  spec_node_id: ux.dataconfig
+  type: dataconfig
+  layer_id: ux
+  name: useRevertChangeProposal
+  description: POST /api/proposals/{proposal_id}/revert.
+  attributes:
+    source: api
+    target: api.operation.revert-proposal
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/api/hooks/proposals/useProposalMutations.ts
+        symbol: useRevertChangeProposal
+  metadata:
+    created_at: 2026-11-19T15:52:25.263Z
+    updated_at: 2026-11-19T15:52:25.263Z
+    version: 1
+ux.dataconfig.use-revert-run:
+  id: 5bd62172-44ca-41f3-aa5a-0e1b766412c6
+  path: ux.dataconfig.use-revert-run
+  spec_node_id: ux.dataconfig
+  type: dataconfig
+  layer_id: ux
+  name: useRevertRun
+  description: POST /api/pipelines/runs/{run_id}/revert.
+  attributes:
+    source: api
+    target: api.operation.revert-pipeline-run
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/api/hooks/pipeline/usePipelineMutations.ts
+        symbol: useRevertRun
+  metadata:
+    created_at: 2026-11-19T15:52:25.263Z
+    updated_at: 2026-11-19T15:52:25.263Z
+    version: 1
+ux.dataconfig.use-run-grounding-workflow:
+  id: 1a89cf1c-c0aa-4834-9691-573b58dafea8
+  path: ux.dataconfig.use-run-grounding-workflow
+  spec_node_id: ux.dataconfig
+  type: dataconfig
+  layer_id: ux
+  name: useRunGroundingWorkflow
+  description: POST /api/reference/grounding-workflows/{workflow_id}/run.
+  attributes:
+    source: api
+    target: api.operation.run-grounding-workflow
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/api/hooks/reference/index.ts
+        symbol: useRunGroundingWorkflow
+  metadata:
+    created_at: 2026-11-19T15:52:25.263Z
+    updated_at: 2026-11-19T15:52:25.263Z
+    version: 1
+ux.dataconfig.use-run-pipeline:
+  id: 0ab0c083-7cb6-4039-afd0-7b50ad3a04d1
+  path: ux.dataconfig.use-run-pipeline
+  spec_node_id: ux.dataconfig
+  type: dataconfig
+  layer_id: ux
+  name: useRunPipeline
+  description: POST /api/pipelines/{pipeline_type}/run.
+  attributes:
+    source: api
+    target: api.operation.execute-pipeline
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/api/hooks/pipeline/usePipelineMutations.ts
+        symbol: useRunPipeline
+  metadata:
+    created_at: 2026-11-19T15:52:25.263Z
+    updated_at: 2026-11-19T15:52:25.263Z
+    version: 1
+ux.dataconfig.use-run-wizard:
+  id: 7a073645-c6e8-465f-8610-9133c7daaee5
+  path: ux.dataconfig.use-run-wizard
+  spec_node_id: ux.dataconfig
+  type: dataconfig
+  layer_id: ux
+  name: useRunWizard
+  description: POST /api/pipelines/{pipeline_type}/run.
+  attributes:
+    source: api
+    target: api.operation.execute-pipeline
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/api/hooks/pipeline/useRunWizard.ts
+        symbol: useRunWizard
+  metadata:
+    created_at: 2026-11-19T15:52:25.263Z
+    updated_at: 2026-11-19T15:52:25.263Z
+    version: 1
+ux.dataconfig.use-schema-extraction-candidates:
+  id: 1a77041b-b217-4ac7-a150-4e89626a1cec
+  path: ux.dataconfig.use-schema-extraction-candidates
+  spec_node_id: ux.dataconfig
+  type: dataconfig
+  layer_id: ux
+  name: useSchemaExtractionCandidates
+  description: GET /api/pipelines/runs/{run_id}/schema-extraction-candidates.
+  attributes:
+    source: api
+    target: api.operation.get-schema-extraction-candidates
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/api/hooks/pipeline/useExtractionCandidates.ts
+        symbol: useSchemaExtractionCandidates
+  metadata:
+    created_at: 2026-11-19T15:52:25.263Z
+    updated_at: 2026-11-19T15:52:25.263Z
+    version: 1
+ux.dataconfig.use-scheme:
+  id: 057eebfb-4144-4d06-bf57-a7c327a98603
+  path: ux.dataconfig.use-scheme
+  spec_node_id: ux.dataconfig
+  type: dataconfig
+  layer_id: ux
+  name: useScheme
+  description: GET /api/schemes/{scheme_id}.
+  attributes:
+    source: api
+    target: api.operation.get-concept-scheme
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/api/hooks/ontology/useSchemes.ts
+        symbol: useScheme
+  metadata:
+    created_at: 2026-11-19T15:52:25.263Z
+    updated_at: 2026-11-19T15:52:25.263Z
+    version: 1
+ux.dataconfig.use-scheme-counts:
+  id: cd09c01d-6569-433d-8601-7eff66ed91b4
+  path: ux.dataconfig.use-scheme-counts
+  spec_node_id: ux.dataconfig
+  type: dataconfig
+  layer_id: ux
+  name: useSchemeCounts
+  description: GET /api/taxonomies/{taxonomy_id}/scheme-counts.
+  attributes:
+    source: api
+    target: api.operation.get-taxonomy-scheme-counts
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/api/hooks/ontology/useContentCounts.ts
+        symbol: useSchemeCounts
+  metadata:
+    created_at: 2026-11-19T15:52:25.263Z
+    updated_at: 2026-11-19T15:52:25.263Z
+    version: 1
+ux.dataconfig.use-scheme-counts-for-taxonomies:
+  id: b2795551-02a9-4960-b654-478c0bc6f8fd
+  path: ux.dataconfig.use-scheme-counts-for-taxonomies
+  spec_node_id: ux.dataconfig
+  type: dataconfig
+  layer_id: ux
+  name: useSchemeCountsForTaxonomies
+  description: GET /api/taxonomies/{taxonomy_id}/scheme-counts.
+  attributes:
+    source: api
+    target: api.operation.get-taxonomy-scheme-counts
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/api/hooks/ontology/useContentCounts.ts
+        symbol: useSchemeCountsForTaxonomies
+  metadata:
+    created_at: 2026-11-19T15:52:25.263Z
+    updated_at: 2026-11-19T15:52:25.263Z
+    version: 1
+ux.dataconfig.use-schemes:
+  id: beb09077-5226-4443-af90-46d05be5ed26
+  path: ux.dataconfig.use-schemes
+  spec_node_id: ux.dataconfig
+  type: dataconfig
+  layer_id: ux
+  name: useSchemes
+  description: GET /api/schemes.
+  attributes:
+    source: api
+    target: api.operation.list-concept-schemes
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/api/hooks/ontology/useSchemes.ts
+        symbol: useSchemes
+  metadata:
+    created_at: 2026-11-19T15:52:25.263Z
+    updated_at: 2026-11-19T15:52:25.263Z
+    version: 1
+ux.dataconfig.use-schemes-by-ids:
+  id: 149deaf3-c56f-42f7-af10-0f405fcb6695
+  path: ux.dataconfig.use-schemes-by-ids
+  spec_node_id: ux.dataconfig
+  type: dataconfig
+  layer_id: ux
+  name: useSchemesByIds
+  description: GET /api/schemes/{scheme_id}.
+  attributes:
+    source: api
+    target: api.operation.get-concept-scheme
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/api/hooks/ontology/useSchemes.ts
+        symbol: useSchemesByIds
+  metadata:
+    created_at: 2026-11-19T15:52:25.263Z
+    updated_at: 2026-11-19T15:52:25.263Z
+    version: 1
+ux.dataconfig.use-set-claim-verdict:
+  id: 183168a0-6ebb-458c-9c11-1ea9bb5e596b
+  path: ux.dataconfig.use-set-claim-verdict
+  spec_node_id: ux.dataconfig
+  type: dataconfig
+  layer_id: ux
+  name: useSetClaimVerdict
+  description: PUT /api/claims/{claim_id}/verdict.
+  attributes:
+    source: api
+    target: api.operation.set-claim-verdict
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/api/hooks/claims/useClaimMutations.ts
+        symbol: useSetClaimVerdict
+  metadata:
+    created_at: 2026-11-19T15:52:25.263Z
+    updated_at: 2026-11-19T15:52:25.263Z
+    version: 1
+ux.dataconfig.use-set-property-relevance:
+  id: 235ca319-9372-408f-ba7d-281289df3481
+  path: ux.dataconfig.use-set-property-relevance
+  spec_node_id: ux.dataconfig
+  type: dataconfig
+  layer_id: ux
+  name: useSetPropertyRelevance
+  description: PUT /api/properties/{property_id}.
+  attributes:
+    source: api
+    target: api.operation.update-property-definition
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/api/hooks/ontology/useProperties.ts
+        symbol: useSetPropertyRelevance
+  metadata:
+    created_at: 2026-11-19T15:52:25.263Z
+    updated_at: 2026-11-19T15:52:25.263Z
+    version: 1
+ux.dataconfig.use-shortest-path:
+  id: 038076af-564c-44b3-9a61-0e7b43e16eb2
+  path: ux.dataconfig.use-shortest-path
+  spec_node_id: ux.dataconfig
+  type: dataconfig
+  layer_id: ux
+  name: useShortestPath
+  description: GET /api/graph/paths/shortest.
+  attributes:
+    source: api
+    target: api.operation.get-shortest-path
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/api/hooks/graph/index.ts
+        symbol: useShortestPath
+  metadata:
+    created_at: 2026-11-19T15:52:25.263Z
+    updated_at: 2026-11-19T15:52:25.263Z
+    version: 1
+ux.dataconfig.use-source:
+  id: 1adac99b-27db-4078-bbbb-1581994b32a4
+  path: ux.dataconfig.use-source
+  spec_node_id: ux.dataconfig
+  type: dataconfig
+  layer_id: ux
+  name: useSource
+  description: GET /api/sources/{source_id}.
+  attributes:
+    source: api
+    target: api.operation.get-source
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/api/hooks/sources/useSource.ts
+        symbol: useSource
+  metadata:
+    created_at: 2026-11-19T15:52:25.263Z
+    updated_at: 2026-11-19T15:52:25.263Z
+    version: 1
+ux.dataconfig.use-source-text:
+  id: 44fef20b-d619-4bc1-9089-a0685112a6ea
+  path: ux.dataconfig.use-source-text
+  spec_node_id: ux.dataconfig
+  type: dataconfig
+  layer_id: ux
+  name: useSourceText
+  description: GET /api/sources/{source_id}/text.
+  attributes:
+    source: api
+    target: api.operation.get-source-text
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/api/hooks/sources/useSource.ts
+        symbol: useSourceText
+  metadata:
+    created_at: 2026-11-19T15:52:25.263Z
+    updated_at: 2026-11-19T15:52:25.263Z
+    version: 1
+ux.dataconfig.use-sources:
+  id: f1dbaf7d-f6b4-4526-9f49-70176e4c0339
+  path: ux.dataconfig.use-sources
+  spec_node_id: ux.dataconfig
+  type: dataconfig
+  layer_id: ux
+  name: useSources
+  description: GET /api/sources.
+  attributes:
+    source: api
+    target: api.operation.list-sources
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/api/hooks/sources/useSources.ts
+        symbol: useSources
+  metadata:
+    created_at: 2026-11-19T15:52:25.263Z
+    updated_at: 2026-11-19T15:52:25.263Z
+    version: 1
+ux.dataconfig.use-sources-by-ids:
+  id: 5aef28f6-e7a9-4b37-a2aa-a79d13581c9b
+  path: ux.dataconfig.use-sources-by-ids
+  spec_node_id: ux.dataconfig
+  type: dataconfig
+  layer_id: ux
+  name: useSourcesByIds
+  description: GET /api/sources/{source_id}.
+  attributes:
+    source: api
+    target: api.operation.get-source
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/api/hooks/sources/useSource.ts
+        symbol: useSourcesByIds
+  metadata:
+    created_at: 2026-11-19T15:52:25.263Z
+    updated_at: 2026-11-19T15:52:25.263Z
+    version: 1
+ux.dataconfig.use-sparql-query:
+  id: 3371ef1c-dcc3-48d1-ab90-b475b4fdef2c
+  path: ux.dataconfig.use-sparql-query
+  spec_node_id: ux.dataconfig
+  type: dataconfig
+  layer_id: ux
+  name: useSparqlQuery
+  description: POST /api/graph/sparql.
+  attributes:
+    source: api
+    target: api.operation.execute-sparql
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/api/hooks/graph/index.ts
+        symbol: useSparqlQuery
+  metadata:
+    created_at: 2026-11-19T15:52:25.263Z
+    updated_at: 2026-11-19T15:52:25.263Z
+    version: 1
+ux.dataconfig.use-stats-trends:
+  id: b378d141-de9f-469b-9810-399a25e65e28
+  path: ux.dataconfig.use-stats-trends
+  spec_node_id: ux.dataconfig
+  type: dataconfig
+  layer_id: ux
+  name: useStatsTrends
+  description: GET /api/v1/admin/stats/trends.
+  attributes:
+    source: api
+    target: api.operation.get-stats-trends
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/api/hooks/admin/useStatsTrends.ts
+        symbol: useStatsTrends
+  metadata:
+    created_at: 2026-11-19T15:52:25.263Z
+    updated_at: 2026-11-19T15:52:25.263Z
+    version: 1
+ux.dataconfig.use-sync-status:
+  id: 636e2086-6c2b-4803-911a-d6fa30cf1093
+  path: ux.dataconfig.use-sync-status
+  spec_node_id: ux.dataconfig
+  type: dataconfig
+  layer_id: ux
+  name: useSyncStatus
+  description: GET /api/v1/versioning/sync/status.
+  attributes:
+    source: api
+    target: api.operation.get-sync-status
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/api/hooks/versioning/index.ts
+        symbol: useSyncStatus
+  metadata:
+    created_at: 2026-11-19T15:52:25.263Z
+    updated_at: 2026-11-19T15:52:25.263Z
+    version: 1
+ux.dataconfig.use-taxonomies:
+  id: e605d171-dfc5-4d91-b377-539f269a88ea
+  path: ux.dataconfig.use-taxonomies
+  spec_node_id: ux.dataconfig
+  type: dataconfig
+  layer_id: ux
+  name: useTaxonomies
+  description: GET /api/taxonomies.
+  attributes:
+    source: api
+    target: api.operation.list-taxonomies
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/api/hooks/ontology/useTaxonomies.ts
+        symbol: useTaxonomies
+  metadata:
+    created_at: 2026-11-19T15:52:25.263Z
+    updated_at: 2026-11-19T15:52:25.263Z
+    version: 1
+ux.dataconfig.use-taxonomies-by-ids:
+  id: 853894c5-c582-4a51-a80c-1fcddff8faff
+  path: ux.dataconfig.use-taxonomies-by-ids
+  spec_node_id: ux.dataconfig
+  type: dataconfig
+  layer_id: ux
+  name: useTaxonomiesByIds
+  description: GET /api/taxonomies/{taxonomy_id}.
+  attributes:
+    source: api
+    target: api.operation.get-taxonomy
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/api/hooks/ontology/useTaxonomies.ts
+        symbol: useTaxonomiesByIds
+  metadata:
+    created_at: 2026-11-19T15:52:25.263Z
+    updated_at: 2026-11-19T15:52:25.263Z
+    version: 1
+ux.dataconfig.use-taxonomy:
+  id: f088b8f5-bc6d-4ae9-94c9-99ad7b03c5ab
+  path: ux.dataconfig.use-taxonomy
+  spec_node_id: ux.dataconfig
+  type: dataconfig
+  layer_id: ux
+  name: useTaxonomy
+  description: GET /api/taxonomies/{taxonomy_id}.
+  attributes:
+    source: api
+    target: api.operation.get-taxonomy
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/api/hooks/ontology/useTaxonomies.ts
+        symbol: useTaxonomy
+  metadata:
+    created_at: 2026-11-19T15:52:25.263Z
+    updated_at: 2026-11-19T15:52:25.263Z
+    version: 1
+ux.dataconfig.use-taxonomy-classes:
+  id: cab3a78e-473b-447a-b39e-41c0e0de021d
+  path: ux.dataconfig.use-taxonomy-classes
+  spec_node_id: ux.dataconfig
+  type: dataconfig
+  layer_id: ux
+  name: useTaxonomyClasses
+  description: GET /api/taxonomies/{taxonomy_id}/classes.
+  attributes:
+    source: api
+    target: api.operation.list-taxonomy-classes
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/api/hooks/ontology/useClasses.ts
+        symbol: useTaxonomyClasses
+  metadata:
+    created_at: 2026-11-19T15:52:25.263Z
+    updated_at: 2026-11-19T15:52:25.263Z
+    version: 1
+ux.dataconfig.use-taxonomy-predicates:
+  id: f517c2d2-bf5f-491c-a9f4-2e977616db5f
+  path: ux.dataconfig.use-taxonomy-predicates
+  spec_node_id: ux.dataconfig
+  type: dataconfig
+  layer_id: ux
+  name: useTaxonomyPredicates
+  description: GET /api/taxonomies/{taxonomy_id}/predicates.
+  attributes:
+    source: api
+    target: api.operation.list-taxonomy-predicates
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/api/hooks/ontology/usePredicates.ts
+        symbol: useTaxonomyPredicates
+  metadata:
+    created_at: 2026-11-19T15:52:25.263Z
+    updated_at: 2026-11-19T15:52:25.263Z
+    version: 1
+ux.dataconfig.use-update-class:
+  id: 37517b3c-f414-48a4-b65c-55d57a653333
+  path: ux.dataconfig.use-update-class
+  spec_node_id: ux.dataconfig
+  type: dataconfig
+  layer_id: ux
+  name: useUpdateClass
+  description: PUT /api/classes/{class_id}.
+  attributes:
+    source: api
+    target: api.operation.update-class
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/api/hooks/ontology/useClasses.ts
+        symbol: useUpdateClass
+  metadata:
+    created_at: 2026-11-19T15:52:25.263Z
+    updated_at: 2026-11-19T15:52:25.263Z
+    version: 1
+ux.dataconfig.use-update-config:
+  id: 4e7d27d7-976a-43b9-85c7-4fd773d2509e
+  path: ux.dataconfig.use-update-config
+  spec_node_id: ux.dataconfig
+  type: dataconfig
+  layer_id: ux
+  name: useUpdateConfig
+  description: PATCH /api/v1/admin/configuration/{section}.
+  attributes:
+    source: api
+    target: api.operation.update-configuration-section
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/api/hooks/admin/useConfig.ts
+        symbol: useUpdateConfig
+  metadata:
+    created_at: 2026-11-19T15:52:25.263Z
+    updated_at: 2026-11-19T15:52:25.263Z
+    version: 1
+ux.dataconfig.use-update-configuration:
+  id: 5c01ff92-dacf-4cf7-95ad-f34f9ca90af9
+  path: ux.dataconfig.use-update-configuration
+  spec_node_id: ux.dataconfig
+  type: dataconfig
+  layer_id: ux
+  name: useUpdateConfiguration
+  description: PUT /api/pipeline_configurations/{config_id}.
+  attributes:
+    source: api
+    target: api.operation.update-pipeline-configuration
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/api/hooks/pipeline/useConfigurationMutations.ts
+        symbol: useUpdateConfiguration
+  metadata:
+    created_at: 2026-11-19T15:52:25.263Z
+    updated_at: 2026-11-19T15:52:25.263Z
+    version: 1
+ux.dataconfig.use-update-grounding-workflow:
+  id: 93f1de51-8e85-4269-9309-26bd23177508
+  path: ux.dataconfig.use-update-grounding-workflow
+  spec_node_id: ux.dataconfig
+  type: dataconfig
+  layer_id: ux
+  name: useUpdateGroundingWorkflow
+  description: PUT /api/reference/grounding-workflows/{workflow_id}.
+  attributes:
+    source: api
+    target: api.operation.update-grounding-workflow
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/api/hooks/reference/index.ts
+        symbol: useUpdateGroundingWorkflow
+  metadata:
+    created_at: 2026-11-19T15:52:25.263Z
+    updated_at: 2026-11-19T15:52:25.263Z
+    version: 1
+ux.dataconfig.use-update-individual:
+  id: ab8a596d-bff6-4105-86e6-fe7af2b58c43
+  path: ux.dataconfig.use-update-individual
+  spec_node_id: ux.dataconfig
+  type: dataconfig
+  layer_id: ux
+  name: useUpdateIndividual
+  description: PUT /api/individuals/{individual_id}.
+  attributes:
+    source: api
+    target: api.operation.update-individual
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/api/hooks/ontology/useIndividuals.ts
+        symbol: useUpdateIndividual
+  metadata:
+    created_at: 2026-11-19T15:52:25.263Z
+    updated_at: 2026-11-19T15:52:25.263Z
+    version: 1
+ux.dataconfig.use-update-property:
+  id: 23c1e23b-9426-4d71-a2ae-3203bf5f4105
+  path: ux.dataconfig.use-update-property
+  spec_node_id: ux.dataconfig
+  type: dataconfig
+  layer_id: ux
+  name: useUpdateProperty
+  description: PUT /api/properties/{property_id}.
+  attributes:
+    source: api
+    target: api.operation.update-property-definition
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/api/hooks/ontology/useProperties.ts
+        symbol: useUpdateProperty
+  metadata:
+    created_at: 2026-11-19T15:52:25.263Z
+    updated_at: 2026-11-19T15:52:25.263Z
+    version: 1
+ux.dataconfig.use-update-scheme:
+  id: e12150a0-a614-41a6-bb2d-c93265022ad8
+  path: ux.dataconfig.use-update-scheme
+  spec_node_id: ux.dataconfig
+  type: dataconfig
+  layer_id: ux
+  name: useUpdateScheme
+  description: PUT /api/schemes/{scheme_id}.
+  attributes:
+    source: api
+    target: api.operation.update-concept-scheme
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/api/hooks/ontology/useSchemes.ts
+        symbol: useUpdateScheme
+  metadata:
+    created_at: 2026-11-19T15:52:25.263Z
+    updated_at: 2026-11-19T15:52:25.263Z
+    version: 1
+ux.dataconfig.use-update-taxonomy:
+  id: b43b2119-a040-473c-9309-11592658a5eb
+  path: ux.dataconfig.use-update-taxonomy
+  spec_node_id: ux.dataconfig
+  type: dataconfig
+  layer_id: ux
+  name: useUpdateTaxonomy
+  description: PUT /api/taxonomies/{taxonomy_id}.
+  attributes:
+    source: api
+    target: api.operation.update-taxonomy
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/api/hooks/ontology/useTaxonomies.ts
+        symbol: useUpdateTaxonomy
+  metadata:
+    created_at: 2026-11-19T15:52:25.263Z
+    updated_at: 2026-11-19T15:52:25.263Z
+    version: 1

@@ -3,7 +3,7 @@ schema: documentation-robotics-v1
 cli_version: 0.5.0
 spec_version: 0.13.0
 created: 2026-03-23T12:18:08.630Z
-updated: 2026-11-17T18:49:10.647Z
+updated: 2026-11-19T16:49:34.787Z
 project:
   name: Context Studio
   description: Local-first knowledge graph application for RAG and communication
@@ -16,41 +16,56 @@ layers:
     path: documentation-robotics/model/01_motivation/
     enabled: true
     elements:
-      assessment: 1
-      constraint: 3
+      assessment: 3
+      constraint: 7
       meaning: 1
-      outcome: 2
-      stakeholder: 4
-      value: 2
+      outcome: 4
+      stakeholder: 6
+      value: 4
+      driver: 4
+      goal: 6
+      principle: 7
+      requirement: 14
   business:
     order: 2
     name: Business
     path: documentation-robotics/model/02_business/
     enabled: true
     elements:
+      businessevent: 6
+      businessfunction: 2
+      businessactor: 3
+      businessrole: 3
+      businessservice: 5
+      businessprocess: 6
+      businessobject: 6
+      contract: 2
       businesscollaboration: 1
-      businessevent: 2
-      businessfunction: 3
-      businessinteraction: 1
-      businessservice: 1
-      contract: 1
   product:
     order: 3
     name: Product
     path: documentation-robotics/model/03_product/
     enabled: true
+    elements:
+      persona: 2
+      softwarecapability: 15
+      feature: 27
+      userworkflow: 5
+      workflowstep: 18
   security:
     order: 4
     name: Security
     path: documentation-robotics/model/04_security/
     enabled: true
     elements:
-      authenticationconfig: 1
-      countermeasure: 2
-      dataclassification: 1
-      role: 1
+      countermeasure: 8
+      dataclassification: 2
       securitymodel: 1
-      threat: 2
+      threat: 9
+      authenticationconfig: 1
+      actor: 2
+      role: 2
+      secureresource: 5
   application:
     order: 5
     name: Application
@@ -58,13 +73,13 @@ layers:
     enabled: true
     elements:
       applicationcollaboration: 1
-      applicationcomponent: 29
-      applicationevent: 6
-      applicationfunction: 4
+      applicationcomponent: 78
+      applicationevent: 4
+      applicationfunction: 14
       applicationinteraction: 3
-      applicationinterface: 1
-      applicationprocess: 3
-      applicationservice: 7
+      applicationinterface: 2
+      applicationprocess: 16
+      applicationservice: 72
   technology:
     order: 6
     name: Technology
@@ -72,10 +87,11 @@ layers:
     enabled: true
     elements:
       communicationnetwork: 1
-      systemsoftware: 29
+      systemsoftware: 36
       technologycollaboration: 1
       technologyevent: 1
       technologyinteraction: 1
+      node: 1
   api:
     order: 7
     name: Api
@@ -84,12 +100,12 @@ layers:
     elements:
       info: 1
       openapidocument: 1
-      operation: 101
+      operation: 172
       ratelimit: 1
-      requestbody: 36
-      response: 57
+      requestbody: 52
+      response: 85
+      responses: 164
       securityscheme: 1
-      responses: 97
   data-model:
     order: 8
     name: Data model
@@ -97,8 +113,7 @@ layers:
     enabled: true
     elements:
       arrayschema: 1
-      numericschema: 1
-      objectschema: 43
+      objectschema: 46
       stringschema: 2
   data-store:
     order: 9
@@ -107,11 +122,10 @@ layers:
     enabled: true
     elements:
       accesspattern: 2
-      collection: 16
+      collection: 37
       database: 4
       retentionpolicy: 1
-      storedlogic: 1
-      validationrule: 1
+      validationrule: 10
   ux:
     order: 10
     name: Ux
@@ -119,12 +133,14 @@ layers:
     enabled: true
     elements:
       experiencestate: 1
-      librarycomponent: 1
       statepattern: 1
       uxapplication: 1
-      uxlibrary: 1
       uxspec: 1
-      view: 11
+      view: 50
+      subview: 27
+      uxlibrary: 1
+      librarycomponent: 8
+      dataconfig: 140
   navigation:
     order: 11
     name: Navigation
@@ -132,18 +148,19 @@ layers:
     enabled: true
     elements:
       navigationflow: 1
-      route: 12
+      route: 36
   apm:
     order: 12
     name: Apm
     path: documentation-robotics/model/12_apm/
     enabled: true
     elements:
-      alert: 3
       logconfiguration: 1
-      logprocessor: 1
-      metricinstrument: 3
-      span: 2
+      logprocessor: 2
+      span: 8
+      traceconfiguration: 2
+      exporterconfig: 3
+      instrumentationconfig: 1
   testing:
     order: 13
     name: Testing
@@ -155,9 +172,17 @@ layers:
       coveragerequirement: 3
       inputspacepartition: 1
       outcomecategory: 2
-      testcoveragemodel: 1
-      testcoveragetarget: 14
+      testcoveragemodel: 2
+      testcoveragetarget: 21
 changeset_history:
   - name: restore-upgrade-drops
     committed_at: 2026-11-17T18:49:10.641Z
     action: committed
+  - name: rebuild-model-from-code
+    committed_at: 2026-11-19T16:49:34.437Z
+    action: committed
+reconciled:
+  changeset: rebuild-model-from-code
+  changeset_id: changeset-1795099306929-dmd727eav
+  landed_at: 2026-11-19T16:49:34.437Z
+  code_commit: 2594d7a48b7f067b4cbb6780fc38b54a00839648

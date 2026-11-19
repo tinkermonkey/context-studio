@@ -1,0 +1,121 @@
+motivation.goal.ontology-workbench-for-client-projects:
+  id: 0f03cd1e-5306-41bf-aecc-a03e074a0cdc
+  path: motivation.goal.ontology-workbench-for-client-projects
+  spec_node_id: motivation.goal
+  type: goal
+  layer_id: motivation
+  name: Ontology Workbench for Client Projects
+  description: "Context Studio is the ontology workbench for its client projects
+    (DR, House): clients propose, people decide in CS, and each client repo
+    stays the release channel."
+  attributes:
+    priority: critical
+  source_reference:
+    provenance: manual
+    locations:
+      - file: rearchitecture/ontology_workbench_proposal.md
+  metadata:
+    created_at: 2026-11-19T16:14:23.185Z
+    updated_at: 2026-11-19T16:14:23.185Z
+    version: 1
+motivation.goal.agents-ground-on-the-curated-model:
+  id: 247dd730-2080-4dc4-9a68-e65fada5b69b
+  path: motivation.goal.agents-ground-on-the-curated-model
+  spec_node_id: motivation.goal
+  type: goal
+  layer_id: motivation
+  name: Agents Ground on the Curated Model
+  description: Agents look up classes and relationship types in the curated model
+    instead of inventing them, and propose what is missing.
+  attributes:
+    priority: high
+  source_reference:
+    provenance: manual
+    locations:
+      - file: documentation/field-guide/index.html
+  metadata:
+    created_at: 2026-11-19T16:14:23.185Z
+    updated_at: 2026-11-19T16:14:23.185Z
+    version: 1
+motivation.goal.trustworthy-extraction-into-datasets:
+  id: 2bf3129c-d79f-4f6a-a4ad-4cc73870f338
+  path: motivation.goal.trustworthy-extraction-into-datasets
+  spec_node_id: motivation.goal
+  type: goal
+  layer_id: motivation
+  name: Trustworthy Extraction into Datasets
+  description: Turn documents into cited individuals and relationships, typed by
+    one schema, good enough that review is mostly quick accepts.
+  attributes:
+    priority: high
+  source_reference:
+    provenance: manual
+    locations:
+      - file: documentation/extraction/README.md
+  metadata:
+    created_at: 2026-11-19T16:14:23.185Z
+    updated_at: 2026-11-19T16:14:23.185Z
+    version: 1
+motivation.goal.every-decision-becomes-data:
+  id: 64ae886b-95ea-423b-9d95-809257f53345
+  path: motivation.goal.every-decision-becomes-data
+  spec_node_id: motivation.goal
+  type: goal
+  layer_id: motivation
+  name: Every Decision Becomes Data
+  description: Accepts, rejects, edits and claim verdicts are stored as gold and
+    used to benchmark the pipelines and decision models that made the
+    suggestion.
+  attributes:
+    priority: medium
+  source_reference:
+    provenance: manual
+    locations:
+      - file: rearchitecture/ontology_workbench_proposal.md
+  metadata:
+    created_at: 2026-11-19T16:14:23.185Z
+    updated_at: 2026-11-19T16:14:23.185Z
+    version: 1
+motivation.goal.packaged-desktop-application:
+  id: ba77ad7e-bb7c-4285-a1ef-0794eda1f958
+  path: motivation.goal.packaged-desktop-application
+  spec_node_id: motivation.goal
+  type: goal
+  layer_id: motivation
+  name: Packaged Desktop Application
+  description: "Ship Context Studio as an installable Tauri desktop app (the /app
+    scaffold packaging /ux and the local server) as the functional MVP nears,
+    planned for the next few weeks. Not built yet: today users run ./dev.sh and
+    a browser."
+  attributes:
+    priority: high
+    documentation: Planned. /app holds only the default Tauri v2 starter and is not
+      wired to /ux; no code-layer elements exist for it yet.
+  source_reference:
+    provenance: manual
+    locations:
+      - file: app/README.md
+  metadata:
+    created_at: 2026-11-19T16:14:23.185Z
+    updated_at: 2026-11-19T16:14:23.185Z
+    version: 1
+motivation.goal.safe-local-first-workspace:
+  id: 5cc88745-91cb-40c4-8e53-e469ac2fe0de
+  path: motivation.goal.safe-local-first-workspace
+  spec_node_id: motivation.goal
+  type: goal
+  layer_id: motivation
+  name: Safe Local-First Workspace
+  description: "The single-user workspace stays safe on its workstation: nothing
+    off the machine, no foreign web page and no agent can read or change it
+    beyond what the owner allows."
+  attributes:
+    priority: high
+  source_reference:
+    provenance: manual
+    locations:
+      - file: README.md
+  metadata:
+    created_at: 2026-11-19T16:14:23.185Z
+    updated_at: 2026-11-19T16:14:23.185Z
+    version: 1

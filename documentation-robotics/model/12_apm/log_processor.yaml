@@ -21,3 +21,22 @@ apm.logprocessor.rotating-file-log-processor:
     created_at: 2026-05-10T11:54:09.892Z
     updated_at: 2026-05-10T11:54:09.892Z
     version: 1
+apm.logprocessor.otlp-log-bridge:
+  id: a9b07c20-4b61-4061-a172-3546e71c1c6e
+  path: apm.logprocessor.otlp-log-bridge
+  spec_node_id: apm.logprocessor
+  type: logprocessor
+  layer_id: apm
+  name: OTLP Log Bridge
+  description: Logging handler bridging Python log records to the OTLP log exporter.
+  attributes:
+    type: batch
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/telemetry/log_bridge.py
+        symbol: OTLPLogHandler
+  metadata:
+    created_at: 2026-11-19T15:03:42.144Z
+    updated_at: 2026-11-19T15:03:42.144Z
+    version: 1

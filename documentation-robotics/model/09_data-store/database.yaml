@@ -48,17 +48,17 @@ data-store.database.reference-api-cachedb:
   type: database
   layer_id: data-store
   name: reference_api_cache.db
-  description: Cached responses from external knowledge source APIs (ConceptNet,
-    DBpedia, Wikidata, schema.org) — no Alembic migrations, can be dropped and
-    rebuilt
+  description: "SQLite cache database of the in-process reference proxy
+    (cache_db_path): successful upstream responses from ConceptNet, DBpedia,
+    Wikidata and schema.org. Can be dropped and rebuilt."
   attributes:
     engine: SQLite
     paradigm: RELATIONAL
   source_reference:
     provenance: extracted
     locations:
-      - file: local-server/adapters/reference/cache.py
-        symbol: CachedReferenceSource
+      - file: local-server/adapters/reference/proxy.py
+        symbol: ReferenceProxy
   metadata:
     created_at: 2026-05-08T12:20:31.707Z
     updated_at: 2026-05-08T12:20:31.707Z

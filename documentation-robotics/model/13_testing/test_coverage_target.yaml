@@ -69,9 +69,9 @@ testing.testcoveragetarget.llm-pipeline-execution:
   type: testcoveragetarget
   layer_id: testing
   name: LLM Pipeline Execution
-  description: Coverage target for pipeline configuration and execution tracking
-    in the LLMPipelineManagement bounded context — traces stored in
-    operations.db
+  description: "Coverage target for pipeline execution: registry and selection,
+    background run executor, run lifecycle (pending, running, cancel, resume,
+    apply, revert) and LLM metadata on runs."
   attributes:
     targetType: business-workflow
     priority: high
@@ -91,9 +91,9 @@ testing.testcoveragetarget.versioning-workflow:
   type: testcoveragetarget
   layer_id: testing
   name: Versioning Workflow
-  description: "Coverage target for the complete version control workflow: change
-    events, changesets, proposals, and conflict resolution in the VersionControl
-    bounded context"
+  description: "Coverage target for change management: change proposals (create,
+    decide, apply, reject, reopen, revert, land), approval policies, claims,
+    gold decisions, change events and sync."
   attributes:
     targetType: business-workflow
     priority: critical
@@ -197,9 +197,9 @@ testing.testcoveragetarget.versioning-integration-tests:
   type: testcoveragetarget
   layer_id: testing
   name: Versioning Integration Tests
-  description: Integration test suite for the versioning bounded context — change
-    event persistence, entity versions, changeset lifecycle, and proposal
-    workflows (3 test files)
+  description: "Integration suites for the versioning context against real SQLite:
+    proposals and their operations, decisions and gold, claims, approval policy,
+    bundle and drift import, provenance, change events (18 test files)."
   attributes:
     targetType: integration-flow
     priority: high
@@ -218,9 +218,9 @@ testing.testcoveragetarget.route-integration-tests:
   type: testcoveragetarget
   layer_id: testing
   name: Route Integration Tests
-  description: Route-level integration tests covering all 8 FastAPI route modules
-    (ontology, graph, extraction, admin, reference, interchange, versioning,
-    pipeline) against real SQLite (7 test files)
+  description: Route-level integration suites for the FastAPI routers (ontology,
+    datasets, graph, pipelines, proposals, comparison, claims, sources, admin,
+    decision models, provenance) against real SQLite (21 test files).
   attributes:
     targetType: api-endpoint
     priority: high
@@ -232,29 +232,6 @@ testing.testcoveragetarget.route-integration-tests:
     created_at: 2026-05-08T12:21:16.528Z
     updated_at: 2026-05-08T12:21:16.528Z
     version: 1
-testing.testcoveragetarget.interchange-round-trip-tests:
-  id: 4569e5ca-38fc-4900-ae51-1958a3c0836b
-  path: testing.testcoveragetarget.interchange-round-trip-tests
-  spec_node_id: testing.testcoveragetarget
-  type: testcoveragetarget
-  layer_id: testing
-  name: Interchange Round-Trip Tests
-  description: Integration tests verifying lossless round-trips across SKOS, OWL,
-    and GraphML serialization formats. Located in
-    tests/integration/interchange/. Covers cross-format round-trips and
-    lossiness documentation.
-  attributes:
-    targetType: integration-flow
-    priority: high
-  source_reference:
-    provenance: extracted
-    locations:
-      - file: local-server/tests/integration/interchange/test_cross_format_roundtrip.py
-        symbol: test_cross_format_roundtrip
-  metadata:
-    created_at: 2026-05-10T11:54:24.461Z
-    updated_at: 2026-05-10T11:54:24.461Z
-    version: 1
 testing.testcoveragetarget.adapter-unit-tests:
   id: 7042770d-173c-43e5-81ec-995366cf5a0f
   path: testing.testcoveragetarget.adapter-unit-tests
@@ -262,18 +239,16 @@ testing.testcoveragetarget.adapter-unit-tests:
   type: testcoveragetarget
   layer_id: testing
   name: Adapter Unit Tests
-  description: "Unit tests for adapter-layer components using fakes: LLM provider
-    routing, change recorder, in-process event publisher, NLP processor, cached
-    reference source, and web schema validation. Located in
-    tests/unit/adapters/."
+  description: "Unit suites for adapters with fakes: LLM providers and router,
+    decision models, chat tools, interchange (DR) adapters, request guard,
+    events, NLP (40 test files)."
   attributes:
     targetType: integration-flow
     priority: high
   source_reference:
     provenance: extracted
     locations:
-      - file: local-server/tests/unit/adapters/llm/test_provider_router_routing.py
-        symbol: TestProviderRouter
+      - file: local-server/tests/unit/adapters
   metadata:
     created_at: 2026-05-10T11:54:31.167Z
     updated_at: 2026-05-10T11:54:31.167Z
@@ -285,18 +260,179 @@ testing.testcoveragetarget.domain-unit-tests:
   type: testcoveragetarget
   layer_id: testing
   name: Domain Unit Tests
-  description: Pure unit tests for all 6 bounded context domain services using
-    fake port implementations. Tests span ontology, graph, extraction, pipeline,
-    versioning, admin, and interchange domains. Located in tests/unit/domain/.
+  description: Pure unit suites for the domain contexts (ontology, graph,
+    extraction, pipelines, versioning, chat, decision, interchange, admin) with
+    fake ports (96 test files).
   attributes:
     targetType: business-workflow
     priority: critical
   source_reference:
     provenance: extracted
     locations:
-      - file: local-server/tests/unit/domain/test_ontology_service.py
-        symbol: TestOntologyService
+      - file: local-server/tests/unit/domain
   metadata:
     created_at: 2026-05-10T11:54:35.237Z
     updated_at: 2026-05-10T11:54:35.237Z
+    version: 1
+testing.testcoveragetarget.ux-component-tests:
+  id: d0cf0376-3130-4ce1-a505-fbc1909d7577
+  path: testing.testcoveragetarget.ux-component-tests
+  spec_node_id: testing.testcoveragetarget
+  type: testcoveragetarget
+  layer_id: testing
+  name: UX Component Tests
+  description: Vitest + React Testing Library suites for components (proposals,
+    pipeline, ontology, ui, entity, crud, graph, sources, shell, schema, chat,
+    datasets, claims, settings, reference) and hooks.
+  attributes:
+    targetType: ui-component
+    priority: high
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/components
+  metadata:
+    created_at: 2026-11-19T15:04:45.527Z
+    updated_at: 2026-11-19T15:04:45.527Z
+    version: 1
+testing.testcoveragetarget.ux-route-tests:
+  id: 875ab217-7811-49ff-8f9e-3b07be1e69b8
+  path: testing.testcoveragetarget.ux-route-tests
+  spec_node_id: testing.testcoveragetarget
+  type: testcoveragetarget
+  layer_id: testing
+  name: UX Route Tests
+  description: Vitest suites rendering the /app route pages (populated, empty and
+    error states).
+  attributes:
+    targetType: ui-component
+    priority: high
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/routes
+  metadata:
+    created_at: 2026-11-19T15:04:45.527Z
+    updated_at: 2026-11-19T15:04:45.527Z
+    version: 1
+testing.testcoveragetarget.ux-api-client-tests:
+  id: c9334fee-7742-4d62-ae59-02c30dd6857c
+  path: testing.testcoveragetarget.ux-api-client-tests
+  spec_node_id: testing.testcoveragetarget
+  type: testcoveragetarget
+  layer_id: testing
+  name: UX API Client Tests
+  description: Vitest (and MSW) suites for API services, TanStack Query hooks and
+    mutation error handling.
+  attributes:
+    targetType: integration-flow
+    priority: medium
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/api
+  metadata:
+    created_at: 2026-11-19T15:04:45.527Z
+    updated_at: 2026-11-19T15:04:45.527Z
+    version: 1
+testing.testcoveragetarget.playwright-e2e-tests:
+  id: 8cb26666-59a2-4ad2-8e6f-57447ec975ec
+  path: testing.testcoveragetarget.playwright-e2e-tests
+  spec_node_id: testing.testcoveragetarget
+  type: testcoveragetarget
+  layer_id: testing
+  name: Playwright E2E Tests
+  description: "Playwright end-to-end specs over the running stack: data, design,
+    graph, ontology management, pipelines, proposals, schema and shell."
+  attributes:
+    targetType: business-workflow
+    priority: high
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/e2e/tests
+  metadata:
+    created_at: 2026-11-19T15:04:45.527Z
+    updated_at: 2026-11-19T15:04:45.527Z
+    version: 1
+testing.testcoveragetarget.pipeline-integration-tests:
+  id: 3878e47e-5426-40ad-86e6-925733d28533
+  path: testing.testcoveragetarget.pipeline-integration-tests
+  spec_node_id: testing.testcoveragetarget
+  type: testcoveragetarget
+  layer_id: testing
+  name: Pipeline Integration Tests
+  description: Integration suites for every pipeline type (extraction, grounding,
+    refinement, reflection, claims) with recorded LLM cassettes and quality
+    floors.
+  attributes:
+    targetType: business-workflow
+    priority: critical
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/tests/integration/pipelines
+  metadata:
+    created_at: 2026-11-19T15:04:45.527Z
+    updated_at: 2026-11-19T15:04:45.527Z
+    version: 1
+testing.testcoveragetarget.chat-and-mcp-integration-tests:
+  id: 8eb4d619-c8b8-4198-87d9-66cfef03a41a
+  path: testing.testcoveragetarget.chat-and-mcp-integration-tests
+  spec_node_id: testing.testcoveragetarget
+  type: testcoveragetarget
+  layer_id: testing
+  name: Chat And MCP Integration Tests
+  description: Integration suites for the chat service, chat routes, tool parity
+    between chat and MCP, and the MCP endpoint.
+  attributes:
+    targetType: integration-flow
+    priority: high
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/tests/integration/chat
+  metadata:
+    created_at: 2026-11-19T15:04:45.527Z
+    updated_at: 2026-11-19T15:04:45.527Z
+    version: 1
+testing.testcoveragetarget.source-integration-tests:
+  id: 50adc368-3b9b-41b2-bc70-2e5b18e36ace
+  path: testing.testcoveragetarget.source-integration-tests
+  spec_node_id: testing.testcoveragetarget
+  type: testcoveragetarget
+  layer_id: testing
+  name: Source Integration Tests
+  description: "Integration suites for sources: readers, fetching, file store and
+    source routes."
+  attributes:
+    targetType: integration-flow
+    priority: high
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/tests/integration/sources
+  metadata:
+    created_at: 2026-11-19T15:04:45.527Z
+    updated_at: 2026-11-19T15:04:45.527Z
+    version: 1
+testing.testcoveragetarget.adapter-integration-tests:
+  id: b9c8e827-e9b6-4f4c-9291-511691f6a8f5
+  path: testing.testcoveragetarget.adapter-integration-tests
+  spec_node_id: testing.testcoveragetarget
+  type: testcoveragetarget
+  layer_id: testing
+  name: Adapter Integration Tests
+  description: "Adapter suites against real SQLite and providers: repositories,
+    vector indexes, transaction scope."
+  attributes:
+    targetType: application-component
+    priority: high
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/tests/integration/adapters
+  metadata:
+    created_at: 2026-11-19T15:04:45.527Z
+    updated_at: 2026-11-19T15:04:45.527Z
     version: 1

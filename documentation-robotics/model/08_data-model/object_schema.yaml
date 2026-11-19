@@ -65,27 +65,6 @@ data-model.objectschema.change-event:
     created_at: 2026-05-07T22:15:45.059Z
     updated_at: 2026-05-07T22:15:45.059Z
     version: 1
-data-model.objectschema.changeset:
-  id: 58e489ea-7f4a-4918-9fec-fe37e404b25a
-  path: data-model.objectschema.changeset
-  spec_node_id: data-model.objectschema
-  type: objectschema
-  layer_id: data-model
-  name: Changeset
-  description: ORM schema for named collections of change events progressing
-    through version control states (WORKING→STAGED→PROPOSED→APPROVED→MERGED) —
-    stores name, description, state, and a JSON array of event_ids
-  attributes:
-    type: object
-  source_reference:
-    provenance: extracted
-    locations:
-      - file: local-server/adapters/persistence/sqlite/models.py
-        symbol: Changeset
-  metadata:
-    created_at: 2026-05-07T22:15:50.409Z
-    updated_at: 2026-05-07T22:15:50.409Z
-    version: 1
 data-model.objectschema.pipeline-configuration:
   id: 7b29fc18-a3a5-4cd6-a820-775b55d2445f
   path: data-model.objectschema.pipeline-configuration
@@ -93,16 +72,15 @@ data-model.objectschema.pipeline-configuration:
   type: objectschema
   layer_id: data-model
   name: Pipeline Configuration
-  description: ORM schema for LLM pipeline configurations in operations.db —
-    stores pipeline slug, title, provider, model, config JSON, system_prompt,
-    user_prompt template, enabled flag, and version counter
+  description: "ORM model for user-created pipeline configurations (operations.db
+    pipeline_configurations): type, implementation, versioned settings."
   attributes:
     type: object
   source_reference:
     provenance: extracted
     locations:
       - file: local-server/adapters/persistence/sqlite/operations/models.py
-        symbol: PipelineConfigurationModel
+        symbol: PipelineConfiguration
   metadata:
     created_at: 2026-05-07T22:15:52.486Z
     updated_at: 2026-05-07T22:15:52.486Z
@@ -192,48 +170,6 @@ data-model.objectschema.extraction-result:
     created_at: 2026-05-08T09:47:13.733Z
     updated_at: 2026-05-08T09:47:13.733Z
     version: 1
-data-model.objectschema.entity-version:
-  id: 45811c9e-1774-42e5-9980-bf90cfd9c090
-  path: data-model.objectschema.entity-version
-  spec_node_id: data-model.objectschema
-  type: objectschema
-  layer_id: data-model
-  name: Entity Version
-  description: ORM schema for entity version snapshots — stores entity_id FK,
-    version number, full JSON snapshot, and the change event that triggered the
-    version
-  attributes:
-    type: object
-  source_reference:
-    provenance: extracted
-    locations:
-      - file: local-server/adapters/persistence/sqlite/models.py
-        symbol: EntityVersion
-  metadata:
-    created_at: 2026-05-08T09:47:14.222Z
-    updated_at: 2026-05-08T09:47:14.222Z
-    version: 1
-data-model.objectschema.changeset-event:
-  id: a9e77d2d-f901-43d3-bc9f-29ad229c9ba5
-  path: data-model.objectschema.changeset-event
-  spec_node_id: data-model.objectschema
-  type: objectschema
-  layer_id: data-model
-  name: Changeset Event
-  description: ORM schema for individual change events within a versioning
-    changeset — stores changeset_id FK, entity_id, operation
-    (create/update/delete), before/after JSON snapshots
-  attributes:
-    type: object
-  source_reference:
-    provenance: extracted
-    locations:
-      - file: local-server/adapters/persistence/sqlite/models.py
-        symbol: ChangesetEvent
-  metadata:
-    created_at: 2026-05-08T09:47:14.708Z
-    updated_at: 2026-05-08T09:47:14.708Z
-    version: 1
 data-model.objectschema.proposal:
   id: 6aa7f2cd-9171-4746-8412-26d03f1e7523
   path: data-model.objectschema.proposal
@@ -241,61 +177,18 @@ data-model.objectschema.proposal:
   type: objectschema
   layer_id: data-model
   name: Proposal
-  description: ORM schema for merge proposals — stores changeset_id FK, submitter,
-    status (pending/approved/rejected/merged), review metadata, and conflict
-    resolution references
+  description: "ORM model for change proposals (change_proposals, a batch_runs
+    subtype): taxonomy, origin, status, landing."
   attributes:
     type: object
   source_reference:
     provenance: extracted
     locations:
       - file: local-server/adapters/persistence/sqlite/models.py
-        symbol: Proposal
+        symbol: ChangeProposalRun
   metadata:
     created_at: 2026-05-08T09:47:20.656Z
     updated_at: 2026-05-08T09:47:20.656Z
-    version: 1
-data-model.objectschema.conflict-resolution:
-  id: c5484bfb-26e2-4629-afe0-f7caa0048b79
-  path: data-model.objectschema.conflict-resolution
-  spec_node_id: data-model.objectschema
-  type: objectschema
-  layer_id: data-model
-  name: Conflict Resolution
-  description: ORM schema for manual conflict resolution records — stores
-    proposal_id FK, entity_id, conflict type, chosen resolution strategy, and
-    resolved snapshot
-  attributes:
-    type: object
-  source_reference:
-    provenance: extracted
-    locations:
-      - file: local-server/adapters/persistence/sqlite/models.py
-        symbol: ConflictResolution
-  metadata:
-    created_at: 2026-05-08T09:47:21.153Z
-    updated_at: 2026-05-08T09:47:21.153Z
-    version: 1
-data-model.objectschema.pipeline-execution:
-  id: 69626d71-fe27-42b4-aaf3-31e7c7fa0457
-  path: data-model.objectschema.pipeline-execution
-  spec_node_id: data-model.objectschema
-  type: objectschema
-  layer_id: data-model
-  name: Pipeline Execution
-  description: ORM schema for pipeline execution records in operations.db — stores
-    pipeline_id FK, trigger, status, input/output JSON, LLM traceability log,
-    and timing metadata
-  attributes:
-    type: object
-  source_reference:
-    provenance: extracted
-    locations:
-      - file: local-server/adapters/persistence/sqlite/operations/models.py
-        symbol: ExecutionModel
-  metadata:
-    created_at: 2026-05-08T09:47:21.641Z
-    updated_at: 2026-05-08T09:47:21.641Z
     version: 1
 data-model.objectschema.system-health:
   id: 702b8f46-089c-4fda-9550-b47bd9ece48f
@@ -725,41 +618,18 @@ data-model.objectschema.pipeline-configuration-entity:
   type: objectschema
   layer_id: data-model
   name: Pipeline Configuration Entity
-  description: Domain entity for an LLM pipeline configuration; defines provider
-    (openai/anthropic), model, prompts (system and user), runtime config,
-    version, enabled flag, and optional seed; validates provider and version >=
-    1
+  description: "Domain value: one version of a pipeline implementation's
+    configuration (built-in or user), as the registry resolves it."
   attributes:
     type: object
   source_reference:
     provenance: extracted
     locations:
-      - file: local-server/domain/pipeline/entities.py
-        symbol: PipelineConfiguration
+      - file: local-server/domain/pipelines/registry.py
+        symbol: ConfigurationVersion
   metadata:
     created_at: 2026-05-09T10:24:45.286Z
     updated_at: 2026-05-09T10:24:45.286Z
-    version: 1
-data-model.objectschema.execution-entity:
-  id: 1c94eb79-f327-4d62-a153-15cbf09a004d
-  path: data-model.objectschema.execution-entity
-  spec_node_id: data-model.objectschema
-  type: objectschema
-  layer_id: data-model
-  name: Execution Entity
-  description: Domain entity recording a single LLM pipeline execution; captures
-    input/output text, provider, model, tokens_in, tokens_out, duration_ms,
-    status (success/error/timeout), optional error message, and timestamp
-  attributes:
-    type: object
-  source_reference:
-    provenance: extracted
-    locations:
-      - file: local-server/domain/pipeline/entities.py
-        symbol: Execution
-  metadata:
-    created_at: 2026-05-09T10:24:45.764Z
-    updated_at: 2026-05-09T10:24:45.764Z
     version: 1
 data-model.objectschema.change-event-entity:
   id: 7598778d-b0c9-4ac2-8ac9-1a15ff5534a3
@@ -783,49 +653,6 @@ data-model.objectschema.change-event-entity:
     created_at: 2026-05-09T10:24:58.754Z
     updated_at: 2026-05-09T10:24:58.754Z
     version: 1
-data-model.objectschema.entity-version-entity:
-  id: 87f41b0a-59dd-4e37-9b69-ffd036f02162
-  path: data-model.objectschema.entity-version-entity
-  spec_node_id: data-model.objectschema
-  type: objectschema
-  layer_id: data-model
-  name: Entity Version Entity
-  description: Domain entity representing a snapshot of an entity at a specific
-    version; carries entity_id, version number, state enum, snapshot dict,
-    created_at, and optional parent_version
-  attributes:
-    type: object
-  source_reference:
-    provenance: extracted
-    locations:
-      - file: local-server/domain/versioning/entities.py
-        symbol: EntityVersion
-  metadata:
-    created_at: 2026-05-09T10:24:59.236Z
-    updated_at: 2026-05-09T10:24:59.236Z
-    version: 1
-data-model.objectschema.changeset-entity:
-  id: f6ecf480-c1fd-4d76-b5bc-c56aa37c635b
-  path: data-model.objectschema.changeset-entity
-  spec_node_id: data-model.objectschema
-  type: objectschema
-  layer_id: data-model
-  name: Changeset Entity
-  description: Domain entity for a named collection of change events proposed as a
-    unit; enforces state machine transitions
-    (WORKING→STAGED→PROPOSED→APPROVED→MERGED) via transition_to(); prevents
-    direct state assignment
-  attributes:
-    type: object
-  source_reference:
-    provenance: extracted
-    locations:
-      - file: local-server/domain/versioning/entities.py
-        symbol: Changeset
-  metadata:
-    created_at: 2026-05-09T10:24:59.713Z
-    updated_at: 2026-05-09T10:24:59.713Z
-    version: 1
 data-model.objectschema.proposal-entity:
   id: 2ff8aa70-673e-4390-97c0-5ebca5cea559
   path: data-model.objectschema.proposal-entity
@@ -833,80 +660,295 @@ data-model.objectschema.proposal-entity:
   type: objectschema
   layer_id: data-model
   name: Proposal Entity
-  description: Domain entity for a formal proposal to merge a changeset;
-    references changeset_id, enforces state transitions (OPEN→APPROVED/REJECTED,
-    APPROVED→MERGED), stores reviewed_at and reviewer_notes
+  description: "Domain entity: a change proposal to one taxonomy, with its ordered
+    proposed operations, origin, status and landing."
   attributes:
     type: object
   source_reference:
     provenance: extracted
     locations:
-      - file: local-server/domain/versioning/entities.py
-        symbol: Proposal
+      - file: local-server/domain/versioning/proposals.py
+        symbol: ChangeProposal
   metadata:
     created_at: 2026-05-09T10:25:00.196Z
     updated_at: 2026-05-09T10:25:00.196Z
     version: 1
-data-model.objectschema.conflict-entity:
-  id: 9415f1bc-6636-463e-be95-21cc351bd236
-  path: data-model.objectschema.conflict-entity
+data-model.objectschema.attribute-definition-entity:
+  id: 5f5b88ee-2f3c-45f6-84c8-ed71fda97e2b
+  path: data-model.objectschema.attribute-definition-entity
   spec_node_id: data-model.objectschema
   type: objectschema
   layer_id: data-model
-  name: Conflict Entity
-  description: Domain entity representing a merge conflict on a single field;
-    carries entity_id, entity_type, field_name, base_value, incoming_value, and
-    resolved_value/strategy; resolved atomically via resolve()
+  name: Attribute Definition Entity
+  description: "Domain entity: an attribute a class's individuals may carry (name,
+    data type, cardinality)."
   attributes:
     type: object
   source_reference:
     provenance: extracted
     locations:
-      - file: local-server/domain/versioning/entities.py
-        symbol: Conflict
+      - file: local-server/domain/ontology/entities.py
+        symbol: AttributeDefinition
   metadata:
-    created_at: 2026-05-09T10:25:00.659Z
-    updated_at: 2026-05-09T10:25:00.659Z
+    created_at: 2026-11-19T14:54:15.821Z
+    updated_at: 2026-11-19T14:54:15.821Z
     version: 1
-data-model.objectschema.conflict-report:
-  id: b9227bff-7418-477e-b76b-daf7c59f6371
-  path: data-model.objectschema.conflict-report
+data-model.objectschema.dataset-entity:
+  id: 322241c3-fef8-4033-ad77-11d3e6793b46
+  path: data-model.objectschema.dataset-entity
   spec_node_id: data-model.objectschema
   type: objectschema
   layer_id: data-model
-  name: Conflict Report
-  description: Report of conflicts in a merge proposal; holds proposal_id and a
-    list of Conflict entities; provides has_conflicts and all_resolved
-    properties
+  name: Dataset Entity
+  description: "Domain entity: a named body of data (individuals and their
+    relationships) over a taxonomy's schema."
   attributes:
     type: object
   source_reference:
     provenance: extracted
     locations:
-      - file: local-server/domain/versioning/entities.py
-        symbol: ConflictReport
+      - file: local-server/domain/ontology/entities.py
+        symbol: Dataset
   metadata:
-    created_at: 2026-05-09T10:25:01.127Z
-    updated_at: 2026-05-09T10:25:01.127Z
+    created_at: 2026-11-19T14:54:15.821Z
+    updated_at: 2026-11-19T14:54:15.821Z
     version: 1
-data-model.objectschema.merge-result:
-  id: d1710a23-4a42-4378-ae37-0190abeaf44c
-  path: data-model.objectschema.merge-result
+data-model.objectschema.predicate-entity:
+  id: 73714d60-3175-43eb-9620-ba2970afb6c6
+  path: data-model.objectschema.predicate-entity
   spec_node_id: data-model.objectschema
   type: objectschema
   layer_id: data-model
-  name: Merge Result
-  description: Result of a successful merge operation; carries proposal_id,
-    changeset_id, merged_at timestamp, events_applied count, and
-    conflicts_resolved count
+  name: Predicate Entity
+  description: "Domain entity: a relation verb in a taxonomy's predicate catalog,
+    used by relationship types."
   attributes:
     type: object
   source_reference:
     provenance: extracted
     locations:
-      - file: local-server/domain/versioning/entities.py
-        symbol: MergeResult
+      - file: local-server/domain/ontology/entities.py
+        symbol: Predicate
   metadata:
-    created_at: 2026-05-09T10:25:01.598Z
-    updated_at: 2026-05-09T10:25:01.598Z
+    created_at: 2026-11-19T14:54:15.821Z
+    updated_at: 2026-11-19T14:54:15.821Z
+    version: 1
+data-model.objectschema.proposed-operation:
+  id: 066a86b3-e78a-438c-a0ad-5e94092bb955
+  path: data-model.objectschema.proposed-operation
+  spec_node_id: data-model.objectschema
+  type: objectschema
+  layer_id: data-model
+  name: Proposed Operation
+  description: "Domain value: one operation in a change proposal
+    (create/update/delete of an entity), with its status and decision."
+  attributes:
+    type: object
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/domain/versioning/proposals.py
+        symbol: ProposedOperation
+  metadata:
+    created_at: 2026-11-19T14:54:15.821Z
+    updated_at: 2026-11-19T14:54:15.821Z
+    version: 1
+data-model.objectschema.proposal-decision-entity:
+  id: 794411bf-cebf-46b1-99eb-70bf4d8c7b68
+  path: data-model.objectschema.proposal-decision-entity
+  spec_node_id: data-model.objectschema
+  type: objectschema
+  layer_id: data-model
+  name: Proposal Decision Entity
+  description: "Domain entity: a reviewer's or policy's decision on a proposal
+    operation, with reason code and timing (the gold record)."
+  attributes:
+    type: object
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/domain/versioning/gold.py
+        symbol: ProposalDecision
+  metadata:
+    created_at: 2026-11-19T14:54:15.821Z
+    updated_at: 2026-11-19T14:54:15.821Z
+    version: 1
+data-model.objectschema.claim-entity:
+  id: 1155ce47-b6cd-4cf0-b560-1276d49fb09a
+  path: data-model.objectschema.claim-entity
+  spec_node_id: data-model.objectschema
+  type: objectschema
+  layer_id: data-model
+  name: Claim Entity
+  description: "Domain entity: a claim about a taxonomy (from notes or a client),
+    with its triage and verdict."
+  attributes:
+    type: object
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/domain/versioning/claims.py
+        symbol: Claim
+  metadata:
+    created_at: 2026-11-19T14:54:15.821Z
+    updated_at: 2026-11-19T14:54:15.821Z
+    version: 1
+data-model.objectschema.approval-policy-entity:
+  id: 35cef383-f97a-4b37-8c16-80a860314cc2
+  path: data-model.objectschema.approval-policy-entity
+  spec_node_id: data-model.objectschema
+  type: objectschema
+  layer_id: data-model
+  name: Approval Policy Entity
+  description: "Domain entity: a taxonomy's approval policy, the rules for which
+    proposal operations auto-apply."
+  attributes:
+    type: object
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/domain/versioning/approval_policy.py
+        symbol: ApprovalPolicy
+  metadata:
+    created_at: 2026-11-19T14:54:15.821Z
+    updated_at: 2026-11-19T14:54:15.821Z
+    version: 1
+data-model.objectschema.entity-source-entity:
+  id: 4d4756bd-3d62-463f-b29a-87f779d9fc7a
+  path: data-model.objectschema.entity-source-entity
+  spec_node_id: data-model.objectschema
+  type: objectschema
+  layer_id: data-model
+  name: Entity Source Entity
+  description: "Domain entity: provenance linking an ontology entity to the source
+    passage it was extracted from."
+  attributes:
+    type: object
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/domain/versioning/provenance.py
+        symbol: EntitySource
+  metadata:
+    created_at: 2026-11-19T14:54:15.821Z
+    updated_at: 2026-11-19T14:54:15.821Z
+    version: 1
+data-model.objectschema.source-entity:
+  id: 6cde0ac8-d4d9-4e55-9a9f-59b75fcd3e8e
+  path: data-model.objectschema.source-entity
+  spec_node_id: data-model.objectschema
+  type: objectschema
+  layer_id: data-model
+  name: Source Entity
+  description: "Domain entity: a source document (file, web page or text) of a
+    taxonomy's dataset, with status and pages."
+  attributes:
+    type: object
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/domain/extraction/sources.py
+        symbol: Source
+  metadata:
+    created_at: 2026-11-19T14:54:15.821Z
+    updated_at: 2026-11-19T14:54:15.821Z
+    version: 1
+data-model.objectschema.pipeline-run-entity:
+  id: a74c439a-5fae-4b41-b7c7-94d27a6e2edb
+  path: data-model.objectschema.pipeline-run-entity
+  spec_node_id: data-model.objectschema
+  type: objectschema
+  layer_id: data-model
+  name: Pipeline Run Entity
+  description: "Domain entity: one run of a pipeline (type, implementation,
+    configuration version, status, stage progress), specialized per pipeline
+    type."
+  attributes:
+    type: object
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/domain/pipelines/entities.py
+        symbol: PipelineRun
+  metadata:
+    created_at: 2026-11-19T14:54:15.821Z
+    updated_at: 2026-11-19T14:54:15.821Z
+    version: 1
+data-model.objectschema.batch-entity:
+  id: 9e53a0e9-7cd4-4589-85f3-d72233a4b9ba
+  path: data-model.objectschema.batch-entity
+  spec_node_id: data-model.objectschema
+  type: objectschema
+  layer_id: data-model
+  name: Batch Entity
+  description: "Domain entity: a batch of pipeline runs with aggregate status."
+  attributes:
+    type: object
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/domain/pipelines/entities.py
+        symbol: Batch
+  metadata:
+    created_at: 2026-11-19T14:54:15.821Z
+    updated_at: 2026-11-19T14:54:15.821Z
+    version: 1
+data-model.objectschema.conversation-entity:
+  id: 36f66379-14ab-43a3-9e27-e0e688ec004a
+  path: data-model.objectschema.conversation-entity
+  spec_node_id: data-model.objectschema
+  type: objectschema
+  layer_id: data-model
+  name: Conversation Entity
+  description: "Domain entity: a chat conversation with its messages."
+  attributes:
+    type: object
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/domain/chat/entities.py
+        symbol: Conversation
+  metadata:
+    created_at: 2026-11-19T14:54:15.821Z
+    updated_at: 2026-11-19T14:54:15.821Z
+    version: 1
+data-model.objectschema.chat-message-entity:
+  id: 9c04f58c-a24f-4f0b-9671-8c356e1e25b4
+  path: data-model.objectschema.chat-message-entity
+  spec_node_id: data-model.objectschema
+  type: objectschema
+  layer_id: data-model
+  name: Chat Message Entity
+  description: "Domain entity: one chat message (role and content blocks: text,
+    tool use, tool result, reasoning)."
+  attributes:
+    type: object
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/domain/chat/entities.py
+        symbol: ChatMessage
+  metadata:
+    created_at: 2026-11-19T14:54:15.821Z
+    updated_at: 2026-11-19T14:54:15.821Z
+    version: 1
+data-model.objectschema.graph-view:
+  id: cb769f88-9bb8-4b1a-9759-07ce72b8021d
+  path: data-model.objectschema.graph-view
+  spec_node_id: data-model.objectschema
+  type: objectschema
+  layer_id: data-model
+  name: Graph View
+  description: "Domain read model: labelled nodes, edges, layers and taxonomies of
+    the ontology graph for visualization."
+  attributes:
+    type: object
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/domain/graph/entities.py
+        symbol: GraphView
+  metadata:
+    created_at: 2026-11-19T14:54:15.821Z
+    updated_at: 2026-11-19T14:54:15.821Z
     version: 1
