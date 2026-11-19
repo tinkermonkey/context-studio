@@ -9,7 +9,6 @@ testing.inputspacepartition.entity-node-type-discriminator:
     Taxonomy, ConceptScheme, Class (valid), and invalid/empty values — maps to
     unified ontology_entities table in local.db"
   attributes:
-    fieldRef: OntologyEntity.node_type
     presenceRule: required
     description: node_type discriminator partition for unified ontology_entities table
   source_reference:

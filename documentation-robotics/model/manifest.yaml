@@ -1,9 +1,9 @@
 version: 0.1.0
 schema: documentation-robotics-v1
-cli_version: 0.2.0
-spec_version: 0.10.0
+cli_version: 0.5.0
+spec_version: 0.13.0
 created: 2026-03-23T12:18:08.630Z
-updated: 2026-10-28T12:50:11.434Z
+updated: 2026-11-17T18:49:10.647Z
 project:
   name: Context Studio
   description: Local-first knowledge graph application for RAG and communication
@@ -39,7 +39,6 @@ layers:
     name: Product
     path: documentation-robotics/model/03_product/
     enabled: true
-    elements: {}
   security:
     order: 4
     name: Security
@@ -90,6 +89,7 @@ layers:
       requestbody: 36
       response: 57
       securityscheme: 1
+      responses: 97
   data-model:
     order: 8
     name: Data model
@@ -157,3 +157,7 @@ layers:
       outcomecategory: 2
       testcoveragemodel: 1
       testcoveragetarget: 14
+changeset_history:
+  - name: restore-upgrade-drops
+    committed_at: 2026-11-17T18:49:10.641Z
+    action: committed

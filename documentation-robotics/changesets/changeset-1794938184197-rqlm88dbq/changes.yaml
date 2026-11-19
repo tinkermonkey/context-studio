@@ -1,0 +1,4477 @@
+- type: add
+  elementId: api.responses.add-parent-class-to-individual-responses
+  layerName: api
+  after:
+    id: b92b0ef1-620d-4bf1-8608-6e86ca577f40
+    path: api.responses.add-parent-class-to-individual-responses
+    spec_node_id: api.responses
+    type: responses
+    layer_id: api
+    name: add-parent-class-to-individual-responses
+    description: Responses map of the add-parent-class-to-individual operation.
+    metadata:
+      created_at: 2026-11-17T17:56:41.413Z
+      updated_at: 2026-11-17T17:56:41.413Z
+      version: 1
+    source_reference:
+      provenance: inferred
+      locations:
+        - file: local-server/adapters/web/ontology_routes.py
+          symbol: add_parent_class_to_individual
+  timestamp: 2026-11-17T18:00:27.931Z
+  sequenceNumber: 0
+- type: add
+  elementId: api.responses.analyze-text-responses
+  layerName: api
+  after:
+    id: 01291861-7132-45d9-8066-84be0ef7d6ef
+    path: api.responses.analyze-text-responses
+    spec_node_id: api.responses
+    type: responses
+    layer_id: api
+    name: analyze-text-responses
+    description: Responses map of the analyze-text operation.
+    metadata:
+      created_at: 2026-11-17T17:56:50.214Z
+      updated_at: 2026-11-17T17:56:50.214Z
+      version: 1
+    source_reference:
+      provenance: inferred
+      locations:
+        - file: local-server/adapters/web/extraction_routes.py
+          symbol: analyze_text
+  timestamp: 2026-11-17T18:00:28.470Z
+  sequenceNumber: 1
+- type: add
+  elementId: api.responses.approve-proposal-responses
+  layerName: api
+  after:
+    id: 65f12b26-f246-4e2c-bc44-f02c721e4c05
+    path: api.responses.approve-proposal-responses
+    spec_node_id: api.responses
+    type: responses
+    layer_id: api
+    name: approve-proposal-responses
+    description: Responses map of the approve-proposal operation.
+    metadata:
+      created_at: 2026-11-17T17:56:50.616Z
+      updated_at: 2026-11-17T17:56:50.616Z
+      version: 1
+    source_reference:
+      provenance: inferred
+      locations:
+        - file: local-server/adapters/web/versioning_routes.py
+          symbol: approve_proposal
+  timestamp: 2026-11-17T18:00:28.984Z
+  sequenceNumber: 2
+- type: add
+  elementId: api.responses.auto-resolve-conflicts-responses
+  layerName: api
+  after:
+    id: 21ff4e83-914d-4cfb-9b1b-baafbae6b395
+    path: api.responses.auto-resolve-conflicts-responses
+    spec_node_id: api.responses
+    type: responses
+    layer_id: api
+    name: auto-resolve-conflicts-responses
+    description: Responses map of the auto-resolve-conflicts operation.
+    metadata:
+      created_at: 2026-11-17T17:56:50.942Z
+      updated_at: 2026-11-17T17:56:50.942Z
+      version: 1
+    source_reference:
+      provenance: inferred
+      locations:
+        - file: local-server/adapters/web/versioning_routes.py
+          symbol: auto_resolve_conflicts
+  timestamp: 2026-11-17T18:00:29.517Z
+  sequenceNumber: 3
+- type: add
+  elementId: api.responses.build-knowledge-graph-responses
+  layerName: api
+  after:
+    id: 8cb847a2-3c6f-4162-acb3-179980e437b4
+    path: api.responses.build-knowledge-graph-responses
+    spec_node_id: api.responses
+    type: responses
+    layer_id: api
+    name: build-knowledge-graph-responses
+    description: Responses map of the build-knowledge-graph operation.
+    metadata:
+      created_at: 2026-11-17T17:56:51.239Z
+      updated_at: 2026-11-17T17:56:51.239Z
+      version: 1
+    source_reference:
+      provenance: inferred
+      locations:
+        - file: local-server/adapters/web/graph_routes.py
+          symbol: build_graph
+  timestamp: 2026-11-17T18:00:30.092Z
+  sequenceNumber: 4
+- type: add
+  elementId: api.responses.check-cycle-responses
+  layerName: api
+  after:
+    id: e1943172-3437-4c37-94a7-4de5a9dbcab1
+    path: api.responses.check-cycle-responses
+    spec_node_id: api.responses
+    type: responses
+    layer_id: api
+    name: check-cycle-responses
+    description: Responses map of the check-cycle operation.
+    metadata:
+      created_at: 2026-11-17T17:56:51.513Z
+      updated_at: 2026-11-17T17:56:51.513Z
+      version: 1
+    source_reference:
+      provenance: inferred
+      locations:
+        - file: local-server/adapters/web/graph_routes.py
+          symbol: check_cycle
+  timestamp: 2026-11-17T18:00:30.632Z
+  sequenceNumber: 5
+- type: add
+  elementId: api.responses.create-changeset-responses
+  layerName: api
+  after:
+    id: 14125938-4e56-4daf-8d1b-f943685d00c6
+    path: api.responses.create-changeset-responses
+    spec_node_id: api.responses
+    type: responses
+    layer_id: api
+    name: create-changeset-responses
+    description: Responses map of the create-changeset operation.
+    metadata:
+      created_at: 2026-11-17T17:56:51.780Z
+      updated_at: 2026-11-17T17:56:51.780Z
+      version: 1
+    source_reference:
+      provenance: inferred
+      locations:
+        - file: local-server/adapters/web/versioning_routes.py
+          symbol: create_changeset
+  timestamp: 2026-11-17T18:00:31.159Z
+  sequenceNumber: 6
+- type: add
+  elementId: api.responses.create-class-responses
+  layerName: api
+  after:
+    id: 8c1a5465-c098-4d03-902c-ba1a64274feb
+    path: api.responses.create-class-responses
+    spec_node_id: api.responses
+    type: responses
+    layer_id: api
+    name: create-class-responses
+    description: Responses map of the create-class operation.
+    metadata:
+      created_at: 2026-11-17T17:56:52.084Z
+      updated_at: 2026-11-17T17:56:52.084Z
+      version: 1
+    source_reference:
+      provenance: inferred
+      locations:
+        - file: local-server/adapters/web/ontology_routes.py
+          symbol: create_class
+  timestamp: 2026-11-17T18:00:31.754Z
+  sequenceNumber: 7
+- type: add
+  elementId: api.responses.create-concept-scheme-responses
+  layerName: api
+  after:
+    id: f339b4ca-ed12-4afa-993f-236aafe159e3
+    path: api.responses.create-concept-scheme-responses
+    spec_node_id: api.responses
+    type: responses
+    layer_id: api
+    name: create-concept-scheme-responses
+    description: Responses map of the create-concept-scheme operation.
+    metadata:
+      created_at: 2026-11-17T17:56:52.366Z
+      updated_at: 2026-11-17T17:56:52.366Z
+      version: 1
+    source_reference:
+      provenance: inferred
+      locations:
+        - file: local-server/adapters/web/ontology_routes.py
+          symbol: create_concept_scheme
+  timestamp: 2026-11-17T18:00:32.345Z
+  sequenceNumber: 8
+- type: add
+  elementId: api.responses.create-individual-responses
+  layerName: api
+  after:
+    id: bc810cd7-500b-4cc9-9526-aa9d207dedb3
+    path: api.responses.create-individual-responses
+    spec_node_id: api.responses
+    type: responses
+    layer_id: api
+    name: create-individual-responses
+    description: Responses map of the create-individual operation.
+    metadata:
+      created_at: 2026-11-17T17:56:52.669Z
+      updated_at: 2026-11-17T17:56:52.669Z
+      version: 1
+    source_reference:
+      provenance: inferred
+      locations:
+        - file: local-server/adapters/web/ontology_routes.py
+          symbol: create_individual
+  timestamp: 2026-11-17T18:00:32.970Z
+  sequenceNumber: 9
+- type: add
+  elementId: api.responses.create-pipeline-configuration-responses
+  layerName: api
+  after:
+    id: 9ef62fda-d329-4d4e-80e1-076c9550ff22
+    path: api.responses.create-pipeline-configuration-responses
+    spec_node_id: api.responses
+    type: responses
+    layer_id: api
+    name: create-pipeline-configuration-responses
+    description: Responses map of the create-pipeline-configuration operation.
+    metadata:
+      created_at: 2026-11-17T17:56:52.978Z
+      updated_at: 2026-11-17T17:56:52.978Z
+      version: 1
+    source_reference:
+      provenance: inferred
+      locations:
+        - file: local-server/adapters/web/pipeline_routes.py
+          symbol: create_pipeline_configuration
+  timestamp: 2026-11-17T18:00:33.627Z
+  sequenceNumber: 10
+- type: add
+  elementId: api.responses.create-property-definition-responses
+  layerName: api
+  after:
+    id: 49c34163-3982-4cc1-b779-35cee152e7fd
+    path: api.responses.create-property-definition-responses
+    spec_node_id: api.responses
+    type: responses
+    layer_id: api
+    name: create-property-definition-responses
+    description: Responses map of the create-property-definition operation.
+    metadata:
+      created_at: 2026-11-17T17:56:53.232Z
+      updated_at: 2026-11-17T17:56:53.232Z
+      version: 1
+    source_reference:
+      provenance: inferred
+      locations:
+        - file: local-server/adapters/web/ontology_routes.py
+          symbol: create_property_definition
+  timestamp: 2026-11-17T18:00:34.198Z
+  sequenceNumber: 11
+- type: add
+  elementId: api.responses.create-relationship-responses
+  layerName: api
+  after:
+    id: a807bccc-0a66-47b9-b077-f42965b2d43d
+    path: api.responses.create-relationship-responses
+    spec_node_id: api.responses
+    type: responses
+    layer_id: api
+    name: create-relationship-responses
+    description: Responses map of the create-relationship operation.
+    metadata:
+      created_at: 2026-11-17T17:56:53.489Z
+      updated_at: 2026-11-17T17:56:53.489Z
+      version: 1
+    source_reference:
+      provenance: inferred
+      locations:
+        - file: local-server/adapters/web/ontology_routes.py
+          symbol: create_relationship
+  timestamp: 2026-11-17T18:00:34.732Z
+  sequenceNumber: 12
+- type: add
+  elementId: api.responses.create-taxonomy-responses
+  layerName: api
+  after:
+    id: 27a5b0e2-9ede-4a56-86e9-f69ccbfe7945
+    path: api.responses.create-taxonomy-responses
+    spec_node_id: api.responses
+    type: responses
+    layer_id: api
+    name: create-taxonomy-responses
+    description: Responses map of the create-taxonomy operation.
+    metadata:
+      created_at: 2026-11-17T17:56:53.749Z
+      updated_at: 2026-11-17T17:56:53.749Z
+      version: 1
+    source_reference:
+      provenance: inferred
+      locations:
+        - file: local-server/adapters/web/ontology_routes.py
+          symbol: create_taxonomy
+  timestamp: 2026-11-17T18:00:35.311Z
+  sequenceNumber: 13
+- type: add
+  elementId: api.responses.delete-class-responses
+  layerName: api
+  after:
+    id: ef922d97-c60e-4c7b-9947-60b6e2611f1f
+    path: api.responses.delete-class-responses
+    spec_node_id: api.responses
+    type: responses
+    layer_id: api
+    name: delete-class-responses
+    description: Responses map of the delete-class operation.
+    metadata:
+      created_at: 2026-11-17T17:56:54.044Z
+      updated_at: 2026-11-17T17:56:54.044Z
+      version: 1
+    source_reference:
+      provenance: inferred
+      locations:
+        - file: local-server/adapters/web/ontology_routes.py
+          symbol: delete_class
+  timestamp: 2026-11-17T18:00:35.840Z
+  sequenceNumber: 14
+- type: add
+  elementId: api.responses.delete-concept-scheme-responses
+  layerName: api
+  after:
+    id: 2aacd366-9ddf-429c-ba34-8ed4342c83ec
+    path: api.responses.delete-concept-scheme-responses
+    spec_node_id: api.responses
+    type: responses
+    layer_id: api
+    name: delete-concept-scheme-responses
+    description: Responses map of the delete-concept-scheme operation.
+    metadata:
+      created_at: 2026-11-17T17:56:54.309Z
+      updated_at: 2026-11-17T17:56:54.309Z
+      version: 1
+    source_reference:
+      provenance: inferred
+      locations:
+        - file: local-server/adapters/web/ontology_routes.py
+          symbol: delete_concept_scheme
+  timestamp: 2026-11-17T18:00:36.395Z
+  sequenceNumber: 15
+- type: add
+  elementId: api.responses.delete-individual-responses
+  layerName: api
+  after:
+    id: 744a9361-77c7-47b7-b554-8c17fe8b5658
+    path: api.responses.delete-individual-responses
+    spec_node_id: api.responses
+    type: responses
+    layer_id: api
+    name: delete-individual-responses
+    description: Responses map of the delete-individual operation.
+    metadata:
+      created_at: 2026-11-17T17:56:54.572Z
+      updated_at: 2026-11-17T17:56:54.572Z
+      version: 1
+    source_reference:
+      provenance: inferred
+      locations:
+        - file: local-server/adapters/web/ontology_routes.py
+          symbol: delete_individual
+  timestamp: 2026-11-17T18:00:37.186Z
+  sequenceNumber: 16
+- type: add
+  elementId: api.responses.delete-pipeline-configuration-responses
+  layerName: api
+  after:
+    id: dc363a4b-3271-4ccd-8d4b-c24208d7dc8b
+    path: api.responses.delete-pipeline-configuration-responses
+    spec_node_id: api.responses
+    type: responses
+    layer_id: api
+    name: delete-pipeline-configuration-responses
+    description: Responses map of the delete-pipeline-configuration operation.
+    metadata:
+      created_at: 2026-11-17T17:56:54.872Z
+      updated_at: 2026-11-17T17:56:54.872Z
+      version: 1
+    source_reference:
+      provenance: inferred
+      locations:
+        - file: local-server/adapters/web/pipeline_routes.py
+          symbol: delete_pipeline_configuration
+  timestamp: 2026-11-17T18:00:37.746Z
+  sequenceNumber: 17
+- type: add
+  elementId: api.responses.delete-property-definition-responses
+  layerName: api
+  after:
+    id: 8e33ecef-347a-40c8-ace1-f5fd9ee72194
+    path: api.responses.delete-property-definition-responses
+    spec_node_id: api.responses
+    type: responses
+    layer_id: api
+    name: delete-property-definition-responses
+    description: Responses map of the delete-property-definition operation.
+    metadata:
+      created_at: 2026-11-17T17:56:55.347Z
+      updated_at: 2026-11-17T17:56:55.347Z
+      version: 1
+    source_reference:
+      provenance: inferred
+      locations:
+        - file: local-server/adapters/web/ontology_routes.py
+          symbol: delete_property_definition
+  timestamp: 2026-11-17T18:00:38.341Z
+  sequenceNumber: 18
+- type: add
+  elementId: api.responses.delete-relationship-responses
+  layerName: api
+  after:
+    id: f728318f-8bdb-4a7c-8fb6-c7a1198e61c2
+    path: api.responses.delete-relationship-responses
+    spec_node_id: api.responses
+    type: responses
+    layer_id: api
+    name: delete-relationship-responses
+    description: Responses map of the delete-relationship operation.
+    metadata:
+      created_at: 2026-11-17T17:56:55.659Z
+      updated_at: 2026-11-17T17:56:55.659Z
+      version: 1
+    source_reference:
+      provenance: inferred
+      locations:
+        - file: local-server/adapters/web/ontology_routes.py
+          symbol: delete_relationship
+  timestamp: 2026-11-17T18:00:38.882Z
+  sequenceNumber: 19
+- type: add
+  elementId: api.responses.delete-taxonomy-responses
+  layerName: api
+  after:
+    id: 5c7ae3fe-2fbb-41fa-8e3f-4d5d5227fc7f
+    path: api.responses.delete-taxonomy-responses
+    spec_node_id: api.responses
+    type: responses
+    layer_id: api
+    name: delete-taxonomy-responses
+    description: Responses map of the delete-taxonomy operation.
+    metadata:
+      created_at: 2026-11-17T17:56:55.914Z
+      updated_at: 2026-11-17T17:56:55.914Z
+      version: 1
+    source_reference:
+      provenance: inferred
+      locations:
+        - file: local-server/adapters/web/ontology_routes.py
+          symbol: delete_taxonomy
+  timestamp: 2026-11-17T18:00:39.428Z
+  sequenceNumber: 20
+- type: add
+  elementId: api.responses.detect-conflicts-responses
+  layerName: api
+  after:
+    id: 60c59513-1286-4214-b1c2-d6b4a1e096dc
+    path: api.responses.detect-conflicts-responses
+    spec_node_id: api.responses
+    type: responses
+    layer_id: api
+    name: detect-conflicts-responses
+    description: Responses map of the detect-conflicts operation.
+    metadata:
+      created_at: 2026-11-17T17:56:56.205Z
+      updated_at: 2026-11-17T17:56:56.205Z
+      version: 1
+    source_reference:
+      provenance: inferred
+      locations:
+        - file: local-server/adapters/web/versioning_routes.py
+          symbol: detect_conflicts
+  timestamp: 2026-11-17T18:00:39.982Z
+  sequenceNumber: 21
+- type: add
+  elementId: api.responses.enrich-from-references-responses
+  layerName: api
+  after:
+    id: 9cfb4228-81f3-417d-9912-b30c90e1f034
+    path: api.responses.enrich-from-references-responses
+    spec_node_id: api.responses
+    type: responses
+    layer_id: api
+    name: enrich-from-references-responses
+    description: Responses map of the enrich-from-references operation.
+    metadata:
+      created_at: 2026-11-17T17:56:56.459Z
+      updated_at: 2026-11-17T17:56:56.459Z
+      version: 1
+    source_reference:
+      provenance: inferred
+      locations:
+        - file: local-server/adapters/web/extraction_routes.py
+          symbol: enrich_from_references
+  timestamp: 2026-11-17T18:00:40.548Z
+  sequenceNumber: 22
+- type: add
+  elementId: api.responses.execute-pipeline-responses
+  layerName: api
+  after:
+    id: 4490ec30-fb87-4da6-9518-de47cd11e4fa
+    path: api.responses.execute-pipeline-responses
+    spec_node_id: api.responses
+    type: responses
+    layer_id: api
+    name: execute-pipeline-responses
+    description: Responses map of the execute-pipeline operation.
+    metadata:
+      created_at: 2026-11-17T17:56:56.710Z
+      updated_at: 2026-11-17T17:56:56.710Z
+      version: 1
+    source_reference:
+      provenance: inferred
+      locations:
+        - file: local-server/adapters/web/pipeline_routes.py
+          symbol: execute_pipeline
+  timestamp: 2026-11-17T18:00:41.171Z
+  sequenceNumber: 23
+- type: add
+  elementId: api.responses.execute-sparql-responses
+  layerName: api
+  after:
+    id: a14f5546-8602-4931-bd60-bf768195782f
+    path: api.responses.execute-sparql-responses
+    spec_node_id: api.responses
+    type: responses
+    layer_id: api
+    name: execute-sparql-responses
+    description: Responses map of the execute-sparql operation.
+    metadata:
+      created_at: 2026-11-17T17:56:56.973Z
+      updated_at: 2026-11-17T17:56:56.973Z
+      version: 1
+    source_reference:
+      provenance: inferred
+      locations:
+        - file: local-server/adapters/web/graph_routes.py
+          symbol: execute_sparql
+  timestamp: 2026-11-17T18:00:41.808Z
+  sequenceNumber: 24
+- type: add
+  elementId: api.responses.export-ontology-responses
+  layerName: api
+  after:
+    id: 18576e31-c46a-4226-bcf8-0e11592fe930
+    path: api.responses.export-ontology-responses
+    spec_node_id: api.responses
+    type: responses
+    layer_id: api
+    name: export-ontology-responses
+    description: Responses map of the export-ontology operation.
+    metadata:
+      created_at: 2026-11-17T17:56:57.245Z
+      updated_at: 2026-11-17T17:56:57.245Z
+      version: 1
+    source_reference:
+      provenance: inferred
+      locations:
+        - file: local-server/adapters/web/interchange_routes.py
+          symbol: export_ontology
+  timestamp: 2026-11-17T18:00:42.476Z
+  sequenceNumber: 25
+- type: add
+  elementId: api.responses.extract-entities-responses
+  layerName: api
+  after:
+    id: d3dbd16b-d989-4d81-97cb-df09fcc12236
+    path: api.responses.extract-entities-responses
+    spec_node_id: api.responses
+    type: responses
+    layer_id: api
+    name: extract-entities-responses
+    description: Responses map of the extract-entities operation.
+    metadata:
+      created_at: 2026-11-17T17:56:57.513Z
+      updated_at: 2026-11-17T17:56:57.513Z
+      version: 1
+    source_reference:
+      provenance: inferred
+      locations:
+        - file: local-server/adapters/web/extraction_routes.py
+          symbol: extract_entities
+  timestamp: 2026-11-17T18:00:43.018Z
+  sequenceNumber: 26
+- type: add
+  elementId: api.responses.extract-triples-responses
+  layerName: api
+  after:
+    id: bcd8d4d6-776c-4251-818f-8825c236cc78
+    path: api.responses.extract-triples-responses
+    spec_node_id: api.responses
+    type: responses
+    layer_id: api
+    name: extract-triples-responses
+    description: Responses map of the extract-triples operation.
+    metadata:
+      created_at: 2026-11-17T17:56:57.805Z
+      updated_at: 2026-11-17T17:56:57.805Z
+      version: 1
+    source_reference:
+      provenance: inferred
+      locations:
+        - file: local-server/adapters/web/extraction_routes.py
+          symbol: extract_triples
+  timestamp: 2026-11-17T18:00:43.552Z
+  sequenceNumber: 27
+- type: add
+  elementId: api.responses.get-all-paths-responses
+  layerName: api
+  after:
+    id: a293754f-9afe-44a5-98a6-3462797165a7
+    path: api.responses.get-all-paths-responses
+    spec_node_id: api.responses
+    type: responses
+    layer_id: api
+    name: get-all-paths-responses
+    description: Responses map of the get-all-paths operation.
+    metadata:
+      created_at: 2026-11-17T17:56:58.068Z
+      updated_at: 2026-11-17T17:56:58.068Z
+      version: 1
+    source_reference:
+      provenance: inferred
+      locations:
+        - file: local-server/adapters/web/graph_routes.py
+          symbol: get_all_paths
+  timestamp: 2026-11-17T18:00:44.077Z
+  sequenceNumber: 28
+- type: add
+  elementId: api.responses.get-background-task-responses
+  layerName: api
+  after:
+    id: 7d1bf825-8f6f-4a7d-9f27-f58b621886b7
+    path: api.responses.get-background-task-responses
+    spec_node_id: api.responses
+    type: responses
+    layer_id: api
+    name: get-background-task-responses
+    description: Responses map of the get-background-task operation.
+    metadata:
+      created_at: 2026-11-17T17:56:58.337Z
+      updated_at: 2026-11-17T17:56:58.337Z
+      version: 1
+    source_reference:
+      provenance: inferred
+      locations:
+        - file: local-server/adapters/web/admin_routes.py
+          symbol: get_background_task
+  timestamp: 2026-11-17T18:00:44.601Z
+  sequenceNumber: 29
+- type: add
+  elementId: api.responses.get-background-tasks-summary-responses
+  layerName: api
+  after:
+    id: 119de5df-0b0c-4389-b761-d1ba5d9d16ee
+    path: api.responses.get-background-tasks-summary-responses
+    spec_node_id: api.responses
+    type: responses
+    layer_id: api
+    name: get-background-tasks-summary-responses
+    description: Responses map of the get-background-tasks-summary operation.
+    metadata:
+      created_at: 2026-11-17T17:56:58.597Z
+      updated_at: 2026-11-17T17:56:58.597Z
+      version: 1
+    source_reference:
+      provenance: inferred
+      locations:
+        - file: local-server/adapters/web/admin_routes.py
+          symbol: get_background_tasks_summary
+  timestamp: 2026-11-17T18:00:45.138Z
+  sequenceNumber: 30
+- type: add
+  elementId: api.responses.get-centrality-responses
+  layerName: api
+  after:
+    id: 6d7c05a2-3805-4f66-a5be-349880b2f380
+    path: api.responses.get-centrality-responses
+    spec_node_id: api.responses
+    type: responses
+    layer_id: api
+    name: get-centrality-responses
+    description: Responses map of the get-centrality operation.
+    metadata:
+      created_at: 2026-11-17T17:56:58.872Z
+      updated_at: 2026-11-17T17:56:58.872Z
+      version: 1
+    source_reference:
+      provenance: inferred
+      locations:
+        - file: local-server/adapters/web/graph_routes.py
+          symbol: get_centrality
+  timestamp: 2026-11-17T18:00:45.675Z
+  sequenceNumber: 31
+- type: add
+  elementId: api.responses.get-change-history-all-responses
+  layerName: api
+  after:
+    id: d7cffea2-ccdc-45a3-879d-209eea363791
+    path: api.responses.get-change-history-all-responses
+    spec_node_id: api.responses
+    type: responses
+    layer_id: api
+    name: get-change-history-all-responses
+    description: Responses map of the get-change-history-all operation.
+    metadata:
+      created_at: 2026-11-17T17:56:59.275Z
+      updated_at: 2026-11-17T17:56:59.275Z
+      version: 1
+    source_reference:
+      provenance: inferred
+      locations:
+        - file: local-server/adapters/web/versioning_routes.py
+          symbol: get_change_history_all
+  timestamp: 2026-11-17T18:00:46.229Z
+  sequenceNumber: 32
+- type: add
+  elementId: api.responses.get-change-history-by-entity-responses
+  layerName: api
+  after:
+    id: 5baa3c68-bc21-4079-89cb-383101ad0de8
+    path: api.responses.get-change-history-by-entity-responses
+    spec_node_id: api.responses
+    type: responses
+    layer_id: api
+    name: get-change-history-by-entity-responses
+    description: Responses map of the get-change-history-by-entity operation.
+    metadata:
+      created_at: 2026-11-17T17:56:59.576Z
+      updated_at: 2026-11-17T17:56:59.576Z
+      version: 1
+    source_reference:
+      provenance: inferred
+      locations:
+        - file: local-server/adapters/web/versioning_routes.py
+          symbol: get_change_history_by_entity
+  timestamp: 2026-11-17T18:00:46.787Z
+  sequenceNumber: 33
+- type: add
+  elementId: api.responses.get-changeset-responses
+  layerName: api
+  after:
+    id: 5e2eead7-63d7-4d6f-ba56-6b763ac2326d
+    path: api.responses.get-changeset-responses
+    spec_node_id: api.responses
+    type: responses
+    layer_id: api
+    name: get-changeset-responses
+    description: Responses map of the get-changeset operation.
+    metadata:
+      created_at: 2026-11-17T17:56:59.844Z
+      updated_at: 2026-11-17T17:56:59.844Z
+      version: 1
+    source_reference:
+      provenance: inferred
+      locations:
+        - file: local-server/adapters/web/versioning_routes.py
+          symbol: get_changeset
+  timestamp: 2026-11-17T18:00:47.334Z
+  sequenceNumber: 34
+- type: add
+  elementId: api.responses.get-class-responses
+  layerName: api
+  after:
+    id: d2ebbdf9-1460-457a-acff-5407ea958b1f
+    path: api.responses.get-class-responses
+    spec_node_id: api.responses
+    type: responses
+    layer_id: api
+    name: get-class-responses
+    description: Responses map of the get-class operation.
+    metadata:
+      created_at: 2026-11-17T17:57:00.126Z
+      updated_at: 2026-11-17T17:57:00.126Z
+      version: 1
+    source_reference:
+      provenance: inferred
+      locations:
+        - file: local-server/adapters/web/ontology_routes.py
+          symbol: get_class
+  timestamp: 2026-11-17T18:00:47.982Z
+  sequenceNumber: 35
+- type: add
+  elementId: api.responses.get-communities-responses
+  layerName: api
+  after:
+    id: 68e88620-de50-4de5-88d7-1af5e8843e4b
+    path: api.responses.get-communities-responses
+    spec_node_id: api.responses
+    type: responses
+    layer_id: api
+    name: get-communities-responses
+    description: Responses map of the get-communities operation.
+    metadata:
+      created_at: 2026-11-17T17:57:00.388Z
+      updated_at: 2026-11-17T17:57:00.388Z
+      version: 1
+    source_reference:
+      provenance: inferred
+      locations:
+        - file: local-server/adapters/web/graph_routes.py
+          symbol: get_communities
+  timestamp: 2026-11-17T18:00:48.666Z
+  sequenceNumber: 36
+- type: add
+  elementId: api.responses.get-concept-scheme-responses
+  layerName: api
+  after:
+    id: 55e354df-e664-4044-b64a-2a88bb3334a4
+    path: api.responses.get-concept-scheme-responses
+    spec_node_id: api.responses
+    type: responses
+    layer_id: api
+    name: get-concept-scheme-responses
+    description: Responses map of the get-concept-scheme operation.
+    metadata:
+      created_at: 2026-11-17T17:57:00.662Z
+      updated_at: 2026-11-17T17:57:00.662Z
+      version: 1
+    source_reference:
+      provenance: inferred
+      locations:
+        - file: local-server/adapters/web/ontology_routes.py
+          symbol: get_concept_scheme
+  timestamp: 2026-11-17T18:00:49.375Z
+  sequenceNumber: 37
+- type: add
+  elementId: api.responses.get-configuration-responses
+  layerName: api
+  after:
+    id: 605ca45b-53ac-4346-82b1-ae31e0049b14
+    path: api.responses.get-configuration-responses
+    spec_node_id: api.responses
+    type: responses
+    layer_id: api
+    name: get-configuration-responses
+    description: Responses map of the get-configuration operation.
+    metadata:
+      created_at: 2026-11-17T17:57:00.935Z
+      updated_at: 2026-11-17T17:57:00.935Z
+      version: 1
+    source_reference:
+      provenance: inferred
+      locations:
+        - file: local-server/adapters/web/admin_routes.py
+          symbol: get_configuration
+  timestamp: 2026-11-17T18:00:49.962Z
+  sequenceNumber: 38
+- type: add
+  elementId: api.responses.get-database-health-responses
+  layerName: api
+  after:
+    id: 2a901f77-fb62-404e-a65b-a4e851dda186
+    path: api.responses.get-database-health-responses
+    spec_node_id: api.responses
+    type: responses
+    layer_id: api
+    name: get-database-health-responses
+    description: Responses map of the get-database-health operation.
+    metadata:
+      created_at: 2026-11-17T17:57:01.206Z
+      updated_at: 2026-11-17T17:57:01.206Z
+      version: 1
+    source_reference:
+      provenance: inferred
+      locations:
+        - file: local-server/adapters/web/admin_routes.py
+          symbol: get_database_health
+  timestamp: 2026-11-17T18:00:50.527Z
+  sequenceNumber: 39
+- type: add
+  elementId: api.responses.get-degree-distribution-responses
+  layerName: api
+  after:
+    id: 0934d492-1d42-4ed1-a8fd-c8958a0a4cf7
+    path: api.responses.get-degree-distribution-responses
+    spec_node_id: api.responses
+    type: responses
+    layer_id: api
+    name: get-degree-distribution-responses
+    description: Responses map of the get-degree-distribution operation.
+    metadata:
+      created_at: 2026-11-17T17:57:01.474Z
+      updated_at: 2026-11-17T17:57:01.474Z
+      version: 1
+    source_reference:
+      provenance: inferred
+      locations:
+        - file: local-server/adapters/web/graph_routes.py
+          symbol: get_degree_distribution
+  timestamp: 2026-11-17T18:00:51.097Z
+  sequenceNumber: 40
+- type: add
+  elementId: api.responses.get-embedding-health-responses
+  layerName: api
+  after:
+    id: 0220458a-2197-4ea4-98d3-74f3fb3588db
+    path: api.responses.get-embedding-health-responses
+    spec_node_id: api.responses
+    type: responses
+    layer_id: api
+    name: get-embedding-health-responses
+    description: Responses map of the get-embedding-health operation.
+    metadata:
+      created_at: 2026-11-17T17:57:01.773Z
+      updated_at: 2026-11-17T17:57:01.773Z
+      version: 1
+    source_reference:
+      provenance: inferred
+      locations:
+        - file: local-server/adapters/web/admin_routes.py
+          symbol: get_embedding_health
+  timestamp: 2026-11-17T18:00:51.859Z
+  sequenceNumber: 41
+- type: add
+  elementId: api.responses.get-entity-version-responses
+  layerName: api
+  after:
+    id: 7e2ec249-56bf-42a6-b864-18a5494d90a4
+    path: api.responses.get-entity-version-responses
+    spec_node_id: api.responses
+    type: responses
+    layer_id: api
+    name: get-entity-version-responses
+    description: Responses map of the get-entity-version operation.
+    metadata:
+      created_at: 2026-11-17T17:57:02.060Z
+      updated_at: 2026-11-17T17:57:02.060Z
+      version: 1
+    source_reference:
+      provenance: inferred
+      locations:
+        - file: local-server/adapters/web/versioning_routes.py
+          symbol: get_entity_version
+  timestamp: 2026-11-17T18:00:53.911Z
+  sequenceNumber: 42
+- type: add
+  elementId: api.responses.get-graph-metrics-responses
+  layerName: api
+  after:
+    id: 6f29dd7d-5eda-4a34-821d-f6bbe3c97664
+    path: api.responses.get-graph-metrics-responses
+    spec_node_id: api.responses
+    type: responses
+    layer_id: api
+    name: get-graph-metrics-responses
+    description: Responses map of the get-graph-metrics operation.
+    metadata:
+      created_at: 2026-11-17T17:57:02.352Z
+      updated_at: 2026-11-17T17:57:02.352Z
+      version: 1
+    source_reference:
+      provenance: inferred
+      locations:
+        - file: local-server/adapters/web/graph_routes.py
+          symbol: get_metrics
+  timestamp: 2026-11-17T18:00:55.178Z
+  sequenceNumber: 43
+- type: add
+  elementId: api.responses.get-import-run-responses
+  layerName: api
+  after:
+    id: 6308a22c-bc7b-4790-8e7d-e74d03445cf6
+    path: api.responses.get-import-run-responses
+    spec_node_id: api.responses
+    type: responses
+    layer_id: api
+    name: get-import-run-responses
+    description: Responses map of the get-import-run operation.
+    metadata:
+      created_at: 2026-11-17T17:57:02.645Z
+      updated_at: 2026-11-17T17:57:02.645Z
+      version: 1
+    source_reference:
+      provenance: inferred
+      locations:
+        - file: local-server/adapters/web/interchange_routes.py
+          symbol: get_import_run
+  timestamp: 2026-11-17T18:00:55.815Z
+  sequenceNumber: 44
+- type: add
+  elementId: api.responses.get-individual-responses
+  layerName: api
+  after:
+    id: 7e44517a-249b-42f0-b321-b81610daf07a
+    path: api.responses.get-individual-responses
+    spec_node_id: api.responses
+    type: responses
+    layer_id: api
+    name: get-individual-responses
+    description: Responses map of the get-individual operation.
+    metadata:
+      created_at: 2026-11-17T17:57:03.122Z
+      updated_at: 2026-11-17T17:57:03.122Z
+      version: 1
+    source_reference:
+      provenance: inferred
+      locations:
+        - file: local-server/adapters/web/ontology_routes.py
+          symbol: get_individual
+  timestamp: 2026-11-17T18:00:56.448Z
+  sequenceNumber: 45
+- type: add
+  elementId: api.responses.get-individual-inherited-properties-responses
+  layerName: api
+  after:
+    id: 33a294e1-95bd-480c-a13e-c98c99108687
+    path: api.responses.get-individual-inherited-properties-responses
+    spec_node_id: api.responses
+    type: responses
+    layer_id: api
+    name: get-individual-inherited-properties-responses
+    description: Responses map of the get-individual-inherited-properties operation.
+    metadata:
+      created_at: 2026-11-17T17:57:03.594Z
+      updated_at: 2026-11-17T17:57:03.594Z
+      version: 1
+    source_reference:
+      provenance: inferred
+      locations:
+        - file: local-server/adapters/web/ontology_routes.py
+          symbol: get_individual_inherited_properties
+  timestamp: 2026-11-17T18:00:57.016Z
+  sequenceNumber: 46
+- type: add
+  elementId: api.responses.get-neighbors-responses
+  layerName: api
+  after:
+    id: fe52b57d-9fbc-442d-872c-dac3fb937e42
+    path: api.responses.get-neighbors-responses
+    spec_node_id: api.responses
+    type: responses
+    layer_id: api
+    name: get-neighbors-responses
+    description: Responses map of the get-neighbors operation.
+    metadata:
+      created_at: 2026-11-17T17:57:04.084Z
+      updated_at: 2026-11-17T17:57:04.084Z
+      version: 1
+    source_reference:
+      provenance: inferred
+      locations:
+        - file: local-server/adapters/web/graph_routes.py
+          symbol: get_neighbors
+  timestamp: 2026-11-17T18:00:57.598Z
+  sequenceNumber: 47
+- type: add
+  elementId: api.responses.get-nlp-health-responses
+  layerName: api
+  after:
+    id: d5764d4e-618c-4144-b275-0f7c066b7733
+    path: api.responses.get-nlp-health-responses
+    spec_node_id: api.responses
+    type: responses
+    layer_id: api
+    name: get-nlp-health-responses
+    description: Responses map of the get-nlp-health operation.
+    metadata:
+      created_at: 2026-11-17T17:57:04.369Z
+      updated_at: 2026-11-17T17:57:04.369Z
+      version: 1
+    source_reference:
+      provenance: inferred
+      locations:
+        - file: local-server/adapters/web/admin_routes.py
+          symbol: get_nlp_health
+  timestamp: 2026-11-17T18:00:58.175Z
+  sequenceNumber: 48
+- type: add
+  elementId: api.responses.get-pipeline-configuration-responses
+  layerName: api
+  after:
+    id: ab1aa302-a8b9-422f-8cab-148b846ddbc4
+    path: api.responses.get-pipeline-configuration-responses
+    spec_node_id: api.responses
+    type: responses
+    layer_id: api
+    name: get-pipeline-configuration-responses
+    description: Responses map of the get-pipeline-configuration operation.
+    metadata:
+      created_at: 2026-11-17T17:57:04.657Z
+      updated_at: 2026-11-17T17:57:04.657Z
+      version: 1
+    source_reference:
+      provenance: inferred
+      locations:
+        - file: local-server/adapters/web/pipeline_routes.py
+          symbol: get_pipeline_configuration
+  timestamp: 2026-11-17T18:00:58.749Z
+  sequenceNumber: 49
+- type: add
+  elementId: api.responses.get-pipeline-executions-responses
+  layerName: api
+  after:
+    id: fd63bdbf-a9ca-4e10-bddf-abf7af06e2f3
+    path: api.responses.get-pipeline-executions-responses
+    spec_node_id: api.responses
+    type: responses
+    layer_id: api
+    name: get-pipeline-executions-responses
+    description: Responses map of the get-pipeline-executions operation.
+    metadata:
+      created_at: 2026-11-17T17:57:04.944Z
+      updated_at: 2026-11-17T17:57:04.944Z
+      version: 1
+    source_reference:
+      provenance: inferred
+      locations:
+        - file: local-server/adapters/web/pipeline_routes.py
+          symbol: get_pipeline_executions
+  timestamp: 2026-11-17T18:00:59.326Z
+  sequenceNumber: 50
+- type: add
+  elementId: api.responses.get-property-definition-responses
+  layerName: api
+  after:
+    id: 59a641bb-7e7d-49a3-960d-4ad3bf4559f2
+    path: api.responses.get-property-definition-responses
+    spec_node_id: api.responses
+    type: responses
+    layer_id: api
+    name: get-property-definition-responses
+    description: Responses map of the get-property-definition operation.
+    metadata:
+      created_at: 2026-11-17T17:57:05.246Z
+      updated_at: 2026-11-17T17:57:05.246Z
+      version: 1
+    source_reference:
+      provenance: inferred
+      locations:
+        - file: local-server/adapters/web/ontology_routes.py
+          symbol: get_property_definition
+  timestamp: 2026-11-17T18:00:59.925Z
+  sequenceNumber: 51
+- type: add
+  elementId: api.responses.get-publish-diff-stats-responses
+  layerName: api
+  after:
+    id: 9a647afd-d513-4b2a-bcfe-0bcba0e4edd6
+    path: api.responses.get-publish-diff-stats-responses
+    spec_node_id: api.responses
+    type: responses
+    layer_id: api
+    name: get-publish-diff-stats-responses
+    description: Responses map of the get-publish-diff-stats operation.
+    metadata:
+      created_at: 2026-11-17T17:57:05.525Z
+      updated_at: 2026-11-17T17:57:05.525Z
+      version: 1
+    source_reference:
+      provenance: inferred
+      locations:
+        - file: local-server/adapters/web/ontology_routes.py
+          symbol: get_publish_diff_stats
+  timestamp: 2026-11-17T18:01:00.562Z
+  sequenceNumber: 52
+- type: add
+  elementId: api.responses.get-rdf-triple-count-responses
+  layerName: api
+  after:
+    id: dcb3ae74-1ee3-4707-b0b5-e5987d68f8b6
+    path: api.responses.get-rdf-triple-count-responses
+    spec_node_id: api.responses
+    type: responses
+    layer_id: api
+    name: get-rdf-triple-count-responses
+    description: Responses map of the get-rdf-triple-count operation.
+    metadata:
+      created_at: 2026-11-17T17:57:05.821Z
+      updated_at: 2026-11-17T17:57:05.821Z
+      version: 1
+    source_reference:
+      provenance: inferred
+      locations:
+        - file: local-server/adapters/web/graph_routes.py
+          symbol: get_rdf_triple_count
+  timestamp: 2026-11-17T18:01:01.138Z
+  sequenceNumber: 53
+- type: add
+  elementId: api.responses.get-rdf-triples-responses
+  layerName: api
+  after:
+    id: 49e71168-0b86-43a7-b20f-152e2925b3a4
+    path: api.responses.get-rdf-triples-responses
+    spec_node_id: api.responses
+    type: responses
+    layer_id: api
+    name: get-rdf-triples-responses
+    description: Responses map of the get-rdf-triples operation.
+    metadata:
+      created_at: 2026-11-17T17:57:06.104Z
+      updated_at: 2026-11-17T17:57:06.104Z
+      version: 1
+    source_reference:
+      provenance: inferred
+      locations:
+        - file: local-server/adapters/web/graph_routes.py
+          symbol: get_rdf_triples
+  timestamp: 2026-11-17T18:01:01.733Z
+  sequenceNumber: 54
+- type: add
+  elementId: api.responses.get-reference-relations-responses
+  layerName: api
+  after:
+    id: 997d8016-f0a0-424a-9a6e-f14b70a812e9
+    path: api.responses.get-reference-relations-responses
+    spec_node_id: api.responses
+    type: responses
+    layer_id: api
+    name: get-reference-relations-responses
+    description: Responses map of the get-reference-relations operation.
+    metadata:
+      created_at: 2026-11-17T17:57:06.381Z
+      updated_at: 2026-11-17T17:57:06.381Z
+      version: 1
+    source_reference:
+      provenance: inferred
+      locations:
+        - file: local-server/adapters/web/reference_routes.py
+          symbol: get_reference_relations
+  timestamp: 2026-11-17T18:01:02.337Z
+  sequenceNumber: 55
+- type: add
+  elementId: api.responses.get-reference-status-responses
+  layerName: api
+  after:
+    id: 797a533f-2c0f-4dd4-8e57-46a4dd62ca5f
+    path: api.responses.get-reference-status-responses
+    spec_node_id: api.responses
+    type: responses
+    layer_id: api
+    name: get-reference-status-responses
+    description: Responses map of the get-reference-status operation.
+    metadata:
+      created_at: 2026-11-17T17:57:06.662Z
+      updated_at: 2026-11-17T17:57:06.662Z
+      version: 1
+    source_reference:
+      provenance: inferred
+      locations:
+        - file: local-server/adapters/web/reference_routes.py
+          symbol: reference_status
+  timestamp: 2026-11-17T18:01:02.914Z
+  sequenceNumber: 56
+- type: add
+  elementId: api.responses.get-relationship-responses
+  layerName: api
+  after:
+    id: 64a5f156-bce9-4b00-aac9-c2d22f6b691f
+    path: api.responses.get-relationship-responses
+    spec_node_id: api.responses
+    type: responses
+    layer_id: api
+    name: get-relationship-responses
+    description: Responses map of the get-relationship operation.
+    metadata:
+      created_at: 2026-11-17T17:57:06.980Z
+      updated_at: 2026-11-17T17:57:06.980Z
+      version: 1
+    source_reference:
+      provenance: inferred
+      locations:
+        - file: local-server/adapters/web/ontology_routes.py
+          symbol: get_relationship
+  timestamp: 2026-11-17T18:01:03.503Z
+  sequenceNumber: 57
+- type: add
+  elementId: api.responses.get-run-change-events-responses
+  layerName: api
+  after:
+    id: f3d41991-f403-4364-8030-819fade5fec1
+    path: api.responses.get-run-change-events-responses
+    spec_node_id: api.responses
+    type: responses
+    layer_id: api
+    name: get-run-change-events-responses
+    description: Responses map of the get-run-change-events operation.
+    metadata:
+      created_at: 2026-11-17T17:57:07.357Z
+      updated_at: 2026-11-17T17:57:07.357Z
+      version: 1
+    source_reference:
+      provenance: inferred
+      locations:
+        - file: local-server/adapters/web/interchange_routes.py
+          symbol: get_run_change_events
+  timestamp: 2026-11-17T18:01:04.091Z
+  sequenceNumber: 58
+- type: add
+  elementId: api.responses.get-service-metrics-responses
+  layerName: api
+  after:
+    id: 18b828fd-53e3-4656-8a2b-0f9966c7058a
+    path: api.responses.get-service-metrics-responses
+    spec_node_id: api.responses
+    type: responses
+    layer_id: api
+    name: get-service-metrics-responses
+    description: Responses map of the get-service-metrics operation.
+    metadata:
+      created_at: 2026-11-17T17:57:07.674Z
+      updated_at: 2026-11-17T17:57:07.674Z
+      version: 1
+    source_reference:
+      provenance: inferred
+      locations:
+        - file: local-server/adapters/web/admin_routes.py
+          symbol: get_service_metrics
+  timestamp: 2026-11-17T18:01:04.689Z
+  sequenceNumber: 59
+- type: add
+  elementId: api.responses.get-shortest-path-responses
+  layerName: api
+  after:
+    id: a018f433-6217-43a4-b592-e333ad82ce2e
+    path: api.responses.get-shortest-path-responses
+    spec_node_id: api.responses
+    type: responses
+    layer_id: api
+    name: get-shortest-path-responses
+    description: Responses map of the get-shortest-path operation.
+    metadata:
+      created_at: 2026-11-17T17:57:08.036Z
+      updated_at: 2026-11-17T17:57:08.036Z
+      version: 1
+    source_reference:
+      provenance: inferred
+      locations:
+        - file: local-server/adapters/web/graph_routes.py
+          symbol: get_shortest_path
+  timestamp: 2026-11-17T18:01:05.345Z
+  sequenceNumber: 60
+- type: add
+  elementId: api.responses.get-subgraph-responses
+  layerName: api
+  after:
+    id: afad80da-b03e-4cf4-9ce7-6f577e5a49f8
+    path: api.responses.get-subgraph-responses
+    spec_node_id: api.responses
+    type: responses
+    layer_id: api
+    name: get-subgraph-responses
+    description: Responses map of the get-subgraph operation.
+    metadata:
+      created_at: 2026-11-17T17:57:08.381Z
+      updated_at: 2026-11-17T17:57:08.381Z
+      version: 1
+    source_reference:
+      provenance: inferred
+      locations:
+        - file: local-server/adapters/web/graph_routes.py
+          symbol: get_subgraph
+  timestamp: 2026-11-17T18:01:05.963Z
+  sequenceNumber: 61
+- type: add
+  elementId: api.responses.get-subgraph-by-depth-responses
+  layerName: api
+  after:
+    id: ad3accac-130d-48bf-a3dd-2cbcc0075f3e
+    path: api.responses.get-subgraph-by-depth-responses
+    spec_node_id: api.responses
+    type: responses
+    layer_id: api
+    name: get-subgraph-by-depth-responses
+    description: Responses map of the get-subgraph-by-depth operation.
+    metadata:
+      created_at: 2026-11-17T17:57:08.712Z
+      updated_at: 2026-11-17T17:57:08.712Z
+      version: 1
+    source_reference:
+      provenance: inferred
+      locations:
+        - file: local-server/adapters/web/graph_routes.py
+          symbol: get_subgraph_by_depth
+  timestamp: 2026-11-17T18:01:06.760Z
+  sequenceNumber: 62
+- type: add
+  elementId: api.responses.get-sync-status-responses
+  layerName: api
+  after:
+    id: fb3721eb-f89f-4846-abd8-f23e746a2c61
+    path: api.responses.get-sync-status-responses
+    spec_node_id: api.responses
+    type: responses
+    layer_id: api
+    name: get-sync-status-responses
+    description: Responses map of the get-sync-status operation.
+    metadata:
+      created_at: 2026-11-17T17:57:09.263Z
+      updated_at: 2026-11-17T17:57:09.263Z
+      version: 1
+    source_reference:
+      provenance: inferred
+      locations:
+        - file: local-server/adapters/web/versioning_routes.py
+          symbol: get_sync_status
+  timestamp: 2026-11-17T18:01:07.355Z
+  sequenceNumber: 63
+- type: add
+  elementId: api.responses.get-system-health-responses
+  layerName: api
+  after:
+    id: c0be9c16-5fcb-4b41-b95e-ff964077006c
+    path: api.responses.get-system-health-responses
+    spec_node_id: api.responses
+    type: responses
+    layer_id: api
+    name: get-system-health-responses
+    description: Responses map of the get-system-health operation.
+    metadata:
+      created_at: 2026-11-17T17:57:09.792Z
+      updated_at: 2026-11-17T17:57:09.792Z
+      version: 1
+    source_reference:
+      provenance: inferred
+      locations:
+        - file: local-server/adapters/web/admin_routes.py
+          symbol: get_system_health
+  timestamp: 2026-11-17T18:01:07.938Z
+  sequenceNumber: 64
+- type: add
+  elementId: api.responses.get-taxonomy-responses
+  layerName: api
+  after:
+    id: f5504415-b315-477c-a1e2-bf39d18be231
+    path: api.responses.get-taxonomy-responses
+    spec_node_id: api.responses
+    type: responses
+    layer_id: api
+    name: get-taxonomy-responses
+    description: Responses map of the get-taxonomy operation.
+    metadata:
+      created_at: 2026-11-17T17:57:10.178Z
+      updated_at: 2026-11-17T17:57:10.178Z
+      version: 1
+    source_reference:
+      provenance: inferred
+      locations:
+        - file: local-server/adapters/web/ontology_routes.py
+          symbol: get_taxonomy
+  timestamp: 2026-11-17T18:01:08.551Z
+  sequenceNumber: 65
+- type: add
+  elementId: api.responses.import-ontology-responses
+  layerName: api
+  after:
+    id: a42a8688-4240-4adb-8d34-4cba72c594d6
+    path: api.responses.import-ontology-responses
+    spec_node_id: api.responses
+    type: responses
+    layer_id: api
+    name: import-ontology-responses
+    description: Responses map of the import-ontology operation.
+    metadata:
+      created_at: 2026-11-17T17:57:10.661Z
+      updated_at: 2026-11-17T17:57:10.661Z
+      version: 1
+    source_reference:
+      provenance: inferred
+      locations:
+        - file: local-server/adapters/web/interchange_routes.py
+          symbol: import_ontology
+  timestamp: 2026-11-17T18:01:09.130Z
+  sequenceNumber: 66
+- type: add
+  elementId: api.responses.list-background-tasks-responses
+  layerName: api
+  after:
+    id: 7e6dabc1-e98d-49d4-8f6d-19c6a4bb5bb1
+    path: api.responses.list-background-tasks-responses
+    spec_node_id: api.responses
+    type: responses
+    layer_id: api
+    name: list-background-tasks-responses
+    description: Responses map of the list-background-tasks operation.
+    metadata:
+      created_at: 2026-11-17T17:57:11.158Z
+      updated_at: 2026-11-17T17:57:11.158Z
+      version: 1
+    source_reference:
+      provenance: inferred
+      locations:
+        - file: local-server/adapters/web/admin_routes.py
+          symbol: list_background_tasks
+  timestamp: 2026-11-17T18:01:09.713Z
+  sequenceNumber: 67
+- type: add
+  elementId: api.responses.list-classes-responses
+  layerName: api
+  after:
+    id: f6f5a959-7d69-4220-905c-5c4a5d4c0949
+    path: api.responses.list-classes-responses
+    spec_node_id: api.responses
+    type: responses
+    layer_id: api
+    name: list-classes-responses
+    description: Responses map of the list-classes operation.
+    metadata:
+      created_at: 2026-11-17T17:57:11.619Z
+      updated_at: 2026-11-17T17:57:11.619Z
+      version: 1
+    source_reference:
+      provenance: inferred
+      locations:
+        - file: local-server/adapters/web/ontology_routes.py
+          symbol: list_classes
+  timestamp: 2026-11-17T18:01:10.326Z
+  sequenceNumber: 68
+- type: add
+  elementId: api.responses.list-concept-schemes-responses
+  layerName: api
+  after:
+    id: 6f79d53f-ea97-410e-845b-c22f87b87bea
+    path: api.responses.list-concept-schemes-responses
+    spec_node_id: api.responses
+    type: responses
+    layer_id: api
+    name: list-concept-schemes-responses
+    description: Responses map of the list-concept-schemes operation.
+    metadata:
+      created_at: 2026-11-17T17:57:11.957Z
+      updated_at: 2026-11-17T17:57:11.957Z
+      version: 1
+    source_reference:
+      provenance: inferred
+      locations:
+        - file: local-server/adapters/web/ontology_routes.py
+          symbol: list_concept_schemes
+  timestamp: 2026-11-17T18:01:11.040Z
+  sequenceNumber: 69
+- type: add
+  elementId: api.responses.list-entity-versions-responses
+  layerName: api
+  after:
+    id: 25a255aa-9e67-4230-a313-df219935af0b
+    path: api.responses.list-entity-versions-responses
+    spec_node_id: api.responses
+    type: responses
+    layer_id: api
+    name: list-entity-versions-responses
+    description: Responses map of the list-entity-versions operation.
+    metadata:
+      created_at: 2026-11-17T17:57:12.243Z
+      updated_at: 2026-11-17T17:57:12.243Z
+      version: 1
+    source_reference:
+      provenance: inferred
+      locations:
+        - file: local-server/adapters/web/versioning_routes.py
+          symbol: list_versions
+  timestamp: 2026-11-17T18:01:11.666Z
+  sequenceNumber: 70
+- type: add
+  elementId: api.responses.list-import-runs-responses
+  layerName: api
+  after:
+    id: bdbea5aa-187b-4fb8-8ba1-5fdc0f85057d
+    path: api.responses.list-import-runs-responses
+    spec_node_id: api.responses
+    type: responses
+    layer_id: api
+    name: list-import-runs-responses
+    description: Responses map of the list-import-runs operation.
+    metadata:
+      created_at: 2026-11-17T17:57:12.616Z
+      updated_at: 2026-11-17T17:57:12.616Z
+      version: 1
+    source_reference:
+      provenance: inferred
+      locations:
+        - file: local-server/adapters/web/interchange_routes.py
+          symbol: list_import_runs
+  timestamp: 2026-11-17T18:01:12.285Z
+  sequenceNumber: 71
+- type: add
+  elementId: api.responses.list-individuals-responses
+  layerName: api
+  after:
+    id: 8454afa3-6980-4d62-9173-90d99a244376
+    path: api.responses.list-individuals-responses
+    spec_node_id: api.responses
+    type: responses
+    layer_id: api
+    name: list-individuals-responses
+    description: Responses map of the list-individuals operation.
+    metadata:
+      created_at: 2026-11-17T17:57:12.948Z
+      updated_at: 2026-11-17T17:57:12.948Z
+      version: 1
+    source_reference:
+      provenance: inferred
+      locations:
+        - file: local-server/adapters/web/ontology_routes.py
+          symbol: list_individuals
+  timestamp: 2026-11-17T18:01:12.891Z
+  sequenceNumber: 72
+- type: add
+  elementId: api.responses.list-pipeline-configurations-responses
+  layerName: api
+  after:
+    id: ff54377f-5c69-4904-9dea-80a9827cbd17
+    path: api.responses.list-pipeline-configurations-responses
+    spec_node_id: api.responses
+    type: responses
+    layer_id: api
+    name: list-pipeline-configurations-responses
+    description: Responses map of the list-pipeline-configurations operation.
+    metadata:
+      created_at: 2026-11-17T17:57:13.283Z
+      updated_at: 2026-11-17T17:57:13.283Z
+      version: 1
+    source_reference:
+      provenance: inferred
+      locations:
+        - file: local-server/adapters/web/pipeline_routes.py
+          symbol: list_pipeline_configurations
+  timestamp: 2026-11-17T18:01:13.508Z
+  sequenceNumber: 73
+- type: add
+  elementId: api.responses.list-property-definitions-responses
+  layerName: api
+  after:
+    id: 12808e6c-ce59-4350-9d00-8ce02aa5b666
+    path: api.responses.list-property-definitions-responses
+    spec_node_id: api.responses
+    type: responses
+    layer_id: api
+    name: list-property-definitions-responses
+    description: Responses map of the list-property-definitions operation.
+    metadata:
+      created_at: 2026-11-17T17:57:13.617Z
+      updated_at: 2026-11-17T17:57:13.617Z
+      version: 1
+    source_reference:
+      provenance: inferred
+      locations:
+        - file: local-server/adapters/web/ontology_routes.py
+          symbol: list_property_definitions
+  timestamp: 2026-11-17T18:01:14.184Z
+  sequenceNumber: 74
+- type: add
+  elementId: api.responses.list-relationships-responses
+  layerName: api
+  after:
+    id: a8d20452-0fed-4d03-9ba0-32a4dbd74397
+    path: api.responses.list-relationships-responses
+    spec_node_id: api.responses
+    type: responses
+    layer_id: api
+    name: list-relationships-responses
+    description: Responses map of the list-relationships operation.
+    metadata:
+      created_at: 2026-11-17T17:57:13.948Z
+      updated_at: 2026-11-17T17:57:13.948Z
+      version: 1
+    source_reference:
+      provenance: inferred
+      locations:
+        - file: local-server/adapters/web/ontology_routes.py
+          symbol: list_relationships
+  timestamp: 2026-11-17T18:01:14.832Z
+  sequenceNumber: 75
+- type: add
+  elementId: api.responses.list-taxonomies-responses
+  layerName: api
+  after:
+    id: dd01de00-cdeb-4c34-a855-49ff126a9b91
+    path: api.responses.list-taxonomies-responses
+    spec_node_id: api.responses
+    type: responses
+    layer_id: api
+    name: list-taxonomies-responses
+    description: Responses map of the list-taxonomies operation.
+    metadata:
+      created_at: 2026-11-17T17:57:14.270Z
+      updated_at: 2026-11-17T17:57:14.270Z
+      version: 1
+    source_reference:
+      provenance: inferred
+      locations:
+        - file: local-server/adapters/web/ontology_routes.py
+          symbol: list_taxonomies
+  timestamp: 2026-11-17T18:01:15.468Z
+  sequenceNumber: 76
+- type: add
+  elementId: api.responses.merge-proposal-responses
+  layerName: api
+  after:
+    id: b64d105a-260e-4fec-a387-6be80e7abf63
+    path: api.responses.merge-proposal-responses
+    spec_node_id: api.responses
+    type: responses
+    layer_id: api
+    name: merge-proposal-responses
+    description: Responses map of the merge-proposal operation.
+    metadata:
+      created_at: 2026-11-17T17:57:14.601Z
+      updated_at: 2026-11-17T17:57:14.601Z
+      version: 1
+    source_reference:
+      provenance: inferred
+      locations:
+        - file: local-server/adapters/web/versioning_routes.py
+          symbol: merge_proposal
+  timestamp: 2026-11-17T18:01:16.085Z
+  sequenceNumber: 77
+- type: add
+  elementId: api.responses.move-class-responses
+  layerName: api
+  after:
+    id: 375b53d8-2cb6-459d-a301-ffac613c9797
+    path: api.responses.move-class-responses
+    spec_node_id: api.responses
+    type: responses
+    layer_id: api
+    name: move-class-responses
+    description: Responses map of the move-class operation.
+    metadata:
+      created_at: 2026-11-17T17:57:14.897Z
+      updated_at: 2026-11-17T17:57:14.897Z
+      version: 1
+    source_reference:
+      provenance: inferred
+      locations:
+        - file: local-server/adapters/web/ontology_routes.py
+          symbol: move_class
+  timestamp: 2026-11-17T18:01:16.723Z
+  sequenceNumber: 78
+- type: add
+  elementId: api.responses.publish-taxonomy-responses
+  layerName: api
+  after:
+    id: 516b0c0d-74fa-4127-9b86-f0e141d6ea17
+    path: api.responses.publish-taxonomy-responses
+    spec_node_id: api.responses
+    type: responses
+    layer_id: api
+    name: publish-taxonomy-responses
+    description: Responses map of the publish-taxonomy operation.
+    metadata:
+      created_at: 2026-11-17T17:57:15.201Z
+      updated_at: 2026-11-17T17:57:15.201Z
+      version: 1
+    source_reference:
+      provenance: inferred
+      locations:
+        - file: local-server/adapters/web/ontology_routes.py
+          symbol: publish_taxonomy
+  timestamp: 2026-11-17T18:01:17.428Z
+  sequenceNumber: 79
+- type: add
+  elementId: api.responses.pull-changes-responses
+  layerName: api
+  after:
+    id: bd4526d5-eb66-41e9-a53c-643108135cb7
+    path: api.responses.pull-changes-responses
+    spec_node_id: api.responses
+    type: responses
+    layer_id: api
+    name: pull-changes-responses
+    description: Responses map of the pull-changes operation.
+    metadata:
+      created_at: 2026-11-17T17:57:15.497Z
+      updated_at: 2026-11-17T17:57:15.497Z
+      version: 1
+    source_reference:
+      provenance: inferred
+      locations:
+        - file: local-server/adapters/web/versioning_routes.py
+          symbol: pull_changes
+  timestamp: 2026-11-17T18:01:18.134Z
+  sequenceNumber: 80
+- type: add
+  elementId: api.responses.push-changes-responses
+  layerName: api
+  after:
+    id: ad5c71da-016f-4845-88ee-cee782a09858
+    path: api.responses.push-changes-responses
+    spec_node_id: api.responses
+    type: responses
+    layer_id: api
+    name: push-changes-responses
+    description: Responses map of the push-changes operation.
+    metadata:
+      created_at: 2026-11-17T17:57:16.450Z
+      updated_at: 2026-11-17T17:57:16.450Z
+      version: 1
+    source_reference:
+      provenance: inferred
+      locations:
+        - file: local-server/adapters/web/versioning_routes.py
+          symbol: push_changes
+  timestamp: 2026-11-17T18:01:18.783Z
+  sequenceNumber: 81
+- type: add
+  elementId: api.responses.reject-proposal-responses
+  layerName: api
+  after:
+    id: a449fc5b-4605-4aed-8496-441438c62f3e
+    path: api.responses.reject-proposal-responses
+    spec_node_id: api.responses
+    type: responses
+    layer_id: api
+    name: reject-proposal-responses
+    description: Responses map of the reject-proposal operation.
+    metadata:
+      created_at: 2026-11-17T17:57:17.012Z
+      updated_at: 2026-11-17T17:57:17.012Z
+      version: 1
+    source_reference:
+      provenance: inferred
+      locations:
+        - file: local-server/adapters/web/versioning_routes.py
+          symbol: reject_proposal
+  timestamp: 2026-11-17T18:01:19.413Z
+  sequenceNumber: 82
+- type: add
+  elementId: api.responses.remove-parent-class-from-individual-responses
+  layerName: api
+  after:
+    id: d34f7e76-268f-404f-a2e4-ea24cf18e9d4
+    path: api.responses.remove-parent-class-from-individual-responses
+    spec_node_id: api.responses
+    type: responses
+    layer_id: api
+    name: remove-parent-class-from-individual-responses
+    description: Responses map of the remove-parent-class-from-individual operation.
+    metadata:
+      created_at: 2026-11-17T17:57:17.581Z
+      updated_at: 2026-11-17T17:57:17.581Z
+      version: 1
+    source_reference:
+      provenance: inferred
+      locations:
+        - file: local-server/adapters/web/ontology_routes.py
+          symbol: remove_parent_class_from_individual
+  timestamp: 2026-11-17T18:01:20.065Z
+  sequenceNumber: 83
+- type: add
+  elementId: api.responses.reorder-individual-classes-responses
+  layerName: api
+  after:
+    id: cf8fb386-afb7-4a80-ad3e-72f4b4992833
+    path: api.responses.reorder-individual-classes-responses
+    spec_node_id: api.responses
+    type: responses
+    layer_id: api
+    name: reorder-individual-classes-responses
+    description: Responses map of the reorder-individual-classes operation.
+    metadata:
+      created_at: 2026-11-17T17:57:18.094Z
+      updated_at: 2026-11-17T17:57:18.094Z
+      version: 1
+    source_reference:
+      provenance: inferred
+      locations:
+        - file: local-server/adapters/web/ontology_routes.py
+          symbol: reorder_individual_classes
+  timestamp: 2026-11-17T18:01:20.719Z
+  sequenceNumber: 84
+- type: add
+  elementId: api.responses.reset-configuration-responses
+  layerName: api
+  after:
+    id: f0a2f548-2303-430e-906a-9592c1f33a79
+    path: api.responses.reset-configuration-responses
+    spec_node_id: api.responses
+    type: responses
+    layer_id: api
+    name: reset-configuration-responses
+    description: Responses map of the reset-configuration operation.
+    metadata:
+      created_at: 2026-11-17T17:57:18.395Z
+      updated_at: 2026-11-17T17:57:18.395Z
+      version: 1
+    source_reference:
+      provenance: inferred
+      locations:
+        - file: local-server/adapters/web/admin_routes.py
+          symbol: reset_configuration
+  timestamp: 2026-11-17T18:01:22.519Z
+  sequenceNumber: 85
+- type: add
+  elementId: api.responses.resolve-conflicts-responses
+  layerName: api
+  after:
+    id: 52e15278-d824-44ac-b8aa-a851f5b49c02
+    path: api.responses.resolve-conflicts-responses
+    spec_node_id: api.responses
+    type: responses
+    layer_id: api
+    name: resolve-conflicts-responses
+    description: Responses map of the resolve-conflicts operation.
+    metadata:
+      created_at: 2026-11-17T17:57:18.938Z
+      updated_at: 2026-11-17T17:57:18.938Z
+      version: 1
+    source_reference:
+      provenance: inferred
+      locations:
+        - file: local-server/adapters/web/versioning_routes.py
+          symbol: resolve_conflicts
+  timestamp: 2026-11-17T18:01:23.366Z
+  sequenceNumber: 86
+- type: add
+  elementId: api.responses.search-references-responses
+  layerName: api
+  after:
+    id: 72012e04-a34f-4823-9f45-724bec0686f1
+    path: api.responses.search-references-responses
+    spec_node_id: api.responses
+    type: responses
+    layer_id: api
+    name: search-references-responses
+    description: Responses map of the search-references operation.
+    metadata:
+      created_at: 2026-11-17T17:57:19.368Z
+      updated_at: 2026-11-17T17:57:19.368Z
+      version: 1
+    source_reference:
+      provenance: inferred
+      locations:
+        - file: local-server/adapters/web/reference_routes.py
+          symbol: search_references
+  timestamp: 2026-11-17T18:01:24.014Z
+  sequenceNumber: 87
+- type: add
+  elementId: api.responses.stage-changeset-responses
+  layerName: api
+  after:
+    id: 003ca3ca-3db4-405c-aeb4-0e6385fae41d
+    path: api.responses.stage-changeset-responses
+    spec_node_id: api.responses
+    type: responses
+    layer_id: api
+    name: stage-changeset-responses
+    description: Responses map of the stage-changeset operation.
+    metadata:
+      created_at: 2026-11-17T17:57:19.797Z
+      updated_at: 2026-11-17T17:57:19.797Z
+      version: 1
+    source_reference:
+      provenance: inferred
+      locations:
+        - file: local-server/adapters/web/versioning_routes.py
+          symbol: stage_changeset
+  timestamp: 2026-11-17T18:01:24.737Z
+  sequenceNumber: 88
+- type: add
+  elementId: api.responses.submit-proposal-responses
+  layerName: api
+  after:
+    id: 2cf59709-9548-4bf2-8976-6ad84618a925
+    path: api.responses.submit-proposal-responses
+    spec_node_id: api.responses
+    type: responses
+    layer_id: api
+    name: submit-proposal-responses
+    description: Responses map of the submit-proposal operation.
+    metadata:
+      created_at: 2026-11-17T17:57:20.117Z
+      updated_at: 2026-11-17T17:57:20.117Z
+      version: 1
+    source_reference:
+      provenance: inferred
+      locations:
+        - file: local-server/adapters/web/versioning_routes.py
+          symbol: submit_proposal
+  timestamp: 2026-11-17T18:01:25.378Z
+  sequenceNumber: 89
+- type: add
+  elementId: api.responses.update-class-responses
+  layerName: api
+  after:
+    id: 5d556f80-ba1f-4397-8a69-61bac696c140
+    path: api.responses.update-class-responses
+    spec_node_id: api.responses
+    type: responses
+    layer_id: api
+    name: update-class-responses
+    description: Responses map of the update-class operation.
+    metadata:
+      created_at: 2026-11-17T17:57:20.459Z
+      updated_at: 2026-11-17T17:57:20.459Z
+      version: 1
+    source_reference:
+      provenance: inferred
+      locations:
+        - file: local-server/adapters/web/ontology_routes.py
+          symbol: update_class
+  timestamp: 2026-11-17T18:01:26.004Z
+  sequenceNumber: 90
+- type: add
+  elementId: api.responses.update-concept-scheme-responses
+  layerName: api
+  after:
+    id: d68cdf7a-0110-472c-a609-0045c25fb12e
+    path: api.responses.update-concept-scheme-responses
+    spec_node_id: api.responses
+    type: responses
+    layer_id: api
+    name: update-concept-scheme-responses
+    description: Responses map of the update-concept-scheme operation.
+    metadata:
+      created_at: 2026-11-17T17:57:20.896Z
+      updated_at: 2026-11-17T17:57:20.896Z
+      version: 1
+    source_reference:
+      provenance: inferred
+      locations:
+        - file: local-server/adapters/web/ontology_routes.py
+          symbol: update_concept_scheme
+  timestamp: 2026-11-17T18:01:26.649Z
+  sequenceNumber: 91
+- type: add
+  elementId: api.responses.update-configuration-section-responses
+  layerName: api
+  after:
+    id: 358c5ed0-5411-436f-80f3-aa354898600e
+    path: api.responses.update-configuration-section-responses
+    spec_node_id: api.responses
+    type: responses
+    layer_id: api
+    name: update-configuration-section-responses
+    description: Responses map of the update-configuration-section operation.
+    metadata:
+      created_at: 2026-11-17T17:57:21.263Z
+      updated_at: 2026-11-17T17:57:21.263Z
+      version: 1
+    source_reference:
+      provenance: inferred
+      locations:
+        - file: local-server/adapters/web/admin_routes.py
+          symbol: update_configuration_section
+  timestamp: 2026-11-17T18:01:27.280Z
+  sequenceNumber: 92
+- type: add
+  elementId: api.responses.update-individual-responses
+  layerName: api
+  after:
+    id: bbca1d2c-4cf0-49b4-af28-0c0755d9d62b
+    path: api.responses.update-individual-responses
+    spec_node_id: api.responses
+    type: responses
+    layer_id: api
+    name: update-individual-responses
+    description: Responses map of the update-individual operation.
+    metadata:
+      created_at: 2026-11-17T17:57:21.604Z
+      updated_at: 2026-11-17T17:57:21.604Z
+      version: 1
+    source_reference:
+      provenance: inferred
+      locations:
+        - file: local-server/adapters/web/ontology_routes.py
+          symbol: update_individual
+  timestamp: 2026-11-17T18:01:27.908Z
+  sequenceNumber: 93
+- type: add
+  elementId: api.responses.update-pipeline-configuration-responses
+  layerName: api
+  after:
+    id: 4f9b5167-556a-4274-ab76-97593f5b7371
+    path: api.responses.update-pipeline-configuration-responses
+    spec_node_id: api.responses
+    type: responses
+    layer_id: api
+    name: update-pipeline-configuration-responses
+    description: Responses map of the update-pipeline-configuration operation.
+    metadata:
+      created_at: 2026-11-17T17:57:21.925Z
+      updated_at: 2026-11-17T17:57:21.925Z
+      version: 1
+    source_reference:
+      provenance: inferred
+      locations:
+        - file: local-server/adapters/web/pipeline_routes.py
+          symbol: update_pipeline_configuration
+  timestamp: 2026-11-17T18:01:28.551Z
+  sequenceNumber: 94
+- type: add
+  elementId: api.responses.update-property-definition-responses
+  layerName: api
+  after:
+    id: 81ea75e7-e402-4e39-beab-1802b01586d4
+    path: api.responses.update-property-definition-responses
+    spec_node_id: api.responses
+    type: responses
+    layer_id: api
+    name: update-property-definition-responses
+    description: Responses map of the update-property-definition operation.
+    metadata:
+      created_at: 2026-11-17T17:57:22.277Z
+      updated_at: 2026-11-17T17:57:22.277Z
+      version: 1
+    source_reference:
+      provenance: inferred
+      locations:
+        - file: local-server/adapters/web/ontology_routes.py
+          symbol: update_property_definition
+  timestamp: 2026-11-17T18:01:29.161Z
+  sequenceNumber: 95
+- type: add
+  elementId: api.responses.update-taxonomy-responses
+  layerName: api
+  after:
+    id: 2026522e-0fee-46f9-b17d-bc5c21296640
+    path: api.responses.update-taxonomy-responses
+    spec_node_id: api.responses
+    type: responses
+    layer_id: api
+    name: update-taxonomy-responses
+    description: Responses map of the update-taxonomy operation.
+    metadata:
+      created_at: 2026-11-17T17:57:22.598Z
+      updated_at: 2026-11-17T17:57:22.598Z
+      version: 1
+    source_reference:
+      provenance: inferred
+      locations:
+        - file: local-server/adapters/web/ontology_routes.py
+          symbol: update_taxonomy
+  timestamp: 2026-11-17T18:01:29.847Z
+  sequenceNumber: 96
+- type: relationship-add
+  elementId: api.operation.add-parent-class-to-individual::composes::api.responses.add-parent-class-to-individual-responses
+  layerName: api
+  after:
+    source: api.operation.add-parent-class-to-individual
+    target: api.responses.add-parent-class-to-individual-responses
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:57:23.167Z
+  sequenceNumber: 97
+- type: relationship-add
+  elementId: api.responses.add-parent-class-to-individual-responses::composes::api.response.individual-response
+  layerName: api
+  after:
+    source: api.responses.add-parent-class-to-individual-responses
+    target: api.response.individual-response
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:57:23.791Z
+  sequenceNumber: 98
+- type: relationship-add
+  elementId: api.operation.analyze-text::composes::api.responses.analyze-text-responses
+  layerName: api
+  after:
+    source: api.operation.analyze-text
+    target: api.responses.analyze-text-responses
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:57:24.237Z
+  sequenceNumber: 99
+- type: relationship-add
+  elementId: api.responses.analyze-text-responses::composes::api.response.extraction-result-schema
+  layerName: api
+  after:
+    source: api.responses.analyze-text-responses
+    target: api.response.extraction-result-schema
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:57:24.821Z
+  sequenceNumber: 100
+- type: relationship-add
+  elementId: api.operation.approve-proposal::composes::api.responses.approve-proposal-responses
+  layerName: api
+  after:
+    source: api.operation.approve-proposal
+    target: api.responses.approve-proposal-responses
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:57:25.314Z
+  sequenceNumber: 101
+- type: relationship-add
+  elementId: api.responses.approve-proposal-responses::composes::api.response.proposal-response
+  layerName: api
+  after:
+    source: api.responses.approve-proposal-responses
+    target: api.response.proposal-response
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:57:25.952Z
+  sequenceNumber: 102
+- type: relationship-add
+  elementId: api.operation.auto-resolve-conflicts::composes::api.responses.auto-resolve-conflicts-responses
+  layerName: api
+  after:
+    source: api.operation.auto-resolve-conflicts
+    target: api.responses.auto-resolve-conflicts-responses
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:57:27.350Z
+  sequenceNumber: 103
+- type: relationship-add
+  elementId: api.responses.auto-resolve-conflicts-responses::composes::api.response.conflict-response
+  layerName: api
+  after:
+    source: api.responses.auto-resolve-conflicts-responses
+    target: api.response.conflict-response
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:57:28.039Z
+  sequenceNumber: 104
+- type: relationship-add
+  elementId: api.operation.build-knowledge-graph::composes::api.responses.build-knowledge-graph-responses
+  layerName: api
+  after:
+    source: api.operation.build-knowledge-graph
+    target: api.responses.build-knowledge-graph-responses
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:57:28.505Z
+  sequenceNumber: 105
+- type: relationship-add
+  elementId: api.responses.build-knowledge-graph-responses::composes::api.response.knowledge-graph-response
+  layerName: api
+  after:
+    source: api.responses.build-knowledge-graph-responses
+    target: api.response.knowledge-graph-response
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:57:28.927Z
+  sequenceNumber: 106
+- type: relationship-add
+  elementId: api.operation.check-cycle::composes::api.responses.check-cycle-responses
+  layerName: api
+  after:
+    source: api.operation.check-cycle
+    target: api.responses.check-cycle-responses
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:57:29.356Z
+  sequenceNumber: 107
+- type: relationship-add
+  elementId: api.responses.check-cycle-responses::composes::api.response.cycle-check-response
+  layerName: api
+  after:
+    source: api.responses.check-cycle-responses
+    target: api.response.cycle-check-response
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:57:29.834Z
+  sequenceNumber: 108
+- type: relationship-add
+  elementId: api.operation.create-changeset::composes::api.responses.create-changeset-responses
+  layerName: api
+  after:
+    source: api.operation.create-changeset
+    target: api.responses.create-changeset-responses
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:57:30.215Z
+  sequenceNumber: 109
+- type: relationship-add
+  elementId: api.responses.create-changeset-responses::composes::api.response.changeset-response
+  layerName: api
+  after:
+    source: api.responses.create-changeset-responses
+    target: api.response.changeset-response
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:57:30.605Z
+  sequenceNumber: 110
+- type: relationship-add
+  elementId: api.operation.create-class::composes::api.responses.create-class-responses
+  layerName: api
+  after:
+    source: api.operation.create-class
+    target: api.responses.create-class-responses
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:57:30.988Z
+  sequenceNumber: 111
+- type: relationship-add
+  elementId: api.responses.create-class-responses::composes::api.response.class-response
+  layerName: api
+  after:
+    source: api.responses.create-class-responses
+    target: api.response.class-response
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:57:31.395Z
+  sequenceNumber: 112
+- type: relationship-add
+  elementId: api.operation.create-concept-scheme::composes::api.responses.create-concept-scheme-responses
+  layerName: api
+  after:
+    source: api.operation.create-concept-scheme
+    target: api.responses.create-concept-scheme-responses
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:57:31.782Z
+  sequenceNumber: 113
+- type: relationship-add
+  elementId: api.responses.create-concept-scheme-responses::composes::api.response.concept-scheme-response
+  layerName: api
+  after:
+    source: api.responses.create-concept-scheme-responses
+    target: api.response.concept-scheme-response
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:57:32.166Z
+  sequenceNumber: 114
+- type: relationship-add
+  elementId: api.operation.create-individual::composes::api.responses.create-individual-responses
+  layerName: api
+  after:
+    source: api.operation.create-individual
+    target: api.responses.create-individual-responses
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:57:32.543Z
+  sequenceNumber: 115
+- type: relationship-add
+  elementId: api.responses.create-individual-responses::composes::api.response.individual-response
+  layerName: api
+  after:
+    source: api.responses.create-individual-responses
+    target: api.response.individual-response
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:57:32.954Z
+  sequenceNumber: 116
+- type: relationship-add
+  elementId: api.operation.create-pipeline-configuration::composes::api.responses.create-pipeline-configuration-responses
+  layerName: api
+  after:
+    source: api.operation.create-pipeline-configuration
+    target: api.responses.create-pipeline-configuration-responses
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:57:33.595Z
+  sequenceNumber: 117
+- type: relationship-add
+  elementId: api.responses.create-pipeline-configuration-responses::composes::api.response.pipeline-configuration-response
+  layerName: api
+  after:
+    source: api.responses.create-pipeline-configuration-responses
+    target: api.response.pipeline-configuration-response
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:57:34.003Z
+  sequenceNumber: 118
+- type: relationship-add
+  elementId: api.operation.create-property-definition::composes::api.responses.create-property-definition-responses
+  layerName: api
+  after:
+    source: api.operation.create-property-definition
+    target: api.responses.create-property-definition-responses
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:57:34.427Z
+  sequenceNumber: 119
+- type: relationship-add
+  elementId: api.responses.create-property-definition-responses::composes::api.response.property-definition-response
+  layerName: api
+  after:
+    source: api.responses.create-property-definition-responses
+    target: api.response.property-definition-response
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:57:34.827Z
+  sequenceNumber: 120
+- type: relationship-add
+  elementId: api.operation.create-relationship::composes::api.responses.create-relationship-responses
+  layerName: api
+  after:
+    source: api.operation.create-relationship
+    target: api.responses.create-relationship-responses
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:57:35.226Z
+  sequenceNumber: 121
+- type: relationship-add
+  elementId: api.responses.create-relationship-responses::composes::api.response.relationship-response
+  layerName: api
+  after:
+    source: api.responses.create-relationship-responses
+    target: api.response.relationship-response
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:57:35.651Z
+  sequenceNumber: 122
+- type: relationship-add
+  elementId: api.operation.create-taxonomy::composes::api.responses.create-taxonomy-responses
+  layerName: api
+  after:
+    source: api.operation.create-taxonomy
+    target: api.responses.create-taxonomy-responses
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:57:36.072Z
+  sequenceNumber: 123
+- type: relationship-add
+  elementId: api.responses.create-taxonomy-responses::composes::api.response.taxonomy-response
+  layerName: api
+  after:
+    source: api.responses.create-taxonomy-responses
+    target: api.response.taxonomy-response
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:57:36.655Z
+  sequenceNumber: 124
+- type: relationship-add
+  elementId: api.operation.delete-class::composes::api.responses.delete-class-responses
+  layerName: api
+  after:
+    source: api.operation.delete-class
+    target: api.responses.delete-class-responses
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:57:37.097Z
+  sequenceNumber: 125
+- type: relationship-add
+  elementId: api.responses.delete-class-responses::composes::api.response.class-response
+  layerName: api
+  after:
+    source: api.responses.delete-class-responses
+    target: api.response.class-response
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:57:37.517Z
+  sequenceNumber: 126
+- type: relationship-add
+  elementId: api.operation.delete-concept-scheme::composes::api.responses.delete-concept-scheme-responses
+  layerName: api
+  after:
+    source: api.operation.delete-concept-scheme
+    target: api.responses.delete-concept-scheme-responses
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:57:37.923Z
+  sequenceNumber: 127
+- type: relationship-add
+  elementId: api.responses.delete-concept-scheme-responses::composes::api.response.concept-scheme-response
+  layerName: api
+  after:
+    source: api.responses.delete-concept-scheme-responses
+    target: api.response.concept-scheme-response
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:57:38.319Z
+  sequenceNumber: 128
+- type: relationship-add
+  elementId: api.operation.delete-individual::composes::api.responses.delete-individual-responses
+  layerName: api
+  after:
+    source: api.operation.delete-individual
+    target: api.responses.delete-individual-responses
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:57:38.698Z
+  sequenceNumber: 129
+- type: relationship-add
+  elementId: api.responses.delete-individual-responses::composes::api.response.individual-response
+  layerName: api
+  after:
+    source: api.responses.delete-individual-responses
+    target: api.response.individual-response
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:57:39.084Z
+  sequenceNumber: 130
+- type: relationship-add
+  elementId: api.operation.delete-pipeline-configuration::composes::api.responses.delete-pipeline-configuration-responses
+  layerName: api
+  after:
+    source: api.operation.delete-pipeline-configuration
+    target: api.responses.delete-pipeline-configuration-responses
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:57:39.458Z
+  sequenceNumber: 131
+- type: relationship-add
+  elementId: api.responses.delete-pipeline-configuration-responses::composes::api.response.pipeline-configuration-response
+  layerName: api
+  after:
+    source: api.responses.delete-pipeline-configuration-responses
+    target: api.response.pipeline-configuration-response
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:57:39.925Z
+  sequenceNumber: 132
+- type: relationship-add
+  elementId: api.operation.delete-property-definition::composes::api.responses.delete-property-definition-responses
+  layerName: api
+  after:
+    source: api.operation.delete-property-definition
+    target: api.responses.delete-property-definition-responses
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:57:40.409Z
+  sequenceNumber: 133
+- type: relationship-add
+  elementId: api.responses.delete-property-definition-responses::composes::api.response.property-definition-response
+  layerName: api
+  after:
+    source: api.responses.delete-property-definition-responses
+    target: api.response.property-definition-response
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:57:40.938Z
+  sequenceNumber: 134
+- type: relationship-add
+  elementId: api.operation.delete-relationship::composes::api.responses.delete-relationship-responses
+  layerName: api
+  after:
+    source: api.operation.delete-relationship
+    target: api.responses.delete-relationship-responses
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:57:41.404Z
+  sequenceNumber: 135
+- type: relationship-add
+  elementId: api.responses.delete-relationship-responses::composes::api.response.relationship-response
+  layerName: api
+  after:
+    source: api.responses.delete-relationship-responses
+    target: api.response.relationship-response
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:57:42.109Z
+  sequenceNumber: 136
+- type: relationship-add
+  elementId: api.operation.delete-taxonomy::composes::api.responses.delete-taxonomy-responses
+  layerName: api
+  after:
+    source: api.operation.delete-taxonomy
+    target: api.responses.delete-taxonomy-responses
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:57:42.656Z
+  sequenceNumber: 137
+- type: relationship-add
+  elementId: api.responses.delete-taxonomy-responses::composes::api.response.taxonomy-response
+  layerName: api
+  after:
+    source: api.responses.delete-taxonomy-responses
+    target: api.response.taxonomy-response
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:57:43.576Z
+  sequenceNumber: 138
+- type: relationship-add
+  elementId: api.operation.detect-conflicts::composes::api.responses.detect-conflicts-responses
+  layerName: api
+  after:
+    source: api.operation.detect-conflicts
+    target: api.responses.detect-conflicts-responses
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:57:44.090Z
+  sequenceNumber: 139
+- type: relationship-add
+  elementId: api.responses.detect-conflicts-responses::composes::api.response.conflict-report-response
+  layerName: api
+  after:
+    source: api.responses.detect-conflicts-responses
+    target: api.response.conflict-report-response
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:57:44.642Z
+  sequenceNumber: 140
+- type: relationship-add
+  elementId: api.operation.enrich-from-references::composes::api.responses.enrich-from-references-responses
+  layerName: api
+  after:
+    source: api.operation.enrich-from-references
+    target: api.responses.enrich-from-references-responses
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:57:45.251Z
+  sequenceNumber: 141
+- type: relationship-add
+  elementId: api.responses.enrich-from-references-responses::composes::api.response.external-reference-response
+  layerName: api
+  after:
+    source: api.responses.enrich-from-references-responses
+    target: api.response.external-reference-response
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:57:45.875Z
+  sequenceNumber: 142
+- type: relationship-add
+  elementId: api.operation.execute-pipeline::composes::api.responses.execute-pipeline-responses
+  layerName: api
+  after:
+    source: api.operation.execute-pipeline
+    target: api.responses.execute-pipeline-responses
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:57:46.504Z
+  sequenceNumber: 143
+- type: relationship-add
+  elementId: api.responses.execute-pipeline-responses::composes::api.response.execution-response
+  layerName: api
+  after:
+    source: api.responses.execute-pipeline-responses
+    target: api.response.execution-response
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:57:47.335Z
+  sequenceNumber: 144
+- type: relationship-add
+  elementId: api.operation.execute-sparql::composes::api.responses.execute-sparql-responses
+  layerName: api
+  after:
+    source: api.operation.execute-sparql
+    target: api.responses.execute-sparql-responses
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:57:47.878Z
+  sequenceNumber: 145
+- type: relationship-add
+  elementId: api.responses.execute-sparql-responses::composes::api.response.sparqlresponse
+  layerName: api
+  after:
+    source: api.responses.execute-sparql-responses
+    target: api.response.sparqlresponse
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:57:48.345Z
+  sequenceNumber: 146
+- type: relationship-add
+  elementId: api.operation.export-ontology::composes::api.responses.export-ontology-responses
+  layerName: api
+  after:
+    source: api.operation.export-ontology
+    target: api.responses.export-ontology-responses
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:57:48.872Z
+  sequenceNumber: 147
+- type: relationship-add
+  elementId: api.responses.export-ontology-responses::composes::api.response.serialization-scope-response
+  layerName: api
+  after:
+    source: api.responses.export-ontology-responses
+    target: api.response.serialization-scope-response
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:57:49.364Z
+  sequenceNumber: 148
+- type: relationship-add
+  elementId: api.operation.extract-entities::composes::api.responses.extract-entities-responses
+  layerName: api
+  after:
+    source: api.operation.extract-entities
+    target: api.responses.extract-entities-responses
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:57:49.858Z
+  sequenceNumber: 149
+- type: relationship-add
+  elementId: api.responses.extract-entities-responses::composes::api.response.extraction-result-schema
+  layerName: api
+  after:
+    source: api.responses.extract-entities-responses
+    target: api.response.extraction-result-schema
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:57:50.313Z
+  sequenceNumber: 150
+- type: relationship-add
+  elementId: api.operation.extract-triples::composes::api.responses.extract-triples-responses
+  layerName: api
+  after:
+    source: api.operation.extract-triples
+    target: api.responses.extract-triples-responses
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:57:50.815Z
+  sequenceNumber: 151
+- type: relationship-add
+  elementId: api.responses.extract-triples-responses::composes::api.response.extract-triple-response
+  layerName: api
+  after:
+    source: api.responses.extract-triples-responses
+    target: api.response.extract-triple-response
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:57:51.326Z
+  sequenceNumber: 152
+- type: relationship-add
+  elementId: api.operation.get-all-paths::composes::api.responses.get-all-paths-responses
+  layerName: api
+  after:
+    source: api.operation.get-all-paths
+    target: api.responses.get-all-paths-responses
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:57:51.851Z
+  sequenceNumber: 153
+- type: relationship-add
+  elementId: api.responses.get-all-paths-responses::composes::api.response.path-result-response
+  layerName: api
+  after:
+    source: api.responses.get-all-paths-responses
+    target: api.response.path-result-response
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:57:52.489Z
+  sequenceNumber: 154
+- type: relationship-add
+  elementId: api.operation.get-background-task::composes::api.responses.get-background-task-responses
+  layerName: api
+  after:
+    source: api.operation.get-background-task
+    target: api.responses.get-background-task-responses
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:57:53.040Z
+  sequenceNumber: 155
+- type: relationship-add
+  elementId: api.responses.get-background-task-responses::composes::api.response.background-task-response
+  layerName: api
+  after:
+    source: api.responses.get-background-task-responses
+    target: api.response.background-task-response
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:57:53.542Z
+  sequenceNumber: 156
+- type: relationship-add
+  elementId: api.operation.get-background-tasks-summary::composes::api.responses.get-background-tasks-summary-responses
+  layerName: api
+  after:
+    source: api.operation.get-background-tasks-summary
+    target: api.responses.get-background-tasks-summary-responses
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:57:54.027Z
+  sequenceNumber: 157
+- type: relationship-add
+  elementId: api.responses.get-background-tasks-summary-responses::composes::api.response.background-task-summary-response
+  layerName: api
+  after:
+    source: api.responses.get-background-tasks-summary-responses
+    target: api.response.background-task-summary-response
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:57:55.125Z
+  sequenceNumber: 158
+- type: relationship-add
+  elementId: api.operation.get-centrality::composes::api.responses.get-centrality-responses
+  layerName: api
+  after:
+    source: api.operation.get-centrality
+    target: api.responses.get-centrality-responses
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:57:56.647Z
+  sequenceNumber: 159
+- type: relationship-add
+  elementId: api.responses.get-centrality-responses::composes::api.response.centrality-response
+  layerName: api
+  after:
+    source: api.responses.get-centrality-responses
+    target: api.response.centrality-response
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:57:58.257Z
+  sequenceNumber: 160
+- type: relationship-add
+  elementId: api.operation.get-change-history-all::composes::api.responses.get-change-history-all-responses
+  layerName: api
+  after:
+    source: api.operation.get-change-history-all
+    target: api.responses.get-change-history-all-responses
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:58:01.127Z
+  sequenceNumber: 161
+- type: relationship-add
+  elementId: api.responses.get-change-history-all-responses::composes::api.response.change-history-response
+  layerName: api
+  after:
+    source: api.responses.get-change-history-all-responses
+    target: api.response.change-history-response
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:58:02.675Z
+  sequenceNumber: 162
+- type: relationship-add
+  elementId: api.responses.get-change-history-all-responses::composes::api.response.versioning-change-event-response
+  layerName: api
+  after:
+    source: api.responses.get-change-history-all-responses
+    target: api.response.versioning-change-event-response
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:58:04.743Z
+  sequenceNumber: 163
+- type: relationship-add
+  elementId: api.operation.get-change-history-by-entity::composes::api.responses.get-change-history-by-entity-responses
+  layerName: api
+  after:
+    source: api.operation.get-change-history-by-entity
+    target: api.responses.get-change-history-by-entity-responses
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:58:08.700Z
+  sequenceNumber: 164
+- type: relationship-add
+  elementId: api.responses.get-change-history-by-entity-responses::composes::api.response.change-history-response
+  layerName: api
+  after:
+    source: api.responses.get-change-history-by-entity-responses
+    target: api.response.change-history-response
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:58:11.029Z
+  sequenceNumber: 165
+- type: relationship-add
+  elementId: api.operation.get-changeset::composes::api.responses.get-changeset-responses
+  layerName: api
+  after:
+    source: api.operation.get-changeset
+    target: api.responses.get-changeset-responses
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:58:12.606Z
+  sequenceNumber: 166
+- type: relationship-add
+  elementId: api.responses.get-changeset-responses::composes::api.response.changeset-response
+  layerName: api
+  after:
+    source: api.responses.get-changeset-responses
+    target: api.response.changeset-response
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:58:14.514Z
+  sequenceNumber: 167
+- type: relationship-add
+  elementId: api.operation.get-class::composes::api.responses.get-class-responses
+  layerName: api
+  after:
+    source: api.operation.get-class
+    target: api.responses.get-class-responses
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:58:17.140Z
+  sequenceNumber: 168
+- type: relationship-add
+  elementId: api.responses.get-class-responses::composes::api.response.class-response
+  layerName: api
+  after:
+    source: api.responses.get-class-responses
+    target: api.response.class-response
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:58:19.993Z
+  sequenceNumber: 169
+- type: relationship-add
+  elementId: api.operation.get-communities::composes::api.responses.get-communities-responses
+  layerName: api
+  after:
+    source: api.operation.get-communities
+    target: api.responses.get-communities-responses
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:58:22.719Z
+  sequenceNumber: 170
+- type: relationship-add
+  elementId: api.responses.get-communities-responses::composes::api.response.communities-response
+  layerName: api
+  after:
+    source: api.responses.get-communities-responses
+    target: api.response.communities-response
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:58:24.098Z
+  sequenceNumber: 171
+- type: relationship-add
+  elementId: api.operation.get-concept-scheme::composes::api.responses.get-concept-scheme-responses
+  layerName: api
+  after:
+    source: api.operation.get-concept-scheme
+    target: api.responses.get-concept-scheme-responses
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:58:24.946Z
+  sequenceNumber: 172
+- type: relationship-add
+  elementId: api.responses.get-concept-scheme-responses::composes::api.response.concept-scheme-response
+  layerName: api
+  after:
+    source: api.responses.get-concept-scheme-responses
+    target: api.response.concept-scheme-response
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:58:26.020Z
+  sequenceNumber: 173
+- type: relationship-add
+  elementId: api.operation.get-configuration::composes::api.responses.get-configuration-responses
+  layerName: api
+  after:
+    source: api.operation.get-configuration
+    target: api.responses.get-configuration-responses
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:58:27.407Z
+  sequenceNumber: 174
+- type: relationship-add
+  elementId: api.responses.get-configuration-responses::composes::api.response.app-configuration-response
+  layerName: api
+  after:
+    source: api.responses.get-configuration-responses
+    target: api.response.app-configuration-response
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:58:28.240Z
+  sequenceNumber: 175
+- type: relationship-add
+  elementId: api.operation.get-database-health::composes::api.responses.get-database-health-responses
+  layerName: api
+  after:
+    source: api.operation.get-database-health
+    target: api.responses.get-database-health-responses
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:58:29.039Z
+  sequenceNumber: 176
+- type: relationship-add
+  elementId: api.responses.get-database-health-responses::composes::api.response.database-health-response
+  layerName: api
+  after:
+    source: api.responses.get-database-health-responses
+    target: api.response.database-health-response
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:58:29.993Z
+  sequenceNumber: 177
+- type: relationship-add
+  elementId: api.operation.get-degree-distribution::composes::api.responses.get-degree-distribution-responses
+  layerName: api
+  after:
+    source: api.operation.get-degree-distribution
+    target: api.responses.get-degree-distribution-responses
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:58:31.744Z
+  sequenceNumber: 178
+- type: relationship-add
+  elementId: api.responses.get-degree-distribution-responses::composes::api.response.degree-distribution-response
+  layerName: api
+  after:
+    source: api.responses.get-degree-distribution-responses
+    target: api.response.degree-distribution-response
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:58:33.283Z
+  sequenceNumber: 179
+- type: relationship-add
+  elementId: api.operation.get-embedding-health::composes::api.responses.get-embedding-health-responses
+  layerName: api
+  after:
+    source: api.operation.get-embedding-health
+    target: api.responses.get-embedding-health-responses
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:58:34.177Z
+  sequenceNumber: 180
+- type: relationship-add
+  elementId: api.responses.get-embedding-health-responses::composes::api.response.component-status-response
+  layerName: api
+  after:
+    source: api.responses.get-embedding-health-responses
+    target: api.response.component-status-response
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:58:35.094Z
+  sequenceNumber: 181
+- type: relationship-add
+  elementId: api.operation.get-entity-version::composes::api.responses.get-entity-version-responses
+  layerName: api
+  after:
+    source: api.operation.get-entity-version
+    target: api.responses.get-entity-version-responses
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:58:35.791Z
+  sequenceNumber: 182
+- type: relationship-add
+  elementId: api.responses.get-entity-version-responses::composes::api.response.entity-version-response
+  layerName: api
+  after:
+    source: api.responses.get-entity-version-responses
+    target: api.response.entity-version-response
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:58:36.511Z
+  sequenceNumber: 183
+- type: relationship-add
+  elementId: api.operation.get-graph-metrics::composes::api.responses.get-graph-metrics-responses
+  layerName: api
+  after:
+    source: api.operation.get-graph-metrics
+    target: api.responses.get-graph-metrics-responses
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:58:37.649Z
+  sequenceNumber: 184
+- type: relationship-add
+  elementId: api.responses.get-graph-metrics-responses::composes::api.response.graph-metrics-response
+  layerName: api
+  after:
+    source: api.responses.get-graph-metrics-responses
+    target: api.response.graph-metrics-response
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:58:38.400Z
+  sequenceNumber: 185
+- type: relationship-add
+  elementId: api.operation.get-import-run::composes::api.responses.get-import-run-responses
+  layerName: api
+  after:
+    source: api.operation.get-import-run
+    target: api.responses.get-import-run-responses
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:58:39.096Z
+  sequenceNumber: 186
+- type: relationship-add
+  elementId: api.responses.get-import-run-responses::composes::api.response.import-run-response
+  layerName: api
+  after:
+    source: api.responses.get-import-run-responses
+    target: api.response.import-run-response
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:58:39.796Z
+  sequenceNumber: 187
+- type: relationship-add
+  elementId: api.operation.get-individual::composes::api.responses.get-individual-responses
+  layerName: api
+  after:
+    source: api.operation.get-individual
+    target: api.responses.get-individual-responses
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:58:40.565Z
+  sequenceNumber: 188
+- type: relationship-add
+  elementId: api.responses.get-individual-responses::composes::api.response.individual-response
+  layerName: api
+  after:
+    source: api.responses.get-individual-responses
+    target: api.response.individual-response
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:58:41.344Z
+  sequenceNumber: 189
+- type: relationship-add
+  elementId: api.responses.get-individual-responses::composes::api.response.lexical-sense-response
+  layerName: api
+  after:
+    source: api.responses.get-individual-responses
+    target: api.response.lexical-sense-response
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:58:41.927Z
+  sequenceNumber: 190
+- type: relationship-add
+  elementId: api.operation.get-individual-inherited-properties::composes::api.responses.get-individual-inherited-properties-responses
+  layerName: api
+  after:
+    source: api.operation.get-individual-inherited-properties
+    target: api.responses.get-individual-inherited-properties-responses
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:58:42.487Z
+  sequenceNumber: 191
+- type: relationship-add
+  elementId: api.responses.get-individual-inherited-properties-responses::composes::api.response.data-property-value-response
+  layerName: api
+  after:
+    source: api.responses.get-individual-inherited-properties-responses
+    target: api.response.data-property-value-response
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:58:43.055Z
+  sequenceNumber: 192
+- type: relationship-add
+  elementId: api.operation.get-neighbors::composes::api.responses.get-neighbors-responses
+  layerName: api
+  after:
+    source: api.operation.get-neighbors
+    target: api.responses.get-neighbors-responses
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:58:43.894Z
+  sequenceNumber: 193
+- type: relationship-add
+  elementId: api.responses.get-neighbors-responses::composes::api.response.neighbors-response
+  layerName: api
+  after:
+    source: api.responses.get-neighbors-responses
+    target: api.response.neighbors-response
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:58:45.026Z
+  sequenceNumber: 194
+- type: relationship-add
+  elementId: api.operation.get-nlp-health::composes::api.responses.get-nlp-health-responses
+  layerName: api
+  after:
+    source: api.operation.get-nlp-health
+    target: api.responses.get-nlp-health-responses
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:58:45.864Z
+  sequenceNumber: 195
+- type: relationship-add
+  elementId: api.responses.get-nlp-health-responses::composes::api.response.component-status-response
+  layerName: api
+  after:
+    source: api.responses.get-nlp-health-responses
+    target: api.response.component-status-response
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:58:46.527Z
+  sequenceNumber: 196
+- type: relationship-add
+  elementId: api.operation.get-pipeline-configuration::composes::api.responses.get-pipeline-configuration-responses
+  layerName: api
+  after:
+    source: api.operation.get-pipeline-configuration
+    target: api.responses.get-pipeline-configuration-responses
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:58:47.303Z
+  sequenceNumber: 197
+- type: relationship-add
+  elementId: api.responses.get-pipeline-configuration-responses::composes::api.response.pipeline-configuration-response
+  layerName: api
+  after:
+    source: api.responses.get-pipeline-configuration-responses
+    target: api.response.pipeline-configuration-response
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:58:47.946Z
+  sequenceNumber: 198
+- type: relationship-add
+  elementId: api.operation.get-pipeline-executions::composes::api.responses.get-pipeline-executions-responses
+  layerName: api
+  after:
+    source: api.operation.get-pipeline-executions
+    target: api.responses.get-pipeline-executions-responses
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:58:48.562Z
+  sequenceNumber: 199
+- type: relationship-add
+  elementId: api.responses.get-pipeline-executions-responses::composes::api.response.execution-response
+  layerName: api
+  after:
+    source: api.responses.get-pipeline-executions-responses
+    target: api.response.execution-response
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:58:49.245Z
+  sequenceNumber: 200
+- type: relationship-add
+  elementId: api.operation.get-property-definition::composes::api.responses.get-property-definition-responses
+  layerName: api
+  after:
+    source: api.operation.get-property-definition
+    target: api.responses.get-property-definition-responses
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:58:49.853Z
+  sequenceNumber: 201
+- type: relationship-add
+  elementId: api.responses.get-property-definition-responses::composes::api.response.property-definition-response
+  layerName: api
+  after:
+    source: api.responses.get-property-definition-responses
+    target: api.response.property-definition-response
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:58:51.469Z
+  sequenceNumber: 202
+- type: relationship-add
+  elementId: api.operation.get-publish-diff-stats::composes::api.responses.get-publish-diff-stats-responses
+  layerName: api
+  after:
+    source: api.operation.get-publish-diff-stats
+    target: api.responses.get-publish-diff-stats-responses
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:58:52.394Z
+  sequenceNumber: 203
+- type: relationship-add
+  elementId: api.responses.get-publish-diff-stats-responses::composes::api.response.publish-diff-stats
+  layerName: api
+  after:
+    source: api.responses.get-publish-diff-stats-responses
+    target: api.response.publish-diff-stats
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:58:53.087Z
+  sequenceNumber: 204
+- type: relationship-add
+  elementId: api.operation.get-rdf-triple-count::composes::api.responses.get-rdf-triple-count-responses
+  layerName: api
+  after:
+    source: api.operation.get-rdf-triple-count
+    target: api.responses.get-rdf-triple-count-responses
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:58:53.927Z
+  sequenceNumber: 205
+- type: relationship-add
+  elementId: api.responses.get-rdf-triple-count-responses::composes::api.response.triple-count-response
+  layerName: api
+  after:
+    source: api.responses.get-rdf-triple-count-responses
+    target: api.response.triple-count-response
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:58:54.632Z
+  sequenceNumber: 206
+- type: relationship-add
+  elementId: api.operation.get-rdf-triples::composes::api.responses.get-rdf-triples-responses
+  layerName: api
+  after:
+    source: api.operation.get-rdf-triples
+    target: api.responses.get-rdf-triples-responses
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:58:55.316Z
+  sequenceNumber: 207
+- type: relationship-add
+  elementId: api.responses.get-rdf-triples-responses::composes::api.response.triple-response
+  layerName: api
+  after:
+    source: api.responses.get-rdf-triples-responses
+    target: api.response.triple-response
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:58:55.886Z
+  sequenceNumber: 208
+- type: relationship-add
+  elementId: api.responses.get-rdf-triples-responses::composes::api.response.triples-response
+  layerName: api
+  after:
+    source: api.responses.get-rdf-triples-responses
+    target: api.response.triples-response
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:58:56.458Z
+  sequenceNumber: 209
+- type: relationship-add
+  elementId: api.operation.get-reference-relations::composes::api.responses.get-reference-relations-responses
+  layerName: api
+  after:
+    source: api.operation.get-reference-relations
+    target: api.responses.get-reference-relations-responses
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:58:57.061Z
+  sequenceNumber: 210
+- type: relationship-add
+  elementId: api.responses.get-reference-relations-responses::composes::api.response.reference-relation-schema
+  layerName: api
+  after:
+    source: api.responses.get-reference-relations-responses
+    target: api.response.reference-relation-schema
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:58:57.633Z
+  sequenceNumber: 211
+- type: relationship-add
+  elementId: api.responses.get-reference-relations-responses::composes::api.response.reference-relations-response-schema
+  layerName: api
+  after:
+    source: api.responses.get-reference-relations-responses
+    target: api.response.reference-relations-response-schema
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:58:58.228Z
+  sequenceNumber: 212
+- type: relationship-add
+  elementId: api.operation.get-reference-status::composes::api.responses.get-reference-status-responses
+  layerName: api
+  after:
+    source: api.operation.get-reference-status
+    target: api.responses.get-reference-status-responses
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:58:58.823Z
+  sequenceNumber: 213
+- type: relationship-add
+  elementId: api.responses.get-reference-status-responses::composes::api.response.reference-source-status-schema
+  layerName: api
+  after:
+    source: api.responses.get-reference-status-responses
+    target: api.response.reference-source-status-schema
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:58:59.463Z
+  sequenceNumber: 214
+- type: relationship-add
+  elementId: api.responses.get-reference-status-responses::composes::api.response.reference-status-response-schema
+  layerName: api
+  after:
+    source: api.responses.get-reference-status-responses
+    target: api.response.reference-status-response-schema
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:59:00.128Z
+  sequenceNumber: 215
+- type: relationship-add
+  elementId: api.operation.get-relationship::composes::api.responses.get-relationship-responses
+  layerName: api
+  after:
+    source: api.operation.get-relationship
+    target: api.responses.get-relationship-responses
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:59:00.759Z
+  sequenceNumber: 216
+- type: relationship-add
+  elementId: api.responses.get-relationship-responses::composes::api.response.relationship-response
+  layerName: api
+  after:
+    source: api.responses.get-relationship-responses
+    target: api.response.relationship-response
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:59:01.359Z
+  sequenceNumber: 217
+- type: relationship-add
+  elementId: api.operation.get-run-change-events::composes::api.responses.get-run-change-events-responses
+  layerName: api
+  after:
+    source: api.operation.get-run-change-events
+    target: api.responses.get-run-change-events-responses
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:59:01.958Z
+  sequenceNumber: 218
+- type: relationship-add
+  elementId: api.responses.get-run-change-events-responses::composes::api.response.interchange-change-event-response
+  layerName: api
+  after:
+    source: api.responses.get-run-change-events-responses
+    target: api.response.interchange-change-event-response
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:59:02.548Z
+  sequenceNumber: 219
+- type: relationship-add
+  elementId: api.operation.get-service-metrics::composes::api.responses.get-service-metrics-responses
+  layerName: api
+  after:
+    source: api.operation.get-service-metrics
+    target: api.responses.get-service-metrics-responses
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:59:03.159Z
+  sequenceNumber: 220
+- type: relationship-add
+  elementId: api.responses.get-service-metrics-responses::composes::api.response.service-metrics-response
+  layerName: api
+  after:
+    source: api.responses.get-service-metrics-responses
+    target: api.response.service-metrics-response
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:59:03.809Z
+  sequenceNumber: 221
+- type: relationship-add
+  elementId: api.operation.get-shortest-path::composes::api.responses.get-shortest-path-responses
+  layerName: api
+  after:
+    source: api.operation.get-shortest-path
+    target: api.responses.get-shortest-path-responses
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:59:04.317Z
+  sequenceNumber: 222
+- type: relationship-add
+  elementId: api.responses.get-shortest-path-responses::composes::api.response.path-result-response
+  layerName: api
+  after:
+    source: api.responses.get-shortest-path-responses
+    target: api.response.path-result-response
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:59:04.796Z
+  sequenceNumber: 223
+- type: relationship-add
+  elementId: api.operation.get-subgraph::composes::api.responses.get-subgraph-responses
+  layerName: api
+  after:
+    source: api.operation.get-subgraph
+    target: api.responses.get-subgraph-responses
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:59:05.272Z
+  sequenceNumber: 224
+- type: relationship-add
+  elementId: api.responses.get-subgraph-responses::composes::api.response.subgraph-result-response
+  layerName: api
+  after:
+    source: api.responses.get-subgraph-responses
+    target: api.response.subgraph-result-response
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:59:05.727Z
+  sequenceNumber: 225
+- type: relationship-add
+  elementId: api.operation.get-subgraph-by-depth::composes::api.responses.get-subgraph-by-depth-responses
+  layerName: api
+  after:
+    source: api.operation.get-subgraph-by-depth
+    target: api.responses.get-subgraph-by-depth-responses
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:59:06.220Z
+  sequenceNumber: 226
+- type: relationship-add
+  elementId: api.responses.get-subgraph-by-depth-responses::composes::api.response.subgraph-data-response
+  layerName: api
+  after:
+    source: api.responses.get-subgraph-by-depth-responses
+    target: api.response.subgraph-data-response
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:59:06.698Z
+  sequenceNumber: 227
+- type: relationship-add
+  elementId: api.operation.get-sync-status::composes::api.responses.get-sync-status-responses
+  layerName: api
+  after:
+    source: api.operation.get-sync-status
+    target: api.responses.get-sync-status-responses
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:59:07.211Z
+  sequenceNumber: 228
+- type: relationship-add
+  elementId: api.responses.get-sync-status-responses::composes::api.response.sync-status-response
+  layerName: api
+  after:
+    source: api.responses.get-sync-status-responses
+    target: api.response.sync-status-response
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:59:07.718Z
+  sequenceNumber: 229
+- type: relationship-add
+  elementId: api.operation.get-system-health::composes::api.responses.get-system-health-responses
+  layerName: api
+  after:
+    source: api.operation.get-system-health
+    target: api.responses.get-system-health-responses
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:59:08.272Z
+  sequenceNumber: 230
+- type: relationship-add
+  elementId: api.responses.get-system-health-responses::composes::api.response.system-health-response
+  layerName: api
+  after:
+    source: api.responses.get-system-health-responses
+    target: api.response.system-health-response
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:59:08.888Z
+  sequenceNumber: 231
+- type: relationship-add
+  elementId: api.operation.get-taxonomy::composes::api.responses.get-taxonomy-responses
+  layerName: api
+  after:
+    source: api.operation.get-taxonomy
+    target: api.responses.get-taxonomy-responses
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:59:09.362Z
+  sequenceNumber: 232
+- type: relationship-add
+  elementId: api.responses.get-taxonomy-responses::composes::api.response.taxonomy-response
+  layerName: api
+  after:
+    source: api.responses.get-taxonomy-responses
+    target: api.response.taxonomy-response
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:59:09.844Z
+  sequenceNumber: 233
+- type: relationship-add
+  elementId: api.operation.import-ontology::composes::api.responses.import-ontology-responses
+  layerName: api
+  after:
+    source: api.operation.import-ontology
+    target: api.responses.import-ontology-responses
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:59:10.326Z
+  sequenceNumber: 234
+- type: relationship-add
+  elementId: api.responses.import-ontology-responses::composes::api.response.import-conflict-response
+  layerName: api
+  after:
+    source: api.responses.import-ontology-responses
+    target: api.response.import-conflict-response
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:59:10.819Z
+  sequenceNumber: 235
+- type: relationship-add
+  elementId: api.responses.import-ontology-responses::composes::api.response.import-plan-response
+  layerName: api
+  after:
+    source: api.responses.import-ontology-responses
+    target: api.response.import-plan-response
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:59:11.301Z
+  sequenceNumber: 236
+- type: relationship-add
+  elementId: api.operation.list-background-tasks::composes::api.responses.list-background-tasks-responses
+  layerName: api
+  after:
+    source: api.operation.list-background-tasks
+    target: api.responses.list-background-tasks-responses
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:59:11.804Z
+  sequenceNumber: 237
+- type: relationship-add
+  elementId: api.responses.list-background-tasks-responses::composes::api.response.background-task-response
+  layerName: api
+  after:
+    source: api.responses.list-background-tasks-responses
+    target: api.response.background-task-response
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:59:13.359Z
+  sequenceNumber: 238
+- type: relationship-add
+  elementId: api.operation.list-classes::composes::api.responses.list-classes-responses
+  layerName: api
+  after:
+    source: api.operation.list-classes
+    target: api.responses.list-classes-responses
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:59:14.085Z
+  sequenceNumber: 239
+- type: relationship-add
+  elementId: api.responses.list-classes-responses::composes::api.response.class-response
+  layerName: api
+  after:
+    source: api.responses.list-classes-responses
+    target: api.response.class-response
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:59:14.632Z
+  sequenceNumber: 240
+- type: relationship-add
+  elementId: api.operation.list-concept-schemes::composes::api.responses.list-concept-schemes-responses
+  layerName: api
+  after:
+    source: api.operation.list-concept-schemes
+    target: api.responses.list-concept-schemes-responses
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:59:15.213Z
+  sequenceNumber: 241
+- type: relationship-add
+  elementId: api.responses.list-concept-schemes-responses::composes::api.response.concept-scheme-response
+  layerName: api
+  after:
+    source: api.responses.list-concept-schemes-responses
+    target: api.response.concept-scheme-response
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:59:15.723Z
+  sequenceNumber: 242
+- type: relationship-add
+  elementId: api.operation.list-entity-versions::composes::api.responses.list-entity-versions-responses
+  layerName: api
+  after:
+    source: api.operation.list-entity-versions
+    target: api.responses.list-entity-versions-responses
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:59:16.201Z
+  sequenceNumber: 243
+- type: relationship-add
+  elementId: api.responses.list-entity-versions-responses::composes::api.response.entity-version-response
+  layerName: api
+  after:
+    source: api.responses.list-entity-versions-responses
+    target: api.response.entity-version-response
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:59:16.679Z
+  sequenceNumber: 244
+- type: relationship-add
+  elementId: api.operation.list-import-runs::composes::api.responses.list-import-runs-responses
+  layerName: api
+  after:
+    source: api.operation.list-import-runs
+    target: api.responses.list-import-runs-responses
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:59:17.167Z
+  sequenceNumber: 245
+- type: relationship-add
+  elementId: api.responses.list-import-runs-responses::composes::api.response.import-run-response
+  layerName: api
+  after:
+    source: api.responses.list-import-runs-responses
+    target: api.response.import-run-response
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:59:17.638Z
+  sequenceNumber: 246
+- type: relationship-add
+  elementId: api.operation.list-individuals::composes::api.responses.list-individuals-responses
+  layerName: api
+  after:
+    source: api.operation.list-individuals
+    target: api.responses.list-individuals-responses
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:59:18.101Z
+  sequenceNumber: 247
+- type: relationship-add
+  elementId: api.responses.list-individuals-responses::composes::api.response.individual-response
+  layerName: api
+  after:
+    source: api.responses.list-individuals-responses
+    target: api.response.individual-response
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:59:18.579Z
+  sequenceNumber: 248
+- type: relationship-add
+  elementId: api.operation.list-pipeline-configurations::composes::api.responses.list-pipeline-configurations-responses
+  layerName: api
+  after:
+    source: api.operation.list-pipeline-configurations
+    target: api.responses.list-pipeline-configurations-responses
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:59:19.070Z
+  sequenceNumber: 249
+- type: relationship-add
+  elementId: api.responses.list-pipeline-configurations-responses::composes::api.response.pipeline-configuration-response
+  layerName: api
+  after:
+    source: api.responses.list-pipeline-configurations-responses
+    target: api.response.pipeline-configuration-response
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:59:19.560Z
+  sequenceNumber: 250
+- type: relationship-add
+  elementId: api.operation.list-property-definitions::composes::api.responses.list-property-definitions-responses
+  layerName: api
+  after:
+    source: api.operation.list-property-definitions
+    target: api.responses.list-property-definitions-responses
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:59:20.061Z
+  sequenceNumber: 251
+- type: relationship-add
+  elementId: api.responses.list-property-definitions-responses::composes::api.response.property-definition-response
+  layerName: api
+  after:
+    source: api.responses.list-property-definitions-responses
+    target: api.response.property-definition-response
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:59:20.566Z
+  sequenceNumber: 252
+- type: relationship-add
+  elementId: api.operation.list-relationships::composes::api.responses.list-relationships-responses
+  layerName: api
+  after:
+    source: api.operation.list-relationships
+    target: api.responses.list-relationships-responses
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:59:21.080Z
+  sequenceNumber: 253
+- type: relationship-add
+  elementId: api.responses.list-relationships-responses::composes::api.response.relationship-response
+  layerName: api
+  after:
+    source: api.responses.list-relationships-responses
+    target: api.response.relationship-response
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:59:21.592Z
+  sequenceNumber: 254
+- type: relationship-add
+  elementId: api.operation.list-taxonomies::composes::api.responses.list-taxonomies-responses
+  layerName: api
+  after:
+    source: api.operation.list-taxonomies
+    target: api.responses.list-taxonomies-responses
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:59:22.094Z
+  sequenceNumber: 255
+- type: relationship-add
+  elementId: api.responses.list-taxonomies-responses::composes::api.response.taxonomy-response
+  layerName: api
+  after:
+    source: api.responses.list-taxonomies-responses
+    target: api.response.taxonomy-response
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:59:22.591Z
+  sequenceNumber: 256
+- type: relationship-add
+  elementId: api.operation.merge-proposal::composes::api.responses.merge-proposal-responses
+  layerName: api
+  after:
+    source: api.operation.merge-proposal
+    target: api.responses.merge-proposal-responses
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:59:23.085Z
+  sequenceNumber: 257
+- type: relationship-add
+  elementId: api.responses.merge-proposal-responses::composes::api.response.merge-result-response
+  layerName: api
+  after:
+    source: api.responses.merge-proposal-responses
+    target: api.response.merge-result-response
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:59:23.605Z
+  sequenceNumber: 258
+- type: relationship-add
+  elementId: api.operation.move-class::composes::api.responses.move-class-responses
+  layerName: api
+  after:
+    source: api.operation.move-class
+    target: api.responses.move-class-responses
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:59:24.116Z
+  sequenceNumber: 259
+- type: relationship-add
+  elementId: api.responses.move-class-responses::composes::api.response.class-response
+  layerName: api
+  after:
+    source: api.responses.move-class-responses
+    target: api.response.class-response
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:59:24.640Z
+  sequenceNumber: 260
+- type: relationship-add
+  elementId: api.operation.publish-taxonomy::composes::api.responses.publish-taxonomy-responses
+  layerName: api
+  after:
+    source: api.operation.publish-taxonomy
+    target: api.responses.publish-taxonomy-responses
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:59:25.195Z
+  sequenceNumber: 261
+- type: relationship-add
+  elementId: api.responses.publish-taxonomy-responses::composes::api.response.taxonomy-response
+  layerName: api
+  after:
+    source: api.responses.publish-taxonomy-responses
+    target: api.response.taxonomy-response
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:59:25.745Z
+  sequenceNumber: 262
+- type: relationship-add
+  elementId: api.operation.pull-changes::composes::api.responses.pull-changes-responses
+  layerName: api
+  after:
+    source: api.operation.pull-changes
+    target: api.responses.pull-changes-responses
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:59:26.396Z
+  sequenceNumber: 263
+- type: relationship-add
+  elementId: api.responses.pull-changes-responses::composes::api.response.sync-result-response
+  layerName: api
+  after:
+    source: api.responses.pull-changes-responses
+    target: api.response.sync-result-response
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:59:26.947Z
+  sequenceNumber: 264
+- type: relationship-add
+  elementId: api.operation.push-changes::composes::api.responses.push-changes-responses
+  layerName: api
+  after:
+    source: api.operation.push-changes
+    target: api.responses.push-changes-responses
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:59:27.478Z
+  sequenceNumber: 265
+- type: relationship-add
+  elementId: api.responses.push-changes-responses::composes::api.response.sync-result-response
+  layerName: api
+  after:
+    source: api.responses.push-changes-responses
+    target: api.response.sync-result-response
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:59:27.995Z
+  sequenceNumber: 266
+- type: relationship-add
+  elementId: api.operation.reject-proposal::composes::api.responses.reject-proposal-responses
+  layerName: api
+  after:
+    source: api.operation.reject-proposal
+    target: api.responses.reject-proposal-responses
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:59:28.497Z
+  sequenceNumber: 267
+- type: relationship-add
+  elementId: api.responses.reject-proposal-responses::composes::api.response.proposal-response
+  layerName: api
+  after:
+    source: api.responses.reject-proposal-responses
+    target: api.response.proposal-response
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:59:29.001Z
+  sequenceNumber: 268
+- type: relationship-add
+  elementId: api.operation.remove-parent-class-from-individual::composes::api.responses.remove-parent-class-from-individual-responses
+  layerName: api
+  after:
+    source: api.operation.remove-parent-class-from-individual
+    target: api.responses.remove-parent-class-from-individual-responses
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:59:29.507Z
+  sequenceNumber: 269
+- type: relationship-add
+  elementId: api.responses.remove-parent-class-from-individual-responses::composes::api.response.individual-response
+  layerName: api
+  after:
+    source: api.responses.remove-parent-class-from-individual-responses
+    target: api.response.individual-response
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:59:30.084Z
+  sequenceNumber: 270
+- type: relationship-add
+  elementId: api.operation.reorder-individual-classes::composes::api.responses.reorder-individual-classes-responses
+  layerName: api
+  after:
+    source: api.operation.reorder-individual-classes
+    target: api.responses.reorder-individual-classes-responses
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:59:31.691Z
+  sequenceNumber: 271
+- type: relationship-add
+  elementId: api.responses.reorder-individual-classes-responses::composes::api.response.individual-response
+  layerName: api
+  after:
+    source: api.responses.reorder-individual-classes-responses
+    target: api.response.individual-response
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:59:32.457Z
+  sequenceNumber: 272
+- type: relationship-add
+  elementId: api.operation.reset-configuration::composes::api.responses.reset-configuration-responses
+  layerName: api
+  after:
+    source: api.operation.reset-configuration
+    target: api.responses.reset-configuration-responses
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:59:32.997Z
+  sequenceNumber: 273
+- type: relationship-add
+  elementId: api.responses.reset-configuration-responses::composes::api.response.app-configuration-response
+  layerName: api
+  after:
+    source: api.responses.reset-configuration-responses
+    target: api.response.app-configuration-response
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:59:33.535Z
+  sequenceNumber: 274
+- type: relationship-add
+  elementId: api.operation.resolve-conflicts::composes::api.responses.resolve-conflicts-responses
+  layerName: api
+  after:
+    source: api.operation.resolve-conflicts
+    target: api.responses.resolve-conflicts-responses
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:59:34.092Z
+  sequenceNumber: 275
+- type: relationship-add
+  elementId: api.responses.resolve-conflicts-responses::composes::api.response.resolution-record-response
+  layerName: api
+  after:
+    source: api.responses.resolve-conflicts-responses
+    target: api.response.resolution-record-response
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:59:34.645Z
+  sequenceNumber: 276
+- type: relationship-add
+  elementId: api.operation.search-references::composes::api.responses.search-references-responses
+  layerName: api
+  after:
+    source: api.operation.search-references
+    target: api.responses.search-references-responses
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:59:35.177Z
+  sequenceNumber: 277
+- type: relationship-add
+  elementId: api.responses.search-references-responses::composes::api.response.reference-result-schema
+  layerName: api
+  after:
+    source: api.responses.search-references-responses
+    target: api.response.reference-result-schema
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:59:35.726Z
+  sequenceNumber: 278
+- type: relationship-add
+  elementId: api.responses.search-references-responses::composes::api.response.reference-search-response-schema
+  layerName: api
+  after:
+    source: api.responses.search-references-responses
+    target: api.response.reference-search-response-schema
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:59:36.253Z
+  sequenceNumber: 279
+- type: relationship-add
+  elementId: api.operation.stage-changeset::composes::api.responses.stage-changeset-responses
+  layerName: api
+  after:
+    source: api.operation.stage-changeset
+    target: api.responses.stage-changeset-responses
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:59:36.783Z
+  sequenceNumber: 280
+- type: relationship-add
+  elementId: api.responses.stage-changeset-responses::composes::api.response.changeset-response
+  layerName: api
+  after:
+    source: api.responses.stage-changeset-responses
+    target: api.response.changeset-response
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:59:37.292Z
+  sequenceNumber: 281
+- type: relationship-add
+  elementId: api.operation.submit-proposal::composes::api.responses.submit-proposal-responses
+  layerName: api
+  after:
+    source: api.operation.submit-proposal
+    target: api.responses.submit-proposal-responses
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:59:37.801Z
+  sequenceNumber: 282
+- type: relationship-add
+  elementId: api.responses.submit-proposal-responses::composes::api.response.proposal-response
+  layerName: api
+  after:
+    source: api.responses.submit-proposal-responses
+    target: api.response.proposal-response
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:59:38.325Z
+  sequenceNumber: 283
+- type: relationship-add
+  elementId: api.operation.update-class::composes::api.responses.update-class-responses
+  layerName: api
+  after:
+    source: api.operation.update-class
+    target: api.responses.update-class-responses
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:59:38.837Z
+  sequenceNumber: 284
+- type: relationship-add
+  elementId: api.responses.update-class-responses::composes::api.response.class-response
+  layerName: api
+  after:
+    source: api.responses.update-class-responses
+    target: api.response.class-response
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:59:39.353Z
+  sequenceNumber: 285
+- type: relationship-add
+  elementId: api.operation.update-concept-scheme::composes::api.responses.update-concept-scheme-responses
+  layerName: api
+  after:
+    source: api.operation.update-concept-scheme
+    target: api.responses.update-concept-scheme-responses
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:59:39.866Z
+  sequenceNumber: 286
+- type: relationship-add
+  elementId: api.responses.update-concept-scheme-responses::composes::api.response.concept-scheme-response
+  layerName: api
+  after:
+    source: api.responses.update-concept-scheme-responses
+    target: api.response.concept-scheme-response
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:59:40.369Z
+  sequenceNumber: 287
+- type: relationship-add
+  elementId: api.operation.update-configuration-section::composes::api.responses.update-configuration-section-responses
+  layerName: api
+  after:
+    source: api.operation.update-configuration-section
+    target: api.responses.update-configuration-section-responses
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:59:40.879Z
+  sequenceNumber: 288
+- type: relationship-add
+  elementId: api.responses.update-configuration-section-responses::composes::api.response.app-configuration-response
+  layerName: api
+  after:
+    source: api.responses.update-configuration-section-responses
+    target: api.response.app-configuration-response
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:59:41.436Z
+  sequenceNumber: 289
+- type: relationship-add
+  elementId: api.operation.update-individual::composes::api.responses.update-individual-responses
+  layerName: api
+  after:
+    source: api.operation.update-individual
+    target: api.responses.update-individual-responses
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:59:41.951Z
+  sequenceNumber: 290
+- type: relationship-add
+  elementId: api.responses.update-individual-responses::composes::api.response.individual-response
+  layerName: api
+  after:
+    source: api.responses.update-individual-responses
+    target: api.response.individual-response
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:59:42.482Z
+  sequenceNumber: 291
+- type: relationship-add
+  elementId: api.operation.update-pipeline-configuration::composes::api.responses.update-pipeline-configuration-responses
+  layerName: api
+  after:
+    source: api.operation.update-pipeline-configuration
+    target: api.responses.update-pipeline-configuration-responses
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:59:42.991Z
+  sequenceNumber: 292
+- type: relationship-add
+  elementId: api.responses.update-pipeline-configuration-responses::composes::api.response.pipeline-configuration-response
+  layerName: api
+  after:
+    source: api.responses.update-pipeline-configuration-responses
+    target: api.response.pipeline-configuration-response
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:59:43.502Z
+  sequenceNumber: 293
+- type: relationship-add
+  elementId: api.operation.update-property-definition::composes::api.responses.update-property-definition-responses
+  layerName: api
+  after:
+    source: api.operation.update-property-definition
+    target: api.responses.update-property-definition-responses
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:59:44.048Z
+  sequenceNumber: 294
+- type: relationship-add
+  elementId: api.responses.update-property-definition-responses::composes::api.response.property-definition-response
+  layerName: api
+  after:
+    source: api.responses.update-property-definition-responses
+    target: api.response.property-definition-response
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:59:44.608Z
+  sequenceNumber: 295
+- type: relationship-add
+  elementId: api.operation.update-taxonomy::composes::api.responses.update-taxonomy-responses
+  layerName: api
+  after:
+    source: api.operation.update-taxonomy
+    target: api.responses.update-taxonomy-responses
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:59:45.197Z
+  sequenceNumber: 296
+- type: relationship-add
+  elementId: api.responses.update-taxonomy-responses::composes::api.response.taxonomy-response
+  layerName: api
+  after:
+    source: api.responses.update-taxonomy-responses
+    target: api.response.taxonomy-response
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-17T17:59:45.727Z
+  sequenceNumber: 297
+- type: relationship-add
+  elementId: technology.systemsoftware.rdflib::serves::application.applicationcomponent.rdflib-query-engine-adapter
+  layerName: technology
+  after:
+    source: technology.systemsoftware.rdflib
+    target: application.applicationcomponent.rdflib-query-engine-adapter
+    predicate: serves
+    layer: technology
+    targetLayer: application
+    category: structural
+  timestamp: 2026-11-17T17:59:46.251Z
+  sequenceNumber: 298
+- type: relationship-add
+  elementId: technology.systemsoftware.spa-cy::serves::application.applicationcomponent.spa-cy-nlp-processor
+  layerName: technology
+  after:
+    source: technology.systemsoftware.spa-cy
+    target: application.applicationcomponent.spa-cy-nlp-processor
+    predicate: serves
+    layer: technology
+    targetLayer: application
+    category: structural
+  timestamp: 2026-11-17T17:59:46.830Z
+  sequenceNumber: 299
+- type: relationship-add
+  elementId: technology.systemsoftware.duck-db::serves::application.applicationcomponent.duck-db-sync-adapter
+  layerName: technology
+  after:
+    source: technology.systemsoftware.duck-db
+    target: application.applicationcomponent.duck-db-sync-adapter
+    predicate: serves
+    layer: technology
+    targetLayer: application
+    category: structural
+  timestamp: 2026-11-17T17:59:47.370Z
+  sequenceNumber: 300
+- type: relationship-add
+  elementId: technology.systemsoftware.boto3::serves::application.applicationcomponent.s3-sync-adapter
+  layerName: technology
+  after:
+    source: technology.systemsoftware.boto3
+    target: application.applicationcomponent.s3-sync-adapter
+    predicate: serves
+    layer: technology
+    targetLayer: application
+    category: structural
+  timestamp: 2026-11-17T17:59:47.885Z
+  sequenceNumber: 301
+- type: relationship-add
+  elementId: technology.systemsoftware.anthropic-sdk::serves::application.applicationcomponent.llm-provider-router
+  layerName: technology
+  after:
+    source: technology.systemsoftware.anthropic-sdk
+    target: application.applicationcomponent.llm-provider-router
+    predicate: serves
+    layer: technology
+    targetLayer: application
+    category: structural
+  timestamp: 2026-11-17T17:59:48.412Z
+  sequenceNumber: 302
+- type: relationship-add
+  elementId: technology.systemsoftware.openai-sdk::serves::application.applicationcomponent.llm-provider-router
+  layerName: technology
+  after:
+    source: technology.systemsoftware.openai-sdk
+    target: application.applicationcomponent.llm-provider-router
+    predicate: serves
+    layer: technology
+    targetLayer: application
+    category: structural
+  timestamp: 2026-11-17T17:59:48.965Z
+  sequenceNumber: 303
+- type: relationship-add
+  elementId: technology.systemsoftware.httpx::serves::application.applicationcomponent.concept-net-reference-source
+  layerName: technology
+  after:
+    source: technology.systemsoftware.httpx
+    target: application.applicationcomponent.concept-net-reference-source
+    predicate: serves
+    layer: technology
+    targetLayer: application
+    category: structural
+  timestamp: 2026-11-17T17:59:49.535Z
+  sequenceNumber: 304
+- type: relationship-add
+  elementId: technology.systemsoftware.httpx::serves::application.applicationcomponent.dbpedia-reference-source
+  layerName: technology
+  after:
+    source: technology.systemsoftware.httpx
+    target: application.applicationcomponent.dbpedia-reference-source
+    predicate: serves
+    layer: technology
+    targetLayer: application
+    category: structural
+  timestamp: 2026-11-17T17:59:50.081Z
+  sequenceNumber: 305
+- type: relationship-add
+  elementId: technology.systemsoftware.httpx::serves::application.applicationcomponent.schema-org-reference-source
+  layerName: technology
+  after:
+    source: technology.systemsoftware.httpx
+    target: application.applicationcomponent.schema-org-reference-source
+    predicate: serves
+    layer: technology
+    targetLayer: application
+    category: structural
+  timestamp: 2026-11-17T17:59:50.623Z
+  sequenceNumber: 306
+- type: relationship-add
+  elementId: technology.systemsoftware.httpx::serves::application.applicationcomponent.wikidata-reference-source
+  layerName: technology
+  after:
+    source: technology.systemsoftware.httpx
+    target: application.applicationcomponent.wikidata-reference-source
+    predicate: serves
+    layer: technology
+    targetLayer: application
+    category: structural
+  timestamp: 2026-11-17T17:59:51.167Z
+  sequenceNumber: 307
+- type: relationship-add
+  elementId: technology.systemsoftware.pyarrow::serves::application.applicationcomponent.duck-db-sync-adapter
+  layerName: technology
+  after:
+    source: technology.systemsoftware.pyarrow
+    target: application.applicationcomponent.duck-db-sync-adapter
+    predicate: serves
+    layer: technology
+    targetLayer: application
+    category: structural
+  timestamp: 2026-11-17T17:59:51.662Z
+  sequenceNumber: 308
