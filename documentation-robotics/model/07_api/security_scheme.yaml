@@ -1,23 +1,22 @@
-api.securityscheme.api-key:
-  id: 26ac8064-37fa-4eeb-9d92-b840c6375ada
-  path: api.securityscheme.api-key
+api.securityscheme.mcp-bearer-token:
+  id: 3f433cf6-4269-41fc-b282-7c01b7f00d5e
+  path: api.securityscheme.mcp-bearer-token
   spec_node_id: api.securityscheme
   type: securityscheme
   layer_id: api
-  name: API Key
-  description: X-API-Key header authentication scheme — optional, enabled when
-    require_secure_key is true in config.json
+  name: MCP Bearer Token
+  description: "Bearer token required on the /mcp endpoint (Authorization: Bearer
+    <auth_token>); the token is shown in Settings. The REST API has no auth
+    scheme: the Request Guard refuses disallowed Origin/Host headers instead."
   attributes:
-    type: apiKey
-    in: header
-    description: X-API-Key header authentication, configurable via
-      require_secure_key in config.json
+    type: http
+    scheme: bearer
   source_reference:
     provenance: extracted
     locations:
-      - file: local-server/app.py
-        symbol: verify_api_key
+      - file: local-server/adapters/mcp/server.py
+        symbol: McpEndpoint
   metadata:
-    created_at: 2026-03-24T09:23:50.747Z
-    updated_at: 2026-03-24T09:23:50.747Z
+    created_at: 2026-11-19T15:13:00.134Z
+    updated_at: 2026-11-19T15:13:00.134Z
     version: 1

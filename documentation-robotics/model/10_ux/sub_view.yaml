@@ -1,0 +1,509 @@
+ux.subview.chat-panel:
+  id: 3587ee39-317c-4817-9f43-3b36a28ba96b
+  path: ux.subview.chat-panel
+  spec_node_id: ux.subview
+  type: subview
+  layer_id: ux
+  name: Chat Panel
+  description: "Chat with the workspace assistant: streamed turns, tool calls and
+    page context."
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/components/chat/ChatPanel.tsx
+        symbol: ChatPanel
+      - file: ux/src/components/chat/ChatPanel.tsx
+        symbol: ux.src.components.chat.ChatPanel
+  metadata:
+    created_at: 2026-11-19T15:02:28.473Z
+    updated_at: 2026-11-19T15:02:28.473Z
+    version: 1
+ux.subview.claim-inspector:
+  id: beb9b141-8c04-4acf-827d-d3048d704ffb
+  path: ux.subview.claim-inspector
+  spec_node_id: ux.subview
+  type: subview
+  layer_id: ux
+  name: Claim Inspector
+  description: "Inspector for one claim: triage answers and verdict form."
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/components/claims/ClaimInspector.tsx
+        symbol: ClaimInspector
+      - file: ux/src/components/claims/ClaimInspector.tsx
+        symbol: ux.src.components.claims.ClaimInspector
+  metadata:
+    created_at: 2026-11-19T15:02:28.473Z
+    updated_at: 2026-11-19T15:02:28.473Z
+    version: 1
+ux.subview.add-source-panel:
+  id: 3e84bbcb-cfa6-4d2c-8714-0a134545c301
+  path: ux.subview.add-source-panel
+  spec_node_id: ux.subview
+  type: subview
+  layer_id: ux
+  name: Add Source Panel
+  description: Add a file, web page or text as a source.
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/components/sources/AddSourcePanel.tsx
+        symbol: AddSourcePanel
+      - file: ux/src/components/sources/AddSourcePanel.tsx
+        symbol: ux.src.components.sources.AddSourcePanel
+  metadata:
+    created_at: 2026-11-19T15:02:28.473Z
+    updated_at: 2026-11-19T15:02:28.473Z
+    version: 1
+ux.subview.extract-run-panel:
+  id: eb58db68-1b59-4466-afc1-b27a4d8410ce
+  path: ux.subview.extract-run-panel
+  spec_node_id: ux.subview
+  type: subview
+  layer_id: ux
+  name: Extract Run Panel
+  description: Pick a pipeline and configuration and start the extraction of a source.
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/components/sources/ExtractRunPanel.tsx
+        symbol: ExtractRunPanel
+      - file: ux/src/components/sources/ExtractRunPanel.tsx
+        symbol: ux.src.components.sources.ExtractRunPanel
+  metadata:
+    created_at: 2026-11-19T15:02:28.473Z
+    updated_at: 2026-11-19T15:02:28.473Z
+    version: 1
+ux.subview.operation-inspector:
+  id: f8e8425c-edf7-494b-8044-292e4c1e797b
+  path: ux.subview.operation-inspector
+  spec_node_id: ux.subview
+  type: subview
+  layer_id: ux
+  name: Operation Inspector
+  description: "Inspector for one proposal operation: diff, decision and in-use resolution."
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/components/proposals/OperationInspector.tsx
+        symbol: OperationInspector
+      - file: ux/src/components/proposals/OperationInspector.tsx
+        symbol: ux.src.components.proposals.OperationInspector
+  metadata:
+    created_at: 2026-11-19T15:02:28.473Z
+    updated_at: 2026-11-19T15:02:28.473Z
+    version: 1
+ux.subview.in-use-resolver:
+  id: 3883b32b-7467-44b2-b41f-64d403977e7b
+  path: ux.subview.in-use-resolver
+  spec_node_id: ux.subview
+  type: subview
+  layer_id: ux
+  name: In Use Resolver
+  description: Resolves in-use blockers before a delete or retype operation is applied.
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/components/proposals/InUseResolver.tsx
+        symbol: InUseResolver
+      - file: ux/src/components/proposals/InUseResolver.tsx
+        symbol: ux.src.components.proposals.InUseResolver
+  metadata:
+    created_at: 2026-11-19T15:02:28.473Z
+    updated_at: 2026-11-19T15:02:28.473Z
+    version: 1
+ux.subview.review-inspector:
+  id: 25b893eb-3207-4db1-8dc7-69b518c028c3
+  path: ux.subview.review-inspector
+  spec_node_id: ux.subview
+  type: subview
+  layer_id: ux
+  name: Review Inspector
+  description: "Inspector for one reviewed element: class, relationship, decision
+    and reason code."
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/components/proposals/review/ReviewInspector.tsx
+        symbol: ReviewInspector
+      - file: ux/src/components/proposals/review/ReviewInspector.tsx
+        symbol: ux.src.components.proposals.review.ReviewInspector
+  metadata:
+    created_at: 2026-11-19T15:02:28.473Z
+    updated_at: 2026-11-19T15:02:28.473Z
+    version: 1
+ux.subview.graph-canvas:
+  id: 6e77afea-2105-4b91-8a2b-1ce9af537123
+  path: ux.subview.graph-canvas
+  spec_node_id: ux.subview
+  type: subview
+  layer_id: ux
+  name: Graph Canvas
+  description: Interactive ontology graph (Heimdall GraphCanvas) with layers and layouts.
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/components/graph/GraphCanvas.tsx
+        symbol: GraphCanvas
+  metadata:
+    created_at: 2026-11-19T15:02:28.473Z
+    updated_at: 2026-11-19T15:02:28.473Z
+    version: 1
+ux.subview.sparql-editor:
+  id: 2b033829-98cd-4375-a9f8-052daaa181d4
+  path: ux.subview.sparql-editor
+  spec_node_id: ux.subview
+  type: subview
+  layer_id: ux
+  name: SPARQL Editor
+  description: SPARQL query editor and results.
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/components/graph/SparqlEditor.tsx
+        symbol: SparqlEditor
+      - file: ux/src/components/graph/SparqlEditor.tsx
+        symbol: ux.src.components.graph.SparqlEditor
+  metadata:
+    created_at: 2026-11-19T15:02:28.473Z
+    updated_at: 2026-11-19T15:02:28.473Z
+    version: 1
+ux.subview.path-finder:
+  id: 5a482e00-bff4-48c6-9051-14200432a96c
+  path: ux.subview.path-finder
+  spec_node_id: ux.subview
+  type: subview
+  layer_id: ux
+  name: Path Finder
+  description: Shortest/all paths between two entities.
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/components/graph/PathFinder.tsx
+        symbol: PathFinder
+      - file: ux/src/components/graph/PathFinder.tsx
+        symbol: ux.src.components.graph.PathFinder
+  metadata:
+    created_at: 2026-11-19T15:02:28.473Z
+    updated_at: 2026-11-19T15:02:28.473Z
+    version: 1
+ux.subview.metrics-panel:
+  id: e4903a13-355b-4a67-8e99-48a8a2af8275
+  path: ux.subview.metrics-panel
+  spec_node_id: ux.subview
+  type: subview
+  layer_id: ux
+  name: Metrics Panel
+  description: Graph metrics, centrality and communities.
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/components/graph/MetricsPanel.tsx
+        symbol: MetricsPanel
+      - file: ux/src/components/graph/MetricsPanel.tsx
+        symbol: ux.src.components.graph.MetricsPanel
+  metadata:
+    created_at: 2026-11-19T15:02:28.473Z
+    updated_at: 2026-11-19T15:02:28.473Z
+    version: 1
+ux.subview.graph-node-inspector:
+  id: 5947c5a2-f189-4d0a-83a7-a881a1f4430d
+  path: ux.subview.graph-node-inspector
+  spec_node_id: ux.subview
+  type: subview
+  layer_id: ux
+  name: Graph Node Inspector
+  description: Inspector for the selected graph node.
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/components/graph/GraphNodeInspector.tsx
+        symbol: GraphNodeInspector
+      - file: ux/src/components/graph/GraphNodeInspector.tsx
+        symbol: ux.src.components.graph.GraphNodeInspector
+  metadata:
+    created_at: 2026-11-19T15:02:28.473Z
+    updated_at: 2026-11-19T15:02:28.473Z
+    version: 1
+ux.subview.entity-navigator:
+  id: 9c9b2276-3b4d-4d72-9881-ec504e72eab7
+  path: ux.subview.entity-navigator
+  spec_node_id: ux.subview
+  type: subview
+  layer_id: ux
+  name: Entity Navigator
+  description: Left-hand navigator over taxonomies, schemes, classes and individuals.
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/components/entity/EntityNavigator.tsx
+        symbol: EntityNavigator
+      - file: ux/src/components/entity/EntityNavigator.tsx
+        symbol: ux.src.components.entity.EntityNavigator
+  metadata:
+    created_at: 2026-11-19T15:02:28.474Z
+    updated_at: 2026-11-19T15:02:28.474Z
+    version: 1
+ux.subview.hierarchy-tree:
+  id: 52adcf2e-c737-49f1-957b-7e35f3da2bb2
+  path: ux.subview.hierarchy-tree
+  spec_node_id: ux.subview
+  type: subview
+  layer_id: ux
+  name: Hierarchy Tree
+  description: Taxonomy hierarchy tree with demo dataset picker.
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/components/ontology/HierarchyTree.tsx
+        symbol: HierarchyTree
+      - file: ux/src/components/ontology/HierarchyTree.tsx
+        symbol: ux.src.components.ontology.HierarchyTree
+  metadata:
+    created_at: 2026-11-19T15:02:28.474Z
+    updated_at: 2026-11-19T15:02:28.474Z
+    version: 1
+ux.subview.individual-candidate-review:
+  id: 9c4f8862-d463-44a1-bd29-a791b11a6d57
+  path: ux.subview.individual-candidate-review
+  spec_node_id: ux.subview
+  type: subview
+  layer_id: ux
+  name: Individual Candidate Review
+  description: Review individual-extraction candidates before accepting.
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/components/pipeline/extraction-review/IndividualCandidateReview.tsx
+        symbol: IndividualCandidateReview
+      - file: ux/src/components/pipeline/extraction-review/IndividualCandidateReview.tsx
+        symbol: ux.src.components.pipeline.extraction-review.IndividualCandidateReview
+  metadata:
+    created_at: 2026-11-19T15:02:28.474Z
+    updated_at: 2026-11-19T15:02:28.474Z
+    version: 1
+ux.subview.schema-candidate-review:
+  id: 03ce9856-d679-4617-95bf-b6926d16a23c
+  path: ux.subview.schema-candidate-review
+  spec_node_id: ux.subview
+  type: subview
+  layer_id: ux
+  name: Schema Candidate Review
+  description: Review schema-extraction candidates before accepting.
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/components/pipeline/extraction-review/SchemaCandidateReview.tsx
+        symbol: SchemaCandidateReview
+      - file: ux/src/components/pipeline/extraction-review/SchemaCandidateReview.tsx
+        symbol: ux.src.components.pipeline.extraction-review.SchemaCandidateReview
+  metadata:
+    created_at: 2026-11-19T15:02:28.474Z
+    updated_at: 2026-11-19T15:02:28.474Z
+    version: 1
+ux.subview.individual-extraction-wizard:
+  id: 53dd4e7b-04e9-4ed1-b4ec-403ebda6b55a
+  path: ux.subview.individual-extraction-wizard
+  spec_node_id: ux.subview
+  type: subview
+  layer_id: ux
+  name: Individual Extraction Wizard
+  description: Run wizard step set for individual extraction.
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/components/pipeline/wizards/IndividualExtractionWizard.tsx
+        symbol: IndividualExtractionWizard
+      - file: ux/src/components/pipeline/wizards/IndividualExtractionWizard.tsx
+        symbol: ux.src.components.pipeline.wizards.IndividualExtractionWizard
+  metadata:
+    created_at: 2026-11-19T15:02:28.474Z
+    updated_at: 2026-11-19T15:02:28.474Z
+    version: 1
+ux.subview.schema-extraction-wizard:
+  id: dcbac334-5827-48d4-a2d9-24ca2a6e68e3
+  path: ux.subview.schema-extraction-wizard
+  spec_node_id: ux.subview
+  type: subview
+  layer_id: ux
+  name: Schema Extraction Wizard
+  description: Run wizard step set for schema extraction.
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/components/pipeline/wizards/SchemaExtractionWizard.tsx
+        symbol: SchemaExtractionWizard
+      - file: ux/src/components/pipeline/wizards/SchemaExtractionWizard.tsx
+        symbol: ux.src.components.pipeline.wizards.SchemaExtractionWizard
+  metadata:
+    created_at: 2026-11-19T15:02:28.474Z
+    updated_at: 2026-11-19T15:02:28.474Z
+    version: 1
+ux.subview.schema-grounding-wizard:
+  id: 85fa5d2f-5cba-44fe-ae51-b48cbd901dce
+  path: ux.subview.schema-grounding-wizard
+  spec_node_id: ux.subview
+  type: subview
+  layer_id: ux
+  name: Schema Grounding Wizard
+  description: Run wizard step set for schema-node grounding.
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/components/pipeline/wizards/SchemaGroundingWizard.tsx
+        symbol: SchemaGroundingWizard
+      - file: ux/src/components/pipeline/wizards/SchemaGroundingWizard.tsx
+        symbol: ux.src.components.pipeline.wizards.SchemaGroundingWizard
+  metadata:
+    created_at: 2026-11-19T15:02:28.474Z
+    updated_at: 2026-11-19T15:02:28.474Z
+    version: 1
+ux.subview.connection-refinement-wizard:
+  id: e7b6007c-c093-46ac-aa30-ef591dcd0d46
+  path: ux.subview.connection-refinement-wizard
+  spec_node_id: ux.subview
+  type: subview
+  layer_id: ux
+  name: Connection Refinement Wizard
+  description: Run wizard step set for connection refinement.
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/components/pipeline/wizards/ConnectionRefinementWizard.tsx
+        symbol: ConnectionRefinementWizard
+      - file: ux/src/components/pipeline/wizards/ConnectionRefinementWizard.tsx
+        symbol: ux.src.components.pipeline.wizards.ConnectionRefinementWizard
+  metadata:
+    created_at: 2026-11-19T15:02:28.474Z
+    updated_at: 2026-11-19T15:02:28.474Z
+    version: 1
+ux.subview.definition-refinement-wizard:
+  id: 5425e391-6ff6-4778-8a55-593ae982590d
+  path: ux.subview.definition-refinement-wizard
+  spec_node_id: ux.subview
+  type: subview
+  layer_id: ux
+  name: Definition Refinement Wizard
+  description: Run wizard step set for definition refinement.
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/components/pipeline/wizards/DefinitionRefinementWizard.tsx
+        symbol: DefinitionRefinementWizard
+      - file: ux/src/components/pipeline/wizards/DefinitionRefinementWizard.tsx
+        symbol: ux.src.components.pipeline.wizards.DefinitionRefinementWizard
+  metadata:
+    created_at: 2026-11-19T15:02:28.474Z
+    updated_at: 2026-11-19T15:02:28.474Z
+    version: 1
+ux.subview.mcp-connection-panel:
+  id: 83251493-2d96-402e-bdba-f011de0c9f81
+  path: ux.subview.mcp-connection-panel
+  spec_node_id: ux.subview
+  type: subview
+  layer_id: ux
+  name: MCP Connection Panel
+  description: Shows the MCP endpoint URL and bearer token for agent clients.
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/components/settings/McpConnectionPanel.tsx
+        symbol: McpConnectionPanel
+  metadata:
+    created_at: 2026-11-19T15:02:28.474Z
+    updated_at: 2026-11-19T15:02:28.474Z
+    version: 1
+ux.subview.change-history-list:
+  id: 872c6ab1-6c83-4db5-ad93-02f0e3519c7e
+  path: ux.subview.change-history-list
+  spec_node_id: ux.subview
+  type: subview
+  layer_id: ux
+  name: Change History List
+  description: Change event history, filterable by entity.
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/components/versioning/ChangeHistoryList.tsx
+        symbol: ChangeHistoryList
+      - file: ux/src/components/versioning/ChangeHistoryList.tsx
+        symbol: ux.src.components.versioning.ChangeHistoryList
+  metadata:
+    created_at: 2026-11-19T15:02:28.474Z
+    updated_at: 2026-11-19T15:02:28.474Z
+    version: 1
+ux.subview.sync-status:
+  id: b1ce9b34-db6c-4871-b5e9-3c102b34ad1f
+  path: ux.subview.sync-status
+  spec_node_id: ux.subview
+  type: subview
+  layer_id: ux
+  name: Sync Status
+  description: Sync status with push and pull.
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/components/versioning/SyncStatus.tsx
+        symbol: SyncStatus
+  metadata:
+    created_at: 2026-11-19T15:02:28.474Z
+    updated_at: 2026-11-19T15:02:28.474Z
+    version: 1
+ux.subview.grounding-review:
+  id: 97051140-03e4-4009-b8a0-3dafa119c589
+  path: ux.subview.grounding-review
+  spec_node_id: ux.subview
+  type: subview
+  layer_id: ux
+  name: Grounding Review
+  description: Review a grounding run's candidates.
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/components/pipeline/review/GroundingReview.tsx
+        symbol: GroundingReview
+      - file: ux/src/components/pipeline/review/GroundingReview.tsx
+        symbol: ux.src.components.pipeline.review.GroundingReview
+  metadata:
+    created_at: 2026-11-19T15:02:28.474Z
+    updated_at: 2026-11-19T15:02:28.474Z
+    version: 1
+ux.subview.definition-refinement-review:
+  id: 9c74786f-0916-428d-b855-3198dd6311fa
+  path: ux.subview.definition-refinement-review
+  spec_node_id: ux.subview
+  type: subview
+  layer_id: ux
+  name: Definition Refinement Review
+  description: Review a definition-refinement run's candidates.
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/components/pipeline/review/DefinitionRefinementReview.tsx
+        symbol: DefinitionRefinementReview
+      - file: ux/src/components/pipeline/review/DefinitionRefinementReview.tsx
+        symbol: ux.src.components.pipeline.review.DefinitionRefinementReview
+  metadata:
+    created_at: 2026-11-19T15:02:28.474Z
+    updated_at: 2026-11-19T15:02:28.474Z
+    version: 1
+ux.subview.connection-refinement-review:
+  id: 4f93cc57-9e4c-44cf-b22c-ab5ae410af5c
+  path: ux.subview.connection-refinement-review
+  spec_node_id: ux.subview
+  type: subview
+  layer_id: ux
+  name: Connection Refinement Review
+  description: Review a connection-refinement run's candidates.
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/components/pipeline/review/ConnectionRefinementReview.tsx
+        symbol: ConnectionRefinementReview
+      - file: ux/src/components/pipeline/review/ConnectionRefinementReview.tsx
+        symbol: ux.src.components.pipeline.review.ConnectionRefinementReview
+  metadata:
+    created_at: 2026-11-19T15:02:28.474Z
+    updated_at: 2026-11-19T15:02:28.474Z
+    version: 1

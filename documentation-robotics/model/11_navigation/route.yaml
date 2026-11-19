@@ -14,6 +14,7 @@ navigation.route.app-root-route:
     provenance: extracted
     locations:
       - file: ux/src/routes/__root.tsx
+        symbol: Route
   metadata:
     created_at: 2026-03-24T09:20:07.548Z
     updated_at: 2026-03-24T09:20:07.548Z
@@ -28,71 +29,15 @@ navigation.route.datasets-route:
   description: Route for the dataset workspace management page — /app/datasets
   attributes:
     type: public
-    title: Datasets
+    title: /app/data/datasets
   source_reference:
     provenance: extracted
     locations:
-      - file: ux/src/routes/app/datasets.tsx
+      - file: ux/src/routes/app/data/datasets.tsx
+        symbol: Route
   metadata:
     created_at: 2026-03-24T09:20:12.797Z
     updated_at: 2026-03-24T09:20:12.797Z
-    version: 1
-navigation.route.rag-experiments-route:
-  id: b6188367-6496-450a-8115-f53cb9bf3c44
-  path: navigation.route.rag-experiments-route
-  spec_node_id: navigation.route
-  type: route
-  layer_id: navigation
-  name: RAG Experiments Route
-  description: Route serving the RAG experiments and pipeline testing view
-  attributes:
-    type: public
-    title: RAG Experiments
-  source_reference:
-    provenance: extracted
-    locations:
-      - file: ux/src/routes/app
-  metadata:
-    created_at: 2026-03-24T09:20:18.605Z
-    updated_at: 2026-03-24T09:20:18.605Z
-    version: 1
-navigation.route.configuration-route:
-  id: 6ace642d-28ee-41bf-bdaf-80741ac3b3d5
-  path: navigation.route.configuration-route
-  spec_node_id: navigation.route
-  type: route
-  layer_id: navigation
-  name: Configuration Route
-  description: Route serving the application configuration view
-  attributes:
-    type: public
-    title: Configuration
-  source_reference:
-    provenance: extracted
-    locations:
-      - file: ux/src/routes/app
-  metadata:
-    created_at: 2026-03-24T09:20:18.938Z
-    updated_at: 2026-03-24T09:20:18.938Z
-    version: 1
-navigation.route.admin-route:
-  id: 1ac00535-cae6-4c56-bccc-5ffe40a8ce24
-  path: navigation.route.admin-route
-  spec_node_id: navigation.route
-  type: route
-  layer_id: navigation
-  name: Admin Route
-  description: Route serving the administrative monitoring and health view
-  attributes:
-    type: public
-    title: Admin
-  source_reference:
-    provenance: extracted
-    locations:
-      - file: ux/src/routes/app
-  metadata:
-    created_at: 2026-03-24T09:20:19.255Z
-    updated_at: 2026-03-24T09:20:19.255Z
     version: 1
 navigation.route.taxonomies-route:
   id: c5fcfaa8-d362-49b7-ab14-35d040b48cfe
@@ -104,10 +49,12 @@ navigation.route.taxonomies-route:
   description: Route for /app/taxonomies — renders Taxonomies View
   attributes:
     type: protected
+    title: /app/schema/taxonomies
   source_reference:
     provenance: extracted
     locations:
-      - file: ux/src/routes/app/taxonomies.tsx
+      - file: ux/src/routes/app/schema/taxonomies.tsx
+        symbol: Route
   metadata:
     created_at: 2026-05-08T10:03:18.901Z
     updated_at: 2026-05-08T10:03:18.902Z
@@ -122,10 +69,12 @@ navigation.route.concept-schemes-route:
   description: Route for /app/concept-schemes — renders Concept Schemes View
   attributes:
     type: protected
+    title: /app/schema/schemes
   source_reference:
     provenance: extracted
     locations:
-      - file: ux/src/routes/app/concept-schemes.tsx
+      - file: ux/src/routes/app/schema/schemes.tsx
+        symbol: Route
   metadata:
     created_at: 2026-05-08T10:03:19.193Z
     updated_at: 2026-05-08T10:03:19.193Z
@@ -140,10 +89,12 @@ navigation.route.classes-route:
   description: Route for /app/classes — renders Classes View
   attributes:
     type: protected
+    title: /app/schema/classes
   source_reference:
     provenance: extracted
     locations:
-      - file: ux/src/routes/app/classes.tsx
+      - file: ux/src/routes/app/schema/classes.tsx
+        symbol: Route
   metadata:
     created_at: 2026-05-08T10:03:19.494Z
     updated_at: 2026-05-08T10:03:19.494Z
@@ -158,10 +109,12 @@ navigation.route.individuals-route:
   description: Route for /app/individuals — renders Individuals View
   attributes:
     type: protected
+    title: /app/data/individuals
   source_reference:
     provenance: extracted
     locations:
-      - file: ux/src/routes/app/individuals.tsx
+      - file: ux/src/routes/app/data/individuals.tsx
+        symbol: Route
   metadata:
     created_at: 2026-05-08T10:03:19.786Z
     updated_at: 2026-05-08T10:03:19.786Z
@@ -176,10 +129,12 @@ navigation.route.properties-route:
   description: Route for /app/properties — renders Properties View
   attributes:
     type: protected
+    title: /app/schema/properties
   source_reference:
     provenance: extracted
     locations:
-      - file: ux/src/routes/app/properties.tsx
+      - file: ux/src/routes/app/schema/properties.tsx
+        symbol: Route
   metadata:
     created_at: 2026-05-08T10:03:20.080Z
     updated_at: 2026-05-08T10:03:20.080Z
@@ -194,29 +149,545 @@ navigation.route.relationships-route:
   description: Route for /app/relationships — renders Relationships View
   attributes:
     type: protected
+    title: /app/schema/relationships
   source_reference:
     provenance: extracted
     locations:
-      - file: ux/src/routes/app/relationships.tsx
+      - file: ux/src/routes/app/schema/relationships.tsx
+        symbol: Route
   metadata:
     created_at: 2026-05-08T10:03:20.374Z
     updated_at: 2026-05-08T10:03:20.374Z
     version: 1
-navigation.route.interchange-route:
-  id: 4129e8cc-836e-40a0-a429-ce2c4701a599
-  path: navigation.route.interchange-route
+navigation.route.app-shell-route:
+  id: c7bd2665-92a0-452b-abb7-dbb956d2e245
+  path: navigation.route.app-shell-route
   spec_node_id: navigation.route
   type: route
   layer_id: navigation
-  name: Interchange Route
-  description: Route for /app/interchange — renders Interchange View
+  name: App Shell Route
   attributes:
-    type: protected
+    type: public
+    title: /app
   source_reference:
     provenance: extracted
     locations:
-      - file: ux/src/routes/app/interchange.tsx
+      - file: ux/src/routes/app.tsx
+        symbol: Route
   metadata:
-    created_at: 2026-05-08T10:03:20.684Z
-    updated_at: 2026-05-08T10:03:20.684Z
+    created_at: 2026-11-19T14:59:11.248Z
+    updated_at: 2026-11-19T14:59:11.248Z
+    version: 1
+navigation.route.claims-route:
+  id: 088a2c79-09c5-46d7-bf26-fb9184856e68
+  path: navigation.route.claims-route
+  spec_node_id: navigation.route
+  type: route
+  layer_id: navigation
+  name: Claims Route
+  attributes:
+    type: public
+    title: /app/claims
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/routes/app/claims.tsx
+        symbol: Route
+  metadata:
+    created_at: 2026-11-19T14:59:11.248Z
+    updated_at: 2026-11-19T14:59:11.248Z
+    version: 1
+navigation.route.contact-sheet-route:
+  id: 9e83bd4f-f05e-46c1-81e7-e113d5501fb4
+  path: navigation.route.contact-sheet-route
+  spec_node_id: navigation.route
+  type: route
+  layer_id: navigation
+  name: Contact Sheet Route
+  attributes:
+    type: public
+    title: /app/contact-sheet
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/routes/app/contact-sheet.tsx
+        symbol: Route
+  metadata:
+    created_at: 2026-11-19T14:59:11.248Z
+    updated_at: 2026-11-19T14:59:11.248Z
+    version: 1
+navigation.route.individual-detail-route:
+  id: ca2bd7d3-43ed-438d-b28b-c2d9d311130a
+  path: navigation.route.individual-detail-route
+  spec_node_id: navigation.route
+  type: route
+  layer_id: navigation
+  name: Individual Detail Route
+  attributes:
+    type: public
+    title: /app/data/individuals/$id
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/routes/app/data/individuals_.$id.tsx
+        symbol: Route
+  metadata:
+    created_at: 2026-11-19T14:59:11.248Z
+    updated_at: 2026-11-19T14:59:11.248Z
+    version: 1
+navigation.route.sources-route:
+  id: 55da4f67-1e37-4d24-be5f-469668812969
+  path: navigation.route.sources-route
+  spec_node_id: navigation.route
+  type: route
+  layer_id: navigation
+  name: Sources Route
+  attributes:
+    type: public
+    title: /app/data/sources
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/routes/app/data/sources.tsx
+        symbol: Route
+  metadata:
+    created_at: 2026-11-19T14:59:11.248Z
+    updated_at: 2026-11-19T14:59:11.248Z
+    version: 1
+navigation.route.extract-source-route:
+  id: 240f35cd-5577-41f8-ba0e-41410506881d
+  path: navigation.route.extract-source-route
+  spec_node_id: navigation.route
+  type: route
+  layer_id: navigation
+  name: Extract Source Route
+  attributes:
+    type: public
+    title: /app/data/sources/$sourceId/extract
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/routes/app/data/sources_.$sourceId.extract.tsx
+        symbol: Route
+  metadata:
+    created_at: 2026-11-19T14:59:11.248Z
+    updated_at: 2026-11-19T14:59:11.248Z
+    version: 1
+navigation.route.graph-route:
+  id: 4ecab85d-201e-4b33-9b00-b5515d1e5a98
+  path: navigation.route.graph-route
+  spec_node_id: navigation.route
+  type: route
+  layer_id: navigation
+  name: Graph Route
+  attributes:
+    type: public
+    title: /app/graph
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/routes/app/graph/index.tsx
+        symbol: Route
+  metadata:
+    created_at: 2026-11-19T14:59:11.248Z
+    updated_at: 2026-11-19T14:59:11.248Z
+    version: 1
+navigation.route.dashboard-route:
+  id: 7ef9ed8b-9223-4751-98e5-3ae3c7249c26
+  path: navigation.route.dashboard-route
+  spec_node_id: navigation.route
+  type: route
+  layer_id: navigation
+  name: Dashboard Route
+  attributes:
+    type: public
+    title: /app/
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/routes/app/index.tsx
+        symbol: Route
+  metadata:
+    created_at: 2026-11-19T14:59:11.248Z
+    updated_at: 2026-11-19T14:59:11.248Z
+    version: 1
+navigation.route.batch-detail-route:
+  id: b24eb104-0b24-47c3-b9d9-d7c57b007098
+  path: navigation.route.batch-detail-route
+  spec_node_id: navigation.route
+  type: route
+  layer_id: navigation
+  name: Batch Detail Route
+  attributes:
+    type: public
+    title: /app/pipelines/batches/$batchId
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/routes/app/pipelines/batches/$batchId.tsx
+        symbol: Route
+  metadata:
+    created_at: 2026-11-19T14:59:11.248Z
+    updated_at: 2026-11-19T14:59:11.248Z
+    version: 1
+navigation.route.benchmark-gold-route:
+  id: f9d7d7e5-7cd9-4cb0-8db8-2085a49e77a7
+  path: navigation.route.benchmark-gold-route
+  spec_node_id: navigation.route
+  type: route
+  layer_id: navigation
+  name: Benchmark Gold Route
+  attributes:
+    type: public
+    title: /app/pipelines/gold
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/routes/app/pipelines/gold.tsx
+        symbol: Route
+  metadata:
+    created_at: 2026-11-19T14:59:11.248Z
+    updated_at: 2026-11-19T14:59:11.248Z
+    version: 1
+navigation.route.pipelines-route:
+  id: f5ca53ce-6a25-4d6d-80c7-72f6fd47b474
+  path: navigation.route.pipelines-route
+  spec_node_id: navigation.route
+  type: route
+  layer_id: navigation
+  name: Pipelines Route
+  attributes:
+    type: public
+    title: /app/pipelines/
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/routes/app/pipelines/index.tsx
+        symbol: Route
+  metadata:
+    created_at: 2026-11-19T14:59:11.248Z
+    updated_at: 2026-11-19T14:59:11.248Z
+    version: 1
+navigation.route.extraction-review-route:
+  id: 91936042-687d-4a1d-ba5e-e0044736b3ab
+  path: navigation.route.extraction-review-route
+  spec_node_id: navigation.route
+  type: route
+  layer_id: navigation
+  name: Extraction Review Route
+  attributes:
+    type: public
+    title: /app/pipelines/review
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/routes/app/pipelines/review.tsx
+        symbol: Route
+  metadata:
+    created_at: 2026-11-19T14:59:11.248Z
+    updated_at: 2026-11-19T14:59:11.248Z
+    version: 1
+navigation.route.pipeline-runs-route:
+  id: 1a026dcf-d598-4b07-ab3c-5c7bda378ccd
+  path: navigation.route.pipeline-runs-route
+  spec_node_id: navigation.route
+  type: route
+  layer_id: navigation
+  name: Pipeline Runs Route
+  attributes:
+    type: public
+    title: /app/pipelines/runs
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/routes/app/pipelines/runs.tsx
+        symbol: Route
+  metadata:
+    created_at: 2026-11-19T14:59:11.248Z
+    updated_at: 2026-11-19T14:59:11.248Z
+    version: 1
+navigation.route.run-wizard-route:
+  id: 0228edab-0253-4476-af33-bdd95e47f358
+  path: navigation.route.run-wizard-route
+  spec_node_id: navigation.route
+  type: route
+  layer_id: navigation
+  name: Run Wizard Route
+  attributes:
+    type: public
+    title: /app/pipelines/types/$type/run
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/routes/app/pipelines/types/$type/run.tsx
+        symbol: Route
+  metadata:
+    created_at: 2026-11-19T14:59:11.248Z
+    updated_at: 2026-11-19T14:59:11.248Z
+    version: 1
+navigation.route.proposals-route:
+  id: f81ad5ce-cc16-4d33-af7e-4a2f56141e4d
+  path: navigation.route.proposals-route
+  spec_node_id: navigation.route
+  type: route
+  layer_id: navigation
+  name: Proposals Route
+  attributes:
+    type: public
+    title: /app/proposals
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/routes/app/proposals.tsx
+        symbol: Route
+  metadata:
+    created_at: 2026-11-19T14:59:11.248Z
+    updated_at: 2026-11-19T14:59:11.248Z
+    version: 1
+navigation.route.proposal-detail-route:
+  id: 4014c0c8-1e4f-4b47-ab45-b94c5789e0d7
+  path: navigation.route.proposal-detail-route
+  spec_node_id: navigation.route
+  type: route
+  layer_id: navigation
+  name: Proposal Detail Route
+  attributes:
+    type: public
+    title: /app/proposals/$proposalId
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/routes/app/proposals_.$proposalId.tsx
+        symbol: Route
+  metadata:
+    created_at: 2026-11-19T14:59:11.248Z
+    updated_at: 2026-11-19T14:59:11.248Z
+    version: 1
+navigation.route.proposal-compare-route:
+  id: b745e3f4-4165-45f0-b978-4737671a4b30
+  path: navigation.route.proposal-compare-route
+  spec_node_id: navigation.route
+  type: route
+  layer_id: navigation
+  name: Proposal Compare Route
+  attributes:
+    type: public
+    title: /app/proposals/$proposalId/compare/$otherId
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/routes/app/proposals_.$proposalId_.compare.$otherId.tsx
+        symbol: Route
+  metadata:
+    created_at: 2026-11-19T14:59:11.248Z
+    updated_at: 2026-11-19T14:59:11.248Z
+    version: 1
+navigation.route.proposal-review-route:
+  id: 38613674-f44f-4b14-b599-70815cc44c07
+  path: navigation.route.proposal-review-route
+  spec_node_id: navigation.route
+  type: route
+  layer_id: navigation
+  name: Proposal Review Route
+  attributes:
+    type: public
+    title: /app/proposals/$proposalId/review
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/routes/app/proposals_.$proposalId_.review.tsx
+        symbol: Route
+  metadata:
+    created_at: 2026-11-19T14:59:11.248Z
+    updated_at: 2026-11-19T14:59:11.248Z
+    version: 1
+navigation.route.reference-sources-route:
+  id: c6b58193-c5f5-4cc5-9a03-88b9f892066a
+  path: navigation.route.reference-sources-route
+  spec_node_id: navigation.route
+  type: route
+  layer_id: navigation
+  name: Reference Sources Route
+  attributes:
+    type: public
+    title: /app/reference/sources
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/routes/app/reference/sources.tsx
+        symbol: Route
+  metadata:
+    created_at: 2026-11-19T14:59:11.248Z
+    updated_at: 2026-11-19T14:59:11.248Z
+    version: 1
+navigation.route.grounding-workflows-route:
+  id: a9bad71f-a29f-4af6-b647-ee04b8127e55
+  path: navigation.route.grounding-workflows-route
+  spec_node_id: navigation.route
+  type: route
+  layer_id: navigation
+  name: Grounding Workflows Route
+  attributes:
+    type: public
+    title: /app/reference/workflows
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/routes/app/reference/workflows.tsx
+        symbol: Route
+  metadata:
+    created_at: 2026-11-19T14:59:11.248Z
+    updated_at: 2026-11-19T14:59:11.248Z
+    version: 1
+navigation.route.class-detail-route:
+  id: 36cb0ddd-4dc9-478b-9983-e143b5d2aacf
+  path: navigation.route.class-detail-route
+  spec_node_id: navigation.route
+  type: route
+  layer_id: navigation
+  name: Class Detail Route
+  attributes:
+    type: public
+    title: /app/schema/classes/$id
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/routes/app/schema/classes_.$id.tsx
+        symbol: Route
+  metadata:
+    created_at: 2026-11-19T14:59:11.248Z
+    updated_at: 2026-11-19T14:59:11.248Z
+    version: 1
+navigation.route.concept-schemes-index-route:
+  id: df343fe9-f6a2-474f-bbde-e23c86994510
+  path: navigation.route.concept-schemes-index-route
+  spec_node_id: navigation.route
+  type: route
+  layer_id: navigation
+  name: Concept Schemes Index Route
+  attributes:
+    type: public
+    title: /app/schema/schemes/
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/routes/app/schema/schemes.index.tsx
+        symbol: Route
+  metadata:
+    created_at: 2026-11-19T14:59:11.248Z
+    updated_at: 2026-11-19T14:59:11.248Z
+    version: 1
+navigation.route.concept-scheme-detail-route:
+  id: 7e596539-db76-464e-b956-a2900cf16e7f
+  path: navigation.route.concept-scheme-detail-route
+  spec_node_id: navigation.route
+  type: route
+  layer_id: navigation
+  name: Concept Scheme Detail Route
+  attributes:
+    type: public
+    title: /app/schema/schemes/$id
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/routes/app/schema/schemes_.$id.tsx
+        symbol: Route
+  metadata:
+    created_at: 2026-11-19T14:59:11.248Z
+    updated_at: 2026-11-19T14:59:11.248Z
+    version: 1
+navigation.route.taxonomy-detail-route:
+  id: 3ac4a16b-ee29-454f-a0bb-e7dddb816940
+  path: navigation.route.taxonomy-detail-route
+  spec_node_id: navigation.route
+  type: route
+  layer_id: navigation
+  name: Taxonomy Detail Route
+  attributes:
+    type: public
+    title: /app/schema/taxonomies/$id
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/routes/app/schema/taxonomies_.$id.tsx
+        symbol: Route
+  metadata:
+    created_at: 2026-11-19T14:59:11.248Z
+    updated_at: 2026-11-19T14:59:11.248Z
+    version: 1
+navigation.route.settings-route:
+  id: 3136818d-ed3d-48c6-a641-56f1bb5d126f
+  path: navigation.route.settings-route
+  spec_node_id: navigation.route
+  type: route
+  layer_id: navigation
+  name: Settings Route
+  attributes:
+    type: public
+    title: /app/settings
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/routes/app/settings.tsx
+        symbol: Route
+  metadata:
+    created_at: 2026-11-19T14:59:11.248Z
+    updated_at: 2026-11-19T14:59:11.248Z
+    version: 1
+navigation.route.versioning-route:
+  id: 6c8ed5a1-ce55-4ef5-9389-59279396dab5
+  path: navigation.route.versioning-route
+  spec_node_id: navigation.route
+  type: route
+  layer_id: navigation
+  name: Versioning Route
+  attributes:
+    type: public
+    title: /app/versioning
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/routes/app/versioning.tsx
+        symbol: Route
+  metadata:
+    created_at: 2026-11-19T14:59:11.248Z
+    updated_at: 2026-11-19T14:59:11.248Z
+    version: 1
+navigation.route.index-redirect-route:
+  id: 5254fc4a-20d1-486d-af0f-6ada1218530f
+  path: navigation.route.index-redirect-route
+  spec_node_id: navigation.route
+  type: route
+  layer_id: navigation
+  name: Index Redirect Route
+  attributes:
+    type: redirect
+    title: /
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/routes/index.tsx
+        symbol: Route
+  metadata:
+    created_at: 2026-11-19T14:59:11.248Z
+    updated_at: 2026-11-19T14:59:11.248Z
+    version: 1
+navigation.route.welcome-route:
+  id: 2dd041f4-8566-4f96-8d0d-7e6cc7190053
+  path: navigation.route.welcome-route
+  spec_node_id: navigation.route
+  type: route
+  layer_id: navigation
+  name: Welcome Route
+  attributes:
+    type: public
+    title: /welcome
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/routes/welcome.tsx
+        symbol: Route
+  metadata:
+    created_at: 2026-11-19T14:59:11.248Z
+    updated_at: 2026-11-19T14:59:11.248Z
     version: 1

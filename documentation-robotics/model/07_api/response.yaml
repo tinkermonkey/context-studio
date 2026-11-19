@@ -38,46 +38,6 @@ api.response.concept-scheme-response:
     created_at: 2026-05-08T11:45:50.373Z
     updated_at: 2026-05-08T11:45:50.373Z
     version: 1
-api.response.external-reference-response:
-  id: d251744b-d322-42da-a0df-d33cdf992336
-  path: api.response.external-reference-response
-  spec_node_id: api.response
-  type: response
-  layer_id: api
-  name: ExternalReferenceResponse
-  description: Response containing an external reference with source URI, label,
-    and relation type
-  attributes:
-    description: API response schema for external  reference  response
-  source_reference:
-    provenance: extracted
-    locations:
-      - file: local-server/adapters/web/schemas/ontology.py
-        symbol: ExternalReferenceResponse
-  metadata:
-    created_at: 2026-05-08T11:45:50.752Z
-    updated_at: 2026-05-08T11:45:50.752Z
-    version: 1
-api.response.lexical-sense-response:
-  id: 28476e04-b5d3-4e35-9868-bc740f002df8
-  path: api.response.lexical-sense-response
-  spec_node_id: api.response
-  type: response
-  layer_id: api
-  name: LexicalSenseResponse
-  description: Response containing a lexical sense with label, language, and
-    optional definition
-  attributes:
-    description: API response schema for lexical  sense  response
-  source_reference:
-    provenance: extracted
-    locations:
-      - file: local-server/adapters/web/schemas/ontology.py
-        symbol: LexicalSenseResponse
-  metadata:
-    created_at: 2026-05-08T11:45:51.147Z
-    updated_at: 2026-05-08T11:45:51.147Z
-    version: 1
 api.response.data-property-value-response:
   id: 9488de98-4e34-41b3-8923-020e42468949
   path: api.response.data-property-value-response
@@ -198,26 +158,6 @@ api.response.versioning-change-event-response:
     created_at: 2026-05-08T11:46:11.684Z
     updated_at: 2026-05-08T11:46:11.684Z
     version: 1
-api.response.entity-version-response:
-  id: eba90bae-c3af-4884-bc5b-abf34637b6ca
-  path: api.response.entity-version-response
-  spec_node_id: api.response
-  type: response
-  layer_id: api
-  name: EntityVersionResponse
-  description: Response containing a point-in-time snapshot of an entity version
-    with changeset reference and full state
-  attributes:
-    description: API response schema for entity  version  response
-  source_reference:
-    provenance: extracted
-    locations:
-      - file: local-server/adapters/web/schemas/versioning.py
-        symbol: EntityVersionResponse
-  metadata:
-    created_at: 2026-05-08T11:46:12.072Z
-    updated_at: 2026-05-08T11:46:12.072Z
-    version: 1
 api.response.change-history-response:
   id: 99516707-3be6-4d2b-8b77-fa205039c22f
   path: api.response.change-history-response
@@ -237,106 +177,6 @@ api.response.change-history-response:
   metadata:
     created_at: 2026-05-08T11:46:12.448Z
     updated_at: 2026-05-08T11:46:12.448Z
-    version: 1
-api.response.changeset-response:
-  id: 22fe7d70-7ac8-4f0c-b161-34dd7b8d811d
-  path: api.response.changeset-response
-  spec_node_id: api.response
-  type: response
-  layer_id: api
-  name: ChangesetResponse
-  description: Response containing a changeset with ID, title, status, change
-    count, and creation metadata
-  attributes:
-    description: API response schema for changeset  response
-  source_reference:
-    provenance: extracted
-    locations:
-      - file: local-server/adapters/web/schemas/versioning.py
-        symbol: ChangesetResponse
-  metadata:
-    created_at: 2026-05-08T11:46:12.825Z
-    updated_at: 2026-05-08T11:46:12.825Z
-    version: 1
-api.response.proposal-response:
-  id: aa10b453-737e-4ec9-858c-9ecc305ad66d
-  path: api.response.proposal-response
-  spec_node_id: api.response
-  type: response
-  layer_id: api
-  name: ProposalResponse
-  description: Response containing a merge proposal with source/target changeset
-    references, status, and conflict summary
-  attributes:
-    description: API response schema for proposal  response
-  source_reference:
-    provenance: extracted
-    locations:
-      - file: local-server/adapters/web/schemas/versioning.py
-        symbol: ProposalResponse
-  metadata:
-    created_at: 2026-05-08T11:46:13.202Z
-    updated_at: 2026-05-08T11:46:13.202Z
-    version: 1
-api.response.conflict-response:
-  id: 84cb0118-6eef-499c-98dd-297c815f3ff8
-  path: api.response.conflict-response
-  spec_node_id: api.response
-  type: response
-  layer_id: api
-  name: ConflictResponse
-  description: Response containing a merge conflict with conflicting entity state,
-    conflict type, and resolution options
-  attributes:
-    description: API response schema for conflict  response
-  source_reference:
-    provenance: extracted
-    locations:
-      - file: local-server/adapters/web/schemas/versioning.py
-        symbol: ConflictResponse
-  metadata:
-    created_at: 2026-05-08T11:46:19.012Z
-    updated_at: 2026-05-08T11:46:19.012Z
-    version: 1
-api.response.conflict-report-response:
-  id: f291862f-12cd-4ac7-afdb-8caf87330e9f
-  path: api.response.conflict-report-response
-  spec_node_id: api.response
-  type: response
-  layer_id: api
-  name: ConflictReportResponse
-  description: Response containing a summary report of all conflicts in a merge
-    proposal with counts by type
-  attributes:
-    description: API response schema for conflict  report  response
-  source_reference:
-    provenance: extracted
-    locations:
-      - file: local-server/adapters/web/schemas/versioning.py
-        symbol: ConflictReportResponse
-  metadata:
-    created_at: 2026-05-08T11:46:19.421Z
-    updated_at: 2026-05-08T11:46:19.421Z
-    version: 1
-api.response.merge-result-response:
-  id: 4b82915d-63db-4442-b3cc-df3cf7b9c8fe
-  path: api.response.merge-result-response
-  spec_node_id: api.response
-  type: response
-  layer_id: api
-  name: MergeResultResponse
-  description: Response containing the outcome of a merge operation with
-    resolved/unresolved conflict counts
-  attributes:
-    description: API response schema for merge  result  response
-  source_reference:
-    provenance: extracted
-    locations:
-      - file: local-server/adapters/web/schemas/versioning.py
-        symbol: MergeResultResponse
-  metadata:
-    created_at: 2026-05-08T11:46:19.829Z
-    updated_at: 2026-05-08T11:46:19.829Z
     version: 1
 api.response.sync-status-response:
   id: c8d39b3c-9294-4af7-b681-a14ddaa0fe29
@@ -537,25 +377,6 @@ api.response.sparqlresponse:
     created_at: 2026-05-08T11:46:42.637Z
     updated_at: 2026-05-08T11:46:42.637Z
     version: 1
-api.response.triple-response:
-  id: d93419ae-9e01-433a-bb10-65ad1aee062a
-  path: api.response.triple-response
-  spec_node_id: api.response
-  type: response
-  layer_id: api
-  name: TripleResponse
-  description: Response containing a single RDF triple with subject, predicate, and object
-  attributes:
-    description: API response schema for triple  response
-  source_reference:
-    provenance: extracted
-    locations:
-      - file: local-server/adapters/web/schemas/graph.py
-        symbol: TripleResponse
-  metadata:
-    created_at: 2026-05-08T11:46:49.208Z
-    updated_at: 2026-05-08T11:46:49.208Z
-    version: 1
 api.response.triples-response:
   id: ce676f09-b109-494e-83f8-2e6fc57e98e5
   path: api.response.triples-response
@@ -654,46 +475,6 @@ api.response.subgraph-result-response:
     created_at: 2026-05-08T11:46:51.861Z
     updated_at: 2026-05-08T11:46:51.861Z
     version: 1
-api.response.serialization-scope-response:
-  id: 6099a277-30ee-41d0-b3ae-ba96c42fe991
-  path: api.response.serialization-scope-response
-  spec_node_id: api.response
-  type: response
-  layer_id: api
-  name: SerializationScopeResponse
-  description: Response confirming the resolved scope for a serialization
-    operation with entity counts
-  attributes:
-    description: API response schema for serialization  scope  response
-  source_reference:
-    provenance: extracted
-    locations:
-      - file: local-server/adapters/web/schemas/interchange.py
-        symbol: SerializationScopeResponse
-  metadata:
-    created_at: 2026-05-08T11:47:00.719Z
-    updated_at: 2026-05-08T11:47:00.719Z
-    version: 1
-api.response.import-conflict-response:
-  id: 1b7c4112-7867-449c-ab75-1e872f6248dd
-  path: api.response.import-conflict-response
-  spec_node_id: api.response
-  type: response
-  layer_id: api
-  name: ImportConflictResponse
-  description: Response describing a conflict detected during an import operation
-    with existing and incoming values
-  attributes:
-    description: API response schema for import  conflict  response
-  source_reference:
-    provenance: extracted
-    locations:
-      - file: local-server/adapters/web/schemas/interchange.py
-        symbol: ImportConflictResponse
-  metadata:
-    created_at: 2026-05-08T11:47:01.153Z
-    updated_at: 2026-05-08T11:47:01.153Z
-    version: 1
 api.response.resolution-record-response:
   id: c4badd9f-ac13-4aac-b73a-60e6a45ec19a
   path: api.response.resolution-record-response
@@ -774,46 +555,6 @@ api.response.interchange-change-event-response:
     created_at: 2026-05-08T11:47:07.214Z
     updated_at: 2026-05-08T11:47:07.214Z
     version: 1
-api.response.reference-result-schema:
-  id: 9433c5be-df4f-45c7-ad55-3010b9b4bdd5
-  path: api.response.reference-result-schema
-  spec_node_id: api.response
-  type: response
-  layer_id: api
-  name: ReferenceResultSchema
-  description: Response containing a single external reference result with URI,
-    label, definition, and source metadata
-  attributes:
-    description: API response schema for reference  result
-  source_reference:
-    provenance: extracted
-    locations:
-      - file: local-server/adapters/web/schemas/reference.py
-        symbol: ReferenceResultSchema
-  metadata:
-    created_at: 2026-05-08T11:47:15.082Z
-    updated_at: 2026-05-08T11:47:15.082Z
-    version: 1
-api.response.reference-relation-schema:
-  id: 3a779f50-1a6b-42e0-898d-418ca437ba35
-  path: api.response.reference-relation-schema
-  spec_node_id: api.response
-  type: response
-  layer_id: api
-  name: ReferenceRelationSchema
-  description: Response containing a typed relation between two concepts from an
-    external knowledge source
-  attributes:
-    description: API response schema for reference  relation
-  source_reference:
-    provenance: extracted
-    locations:
-      - file: local-server/adapters/web/schemas/reference.py
-        symbol: ReferenceRelationSchema
-  metadata:
-    created_at: 2026-05-08T11:47:15.644Z
-    updated_at: 2026-05-08T11:47:15.644Z
-    version: 1
 api.response.reference-search-response-schema:
   id: f70ef0d4-67dd-402d-a9fe-8df88ec94f51
   path: api.response.reference-search-response-schema
@@ -853,26 +594,6 @@ api.response.reference-relations-response-schema:
   metadata:
     created_at: 2026-05-08T11:47:20.783Z
     updated_at: 2026-05-08T11:47:20.783Z
-    version: 1
-api.response.reference-source-status-schema:
-  id: 59106944-d6e7-4f78-83ed-ee369d41a38b
-  path: api.response.reference-source-status-schema
-  spec_node_id: api.response
-  type: response
-  layer_id: api
-  name: ReferenceSourceStatusSchema
-  description: Response containing the availability status of a single external
-    reference source
-  attributes:
-    description: API response schema for reference  source  status
-  source_reference:
-    provenance: extracted
-    locations:
-      - file: local-server/adapters/web/schemas/reference.py
-        symbol: ReferenceSourceStatusSchema
-  metadata:
-    created_at: 2026-05-08T11:47:21.246Z
-    updated_at: 2026-05-08T11:47:21.246Z
     version: 1
 api.response.reference-status-response-schema:
   id: 5cc09393-8536-45d6-88c4-b8b1f4591847
@@ -1067,31 +788,11 @@ api.response.pipeline-configuration-response:
   source_reference:
     provenance: extracted
     locations:
-      - file: local-server/adapters/web/schemas/pipeline.py
+      - file: local-server/adapters/web/schemas/pipelines.py
         symbol: PipelineConfigurationResponse
   metadata:
     created_at: 2026-05-08T11:47:52.839Z
     updated_at: 2026-05-08T11:47:52.839Z
-    version: 1
-api.response.execution-response:
-  id: e4ca7535-a869-46ef-8a81-b55b3ac376d6
-  path: api.response.execution-response
-  spec_node_id: api.response
-  type: response
-  layer_id: api
-  name: ExecutionResponse
-  description: Response containing a pipeline execution record with input, output,
-    token usage, and duration
-  attributes:
-    description: API response schema for execution  response
-  source_reference:
-    provenance: extracted
-    locations:
-      - file: local-server/adapters/web/schemas/pipeline.py
-        symbol: ExecutionResponse
-  metadata:
-    created_at: 2026-05-08T11:47:53.319Z
-    updated_at: 2026-05-08T11:47:53.319Z
     version: 1
 api.response.publish-diff-stats:
   id: 4da5b8b1-0dd8-4e7a-9a3b-88b618c7d54a
@@ -1113,23 +814,800 @@ api.response.publish-diff-stats:
     created_at: 2026-05-11T12:03:00.105Z
     updated_at: 2026-05-11T12:03:00.105Z
     version: 1
-api.response.extract-triple-response:
-  id: 8d3b6187-4bbc-401f-9f82-69b27495baac
-  path: api.response.extract-triple-response
+api.response.accept-rest-response:
+  id: 9d66c083-cfc1-47cc-bb9c-10b691f956b6
+  path: api.response.accept-rest-response
   spec_node_id: api.response
   type: response
   layer_id: api
-  name: ExtractTripleResponse
-  description: Response from triple extraction containing extracted triples,
-    warnings, and metadata
+  name: AcceptRestResponse
   attributes:
-    description: Triple extraction results with extracted triples and metadata
+    description: AcceptRestResponse
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/schemas/proposal_comparison.py
+        symbol: AcceptRestResponse
+  metadata:
+    created_at: 2026-11-19T15:15:02.501Z
+    updated_at: 2026-11-19T15:15:02.501Z
+    version: 1
+api.response.apply-run-response:
+  id: d8af6f67-25c6-44ae-8d6c-b950b62a4f61
+  path: api.response.apply-run-response
+  spec_node_id: api.response
+  type: response
+  layer_id: api
+  name: ApplyRunResponse
+  attributes:
+    description: ApplyRunResponse
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/schemas/pipelines.py
+        symbol: ApplyRunResponse
+  metadata:
+    created_at: 2026-11-19T15:15:02.501Z
+    updated_at: 2026-11-19T15:15:02.501Z
+    version: 1
+api.response.approval-policy-response:
+  id: 1c6bf145-aeda-45f0-9999-55ee7355be3f
+  path: api.response.approval-policy-response
+  spec_node_id: api.response
+  type: response
+  layer_id: api
+  name: ApprovalPolicyResponse
+  attributes:
+    description: ApprovalPolicyResponse
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/schemas/proposals.py
+        symbol: ApprovalPolicyResponse
+  metadata:
+    created_at: 2026-11-19T15:15:02.501Z
+    updated_at: 2026-11-19T15:15:02.501Z
+    version: 1
+api.response.attribute-definition-response:
+  id: 1482bb20-03b8-4827-b55c-d7b5db597868
+  path: api.response.attribute-definition-response
+  spec_node_id: api.response
+  type: response
+  layer_id: api
+  name: AttributeDefinitionResponse
+  attributes:
+    description: AttributeDefinitionResponse
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/schemas/ontology.py
+        symbol: AttributeDefinitionResponse
+  metadata:
+    created_at: 2026-11-19T15:15:02.501Z
+    updated_at: 2026-11-19T15:15:02.501Z
+    version: 1
+api.response.batch-response:
+  id: f5af0e9a-c963-4fac-8f5f-b93a7537ae69
+  path: api.response.batch-response
+  spec_node_id: api.response
+  type: response
+  layer_id: api
+  name: BatchResponse
+  attributes:
+    description: BatchResponse
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/schemas/pipelines.py
+        symbol: BatchResponse
+  metadata:
+    created_at: 2026-11-19T15:15:02.501Z
+    updated_at: 2026-11-19T15:15:02.501Z
+    version: 1
+api.response.bundle-import-response:
+  id: 2ecb3a14-5e2c-45b9-8a68-479f6d652044
+  path: api.response.bundle-import-response
+  spec_node_id: api.response
+  type: response
+  layer_id: api
+  name: BundleImportResponse
+  attributes:
+    description: BundleImportResponse
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/schemas/bundles.py
+        symbol: BundleImportResponse
+  metadata:
+    created_at: 2026-11-19T15:15:02.501Z
+    updated_at: 2026-11-19T15:15:02.501Z
+    version: 1
+api.response.cancel-batch-response:
+  id: b44d3a8b-7144-4576-bd7b-86a2a0e1da00
+  path: api.response.cancel-batch-response
+  spec_node_id: api.response
+  type: response
+  layer_id: api
+  name: CancelBatchResponse
+  attributes:
+    description: CancelBatchResponse
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/schemas/pipelines.py
+        symbol: CancelBatchResponse
+  metadata:
+    created_at: 2026-11-19T15:15:02.501Z
+    updated_at: 2026-11-19T15:15:02.501Z
+    version: 1
+api.response.change-proposal-response:
+  id: 2f4dc526-a1c7-40c9-8173-5cc609b51427
+  path: api.response.change-proposal-response
+  spec_node_id: api.response
+  type: response
+  layer_id: api
+  name: ChangeProposalResponse
+  attributes:
+    description: ChangeProposalResponse
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/schemas/proposals.py
+        symbol: ChangeProposalResponse
+  metadata:
+    created_at: 2026-11-19T15:15:02.501Z
+    updated_at: 2026-11-19T15:15:02.501Z
+    version: 1
+api.response.change-proposal-revert-response:
+  id: 570ac27c-4e31-4d6b-af22-f6853a9aeb98
+  path: api.response.change-proposal-revert-response
+  spec_node_id: api.response
+  type: response
+  layer_id: api
+  name: ChangeProposalRevertResponse
+  attributes:
+    description: ChangeProposalRevertResponse
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/schemas/proposals.py
+        symbol: ChangeProposalRevertResponse
+  metadata:
+    created_at: 2026-11-19T15:15:02.501Z
+    updated_at: 2026-11-19T15:15:02.501Z
+    version: 1
+api.response.chat-status-response:
+  id: 7c4b920b-f2c9-4ec2-bacb-6931889dc1e5
+  path: api.response.chat-status-response
+  spec_node_id: api.response
+  type: response
+  layer_id: api
+  name: ChatStatusResponse
+  attributes:
+    description: ChatStatusResponse
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/schemas/chat.py
+        symbol: ChatStatusResponse
+  metadata:
+    created_at: 2026-11-19T15:15:02.501Z
+    updated_at: 2026-11-19T15:15:02.501Z
+    version: 1
+api.response.claim-response:
+  id: 04bcd33f-d774-4ac1-8d2c-7618c050ee09
+  path: api.response.claim-response
+  spec_node_id: api.response
+  type: response
+  layer_id: api
+  name: ClaimResponse
+  attributes:
+    description: ClaimResponse
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/schemas/claims.py
+        symbol: ClaimResponse
+  metadata:
+    created_at: 2026-11-19T15:15:02.501Z
+    updated_at: 2026-11-19T15:15:02.501Z
+    version: 1
+api.response.class-counts-response:
+  id: bc646700-d2c9-4208-b64e-0e1aaa5bd1a7
+  path: api.response.class-counts-response
+  spec_node_id: api.response
+  type: response
+  layer_id: api
+  name: ClassCountsResponse
+  attributes:
+    description: ClassCountsResponse
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/schemas/ontology.py
+        symbol: ClassCountsResponse
+  metadata:
+    created_at: 2026-11-19T15:15:02.501Z
+    updated_at: 2026-11-19T15:15:02.501Z
+    version: 1
+api.response.conversation-detail-response:
+  id: fe32f1ff-a243-4ed7-bb58-dd2e0eac7ee1
+  path: api.response.conversation-detail-response
+  spec_node_id: api.response
+  type: response
+  layer_id: api
+  name: ConversationDetailResponse
+  attributes:
+    description: ConversationDetailResponse
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/schemas/chat.py
+        symbol: ConversationDetailResponse
+  metadata:
+    created_at: 2026-11-19T15:15:02.501Z
+    updated_at: 2026-11-19T15:15:02.501Z
+    version: 1
+api.response.conversation-response:
+  id: 00d3809c-581b-4ad7-8143-50b448a25fcf
+  path: api.response.conversation-response
+  spec_node_id: api.response
+  type: response
+  layer_id: api
+  name: ConversationResponse
+  attributes:
+    description: ConversationResponse
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/schemas/chat.py
+        symbol: ConversationResponse
+  metadata:
+    created_at: 2026-11-19T15:15:02.501Z
+    updated_at: 2026-11-19T15:15:02.501Z
+    version: 1
+api.response.dataset-deletion-response:
+  id: 3dcf17f3-33f2-4bbc-af67-531ff8384dc8
+  path: api.response.dataset-deletion-response
+  spec_node_id: api.response
+  type: response
+  layer_id: api
+  name: DatasetDeletionResponse
+  attributes:
+    description: DatasetDeletionResponse
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/schemas/ontology.py
+        symbol: DatasetDeletionResponse
+  metadata:
+    created_at: 2026-11-19T15:15:02.501Z
+    updated_at: 2026-11-19T15:15:02.501Z
+    version: 1
+api.response.dataset-response:
+  id: b9e53f69-284b-4678-b130-4927bd9da499
+  path: api.response.dataset-response
+  spec_node_id: api.response
+  type: response
+  layer_id: api
+  name: DatasetResponse
+  attributes:
+    description: DatasetResponse
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/schemas/ontology.py
+        symbol: DatasetResponse
+  metadata:
+    created_at: 2026-11-19T15:15:02.501Z
+    updated_at: 2026-11-19T15:15:02.501Z
+    version: 1
+api.response.decision-model-list-response:
+  id: c541eaaf-4f39-46a7-a0bd-03c45e50edbc
+  path: api.response.decision-model-list-response
+  spec_node_id: api.response
+  type: response
+  layer_id: api
+  name: DecisionModelListResponse
+  attributes:
+    description: DecisionModelListResponse
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/schemas/decision.py
+        symbol: DecisionModelListResponse
+  metadata:
+    created_at: 2026-11-19T15:15:02.501Z
+    updated_at: 2026-11-19T15:15:02.501Z
+    version: 1
+api.response.demo-dataset-descriptor-response:
+  id: 3f9ac492-100e-47da-9e3c-d67cdc3e8e93
+  path: api.response.demo-dataset-descriptor-response
+  spec_node_id: api.response
+  type: response
+  layer_id: api
+  name: DemoDatasetDescriptorResponse
+  attributes:
+    description: DemoDatasetDescriptorResponse
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/schemas/admin.py
+        symbol: DemoDatasetDescriptorResponse
+  metadata:
+    created_at: 2026-11-19T15:15:02.501Z
+    updated_at: 2026-11-19T15:15:02.501Z
+    version: 1
+api.response.demo-dataset-load-response:
+  id: ea4dac70-4f4d-4f12-8b45-a008bde06c3a
+  path: api.response.demo-dataset-load-response
+  spec_node_id: api.response
+  type: response
+  layer_id: api
+  name: DemoDatasetLoadResponse
+  attributes:
+    description: DemoDatasetLoadResponse
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/schemas/admin.py
+        symbol: DemoDatasetLoadResponse
+  metadata:
+    created_at: 2026-11-19T15:15:02.501Z
+    updated_at: 2026-11-19T15:15:02.501Z
+    version: 1
+api.response.dr-decision-response:
+  id: e5534f49-b4da-49be-a7c1-18ba3eb985ae
+  path: api.response.dr-decision-response
+  spec_node_id: api.response
+  type: response
+  layer_id: api
+  name: DrDecisionResponse
+  attributes:
+    description: DrDecisionResponse
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/schemas/proposals.py
+        symbol: DrDecisionResponse
+  metadata:
+    created_at: 2026-11-19T15:15:02.501Z
+    updated_at: 2026-11-19T15:15:02.501Z
+    version: 1
+api.response.drift-response:
+  id: 2f4296cf-cd59-469e-9a45-a39e5398bd20
+  path: api.response.drift-response
+  spec_node_id: api.response
+  type: response
+  layer_id: api
+  name: DriftResponse
+  attributes:
+    description: DriftResponse
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/schemas/drift.py
+        symbol: DriftResponse
+  metadata:
+    created_at: 2026-11-19T15:15:02.501Z
+    updated_at: 2026-11-19T15:15:02.501Z
+    version: 1
+api.response.enqueue-batch-runs-response:
+  id: 2cffe2f7-7150-4c2c-aeb2-e9d1011289dc
+  path: api.response.enqueue-batch-runs-response
+  spec_node_id: api.response
+  type: response
+  layer_id: api
+  name: EnqueueBatchRunsResponse
+  attributes:
+    description: EnqueueBatchRunsResponse
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/schemas/pipelines.py
+        symbol: EnqueueBatchRunsResponse
+  metadata:
+    created_at: 2026-11-19T15:15:02.501Z
+    updated_at: 2026-11-19T15:15:02.501Z
+    version: 1
+api.response.entity-source-response:
+  id: 21afffa7-7e1f-4b5d-8c77-b626bce34e9d
+  path: api.response.entity-source-response
+  spec_node_id: api.response
+  type: response
+  layer_id: api
+  name: EntitySourceResponse
+  attributes:
+    description: EntitySourceResponse
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/schemas/proposals.py
+        symbol: EntitySourceResponse
+  metadata:
+    created_at: 2026-11-19T15:15:02.501Z
+    updated_at: 2026-11-19T15:15:02.501Z
+    version: 1
+api.response.extraction-example-response:
+  id: 89e14c21-770a-4e50-9ecc-9312110a3402
+  path: api.response.extraction-example-response
+  spec_node_id: api.response
+  type: response
+  layer_id: api
+  name: ExtractionExampleResponse
+  attributes:
+    description: ExtractionExampleResponse
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/schemas/pipelines.py
+        symbol: ExtractionExampleResponse
+  metadata:
+    created_at: 2026-11-19T15:15:02.501Z
+    updated_at: 2026-11-19T15:15:02.501Z
+    version: 1
+api.response.graph-view-response:
+  id: 93be7c32-2310-4967-a3ea-c9547045a2ef
+  path: api.response.graph-view-response
+  spec_node_id: api.response
+  type: response
+  layer_id: api
+  name: GraphViewResponse
+  attributes:
+    description: GraphViewResponse
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/schemas/graph.py
+        symbol: GraphViewResponse
+  metadata:
+    created_at: 2026-11-19T15:15:02.501Z
+    updated_at: 2026-11-19T15:15:02.501Z
+    version: 1
+api.response.grounding-workflow-response:
+  id: 1621701a-1ad2-4a2f-b8ef-ae2f2ccf9f0d
+  path: api.response.grounding-workflow-response
+  spec_node_id: api.response
+  type: response
+  layer_id: api
+  name: GroundingWorkflowResponse
+  attributes:
+    description: GroundingWorkflowResponse
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/schemas/reference.py
+        symbol: GroundingWorkflowResponse
+  metadata:
+    created_at: 2026-11-19T15:15:02.501Z
+    updated_at: 2026-11-19T15:15:02.501Z
+    version: 1
+api.response.implementation-response:
+  id: 76fc0f0c-6828-4410-b5ed-f7a25a39a4fb
+  path: api.response.implementation-response
+  spec_node_id: api.response
+  type: response
+  layer_id: api
+  name: ImplementationResponse
+  attributes:
+    description: ImplementationResponse
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/schemas/pipelines.py
+        symbol: ImplementationResponse
+  metadata:
+    created_at: 2026-11-19T15:15:02.501Z
+    updated_at: 2026-11-19T15:15:02.501Z
+    version: 1
+api.response.mcp-connection-response:
+  id: 6effcfd9-b081-47f8-9bee-fe0d81ceb2a3
+  path: api.response.mcp-connection-response
+  spec_node_id: api.response
+  type: response
+  layer_id: api
+  name: McpConnectionResponse
+  attributes:
+    description: McpConnectionResponse
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/schemas/admin.py
+        symbol: McpConnectionResponse
+  metadata:
+    created_at: 2026-11-19T15:15:02.501Z
+    updated_at: 2026-11-19T15:15:02.501Z
+    version: 1
+api.response.pair-decision-response:
+  id: c79d9120-cdea-48a1-9f57-6e37a681d04e
+  path: api.response.pair-decision-response
+  spec_node_id: api.response
+  type: response
+  layer_id: api
+  name: PairDecisionResponse
+  attributes:
+    description: PairDecisionResponse
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/schemas/proposal_comparison.py
+        symbol: PairDecisionResponse
+  metadata:
+    created_at: 2026-11-19T15:15:02.501Z
+    updated_at: 2026-11-19T15:15:02.501Z
+    version: 1
+api.response.pipeline-run-response:
+  id: 02ffb4ab-8f0b-4dd9-82b1-7e338e75db85
+  path: api.response.pipeline-run-response
+  spec_node_id: api.response
+  type: response
+  layer_id: api
+  name: PipelineRunResponse
+  attributes:
+    description: PipelineRunResponse
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/schemas/pipelines.py
+        symbol: PipelineRunResponse
+  metadata:
+    created_at: 2026-11-19T15:15:02.501Z
+    updated_at: 2026-11-19T15:15:02.501Z
+    version: 1
+api.response.pipeline-type-response:
+  id: cfbc5014-13d3-48fb-8985-9de1a26fc83e
+  path: api.response.pipeline-type-response
+  spec_node_id: api.response
+  type: response
+  layer_id: api
+  name: PipelineTypeResponse
+  attributes:
+    description: PipelineTypeResponse
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/schemas/pipelines.py
+        symbol: PipelineTypeResponse
+  metadata:
+    created_at: 2026-11-19T15:15:02.501Z
+    updated_at: 2026-11-19T15:15:02.501Z
+    version: 1
+api.response.predicate-response:
+  id: 24f55846-f7d9-4112-aab2-9a68444d5a46
+  path: api.response.predicate-response
+  spec_node_id: api.response
+  type: response
+  layer_id: api
+  name: PredicateResponse
+  attributes:
+    description: PredicateResponse
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/schemas/ontology.py
+        symbol: PredicateResponse
+  metadata:
+    created_at: 2026-11-19T15:15:02.501Z
+    updated_at: 2026-11-19T15:15:02.501Z
+    version: 1
+api.response.proposal-comparison-response:
+  id: 8cd81db0-fb66-40cd-8944-939b300bc4ca
+  path: api.response.proposal-comparison-response
+  spec_node_id: api.response
+  type: response
+  layer_id: api
+  name: ProposalComparisonResponse
+  attributes:
+    description: ProposalComparisonResponse
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/schemas/proposal_comparison.py
+        symbol: ProposalComparisonResponse
+  metadata:
+    created_at: 2026-11-19T15:15:02.501Z
+    updated_at: 2026-11-19T15:15:02.501Z
+    version: 1
+api.response.recognition-preview-response:
+  id: 6135a995-d81f-4831-a3ef-fd328c90537a
+  path: api.response.recognition-preview-response
+  spec_node_id: api.response
+  type: response
+  layer_id: api
+  name: RecognitionPreviewResponse
+  attributes:
+    description: RecognitionPreviewResponse
   source_reference:
     provenance: extracted
     locations:
       - file: local-server/adapters/web/schemas/extraction.py
-        symbol: ExtractTripleResponse
+        symbol: RecognitionPreviewResponse
   metadata:
-    created_at: 2026-05-11T12:03:00.691Z
-    updated_at: 2026-05-11T12:03:00.691Z
+    created_at: 2026-11-19T15:15:02.501Z
+    updated_at: 2026-11-19T15:15:02.501Z
+    version: 1
+api.response.resume-batch-response:
+  id: a86f4a1a-27ac-44f8-b9ac-e39c41a9044e
+  path: api.response.resume-batch-response
+  spec_node_id: api.response
+  type: response
+  layer_id: api
+  name: ResumeBatchResponse
+  attributes:
+    description: ResumeBatchResponse
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/schemas/pipelines.py
+        symbol: ResumeBatchResponse
+  metadata:
+    created_at: 2026-11-19T15:15:02.501Z
+    updated_at: 2026-11-19T15:15:02.501Z
+    version: 1
+api.response.revert-run-response:
+  id: e4da6e9e-7faa-4697-9d2b-8f2b1e6419ac
+  path: api.response.revert-run-response
+  spec_node_id: api.response
+  type: response
+  layer_id: api
+  name: RevertRunResponse
+  attributes:
+    description: RevertRunResponse
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/schemas/pipelines.py
+        symbol: RevertRunResponse
+  metadata:
+    created_at: 2026-11-19T15:15:02.501Z
+    updated_at: 2026-11-19T15:15:02.501Z
+    version: 1
+api.response.scheme-counts-response:
+  id: 05ca2c32-8468-4c4d-90b4-2067f6216055
+  path: api.response.scheme-counts-response
+  spec_node_id: api.response
+  type: response
+  layer_id: api
+  name: SchemeCountsResponse
+  attributes:
+    description: SchemeCountsResponse
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/schemas/ontology.py
+        symbol: SchemeCountsResponse
+  metadata:
+    created_at: 2026-11-19T15:15:02.501Z
+    updated_at: 2026-11-19T15:15:02.501Z
+    version: 1
+api.response.source-extract-response:
+  id: 6959dff5-e419-4130-9f40-2b19989e403a
+  path: api.response.source-extract-response
+  spec_node_id: api.response
+  type: response
+  layer_id: api
+  name: SourceExtractResponse
+  attributes:
+    description: SourceExtractResponse
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/schemas/sources.py
+        symbol: SourceExtractResponse
+  metadata:
+    created_at: 2026-11-19T15:15:02.501Z
+    updated_at: 2026-11-19T15:15:02.501Z
+    version: 1
+api.response.source-response:
+  id: 9c73c603-6fee-4dd5-90a5-b7154838ae2b
+  path: api.response.source-response
+  spec_node_id: api.response
+  type: response
+  layer_id: api
+  name: SourceResponse
+  attributes:
+    description: SourceResponse
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/schemas/sources.py
+        symbol: SourceResponse
+  metadata:
+    created_at: 2026-11-19T15:15:02.501Z
+    updated_at: 2026-11-19T15:15:02.501Z
+    version: 1
+api.response.source-text-response:
+  id: 04bd067b-80d8-4f98-bebc-de245ba834c6
+  path: api.response.source-text-response
+  spec_node_id: api.response
+  type: response
+  layer_id: api
+  name: SourceTextResponse
+  attributes:
+    description: SourceTextResponse
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/schemas/sources.py
+        symbol: SourceTextResponse
+  metadata:
+    created_at: 2026-11-19T15:15:02.501Z
+    updated_at: 2026-11-19T15:15:02.501Z
+    version: 1
+api.response.stats-trends-response:
+  id: 9df7a59b-8d21-4d65-b810-45ef5a8dd9e7
+  path: api.response.stats-trends-response
+  spec_node_id: api.response
+  type: response
+  layer_id: api
+  name: StatsTrendsResponse
+  attributes:
+    description: StatsTrendsResponse
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/schemas/admin.py
+        symbol: StatsTrendsResponse
+  metadata:
+    created_at: 2026-11-19T15:15:02.501Z
+    updated_at: 2026-11-19T15:15:02.501Z
+    version: 1
+api.response.workflow-run-response:
+  id: 7e3d1151-6acd-49e7-b705-6aabbca24fea
+  path: api.response.workflow-run-response
+  spec_node_id: api.response
+  type: response
+  layer_id: api
+  name: WorkflowRunResponse
+  attributes:
+    description: WorkflowRunResponse
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/schemas/reference.py
+        symbol: WorkflowRunResponse
+  metadata:
+    created_at: 2026-11-19T15:15:02.501Z
+    updated_at: 2026-11-19T15:15:02.501Z
+    version: 1
+api.response.gold-decision-response:
+  id: 0f1e23c6-0895-43ea-83fd-e4636e345fe3
+  path: api.response.gold-decision-response
+  spec_node_id: api.response
+  type: response
+  layer_id: api
+  name: GoldDecisionResponse
+  description: One reviewer or policy decision on a proposal operation (gold),
+    returned in a paged list.
+  attributes:
+    description: One reviewer or policy decision on a proposal operation (gold)
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/schemas/proposals.py
+        symbol: GoldDecisionResponse
+  metadata:
+    created_at: 2026-11-19T15:45:33.526Z
+    updated_at: 2026-11-19T15:45:33.526Z
+    version: 1
+api.response.candidate-item:
+  id: 1644bf64-8126-4770-8b4c-d08a4d81e969
+  path: api.response.candidate-item
+  spec_node_id: api.response
+  type: response
+  layer_id: api
+  name: CandidateItem
+  description: "A pipeline run's candidate, discriminated by candidate_type:
+    schema class, property, attribute or connection, triple, grounding or
+    refinement candidate."
+  attributes:
+    description: List of a run's candidates (discriminated union on candidate_type)
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/schemas/pipelines.py
+        symbol: CandidateItem
+  metadata:
+    created_at: 2026-11-19T15:45:33.526Z
+    updated_at: 2026-11-19T15:45:33.526Z
     version: 1

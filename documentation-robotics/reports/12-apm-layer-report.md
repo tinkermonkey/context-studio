@@ -16,35 +16,43 @@ Observability, monitoring, metrics, logging, and tracing.
 
 | Metric                    | Count |
 | ------------------------- | ----- |
-| Elements                  | 10    |
-| Intra-Layer Relationships | 4     |
-| Inter-Layer Relationships | 7     |
+| Elements                  | 17    |
+| Intra-Layer Relationships | 5     |
+| Inter-Layer Relationships | 14    |
 | Inbound Relationships     | 0     |
-| Outbound Relationships    | 7     |
+| Outbound Relationships    | 14    |
 
 **Cross-Layer References**:
 
-- **Downstream layers**: [Navigation](./11-navigation-layer-report.md), [UX](./10-ux-layer-report.md)
+- **Downstream layers**: [Application](./05-application-layer-report.md), [Navigation](./11-navigation-layer-report.md), [Technology](./06-technology-layer-report.md), [UX](./10-ux-layer-report.md)
 
 ## Intra-Layer Relationships
 
 ```mermaid
 flowchart LR
   subgraph apm
-    apm_alert_background_task_dead_letter_alert["Background Task Dead Letter Alert"]
-    apm_alert_llm_pipeline_failure_alert["LLM Pipeline Failure Alert"]
-    apm_alert_rate_limit_breach_alert["Rate Limit Breach Alert"]
+    apm_exporterconfig_browser_otlp_http_span_exporter["Browser OTLP HTTP Span Exporter"]
+    apm_exporterconfig_otlp_log_exporter["OTLP Log Exporter"]
+    apm_exporterconfig_otlp_span_exporter["OTLP Span Exporter"]
+    apm_instrumentationconfig_fast_api_sqlalchemy_httpx_instrumentation["FastAPI SQLAlchemy httpx Instrumentation"]
     apm_logconfiguration_context_studio_server_log_configuration["Context Studio Server Log Configuration"]
+    apm_logprocessor_otlp_log_bridge["OTLP Log Bridge"]
     apm_logprocessor_rotating_file_log_processor["Rotating File Log Processor"]
-    apm_metricinstrument_background_task_queue_depth["Background Task Queue Depth"]
-    apm_metricinstrument_llm_execution_tracker["LLM Execution Tracker"]
-    apm_metricinstrument_rag_processing_time["RAG Processing Time"]
     apm_span_api_request_span["API Request Span"]
+    apm_span_browser_http_client_span["Browser HTTP Client Span"]
+    apm_span_browser_navigation_span["Browser Navigation Span"]
     apm_span_database_query_span["Database Query Span"]
-    apm_alert_background_task_dead_letter_alert -->|monitors| apm_metricinstrument_background_task_queue_depth
-    apm_alert_background_task_dead_letter_alert -->|monitors| apm_span_api_request_span
-    apm_alert_llm_pipeline_failure_alert -->|monitors| apm_metricinstrument_llm_execution_tracker
-    apm_alert_rate_limit_breach_alert -->|monitors| apm_metricinstrument_rag_processing_time
+    apm_span_embedding_encode_span["Embedding Encode Span"]
+    apm_span_llm_completion_span["LLM Completion Span"]
+    apm_span_nlp_process_span["NLP Process Span"]
+    apm_span_sync_span["Sync Span"]
+    apm_traceconfiguration_browser_trace_configuration["Browser Trace Configuration"]
+    apm_traceconfiguration_server_trace_configuration["Server Trace Configuration"]
+    apm_logconfiguration_context_studio_server_log_configuration -->|aggregates| apm_exporterconfig_otlp_log_exporter
+    apm_logconfiguration_context_studio_server_log_configuration -->|aggregates| apm_logprocessor_otlp_log_bridge
+    apm_logconfiguration_context_studio_server_log_configuration -->|aggregates| apm_logprocessor_rotating_file_log_processor
+    apm_traceconfiguration_browser_trace_configuration -->|aggregates| apm_exporterconfig_browser_otlp_http_span_exporter
+    apm_traceconfiguration_server_trace_configuration -->|aggregates| apm_exporterconfig_otlp_span_exporter
   end
 ```
 
@@ -66,94 +74,118 @@ flowchart TB
   navigation["Navigation"]
   apm["APM"]
   testing["Testing"]
+  apm --> application
   apm --> navigation
+  apm --> technology
   apm --> ux
   class apm current
 ```
 
 ## Inter-Layer Relationships Table
 
-| Relationship ID                                  | Source Node                                        | Dest Node                                           | Dest Layer   | Predicate  | Cardinality  | Strength |
-| ------------------------------------------------ | -------------------------------------------------- | --------------------------------------------------- | ------------ | ---------- | ------------ | -------- |
-| `apm.metricinstrument.monitors.navigation.route` | `apm.metricinstrument.background-task-queue-depth` | `navigation.route.admin-route`                      | `navigation` | `monitors` | many-to-many | medium   |
-| `apm.metricinstrument.monitors.navigation.route` | `apm.metricinstrument.llm-execution-tracker`       | `navigation.route.rag-experiments-route`            | `navigation` | `monitors` | many-to-many | medium   |
-| `apm.metricinstrument.monitors.navigation.route` | `apm.metricinstrument.rag-processing-time`         | `navigation.route.rag-experiments-route`            | `navigation` | `monitors` | many-to-many | medium   |
-| `apm.metricinstrument.monitors.ux.view`          | `apm.metricinstrument.rag-processing-time`         | `ux.view.rag-experiments-view`                      | `ux`         | `monitors` | many-to-many | medium   |
-| `apm.span.monitors.navigation.navigationflow`    | `apm.span.api-request-span`                        | `navigation.navigationflow.ontology-hierarchy-flow` | `navigation` | `monitors` | many-to-many | medium   |
-| `apm.span.monitors.ux.view`                      | `apm.span.api-request-span`                        | `ux.view.rag-experiments-view`                      | `ux`         | `monitors` | many-to-many | medium   |
-| `apm.span.monitors.ux.view`                      | `apm.span.database-query-span`                     | `ux.view.datasets-view`                             | `ux`         | `monitors` | many-to-many | medium   |
+| Relationship ID                                                | Source Node                                                           | Dest Node                                                                 | Dest Layer    | Predicate  | Cardinality  | Strength |
+| -------------------------------------------------------------- | --------------------------------------------------------------------- | ------------------------------------------------------------------------- | ------------- | ---------- | ------------ | -------- |
+| `apm.instrumentationconfig.monitors.technology.systemsoftware` | `apm.instrumentationconfig.fast-api-sqlalchemy-httpx-instrumentation` | `technology.systemsoftware.fast-api`                                      | `technology`  | `monitors` | many-to-many | medium   |
+| `apm.instrumentationconfig.monitors.technology.systemsoftware` | `apm.instrumentationconfig.fast-api-sqlalchemy-httpx-instrumentation` | `technology.systemsoftware.httpx`                                         | `technology`  | `monitors` | many-to-many | medium   |
+| `apm.instrumentationconfig.monitors.technology.systemsoftware` | `apm.instrumentationconfig.fast-api-sqlalchemy-httpx-instrumentation` | `technology.systemsoftware.sqlalchemy`                                    | `technology`  | `monitors` | many-to-many | medium   |
+| `apm.span.monitors.navigation.navigationflow`                  | `apm.span.api-request-span`                                           | `navigation.navigationflow.ontology-hierarchy-flow`                       | `navigation`  | `monitors` | many-to-many | medium   |
+| `apm.span.monitors.ux.view`                                    | `apm.span.api-request-span`                                           | `ux.view.pipelines-view`                                                  | `ux`          | `monitors` | many-to-many | medium   |
+| `apm.span.monitors.ux.view`                                    | `apm.span.browser-http-client-span`                                   | `ux.view.app-shell-view`                                                  | `ux`          | `monitors` | many-to-many | medium   |
+| `apm.span.monitors.ux.view`                                    | `apm.span.browser-navigation-span`                                    | `ux.view.app-shell-view`                                                  | `ux`          | `monitors` | many-to-many | medium   |
+| `apm.span.monitors.ux.view`                                    | `apm.span.database-query-span`                                        | `ux.view.datasets-view`                                                   | `ux`          | `monitors` | many-to-many | medium   |
+| `apm.span.monitors.application.applicationcomponent`           | `apm.span.embedding-encode-span`                                      | `application.applicationcomponent.sentence-transformer-embedding-adapter` | `application` | `monitors` | many-to-many | medium   |
+| `apm.span.monitors.application.applicationcomponent`           | `apm.span.llm-completion-span`                                        | `application.applicationcomponent.anthropic-llm-provider`                 | `application` | `monitors` | many-to-many | medium   |
+| `apm.span.monitors.application.applicationcomponent`           | `apm.span.llm-completion-span`                                        | `application.applicationcomponent.open-ai-llm-provider`                   | `application` | `monitors` | many-to-many | medium   |
+| `apm.span.monitors.application.applicationcomponent`           | `apm.span.nlp-process-span`                                           | `application.applicationcomponent.spa-cy-nlp-processor`                   | `application` | `monitors` | many-to-many | medium   |
+| `apm.span.monitors.application.applicationcomponent`           | `apm.span.sync-span`                                                  | `application.applicationcomponent.duck-db-sync-adapter`                   | `application` | `monitors` | many-to-many | medium   |
+| `apm.span.monitors.application.applicationcomponent`           | `apm.span.sync-span`                                                  | `application.applicationcomponent.s3-sync-adapter`                        | `application` | `monitors` | many-to-many | medium   |
 
 ## Element Reference
 
-### Background Task Dead Letter Alert {#background-task-dead-letter-alert}
+### Browser OTLP HTTP Span Exporter {#browser-otlp-http-span-exporter}
 
-**ID**: `apm.alert.background-task-dead-letter-alert`
+**ID**: `apm.exporterconfig.browser-otlp-http-span-exporter`
 
-**Type**: `alert`
+**Type**: `exporterconfig`
 
-Alert triggered when background tasks accumulate in the dead-letter state in operations.db, indicating persistent failures in the admin bounded context
-
-#### Attributes
-
-| Name               | Value                                 |
-| ------------------ | ------------------------------------- |
-| condition          | dead_letter_task_count &gt; 0         |
-| description        | Background tasks in dead-letter state |
-| evaluationInterval | PT5M                                  |
-| severity           | warning                               |
-
-#### Relationships
-
-| Type        | Related Element                                    | Predicate  | Direction |
-| ----------- | -------------------------------------------------- | ---------- | --------- |
-| intra-layer | `apm.metricinstrument.background-task-queue-depth` | `monitors` | outbound  |
-| intra-layer | `apm.span.api-request-span`                        | `monitors` | outbound  |
-
-### LLM Pipeline Failure Alert {#llm-pipeline-failure-alert}
-
-**ID**: `apm.alert.llm-pipeline-failure-alert`
-
-**Type**: `alert`
-
-Alert triggered when LLM pipeline execution fails or times out, recorded in the operations.db pipeline_executions table with ERROR status
+OTLPTraceExporter over HTTP that the UX's tracer provider sends finished spans to, batched; a console exporter is added in development.
 
 #### Attributes
 
-| Name               | Value                                |
-| ------------------ | ------------------------------------ |
-| condition          | pipeline_execution.status == failed  |
-| description        | LLM pipeline execution failure alert |
-| evaluationInterval | PT1M                                 |
-| severity           | critical                             |
+| Name     | Value                                              |
+| -------- | -------------------------------------------------- |
+| endpoint | VITE_OTLP_ENDPOINT (default http://localhost:4318) |
+| type     | otlp                                               |
 
 #### Relationships
 
-| Type        | Related Element                              | Predicate  | Direction |
-| ----------- | -------------------------------------------- | ---------- | --------- |
-| intra-layer | `apm.metricinstrument.llm-execution-tracker` | `monitors` | outbound  |
+| Type        | Related Element                                      | Predicate    | Direction |
+| ----------- | ---------------------------------------------------- | ------------ | --------- |
+| intra-layer | `apm.traceconfiguration.browser-trace-configuration` | `aggregates` | inbound   |
 
-### Rate Limit Breach Alert {#rate-limit-breach-alert}
+### OTLP Log Exporter {#otlp-log-exporter}
 
-**ID**: `apm.alert.rate-limit-breach-alert`
+**ID**: `apm.exporterconfig.otlp-log-exporter`
 
-**Type**: `alert`
+**Type**: `exporterconfig`
 
-Warning alert when external reference API rate limits are approached — the reference adapter in adapters/reference enforces per-source limits from config.json
+OTLP log exporter over gRPC or HTTP, chosen by the configured protocol.
 
 #### Attributes
 
-| Name               | Value                                               |
-| ------------------ | --------------------------------------------------- |
-| condition          | external_api_request_rate &gt; rate_limit_threshold |
-| description        | External reference API rate limit approaching       |
-| evaluationInterval | PT1M                                                |
-| severity           | warning                                             |
+| Name     | Value                                    |
+| -------- | ---------------------------------------- |
+| endpoint | config.json telemetry grpc/http endpoint |
+| type     | otlp                                     |
 
 #### Relationships
 
-| Type        | Related Element                            | Predicate  | Direction |
-| ----------- | ------------------------------------------ | ---------- | --------- |
-| intra-layer | `apm.metricinstrument.rag-processing-time` | `monitors` | outbound  |
+| Type        | Related Element                                                | Predicate    | Direction |
+| ----------- | -------------------------------------------------------------- | ------------ | --------- |
+| intra-layer | `apm.logconfiguration.context-studio-server-log-configuration` | `aggregates` | inbound   |
+
+### OTLP Span Exporter {#otlp-span-exporter}
+
+**ID**: `apm.exporterconfig.otlp-span-exporter`
+
+**Type**: `exporterconfig`
+
+OTLP span exporter over gRPC or HTTP, chosen by the configured protocol.
+
+#### Attributes
+
+| Name     | Value                                    |
+| -------- | ---------------------------------------- |
+| endpoint | config.json telemetry grpc/http endpoint |
+| type     | otlp                                     |
+
+#### Relationships
+
+| Type        | Related Element                                     | Predicate    | Direction |
+| ----------- | --------------------------------------------------- | ------------ | --------- |
+| intra-layer | `apm.traceconfiguration.server-trace-configuration` | `aggregates` | inbound   |
+
+### FastAPI SQLAlchemy httpx Instrumentation {#fastapi-sqlalchemy-httpx-instrumentation}
+
+**ID**: `apm.instrumentationconfig.fast-api-sqlalchemy-httpx-instrumentation`
+
+**Type**: `instrumentationconfig`
+
+Auto-instrumentation of FastAPI requests, SQLAlchemy queries and httpx client calls.
+
+#### Attributes
+
+| Name | Value |
+| ---- | ----- |
+| type | auto  |
+
+#### Relationships
+
+| Type        | Related Element                        | Predicate  | Direction |
+| ----------- | -------------------------------------- | ---------- | --------- |
+| inter-layer | `technology.systemsoftware.fast-api`   | `monitors` | outbound  |
+| inter-layer | `technology.systemsoftware.httpx`      | `monitors` | outbound  |
+| inter-layer | `technology.systemsoftware.sqlalchemy` | `monitors` | outbound  |
 
 ### Context Studio Server Log Configuration {#context-studio-server-log-configuration}
 
@@ -170,6 +202,34 @@ Rotating file logger for the local-server. Configured via config.json logging se
 | minimumSeverity | INFO                        |
 | serviceName     | context-studio-local-server |
 
+#### Relationships
+
+| Type        | Related Element                                | Predicate    | Direction |
+| ----------- | ---------------------------------------------- | ------------ | --------- |
+| intra-layer | `apm.exporterconfig.otlp-log-exporter`         | `aggregates` | outbound  |
+| intra-layer | `apm.logprocessor.otlp-log-bridge`             | `aggregates` | outbound  |
+| intra-layer | `apm.logprocessor.rotating-file-log-processor` | `aggregates` | outbound  |
+
+### OTLP Log Bridge {#otlp-log-bridge}
+
+**ID**: `apm.logprocessor.otlp-log-bridge`
+
+**Type**: `logprocessor`
+
+Logging handler bridging Python log records to the OTLP log exporter.
+
+#### Attributes
+
+| Name | Value |
+| ---- | ----- |
+| type | batch |
+
+#### Relationships
+
+| Type        | Related Element                                                | Predicate    | Direction |
+| ----------- | -------------------------------------------------------------- | ------------ | --------- |
+| intra-layer | `apm.logconfiguration.context-studio-server-log-configuration` | `aggregates` | inbound   |
+
 ### Rotating File Log Processor {#rotating-file-log-processor}
 
 **ID**: `apm.logprocessor.rotating-file-log-processor`
@@ -185,78 +245,11 @@ Python RotatingFileHandler-based log processor writing to context_studio.log. Ro
 | enabled | true   |
 | type    | simple |
 
-### Background Task Queue Depth {#background-task-queue-depth}
-
-**ID**: `apm.metricinstrument.background-task-queue-depth`
-
-**Type**: `metricinstrument`
-
-Gauge instrument monitoring the number of pending and running background tasks managed by the admin bounded context
-
-#### Attributes
-
-| Name        | Value                                     |
-| ----------- | ----------------------------------------- |
-| description | Pending and running background task count |
-| enabled     | true                                      |
-| type        | Gauge                                     |
-| unit        | tasks                                     |
-
 #### Relationships
 
-| Type        | Related Element                               | Predicate  | Direction |
-| ----------- | --------------------------------------------- | ---------- | --------- |
-| inter-layer | `navigation.route.admin-route`                | `monitors` | outbound  |
-| intra-layer | `apm.alert.background-task-dead-letter-alert` | `monitors` | inbound   |
-
-### LLM Execution Tracker {#llm-execution-tracker}
-
-**ID**: `apm.metricinstrument.llm-execution-tracker`
-
-**Type**: `metricinstrument`
-
-Counter instrument tracking LLM API call counts, token usage, latency, and errors per pipeline execution — traced in operations.db pipeline_executions table
-
-#### Attributes
-
-| Name        | Value                               |
-| ----------- | ----------------------------------- |
-| description | LLM API call tracking per execution |
-| enabled     | true                                |
-| type        | Counter                             |
-| unit        | calls                               |
-
-#### Relationships
-
-| Type        | Related Element                          | Predicate  | Direction |
-| ----------- | ---------------------------------------- | ---------- | --------- |
-| inter-layer | `navigation.route.rag-experiments-route` | `monitors` | outbound  |
-| intra-layer | `apm.alert.llm-pipeline-failure-alert`   | `monitors` | inbound   |
-
-### RAG Processing Time {#rag-processing-time}
-
-**ID**: `apm.metricinstrument.rag-processing-time`
-
-**Type**: `metricinstrument`
-
-Histogram instrument measuring processing time in milliseconds for RAG pipeline execution in the extraction bounded context
-
-#### Attributes
-
-| Name        | Value                            |
-| ----------- | -------------------------------- |
-| description | RAG pipeline processing duration |
-| enabled     | true                             |
-| type        | Histogram                        |
-| unit        | ms                               |
-
-#### Relationships
-
-| Type        | Related Element                          | Predicate  | Direction |
-| ----------- | ---------------------------------------- | ---------- | --------- |
-| inter-layer | `navigation.route.rag-experiments-route` | `monitors` | outbound  |
-| inter-layer | `ux.view.rag-experiments-view`           | `monitors` | outbound  |
-| intra-layer | `apm.alert.rate-limit-breach-alert`      | `monitors` | inbound   |
+| Type        | Related Element                                                | Predicate    | Direction |
+| ----------- | -------------------------------------------------------------- | ------------ | --------- |
+| intra-layer | `apm.logconfiguration.context-studio-server-log-configuration` | `aggregates` | inbound   |
 
 ### API Request Span {#api-request-span}
 
@@ -286,8 +279,65 @@ Trace span representing the full duration of a single HTTP API request, from rec
 | Type        | Related Element                                     | Predicate  | Direction |
 | ----------- | --------------------------------------------------- | ---------- | --------- |
 | inter-layer | `navigation.navigationflow.ontology-hierarchy-flow` | `monitors` | outbound  |
-| inter-layer | `ux.view.rag-experiments-view`                      | `monitors` | outbound  |
-| intra-layer | `apm.alert.background-task-dead-letter-alert`       | `monitors` | inbound   |
+| inter-layer | `ux.view.pipelines-view`                            | `monitors` | outbound  |
+
+### Browser HTTP Client Span {#browser-http-client-span}
+
+**ID**: `apm.span.browser-http-client-span`
+
+**Type**: `span`
+
+UX span per API request made through the axios client (HTTP &lt;method&gt; &lt;url&gt;).
+
+#### Attributes
+
+| Name                   | Value  |
+| ---------------------- | ------ |
+| droppedAttributesCount | 0      |
+| droppedEventsCount     | 0      |
+| droppedLinksCount      | 0      |
+| endTimeUnixNano        | 0      |
+| parentSpanId           |        |
+| spanId                 |        |
+| spanKind               | CLIENT |
+| startTimeUnixNano      | 0      |
+| traceId                |        |
+| traceState             |        |
+
+#### Relationships
+
+| Type        | Related Element          | Predicate  | Direction |
+| ----------- | ------------------------ | ---------- | --------- |
+| inter-layer | `ux.view.app-shell-view` | `monitors` | outbound  |
+
+### Browser Navigation Span {#browser-navigation-span}
+
+**ID**: `apm.span.browser-navigation-span`
+
+**Type**: `span`
+
+UX span per router navigation (Navigation: &lt;pathname&gt;).
+
+#### Attributes
+
+| Name                   | Value    |
+| ---------------------- | -------- |
+| droppedAttributesCount | 0        |
+| droppedEventsCount     | 0        |
+| droppedLinksCount      | 0        |
+| endTimeUnixNano        | 0        |
+| parentSpanId           |          |
+| spanId                 |          |
+| spanKind               | INTERNAL |
+| startTimeUnixNano      | 0        |
+| traceId                |          |
+| traceState             |          |
+
+#### Relationships
+
+| Type        | Related Element          | Predicate  | Direction |
+| ----------- | ------------------------ | ---------- | --------- |
+| inter-layer | `ux.view.app-shell-view` | `monitors` | outbound  |
 
 ### Database Query Span {#database-query-span}
 
@@ -318,6 +368,152 @@ OpenTelemetry span covering SQLAlchemy database query execution across local.db 
 | ----------- | ----------------------- | ---------- | --------- |
 | inter-layer | `ux.view.datasets-view` | `monitors` | outbound  |
 
+### Embedding Encode Span {#embedding-encode-span}
+
+**ID**: `apm.span.embedding-encode-span`
+
+**Type**: `span`
+
+Span around sentence-transformer encoding (embedding.encode).
+
+#### Attributes
+
+| Name                   | Value    |
+| ---------------------- | -------- |
+| droppedAttributesCount | 0        |
+| droppedEventsCount     | 0        |
+| droppedLinksCount      | 0        |
+| endTimeUnixNano        | 0        |
+| parentSpanId           |          |
+| spanId                 |          |
+| spanKind               | INTERNAL |
+| startTimeUnixNano      | 0        |
+| traceId                |          |
+| traceState             |          |
+
+#### Relationships
+
+| Type        | Related Element                                                           | Predicate  | Direction |
+| ----------- | ------------------------------------------------------------------------- | ---------- | --------- |
+| inter-layer | `application.applicationcomponent.sentence-transformer-embedding-adapter` | `monitors` | outbound  |
+
+### LLM Completion Span {#llm-completion-span}
+
+**ID**: `apm.span.llm-completion-span`
+
+**Type**: `span`
+
+Span around each LLM completion call (llm.complete.anthropic, llm.complete.openai) with model and token attributes.
+
+#### Attributes
+
+| Name                   | Value  |
+| ---------------------- | ------ |
+| droppedAttributesCount | 0      |
+| droppedEventsCount     | 0      |
+| droppedLinksCount      | 0      |
+| endTimeUnixNano        | 0      |
+| parentSpanId           |        |
+| spanId                 |        |
+| spanKind               | CLIENT |
+| startTimeUnixNano      | 0      |
+| traceId                |        |
+| traceState             |        |
+
+#### Relationships
+
+| Type        | Related Element                                           | Predicate  | Direction |
+| ----------- | --------------------------------------------------------- | ---------- | --------- |
+| inter-layer | `application.applicationcomponent.anthropic-llm-provider` | `monitors` | outbound  |
+| inter-layer | `application.applicationcomponent.open-ai-llm-provider`   | `monitors` | outbound  |
+
+### NLP Process Span {#nlp-process-span}
+
+**ID**: `apm.span.nlp-process-span`
+
+**Type**: `span`
+
+Span around spaCy processing (nlp.process, nlp.process_open).
+
+#### Attributes
+
+| Name                   | Value    |
+| ---------------------- | -------- |
+| droppedAttributesCount | 0        |
+| droppedEventsCount     | 0        |
+| droppedLinksCount      | 0        |
+| endTimeUnixNano        | 0        |
+| parentSpanId           |          |
+| spanId                 |          |
+| spanKind               | INTERNAL |
+| startTimeUnixNano      | 0        |
+| traceId                |          |
+| traceState             |          |
+
+#### Relationships
+
+| Type        | Related Element                                         | Predicate  | Direction |
+| ----------- | ------------------------------------------------------- | ---------- | --------- |
+| inter-layer | `application.applicationcomponent.spa-cy-nlp-processor` | `monitors` | outbound  |
+
+### Sync Span {#sync-span}
+
+**ID**: `apm.span.sync-span`
+
+**Type**: `span`
+
+Spans around sync push and pull (sync.push/pull.duckdb, sync.push/pull.s3).
+
+#### Attributes
+
+| Name                   | Value  |
+| ---------------------- | ------ |
+| droppedAttributesCount | 0      |
+| droppedEventsCount     | 0      |
+| droppedLinksCount      | 0      |
+| endTimeUnixNano        | 0      |
+| parentSpanId           |        |
+| spanId                 |        |
+| spanKind               | CLIENT |
+| startTimeUnixNano      | 0      |
+| traceId                |        |
+| traceState             |        |
+
+#### Relationships
+
+| Type        | Related Element                                         | Predicate  | Direction |
+| ----------- | ------------------------------------------------------- | ---------- | --------- |
+| inter-layer | `application.applicationcomponent.duck-db-sync-adapter` | `monitors` | outbound  |
+| inter-layer | `application.applicationcomponent.s3-sync-adapter`      | `monitors` | outbound  |
+
+### Browser Trace Configuration {#browser-trace-configuration}
+
+**ID**: `apm.traceconfiguration.browser-trace-configuration`
+
+**Type**: `traceconfiguration`
+
+Web TracerProvider for the UX with an OTLP HTTP exporter (VITE_OTLP_ENDPOINT, default localhost:4318).
+
+#### Relationships
+
+| Type        | Related Element                                      | Predicate    | Direction |
+| ----------- | ---------------------------------------------------- | ------------ | --------- |
+| intra-layer | `apm.exporterconfig.browser-otlp-http-span-exporter` | `aggregates` | outbound  |
+
+### Server Trace Configuration {#server-trace-configuration}
+
+**ID**: `apm.traceconfiguration.server-trace-configuration`
+
+**Type**: `traceconfiguration`
+
+OpenTelemetry TracerProvider for local-server: resource, batch span processor and OTLP exporter, set up when telemetry is enabled in config.json.
+
+#### Relationships
+
+| Type        | Related Element                         | Predicate    | Direction |
+| ----------- | --------------------------------------- | ------------ | --------- |
+| intra-layer | `apm.exporterconfig.otlp-span-exporter` | `aggregates` | outbound  |
+
 ---
 
-Generated: 2026-11-17T18:49:10.650Z | Model Version: 0.1.0
+Generated: 2026-11-19T16:49:39.982Z | Model Version: 0.1.0

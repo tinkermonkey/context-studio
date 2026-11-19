@@ -67,59 +67,6 @@ api.requestbody.concept-scheme-update-request:
     created_at: 2026-05-08T11:44:58.497Z
     updated_at: 2026-05-08T11:44:58.497Z
     version: 1
-api.requestbody.external-reference-request:
-  id: d7477e52-018f-4fe7-85c3-1007089f0972
-  path: api.requestbody.external-reference-request
-  spec_node_id: api.requestbody
-  type: requestbody
-  layer_id: api
-  name: ExternalReferenceRequest
-  description: Request body containing external reference details to attach to an
-    ontology entity
-  source_reference:
-    provenance: extracted
-    locations:
-      - file: local-server/adapters/web/schemas/ontology.py
-        symbol: ExternalReferenceRequest
-  metadata:
-    created_at: 2026-05-08T11:44:58.847Z
-    updated_at: 2026-05-08T11:44:58.847Z
-    version: 1
-api.requestbody.lexical-sense-request:
-  id: ae11bf27-6408-480b-a976-118b73c7b06b
-  path: api.requestbody.lexical-sense-request
-  spec_node_id: api.requestbody
-  type: requestbody
-  layer_id: api
-  name: LexicalSenseRequest
-  description: Request body containing lexical sense details (label, language,
-    definition) for an ontology entity
-  source_reference:
-    provenance: extracted
-    locations:
-      - file: local-server/adapters/web/schemas/ontology.py
-        symbol: LexicalSenseRequest
-  metadata:
-    created_at: 2026-05-08T11:45:03.921Z
-    updated_at: 2026-05-08T11:45:03.921Z
-    version: 1
-api.requestbody.data-property-value-request:
-  id: f77efe88-b37d-4085-9785-bb8b2e1e5704
-  path: api.requestbody.data-property-value-request
-  spec_node_id: api.requestbody
-  type: requestbody
-  layer_id: api
-  name: DataPropertyValueRequest
-  description: Request body to set a typed data property value on an ontology entity
-  source_reference:
-    provenance: extracted
-    locations:
-      - file: local-server/adapters/web/schemas/ontology.py
-        symbol: DataPropertyValueRequest
-  metadata:
-    created_at: 2026-05-08T11:45:04.265Z
-    updated_at: 2026-05-08T11:45:04.265Z
-    version: 1
 api.requestbody.class-create-request:
   id: fd76382b-867a-4079-8e1f-08bddebd2045
   path: api.requestbody.class-create-request
@@ -296,77 +243,6 @@ api.requestbody.individual-class-list-request:
     created_at: 2026-05-08T11:45:18.603Z
     updated_at: 2026-05-08T11:45:18.603Z
     version: 1
-api.requestbody.changeset-create-request:
-  id: 27d7028e-0117-4e19-bbbe-4cb01b8c30f3
-  path: api.requestbody.changeset-create-request
-  spec_node_id: api.requestbody
-  type: requestbody
-  layer_id: api
-  name: ChangesetCreateRequest
-  description: Request body to create a new versioning changeset with title and
-    optional description
-  source_reference:
-    provenance: extracted
-    locations:
-      - file: local-server/adapters/web/schemas/versioning.py
-        symbol: ChangesetCreateRequest
-  metadata:
-    created_at: 2026-05-08T11:46:04.058Z
-    updated_at: 2026-05-08T11:46:04.058Z
-    version: 1
-api.requestbody.reject-proposal-request:
-  id: e6f80079-a4f2-414b-9729-b1a1e280202f
-  path: api.requestbody.reject-proposal-request
-  spec_node_id: api.requestbody
-  type: requestbody
-  layer_id: api
-  name: RejectProposalRequest
-  description: Request body to reject a merge proposal with a mandatory rejection reason
-  source_reference:
-    provenance: extracted
-    locations:
-      - file: local-server/adapters/web/schemas/versioning.py
-        symbol: RejectProposalRequest
-  metadata:
-    created_at: 2026-05-08T11:46:04.474Z
-    updated_at: 2026-05-08T11:46:04.474Z
-    version: 1
-api.requestbody.resolve-conflicts-request:
-  id: 50e16d8c-63fb-4ac6-b113-49628030ca5e
-  path: api.requestbody.resolve-conflicts-request
-  spec_node_id: api.requestbody
-  type: requestbody
-  layer_id: api
-  name: ResolveConflictsRequest
-  description: Request body containing resolution decisions for each conflict in a
-    merge proposal
-  source_reference:
-    provenance: extracted
-    locations:
-      - file: local-server/adapters/web/schemas/versioning.py
-        symbol: ResolveConflictsRequest
-  metadata:
-    created_at: 2026-05-08T11:46:04.900Z
-    updated_at: 2026-05-08T11:46:04.900Z
-    version: 1
-api.requestbody.auto-resolve-conflicts-request:
-  id: dff8f9d9-52c7-4a12-b7cd-a8c88e94747a
-  path: api.requestbody.auto-resolve-conflicts-request
-  spec_node_id: api.requestbody
-  type: requestbody
-  layer_id: api
-  name: AutoResolveConflictsRequest
-  description: Request body specifying automatic conflict resolution strategy
-    (e.g., accept-ours, accept-theirs)
-  source_reference:
-    provenance: extracted
-    locations:
-      - file: local-server/adapters/web/schemas/versioning.py
-        symbol: AutoResolveConflictsRequest
-  metadata:
-    created_at: 2026-05-08T11:46:05.337Z
-    updated_at: 2026-05-08T11:46:05.337Z
-    version: 1
 api.requestbody.cycle-check-request:
   id: a8e45720-a421-49d0-ab4e-3827df9ad9fb
   path: api.requestbody.cycle-check-request
@@ -402,24 +278,6 @@ api.requestbody.sparqlrequest:
   metadata:
     created_at: 2026-05-08T11:46:33.293Z
     updated_at: 2026-05-08T11:46:33.293Z
-    version: 1
-api.requestbody.serialization-scope-request:
-  id: 7af4488b-de76-46bc-922b-fac525cc61ed
-  path: api.requestbody.serialization-scope-request
-  spec_node_id: api.requestbody
-  type: requestbody
-  layer_id: api
-  name: SerializationScopeRequest
-  description: Request body defining the scope (taxonomy IDs, entity types, depth)
-    for a graph serialization export
-  source_reference:
-    provenance: extracted
-    locations:
-      - file: local-server/adapters/web/schemas/interchange.py
-        symbol: SerializationScopeRequest
-  metadata:
-    created_at: 2026-05-08T11:46:59.822Z
-    updated_at: 2026-05-08T11:46:59.822Z
     version: 1
 api.requestbody.export-request:
   id: cc5cb7d3-f452-4c17-915c-c5f9e2f5801e
@@ -547,60 +405,6 @@ api.requestbody.config-section-update-request:
     created_at: 2026-05-08T11:47:36.870Z
     updated_at: 2026-05-08T11:47:36.870Z
     version: 1
-api.requestbody.pipeline-configuration-create:
-  id: 169fe0f4-4410-48e6-8515-94ba35085f15
-  path: api.requestbody.pipeline-configuration-create
-  spec_node_id: api.requestbody
-  type: requestbody
-  layer_id: api
-  name: PipelineConfigurationCreate
-  description: Request body to create a new LLM pipeline configuration with
-    provider, model, and parameter settings
-  source_reference:
-    provenance: extracted
-    locations:
-      - file: local-server/adapters/web/schemas/pipeline.py
-        symbol: PipelineConfigurationCreate
-  metadata:
-    created_at: 2026-05-08T11:47:51.396Z
-    updated_at: 2026-05-08T11:47:51.396Z
-    version: 1
-api.requestbody.pipeline-configuration-update:
-  id: 77c1880a-9c95-4587-b0d1-d40aa8756733
-  path: api.requestbody.pipeline-configuration-update
-  spec_node_id: api.requestbody
-  type: requestbody
-  layer_id: api
-  name: PipelineConfigurationUpdate
-  description: Request body to update an existing LLM pipeline configuration with
-    new provider or model settings
-  source_reference:
-    provenance: extracted
-    locations:
-      - file: local-server/adapters/web/schemas/pipeline.py
-        symbol: PipelineConfigurationUpdate
-  metadata:
-    created_at: 2026-05-08T11:47:51.876Z
-    updated_at: 2026-05-08T11:47:51.876Z
-    version: 1
-api.requestbody.pipeline-execute-request:
-  id: 76dc6d6b-ca93-49c6-aa0b-116f267f4569
-  path: api.requestbody.pipeline-execute-request
-  spec_node_id: api.requestbody
-  type: requestbody
-  layer_id: api
-  name: PipelineExecuteRequest
-  description: Request body specifying pipeline ID and input payload to execute an
-    LLM pipeline
-  source_reference:
-    provenance: extracted
-    locations:
-      - file: local-server/adapters/web/schemas/pipeline.py
-        symbol: PipelineExecuteRequest
-  metadata:
-    created_at: 2026-05-08T11:47:52.352Z
-    updated_at: 2026-05-08T11:47:52.352Z
-    version: 1
 api.requestbody.taxonomy-publish-request:
   id: fdadf165-5068-4314-ac25-34b28ec8b41d
   path: api.requestbody.taxonomy-publish-request
@@ -618,21 +422,464 @@ api.requestbody.taxonomy-publish-request:
     created_at: 2026-05-11T12:02:52.577Z
     updated_at: 2026-05-11T12:02:52.577Z
     version: 1
-api.requestbody.extract-triple-request:
-  id: 2a9b9769-ff7c-4064-8cc4-fbaa547692fd
-  path: api.requestbody.extract-triple-request
+api.requestbody.accept-rest-request:
+  id: 55fa8cce-d2a8-46a9-aa3a-5bb9c85ff999
+  path: api.requestbody.accept-rest-request
   spec_node_id: api.requestbody
   type: requestbody
   layer_id: api
-  name: ExtractTripleRequest
-  description: Request body for extracting RDF triples from text with ontology
-    context and extraction options
+  name: AcceptRestRequest
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/schemas/proposal_comparison.py
+        symbol: AcceptRestRequest
+  metadata:
+    created_at: 2026-11-19T15:15:02.501Z
+    updated_at: 2026-11-19T15:15:02.501Z
+    version: 1
+api.requestbody.add-individual-request:
+  id: 0fa41ebc-e55f-4217-bf52-2b629dff4bfc
+  path: api.requestbody.add-individual-request
+  spec_node_id: api.requestbody
+  type: requestbody
+  layer_id: api
+  name: AddIndividualRequest
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/schemas/proposals.py
+        symbol: AddIndividualRequest
+  metadata:
+    created_at: 2026-11-19T15:15:02.501Z
+    updated_at: 2026-11-19T15:15:02.501Z
+    version: 1
+api.requestbody.apply-run-request:
+  id: 154e9615-4c61-46b3-a29c-035449db8aeb
+  path: api.requestbody.apply-run-request
+  spec_node_id: api.requestbody
+  type: requestbody
+  layer_id: api
+  name: ApplyRunRequest
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/schemas/pipelines.py
+        symbol: ApplyRunRequest
+  metadata:
+    created_at: 2026-11-19T15:15:02.501Z
+    updated_at: 2026-11-19T15:15:02.501Z
+    version: 1
+api.requestbody.approval-policy-request:
+  id: 1e463c6d-ff27-4a6e-8923-dc73f63c21c7
+  path: api.requestbody.approval-policy-request
+  spec_node_id: api.requestbody
+  type: requestbody
+  layer_id: api
+  name: ApprovalPolicyRequest
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/schemas/proposals.py
+        symbol: ApprovalPolicyRequest
+  metadata:
+    created_at: 2026-11-19T15:15:02.501Z
+    updated_at: 2026-11-19T15:15:02.501Z
+    version: 1
+api.requestbody.attribute-definition-create-request:
+  id: 50984102-d964-4149-b4a6-a6fa20e15b59
+  path: api.requestbody.attribute-definition-create-request
+  spec_node_id: api.requestbody
+  type: requestbody
+  layer_id: api
+  name: AttributeDefinitionCreateRequest
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/schemas/ontology.py
+        symbol: AttributeDefinitionCreateRequest
+  metadata:
+    created_at: 2026-11-19T15:15:02.501Z
+    updated_at: 2026-11-19T15:15:02.501Z
+    version: 1
+api.requestbody.attribute-definition-update-request:
+  id: 80596ca0-ae52-4c29-bef4-9df62aa84f59
+  path: api.requestbody.attribute-definition-update-request
+  spec_node_id: api.requestbody
+  type: requestbody
+  layer_id: api
+  name: AttributeDefinitionUpdateRequest
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/schemas/ontology.py
+        symbol: AttributeDefinitionUpdateRequest
+  metadata:
+    created_at: 2026-11-19T15:15:02.501Z
+    updated_at: 2026-11-19T15:15:02.501Z
+    version: 1
+api.requestbody.change-proposal-apply-request:
+  id: f2ce40ad-fac1-4f20-a346-c1c42e7f5756
+  path: api.requestbody.change-proposal-apply-request
+  spec_node_id: api.requestbody
+  type: requestbody
+  layer_id: api
+  name: ChangeProposalApplyRequest
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/schemas/proposals.py
+        symbol: ChangeProposalApplyRequest
+  metadata:
+    created_at: 2026-11-19T15:15:02.501Z
+    updated_at: 2026-11-19T15:15:02.501Z
+    version: 1
+api.requestbody.change-proposal-create-request:
+  id: dac49f48-eeae-441f-b069-6b729f0cc90a
+  path: api.requestbody.change-proposal-create-request
+  spec_node_id: api.requestbody
+  type: requestbody
+  layer_id: api
+  name: ChangeProposalCreateRequest
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/schemas/proposals.py
+        symbol: ChangeProposalCreateRequest
+  metadata:
+    created_at: 2026-11-19T15:15:02.501Z
+    updated_at: 2026-11-19T15:15:02.501Z
+    version: 1
+api.requestbody.change-proposal-landed-request:
+  id: dcec558c-c708-4a20-831b-7317b4a423bd
+  path: api.requestbody.change-proposal-landed-request
+  spec_node_id: api.requestbody
+  type: requestbody
+  layer_id: api
+  name: ChangeProposalLandedRequest
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/schemas/proposals.py
+        symbol: ChangeProposalLandedRequest
+  metadata:
+    created_at: 2026-11-19T15:15:02.502Z
+    updated_at: 2026-11-19T15:15:02.502Z
+    version: 1
+api.requestbody.change-proposal-reopen-request:
+  id: 4f327465-f1f5-4778-b79c-c63d6a22230a
+  path: api.requestbody.change-proposal-reopen-request
+  spec_node_id: api.requestbody
+  type: requestbody
+  layer_id: api
+  name: ChangeProposalReopenRequest
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/schemas/proposals.py
+        symbol: ChangeProposalReopenRequest
+  metadata:
+    created_at: 2026-11-19T15:15:02.502Z
+    updated_at: 2026-11-19T15:15:02.502Z
+    version: 1
+api.requestbody.claim-verdict-request:
+  id: 73ec548b-3e08-40be-8cd7-97d2e6b6d8a6
+  path: api.requestbody.claim-verdict-request
+  spec_node_id: api.requestbody
+  type: requestbody
+  layer_id: api
+  name: ClaimVerdictRequest
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/schemas/claims.py
+        symbol: ClaimVerdictRequest
+  metadata:
+    created_at: 2026-11-19T15:15:02.502Z
+    updated_at: 2026-11-19T15:15:02.502Z
+    version: 1
+api.requestbody.claims-submit-request:
+  id: 1416c0bf-2594-41ab-a037-5b94f5d90e74
+  path: api.requestbody.claims-submit-request
+  spec_node_id: api.requestbody
+  type: requestbody
+  layer_id: api
+  name: ClaimsSubmitRequest
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/schemas/claims.py
+        symbol: ClaimsSubmitRequest
+  metadata:
+    created_at: 2026-11-19T15:15:02.502Z
+    updated_at: 2026-11-19T15:15:02.502Z
+    version: 1
+api.requestbody.dataset-create-request:
+  id: be2ac174-2292-429f-8f81-f98b4222d983
+  path: api.requestbody.dataset-create-request
+  spec_node_id: api.requestbody
+  type: requestbody
+  layer_id: api
+  name: DatasetCreateRequest
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/schemas/ontology.py
+        symbol: DatasetCreateRequest
+  metadata:
+    created_at: 2026-11-19T15:15:02.502Z
+    updated_at: 2026-11-19T15:15:02.502Z
+    version: 1
+api.requestbody.dr-spec-drift-request:
+  id: 992d59f8-d05b-4ab0-90f8-c85766735a69
+  path: api.requestbody.dr-spec-drift-request
+  spec_node_id: api.requestbody
+  type: requestbody
+  layer_id: api
+  name: DrSpecDriftRequest
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/schemas/drift.py
+        symbol: DrSpecDriftRequest
+  metadata:
+    created_at: 2026-11-19T15:15:02.502Z
+    updated_at: 2026-11-19T15:15:02.502Z
+    version: 1
+api.requestbody.enqueue-batch-runs-request:
+  id: 2699e916-bd58-4acb-b354-5bf2c65751b4
+  path: api.requestbody.enqueue-batch-runs-request
+  spec_node_id: api.requestbody
+  type: requestbody
+  layer_id: api
+  name: EnqueueBatchRunsRequest
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/schemas/pipelines.py
+        symbol: EnqueueBatchRunsRequest
+  metadata:
+    created_at: 2026-11-19T15:15:02.502Z
+    updated_at: 2026-11-19T15:15:02.502Z
+    version: 1
+api.requestbody.grounding-workflow-create:
+  id: 32bd3b6a-2768-4a55-84e4-8ad551a76c20
+  path: api.requestbody.grounding-workflow-create
+  spec_node_id: api.requestbody
+  type: requestbody
+  layer_id: api
+  name: GroundingWorkflowCreate
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/schemas/reference.py
+        symbol: GroundingWorkflowCreate
+  metadata:
+    created_at: 2026-11-19T15:15:02.502Z
+    updated_at: 2026-11-19T15:15:02.502Z
+    version: 1
+api.requestbody.grounding-workflow-update:
+  id: 6658ef3c-93e7-4564-b6f3-a135833eadc9
+  path: api.requestbody.grounding-workflow-update
+  spec_node_id: api.requestbody
+  type: requestbody
+  layer_id: api
+  name: GroundingWorkflowUpdate
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/schemas/reference.py
+        symbol: GroundingWorkflowUpdate
+  metadata:
+    created_at: 2026-11-19T15:15:02.502Z
+    updated_at: 2026-11-19T15:15:02.502Z
+    version: 1
+api.requestbody.pair-decision-request:
+  id: f78c9174-c057-44d1-9659-ed0781ea856e
+  path: api.requestbody.pair-decision-request
+  spec_node_id: api.requestbody
+  type: requestbody
+  layer_id: api
+  name: PairDecisionRequest
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/schemas/proposal_comparison.py
+        symbol: PairDecisionRequest
+  metadata:
+    created_at: 2026-11-19T15:15:02.502Z
+    updated_at: 2026-11-19T15:15:02.502Z
+    version: 1
+api.requestbody.recognition-preview-request:
+  id: 437c9908-e722-471d-86c3-083744fe7dec
+  path: api.requestbody.recognition-preview-request
+  spec_node_id: api.requestbody
+  type: requestbody
+  layer_id: api
+  name: RecognitionPreviewRequest
   source_reference:
     provenance: extracted
     locations:
       - file: local-server/adapters/web/schemas/extraction.py
-        symbol: ExtractTripleRequest
+        symbol: RecognitionPreviewRequest
   metadata:
-    created_at: 2026-05-11T12:02:53.611Z
-    updated_at: 2026-05-11T12:02:53.611Z
+    created_at: 2026-11-19T15:15:02.502Z
+    updated_at: 2026-11-19T15:15:02.502Z
+    version: 1
+api.requestbody.send-message-request:
+  id: 33d4fbd1-e722-4297-8f0f-384958440df0
+  path: api.requestbody.send-message-request
+  spec_node_id: api.requestbody
+  type: requestbody
+  layer_id: api
+  name: SendMessageRequest
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/schemas/chat.py
+        symbol: SendMessageRequest
+  metadata:
+    created_at: 2026-11-19T15:15:02.502Z
+    updated_at: 2026-11-19T15:15:02.502Z
+    version: 1
+api.requestbody.source-extract-request:
+  id: 1cdccc94-e021-4fe8-b9b1-945c43aea4fc
+  path: api.requestbody.source-extract-request
+  spec_node_id: api.requestbody
+  type: requestbody
+  layer_id: api
+  name: SourceExtractRequest
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/schemas/sources.py
+        symbol: SourceExtractRequest
+  metadata:
+    created_at: 2026-11-19T15:15:02.502Z
+    updated_at: 2026-11-19T15:15:02.502Z
+    version: 1
+api.requestbody.change-proposal-reject-request:
+  id: 6bd9313f-caf6-463f-b6da-a160e5ca06ab
+  path: api.requestbody.change-proposal-reject-request
+  spec_node_id: api.requestbody
+  type: requestbody
+  layer_id: api
+  name: ChangeProposalRejectRequest
+  description: Operations to reject (all pending or failed ones when omitted) and
+    an optional note stored as each operation's reason.
+  attributes:
+    required: true
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/schemas/proposals.py
+        symbol: ChangeProposalRejectRequest
+  metadata:
+    created_at: 2026-11-19T15:45:33.526Z
+    updated_at: 2026-11-19T15:45:33.526Z
+    version: 1
+api.requestbody.pipeline-configuration-create-request:
+  id: 26397492-62eb-4e5f-b000-a7ad0a4a07d7
+  path: api.requestbody.pipeline-configuration-create-request
+  spec_node_id: api.requestbody
+  type: requestbody
+  layer_id: api
+  name: PipelineConfigurationCreateRequest
+  description: Request body for creating a user pipeline configuration of an implementation.
+  attributes:
+    required: true
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/schemas/pipelines.py
+        symbol: PipelineConfigurationCreateRequest
+  metadata:
+    created_at: 2026-11-19T15:45:33.526Z
+    updated_at: 2026-11-19T15:45:33.526Z
+    version: 1
+api.requestbody.pipeline-configuration-update-request:
+  id: 659466c5-d13b-428b-b502-cba67e328134
+  path: api.requestbody.pipeline-configuration-update-request
+  spec_node_id: api.requestbody
+  type: requestbody
+  layer_id: api
+  name: PipelineConfigurationUpdateRequest
+  description: Request body for updating a user pipeline configuration.
+  attributes:
+    required: true
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/schemas/pipelines.py
+        symbol: PipelineConfigurationUpdateRequest
+  metadata:
+    created_at: 2026-11-19T15:45:33.526Z
+    updated_at: 2026-11-19T15:45:33.526Z
+    version: 1
+api.requestbody.pipeline-run-request:
+  id: b4605e94-acbd-4c03-a5bb-422403428835
+  path: api.requestbody.pipeline-run-request
+  spec_node_id: api.requestbody
+  type: requestbody
+  layer_id: api
+  name: PipelineRunRequest
+  description: "Polymorphic request to run a pipeline of a type: the source, the
+    selected implementation and configuration, and run parameters."
+  attributes:
+    required: true
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/schemas/pipelines.py
+        symbol: PipelineRunRequest
+  metadata:
+    created_at: 2026-11-19T15:45:33.526Z
+    updated_at: 2026-11-19T15:45:33.526Z
+    version: 1
+api.requestbody.import-ontology-upload:
+  id: 7fdd2c20-43d6-4f28-9f69-94a7d269cac8
+  path: api.requestbody.import-ontology-upload
+  spec_node_id: api.requestbody
+  type: requestbody
+  layer_id: api
+  name: Import Ontology Upload
+  description: "multipart/form-data upload for an ontology import: format, the
+    file, dry_run and conflict resolutions (FastAPI form parameters, no Pydantic
+    model)."
+  attributes:
+    required: true
+  metadata:
+    created_at: 2026-11-19T15:45:33.526Z
+    updated_at: 2026-11-19T15:45:33.526Z
+    version: 1
+api.requestbody.add-source-request:
+  id: 1c4f3b17-5d3b-4b4f-99c9-642623a9afe2
+  path: api.requestbody.add-source-request
+  spec_node_id: api.requestbody
+  type: requestbody
+  layer_id: api
+  name: Add Source Request
+  description: Either a multipart/form-data file upload (PDF, Markdown, HTML or
+    plain text) or a JSON body with a url to fetch or a title and pasted text
+    (read from the request in the handler, no Pydantic model).
+  attributes:
+    required: true
+  metadata:
+    created_at: 2026-11-19T15:45:33.526Z
+    updated_at: 2026-11-19T15:45:33.526Z
+    version: 1
+api.requestbody.bundle-document:
+  id: 2bd95fa7-9654-4673-94b1-6b60a9e3b53c
+  path: api.requestbody.bundle-document
+  spec_node_id: api.requestbody
+  type: requestbody
+  layer_id: api
+  name: Bundle Document
+  description: A context-studio-bundle JSON document (v1; v0 still imports), taken
+    as a free-form object.
+  attributes:
+    required: true
+  metadata:
+    created_at: 2026-11-19T15:45:33.526Z
+    updated_at: 2026-11-19T15:45:33.526Z
     version: 1

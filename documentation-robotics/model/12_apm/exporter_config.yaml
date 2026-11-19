@@ -1,0 +1,60 @@
+apm.exporterconfig.otlp-span-exporter:
+  id: 05435768-1f54-4e06-ab77-06fcdbcb5d28
+  path: apm.exporterconfig.otlp-span-exporter
+  spec_node_id: apm.exporterconfig
+  type: exporterconfig
+  layer_id: apm
+  name: OTLP Span Exporter
+  description: OTLP span exporter over gRPC or HTTP, chosen by the configured protocol.
+  attributes:
+    type: otlp
+    endpoint: config.json telemetry grpc/http endpoint
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/telemetry/exporters.py
+        symbol: create_span_exporter
+  metadata:
+    created_at: 2026-11-19T15:03:42.142Z
+    updated_at: 2026-11-19T15:03:42.142Z
+    version: 1
+apm.exporterconfig.otlp-log-exporter:
+  id: 78ecad9c-6b7b-43b8-b112-6b15fcbe5f7d
+  path: apm.exporterconfig.otlp-log-exporter
+  spec_node_id: apm.exporterconfig
+  type: exporterconfig
+  layer_id: apm
+  name: OTLP Log Exporter
+  description: OTLP log exporter over gRPC or HTTP, chosen by the configured protocol.
+  attributes:
+    type: otlp
+    endpoint: config.json telemetry grpc/http endpoint
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/telemetry/exporters.py
+        symbol: create_log_exporter
+  metadata:
+    created_at: 2026-11-19T15:03:42.143Z
+    updated_at: 2026-11-19T15:03:42.143Z
+    version: 1
+apm.exporterconfig.browser-otlp-http-span-exporter:
+  id: 51985961-a19b-4116-a567-fa4d581b30f3
+  path: apm.exporterconfig.browser-otlp-http-span-exporter
+  spec_node_id: apm.exporterconfig
+  type: exporterconfig
+  layer_id: apm
+  name: Browser OTLP HTTP Span Exporter
+  description: OTLPTraceExporter over HTTP that the UX's tracer provider sends
+    finished spans to, batched; a console exporter is added in development.
+  attributes:
+    type: otlp
+    endpoint: VITE_OTLP_ENDPOINT (default http://localhost:4318)
+  source_reference:
+    provenance: manual
+    locations:
+      - file: ux/src/telemetry/tracer.ts
+  metadata:
+    created_at: 2026-11-19T16:40:33.684Z
+    updated_at: 2026-11-19T16:40:33.684Z
+    version: 1

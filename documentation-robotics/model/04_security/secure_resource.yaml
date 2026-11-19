@@ -1,0 +1,101 @@
+security.secureresource.local-rest-api:
+  id: 2dc32116-a105-4aa2-add4-7647e88a823a
+  path: security.secureresource.local-rest-api
+  spec_node_id: security.secureresource
+  type: secureresource
+  layer_id: security
+  name: Local REST API
+  description: The unauthenticated REST API on 127.0.0.1:8000, guarded by
+    Origin/Host checks and loopback binding.
+  attributes:
+    resource: http://127.0.0.1:8000/api
+    type: api
+  source_reference:
+    provenance: manual
+    locations:
+      - file: README.md
+  metadata:
+    created_at: 2026-11-19T16:18:36.732Z
+    updated_at: 2026-11-19T16:18:36.732Z
+    version: 1
+security.secureresource.mcp-endpoint:
+  id: f283af1f-be75-4b51-9166-4e2450d650dd
+  path: security.secureresource.mcp-endpoint
+  spec_node_id: security.secureresource
+  type: secureresource
+  layer_id: security
+  name: MCP Endpoint
+  description: "The /mcp endpoint on the running app: bearer token, loopback only,
+    DNS-rebinding protection."
+  attributes:
+    resource: http://127.0.0.1:8000/mcp
+    type: api
+  source_reference:
+    provenance: manual
+    locations:
+      - file: README.md
+  metadata:
+    created_at: 2026-11-19T16:18:36.733Z
+    updated_at: 2026-11-19T16:18:36.733Z
+    version: 1
+security.secureresource.configuration-file:
+  id: 97c8f3e2-8bcd-4c35-a14f-c3835f0fada1
+  path: security.secureresource.configuration-file
+  spec_node_id: security.secureresource
+  type: secureresource
+  layer_id: security
+  name: Configuration File
+  description: "config.json: holds LLM provider keys, the MCP token, S3 and
+    Workers AI credentials; untracked since #1378 (config.example.json is the
+    template)."
+  attributes:
+    resource: local-server/config.json
+    type: file
+  source_reference:
+    provenance: manual
+    locations:
+      - file: README.md
+  metadata:
+    created_at: 2026-11-19T16:18:36.733Z
+    updated_at: 2026-11-19T16:18:36.733Z
+    version: 1
+security.secureresource.workspace-databases:
+  id: 6a30454b-db8d-4221-aef4-31b9ece5ad69
+  path: security.secureresource.workspace-databases
+  spec_node_id: security.secureresource
+  type: secureresource
+  layer_id: security
+  name: Workspace Databases
+  description: local.db (ontology, datasets, sources, proposals, decisions,
+    claims) and operations.db (pipeline runs, LLM traces, chat).
+  attributes:
+    resource: local.db, operations.db
+    type: database
+  source_reference:
+    provenance: manual
+    locations:
+      - file: CLAUDE.md
+  metadata:
+    created_at: 2026-11-19T16:18:36.733Z
+    updated_at: 2026-11-19T16:18:36.733Z
+    version: 1
+security.secureresource.vite-dev-server:
+  id: 90cf6d11-cb48-423c-8d57-2a3a20bd8b6e
+  path: security.secureresource.vite-dev-server
+  spec_node_id: security.secureresource
+  type: secureresource
+  layer_id: security
+  name: Vite Dev Server
+  description: npm run dev serves the UI and proxies /api to the back end; it
+    listens on all interfaces.
+  attributes:
+    resource: ux dev server (port 3100) proxying /api
+    type: ui
+  source_reference:
+    provenance: manual
+    locations:
+      - file: README.md
+  metadata:
+    created_at: 2026-11-19T16:18:36.733Z
+    updated_at: 2026-11-19T16:18:36.733Z
+    version: 1

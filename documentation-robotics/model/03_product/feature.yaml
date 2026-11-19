@@ -1,0 +1,436 @@
+product.feature.proposal-review-page:
+  id: ff4fcd32-3de3-4f39-bf0c-da37e372efff
+  path: product.feature.proposal-review-page
+  spec_node_id: product.feature
+  type: feature
+  layer_id: product
+  name: Proposal Review Page
+  description: "/app/proposals/$id/review: the source beside the candidates,
+    review pills with hover overlays, the review inspector, tier control and
+    reject-the-rest."
+  attributes:
+    priority: critical
+    status: delivered
+  metadata:
+    created_at: 2026-11-19T16:21:41.307Z
+    updated_at: 2026-11-19T16:21:41.307Z
+    version: 1
+product.feature.proposal-queue-and-detail:
+  id: a8577e48-5a9d-4764-97e4-e7bcfed3f854
+  path: product.feature.proposal-queue-and-detail
+  spec_node_id: product.feature
+  type: feature
+  layer_id: product
+  name: Proposal Queue and Detail
+  description: Proposal list with the needs-decision banner, mechanical threshold,
+    tiered operations, conflict and in-use cards, apply, revert and landing
+    state.
+  attributes:
+    priority: high
+    status: delivered
+  metadata:
+    created_at: 2026-11-19T16:21:41.307Z
+    updated_at: 2026-11-19T16:21:41.307Z
+    version: 1
+product.feature.compare-two-pipelines:
+  id: bdc6ade6-f0bc-4470-931a-0cddc4adb797
+  path: product.feature.compare-two-pipelines
+  spec_node_id: product.feature
+  type: feature
+  layer_id: product
+  name: Compare Two Pipelines
+  description: "/app/proposals/$id/compare/$otherId: two pipelines' proposals for
+    one source, decided once for both."
+  attributes:
+    priority: medium
+    status: delivered
+  metadata:
+    created_at: 2026-11-19T16:21:41.307Z
+    updated_at: 2026-11-19T16:21:41.307Z
+    version: 1
+product.feature.gold-mode:
+  id: c1f12d93-69dc-48a5-b6b0-bcfb0baf56e0
+  path: product.feature.gold-mode
+  spec_node_id: product.feature
+  type: feature
+  layer_id: product
+  name: Gold Mode
+  description: "/app/pipelines/gold: review gold-check proposals for benchmark
+    documents and export gold."
+  attributes:
+    priority: medium
+    status: delivered
+  metadata:
+    created_at: 2026-11-19T16:21:41.307Z
+    updated_at: 2026-11-19T16:21:41.307Z
+    version: 1
+product.feature.sources-page-and-extract-flow:
+  id: 003bc8f9-829c-440d-a0f6-4a700e395481
+  path: product.feature.sources-page-and-extract-flow
+  spec_node_id: product.feature
+  type: feature
+  layer_id: product
+  name: Sources Page and Extract Flow
+  description: Add a file, page or text as a source, pick a dataset and
+    configuration, and follow extraction stage progress to its proposal.
+  attributes:
+    priority: high
+    status: delivered
+  metadata:
+    created_at: 2026-11-19T16:21:41.307Z
+    updated_at: 2026-11-19T16:21:41.307Z
+    version: 1
+product.feature.extraction-review-bench:
+  id: 0486da63-c01c-4760-bfac-91878bdc9bf8
+  path: product.feature.extraction-review-bench
+  spec_node_id: product.feature
+  type: feature
+  layer_id: product
+  name: Extraction Review Bench
+  description: Paste-text tuning bench with an example library and recognition
+    preview; applies reviewed candidates directly (not through a proposal).
+  attributes:
+    priority: medium
+    status: delivered
+  metadata:
+    created_at: 2026-11-19T16:21:41.307Z
+    updated_at: 2026-11-19T16:21:41.307Z
+    version: 1
+product.feature.approval-policy:
+  id: 7c8cd320-6a1a-44bb-9d6e-6e44ad240800
+  path: product.feature.approval-policy
+  spec_node_id: product.feature
+  type: feature
+  layer_id: product
+  name: Approval Policy
+  description: Per-taxonomy auto-apply rules for routine changes. REST only; no screen.
+  attributes:
+    priority: medium
+    status: delivered
+  metadata:
+    created_at: 2026-11-19T16:21:41.307Z
+    updated_at: 2026-11-19T16:21:41.307Z
+    version: 1
+product.feature.check-drift:
+  id: 7db54184-cf3a-477d-8185-e9e791109d34
+  path: product.feature.check-drift
+  spec_node_id: product.feature
+  type: feature
+  layer_id: product
+  name: Check Drift
+  description: Compare the mirrored dr_spec taxonomy with the DR spec on disk and
+    propose the difference (from the taxonomy page).
+  attributes:
+    priority: medium
+    status: delivered
+  metadata:
+    created_at: 2026-11-19T16:21:41.307Z
+    updated_at: 2026-11-19T16:21:41.307Z
+    version: 1
+product.feature.export-bundle:
+  id: 55c60001-ee33-42d7-a349-52f9b60e2700
+  path: product.feature.export-bundle
+  spec_node_id: product.feature
+  type: feature
+  layer_id: product
+  name: Export Bundle
+  description: JSON snapshot of a taxonomy, optionally with a dataset or schema
+    only, from the taxonomy page.
+  attributes:
+    priority: medium
+    status: delivered
+  metadata:
+    created_at: 2026-11-19T16:21:41.307Z
+    updated_at: 2026-11-19T16:21:41.307Z
+    version: 1
+product.feature.mcp-integration-settings:
+  id: 9a645a53-88e8-438c-a0ae-b7ce5aeaebb2
+  path: product.feature.mcp-integration-settings
+  spec_node_id: product.feature
+  type: feature
+  layer_id: product
+  name: MCP Integration Settings
+  description: "Configuration, Integrations: shows the MCP token and the claude
+    mcp add command."
+  attributes:
+    priority: high
+    status: delivered
+  metadata:
+    created_at: 2026-11-19T16:21:41.307Z
+    updated_at: 2026-11-19T16:21:41.307Z
+    version: 1
+product.feature.demo-dataset-loader:
+  id: 2073d453-2f7b-4764-b8a0-db24e782bb04
+  path: product.feature.demo-dataset-loader
+  spec_node_id: product.feature
+  type: feature
+  layer_id: product
+  name: Demo Dataset Loader
+  description: Load the Software Architecture demo dataset from an empty Dashboard.
+  attributes:
+    priority: low
+    status: delivered
+  metadata:
+    created_at: 2026-11-19T16:21:41.307Z
+    updated_at: 2026-11-19T16:21:41.307Z
+    version: 1
+product.feature.dataset-selector:
+  id: 31cd4892-4005-4564-822e-a05165a6a65c
+  path: product.feature.dataset-selector
+  spec_node_id: product.feature
+  type: feature
+  layer_id: product
+  name: Dataset Selector
+  description: A dataset picker (DatasetSelect, also inside the entity navigator)
+    that scopes the dashboard, graph, relationships and data pages.
+  attributes:
+    priority: high
+    status: delivered
+  metadata:
+    created_at: 2026-11-19T16:21:41.307Z
+    updated_at: 2026-11-19T16:21:41.307Z
+    version: 1
+product.feature.graph-view:
+  id: c31a5486-4fee-456d-a8ec-1874d4014939
+  path: product.feature.graph-view
+  spec_node_id: product.feature
+  type: feature
+  layer_id: product
+  name: Graph View
+  description: "/app/graph: layouts, focus, metrics, path finder and SPARQL editor."
+  attributes:
+    priority: medium
+    status: delivered
+  metadata:
+    created_at: 2026-11-19T16:21:41.307Z
+    updated_at: 2026-11-19T16:21:41.307Z
+    version: 1
+product.feature.chat-panel:
+  id: 56dc4ba0-f44a-43a0-87a6-52d2dd8c21e4
+  path: product.feature.chat-panel
+  spec_node_id: product.feature
+  type: feature
+  layer_id: product
+  name: Chat Panel
+  description: The in-app chat (Cmd-J) mounted in the app shell, so it is on every
+    page, with 'Ask about this' entry points on entity pages and proposal cards.
+  attributes:
+    priority: high
+    status: delivered
+  metadata:
+    created_at: 2026-11-19T16:21:41.307Z
+    updated_at: 2026-11-19T16:21:41.307Z
+    version: 1
+product.feature.claims-page:
+  id: bce00938-7614-44ac-8234-3afe04d69674
+  path: product.feature.claims-page
+  spec_node_id: product.feature
+  type: feature
+  layer_id: product
+  name: Claims Page
+  description: "/app/claims: filter, claim inspector, verdicts and export."
+  attributes:
+    priority: medium
+    status: delivered
+  metadata:
+    created_at: 2026-11-19T16:21:41.307Z
+    updated_at: 2026-11-19T16:21:41.307Z
+    version: 1
+product.feature.runs-page:
+  id: ceeaf27a-3692-43bf-8639-cb661d17e535
+  path: product.feature.runs-page
+  spec_node_id: product.feature
+  type: feature
+  layer_id: product
+  name: Runs Page
+  description: "/app/pipelines/runs: filter runs, run detail drawer with
+    per-pipeline review, apply selected candidates, revert; batch detail."
+  attributes:
+    priority: medium
+    status: delivered
+  metadata:
+    created_at: 2026-11-19T16:21:41.307Z
+    updated_at: 2026-11-19T16:21:41.307Z
+    version: 1
+product.feature.pipeline-run-wizard:
+  id: 982be5c0-d053-4c2d-b841-0c36b4db07cb
+  path: product.feature.pipeline-run-wizard
+  spec_node_id: product.feature
+  type: feature
+  layer_id: product
+  name: Pipeline Run Wizard
+  description: "/app/pipelines and the per-type run wizard: choose implementation
+    and configuration and start a run."
+  attributes:
+    priority: medium
+    status: delivered
+  metadata:
+    created_at: 2026-11-19T16:21:41.307Z
+    updated_at: 2026-11-19T16:21:41.307Z
+    version: 1
+product.feature.change-history-and-sync:
+  id: 560c1673-a36b-4222-93f6-e7b76ee760db
+  path: product.feature.change-history-and-sync
+  spec_node_id: product.feature
+  type: feature
+  layer_id: product
+  name: Change History and Sync
+  description: "/app/versioning: change history list and sync status, push and pull."
+  attributes:
+    priority: low
+    status: delivered
+  metadata:
+    created_at: 2026-11-19T16:21:41.307Z
+    updated_at: 2026-11-19T16:21:41.307Z
+    version: 1
+product.feature.schema-and-data-pages:
+  id: b4cd6079-77d9-4f1e-8c00-c7012ea47787
+  path: product.feature.schema-and-data-pages
+  spec_node_id: product.feature
+  type: feature
+  layer_id: product
+  name: Schema and Data Pages
+  description: Taxonomy, scheme, class, property, relationship, dataset and
+    individual pages, list and detail, sharing the entity navigator and the CRUD
+    drawers and dialogs.
+  attributes:
+    priority: critical
+    status: delivered
+  metadata:
+    created_at: 2026-11-19T16:21:41.307Z
+    updated_at: 2026-11-19T16:21:41.307Z
+    version: 1
+product.feature.inline-suggesters-in-drawers:
+  id: 05e9146f-9da3-44c3-b0da-89254ed5cf06
+  path: product.feature.inline-suggesters-in-drawers
+  spec_node_id: product.feature
+  type: feature
+  layer_id: product
+  name: Inline Suggesters in Drawers
+  description: "SuggestField in the taxonomy, scheme, class, property and create
+    drawers: run a refinement or grounding suggestion and receive it as a
+    proposal."
+  attributes:
+    priority: medium
+    status: delivered
+  metadata:
+    created_at: 2026-11-19T16:21:41.307Z
+    updated_at: 2026-11-19T16:21:41.307Z
+    version: 1
+product.feature.pending-changes-on-entity-pages:
+  id: 7d15c7e9-de9c-427f-a935-1f86a101a632
+  path: product.feature.pending-changes-on-entity-pages
+  spec_node_id: product.feature
+  type: feature
+  layer_id: product
+  name: Pending Changes on Entity Pages
+  description: Pending proposal operations shown on taxonomy and class pages and
+    the property drawer, linking to the proposal.
+  attributes:
+    priority: medium
+    status: delivered
+  metadata:
+    created_at: 2026-11-19T16:21:41.307Z
+    updated_at: 2026-11-19T16:21:41.307Z
+    version: 1
+product.feature.source-citations-on-entity-pages:
+  id: 26dd8271-0035-4c85-be2d-5e4f57de37ad
+  path: product.feature.source-citations-on-entity-pages
+  spec_node_id: product.feature
+  type: feature
+  layer_id: product
+  name: Source Citations on Entity Pages
+  description: "EntitySources on individual pages and the relationship drawer: the
+    source, page and quote each fact came from."
+  attributes:
+    priority: high
+    status: delivered
+  metadata:
+    created_at: 2026-11-19T16:21:41.307Z
+    updated_at: 2026-11-19T16:21:41.307Z
+    version: 1
+product.feature.reference-sources-and-grounding-workflows:
+  id: 20159868-98c6-4054-937b-29b3af86f377
+  path: product.feature.reference-sources-and-grounding-workflows
+  spec_node_id: product.feature
+  type: feature
+  layer_id: product
+  name: Reference Sources and Grounding Workflows
+  description: "/app/reference: reference source settings and grounding workflows,
+    with their drawers."
+  attributes:
+    priority: low
+    status: delivered
+  metadata:
+    created_at: 2026-11-19T16:21:41.308Z
+    updated_at: 2026-11-19T16:21:41.308Z
+    version: 1
+product.feature.installable-desktop-app:
+  id: 9826ccdf-3109-4bb2-8968-338a63540270
+  path: product.feature.installable-desktop-app
+  spec_node_id: product.feature
+  type: feature
+  layer_id: product
+  name: Installable Desktop App
+  description: A Tauri desktop build of Context Studio that starts the local
+    server and opens the UI without ./dev.sh. Planned for the next few weeks;
+    /app holds only the starter.
+  attributes:
+    priority: high
+    status: planned
+  source_reference:
+    provenance: manual
+    locations:
+      - file: app/README.md
+  metadata:
+    created_at: 2026-11-19T16:21:41.308Z
+    updated_at: 2026-11-19T16:21:41.308Z
+    version: 1
+product.feature.configuration-settings:
+  id: a9fb04c1-b064-4963-b22e-a2e80ef04ca7
+  path: product.feature.configuration-settings
+  spec_node_id: product.feature
+  type: feature
+  layer_id: product
+  name: Configuration Settings
+  description: "/app/settings: edit, reset and inspect config.json sections (LLM
+    providers, decision models, sources, sync, MCP)."
+  attributes:
+    priority: medium
+    status: delivered
+  metadata:
+    created_at: 2026-11-19T16:34:19.519Z
+    updated_at: 2026-11-19T16:34:19.519Z
+    version: 1
+product.feature.system-health-and-background-tasks:
+  id: 3a0a204d-8b08-4929-8a0b-2fb94aaededc
+  path: product.feature.system-health-and-background-tasks
+  spec_node_id: product.feature
+  type: feature
+  layer_id: product
+  name: System Health and Background Tasks
+  description: Health of the database, embedding, NLP and LLM services, usage
+    trends and background tasks, shown on the Dashboard and in the status bar.
+  attributes:
+    priority: low
+    status: delivered
+  metadata:
+    created_at: 2026-11-19T16:34:19.519Z
+    updated_at: 2026-11-19T16:34:19.519Z
+    version: 1
+product.feature.owl-skos-and-graph-ml-import-and-export:
+  id: 78628959-e16a-44f7-acc4-2a43d27956ff
+  path: product.feature.owl-skos-and-graph-ml-import-and-export
+  spec_node_id: product.feature
+  type: feature
+  layer_id: product
+  name: OWL SKOS and GraphML Import and Export
+  description: Import and export a taxonomy as OWL, SKOS or GraphML, with import
+    runs and their change events. REST only; no screen.
+  attributes:
+    priority: low
+    status: delivered
+  metadata:
+    created_at: 2026-11-19T16:34:19.519Z
+    updated_at: 2026-11-19T16:34:19.519Z
+    version: 1

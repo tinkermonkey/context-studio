@@ -16,69 +16,72 @@ Data entities, relationships, and data structure definitions.
 
 | Metric                    | Count |
 | ------------------------- | ----- |
-| Elements                  | 47    |
-| Intra-Layer Relationships | 19    |
-| Inter-Layer Relationships | 34    |
-| Inbound Relationships     | 0     |
-| Outbound Relationships    | 34    |
+| Elements                  | 49    |
+| Intra-Layer Relationships | 10    |
+| Inter-Layer Relationships | 107   |
+| Inbound Relationships     | 47    |
+| Outbound Relationships    | 60    |
 
 **Cross-Layer References**:
 
-- **Downstream layers**: [API](./07-api-layer-report.md)
+- **Upstream layers**: [Application](./05-application-layer-report.md)
+- **Downstream layers**: [API](./07-api-layer-report.md), [Business](./02-business-layer-report.md), [Data Store](./09-data-store-layer-report.md), [Motivation](./01-motivation-layer-report.md)
 
 ## Intra-Layer Relationships
 
 *This layer has >30 elements. Summary table shown instead of diagram.*
 
-| Element                                                 | Type            | Relationships |
-| ------------------------------------------------------- | --------------- | ------------- |
-| `data-model.arrayschema.external-references-list`       | `arrayschema`   | 4             |
-| `data-model.numericschema.relationship-weight`          | `numericschema` | 1             |
-| `data-model.objectschema.app-configuration`             | `objectschema`  | 0             |
-| `data-model.objectschema.background-task`               | `objectschema`  | 0             |
-| `data-model.objectschema.change-event`                  | `objectschema`  | 3             |
-| `data-model.objectschema.change-event-entity`           | `objectschema`  | 1             |
-| `data-model.objectschema.changeset`                     | `objectschema`  | 4             |
-| `data-model.objectschema.changeset-entity`              | `objectschema`  | 1             |
-| `data-model.objectschema.changeset-event`               | `objectschema`  | 1             |
-| `data-model.objectschema.concept-scheme-entity`         | `objectschema`  | 0             |
-| `data-model.objectschema.conflict-entity`               | `objectschema`  | 0             |
-| `data-model.objectschema.conflict-report`               | `objectschema`  | 0             |
-| `data-model.objectschema.conflict-resolution`           | `objectschema`  | 1             |
-| `data-model.objectschema.entity-version`                | `objectschema`  | 1             |
-| `data-model.objectschema.entity-version-entity`         | `objectschema`  | 1             |
-| `data-model.objectschema.execution-entity`              | `objectschema`  | 0             |
-| `data-model.objectschema.extracted-entity`              | `objectschema`  | 0             |
-| `data-model.objectschema.extraction-result`             | `objectschema`  | 0             |
-| `data-model.objectschema.extraction-run`                | `objectschema`  | 0             |
-| `data-model.objectschema.graph-metrics`                 | `objectschema`  | 0             |
-| `data-model.objectschema.import-run`                    | `objectschema`  | 3             |
-| `data-model.objectschema.import-run-entity`             | `objectschema`  | 1             |
-| `data-model.objectschema.individual-class`              | `objectschema`  | 0             |
-| `data-model.objectschema.individual-entity`             | `objectschema`  | 0             |
-| `data-model.objectschema.knowledge-graph`               | `objectschema`  | 0             |
-| `data-model.objectschema.merge-result`                  | `objectschema`  | 0             |
-| `data-model.objectschema.ontology-class-entity`         | `objectschema`  | 0             |
-| `data-model.objectschema.ontology-entity`               | `objectschema`  | 3             |
-| `data-model.objectschema.path-result`                   | `objectschema`  | 0             |
-| `data-model.objectschema.pipeline-configuration`        | `objectschema`  | 2             |
-| `data-model.objectschema.pipeline-configuration-entity` | `objectschema`  | 2             |
-| `data-model.objectschema.pipeline-execution`            | `objectschema`  | 2             |
-| `data-model.objectschema.processing-metrics`            | `objectschema`  | 0             |
-| `data-model.objectschema.property-definition`           | `objectschema`  | 0             |
-| `data-model.objectschema.property-definition-entity`    | `objectschema`  | 0             |
-| `data-model.objectschema.proposal`                      | `objectschema`  | 3             |
-| `data-model.objectschema.proposal-entity`               | `objectschema`  | 1             |
-| `data-model.objectschema.relationship`                  | `objectschema`  | 1             |
-| `data-model.objectschema.relationship-entity`           | `objectschema`  | 0             |
-| `data-model.objectschema.resolution-record`             | `objectschema`  | 0             |
-| `data-model.objectschema.subgraph`                      | `objectschema`  | 0             |
-| `data-model.objectschema.subgraph-result`               | `objectschema`  | 0             |
-| `data-model.objectschema.system-health`                 | `objectschema`  | 0             |
-| `data-model.objectschema.taxonomy-entity`               | `objectschema`  | 0             |
-| `data-model.objectschema.triple-extraction-result`      | `objectschema`  | 0             |
-| `data-model.stringschema.iso-8601-datetime`             | `stringschema`  | 1             |
-| `data-model.stringschema.uuid-string`                   | `stringschema`  | 1             |
+| Element                                                 | Type           | Relationships |
+| ------------------------------------------------------- | -------------- | ------------- |
+| `data-model.arrayschema.external-references-list`       | `arrayschema`  | 3             |
+| `data-model.objectschema.app-configuration`             | `objectschema` | 0             |
+| `data-model.objectschema.approval-policy-entity`        | `objectschema` | 0             |
+| `data-model.objectschema.attribute-definition-entity`   | `objectschema` | 0             |
+| `data-model.objectschema.background-task`               | `objectschema` | 0             |
+| `data-model.objectschema.batch-entity`                  | `objectschema` | 0             |
+| `data-model.objectschema.change-event`                  | `objectschema` | 3             |
+| `data-model.objectschema.change-event-entity`           | `objectschema` | 1             |
+| `data-model.objectschema.chat-message-entity`           | `objectschema` | 0             |
+| `data-model.objectschema.claim-entity`                  | `objectschema` | 0             |
+| `data-model.objectschema.concept-scheme-entity`         | `objectschema` | 0             |
+| `data-model.objectschema.conversation-entity`           | `objectschema` | 0             |
+| `data-model.objectschema.dataset-entity`                | `objectschema` | 0             |
+| `data-model.objectschema.entity-source-entity`          | `objectschema` | 0             |
+| `data-model.objectschema.extracted-entity`              | `objectschema` | 0             |
+| `data-model.objectschema.extraction-result`             | `objectschema` | 0             |
+| `data-model.objectschema.extraction-run`                | `objectschema` | 0             |
+| `data-model.objectschema.graph-metrics`                 | `objectschema` | 0             |
+| `data-model.objectschema.graph-view`                    | `objectschema` | 0             |
+| `data-model.objectschema.import-run`                    | `objectschema` | 2             |
+| `data-model.objectschema.import-run-entity`             | `objectschema` | 1             |
+| `data-model.objectschema.individual-class`              | `objectschema` | 0             |
+| `data-model.objectschema.individual-entity`             | `objectschema` | 0             |
+| `data-model.objectschema.knowledge-graph`               | `objectschema` | 0             |
+| `data-model.objectschema.ontology-class-entity`         | `objectschema` | 0             |
+| `data-model.objectschema.ontology-entity`               | `objectschema` | 3             |
+| `data-model.objectschema.path-result`                   | `objectschema` | 0             |
+| `data-model.objectschema.pipeline-configuration`        | `objectschema` | 1             |
+| `data-model.objectschema.pipeline-configuration-entity` | `objectschema` | 1             |
+| `data-model.objectschema.pipeline-run-entity`           | `objectschema` | 0             |
+| `data-model.objectschema.predicate-entity`              | `objectschema` | 0             |
+| `data-model.objectschema.processing-metrics`            | `objectschema` | 0             |
+| `data-model.objectschema.property-definition`           | `objectschema` | 0             |
+| `data-model.objectschema.property-definition-entity`    | `objectschema` | 0             |
+| `data-model.objectschema.proposal`                      | `objectschema` | 1             |
+| `data-model.objectschema.proposal-decision-entity`      | `objectschema` | 0             |
+| `data-model.objectschema.proposal-entity`               | `objectschema` | 1             |
+| `data-model.objectschema.proposed-operation`            | `objectschema` | 0             |
+| `data-model.objectschema.relationship`                  | `objectschema` | 1             |
+| `data-model.objectschema.relationship-entity`           | `objectschema` | 0             |
+| `data-model.objectschema.resolution-record`             | `objectschema` | 0             |
+| `data-model.objectschema.source-entity`                 | `objectschema` | 0             |
+| `data-model.objectschema.subgraph`                      | `objectschema` | 0             |
+| `data-model.objectschema.subgraph-result`               | `objectschema` | 0             |
+| `data-model.objectschema.system-health`                 | `objectschema` | 0             |
+| `data-model.objectschema.taxonomy-entity`               | `objectschema` | 0             |
+| `data-model.objectschema.triple-extraction-result`      | `objectschema` | 0             |
+| `data-model.stringschema.iso-8601-datetime`             | `stringschema` | 1             |
+| `data-model.stringschema.uuid-string`                   | `stringschema` | 1             |
 
 ## Inter-Layer Dependencies
 
@@ -98,48 +101,125 @@ flowchart TB
   navigation["Navigation"]
   apm["APM"]
   testing["Testing"]
+  application --> data_model
   data_model --> api
+  data_model --> business
+  data_model --> data_store
+  data_model --> motivation
   class data_model current
 ```
 
 ## Inter-Layer Relationships Table
 
-| Relationship ID                                   | Source Node                                             | Dest Node                                            | Dest Layer | Predicate | Cardinality  | Strength |
-| ------------------------------------------------- | ------------------------------------------------------- | ---------------------------------------------------- | ---------- | --------- | ------------ | -------- |
-| `data-model.objectschema.maps-to.api.response`    | `data-model.objectschema.app-configuration`             | `api.response.app-configuration-response`            | `api`      | `maps-to` | many-to-many | medium   |
-| `data-model.objectschema.maps-to.api.response`    | `data-model.objectschema.background-task`               | `api.response.background-task-response`              | `api`      | `maps-to` | many-to-many | medium   |
-| `data-model.objectschema.maps-to.api.response`    | `data-model.objectschema.change-event-entity`           | `api.response.change-history-response`               | `api`      | `maps-to` | many-to-many | medium   |
-| `data-model.objectschema.maps-to.api.response`    | `data-model.objectschema.changeset-entity`              | `api.response.changeset-response`                    | `api`      | `maps-to` | many-to-many | medium   |
-| `data-model.objectschema.maps-to.api.response`    | `data-model.objectschema.concept-scheme-entity`         | `api.response.concept-scheme-response`               | `api`      | `maps-to` | many-to-many | medium   |
-| `data-model.objectschema.maps-to.api.response`    | `data-model.objectschema.conflict-entity`               | `api.response.conflict-response`                     | `api`      | `maps-to` | many-to-many | medium   |
-| `data-model.objectschema.maps-to.api.response`    | `data-model.objectschema.conflict-report`               | `api.response.conflict-report-response`              | `api`      | `maps-to` | many-to-many | medium   |
-| `data-model.objectschema.maps-to.api.response`    | `data-model.objectschema.entity-version-entity`         | `api.response.entity-version-response`               | `api`      | `maps-to` | many-to-many | medium   |
-| `data-model.objectschema.maps-to.api.response`    | `data-model.objectschema.entity-version`                | `api.response.entity-version-response`               | `api`      | `maps-to` | many-to-many | medium   |
-| `data-model.objectschema.maps-to.api.response`    | `data-model.objectschema.execution-entity`              | `api.response.execution-response`                    | `api`      | `maps-to` | many-to-many | medium   |
-| `data-model.objectschema.maps-to.api.response`    | `data-model.objectschema.extracted-entity`              | `api.response.extraction-result-schema`              | `api`      | `maps-to` | many-to-many | medium   |
-| `data-model.objectschema.maps-to.api.response`    | `data-model.objectschema.extraction-result`             | `api.response.extraction-result-schema`              | `api`      | `maps-to` | many-to-many | medium   |
-| `data-model.objectschema.maps-to.api.response`    | `data-model.objectschema.extraction-run`                | `api.response.extraction-result-schema`              | `api`      | `maps-to` | many-to-many | medium   |
-| `data-model.objectschema.maps-to.api.response`    | `data-model.objectschema.graph-metrics`                 | `api.response.graph-metrics-response`                | `api`      | `maps-to` | many-to-many | medium   |
-| `data-model.objectschema.maps-to.api.response`    | `data-model.objectschema.import-run-entity`             | `api.response.import-run-response`                   | `api`      | `maps-to` | many-to-many | medium   |
-| `data-model.objectschema.maps-to.api.requestbody` | `data-model.objectschema.individual-class`              | `api.requestbody.individual-class-list-request`      | `api`      | `maps-to` | many-to-many | medium   |
-| `data-model.objectschema.maps-to.api.requestbody` | `data-model.objectschema.individual-class`              | `api.requestbody.individual-class-request`           | `api`      | `maps-to` | many-to-many | medium   |
-| `data-model.objectschema.maps-to.api.response`    | `data-model.objectschema.individual-entity`             | `api.response.individual-response`                   | `api`      | `maps-to` | many-to-many | medium   |
-| `data-model.objectschema.maps-to.api.response`    | `data-model.objectschema.knowledge-graph`               | `api.response.knowledge-graph-response`              | `api`      | `maps-to` | many-to-many | medium   |
-| `data-model.objectschema.maps-to.api.response`    | `data-model.objectschema.merge-result`                  | `api.response.merge-result-response`                 | `api`      | `maps-to` | many-to-many | medium   |
-| `data-model.objectschema.maps-to.api.response`    | `data-model.objectschema.ontology-class-entity`         | `api.response.class-response`                        | `api`      | `maps-to` | many-to-many | medium   |
-| `data-model.objectschema.maps-to.api.response`    | `data-model.objectschema.path-result`                   | `api.response.path-result-response`                  | `api`      | `maps-to` | many-to-many | medium   |
-| `data-model.objectschema.maps-to.api.requestbody` | `data-model.objectschema.pipeline-configuration-entity` | `api.requestbody.pipeline-configuration-create`      | `api`      | `maps-to` | many-to-many | medium   |
-| `data-model.objectschema.maps-to.api.response`    | `data-model.objectschema.processing-metrics`            | `api.response.service-metrics-response`              | `api`      | `maps-to` | many-to-many | medium   |
-| `data-model.objectschema.maps-to.api.requestbody` | `data-model.objectschema.property-definition-entity`    | `api.requestbody.property-definition-create-request` | `api`      | `maps-to` | many-to-many | medium   |
-| `data-model.objectschema.maps-to.api.requestbody` | `data-model.objectschema.property-definition`           | `api.requestbody.property-definition-create-request` | `api`      | `maps-to` | many-to-many | medium   |
-| `data-model.objectschema.maps-to.api.response`    | `data-model.objectschema.property-definition`           | `api.response.property-definition-response`          | `api`      | `maps-to` | many-to-many | medium   |
-| `data-model.objectschema.maps-to.api.response`    | `data-model.objectschema.relationship-entity`           | `api.response.relationship-response`                 | `api`      | `maps-to` | many-to-many | medium   |
-| `data-model.objectschema.maps-to.api.response`    | `data-model.objectschema.resolution-record`             | `api.response.resolution-record-response`            | `api`      | `maps-to` | many-to-many | medium   |
-| `data-model.objectschema.maps-to.api.response`    | `data-model.objectschema.subgraph`                      | `api.response.subgraph-data-response`                | `api`      | `maps-to` | many-to-many | medium   |
-| `data-model.objectschema.maps-to.api.response`    | `data-model.objectschema.subgraph-result`               | `api.response.subgraph-result-response`              | `api`      | `maps-to` | many-to-many | medium   |
-| `data-model.objectschema.maps-to.api.response`    | `data-model.objectschema.system-health`                 | `api.response.database-health-response`              | `api`      | `maps-to` | many-to-many | medium   |
-| `data-model.objectschema.maps-to.api.response`    | `data-model.objectschema.taxonomy-entity`               | `api.response.taxonomy-response`                     | `api`      | `maps-to` | many-to-many | medium   |
-| `data-model.objectschema.maps-to.api.response`    | `data-model.objectschema.triple-extraction-result`      | `api.response.triples-response`                      | `api`      | `maps-to` | many-to-many | medium   |
+| Relationship ID                                                     | Source Node                                                                 | Dest Node                                                       | Dest Layer   | Predicate   | Cardinality  | Strength |
+| ------------------------------------------------------------------- | --------------------------------------------------------------------------- | --------------------------------------------------------------- | ------------ | ----------- | ------------ | -------- |
+| `application.applicationcomponent.accesses.data-model.objectschema` | `application.applicationcomponent.canon-demo-dataset-loader`                | `data-model.objectschema.concept-scheme-entity`                 | `data-model` | `accesses`  | many-to-many | medium   |
+| `application.applicationcomponent.accesses.data-model.objectschema` | `application.applicationcomponent.canon-demo-dataset-loader`                | `data-model.objectschema.ontology-class-entity`                 | `data-model` | `accesses`  | many-to-many | medium   |
+| `application.applicationcomponent.accesses.data-model.objectschema` | `application.applicationcomponent.canon-demo-dataset-loader`                | `data-model.objectschema.property-definition-entity`            | `data-model` | `accesses`  | many-to-many | medium   |
+| `application.applicationcomponent.accesses.data-model.objectschema` | `application.applicationcomponent.canon-demo-dataset-loader`                | `data-model.objectschema.taxonomy-entity`                       | `data-model` | `accesses`  | many-to-many | medium   |
+| `application.applicationcomponent.accesses.data-model.objectschema` | `application.applicationcomponent.duck-db-sync-adapter`                     | `data-model.objectschema.change-event-entity`                   | `data-model` | `accesses`  | many-to-many | medium   |
+| `application.applicationcomponent.accesses.data-model.objectschema` | `application.applicationcomponent.json-file-config-store`                   | `data-model.objectschema.app-configuration`                     | `data-model` | `accesses`  | many-to-many | medium   |
+| `application.applicationcomponent.accesses.data-model.objectschema` | `application.applicationcomponent.network-x-graph-engine-adapter`           | `data-model.objectschema.graph-view`                            | `data-model` | `accesses`  | many-to-many | medium   |
+| `application.applicationcomponent.accesses.data-model.objectschema` | `application.applicationcomponent.owl-interchange-adapter`                  | `data-model.objectschema.concept-scheme-entity`                 | `data-model` | `accesses`  | many-to-many | medium   |
+| `application.applicationcomponent.accesses.data-model.objectschema` | `application.applicationcomponent.rdflib-query-engine-adapter`              | `data-model.objectschema.concept-scheme-entity`                 | `data-model` | `accesses`  | many-to-many | medium   |
+| `application.applicationcomponent.accesses.data-model.objectschema` | `application.applicationcomponent.rdflib-query-engine-adapter`              | `data-model.objectschema.ontology-class-entity`                 | `data-model` | `accesses`  | many-to-many | medium   |
+| `application.applicationcomponent.accesses.data-model.objectschema` | `application.applicationcomponent.rdflib-query-engine-adapter`              | `data-model.objectschema.taxonomy-entity`                       | `data-model` | `accesses`  | many-to-many | medium   |
+| `application.applicationcomponent.accesses.data-model.objectschema` | `application.applicationcomponent.s3-sync-adapter`                          | `data-model.objectschema.change-event-entity`                   | `data-model` | `accesses`  | many-to-many | medium   |
+| `application.applicationcomponent.accesses.data-model.objectschema` | `application.applicationcomponent.skos-interchange-adapter`                 | `data-model.objectschema.concept-scheme-entity`                 | `data-model` | `accesses`  | many-to-many | medium   |
+| `application.applicationcomponent.accesses.data-model.objectschema` | `application.applicationcomponent.sqlite-approval-policy-repository`        | `data-model.objectschema.approval-policy-entity`                | `data-model` | `accesses`  | many-to-many | medium   |
+| `application.applicationcomponent.accesses.data-model.objectschema` | `application.applicationcomponent.sqlite-batch-repository`                  | `data-model.objectschema.batch-entity`                          | `data-model` | `accesses`  | many-to-many | medium   |
+| `application.applicationcomponent.accesses.data-model.objectschema` | `application.applicationcomponent.sqlite-change-proposal-repository`        | `data-model.objectschema.proposal`                              | `data-model` | `accesses`  | many-to-many | medium   |
+| `application.applicationcomponent.accesses.data-model.objectschema` | `application.applicationcomponent.sqlite-change-proposal-repository`        | `data-model.objectschema.proposal-decision-entity`              | `data-model` | `accesses`  | many-to-many | medium   |
+| `application.applicationcomponent.accesses.data-model.objectschema` | `application.applicationcomponent.sqlite-change-proposal-repository`        | `data-model.objectschema.proposal-entity`                       | `data-model` | `accesses`  | many-to-many | medium   |
+| `application.applicationcomponent.accesses.data-model.objectschema` | `application.applicationcomponent.sqlite-change-proposal-repository`        | `data-model.objectschema.proposed-operation`                    | `data-model` | `accesses`  | many-to-many | medium   |
+| `application.applicationcomponent.accesses.data-model.objectschema` | `application.applicationcomponent.sqlite-change-repository`                 | `data-model.objectschema.change-event`                          | `data-model` | `accesses`  | many-to-many | medium   |
+| `application.applicationcomponent.accesses.data-model.objectschema` | `application.applicationcomponent.sqlite-change-repository`                 | `data-model.objectschema.change-event-entity`                   | `data-model` | `accesses`  | many-to-many | medium   |
+| `application.applicationcomponent.accesses.data-model.objectschema` | `application.applicationcomponent.sqlite-claim-repository`                  | `data-model.objectschema.claim-entity`                          | `data-model` | `accesses`  | many-to-many | medium   |
+| `application.applicationcomponent.accesses.data-model.objectschema` | `application.applicationcomponent.sqlite-conversation-repository`           | `data-model.objectschema.chat-message-entity`                   | `data-model` | `accesses`  | many-to-many | medium   |
+| `application.applicationcomponent.accesses.data-model.objectschema` | `application.applicationcomponent.sqlite-conversation-repository`           | `data-model.objectschema.conversation-entity`                   | `data-model` | `accesses`  | many-to-many | medium   |
+| `application.applicationcomponent.accesses.data-model.objectschema` | `application.applicationcomponent.sqlite-entity-source-repository`          | `data-model.objectschema.entity-source-entity`                  | `data-model` | `accesses`  | many-to-many | medium   |
+| `application.applicationcomponent.accesses.data-model.objectschema` | `application.applicationcomponent.sqlite-extraction-repository`             | `data-model.objectschema.extracted-entity`                      | `data-model` | `accesses`  | many-to-many | medium   |
+| `application.applicationcomponent.accesses.data-model.objectschema` | `application.applicationcomponent.sqlite-extraction-repository`             | `data-model.objectschema.extraction-result`                     | `data-model` | `accesses`  | many-to-many | medium   |
+| `application.applicationcomponent.accesses.data-model.objectschema` | `application.applicationcomponent.sqlite-extraction-run-repository`         | `data-model.objectschema.extraction-run`                        | `data-model` | `accesses`  | many-to-many | medium   |
+| `application.applicationcomponent.accesses.data-model.objectschema` | `application.applicationcomponent.sqlite-interchange-repository`            | `data-model.objectschema.import-run`                            | `data-model` | `accesses`  | many-to-many | medium   |
+| `application.applicationcomponent.accesses.data-model.objectschema` | `application.applicationcomponent.sqlite-interchange-repository`            | `data-model.objectschema.import-run-entity`                     | `data-model` | `accesses`  | many-to-many | medium   |
+| `application.applicationcomponent.accesses.data-model.objectschema` | `application.applicationcomponent.sqlite-interchange-repository`            | `data-model.objectschema.resolution-record`                     | `data-model` | `accesses`  | many-to-many | medium   |
+| `application.applicationcomponent.accesses.data-model.objectschema` | `application.applicationcomponent.sqlite-ontology-repository`               | `data-model.objectschema.attribute-definition-entity`           | `data-model` | `accesses`  | many-to-many | medium   |
+| `application.applicationcomponent.accesses.data-model.objectschema` | `application.applicationcomponent.sqlite-ontology-repository`               | `data-model.objectschema.concept-scheme-entity`                 | `data-model` | `accesses`  | many-to-many | medium   |
+| `application.applicationcomponent.accesses.data-model.objectschema` | `application.applicationcomponent.sqlite-ontology-repository`               | `data-model.objectschema.dataset-entity`                        | `data-model` | `accesses`  | many-to-many | medium   |
+| `application.applicationcomponent.accesses.data-model.objectschema` | `application.applicationcomponent.sqlite-ontology-repository`               | `data-model.objectschema.individual-class`                      | `data-model` | `accesses`  | many-to-many | medium   |
+| `application.applicationcomponent.accesses.data-model.objectschema` | `application.applicationcomponent.sqlite-ontology-repository`               | `data-model.objectschema.individual-entity`                     | `data-model` | `accesses`  | many-to-many | medium   |
+| `application.applicationcomponent.accesses.data-model.objectschema` | `application.applicationcomponent.sqlite-ontology-repository`               | `data-model.objectschema.ontology-class-entity`                 | `data-model` | `accesses`  | many-to-many | medium   |
+| `application.applicationcomponent.accesses.data-model.objectschema` | `application.applicationcomponent.sqlite-ontology-repository`               | `data-model.objectschema.ontology-entity`                       | `data-model` | `accesses`  | many-to-many | medium   |
+| `application.applicationcomponent.accesses.data-model.objectschema` | `application.applicationcomponent.sqlite-ontology-repository`               | `data-model.objectschema.predicate-entity`                      | `data-model` | `accesses`  | many-to-many | medium   |
+| `application.applicationcomponent.accesses.data-model.objectschema` | `application.applicationcomponent.sqlite-ontology-repository`               | `data-model.objectschema.property-definition`                   | `data-model` | `accesses`  | many-to-many | medium   |
+| `application.applicationcomponent.accesses.data-model.objectschema` | `application.applicationcomponent.sqlite-ontology-repository`               | `data-model.objectschema.property-definition-entity`            | `data-model` | `accesses`  | many-to-many | medium   |
+| `application.applicationcomponent.accesses.data-model.objectschema` | `application.applicationcomponent.sqlite-ontology-repository`               | `data-model.objectschema.relationship-entity`                   | `data-model` | `accesses`  | many-to-many | medium   |
+| `application.applicationcomponent.accesses.data-model.objectschema` | `application.applicationcomponent.sqlite-ontology-repository`               | `data-model.objectschema.taxonomy-entity`                       | `data-model` | `accesses`  | many-to-many | medium   |
+| `application.applicationcomponent.accesses.data-model.objectschema` | `application.applicationcomponent.sqlite-pipeline-configuration-repository` | `data-model.objectschema.pipeline-configuration`                | `data-model` | `accesses`  | many-to-many | medium   |
+| `application.applicationcomponent.accesses.data-model.objectschema` | `application.applicationcomponent.sqlite-pipeline-configuration-repository` | `data-model.objectschema.pipeline-configuration-entity`         | `data-model` | `accesses`  | many-to-many | medium   |
+| `application.applicationcomponent.accesses.data-model.objectschema` | `application.applicationcomponent.sqlite-pipeline-repository`               | `data-model.objectschema.pipeline-run-entity`                   | `data-model` | `accesses`  | many-to-many | medium   |
+| `application.applicationcomponent.accesses.data-model.objectschema` | `application.applicationcomponent.sqlite-source-repository`                 | `data-model.objectschema.source-entity`                         | `data-model` | `accesses`  | many-to-many | medium   |
+| `data-model.objectschema.maps-to.api.response`                      | `data-model.objectschema.app-configuration`                                 | `api.response.app-configuration-response`                       | `api`        | `maps-to`   | many-to-many | medium   |
+| `data-model.objectschema.maps-to.data-store.collection`             | `data-model.objectschema.approval-policy-entity`                            | `data-store.collection.approval-policies`                       | `data-store` | `maps-to`   | many-to-many | medium   |
+| `data-model.objectschema.maps-to.data-store.collection`             | `data-model.objectschema.attribute-definition-entity`                       | `data-store.collection.attribute-definitions`                   | `data-store` | `maps-to`   | many-to-many | medium   |
+| `data-model.objectschema.maps-to.api.response`                      | `data-model.objectschema.background-task`                                   | `api.response.background-task-response`                         | `api`        | `maps-to`   | many-to-many | medium   |
+| `data-model.objectschema.maps-to.data-store.collection`             | `data-model.objectschema.batch-entity`                                      | `data-store.collection.batches`                                 | `data-store` | `maps-to`   | many-to-many | medium   |
+| `data-model.objectschema.maps-to.api.response`                      | `data-model.objectschema.change-event-entity`                               | `api.response.change-history-response`                          | `api`        | `maps-to`   | many-to-many | medium   |
+| `data-model.objectschema.maps-to.data-store.collection`             | `data-model.objectschema.change-event-entity`                               | `data-store.collection.change-events`                           | `data-store` | `maps-to`   | many-to-many | medium   |
+| `data-model.objectschema.maps-to.data-store.collection`             | `data-model.objectschema.change-event`                                      | `data-store.collection.change-events`                           | `data-store` | `maps-to`   | many-to-many | medium   |
+| `data-model.objectschema.maps-to.data-store.collection`             | `data-model.objectschema.chat-message-entity`                               | `data-store.collection.chat-messages`                           | `data-store` | `maps-to`   | many-to-many | medium   |
+| `data-model.objectschema.maps-to.data-store.collection`             | `data-model.objectschema.claim-entity`                                      | `data-store.collection.claims`                                  | `data-store` | `maps-to`   | many-to-many | medium   |
+| `data-model.objectschema.realizes.business.businessobject`          | `data-model.objectschema.claim-entity`                                      | `business.businessobject.claim`                                 | `business`   | `realizes`  | many-to-many | medium   |
+| `data-model.objectschema.maps-to.api.response`                      | `data-model.objectschema.concept-scheme-entity`                             | `api.response.concept-scheme-response`                          | `api`        | `maps-to`   | many-to-many | medium   |
+| `data-model.objectschema.maps-to.data-store.collection`             | `data-model.objectschema.concept-scheme-entity`                             | `data-store.collection.ontology-entities`                       | `data-store` | `maps-to`   | many-to-many | medium   |
+| `data-model.objectschema.maps-to.data-store.collection`             | `data-model.objectschema.conversation-entity`                               | `data-store.collection.chat-conversations`                      | `data-store` | `maps-to`   | many-to-many | medium   |
+| `data-model.objectschema.maps-to.data-store.collection`             | `data-model.objectschema.dataset-entity`                                    | `data-store.collection.datasets`                                | `data-store` | `maps-to`   | many-to-many | medium   |
+| `data-model.objectschema.maps-to.data-store.collection`             | `data-model.objectschema.entity-source-entity`                              | `data-store.collection.entity-sources`                          | `data-store` | `maps-to`   | many-to-many | medium   |
+| `data-model.objectschema.maps-to.api.response`                      | `data-model.objectschema.extracted-entity`                                  | `api.response.extraction-result-schema`                         | `api`        | `maps-to`   | many-to-many | medium   |
+| `data-model.objectschema.maps-to.api.response`                      | `data-model.objectschema.extraction-result`                                 | `api.response.extraction-result-schema`                         | `api`        | `maps-to`   | many-to-many | medium   |
+| `data-model.objectschema.maps-to.data-store.collection`             | `data-model.objectschema.extraction-result`                                 | `data-store.collection.extraction-results-table`                | `data-store` | `maps-to`   | many-to-many | medium   |
+| `data-model.objectschema.maps-to.api.response`                      | `data-model.objectschema.extraction-run`                                    | `api.response.extraction-result-schema`                         | `api`        | `maps-to`   | many-to-many | medium   |
+| `data-model.objectschema.maps-to.data-store.collection`             | `data-model.objectschema.extraction-run`                                    | `data-store.collection.extraction-runs`                         | `data-store` | `maps-to`   | many-to-many | medium   |
+| `data-model.objectschema.maps-to.api.response`                      | `data-model.objectschema.graph-metrics`                                     | `api.response.graph-metrics-response`                           | `api`        | `maps-to`   | many-to-many | medium   |
+| `data-model.objectschema.maps-to.api.response`                      | `data-model.objectschema.import-run-entity`                                 | `api.response.import-run-response`                              | `api`        | `maps-to`   | many-to-many | medium   |
+| `data-model.objectschema.maps-to.data-store.collection`             | `data-model.objectschema.import-run-entity`                                 | `data-store.collection.import-runs-table`                       | `data-store` | `maps-to`   | many-to-many | medium   |
+| `data-model.objectschema.maps-to.data-store.collection`             | `data-model.objectschema.import-run`                                        | `data-store.collection.import-runs-table`                       | `data-store` | `maps-to`   | many-to-many | medium   |
+| `data-model.objectschema.maps-to.api.requestbody`                   | `data-model.objectschema.individual-class`                                  | `api.requestbody.individual-class-list-request`                 | `api`        | `maps-to`   | many-to-many | medium   |
+| `data-model.objectschema.maps-to.api.requestbody`                   | `data-model.objectschema.individual-class`                                  | `api.requestbody.individual-class-request`                      | `api`        | `maps-to`   | many-to-many | medium   |
+| `data-model.objectschema.maps-to.data-store.collection`             | `data-model.objectschema.individual-class`                                  | `data-store.collection.individual-classes-table`                | `data-store` | `maps-to`   | many-to-many | medium   |
+| `data-model.objectschema.maps-to.api.response`                      | `data-model.objectschema.individual-entity`                                 | `api.response.individual-response`                              | `api`        | `maps-to`   | many-to-many | medium   |
+| `data-model.objectschema.maps-to.data-store.collection`             | `data-model.objectschema.individual-entity`                                 | `data-store.collection.ontology-entities`                       | `data-store` | `maps-to`   | many-to-many | medium   |
+| `data-model.objectschema.maps-to.api.response`                      | `data-model.objectschema.knowledge-graph`                                   | `api.response.knowledge-graph-response`                         | `api`        | `maps-to`   | many-to-many | medium   |
+| `data-model.objectschema.maps-to.api.response`                      | `data-model.objectschema.ontology-class-entity`                             | `api.response.class-response`                                   | `api`        | `maps-to`   | many-to-many | medium   |
+| `data-model.objectschema.maps-to.data-store.collection`             | `data-model.objectschema.ontology-class-entity`                             | `data-store.collection.ontology-entities`                       | `data-store` | `maps-to`   | many-to-many | medium   |
+| `data-model.objectschema.maps-to.data-store.collection`             | `data-model.objectschema.ontology-entity`                                   | `data-store.collection.ontology-entities`                       | `data-store` | `maps-to`   | many-to-many | medium   |
+| `data-model.objectschema.maps-to.api.response`                      | `data-model.objectschema.path-result`                                       | `api.response.path-result-response`                             | `api`        | `maps-to`   | many-to-many | medium   |
+| `data-model.objectschema.maps-to.data-store.collection`             | `data-model.objectschema.pipeline-configuration`                            | `data-store.collection.pipeline-configurations-table`           | `data-store` | `maps-to`   | many-to-many | medium   |
+| `data-model.objectschema.maps-to.data-store.collection`             | `data-model.objectschema.pipeline-run-entity`                               | `data-store.collection.pipeline-runs`                           | `data-store` | `maps-to`   | many-to-many | medium   |
+| `data-model.objectschema.maps-to.data-store.collection`             | `data-model.objectschema.predicate-entity`                                  | `data-store.collection.predicates`                              | `data-store` | `maps-to`   | many-to-many | medium   |
+| `data-model.objectschema.satisfies.motivation.requirement`          | `data-model.objectschema.predicate-entity`                                  | `motivation.requirement.relationships-limited-to-allowed-types` | `motivation` | `satisfies` | many-to-many | medium   |
+| `data-model.objectschema.maps-to.api.response`                      | `data-model.objectschema.processing-metrics`                                | `api.response.service-metrics-response`                         | `api`        | `maps-to`   | many-to-many | medium   |
+| `data-model.objectschema.maps-to.api.requestbody`                   | `data-model.objectschema.property-definition-entity`                        | `api.requestbody.property-definition-create-request`            | `api`        | `maps-to`   | many-to-many | medium   |
+| `data-model.objectschema.maps-to.data-store.collection`             | `data-model.objectschema.property-definition-entity`                        | `data-store.collection.property-definitions-table`              | `data-store` | `maps-to`   | many-to-many | medium   |
+| `data-model.objectschema.maps-to.api.requestbody`                   | `data-model.objectschema.property-definition`                               | `api.requestbody.property-definition-create-request`            | `api`        | `maps-to`   | many-to-many | medium   |
+| `data-model.objectschema.maps-to.api.response`                      | `data-model.objectschema.property-definition`                               | `api.response.property-definition-response`                     | `api`        | `maps-to`   | many-to-many | medium   |
+| `data-model.objectschema.maps-to.data-store.collection`             | `data-model.objectschema.property-definition`                               | `data-store.collection.property-definitions-table`              | `data-store` | `maps-to`   | many-to-many | medium   |
+| `data-model.objectschema.maps-to.data-store.collection`             | `data-model.objectschema.proposal-decision-entity`                          | `data-store.collection.proposal-decisions`                      | `data-store` | `maps-to`   | many-to-many | medium   |
+| `data-model.objectschema.maps-to.data-store.collection`             | `data-model.objectschema.proposal-entity`                                   | `data-store.collection.proposals-table`                         | `data-store` | `maps-to`   | many-to-many | medium   |
+| `data-model.objectschema.maps-to.data-store.collection`             | `data-model.objectschema.proposal`                                          | `data-store.collection.proposals-table`                         | `data-store` | `maps-to`   | many-to-many | medium   |
+| `data-model.objectschema.maps-to.data-store.collection`             | `data-model.objectschema.proposed-operation`                                | `data-store.collection.proposal-operations`                     | `data-store` | `maps-to`   | many-to-many | medium   |
+| `data-model.objectschema.maps-to.api.response`                      | `data-model.objectschema.relationship-entity`                               | `api.response.relationship-response`                            | `api`        | `maps-to`   | many-to-many | medium   |
+| `data-model.objectschema.maps-to.data-store.collection`             | `data-model.objectschema.relationship-entity`                               | `data-store.collection.relationships`                           | `data-store` | `maps-to`   | many-to-many | medium   |
+| `data-model.objectschema.maps-to.data-store.collection`             | `data-model.objectschema.relationship`                                      | `data-store.collection.relationships`                           | `data-store` | `maps-to`   | many-to-many | medium   |
+| `data-model.objectschema.maps-to.api.response`                      | `data-model.objectschema.resolution-record`                                 | `api.response.resolution-record-response`                       | `api`        | `maps-to`   | many-to-many | medium   |
+| `data-model.objectschema.maps-to.data-store.collection`             | `data-model.objectschema.source-entity`                                     | `data-store.collection.sources`                                 | `data-store` | `maps-to`   | many-to-many | medium   |
+| `data-model.objectschema.maps-to.api.response`                      | `data-model.objectschema.subgraph`                                          | `api.response.subgraph-data-response`                           | `api`        | `maps-to`   | many-to-many | medium   |
+| `data-model.objectschema.maps-to.api.response`                      | `data-model.objectschema.subgraph-result`                                   | `api.response.subgraph-result-response`                         | `api`        | `maps-to`   | many-to-many | medium   |
+| `data-model.objectschema.maps-to.api.response`                      | `data-model.objectschema.system-health`                                     | `api.response.database-health-response`                         | `api`        | `maps-to`   | many-to-many | medium   |
+| `data-model.objectschema.maps-to.api.response`                      | `data-model.objectschema.taxonomy-entity`                                   | `api.response.taxonomy-response`                                | `api`        | `maps-to`   | many-to-many | medium   |
+| `data-model.objectschema.maps-to.data-store.collection`             | `data-model.objectschema.taxonomy-entity`                                   | `data-store.collection.ontology-entities`                       | `data-store` | `maps-to`   | many-to-many | medium   |
+| `data-model.objectschema.maps-to.api.response`                      | `data-model.objectschema.triple-extraction-result`                          | `api.response.triples-response`                                 | `api`        | `maps-to`   | many-to-many | medium   |
 
 ## Element Reference
 
@@ -161,34 +241,11 @@ Array schema for the external_references list on the Class entity — holds enri
 
 #### Relationships
 
-| Type        | Related Element                                | Predicate  | Direction |
-| ----------- | ---------------------------------------------- | ---------- | --------- |
-| intra-layer | `data-model.numericschema.relationship-weight` | `composes` | outbound  |
-| intra-layer | `data-model.objectschema.ontology-entity`      | `composes` | outbound  |
-| intra-layer | `data-model.stringschema.iso-8601-datetime`    | `composes` | outbound  |
-| intra-layer | `data-model.stringschema.uuid-string`          | `composes` | outbound  |
-
-### relationship weight {#relationship-weight}
-
-**ID**: `data-model.numericschema.relationship-weight`
-
-**Type**: `numericschema`
-
-Float schema for the weight property on typed relationships — defaults to 1.0, used for semantic similarity scoring and graph traversal
-
-#### Attributes
-
-| Name    | Value  |
-| ------- | ------ |
-| maximum | 1      |
-| minimum | 0      |
-| type    | number |
-
-#### Relationships
-
-| Type        | Related Element                                   | Predicate  | Direction |
-| ----------- | ------------------------------------------------- | ---------- | --------- |
-| intra-layer | `data-model.arrayschema.external-references-list` | `composes` | inbound   |
+| Type        | Related Element                             | Predicate  | Direction |
+| ----------- | ------------------------------------------- | ---------- | --------- |
+| intra-layer | `data-model.objectschema.ontology-entity`   | `composes` | outbound  |
+| intra-layer | `data-model.stringschema.iso-8601-datetime` | `composes` | outbound  |
+| intra-layer | `data-model.stringschema.uuid-string`       | `composes` | outbound  |
 
 ### App Configuration {#app-configuration}
 
@@ -206,9 +263,52 @@ Domain entity representing application configuration organized into sections: se
 
 #### Relationships
 
-| Type        | Related Element                           | Predicate | Direction |
-| ----------- | ----------------------------------------- | --------- | --------- |
-| inter-layer | `api.response.app-configuration-response` | `maps-to` | outbound  |
+| Type        | Related Element                                           | Predicate  | Direction |
+| ----------- | --------------------------------------------------------- | ---------- | --------- |
+| inter-layer | `application.applicationcomponent.json-file-config-store` | `accesses` | inbound   |
+| inter-layer | `api.response.app-configuration-response`                 | `maps-to`  | outbound  |
+
+### Approval Policy Entity {#approval-policy-entity}
+
+**ID**: `data-model.objectschema.approval-policy-entity`
+
+**Type**: `objectschema`
+
+Domain entity: a taxonomy's approval policy, the rules for which proposal operations auto-apply.
+
+#### Attributes
+
+| Name | Value  |
+| ---- | ------ |
+| type | object |
+
+#### Relationships
+
+| Type        | Related Element                                                      | Predicate  | Direction |
+| ----------- | -------------------------------------------------------------------- | ---------- | --------- |
+| inter-layer | `application.applicationcomponent.sqlite-approval-policy-repository` | `accesses` | inbound   |
+| inter-layer | `data-store.collection.approval-policies`                            | `maps-to`  | outbound  |
+
+### Attribute Definition Entity {#attribute-definition-entity}
+
+**ID**: `data-model.objectschema.attribute-definition-entity`
+
+**Type**: `objectschema`
+
+Domain entity: an attribute a class's individuals may carry (name, data type, cardinality).
+
+#### Attributes
+
+| Name | Value  |
+| ---- | ------ |
+| type | object |
+
+#### Relationships
+
+| Type        | Related Element                                               | Predicate  | Direction |
+| ----------- | ------------------------------------------------------------- | ---------- | --------- |
+| inter-layer | `application.applicationcomponent.sqlite-ontology-repository` | `accesses` | inbound   |
+| inter-layer | `data-store.collection.attribute-definitions`                 | `maps-to`  | outbound  |
 
 ### Background Task {#background-task}
 
@@ -230,6 +330,27 @@ Domain entity representing a long-running background task with id, name, status 
 | ----------- | --------------------------------------- | --------- | --------- |
 | inter-layer | `api.response.background-task-response` | `maps-to` | outbound  |
 
+### Batch Entity {#batch-entity}
+
+**ID**: `data-model.objectschema.batch-entity`
+
+**Type**: `objectschema`
+
+Domain entity: a batch of pipeline runs with aggregate status.
+
+#### Attributes
+
+| Name | Value  |
+| ---- | ------ |
+| type | object |
+
+#### Relationships
+
+| Type        | Related Element                                            | Predicate  | Direction |
+| ----------- | ---------------------------------------------------------- | ---------- | --------- |
+| inter-layer | `application.applicationcomponent.sqlite-batch-repository` | `accesses` | inbound   |
+| inter-layer | `data-store.collection.batches`                            | `maps-to`  | outbound  |
+
 ### Change Event {#change-event}
 
 **ID**: `data-model.objectschema.change-event`
@@ -246,11 +367,13 @@ ORM schema for the audit trail of all entity mutations — stores entity_id, ent
 
 #### Relationships
 
-| Type        | Related Element                               | Predicate     | Direction |
-| ----------- | --------------------------------------------- | ------------- | --------- |
-| intra-layer | `data-model.objectschema.change-event-entity` | `specializes` | inbound   |
-| intra-layer | `data-model.objectschema.ontology-entity`     | `specializes` | outbound  |
-| intra-layer | `data-model.objectschema.import-run`          | `specializes` | inbound   |
+| Type        | Related Element                                             | Predicate     | Direction |
+| ----------- | ----------------------------------------------------------- | ------------- | --------- |
+| inter-layer | `application.applicationcomponent.sqlite-change-repository` | `accesses`    | inbound   |
+| inter-layer | `data-store.collection.change-events`                       | `maps-to`     | outbound  |
+| intra-layer | `data-model.objectschema.change-event-entity`               | `specializes` | inbound   |
+| intra-layer | `data-model.objectschema.ontology-entity`                   | `specializes` | outbound  |
+| intra-layer | `data-model.objectschema.import-run`                        | `specializes` | inbound   |
 
 ### Change Event Entity {#change-event-entity}
 
@@ -268,18 +391,22 @@ Domain entity recording a single change to an entity; carries entity_id, entity_
 
 #### Relationships
 
-| Type        | Related Element                        | Predicate     | Direction |
-| ----------- | -------------------------------------- | ------------- | --------- |
-| inter-layer | `api.response.change-history-response` | `maps-to`     | outbound  |
-| intra-layer | `data-model.objectschema.change-event` | `specializes` | outbound  |
+| Type        | Related Element                                             | Predicate     | Direction |
+| ----------- | ----------------------------------------------------------- | ------------- | --------- |
+| inter-layer | `application.applicationcomponent.duck-db-sync-adapter`     | `accesses`    | inbound   |
+| inter-layer | `application.applicationcomponent.s3-sync-adapter`          | `accesses`    | inbound   |
+| inter-layer | `application.applicationcomponent.sqlite-change-repository` | `accesses`    | inbound   |
+| inter-layer | `api.response.change-history-response`                      | `maps-to`     | outbound  |
+| inter-layer | `data-store.collection.change-events`                       | `maps-to`     | outbound  |
+| intra-layer | `data-model.objectschema.change-event`                      | `specializes` | outbound  |
 
-### Changeset {#changeset}
+### Chat Message Entity {#chat-message-entity}
 
-**ID**: `data-model.objectschema.changeset`
+**ID**: `data-model.objectschema.chat-message-entity`
 
 **Type**: `objectschema`
 
-ORM schema for named collections of change events progressing through version control states (WORKING→STAGED→PROPOSED→APPROVED→MERGED) — stores name, description, state, and a JSON array of event_ids
+Domain entity: one chat message (role and content blocks: text, tool use, tool result, reasoning).
 
 #### Attributes
 
@@ -289,20 +416,18 @@ ORM schema for named collections of change events progressing through version co
 
 #### Relationships
 
-| Type        | Related Element                            | Predicate     | Direction |
-| ----------- | ------------------------------------------ | ------------- | --------- |
-| intra-layer | `data-model.objectschema.changeset-entity` | `specializes` | inbound   |
-| intra-layer | `data-model.objectschema.changeset-event`  | `specializes` | outbound  |
-| intra-layer | `data-model.objectschema.proposal`         | `specializes` | outbound  |
-| intra-layer | `data-model.objectschema.import-run`       | `specializes` | inbound   |
+| Type        | Related Element                                                   | Predicate  | Direction |
+| ----------- | ----------------------------------------------------------------- | ---------- | --------- |
+| inter-layer | `application.applicationcomponent.sqlite-conversation-repository` | `accesses` | inbound   |
+| inter-layer | `data-store.collection.chat-messages`                             | `maps-to`  | outbound  |
 
-### Changeset Entity {#changeset-entity}
+### Claim Entity {#claim-entity}
 
-**ID**: `data-model.objectschema.changeset-entity`
+**ID**: `data-model.objectschema.claim-entity`
 
 **Type**: `objectschema`
 
-Domain entity for a named collection of change events proposed as a unit; enforces state machine transitions (WORKING→STAGED→PROPOSED→APPROVED→MERGED) via transition_to(); prevents direct state assignment
+Domain entity: a claim about a taxonomy (from notes or a client), with its triage and verdict.
 
 #### Attributes
 
@@ -312,30 +437,11 @@ Domain entity for a named collection of change events proposed as a unit; enforc
 
 #### Relationships
 
-| Type        | Related Element                     | Predicate     | Direction |
-| ----------- | ----------------------------------- | ------------- | --------- |
-| inter-layer | `api.response.changeset-response`   | `maps-to`     | outbound  |
-| intra-layer | `data-model.objectschema.changeset` | `specializes` | outbound  |
-
-### Changeset Event {#changeset-event}
-
-**ID**: `data-model.objectschema.changeset-event`
-
-**Type**: `objectschema`
-
-ORM schema for individual change events within a versioning changeset — stores changeset_id FK, entity_id, operation (create/update/delete), before/after JSON snapshots
-
-#### Attributes
-
-| Name | Value  |
-| ---- | ------ |
-| type | object |
-
-#### Relationships
-
-| Type        | Related Element                     | Predicate     | Direction |
-| ----------- | ----------------------------------- | ------------- | --------- |
-| intra-layer | `data-model.objectschema.changeset` | `specializes` | inbound   |
+| Type        | Related Element                                            | Predicate  | Direction |
+| ----------- | ---------------------------------------------------------- | ---------- | --------- |
+| inter-layer | `application.applicationcomponent.sqlite-claim-repository` | `accesses` | inbound   |
+| inter-layer | `data-store.collection.claims`                             | `maps-to`  | outbound  |
+| inter-layer | `business.businessobject.claim`                            | `realizes` | outbound  |
 
 ### Concept Scheme Entity {#concept-scheme-entity}
 
@@ -353,17 +459,23 @@ Domain entity for a concept scheme that groups classes within a taxonomy; has id
 
 #### Relationships
 
-| Type        | Related Element                        | Predicate | Direction |
-| ----------- | -------------------------------------- | --------- | --------- |
-| inter-layer | `api.response.concept-scheme-response` | `maps-to` | outbound  |
+| Type        | Related Element                                                | Predicate  | Direction |
+| ----------- | -------------------------------------------------------------- | ---------- | --------- |
+| inter-layer | `application.applicationcomponent.canon-demo-dataset-loader`   | `accesses` | inbound   |
+| inter-layer | `application.applicationcomponent.owl-interchange-adapter`     | `accesses` | inbound   |
+| inter-layer | `application.applicationcomponent.rdflib-query-engine-adapter` | `accesses` | inbound   |
+| inter-layer | `application.applicationcomponent.skos-interchange-adapter`    | `accesses` | inbound   |
+| inter-layer | `application.applicationcomponent.sqlite-ontology-repository`  | `accesses` | inbound   |
+| inter-layer | `api.response.concept-scheme-response`                         | `maps-to`  | outbound  |
+| inter-layer | `data-store.collection.ontology-entities`                      | `maps-to`  | outbound  |
 
-### Conflict Entity {#conflict-entity}
+### Conversation Entity {#conversation-entity}
 
-**ID**: `data-model.objectschema.conflict-entity`
+**ID**: `data-model.objectschema.conversation-entity`
 
 **Type**: `objectschema`
 
-Domain entity representing a merge conflict on a single field; carries entity_id, entity_type, field_name, base_value, incoming_value, and resolved_value/strategy; resolved atomically via resolve()
+Domain entity: a chat conversation with its messages.
 
 #### Attributes
 
@@ -373,17 +485,18 @@ Domain entity representing a merge conflict on a single field; carries entity_id
 
 #### Relationships
 
-| Type        | Related Element                  | Predicate | Direction |
-| ----------- | -------------------------------- | --------- | --------- |
-| inter-layer | `api.response.conflict-response` | `maps-to` | outbound  |
+| Type        | Related Element                                                   | Predicate  | Direction |
+| ----------- | ----------------------------------------------------------------- | ---------- | --------- |
+| inter-layer | `application.applicationcomponent.sqlite-conversation-repository` | `accesses` | inbound   |
+| inter-layer | `data-store.collection.chat-conversations`                        | `maps-to`  | outbound  |
 
-### Conflict Report {#conflict-report}
+### Dataset Entity {#dataset-entity}
 
-**ID**: `data-model.objectschema.conflict-report`
+**ID**: `data-model.objectschema.dataset-entity`
 
 **Type**: `objectschema`
 
-Report of conflicts in a merge proposal; holds proposal_id and a list of Conflict entities; provides has_conflicts and all_resolved properties
+Domain entity: a named body of data (individuals and their relationships) over a taxonomy's schema.
 
 #### Attributes
 
@@ -393,17 +506,18 @@ Report of conflicts in a merge proposal; holds proposal_id and a list of Conflic
 
 #### Relationships
 
-| Type        | Related Element                         | Predicate | Direction |
-| ----------- | --------------------------------------- | --------- | --------- |
-| inter-layer | `api.response.conflict-report-response` | `maps-to` | outbound  |
+| Type        | Related Element                                               | Predicate  | Direction |
+| ----------- | ------------------------------------------------------------- | ---------- | --------- |
+| inter-layer | `application.applicationcomponent.sqlite-ontology-repository` | `accesses` | inbound   |
+| inter-layer | `data-store.collection.datasets`                              | `maps-to`  | outbound  |
 
-### Conflict Resolution {#conflict-resolution}
+### Entity Source Entity {#entity-source-entity}
 
-**ID**: `data-model.objectschema.conflict-resolution`
+**ID**: `data-model.objectschema.entity-source-entity`
 
 **Type**: `objectschema`
 
-ORM schema for manual conflict resolution records — stores proposal_id FK, entity_id, conflict type, chosen resolution strategy, and resolved snapshot
+Domain entity: provenance linking an ontology entity to the source passage it was extracted from.
 
 #### Attributes
 
@@ -413,71 +527,10 @@ ORM schema for manual conflict resolution records — stores proposal_id FK, ent
 
 #### Relationships
 
-| Type        | Related Element                    | Predicate     | Direction |
-| ----------- | ---------------------------------- | ------------- | --------- |
-| intra-layer | `data-model.objectschema.proposal` | `specializes` | inbound   |
-
-### Entity Version {#entity-version}
-
-**ID**: `data-model.objectschema.entity-version`
-
-**Type**: `objectschema`
-
-ORM schema for entity version snapshots — stores entity_id FK, version number, full JSON snapshot, and the change event that triggered the version
-
-#### Attributes
-
-| Name | Value  |
-| ---- | ------ |
-| type | object |
-
-#### Relationships
-
-| Type        | Related Element                                 | Predicate     | Direction |
-| ----------- | ----------------------------------------------- | ------------- | --------- |
-| inter-layer | `api.response.entity-version-response`          | `maps-to`     | outbound  |
-| intra-layer | `data-model.objectschema.entity-version-entity` | `specializes` | inbound   |
-
-### Entity Version Entity {#entity-version-entity}
-
-**ID**: `data-model.objectschema.entity-version-entity`
-
-**Type**: `objectschema`
-
-Domain entity representing a snapshot of an entity at a specific version; carries entity_id, version number, state enum, snapshot dict, created_at, and optional parent_version
-
-#### Attributes
-
-| Name | Value  |
-| ---- | ------ |
-| type | object |
-
-#### Relationships
-
-| Type        | Related Element                          | Predicate     | Direction |
-| ----------- | ---------------------------------------- | ------------- | --------- |
-| inter-layer | `api.response.entity-version-response`   | `maps-to`     | outbound  |
-| intra-layer | `data-model.objectschema.entity-version` | `specializes` | outbound  |
-
-### Execution Entity {#execution-entity}
-
-**ID**: `data-model.objectschema.execution-entity`
-
-**Type**: `objectschema`
-
-Domain entity recording a single LLM pipeline execution; captures input/output text, provider, model, tokens_in, tokens_out, duration_ms, status (success/error/timeout), optional error message, and timestamp
-
-#### Attributes
-
-| Name | Value  |
-| ---- | ------ |
-| type | object |
-
-#### Relationships
-
-| Type        | Related Element                   | Predicate | Direction |
-| ----------- | --------------------------------- | --------- | --------- |
-| inter-layer | `api.response.execution-response` | `maps-to` | outbound  |
+| Type        | Related Element                                                    | Predicate  | Direction |
+| ----------- | ------------------------------------------------------------------ | ---------- | --------- |
+| inter-layer | `application.applicationcomponent.sqlite-entity-source-repository` | `accesses` | inbound   |
+| inter-layer | `data-store.collection.entity-sources`                             | `maps-to`  | outbound  |
 
 ### Extracted Entity {#extracted-entity}
 
@@ -495,9 +548,10 @@ Domain entity for an entity extracted from text through one or more extraction l
 
 #### Relationships
 
-| Type        | Related Element                         | Predicate | Direction |
-| ----------- | --------------------------------------- | --------- | --------- |
-| inter-layer | `api.response.extraction-result-schema` | `maps-to` | outbound  |
+| Type        | Related Element                                                 | Predicate  | Direction |
+| ----------- | --------------------------------------------------------------- | ---------- | --------- |
+| inter-layer | `application.applicationcomponent.sqlite-extraction-repository` | `accesses` | inbound   |
+| inter-layer | `api.response.extraction-result-schema`                         | `maps-to`  | outbound  |
 
 ### Extraction Result {#extraction-result}
 
@@ -515,9 +569,11 @@ ORM schema for persisted extraction results — stores source text, NLP/LLM pipe
 
 #### Relationships
 
-| Type        | Related Element                         | Predicate | Direction |
-| ----------- | --------------------------------------- | --------- | --------- |
-| inter-layer | `api.response.extraction-result-schema` | `maps-to` | outbound  |
+| Type        | Related Element                                                 | Predicate  | Direction |
+| ----------- | --------------------------------------------------------------- | ---------- | --------- |
+| inter-layer | `application.applicationcomponent.sqlite-extraction-repository` | `accesses` | inbound   |
+| inter-layer | `api.response.extraction-result-schema`                         | `maps-to`  | outbound  |
+| inter-layer | `data-store.collection.extraction-results-table`                | `maps-to`  | outbound  |
 
 ### Extraction Run {#extraction-run}
 
@@ -535,9 +591,11 @@ First-class domain entity (audit record) tracking an extraction operation; recor
 
 #### Relationships
 
-| Type        | Related Element                         | Predicate | Direction |
-| ----------- | --------------------------------------- | --------- | --------- |
-| inter-layer | `api.response.extraction-result-schema` | `maps-to` | outbound  |
+| Type        | Related Element                                                     | Predicate  | Direction |
+| ----------- | ------------------------------------------------------------------- | ---------- | --------- |
+| inter-layer | `application.applicationcomponent.sqlite-extraction-run-repository` | `accesses` | inbound   |
+| inter-layer | `api.response.extraction-result-schema`                             | `maps-to`  | outbound  |
+| inter-layer | `data-store.collection.extraction-runs`                             | `maps-to`  | outbound  |
 
 ### Graph Metrics {#graph-metrics}
 
@@ -559,6 +617,26 @@ Computed structural metrics for a knowledge graph: density, average_degree, conn
 | ----------- | ------------------------------------- | --------- | --------- |
 | inter-layer | `api.response.graph-metrics-response` | `maps-to` | outbound  |
 
+### Graph View {#graph-view}
+
+**ID**: `data-model.objectschema.graph-view`
+
+**Type**: `objectschema`
+
+Domain read model: labelled nodes, edges, layers and taxonomies of the ontology graph for visualization.
+
+#### Attributes
+
+| Name | Value  |
+| ---- | ------ |
+| type | object |
+
+#### Relationships
+
+| Type        | Related Element                                                   | Predicate  | Direction |
+| ----------- | ----------------------------------------------------------------- | ---------- | --------- |
+| inter-layer | `application.applicationcomponent.network-x-graph-engine-adapter` | `accesses` | inbound   |
+
 ### Import Run {#import-run}
 
 **ID**: `data-model.objectschema.import-run`
@@ -575,11 +653,12 @@ ORM schema tracking interchange import operations (SKOS/OWL/GraphML) — stores 
 
 #### Relationships
 
-| Type        | Related Element                             | Predicate     | Direction |
-| ----------- | ------------------------------------------- | ------------- | --------- |
-| intra-layer | `data-model.objectschema.import-run-entity` | `specializes` | inbound   |
-| intra-layer | `data-model.objectschema.change-event`      | `specializes` | outbound  |
-| intra-layer | `data-model.objectschema.changeset`         | `specializes` | outbound  |
+| Type        | Related Element                                                  | Predicate     | Direction |
+| ----------- | ---------------------------------------------------------------- | ------------- | --------- |
+| inter-layer | `application.applicationcomponent.sqlite-interchange-repository` | `accesses`    | inbound   |
+| inter-layer | `data-store.collection.import-runs-table`                        | `maps-to`     | outbound  |
+| intra-layer | `data-model.objectschema.import-run-entity`                      | `specializes` | inbound   |
+| intra-layer | `data-model.objectschema.change-event`                           | `specializes` | outbound  |
 
 ### Import Run Entity {#import-run-entity}
 
@@ -597,10 +676,12 @@ Domain entity tracking an import operation from inception through completion; re
 
 #### Relationships
 
-| Type        | Related Element                      | Predicate     | Direction |
-| ----------- | ------------------------------------ | ------------- | --------- |
-| inter-layer | `api.response.import-run-response`   | `maps-to`     | outbound  |
-| intra-layer | `data-model.objectschema.import-run` | `specializes` | outbound  |
+| Type        | Related Element                                                  | Predicate     | Direction |
+| ----------- | ---------------------------------------------------------------- | ------------- | --------- |
+| inter-layer | `application.applicationcomponent.sqlite-interchange-repository` | `accesses`    | inbound   |
+| inter-layer | `api.response.import-run-response`                               | `maps-to`     | outbound  |
+| inter-layer | `data-store.collection.import-runs-table`                        | `maps-to`     | outbound  |
+| intra-layer | `data-model.objectschema.import-run`                             | `specializes` | outbound  |
 
 ### Individual Class {#individual-class}
 
@@ -618,10 +699,12 @@ Association table ORM schema linking individual instances to their parent classe
 
 #### Relationships
 
-| Type        | Related Element                                 | Predicate | Direction |
-| ----------- | ----------------------------------------------- | --------- | --------- |
-| inter-layer | `api.requestbody.individual-class-list-request` | `maps-to` | outbound  |
-| inter-layer | `api.requestbody.individual-class-request`      | `maps-to` | outbound  |
+| Type        | Related Element                                               | Predicate  | Direction |
+| ----------- | ------------------------------------------------------------- | ---------- | --------- |
+| inter-layer | `application.applicationcomponent.sqlite-ontology-repository` | `accesses` | inbound   |
+| inter-layer | `api.requestbody.individual-class-list-request`               | `maps-to`  | outbound  |
+| inter-layer | `api.requestbody.individual-class-request`                    | `maps-to`  | outbound  |
+| inter-layer | `data-store.collection.individual-classes-table`              | `maps-to`  | outbound  |
 
 ### Individual Entity {#individual-entity}
 
@@ -639,9 +722,11 @@ Domain entity representing an instance of one or more classes; maintains an orde
 
 #### Relationships
 
-| Type        | Related Element                    | Predicate | Direction |
-| ----------- | ---------------------------------- | --------- | --------- |
-| inter-layer | `api.response.individual-response` | `maps-to` | outbound  |
+| Type        | Related Element                                               | Predicate  | Direction |
+| ----------- | ------------------------------------------------------------- | ---------- | --------- |
+| inter-layer | `application.applicationcomponent.sqlite-ontology-repository` | `accesses` | inbound   |
+| inter-layer | `api.response.individual-response`                            | `maps-to`  | outbound  |
+| inter-layer | `data-store.collection.ontology-entities`                     | `maps-to`  | outbound  |
 
 ### Knowledge Graph {#knowledge-graph}
 
@@ -663,26 +748,6 @@ Lightweight snapshot descriptor of the in-memory knowledge graph state; carries 
 | ----------- | --------------------------------------- | --------- | --------- |
 | inter-layer | `api.response.knowledge-graph-response` | `maps-to` | outbound  |
 
-### Merge Result {#merge-result}
-
-**ID**: `data-model.objectschema.merge-result`
-
-**Type**: `objectschema`
-
-Result of a successful merge operation; carries proposal_id, changeset_id, merged_at timestamp, events_applied count, and conflicts_resolved count
-
-#### Attributes
-
-| Name | Value  |
-| ---- | ------ |
-| type | object |
-
-#### Relationships
-
-| Type        | Related Element                      | Predicate | Direction |
-| ----------- | ------------------------------------ | --------- | --------- |
-| inter-layer | `api.response.merge-result-response` | `maps-to` | outbound  |
-
 ### Ontology Class Entity {#ontology-class-entity}
 
 **ID**: `data-model.objectschema.ontology-class-entity`
@@ -699,9 +764,13 @@ Domain entity representing a concept (OntologyClass) in the ontology hierarchy; 
 
 #### Relationships
 
-| Type        | Related Element               | Predicate | Direction |
-| ----------- | ----------------------------- | --------- | --------- |
-| inter-layer | `api.response.class-response` | `maps-to` | outbound  |
+| Type        | Related Element                                                | Predicate  | Direction |
+| ----------- | -------------------------------------------------------------- | ---------- | --------- |
+| inter-layer | `application.applicationcomponent.canon-demo-dataset-loader`   | `accesses` | inbound   |
+| inter-layer | `application.applicationcomponent.rdflib-query-engine-adapter` | `accesses` | inbound   |
+| inter-layer | `application.applicationcomponent.sqlite-ontology-repository`  | `accesses` | inbound   |
+| inter-layer | `api.response.class-response`                                  | `maps-to`  | outbound  |
+| inter-layer | `data-store.collection.ontology-entities`                      | `maps-to`  | outbound  |
 
 ### Ontology Entity {#ontology-entity}
 
@@ -719,11 +788,13 @@ Single-table inheritance ORM schema for all ontology entities (taxonomy, concept
 
 #### Relationships
 
-| Type        | Related Element                                   | Predicate     | Direction |
-| ----------- | ------------------------------------------------- | ------------- | --------- |
-| intra-layer | `data-model.arrayschema.external-references-list` | `composes`    | inbound   |
-| intra-layer | `data-model.objectschema.change-event`            | `specializes` | inbound   |
-| intra-layer | `data-model.objectschema.relationship`            | `specializes` | outbound  |
+| Type        | Related Element                                               | Predicate     | Direction |
+| ----------- | ------------------------------------------------------------- | ------------- | --------- |
+| inter-layer | `application.applicationcomponent.sqlite-ontology-repository` | `accesses`    | inbound   |
+| inter-layer | `data-store.collection.ontology-entities`                     | `maps-to`     | outbound  |
+| intra-layer | `data-model.arrayschema.external-references-list`             | `composes`    | inbound   |
+| intra-layer | `data-model.objectschema.change-event`                        | `specializes` | inbound   |
+| intra-layer | `data-model.objectschema.relationship`                        | `specializes` | outbound  |
 
 ### Path Result {#path-result}
 
@@ -751,7 +822,7 @@ An ordered path traversal between two nodes in the knowledge graph; contains sou
 
 **Type**: `objectschema`
 
-ORM schema for LLM pipeline configurations in operations.db — stores pipeline slug, title, provider, model, config JSON, system_prompt, user_prompt template, enabled flag, and version counter
+ORM model for user-created pipeline configurations (operations.db pipeline_configurations): type, implementation, versioned settings.
 
 #### Attributes
 
@@ -761,10 +832,11 @@ ORM schema for LLM pipeline configurations in operations.db — stores pipeline 
 
 #### Relationships
 
-| Type        | Related Element                                         | Predicate     | Direction |
-| ----------- | ------------------------------------------------------- | ------------- | --------- |
-| intra-layer | `data-model.objectschema.pipeline-configuration-entity` | `specializes` | inbound   |
-| intra-layer | `data-model.objectschema.pipeline-execution`            | `specializes` | outbound  |
+| Type        | Related Element                                                             | Predicate     | Direction |
+| ----------- | --------------------------------------------------------------------------- | ------------- | --------- |
+| inter-layer | `application.applicationcomponent.sqlite-pipeline-configuration-repository` | `accesses`    | inbound   |
+| inter-layer | `data-store.collection.pipeline-configurations-table`                       | `maps-to`     | outbound  |
+| intra-layer | `data-model.objectschema.pipeline-configuration-entity`                     | `specializes` | inbound   |
 
 ### Pipeline Configuration Entity {#pipeline-configuration-entity}
 
@@ -772,7 +844,7 @@ ORM schema for LLM pipeline configurations in operations.db — stores pipeline 
 
 **Type**: `objectschema`
 
-Domain entity for an LLM pipeline configuration; defines provider (openai/anthropic), model, prompts (system and user), runtime config, version, enabled flag, and optional seed; validates provider and version &gt;= 1
+Domain value: one version of a pipeline implementation's configuration (built-in or user), as the registry resolves it.
 
 #### Attributes
 
@@ -782,19 +854,18 @@ Domain entity for an LLM pipeline configuration; defines provider (openai/anthro
 
 #### Relationships
 
-| Type        | Related Element                                  | Predicate     | Direction |
-| ----------- | ------------------------------------------------ | ------------- | --------- |
-| inter-layer | `api.requestbody.pipeline-configuration-create`  | `maps-to`     | outbound  |
-| intra-layer | `data-model.objectschema.pipeline-configuration` | `specializes` | outbound  |
-| intra-layer | `data-model.objectschema.pipeline-execution`     | `specializes` | outbound  |
+| Type        | Related Element                                                             | Predicate     | Direction |
+| ----------- | --------------------------------------------------------------------------- | ------------- | --------- |
+| inter-layer | `application.applicationcomponent.sqlite-pipeline-configuration-repository` | `accesses`    | inbound   |
+| intra-layer | `data-model.objectschema.pipeline-configuration`                            | `specializes` | outbound  |
 
-### Pipeline Execution {#pipeline-execution}
+### Pipeline Run Entity {#pipeline-run-entity}
 
-**ID**: `data-model.objectschema.pipeline-execution`
+**ID**: `data-model.objectschema.pipeline-run-entity`
 
 **Type**: `objectschema`
 
-ORM schema for pipeline execution records in operations.db — stores pipeline_id FK, trigger, status, input/output JSON, LLM traceability log, and timing metadata
+Domain entity: one run of a pipeline (type, implementation, configuration version, status, stage progress), specialized per pipeline type.
 
 #### Attributes
 
@@ -804,10 +875,32 @@ ORM schema for pipeline execution records in operations.db — stores pipeline_i
 
 #### Relationships
 
-| Type        | Related Element                                         | Predicate     | Direction |
-| ----------- | ------------------------------------------------------- | ------------- | --------- |
-| intra-layer | `data-model.objectschema.pipeline-configuration-entity` | `specializes` | inbound   |
-| intra-layer | `data-model.objectschema.pipeline-configuration`        | `specializes` | inbound   |
+| Type        | Related Element                                               | Predicate  | Direction |
+| ----------- | ------------------------------------------------------------- | ---------- | --------- |
+| inter-layer | `application.applicationcomponent.sqlite-pipeline-repository` | `accesses` | inbound   |
+| inter-layer | `data-store.collection.pipeline-runs`                         | `maps-to`  | outbound  |
+
+### Predicate Entity {#predicate-entity}
+
+**ID**: `data-model.objectschema.predicate-entity`
+
+**Type**: `objectschema`
+
+Domain entity: a relation verb in a taxonomy's predicate catalog, used by relationship types.
+
+#### Attributes
+
+| Name | Value  |
+| ---- | ------ |
+| type | object |
+
+#### Relationships
+
+| Type        | Related Element                                                 | Predicate   | Direction |
+| ----------- | --------------------------------------------------------------- | ----------- | --------- |
+| inter-layer | `application.applicationcomponent.sqlite-ontology-repository`   | `accesses`  | inbound   |
+| inter-layer | `data-store.collection.predicates`                              | `maps-to`   | outbound  |
+| inter-layer | `motivation.requirement.relationships-limited-to-allowed-types` | `satisfies` | outbound  |
 
 ### Processing Metrics {#processing-metrics}
 
@@ -845,10 +938,12 @@ ORM schema for property definitions (relationship types/object properties) — s
 
 #### Relationships
 
-| Type        | Related Element                                      | Predicate | Direction |
-| ----------- | ---------------------------------------------------- | --------- | --------- |
-| inter-layer | `api.requestbody.property-definition-create-request` | `maps-to` | outbound  |
-| inter-layer | `api.response.property-definition-response`          | `maps-to` | outbound  |
+| Type        | Related Element                                               | Predicate  | Direction |
+| ----------- | ------------------------------------------------------------- | ---------- | --------- |
+| inter-layer | `application.applicationcomponent.sqlite-ontology-repository` | `accesses` | inbound   |
+| inter-layer | `api.requestbody.property-definition-create-request`          | `maps-to`  | outbound  |
+| inter-layer | `api.response.property-definition-response`                   | `maps-to`  | outbound  |
+| inter-layer | `data-store.collection.property-definitions-table`            | `maps-to`  | outbound  |
 
 ### Property Definition Entity {#property-definition-entity}
 
@@ -866,9 +961,12 @@ Domain entity defining a property (relationship type) with identifier, title, op
 
 #### Relationships
 
-| Type        | Related Element                                      | Predicate | Direction |
-| ----------- | ---------------------------------------------------- | --------- | --------- |
-| inter-layer | `api.requestbody.property-definition-create-request` | `maps-to` | outbound  |
+| Type        | Related Element                                               | Predicate  | Direction |
+| ----------- | ------------------------------------------------------------- | ---------- | --------- |
+| inter-layer | `application.applicationcomponent.canon-demo-dataset-loader`  | `accesses` | inbound   |
+| inter-layer | `application.applicationcomponent.sqlite-ontology-repository` | `accesses` | inbound   |
+| inter-layer | `api.requestbody.property-definition-create-request`          | `maps-to`  | outbound  |
+| inter-layer | `data-store.collection.property-definitions-table`            | `maps-to`  | outbound  |
 
 ### Proposal {#proposal}
 
@@ -876,7 +974,7 @@ Domain entity defining a property (relationship type) with identifier, title, op
 
 **Type**: `objectschema`
 
-ORM schema for merge proposals — stores changeset_id FK, submitter, status (pending/approved/rejected/merged), review metadata, and conflict resolution references
+ORM model for change proposals (change_proposals, a batch_runs subtype): taxonomy, origin, status, landing.
 
 #### Attributes
 
@@ -886,11 +984,32 @@ ORM schema for merge proposals — stores changeset_id FK, submitter, status (pe
 
 #### Relationships
 
-| Type        | Related Element                               | Predicate     | Direction |
-| ----------- | --------------------------------------------- | ------------- | --------- |
-| intra-layer | `data-model.objectschema.changeset`           | `specializes` | inbound   |
-| intra-layer | `data-model.objectschema.proposal-entity`     | `specializes` | inbound   |
-| intra-layer | `data-model.objectschema.conflict-resolution` | `specializes` | outbound  |
+| Type        | Related Element                                                      | Predicate     | Direction |
+| ----------- | -------------------------------------------------------------------- | ------------- | --------- |
+| inter-layer | `application.applicationcomponent.sqlite-change-proposal-repository` | `accesses`    | inbound   |
+| inter-layer | `data-store.collection.proposals-table`                              | `maps-to`     | outbound  |
+| intra-layer | `data-model.objectschema.proposal-entity`                            | `specializes` | inbound   |
+
+### Proposal Decision Entity {#proposal-decision-entity}
+
+**ID**: `data-model.objectschema.proposal-decision-entity`
+
+**Type**: `objectschema`
+
+Domain entity: a reviewer's or policy's decision on a proposal operation, with reason code and timing (the gold record).
+
+#### Attributes
+
+| Name | Value  |
+| ---- | ------ |
+| type | object |
+
+#### Relationships
+
+| Type        | Related Element                                                      | Predicate  | Direction |
+| ----------- | -------------------------------------------------------------------- | ---------- | --------- |
+| inter-layer | `application.applicationcomponent.sqlite-change-proposal-repository` | `accesses` | inbound   |
+| inter-layer | `data-store.collection.proposal-decisions`                           | `maps-to`  | outbound  |
 
 ### Proposal Entity {#proposal-entity}
 
@@ -898,7 +1017,7 @@ ORM schema for merge proposals — stores changeset_id FK, submitter, status (pe
 
 **Type**: `objectschema`
 
-Domain entity for a formal proposal to merge a changeset; references changeset_id, enforces state transitions (OPEN→APPROVED/REJECTED, APPROVED→MERGED), stores reviewed_at and reviewer_notes
+Domain entity: a change proposal to one taxonomy, with its ordered proposed operations, origin, status and landing.
 
 #### Attributes
 
@@ -908,9 +1027,32 @@ Domain entity for a formal proposal to merge a changeset; references changeset_i
 
 #### Relationships
 
-| Type        | Related Element                    | Predicate     | Direction |
-| ----------- | ---------------------------------- | ------------- | --------- |
-| intra-layer | `data-model.objectschema.proposal` | `specializes` | outbound  |
+| Type        | Related Element                                                      | Predicate     | Direction |
+| ----------- | -------------------------------------------------------------------- | ------------- | --------- |
+| inter-layer | `application.applicationcomponent.sqlite-change-proposal-repository` | `accesses`    | inbound   |
+| inter-layer | `data-store.collection.proposals-table`                              | `maps-to`     | outbound  |
+| intra-layer | `data-model.objectschema.proposal`                                   | `specializes` | outbound  |
+
+### Proposed Operation {#proposed-operation}
+
+**ID**: `data-model.objectschema.proposed-operation`
+
+**Type**: `objectschema`
+
+Domain value: one operation in a change proposal (create/update/delete of an entity), with its status and decision.
+
+#### Attributes
+
+| Name | Value  |
+| ---- | ------ |
+| type | object |
+
+#### Relationships
+
+| Type        | Related Element                                                      | Predicate  | Direction |
+| ----------- | -------------------------------------------------------------------- | ---------- | --------- |
+| inter-layer | `application.applicationcomponent.sqlite-change-proposal-repository` | `accesses` | inbound   |
+| inter-layer | `data-store.collection.proposal-operations`                          | `maps-to`  | outbound  |
 
 ### Relationship {#relationship}
 
@@ -930,6 +1072,7 @@ ORM schema for typed directed edges between ontology entities — stores source_
 
 | Type        | Related Element                           | Predicate     | Direction |
 | ----------- | ----------------------------------------- | ------------- | --------- |
+| inter-layer | `data-store.collection.relationships`     | `maps-to`     | outbound  |
 | intra-layer | `data-model.objectschema.ontology-entity` | `specializes` | inbound   |
 
 ### Relationship Entity {#relationship-entity}
@@ -948,9 +1091,11 @@ Domain entity for a typed relationship between two ontology entities; carries so
 
 #### Relationships
 
-| Type        | Related Element                      | Predicate | Direction |
-| ----------- | ------------------------------------ | --------- | --------- |
-| inter-layer | `api.response.relationship-response` | `maps-to` | outbound  |
+| Type        | Related Element                                               | Predicate  | Direction |
+| ----------- | ------------------------------------------------------------- | ---------- | --------- |
+| inter-layer | `application.applicationcomponent.sqlite-ontology-repository` | `accesses` | inbound   |
+| inter-layer | `api.response.relationship-response`                          | `maps-to`  | outbound  |
+| inter-layer | `data-store.collection.relationships`                         | `maps-to`  | outbound  |
 
 ### Resolution Record {#resolution-record}
 
@@ -968,9 +1113,31 @@ A recorded resolution for a specific conflict in an import run; captures match_k
 
 #### Relationships
 
-| Type        | Related Element                           | Predicate | Direction |
-| ----------- | ----------------------------------------- | --------- | --------- |
-| inter-layer | `api.response.resolution-record-response` | `maps-to` | outbound  |
+| Type        | Related Element                                                  | Predicate  | Direction |
+| ----------- | ---------------------------------------------------------------- | ---------- | --------- |
+| inter-layer | `application.applicationcomponent.sqlite-interchange-repository` | `accesses` | inbound   |
+| inter-layer | `api.response.resolution-record-response`                        | `maps-to`  | outbound  |
+
+### Source Entity {#source-entity}
+
+**ID**: `data-model.objectschema.source-entity`
+
+**Type**: `objectschema`
+
+Domain entity: a source document (file, web page or text) of a taxonomy's dataset, with status and pages.
+
+#### Attributes
+
+| Name | Value  |
+| ---- | ------ |
+| type | object |
+
+#### Relationships
+
+| Type        | Related Element                                             | Predicate  | Direction |
+| ----------- | ----------------------------------------------------------- | ---------- | --------- |
+| inter-layer | `application.applicationcomponent.sqlite-source-repository` | `accesses` | inbound   |
+| inter-layer | `data-store.collection.sources`                             | `maps-to`  | outbound  |
 
 ### Subgraph {#subgraph}
 
@@ -1048,9 +1215,13 @@ Domain entity for a taxonomy that organizes concepts at the top level; has id, t
 
 #### Relationships
 
-| Type        | Related Element                  | Predicate | Direction |
-| ----------- | -------------------------------- | --------- | --------- |
-| inter-layer | `api.response.taxonomy-response` | `maps-to` | outbound  |
+| Type        | Related Element                                                | Predicate  | Direction |
+| ----------- | -------------------------------------------------------------- | ---------- | --------- |
+| inter-layer | `application.applicationcomponent.canon-demo-dataset-loader`   | `accesses` | inbound   |
+| inter-layer | `application.applicationcomponent.rdflib-query-engine-adapter` | `accesses` | inbound   |
+| inter-layer | `application.applicationcomponent.sqlite-ontology-repository`  | `accesses` | inbound   |
+| inter-layer | `api.response.taxonomy-response`                               | `maps-to`  | outbound  |
+| inter-layer | `data-store.collection.ontology-entities`                      | `maps-to`  | outbound  |
 
 ### Triple Extraction Result {#triple-extraction-result}
 
@@ -1118,4 +1289,4 @@ String schema for entity identifiers — UUID v4 format, used as primary keys ac
 
 ---
 
-Generated: 2026-11-17T18:49:10.650Z | Model Version: 0.1.0
+Generated: 2026-11-19T16:49:39.982Z | Model Version: 0.1.0

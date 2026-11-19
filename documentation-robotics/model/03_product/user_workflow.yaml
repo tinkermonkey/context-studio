@@ -1,0 +1,75 @@
+product.userworkflow.review-and-decide-a-proposal:
+  id: 48d78548-bb8b-4c36-8891-a3f8c94f3c9a
+  path: product.userworkflow.review-and-decide-a-proposal
+  spec_node_id: product.userworkflow
+  type: userworkflow
+  layer_id: product
+  name: Review and Decide a Proposal
+  description: Open a proposal, clear the mechanical tier by threshold, judge the
+    rest, apply, and revert if needed.
+  attributes:
+    complexity: moderate
+  metadata:
+    created_at: 2026-11-19T16:21:41.308Z
+    updated_at: 2026-11-19T16:21:41.308Z
+    version: 1
+product.userworkflow.extract-a-document-into-a-dataset:
+  id: 48b32751-65dd-48ab-9cc0-0168ce743cbe
+  path: product.userworkflow.extract-a-document-into-a-dataset
+  spec_node_id: product.userworkflow
+  type: userworkflow
+  layer_id: product
+  name: Extract a Document into a Dataset
+  description: Add a source, extract it into a dataset, review the proposal and
+    see the citations.
+  attributes:
+    complexity: moderate
+  metadata:
+    created_at: 2026-11-19T16:21:41.308Z
+    updated_at: 2026-11-19T16:21:41.308Z
+    version: 1
+product.userworkflow.adjudicate-a-client-plan:
+  id: e7f93423-31cf-442e-893e-82c1f73d52f9
+  path: product.userworkflow.adjudicate-a-client-plan
+  spec_node_id: product.userworkflow
+  type: userworkflow
+  layer_id: product
+  name: Adjudicate a Client Plan
+  description: A client's plan arrives as a proposal, the curator reviews it, and
+    the client reads the decisions and lands them.
+  attributes:
+    complexity: complex
+  metadata:
+    created_at: 2026-11-19T16:21:41.308Z
+    updated_at: 2026-11-19T16:21:41.308Z
+    version: 1
+product.userworkflow.check-benchmark-gold-workflow:
+  id: 31ed7e60-e765-47ba-b834-d7d7e4724a41
+  path: product.userworkflow.check-benchmark-gold-workflow
+  spec_node_id: product.userworkflow
+  type: userworkflow
+  layer_id: product
+  name: Check Benchmark Gold Workflow
+  description: Open a gold-check proposal in gold mode, judge it on the Review
+    page and write the gold back.
+  attributes:
+    complexity: moderate
+  metadata:
+    created_at: 2026-11-19T16:21:41.308Z
+    updated_at: 2026-11-19T16:21:41.308Z
+    version: 1
+product.userworkflow.connect-an-agent:
+  id: 794e7f62-89b2-4060-8816-3de6de841738
+  path: product.userworkflow.connect-an-agent
+  spec_node_id: product.userworkflow
+  type: userworkflow
+  layer_id: product
+  name: Connect an Agent
+  description: Copy the token and command from Settings, run claude mcp add, and
+    ask the agent about the model.
+  attributes:
+    complexity: simple
+  metadata:
+    created_at: 2026-11-19T16:21:41.308Z
+    updated_at: 2026-11-19T16:21:41.308Z
+    version: 1

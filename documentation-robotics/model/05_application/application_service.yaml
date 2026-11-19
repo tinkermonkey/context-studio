@@ -64,28 +64,6 @@ application.applicationservice.extraction-service:
     created_at: 2026-05-07T22:15:07.512Z
     updated_at: 2026-05-07T22:15:07.512Z
     version: 1
-application.applicationservice.pipeline-service:
-  id: c7898212-b51c-4769-b0f5-9e7c973ed605
-  path: application.applicationservice.pipeline-service
-  spec_node_id: application.applicationservice
-  type: applicationservice
-  layer_id: application
-  name: Pipeline Service
-  description: Domain service managing LLM pipeline configuration lifecycle and
-    execution — creates/updates/deletes configurations, executes pipelines with
-    timeout handling and full token/duration instrumentation, publishes
-    PipelineExecuted events
-  attributes:
-    serviceType: synchronous
-  source_reference:
-    provenance: extracted
-    locations:
-      - file: local-server/domain/pipeline/services.py
-        symbol: PipelineService
-  metadata:
-    created_at: 2026-05-07T22:15:11.423Z
-    updated_at: 2026-05-07T22:15:11.423Z
-    version: 1
 application.applicationservice.versioning-service:
   id: a33a6665-2147-479c-9d14-fcfd07cc52be
   path: application.applicationservice.versioning-service
@@ -149,4 +127,1289 @@ application.applicationservice.import-run-service:
   metadata:
     created_at: 2026-05-07T22:15:19.737Z
     updated_at: 2026-05-07T22:15:19.737Z
+    version: 1
+application.applicationservice.chat-service:
+  id: 7c070da5-d29a-4321-879d-13ce45b857fb
+  path: application.applicationservice.chat-service
+  spec_node_id: application.applicationservice
+  type: applicationservice
+  layer_id: application
+  name: Chat Service
+  description: "Runs chat conversations: streams model turns, executes tool calls
+    against the workspace, persists messages."
+  attributes:
+    serviceType: asynchronous
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/domain/chat/services.py
+        symbol: ChatService
+  metadata:
+    created_at: 2026-11-19T14:52:22.372Z
+    updated_at: 2026-11-19T14:52:22.372Z
+    version: 1
+application.applicationservice.source-service:
+  id: 5e3d5442-f985-4bc4-a58e-e4bedf31d75d
+  path: application.applicationservice.source-service
+  spec_node_id: application.applicationservice
+  type: applicationservice
+  layer_id: application
+  name: Source Service
+  description: Adds, reads, lists and removes sources (files, web pages, text) of
+    a taxonomy's dataset, with their text and headings.
+  attributes:
+    serviceType: synchronous
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/domain/extraction/sources.py
+        symbol: SourceService
+  metadata:
+    created_at: 2026-11-19T14:52:22.372Z
+    updated_at: 2026-11-19T14:52:22.372Z
+    version: 1
+application.applicationservice.proposal-service:
+  id: 862e690a-a83b-423f-a827-6de22368dd4d
+  path: application.applicationservice.proposal-service
+  spec_node_id: application.applicationservice
+  type: applicationservice
+  layer_id: application
+  name: Proposal Service
+  description: "Change proposals: create, decide, apply, reject, reopen, land and
+    read operations; applies them under a run with approval rules."
+  attributes:
+    serviceType: synchronous
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/domain/versioning/proposal_service.py
+        symbol: ProposalService
+  metadata:
+    created_at: 2026-11-19T14:52:22.372Z
+    updated_at: 2026-11-19T14:52:22.372Z
+    version: 1
+application.applicationservice.revert-service:
+  id: f0238fe8-7946-40d6-b8d2-71ff8fa399d9
+  path: application.applicationservice.revert-service
+  spec_node_id: application.applicationservice
+  type: applicationservice
+  layer_id: application
+  name: Revert Service
+  description: Reverts everything a run or proposal applied, from its change events.
+  attributes:
+    serviceType: synchronous
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/domain/versioning/revert_service.py
+        symbol: RevertService
+  metadata:
+    created_at: 2026-11-19T14:52:22.372Z
+    updated_at: 2026-11-19T14:52:22.372Z
+    version: 1
+application.applicationservice.claim-service:
+  id: fca425d5-8b9d-4c65-8cbe-8070d8fa79d6
+  path: application.applicationservice.claim-service
+  spec_node_id: application.applicationservice
+  type: applicationservice
+  layer_id: application
+  name: Claim Service
+  description: "A taxonomy's claims: submit by key, triage, verdicts, export."
+  attributes:
+    serviceType: synchronous
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/domain/versioning/claims.py
+        symbol: ClaimService
+  metadata:
+    created_at: 2026-11-19T14:52:22.372Z
+    updated_at: 2026-11-19T14:52:22.372Z
+    version: 1
+application.applicationservice.approval-policy-service:
+  id: ed7a2c00-6f35-425c-9abd-56f327ac8d6d
+  path: application.applicationservice.approval-policy-service
+  spec_node_id: application.applicationservice
+  type: applicationservice
+  layer_id: application
+  name: Approval Policy Service
+  description: "Reads and sets a taxonomy's approval policy: which proposal
+    operations auto-apply."
+  attributes:
+    serviceType: synchronous
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/domain/versioning/approval_policy.py
+        symbol: ApprovalPolicyService
+  metadata:
+    created_at: 2026-11-19T14:52:22.373Z
+    updated_at: 2026-11-19T14:52:22.373Z
+    version: 1
+application.applicationservice.bundle-import-service:
+  id: d2b3f921-1b9e-45f8-89ad-64aa6f72fd81
+  path: application.applicationservice.bundle-import-service
+  spec_node_id: application.applicationservice
+  type: applicationservice
+  layer_id: application
+  name: Bundle Import Service
+  description: Plans a Context Studio bundle against the workspace and proposes it
+    as one change proposal.
+  attributes:
+    serviceType: synchronous
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/domain/versioning/bundle_import.py
+        symbol: BundleImportService
+  metadata:
+    created_at: 2026-11-19T14:52:22.373Z
+    updated_at: 2026-11-19T14:52:22.373Z
+    version: 1
+application.applicationservice.drift-import-service:
+  id: bc9c51db-41c6-4058-aae3-0ca7aae58b8b
+  path: application.applicationservice.drift-import-service
+  spec_node_id: application.applicationservice
+  type: applicationservice
+  layer_id: application
+  name: Drift Import Service
+  description: Reports or proposes the drift between a client's spec (DR) and its taxonomy.
+  attributes:
+    serviceType: synchronous
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/domain/versioning/drift.py
+        symbol: DriftImportService
+  metadata:
+    created_at: 2026-11-19T14:52:22.373Z
+    updated_at: 2026-11-19T14:52:22.373Z
+    version: 1
+application.applicationservice.bundle-export-service:
+  id: c63cd2f9-a502-4fb5-9624-cf05ba254dca
+  path: application.applicationservice.bundle-export-service
+  spec_node_id: application.applicationservice
+  type: applicationservice
+  layer_id: application
+  name: Bundle Export Service
+  description: Exports one taxonomy as a Context Studio bundle (v1).
+  attributes:
+    serviceType: synchronous
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/domain/interchange/bundle.py
+        symbol: BundleExporter
+  metadata:
+    created_at: 2026-11-19T14:52:22.373Z
+    updated_at: 2026-11-19T14:52:22.373Z
+    version: 1
+application.applicationservice.proposal-comparison-service:
+  id: 804cc610-32ff-4306-b60e-ad0f80a3eae1
+  path: application.applicationservice.proposal-comparison-service
+  spec_node_id: application.applicationservice
+  type: applicationservice
+  layer_id: application
+  name: Proposal Comparison Service
+  description: "Compares two pipelines' proposals for one source: pairs their
+    individual creates and decides each pair once for both."
+  attributes:
+    serviceType: synchronous
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/domain/pipelines/proposal_comparison.py
+        symbol: ProposalComparisonService
+  metadata:
+    created_at: 2026-11-19T14:52:22.373Z
+    updated_at: 2026-11-19T14:52:22.373Z
+    version: 1
+application.applicationservice.source-extraction-service:
+  id: d7183ab2-59bd-491d-bb97-987fd936715f
+  path: application.applicationservice.source-extraction-service
+  spec_node_id: application.applicationservice
+  type: applicationservice
+  layer_id: application
+  name: Source Extraction Service
+  description: Extracts a ready source into proposals in the background, and
+    reports each source's last extraction.
+  attributes:
+    serviceType: asynchronous
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/domain/pipelines/source_extraction.py
+        symbol: SourceExtractionService
+  metadata:
+    created_at: 2026-11-19T14:52:22.373Z
+    updated_at: 2026-11-19T14:52:22.373Z
+    version: 1
+application.applicationservice.schema-recognition-preview-service:
+  id: 86d9dd2a-fe2f-49e7-bb1d-044467cfc100
+  path: application.applicationservice.schema-recognition-preview-service
+  spec_node_id: application.applicationservice
+  type: applicationservice
+  layer_id: application
+  name: Schema Recognition Preview Service
+  description: Previews which extracted schema candidates would match existing
+    ontology entities.
+  attributes:
+    serviceType: synchronous
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/domain/pipelines/schema_extraction/recognition_preview.py
+        symbol: SchemaRecognitionPreviewService
+  metadata:
+    created_at: 2026-11-19T14:52:22.373Z
+    updated_at: 2026-11-19T14:52:22.373Z
+    version: 1
+application.applicationservice.pipeline-registry:
+  id: 4659b4bb-de69-4096-ae39-44722643c27b
+  path: application.applicationservice.pipeline-registry
+  spec_node_id: application.applicationservice
+  type: applicationservice
+  layer_id: application
+  name: Pipeline Registry
+  description: Registered pipeline types, their implementations and configuration
+    versions; owns the defaults.
+  attributes:
+    serviceType: synchronous
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/domain/pipelines/registry.py
+        symbol: PipelineTypeRegistry
+  metadata:
+    created_at: 2026-11-19T14:52:22.373Z
+    updated_at: 2026-11-19T14:52:22.373Z
+    version: 1
+application.applicationservice.pipeline-selection-service:
+  id: 41d1c2f8-29f0-424e-a27f-2838524ae92f
+  path: application.applicationservice.pipeline-selection-service
+  spec_node_id: application.applicationservice
+  type: applicationservice
+  layer_id: application
+  name: Pipeline Selection Service
+  description: Resolves a requested pipeline (type, implementation, configuration)
+    to what runs, the one way to select a pipeline.
+  attributes:
+    serviceType: synchronous
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/domain/pipelines/selection.py
+        symbol: PipelineResolver
+  metadata:
+    created_at: 2026-11-19T14:52:22.373Z
+    updated_at: 2026-11-19T14:52:22.373Z
+    version: 1
+application.applicationservice.demo-dataset-service:
+  id: 5126549b-abb3-42b7-8e5c-0665c41f4e82
+  path: application.applicationservice.demo-dataset-service
+  spec_node_id: application.applicationservice
+  type: applicationservice
+  layer_id: application
+  name: Demo Dataset Service
+  description: Lists and loads demo datasets through the DemoDatasetLoader port.
+  attributes:
+    serviceType: synchronous
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/domain/admin/demo_dataset_service.py
+        symbol: LoadDemoDataset
+  metadata:
+    created_at: 2026-11-19T14:52:22.373Z
+    updated_at: 2026-11-19T14:52:22.373Z
+    version: 1
+application.applicationservice.change-record-port:
+  id: e620e70a-b8d5-4af8-9d74-9f07e4ada460
+  path: application.applicationservice.change-record-port
+  spec_node_id: application.applicationservice
+  type: applicationservice
+  layer_id: application
+  name: ChangeRecordPort
+  description: "Hexagonal port: records change events to the audit trail."
+  attributes:
+    serviceType: synchronous
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/domain/ports.py
+        symbol: ChangeRecordPort
+  metadata:
+    created_at: 2026-11-19T16:26:38.991Z
+    updated_at: 2026-11-19T16:26:38.991Z
+    version: 1
+application.applicationservice.transaction-scope:
+  id: 4dae613a-a889-4361-8fe2-2f1c3646c544
+  path: application.applicationservice.transaction-scope
+  spec_node_id: application.applicationservice
+  type: applicationservice
+  layer_id: application
+  name: TransactionScope
+  description: "Hexagonal port: runs several repository writes as one unit, all
+    kept or none."
+  attributes:
+    serviceType: synchronous
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/domain/ports.py
+        symbol: TransactionScope
+  metadata:
+    created_at: 2026-11-19T16:26:38.991Z
+    updated_at: 2026-11-19T16:26:38.991Z
+    version: 1
+application.applicationservice.chat-model:
+  id: a73c2fb1-dcd4-4c22-8970-8c8f3b12272b
+  path: application.applicationservice.chat-model
+  spec_node_id: application.applicationservice
+  type: applicationservice
+  layer_id: application
+  name: ChatModel
+  description: "Hexagonal port: a streaming, tool-calling chat model."
+  attributes:
+    serviceType: synchronous
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/domain/chat/ports.py
+        symbol: ChatModel
+  metadata:
+    created_at: 2026-11-19T16:26:38.991Z
+    updated_at: 2026-11-19T16:26:38.991Z
+    version: 1
+application.applicationservice.chat-tool:
+  id: 5819cd5f-7584-45f3-9014-de60c0232dc6
+  path: application.applicationservice.chat-tool
+  spec_node_id: application.applicationservice
+  type: applicationservice
+  layer_id: application
+  name: ChatTool
+  description: "Hexagonal port: a tool the assistant or an MCP agent can call; it
+    reads the workspace or proposes changes a person reviews. The one tool
+    registry behind chat and MCP."
+  attributes:
+    serviceType: asynchronous
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/domain/chat/ports.py
+        symbol: ChatTool
+  metadata:
+    created_at: 2026-11-19T16:26:38.991Z
+    updated_at: 2026-11-19T16:26:38.991Z
+    version: 1
+application.applicationservice.conversation-repository:
+  id: f6e28016-9cba-4906-af44-b8a85e3f9fd8
+  path: application.applicationservice.conversation-repository
+  spec_node_id: application.applicationservice
+  type: applicationservice
+  layer_id: application
+  name: ConversationRepository
+  description: "Hexagonal port: stores chat conversations and their messages."
+  attributes:
+    serviceType: asynchronous
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/domain/chat/ports.py
+        symbol: ConversationRepository
+  metadata:
+    created_at: 2026-11-19T16:26:38.991Z
+    updated_at: 2026-11-19T16:26:38.991Z
+    version: 1
+application.applicationservice.chat-settings:
+  id: f3e12997-e748-4475-8278-d4673bc2e178
+  path: application.applicationservice.chat-settings
+  spec_node_id: application.applicationservice
+  type: applicationservice
+  layer_id: application
+  name: ChatSettings
+  description: "Hexagonal port: chat configuration, read on every turn so changes
+    apply at once."
+  attributes:
+    serviceType: synchronous
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/domain/chat/ports.py
+        symbol: ChatSettings
+  metadata:
+    created_at: 2026-11-19T16:26:38.991Z
+    updated_at: 2026-11-19T16:26:38.991Z
+    version: 1
+application.applicationservice.workspace-context:
+  id: 7090f3b3-bd42-47a4-a252-e5256c464610
+  path: application.applicationservice.workspace-context
+  spec_node_id: application.applicationservice
+  type: applicationservice
+  layer_id: application
+  name: WorkspaceContext
+  description: "Hexagonal port: describes the workspace and the viewed page to the
+    chat model."
+  attributes:
+    serviceType: asynchronous
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/domain/chat/ports.py
+        symbol: WorkspaceContext
+  metadata:
+    created_at: 2026-11-19T16:26:38.991Z
+    updated_at: 2026-11-19T16:26:38.991Z
+    version: 1
+application.applicationservice.graph-engine:
+  id: 5a177eb8-5745-4871-9962-2cc0b3385e6e
+  path: application.applicationservice.graph-engine
+  spec_node_id: application.applicationservice
+  type: applicationservice
+  layer_id: application
+  name: GraphEngine
+  description: "Hexagonal port: in-memory graph operations (shortest path,
+    centrality, community detection)."
+  attributes:
+    serviceType: synchronous
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/domain/graph/ports.py
+        symbol: GraphEngine
+  metadata:
+    created_at: 2026-11-19T16:26:38.991Z
+    updated_at: 2026-11-19T16:26:38.991Z
+    version: 1
+application.applicationservice.semantic-query-engine:
+  id: bf84cb39-c9f2-4a92-8453-f1d523e0d3f3
+  path: application.applicationservice.semantic-query-engine
+  spec_node_id: application.applicationservice
+  type: applicationservice
+  layer_id: application
+  name: SemanticQueryEngine
+  description: "Hexagonal port: RDF/SPARQL operations on ontology knowledge."
+  attributes:
+    serviceType: synchronous
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/domain/graph/ports.py
+        symbol: SemanticQueryEngine
+  metadata:
+    created_at: 2026-11-19T16:26:38.991Z
+    updated_at: 2026-11-19T16:26:38.991Z
+    version: 1
+application.applicationservice.metrics-collector:
+  id: d84707fd-e926-488a-8b28-9d306469cc1a
+  path: application.applicationservice.metrics-collector
+  spec_node_id: application.applicationservice
+  type: applicationservice
+  layer_id: application
+  name: MetricsCollector
+  description: "Hexagonal port: collects system health metrics."
+  attributes:
+    serviceType: synchronous
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/domain/admin/ports.py
+        symbol: MetricsCollector
+  metadata:
+    created_at: 2026-11-19T16:26:38.991Z
+    updated_at: 2026-11-19T16:26:38.991Z
+    version: 1
+application.applicationservice.health-checkable-nlp:
+  id: b645dd77-6d67-4b46-9545-60082b6cf512
+  path: application.applicationservice.health-checkable-nlp
+  spec_node_id: application.applicationservice
+  type: applicationservice
+  layer_id: application
+  name: HealthCheckableNLP
+  description: "Hexagonal port: narrow health check for NLP components."
+  attributes:
+    serviceType: synchronous
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/domain/admin/ports.py
+        symbol: HealthCheckableNLP
+  metadata:
+    created_at: 2026-11-19T16:26:38.991Z
+    updated_at: 2026-11-19T16:26:38.991Z
+    version: 1
+application.applicationservice.health-checkable-embedding:
+  id: da930e43-ab76-44cf-adef-d8bf6311a483
+  path: application.applicationservice.health-checkable-embedding
+  spec_node_id: application.applicationservice
+  type: applicationservice
+  layer_id: application
+  name: HealthCheckableEmbedding
+  description: "Hexagonal port: narrow health check for embedding components."
+  attributes:
+    serviceType: synchronous
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/domain/admin/ports.py
+        symbol: HealthCheckableEmbedding
+  metadata:
+    created_at: 2026-11-19T16:26:38.991Z
+    updated_at: 2026-11-19T16:26:38.991Z
+    version: 1
+application.applicationservice.health-checkable-llm:
+  id: 5c0fca0e-48d4-4f20-8cad-36517f1e1d04
+  path: application.applicationservice.health-checkable-llm
+  spec_node_id: application.applicationservice
+  type: applicationservice
+  layer_id: application
+  name: HealthCheckableLLM
+  description: "Hexagonal port: narrow health check for LLM components."
+  attributes:
+    serviceType: synchronous
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/domain/admin/ports.py
+        symbol: HealthCheckableLLM
+  metadata:
+    created_at: 2026-11-19T16:26:38.991Z
+    updated_at: 2026-11-19T16:26:38.991Z
+    version: 1
+application.applicationservice.configuration-store:
+  id: 040e6fc2-cacb-4ca1-9518-7cd9fdd667b4
+  path: application.applicationservice.configuration-store
+  spec_node_id: application.applicationservice
+  type: applicationservice
+  layer_id: application
+  name: ConfigurationStore
+  description: "Hexagonal port: persists and retrieves application configuration."
+  attributes:
+    serviceType: synchronous
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/domain/admin/ports.py
+        symbol: ConfigurationStore
+  metadata:
+    created_at: 2026-11-19T16:26:38.991Z
+    updated_at: 2026-11-19T16:26:38.991Z
+    version: 1
+application.applicationservice.demo-dataset-loader:
+  id: 76f95efe-8955-4a72-a4e5-91ee8f6c96ec
+  path: application.applicationservice.demo-dataset-loader
+  spec_node_id: application.applicationservice
+  type: applicationservice
+  layer_id: application
+  name: DemoDatasetLoader
+  description: "Hexagonal port: discovers and loads pre-curated demo datasets."
+  attributes:
+    serviceType: synchronous
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/domain/admin/ports.py
+        symbol: DemoDatasetLoader
+  metadata:
+    created_at: 2026-11-19T16:26:38.991Z
+    updated_at: 2026-11-19T16:26:38.991Z
+    version: 1
+application.applicationservice.ontology-serializer:
+  id: 76f3a154-eff9-4927-ab6e-aaabe283dd40
+  path: application.applicationservice.ontology-serializer
+  spec_node_id: application.applicationservice
+  type: applicationservice
+  layer_id: application
+  name: OntologySerializer
+  description: "Hexagonal port: exports ontology data in a format (OWL, SKOS, GraphML)."
+  attributes:
+    serviceType: synchronous
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/domain/interchange/ports.py
+        symbol: OntologySerializer
+  metadata:
+    created_at: 2026-11-19T16:26:38.991Z
+    updated_at: 2026-11-19T16:26:38.991Z
+    version: 1
+application.applicationservice.ontology-deserializer:
+  id: 6b30a7bc-7df4-4d01-896a-d0cdc8f81e45
+  path: application.applicationservice.ontology-deserializer
+  spec_node_id: application.applicationservice
+  type: applicationservice
+  layer_id: application
+  name: OntologyDeserializer
+  description: "Hexagonal port: imports ontology data from a format (OWL, SKOS, GraphML)."
+  attributes:
+    serviceType: synchronous
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/domain/interchange/ports.py
+        symbol: OntologyDeserializer
+  metadata:
+    created_at: 2026-11-19T16:26:38.991Z
+    updated_at: 2026-11-19T16:26:38.991Z
+    version: 1
+application.applicationservice.batch-run-repository:
+  id: 419a0989-fc40-4e75-b19e-c3ad776ff873
+  path: application.applicationservice.batch-run-repository
+  spec_node_id: application.applicationservice
+  type: applicationservice
+  layer_id: application
+  name: BatchRunRepository
+  description: "Hexagonal port: persists and queries batch runs (import and extraction)."
+  attributes:
+    serviceType: synchronous
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/domain/interchange/ports.py
+        symbol: BatchRunRepository
+  metadata:
+    created_at: 2026-11-19T16:26:38.991Z
+    updated_at: 2026-11-19T16:26:38.991Z
+    version: 1
+application.applicationservice.llmprovider:
+  id: 9bd2ba65-60a9-4683-93fd-a7d11fd95452
+  path: application.applicationservice.llmprovider
+  spec_node_id: application.applicationservice
+  type: applicationservice
+  layer_id: application
+  name: LLMProvider
+  description: "Hexagonal port: LLM completion and model introspection."
+  attributes:
+    serviceType: synchronous
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/domain/pipelines/ports.py
+        symbol: LLMProvider
+  metadata:
+    created_at: 2026-11-19T16:26:38.991Z
+    updated_at: 2026-11-19T16:26:38.991Z
+    version: 1
+application.applicationservice.extraction-port:
+  id: ea931fbe-7054-427e-843e-5bbf513cb31e
+  path: application.applicationservice.extraction-port
+  spec_node_id: application.applicationservice
+  type: applicationservice
+  layer_id: application
+  name: ExtractionPort
+  description: "Hexagonal port: what the pipelines context needs from the
+    extraction context (extract_triples); decouples the individual-extraction
+    orchestrator from ExtractionService, which satisfies it structurally."
+  attributes:
+    serviceType: synchronous
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/domain/pipelines/ports.py
+        symbol: ExtractionPort
+  metadata:
+    created_at: 2026-11-19T16:26:38.991Z
+    updated_at: 2026-11-19T16:26:38.991Z
+    version: 1
+application.applicationservice.pipeline-run-repository:
+  id: 47403729-f4ba-4826-a097-b891fa9d6244
+  path: application.applicationservice.pipeline-run-repository
+  spec_node_id: application.applicationservice
+  type: applicationservice
+  layer_id: application
+  name: PipelineRunRepository
+  description: "Hexagonal port: persists and retrieves pipeline run entities."
+  attributes:
+    serviceType: synchronous
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/domain/pipelines/ports.py
+        symbol: PipelineRunRepository
+  metadata:
+    created_at: 2026-11-19T16:26:38.991Z
+    updated_at: 2026-11-19T16:26:38.991Z
+    version: 1
+application.applicationservice.batch-repository:
+  id: a4256c8a-613b-4893-8c20-c46ec5c4a318
+  path: application.applicationservice.batch-repository
+  spec_node_id: application.applicationservice
+  type: applicationservice
+  layer_id: application
+  name: BatchRepository
+  description: "Hexagonal port: persists and retrieves pipeline batch entities."
+  attributes:
+    serviceType: synchronous
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/domain/pipelines/ports.py
+        symbol: BatchRepository
+  metadata:
+    created_at: 2026-11-19T16:26:38.991Z
+    updated_at: 2026-11-19T16:26:38.991Z
+    version: 1
+application.applicationservice.pipeline-run-status-writer:
+  id: 326cb064-583e-4878-8d0e-5a5ac7dfaecb
+  path: application.applicationservice.pipeline-run-status-writer
+  spec_node_id: application.applicationservice
+  type: applicationservice
+  layer_id: application
+  name: PipelineRunStatusWriter
+  description: "Hexagonal port: writes pipeline run status; the narrow interface
+    orchestrators use."
+  attributes:
+    serviceType: synchronous
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/domain/pipelines/ports.py
+        symbol: PipelineRunStatusWriter
+  metadata:
+    created_at: 2026-11-19T16:26:38.991Z
+    updated_at: 2026-11-19T16:26:38.991Z
+    version: 1
+application.applicationservice.pipeline-run-submitter:
+  id: e780c646-210b-42bf-bd79-555458c2c195
+  path: application.applicationservice.pipeline-run-submitter
+  spec_node_id: application.applicationservice
+  type: applicationservice
+  layer_id: application
+  name: PipelineRunSubmitter
+  description: "Hexagonal port: queues a pipeline run to execute in the background."
+  attributes:
+    serviceType: asynchronous
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/domain/pipelines/ports.py
+        symbol: PipelineRunSubmitter
+  metadata:
+    created_at: 2026-11-19T16:26:38.991Z
+    updated_at: 2026-11-19T16:26:38.991Z
+    version: 1
+application.applicationservice.source-run-reader:
+  id: 04f4f142-6e20-4e4f-a28f-73f326388504
+  path: application.applicationservice.source-run-reader
+  spec_node_id: application.applicationservice
+  type: applicationservice
+  layer_id: application
+  name: SourceRunReader
+  description: "Hexagonal port: finds the extraction runs on sources."
+  attributes:
+    serviceType: synchronous
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/domain/pipelines/ports.py
+        symbol: SourceRunReader
+  metadata:
+    created_at: 2026-11-19T16:26:38.991Z
+    updated_at: 2026-11-19T16:26:38.991Z
+    version: 1
+application.applicationservice.grounding-adapter-port:
+  id: 0efa7499-f74b-45e5-a3db-c512cd982dc1
+  path: application.applicationservice.grounding-adapter-port
+  spec_node_id: application.applicationservice
+  type: applicationservice
+  layer_id: application
+  name: GroundingAdapterPort
+  description: "Hexagonal port: external knowledge-source adapter used by the
+    grounding orchestrator."
+  attributes:
+    serviceType: asynchronous
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/domain/pipelines/schema_node_grounding/ports.py
+        symbol: GroundingAdapterPort
+  metadata:
+    created_at: 2026-11-19T16:26:38.991Z
+    updated_at: 2026-11-19T16:26:38.991Z
+    version: 1
+application.applicationservice.ontology-repository:
+  id: 0c59773e-cd92-4fed-9e91-94cc24aba63e
+  path: application.applicationservice.ontology-repository
+  spec_node_id: application.applicationservice
+  type: applicationservice
+  layer_id: application
+  name: OntologyRepository
+  description: "Hexagonal port: persists and retrieves ontology entities
+    (taxonomies, schemes, classes, relationship types, datasets, individuals)."
+  attributes:
+    serviceType: synchronous
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/domain/ontology/ports.py
+        symbol: OntologyRepository
+  metadata:
+    created_at: 2026-11-19T16:26:38.991Z
+    updated_at: 2026-11-19T16:26:38.991Z
+    version: 1
+application.applicationservice.embedding-service:
+  id: 2cddd803-2182-4292-b9ee-cb1ea8ec860b
+  path: application.applicationservice.embedding-service
+  spec_node_id: application.applicationservice
+  type: applicationservice
+  layer_id: application
+  name: EmbeddingService
+  description: "Hexagonal port: embeds text into vector space."
+  attributes:
+    serviceType: synchronous
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/domain/ontology/ports.py
+        symbol: EmbeddingService
+  metadata:
+    created_at: 2026-11-19T16:26:38.991Z
+    updated_at: 2026-11-19T16:26:38.991Z
+    version: 1
+application.applicationservice.schema-vector-index:
+  id: e0391588-39c1-4937-ba30-b0f6d3b3599c
+  path: application.applicationservice.schema-vector-index
+  spec_node_id: application.applicationservice
+  type: applicationservice
+  layer_id: application
+  name: SchemaVectorIndex
+  description: "Hexagonal port: semantic vector search over existing schema entities."
+  attributes:
+    serviceType: synchronous
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/domain/ontology/ports.py
+        symbol: SchemaVectorIndex
+  metadata:
+    created_at: 2026-11-19T16:26:38.991Z
+    updated_at: 2026-11-19T16:26:38.991Z
+    version: 1
+application.applicationservice.individual-vector-index:
+  id: f6fd3158-160a-4601-9b42-390ea335511d
+  path: application.applicationservice.individual-vector-index
+  spec_node_id: application.applicationservice
+  type: applicationservice
+  layer_id: application
+  name: IndividualVectorIndex
+  description: "Hexagonal port: semantic vector search over existing graph individuals."
+  attributes:
+    serviceType: synchronous
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/domain/ontology/ports.py
+        symbol: IndividualVectorIndex
+  metadata:
+    created_at: 2026-11-19T16:26:38.991Z
+    updated_at: 2026-11-19T16:26:38.991Z
+    version: 1
+application.applicationservice.decision-model:
+  id: da900c2e-348a-4b4d-a6e9-d82834eb16a8
+  path: application.applicationservice.decision-model
+  spec_node_id: application.applicationservice
+  type: applicationservice
+  layer_id: application
+  name: DecisionModel
+  description: "Hexagonal port: one configured decision-model instance (choice,
+    score, yes/no probabilities)."
+  attributes:
+    serviceType: synchronous
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/domain/decision/ports.py
+        symbol: DecisionModel
+  metadata:
+    created_at: 2026-11-19T16:26:38.991Z
+    updated_at: 2026-11-19T16:26:38.991Z
+    version: 1
+application.applicationservice.decision-models:
+  id: 78536788-d2a7-41d5-bd7f-0469313794e2
+  path: application.applicationservice.decision-models
+  spec_node_id: application.applicationservice
+  type: applicationservice
+  layer_id: application
+  name: DecisionModels
+  description: "Hexagonal port: looks up configured decision-model instances."
+  attributes:
+    serviceType: synchronous
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/domain/decision/ports.py
+        symbol: DecisionModels
+  metadata:
+    created_at: 2026-11-19T16:26:38.991Z
+    updated_at: 2026-11-19T16:26:38.991Z
+    version: 1
+application.applicationservice.change-repository:
+  id: 0e1d4f7b-45ae-4865-b431-8e482c62f24f
+  path: application.applicationservice.change-repository
+  spec_node_id: application.applicationservice
+  type: applicationservice
+  layer_id: application
+  name: ChangeRepository
+  description: "Hexagonal port: persists and queries change events."
+  attributes:
+    serviceType: synchronous
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/domain/versioning/ports.py
+        symbol: ChangeRepository
+  metadata:
+    created_at: 2026-11-19T16:26:38.991Z
+    updated_at: 2026-11-19T16:26:38.991Z
+    version: 1
+application.applicationservice.sync-target:
+  id: b7055423-df0b-4e47-bc47-6a57aa55c09f
+  path: application.applicationservice.sync-target
+  spec_node_id: application.applicationservice
+  type: applicationservice
+  layer_id: application
+  name: SyncTarget
+  description: "Hexagonal port: remote synchronization of change events."
+  attributes:
+    serviceType: synchronous
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/domain/versioning/ports.py
+        symbol: SyncTarget
+  metadata:
+    created_at: 2026-11-19T16:26:38.991Z
+    updated_at: 2026-11-19T16:26:38.991Z
+    version: 1
+application.applicationservice.change-proposal-repository:
+  id: 10bf0185-955e-44b4-9c51-9d9b4e2c336a
+  path: application.applicationservice.change-proposal-repository
+  spec_node_id: application.applicationservice
+  type: applicationservice
+  layer_id: application
+  name: ChangeProposalRepository
+  description: "Hexagonal port: stores change proposals and the outcome of each operation."
+  attributes:
+    serviceType: synchronous
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/domain/versioning/ports.py
+        symbol: ChangeProposalRepository
+  metadata:
+    created_at: 2026-11-19T16:26:38.991Z
+    updated_at: 2026-11-19T16:26:38.991Z
+    version: 1
+application.applicationservice.entity-source-repository:
+  id: d8e4495f-9137-4856-8caf-8eb456b4cf98
+  path: application.applicationservice.entity-source-repository
+  spec_node_id: application.applicationservice
+  type: applicationservice
+  layer_id: application
+  name: EntitySourceRepository
+  description: "Hexagonal port: the source passages behind applied entities."
+  attributes:
+    serviceType: synchronous
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/domain/versioning/ports.py
+        symbol: EntitySourceRepository
+  metadata:
+    created_at: 2026-11-19T16:26:38.991Z
+    updated_at: 2026-11-19T16:26:38.991Z
+    version: 1
+application.applicationservice.claim-repository:
+  id: b3608a07-49e1-49bb-8276-f30509f812ff
+  path: application.applicationservice.claim-repository
+  spec_node_id: application.applicationservice
+  type: applicationservice
+  layer_id: application
+  name: ClaimRepository
+  description: "Hexagonal port: a taxonomy's claims."
+  attributes:
+    serviceType: synchronous
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/domain/versioning/ports.py
+        symbol: ClaimRepository
+  metadata:
+    created_at: 2026-11-19T16:26:38.991Z
+    updated_at: 2026-11-19T16:26:38.991Z
+    version: 1
+application.applicationservice.approval-policy-repository:
+  id: 5822018d-170d-450a-a726-2a04ccffc75e
+  path: application.applicationservice.approval-policy-repository
+  spec_node_id: application.applicationservice
+  type: applicationservice
+  layer_id: application
+  name: ApprovalPolicyRepository
+  description: "Hexagonal port: each taxonomy's approval policy (at most one per taxonomy)."
+  attributes:
+    serviceType: synchronous
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/domain/versioning/ports.py
+        symbol: ApprovalPolicyRepository
+  metadata:
+    created_at: 2026-11-19T16:26:38.991Z
+    updated_at: 2026-11-19T16:26:38.991Z
+    version: 1
+application.applicationservice.proposal-apply-rules:
+  id: 311d8710-9eba-4993-8e68-f8a1b0294102
+  path: application.applicationservice.proposal-apply-rules
+  spec_node_id: application.applicationservice
+  type: applicationservice
+  layer_id: application
+  name: ProposalApplyRules
+  description: "Hexagonal port: rules some property definitions or predicates are
+    under (e.g. the DR spec's relationship types and predicates), checked when a
+    proposal applies."
+  attributes:
+    serviceType: synchronous
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/domain/versioning/ports.py
+        symbol: ProposalApplyRules
+  metadata:
+    created_at: 2026-11-19T16:26:38.991Z
+    updated_at: 2026-11-19T16:26:38.991Z
+    version: 1
+application.applicationservice.nlpprocessor:
+  id: 67dd5268-3629-4c3d-8350-b8a5367ee4d6
+  path: application.applicationservice.nlpprocessor
+  spec_node_id: application.applicationservice
+  type: applicationservice
+  layer_id: application
+  name: NLPProcessor
+  description: "Hexagonal port: natural language processing (entities, tokens,
+    noun chunks)."
+  attributes:
+    serviceType: synchronous
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/domain/extraction/ports.py
+        symbol: NLPProcessor
+  metadata:
+    created_at: 2026-11-19T16:26:38.991Z
+    updated_at: 2026-11-19T16:26:38.991Z
+    version: 1
+application.applicationservice.clustering-port:
+  id: b45ad8a0-bf79-4bb9-9e53-dce00aa3c488
+  path: application.applicationservice.clustering-port
+  spec_node_id: application.applicationservice
+  type: applicationservice
+  layer_id: application
+  name: ClusteringPort
+  description: "Hexagonal port: clusters embedding vectors."
+  attributes:
+    serviceType: synchronous
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/domain/extraction/ports.py
+        symbol: ClusteringPort
+  metadata:
+    created_at: 2026-11-19T16:26:38.991Z
+    updated_at: 2026-11-19T16:26:38.991Z
+    version: 1
+application.applicationservice.reference-source:
+  id: e74d06b6-62e1-4a11-bb55-5f6a0ee64763
+  path: application.applicationservice.reference-source
+  spec_node_id: application.applicationservice
+  type: applicationservice
+  layer_id: application
+  name: ReferenceSource
+  description: "Hexagonal port: an external reference knowledge source (search,
+    relations, availability)."
+  attributes:
+    serviceType: synchronous
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/domain/extraction/ports.py
+        symbol: ReferenceSource
+  metadata:
+    created_at: 2026-11-19T16:26:38.991Z
+    updated_at: 2026-11-19T16:26:38.991Z
+    version: 1
+application.applicationservice.individual-recognizer:
+  id: cfcf1beb-2d9d-445c-a020-4432415647ef
+  path: application.applicationservice.individual-recognizer
+  spec_node_id: application.applicationservice
+  type: applicationservice
+  layer_id: application
+  name: IndividualRecognizer
+  description: "Hexagonal port: resolves an extracted individual mention to an
+    existing graph node."
+  attributes:
+    serviceType: synchronous
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/domain/extraction/ports.py
+        symbol: IndividualRecognizer
+  metadata:
+    created_at: 2026-11-19T16:26:38.991Z
+    updated_at: 2026-11-19T16:26:38.991Z
+    version: 1
+application.applicationservice.extraction-repository:
+  id: 0de72393-1bc8-4f02-bd9f-e151d090e14b
+  path: application.applicationservice.extraction-repository
+  spec_node_id: application.applicationservice
+  type: applicationservice
+  layer_id: application
+  name: ExtractionRepository
+  description: "Hexagonal port: persistence of extraction results."
+  attributes:
+    serviceType: synchronous
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/domain/extraction/ports.py
+        symbol: ExtractionRepository
+  metadata:
+    created_at: 2026-11-19T16:26:38.991Z
+    updated_at: 2026-11-19T16:26:38.991Z
+    version: 1
+application.applicationservice.extraction-run-repository:
+  id: 25f23394-cb18-4f2d-a187-442591da33b2
+  path: application.applicationservice.extraction-run-repository
+  spec_node_id: application.applicationservice
+  type: applicationservice
+  layer_id: application
+  name: ExtractionRunRepository
+  description: "Hexagonal port: persistence of extraction runs."
+  attributes:
+    serviceType: synchronous
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/domain/extraction/ports.py
+        symbol: ExtractionRunRepository
+  metadata:
+    created_at: 2026-11-19T16:26:38.991Z
+    updated_at: 2026-11-19T16:26:38.991Z
+    version: 1
+application.applicationservice.source-repository:
+  id: f822d4cc-8356-48b1-b31c-916d40112b15
+  path: application.applicationservice.source-repository
+  spec_node_id: application.applicationservice
+  type: applicationservice
+  layer_id: application
+  name: SourceRepository
+  description: "Hexagonal port: stores sources (files, web pages and text) that
+    extraction reads."
+  attributes:
+    serviceType: synchronous
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/domain/extraction/ports.py
+        symbol: SourceRepository
+  metadata:
+    created_at: 2026-11-19T16:26:38.991Z
+    updated_at: 2026-11-19T16:26:38.991Z
+    version: 1
+application.applicationservice.source-reader:
+  id: 6e23cd6c-e666-4b1b-867e-c9c04c2ae965
+  path: application.applicationservice.source-reader
+  spec_node_id: application.applicationservice
+  type: applicationservice
+  layer_id: application
+  name: SourceReader
+  description: "Hexagonal port: reads one format's text with its page and heading offsets."
+  attributes:
+    serviceType: synchronous
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/domain/extraction/ports.py
+        symbol: SourceReader
+  metadata:
+    created_at: 2026-11-19T16:26:38.991Z
+    updated_at: 2026-11-19T16:26:38.991Z
+    version: 1
+application.applicationservice.page-fetcher:
+  id: ccda8a40-0ead-4fa6-a8d7-a2e0e02595db
+  path: application.applicationservice.page-fetcher
+  spec_node_id: application.applicationservice
+  type: applicationservice
+  layer_id: application
+  name: PageFetcher
+  description: "Hexagonal port: fetches one web page (http or https; no links followed)."
+  attributes:
+    serviceType: synchronous
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/domain/extraction/ports.py
+        symbol: PageFetcher
+  metadata:
+    created_at: 2026-11-19T16:26:38.991Z
+    updated_at: 2026-11-19T16:26:38.991Z
+    version: 1
+application.applicationservice.source-file-store:
+  id: e38e0e4a-f357-4964-aa59-ec254c1fd432
+  path: application.applicationservice.source-file-store
+  spec_node_id: application.applicationservice
+  type: applicationservice
+  layer_id: application
+  name: SourceFileStore
+  description: "Hexagonal port: keeps a source's original file beside the
+    workspace databases."
+  attributes:
+    serviceType: synchronous
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/domain/extraction/ports.py
+        symbol: SourceFileStore
+  metadata:
+    created_at: 2026-11-19T16:26:38.991Z
+    updated_at: 2026-11-19T16:26:38.991Z
+    version: 1
+application.applicationservice.drift-planner:
+  id: af8bd7ba-b367-4666-81ba-98f8f1dbe5c4
+  path: application.applicationservice.drift-planner
+  spec_node_id: application.applicationservice
+  type: applicationservice
+  layer_id: application
+  name: DriftPlanner
+  description: "Hexagonal port: compares one kind of client source (the DR spec)
+    with the taxonomy that mirrors it."
+  attributes:
+    serviceType: synchronous
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/domain/versioning/drift.py
+        symbol: DriftPlanner
+  metadata:
+    created_at: 2026-11-19T16:26:38.991Z
+    updated_at: 2026-11-19T16:26:38.991Z
+    version: 1
+application.applicationservice.extraction-usage-repository:
+  id: ddc4cfc4-2f59-4fc2-9606-6c16cb01ef43
+  path: application.applicationservice.extraction-usage-repository
+  spec_node_id: application.applicationservice
+  type: applicationservice
+  layer_id: application
+  name: ExtractionUsageRepository
+  description: "Hexagonal port: extraction usage examples for an entity. No
+    adapter implements it today; the traversal treats it as optional."
+  attributes:
+    serviceType: synchronous
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/domain/pipelines/refinement/neighborhood.py
+        symbol: ExtractionUsageRepository
+  metadata:
+    created_at: 2026-11-19T16:26:38.991Z
+    updated_at: 2026-11-19T16:26:38.991Z
     version: 1

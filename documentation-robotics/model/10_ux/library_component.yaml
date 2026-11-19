@@ -1,21 +1,170 @@
-ux.librarycomponent.flowbite-react-components:
-  id: 7903e0ed-b261-49cf-a4fe-ebe1e7e8e13e
-  path: ux.librarycomponent.flowbite-react-components
+ux.librarycomponent.app-ui-primitives:
+  id: bfba5119-1a93-49a4-a326-33cf1e15d6d4
+  path: ux.librarycomponent.app-ui-primitives
   spec_node_id: ux.librarycomponent
   type: librarycomponent
   layer_id: ux
-  name: Flowbite React Components
-  description: The Flowbite React component set used throughout the Context Studio
-    SPA. Provides buttons, modals, tables, forms, badges, and other UI
-    primitives built on Tailwind CSS, composing the visual layer of all views.
+  name: App UI Primitives
+  description: "The app's own UI primitives over Heimdall: Drawer,
+    InlineInspector, TypeToConfirmDialog, Toast, EmptyState, ErrorBanner,
+    EditableField, ErrorBoundary."
   attributes:
     type: display
     category: ui-primitives
   source_reference:
     provenance: extracted
     locations:
-      - file: ux/src/components/
+      - file: ux/src/components/ui/Drawer.tsx
+        symbol: Drawer
+      - file: ux/src/components/ui/Drawer.tsx
+        symbol: ux.src.components.ui.Drawer
   metadata:
-    created_at: 2026-03-24T10:43:31.703Z
-    updated_at: 2026-03-24T10:43:31.703Z
+    created_at: 2026-11-19T15:02:45.110Z
+    updated_at: 2026-11-19T15:02:45.110Z
+    version: 1
+ux.librarycomponent.editable-field:
+  id: bf2fa947-2191-443c-8503-b143949d1364
+  path: ux.librarycomponent.editable-field
+  spec_node_id: ux.librarycomponent
+  type: librarycomponent
+  layer_id: ux
+  name: Editable Field
+  description: "Inline-editable field primitive: click to edit, saves on blur or
+    Enter, cancels on Escape."
+  attributes:
+    type: input
+    category: ui-primitives
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/components/ui/EditableField.tsx
+        symbol: EditableField
+  metadata:
+    created_at: 2026-11-19T15:43:01.056Z
+    updated_at: 2026-11-19T15:43:01.056Z
+    version: 1
+ux.librarycomponent.empty-state:
+  id: 3f514b57-3e39-4087-a237-33872575eae0
+  path: ux.librarycomponent.empty-state
+  spec_node_id: ux.librarycomponent
+  type: librarycomponent
+  layer_id: ux
+  name: Empty State
+  description: Placeholder shown when a list or panel has nothing to show, with an
+    optional action.
+  attributes:
+    type: feedback
+    category: ui-primitives
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/components/ui/EmptyState.tsx
+        symbol: EmptyState
+  metadata:
+    created_at: 2026-11-19T15:43:01.056Z
+    updated_at: 2026-11-19T15:43:01.056Z
+    version: 1
+ux.librarycomponent.error-banner:
+  id: fc1ae1ce-907a-4382-bf3a-19f7ec752924
+  path: ux.librarycomponent.error-banner
+  spec_node_id: ux.librarycomponent
+  type: librarycomponent
+  layer_id: ux
+  name: Error Banner
+  description: Banner that reports a failed request, with a copyable server log path.
+  attributes:
+    type: feedback
+    category: ui-primitives
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/components/ui/ErrorBanner.tsx
+        symbol: ErrorBanner
+  metadata:
+    created_at: 2026-11-19T15:43:01.056Z
+    updated_at: 2026-11-19T15:43:01.056Z
+    version: 1
+ux.librarycomponent.error-boundary:
+  id: 63bf0b7d-0eef-4808-bf9a-fb8cd0b5e4e6
+  path: ux.librarycomponent.error-boundary
+  spec_node_id: ux.librarycomponent
+  type: librarycomponent
+  layer_id: ux
+  name: Error Boundary
+  description: React error boundary that catches render errors in a subtree and
+    shows a fallback.
+  attributes:
+    type: feedback
+    category: ui-primitives
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/components/ui/ErrorBoundary.tsx
+        symbol: ErrorBoundary
+  metadata:
+    created_at: 2026-11-19T15:43:01.056Z
+    updated_at: 2026-11-19T15:43:01.056Z
+    version: 1
+ux.librarycomponent.inline-inspector:
+  id: 18eb5ffd-97e8-408c-83c8-647fd426d839
+  path: ux.librarycomponent.inline-inspector
+  spec_node_id: ux.librarycomponent
+  type: librarycomponent
+  layer_id: ux
+  name: Inline Inspector
+  description: Inspector panel shown beside a table for the selected row, with a
+    row action menu.
+  attributes:
+    type: display
+    category: ui-primitives
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/components/ui/InlineInspector.tsx
+        symbol: InlineInspector
+  metadata:
+    created_at: 2026-11-19T15:43:01.056Z
+    updated_at: 2026-11-19T15:43:01.056Z
+    version: 1
+ux.librarycomponent.toast:
+  id: e3b7d141-213c-405f-9ca9-705df9199003
+  path: ux.librarycomponent.toast
+  spec_node_id: ux.librarycomponent
+  type: librarycomponent
+  layer_id: ux
+  name: Toast
+  description: "Toast notifications: the provider, viewport and useToasts hook the
+    app reports outcomes and errors through."
+  attributes:
+    type: feedback
+    category: ui-primitives
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/components/ui/Toast.tsx
+        symbol: ToastProvider
+  metadata:
+    created_at: 2026-11-19T15:43:01.056Z
+    updated_at: 2026-11-19T15:43:01.056Z
+    version: 1
+ux.librarycomponent.type-to-confirm-dialog:
+  id: 89ce82f9-c9de-4c2a-919b-e70800798e4c
+  path: ux.librarycomponent.type-to-confirm-dialog
+  spec_node_id: ux.librarycomponent
+  type: librarycomponent
+  layer_id: ux
+  name: Type To Confirm Dialog
+  description: Confirmation dialog for destructive actions that requires typing
+    the target's name.
+  attributes:
+    type: form
+    category: ui-primitives
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/components/ui/TypeToConfirmDialog.tsx
+        symbol: TypeToConfirmDialog
+  metadata:
+    created_at: 2026-11-19T15:43:01.056Z
+    updated_at: 2026-11-19T15:43:01.056Z
     version: 1

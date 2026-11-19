@@ -62,28 +62,6 @@ application.applicationcomponent.system-metrics-collector-adapter:
     created_at: 2026-05-07T22:15:29.257Z
     updated_at: 2026-05-07T22:15:29.257Z
     version: 1
-application.applicationcomponent.sqlite-persistence-adapter:
-  id: 1dd279b7-e7b5-4d9d-807d-9be87ff19edb
-  path: application.applicationcomponent.sqlite-persistence-adapter
-  spec_node_id: application.applicationcomponent
-  type: applicationcomponent
-  layer_id: application
-  name: SQLite Persistence Adapter
-  description: Infrastructure adapter implementing repository ports via SQLAlchemy
-    — persists ontology entities, relationships, change events, changesets,
-    proposals, and extraction results to local.db using single-table inheritance
-    ORM model
-  attributes:
-    type: internal
-  source_reference:
-    provenance: extracted
-    locations:
-      - file: local-server/adapters/persistence/sqlite/ontology_repo.py
-        symbol: SQLiteOntologyRepository
-  metadata:
-    created_at: 2026-05-07T22:15:33.271Z
-    updated_at: 2026-05-07T22:15:33.272Z
-    version: 1
 application.applicationcomponent.llm-provider-router:
   id: fb040a66-cac1-4907-8612-c8468399e183
   path: application.applicationcomponent.llm-provider-router
@@ -527,16 +505,15 @@ application.applicationcomponent.sqlite-pipeline-repository:
   type: applicationcomponent
   layer_id: application
   name: SQLite Pipeline Repository
-  description: SQLite implementation of the PipelineRepository port for
-    operations.db — manages persistence of pipeline configurations and execution
-    records with complete instrumentation for observability
+  description: "PipelineRunRepository over local.db: pipeline runs (one table per
+    pipeline type over batch_runs), their status, candidates and LLM metadata."
   attributes:
     type: internal
   source_reference:
     provenance: extracted
     locations:
-      - file: local-server/adapters/persistence/sqlite/pipeline_repo.py
-        symbol: SQLitePipelineRepository
+      - file: local-server/adapters/persistence/sqlite/pipeline_run_repo.py
+        symbol: PipelineRepository
   metadata:
     created_at: 2026-05-08T12:19:49.956Z
     updated_at: 2026-05-08T12:19:49.956Z
@@ -569,16 +546,16 @@ application.applicationcomponent.cached-reference-source:
   type: applicationcomponent
   layer_id: application
   name: Cached Reference Source
-  description: Decorator that wraps a ReferenceSource and caches results to SQLite
-    — provides TTL-based expiry ensuring stale data is refreshed while improving
-    efficiency when querying the same terms repeatedly
+  description: In-process caching HTTP proxy in front of the external reference
+    sources (ConceptNet, DBpedia, Wikidata, schema.org); caches successful
+    upstream responses only.
   attributes:
     type: service-component
   source_reference:
     provenance: extracted
     locations:
-      - file: local-server/adapters/reference/cache.py
-        symbol: CachedReferenceSource
+      - file: local-server/adapters/reference/proxy.py
+        symbol: ReferenceProxy
   metadata:
     created_at: 2026-05-08T12:19:55.023Z
     updated_at: 2026-05-08T12:19:55.023Z
@@ -604,4 +581,986 @@ application.applicationcomponent.no-op-sync-adapter:
   metadata:
     created_at: 2026-05-08T12:19:56.922Z
     updated_at: 2026-05-08T12:19:56.922Z
+    version: 1
+application.applicationcomponent.anthropic-chat-model:
+  id: 3a8c665d-dc49-42a3-9de1-0fafdec7cc6e
+  path: application.applicationcomponent.anthropic-chat-model
+  spec_node_id: application.applicationcomponent
+  type: applicationcomponent
+  layer_id: application
+  name: Anthropic Chat Model
+  description: "ChatModel adapter for Anthropic Claude: streams assistant turns
+    with tool use for the chat service."
+  attributes:
+    type: service-component
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/llm/anthropic_chat.py
+        symbol: AnthropicChatModel
+  metadata:
+    created_at: 2026-11-19T14:51:26.963Z
+    updated_at: 2026-11-19T14:51:26.963Z
+    version: 1
+application.applicationcomponent.open-router-chat-model:
+  id: 8475bd74-65a4-4678-9a54-d8918b746e76
+  path: application.applicationcomponent.open-router-chat-model
+  spec_node_id: application.applicationcomponent
+  type: applicationcomponent
+  layer_id: application
+  name: OpenRouter Chat Model
+  description: ChatModel adapter for OpenRouter-hosted models, with tool calls.
+  attributes:
+    type: service-component
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/llm/openrouter_chat.py
+        symbol: OpenRouterChatModel
+  metadata:
+    created_at: 2026-11-19T14:51:26.963Z
+    updated_at: 2026-11-19T14:51:26.963Z
+    version: 1
+application.applicationcomponent.open-router-llm-provider:
+  id: 203b42a7-ce86-472f-bd9b-2a4815615421
+  path: application.applicationcomponent.open-router-llm-provider
+  spec_node_id: application.applicationcomponent
+  type: applicationcomponent
+  layer_id: application
+  name: OpenRouter LLM Provider
+  description: LLMProvider adapter for the OpenRouter API, used by the provider
+    router for pipeline LLM calls.
+  attributes:
+    type: service-component
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/llm/openrouter_provider.py
+        symbol: OpenRouterProvider
+  metadata:
+    created_at: 2026-11-19T14:51:26.963Z
+    updated_at: 2026-11-19T14:51:26.963Z
+    version: 1
+application.applicationcomponent.decision-model-registry:
+  id: baf0171a-101b-497f-89a6-80263749a38c
+  path: application.applicationcomponent.decision-model-registry
+  spec_node_id: application.applicationcomponent
+  type: applicationcomponent
+  layer_id: application
+  name: Decision Model Registry
+  description: The configured decision-model instances by name (implements the
+    DecisionModels port), with fallbacks.
+  attributes:
+    type: service-component
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/decision/registry.py
+        symbol: DecisionModelRegistry
+  metadata:
+    created_at: 2026-11-19T14:51:26.963Z
+    updated_at: 2026-11-19T14:51:26.963Z
+    version: 1
+application.applicationcomponent.llm-decision-model:
+  id: d6f1d1d1-9b31-43f4-b478-ed3019d30c63
+  path: application.applicationcomponent.llm-decision-model
+  spec_node_id: application.applicationcomponent
+  type: applicationcomponent
+  layer_id: application
+  name: LLM Decision Model
+  description: DecisionModel adapter over the LLM provider router, answering
+    yes/no, choice and score questions as JSON.
+  attributes:
+    type: service-component
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/decision/llm.py
+        symbol: LLMDecisionModel
+  metadata:
+    created_at: 2026-11-19T14:51:26.963Z
+    updated_at: 2026-11-19T14:51:26.963Z
+    version: 1
+application.applicationcomponent.workers-ai-decision-model:
+  id: 6e53cff1-a33c-4876-9fe9-c7769ada3b5a
+  path: application.applicationcomponent.workers-ai-decision-model
+  spec_node_id: application.applicationcomponent
+  type: applicationcomponent
+  layer_id: application
+  name: Workers AI Decision Model
+  description: DecisionModel adapter for the Workers AI state-plus-questions API
+    (the Clef decision model).
+  attributes:
+    type: external
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/decision/workers_ai.py
+        symbol: WorkersAIDecisionModel
+  metadata:
+    created_at: 2026-11-19T14:51:26.963Z
+    updated_at: 2026-11-19T14:51:26.963Z
+    version: 1
+application.applicationcomponent.canon-demo-dataset-loader:
+  id: 442e7228-0718-49d2-b38d-c1f8e95581e6
+  path: application.applicationcomponent.canon-demo-dataset-loader
+  spec_node_id: application.applicationcomponent
+  type: applicationcomponent
+  layer_id: application
+  name: Canon Demo Dataset Loader
+  description: Loads a canon-backed demo dataset into the ontology repository
+    (DemoDatasetLoader port).
+  attributes:
+    type: service-component
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/demo/canon_loader.py
+        symbol: CanonDemoDatasetLoader
+  metadata:
+    created_at: 2026-11-19T14:51:26.963Z
+    updated_at: 2026-11-19T14:51:26.963Z
+    version: 1
+application.applicationcomponent.caching-embedding-service:
+  id: d25d7305-ee26-447c-9b11-5b173095ff24
+  path: application.applicationcomponent.caching-embedding-service
+  spec_node_id: application.applicationcomponent
+  type: applicationcomponent
+  layer_id: application
+  name: Caching Embedding Service
+  description: EmbeddingService decorator that memoizes single-text embed calls.
+  attributes:
+    type: service-component
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/embedding/caching_embedding_service.py
+        symbol: CachingEmbeddingService
+  metadata:
+    created_at: 2026-11-19T14:51:26.963Z
+    updated_at: 2026-11-19T14:51:26.963Z
+    version: 1
+application.applicationcomponent.cascade-individual-recognizer:
+  id: 2e944ebd-711b-4627-a064-f45a18ee4b94
+  path: application.applicationcomponent.cascade-individual-recognizer
+  spec_node_id: application.applicationcomponent
+  type: applicationcomponent
+  layer_id: application
+  name: Cascade Individual Recognizer
+  description: "IndividualRecognizer adapter: exact match, then a clear vector
+    winner, then an LLM tiebreak."
+  attributes:
+    type: service-component
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/recognition/individual_recognizer.py
+        symbol: CascadeIndividualRecognizer
+  metadata:
+    created_at: 2026-11-19T14:51:26.963Z
+    updated_at: 2026-11-19T14:51:26.963Z
+    version: 1
+application.applicationcomponent.pipeline-orchestrator-factory:
+  id: 01866252-1a10-458f-9221-03f1337e12a0
+  path: application.applicationcomponent.pipeline-orchestrator-factory
+  spec_node_id: application.applicationcomponent
+  type: applicationcomponent
+  layer_id: application
+  name: Pipeline Orchestrator Factory
+  description: Builds pipeline orchestrators, their state and run records from the
+    registry's selected implementation and configuration.
+  attributes:
+    type: internal
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/factories/orchestrator_factory.py
+        symbol: create_orchestrator
+  metadata:
+    created_at: 2026-11-19T14:51:26.963Z
+    updated_at: 2026-11-19T14:51:26.963Z
+    version: 1
+application.applicationcomponent.dr-spec-reader:
+  id: a092ce21-d4bf-42ba-aa01-ec0e196617c9
+  path: application.applicationcomponent.dr-spec-reader
+  spec_node_id: application.applicationcomponent
+  type: applicationcomponent
+  layer_id: application
+  name: DR Spec Reader
+  description: "Reads a Documentation Robotics spec checkout: manifest, node and
+    relationship schemas, predicate catalog and charter."
+  attributes:
+    type: internal
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/interchange/dr_spec.py
+        symbol: iter_node_schemas
+  metadata:
+    created_at: 2026-11-19T14:51:26.963Z
+    updated_at: 2026-11-19T14:51:26.963Z
+    version: 1
+application.applicationcomponent.dr-spec-drift-planner:
+  id: 21acff8b-13db-4a8a-8914-05006b7ad7e4
+  path: application.applicationcomponent.dr-spec-drift-planner
+  spec_node_id: application.applicationcomponent
+  type: applicationcomponent
+  layer_id: application
+  name: DR Spec Drift Planner
+  description: Plans the drift between a DR spec checkout and the dr_spec taxonomy
+    (DriftPlanner port).
+  attributes:
+    type: service-component
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/interchange/dr_drift.py
+        symbol: DrDriftPlanner
+  metadata:
+    created_at: 2026-11-19T14:51:26.963Z
+    updated_at: 2026-11-19T14:51:26.963Z
+    version: 1
+application.applicationcomponent.dr-predicate-rules:
+  id: 9c3bd2fa-e90d-4e78-bbd5-ce5e7c5df8a3
+  path: application.applicationcomponent.dr-predicate-rules
+  spec_node_id: application.applicationcomponent
+  type: applicationcomponent
+  layer_id: application
+  name: DR Predicate Rules
+  description: ProposalApplyRules for DR predicates on the dr_spec taxonomy.
+  attributes:
+    type: internal
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/interchange/dr_predicates.py
+        symbol: DrPredicateRules
+  metadata:
+    created_at: 2026-11-19T14:51:26.963Z
+    updated_at: 2026-11-19T14:51:26.963Z
+    version: 1
+application.applicationcomponent.dr-relationship-rules:
+  id: 981e288c-80ee-4f13-94ac-be86f50df214
+  path: application.applicationcomponent.dr-relationship-rules
+  spec_node_id: application.applicationcomponent
+  type: applicationcomponent
+  layer_id: application
+  name: DR Relationship Rules
+  description: ProposalApplyRules for the DR spec's relationship types.
+  attributes:
+    type: internal
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/interchange/dr_relationships.py
+        symbol: DrRelationshipRules
+  metadata:
+    created_at: 2026-11-19T14:51:26.963Z
+    updated_at: 2026-11-19T14:51:26.963Z
+    version: 1
+application.applicationcomponent.dr-claims-importer:
+  id: a6cedc06-2647-4dca-b18b-83b88db6ddeb
+  path: application.applicationcomponent.dr-claims-importer
+  spec_node_id: application.applicationcomponent
+  type: applicationcomponent
+  layer_id: application
+  name: DR Claims Importer
+  description: Imports DR claims JSONL into a taxonomy's claims, resolving DR spec
+    ids to entity ids.
+  attributes:
+    type: internal
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/interchange/dr_claims.py
+        symbol: import_dr_claims
+  metadata:
+    created_at: 2026-11-19T14:51:26.963Z
+    updated_at: 2026-11-19T14:51:26.963Z
+    version: 1
+application.applicationcomponent.dr-reflection-plan-importer:
+  id: 1f734932-1486-4714-a166-da116d42235d
+  path: application.applicationcomponent.dr-reflection-plan-importer
+  spec_node_id: application.applicationcomponent
+  type: applicationcomponent
+  layer_id: application
+  name: DR Reflection Plan Importer
+  description: Turns a DR reflection plan into one change proposal on the dr_spec taxonomy.
+  attributes:
+    type: internal
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/interchange/dr_reflection_plan.py
+        symbol: import_reflection_plan
+  metadata:
+    created_at: 2026-11-19T14:51:26.963Z
+    updated_at: 2026-11-19T14:51:26.963Z
+    version: 1
+application.applicationcomponent.dr-spec-changes-exporter:
+  id: aed7984e-5a16-486d-838d-71c67596125b
+  path: application.applicationcomponent.dr-spec-changes-exporter
+  spec_node_id: application.applicationcomponent
+  type: applicationcomponent
+  layer_id: application
+  name: DR Spec Changes Exporter
+  description: Exports a decided proposal's applied DR spec changes in the
+    cs-dr-spec-changes/1 format.
+  attributes:
+    type: internal
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/interchange/dr_spec_changes.py
+        symbol: spec_changes_for
+  metadata:
+    created_at: 2026-11-19T14:51:26.963Z
+    updated_at: 2026-11-19T14:51:26.963Z
+    version: 1
+application.applicationcomponent.dr-decisions-exporter:
+  id: 75c30cb4-bfb5-4ff2-93c2-5ea075af0203
+  path: application.applicationcomponent.dr-decisions-exporter
+  spec_node_id: application.applicationcomponent
+  type: applicationcomponent
+  layer_id: application
+  name: DR Decisions Exporter
+  description: The decisions on a reflection-plan proposal, joined to the client's
+    plan by seq.
+  attributes:
+    type: internal
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/interchange/dr_decisions.py
+        symbol: decisions_for
+  metadata:
+    created_at: 2026-11-19T14:51:26.964Z
+    updated_at: 2026-11-19T14:51:26.964Z
+    version: 1
+application.applicationcomponent.mcp-server:
+  id: cb96a9df-a7e4-4740-91ed-7db9bc83bfa4
+  path: application.applicationcomponent.mcp-server
+  spec_node_id: application.applicationcomponent
+  type: applicationcomponent
+  layer_id: application
+  name: MCP Server
+  description: ASGI MCP endpoint at /mcp exposing the chat tools to agent clients
+    with a bearer token.
+  attributes:
+    type: service-component
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/mcp/server.py
+        symbol: McpEndpoint
+  metadata:
+    created_at: 2026-11-19T14:51:26.964Z
+    updated_at: 2026-11-19T14:51:26.964Z
+    version: 1
+application.applicationcomponent.ontology-chat-tools:
+  id: 92d447fe-ad7e-4f00-ad3b-97951cce8f4b
+  path: application.applicationcomponent.ontology-chat-tools
+  spec_node_id: application.applicationcomponent
+  type: applicationcomponent
+  layer_id: application
+  name: Ontology Chat Tools
+  description: "Read tools over the ontology for chat and MCP: taxonomies,
+    datasets, search, entities, neighbors, paths, predicates."
+  attributes:
+    type: internal
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/chat/tools.py
+        symbol: build_chat_tools
+  metadata:
+    created_at: 2026-11-19T14:51:26.964Z
+    updated_at: 2026-11-19T14:51:26.964Z
+    version: 1
+application.applicationcomponent.proposal-chat-tools:
+  id: db915397-5caa-4acd-8175-31922c94b6e9
+  path: application.applicationcomponent.proposal-chat-tools
+  spec_node_id: application.applicationcomponent
+  type: applicationcomponent
+  layer_id: application
+  name: Proposal Chat Tools
+  description: Chat/MCP tools to list, read, propose, land proposals and report DR
+    spec drift.
+  attributes:
+    type: internal
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/chat/proposal_tools.py
+        symbol: build_proposal_tools
+  metadata:
+    created_at: 2026-11-19T14:51:26.964Z
+    updated_at: 2026-11-19T14:51:26.964Z
+    version: 1
+application.applicationcomponent.source-chat-tools:
+  id: 7c4e4ecd-491c-4147-852f-426b99bc6c7a
+  path: application.applicationcomponent.source-chat-tools
+  spec_node_id: application.applicationcomponent
+  type: applicationcomponent
+  layer_id: application
+  name: Source Chat Tools
+  description: Chat/MCP tools to add, list, read and extract sources.
+  attributes:
+    type: internal
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/chat/source_tools.py
+        symbol: build_source_tools
+  metadata:
+    created_at: 2026-11-19T14:51:26.964Z
+    updated_at: 2026-11-19T14:51:26.964Z
+    version: 1
+application.applicationcomponent.run-chat-tools:
+  id: 17d09b3f-1d60-4525-8143-f53204a1cf78
+  path: application.applicationcomponent.run-chat-tools
+  spec_node_id: application.applicationcomponent
+  type: applicationcomponent
+  layer_id: application
+  name: Run Chat Tools
+  description: Chat/MCP tools to start refinement runs and read run status.
+  attributes:
+    type: internal
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/chat/run_tools.py
+        symbol: build_run_tools
+  metadata:
+    created_at: 2026-11-19T14:51:26.964Z
+    updated_at: 2026-11-19T14:51:26.964Z
+    version: 1
+application.applicationcomponent.claim-chat-tools:
+  id: 6418bace-3431-45a2-b437-1afe4815c0e3
+  path: application.applicationcomponent.claim-chat-tools
+  spec_node_id: application.applicationcomponent
+  type: applicationcomponent
+  layer_id: application
+  name: Claim Chat Tools
+  description: Chat/MCP tools to submit and list a taxonomy's claims.
+  attributes:
+    type: internal
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/chat/claim_tools.py
+        symbol: build_claim_tools
+  metadata:
+    created_at: 2026-11-19T14:51:26.964Z
+    updated_at: 2026-11-19T14:51:26.964Z
+    version: 1
+application.applicationcomponent.interchange-chat-tools:
+  id: 3d52bad2-ab5d-472b-9caf-f39cdd0451d6
+  path: application.applicationcomponent.interchange-chat-tools
+  spec_node_id: application.applicationcomponent
+  type: applicationcomponent
+  layer_id: application
+  name: Interchange Chat Tools
+  description: "Chat/MCP tools for DR clients: submit a reflection plan, read spec
+    changes and decisions."
+  attributes:
+    type: internal
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/chat/interchange_tools.py
+        symbol: build_interchange_tools
+  metadata:
+    created_at: 2026-11-19T14:51:26.964Z
+    updated_at: 2026-11-19T14:51:26.964Z
+    version: 1
+application.applicationcomponent.ontology-workspace-context:
+  id: a2969e96-b32d-4186-b774-a001b76dd271
+  path: application.applicationcomponent.ontology-workspace-context
+  spec_node_id: application.applicationcomponent
+  type: applicationcomponent
+  layer_id: application
+  name: Ontology Workspace Context
+  description: "WorkspaceContext port over the ontology service: renders the page
+    context a chat turn starts from."
+  attributes:
+    type: internal
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/chat/context.py
+        symbol: OntologyWorkspaceContext
+  metadata:
+    created_at: 2026-11-19T14:51:26.964Z
+    updated_at: 2026-11-19T14:51:26.964Z
+    version: 1
+application.applicationcomponent.sqlite-approval-policy-repository:
+  id: cb660fac-410e-47cb-b09b-bc63b5ba73d1
+  path: application.applicationcomponent.sqlite-approval-policy-repository
+  spec_node_id: application.applicationcomponent
+  type: applicationcomponent
+  layer_id: application
+  name: SQLite Approval Policy Repository
+  description: ApprovalPolicyRepository over local.db; one row per taxonomy.
+  attributes:
+    type: service-component
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/persistence/sqlite/approval_policy_repo.py
+        symbol: SQLiteApprovalPolicyRepository
+  metadata:
+    created_at: 2026-11-19T14:51:53.022Z
+    updated_at: 2026-11-19T14:51:53.022Z
+    version: 1
+application.applicationcomponent.sqlite-batch-repository:
+  id: ee00747c-859c-4bbb-ad5d-69ab66541f6b
+  path: application.applicationcomponent.sqlite-batch-repository
+  spec_node_id: application.applicationcomponent
+  type: applicationcomponent
+  layer_id: application
+  name: SQLite Batch Repository
+  description: "BatchRepository over local.db: batches of pipeline runs."
+  attributes:
+    type: service-component
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/persistence/sqlite/batch_repo.py
+        symbol: BatchRepository
+  metadata:
+    created_at: 2026-11-19T14:51:53.022Z
+    updated_at: 2026-11-19T14:51:53.022Z
+    version: 1
+application.applicationcomponent.sqlite-conversation-repository:
+  id: 26489fe0-9f39-439d-8c9d-93fefb149876
+  path: application.applicationcomponent.sqlite-conversation-repository
+  spec_node_id: application.applicationcomponent
+  type: applicationcomponent
+  layer_id: application
+  name: SQLite Conversation Repository
+  description: "ConversationRepository: chat conversations and messages in operations.db."
+  attributes:
+    type: service-component
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/persistence/sqlite/chat_repo.py
+        symbol: SqliteConversationRepository
+  metadata:
+    created_at: 2026-11-19T14:51:53.022Z
+    updated_at: 2026-11-19T14:51:53.022Z
+    version: 1
+application.applicationcomponent.sqlite-claim-repository:
+  id: e0b9d6d0-35d4-4aff-8454-572049445ead
+  path: application.applicationcomponent.sqlite-claim-repository
+  spec_node_id: application.applicationcomponent
+  type: applicationcomponent
+  layer_id: application
+  name: SQLite Claim Repository
+  description: ClaimRepository over local.db's claims table.
+  attributes:
+    type: service-component
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/persistence/sqlite/claim_repo.py
+        symbol: SQLiteClaimRepository
+  metadata:
+    created_at: 2026-11-19T14:51:53.022Z
+    updated_at: 2026-11-19T14:51:53.022Z
+    version: 1
+application.applicationcomponent.sqlite-entity-source-repository:
+  id: d64b59bd-0490-467c-afa9-abf927a7ec93
+  path: application.applicationcomponent.sqlite-entity-source-repository
+  spec_node_id: application.applicationcomponent
+  type: applicationcomponent
+  layer_id: application
+  name: SQLite Entity Source Repository
+  description: "EntitySourceRepository over local.db: the source passages entities
+    were extracted from."
+  attributes:
+    type: service-component
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/persistence/sqlite/entity_source_repo.py
+        symbol: SQLiteEntitySourceRepository
+  metadata:
+    created_at: 2026-11-19T14:51:53.022Z
+    updated_at: 2026-11-19T14:51:53.022Z
+    version: 1
+application.applicationcomponent.sqlite-extraction-run-repository:
+  id: 5ad907fc-53e4-4ea2-94c4-e9b0133a1de6
+  path: application.applicationcomponent.sqlite-extraction-run-repository
+  spec_node_id: application.applicationcomponent
+  type: applicationcomponent
+  layer_id: application
+  name: SQLite Extraction Run Repository
+  description: ExtractionRunRepository over local.db.
+  attributes:
+    type: service-component
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/persistence/sqlite/extraction_run_repo.py
+        symbol: SQLiteExtractionRunRepository
+  metadata:
+    created_at: 2026-11-19T14:51:53.022Z
+    updated_at: 2026-11-19T14:51:53.022Z
+    version: 1
+application.applicationcomponent.sqlite-individual-vector-index:
+  id: 626d2dbb-7051-4900-b5b8-dfeb762e2a83
+  path: application.applicationcomponent.sqlite-individual-vector-index
+  spec_node_id: application.applicationcomponent
+  type: applicationcomponent
+  layer_id: application
+  name: SQLite Individual Vector Index
+  description: IndividualVectorIndex port over SQLite vector storage, for
+    recognizing existing individuals.
+  attributes:
+    type: service-component
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/persistence/sqlite/individual_vector_index.py
+        symbol: SqliteIndividualVectorIndex
+  metadata:
+    created_at: 2026-11-19T14:51:53.022Z
+    updated_at: 2026-11-19T14:51:53.022Z
+    version: 1
+application.applicationcomponent.sqlite-pipeline-configuration-repository:
+  id: 251b482d-f96f-4ee3-8598-1910e693116f
+  path: application.applicationcomponent.sqlite-pipeline-configuration-repository
+  spec_node_id: application.applicationcomponent
+  type: applicationcomponent
+  layer_id: application
+  name: SQLite Pipeline Configuration Repository
+  description: User-created pipeline configurations in operations.db.
+  attributes:
+    type: service-component
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/persistence/sqlite/pipeline_config_repo.py
+        symbol: PipelineConfigurationRepository
+  metadata:
+    created_at: 2026-11-19T14:51:53.022Z
+    updated_at: 2026-11-19T14:51:53.022Z
+    version: 1
+application.applicationcomponent.sqlite-change-proposal-repository:
+  id: 3780caa2-7388-4370-b459-4b292d7a29fd
+  path: application.applicationcomponent.sqlite-change-proposal-repository
+  spec_node_id: application.applicationcomponent
+  type: applicationcomponent
+  layer_id: application
+  name: SQLite Change Proposal Repository
+  description: "ChangeProposalRepository over local.db: proposals, their
+    operations and decisions."
+  attributes:
+    type: service-component
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/persistence/sqlite/proposal_repo.py
+        symbol: SQLiteChangeProposalRepository
+  metadata:
+    created_at: 2026-11-19T14:51:53.022Z
+    updated_at: 2026-11-19T14:51:53.022Z
+    version: 1
+application.applicationcomponent.sqlite-schema-vector-index:
+  id: 0f96b42c-e774-4417-9785-67b651d880cc
+  path: application.applicationcomponent.sqlite-schema-vector-index
+  spec_node_id: application.applicationcomponent
+  type: applicationcomponent
+  layer_id: application
+  name: SQLite Schema Vector Index
+  description: "SchemaVectorIndex port: vector index over schema entities
+    (classes, predicates) by definition."
+  attributes:
+    type: service-component
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/persistence/sqlite/schema_vector_index.py
+        symbol: SqliteSchemaVectorIndex
+  metadata:
+    created_at: 2026-11-19T14:51:53.022Z
+    updated_at: 2026-11-19T14:51:53.022Z
+    version: 1
+application.applicationcomponent.sqlite-source-repository:
+  id: 3a8132d7-82ba-4766-a419-00be2061e7c7
+  path: application.applicationcomponent.sqlite-source-repository
+  spec_node_id: application.applicationcomponent
+  type: applicationcomponent
+  layer_id: application
+  name: SQLite Source Repository
+  description: SourceRepository over local.db's sources table.
+  attributes:
+    type: service-component
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/persistence/sqlite/source_repo.py
+        symbol: SQLiteSourceRepository
+  metadata:
+    created_at: 2026-11-19T14:51:53.022Z
+    updated_at: 2026-11-19T14:51:53.022Z
+    version: 1
+application.applicationcomponent.sqlite-transaction-scope:
+  id: 5c82ccc4-6486-4ae0-b0f4-cbbf70d65c26
+  path: application.applicationcomponent.sqlite-transaction-scope
+  spec_node_id: application.applicationcomponent
+  type: applicationcomponent
+  layer_id: application
+  name: SQLite Transaction Scope
+  description: TransactionScope over repositories sharing one session, so a use
+    case commits or rolls back as a unit.
+  attributes:
+    type: internal
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/persistence/sqlite/transaction.py
+        symbol: SqliteTransactionScope
+  metadata:
+    created_at: 2026-11-19T14:51:53.022Z
+    updated_at: 2026-11-19T14:51:53.022Z
+    version: 1
+application.applicationcomponent.database-manager:
+  id: e0578b69-4343-4d61-8f29-c3a7ac2176cc
+  path: application.applicationcomponent.database-manager
+  spec_node_id: application.applicationcomponent
+  type: applicationcomponent
+  layer_id: application
+  name: Database Manager
+  description: Creates and manages the local.db and operations.db engines and
+    sessions (WAL, busy_timeout, QueuePool).
+  attributes:
+    type: internal
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/persistence/sqlite/connection.py
+        symbol: DatabaseManager
+  metadata:
+    created_at: 2026-11-19T14:51:53.022Z
+    updated_at: 2026-11-19T14:51:53.022Z
+    version: 1
+application.applicationcomponent.background-run-executor:
+  id: fb1a45f7-58f8-4e0d-82f8-9318016c6589
+  path: application.applicationcomponent.background-run-executor
+  spec_node_id: application.applicationcomponent
+  type: applicationcomponent
+  layer_id: application
+  name: Background Run Executor
+  description: Runs pending pipeline runs on background worker threads and records
+    their outcome.
+  attributes:
+    type: service-component
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/pipelines/run_executor.py
+        symbol: BackgroundRunExecutor
+  metadata:
+    created_at: 2026-11-19T14:51:53.022Z
+    updated_at: 2026-11-19T14:51:53.022Z
+    version: 1
+application.applicationcomponent.grounding-adapter:
+  id: 5031f226-fb33-4a57-a5c4-bda2aade1664
+  path: application.applicationcomponent.grounding-adapter
+  spec_node_id: application.applicationcomponent
+  type: applicationcomponent
+  layer_id: application
+  name: Grounding Adapter
+  description: Queries external reference sources for grounding candidates
+    (GroundingAdapterPort).
+  attributes:
+    type: service-component
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/reference/grounding/adapter.py
+        symbol: GroundingAdapter
+  metadata:
+    created_at: 2026-11-19T14:51:53.022Z
+    updated_at: 2026-11-19T14:51:53.022Z
+    version: 1
+application.applicationcomponent.http-page-fetcher:
+  id: 9558e9a7-6580-4d98-821c-dd41756c61db
+  path: application.applicationcomponent.http-page-fetcher
+  spec_node_id: application.applicationcomponent
+  type: applicationcomponent
+  layer_id: application
+  name: HTTP Page Fetcher
+  description: "PageFetcher port: fetches one web page for a URL source, following
+    redirects, with a size limit."
+  attributes:
+    type: service-component
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/sources/fetcher.py
+        symbol: HttpPageFetcher
+  metadata:
+    created_at: 2026-11-19T14:51:53.022Z
+    updated_at: 2026-11-19T14:51:53.022Z
+    version: 1
+application.applicationcomponent.local-source-file-store:
+  id: 1f1b2994-f574-4337-9e76-19cd068b1202
+  path: application.applicationcomponent.local-source-file-store
+  spec_node_id: application.applicationcomponent
+  type: applicationcomponent
+  layer_id: application
+  name: Local Source File Store
+  description: "SourceFileStore port: keeps each source's original file beside the
+    workspace database."
+  attributes:
+    type: service-component
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/sources/file_store.py
+        symbol: LocalSourceFileStore
+  metadata:
+    created_at: 2026-11-19T14:51:53.023Z
+    updated_at: 2026-11-19T14:51:53.023Z
+    version: 1
+application.applicationcomponent.pdf-text-reader:
+  id: 76ba710f-bbcd-4bd6-aeb6-796c124d42db
+  path: application.applicationcomponent.pdf-text-reader
+  spec_node_id: application.applicationcomponent
+  type: applicationcomponent
+  layer_id: application
+  name: PDF Text Reader
+  description: "SourceReader for PDFs: text layer page by page, headings from the outline."
+  attributes:
+    type: internal
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/sources/readers.py
+        symbol: PdfTextReader
+  metadata:
+    created_at: 2026-11-19T14:51:53.023Z
+    updated_at: 2026-11-19T14:51:53.023Z
+    version: 1
+application.applicationcomponent.html-reader:
+  id: 47a32117-b5e8-485c-abc9-8d2128766e69
+  path: application.applicationcomponent.html-reader
+  spec_node_id: application.applicationcomponent
+  type: applicationcomponent
+  layer_id: application
+  name: HTML Reader
+  description: "SourceReader for HTML: the page's main text without navigation,
+    footers and comments."
+  attributes:
+    type: internal
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/sources/readers.py
+        symbol: HtmlReader
+  metadata:
+    created_at: 2026-11-19T14:51:53.023Z
+    updated_at: 2026-11-19T14:51:53.023Z
+    version: 1
+application.applicationcomponent.markdown-reader:
+  id: 5fcfb6ce-6ee4-4ef1-9f5d-18bf5b6c20c4
+  path: application.applicationcomponent.markdown-reader
+  spec_node_id: application.applicationcomponent
+  type: applicationcomponent
+  layer_id: application
+  name: Markdown Reader
+  description: SourceReader for Markdown, with ATX headings.
+  attributes:
+    type: internal
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/sources/readers.py
+        symbol: MarkdownReader
+  metadata:
+    created_at: 2026-11-19T14:51:53.023Z
+    updated_at: 2026-11-19T14:51:53.023Z
+    version: 1
+application.applicationcomponent.plain-text-reader:
+  id: 5c538d75-ecd8-41d2-a348-ac37ea4f7174
+  path: application.applicationcomponent.plain-text-reader
+  spec_node_id: application.applicationcomponent
+  type: applicationcomponent
+  layer_id: application
+  name: Plain Text Reader
+  description: "SourceReader for plain text: one page, no headings."
+  attributes:
+    type: internal
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/sources/readers.py
+        symbol: PlainTextReader
+  metadata:
+    created_at: 2026-11-19T14:51:53.023Z
+    updated_at: 2026-11-19T14:51:53.023Z
+    version: 1
+application.applicationcomponent.sklearn-clusterer:
+  id: 263301c8-d9d4-4ddb-b374-de432126a4c9
+  path: application.applicationcomponent.sklearn-clusterer
+  spec_node_id: application.applicationcomponent
+  type: applicationcomponent
+  layer_id: application
+  name: Sklearn Clusterer
+  description: ClusteringPort adapter backed by scikit-learn, used to group
+    candidate concepts.
+  attributes:
+    type: service-component
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/clustering/sklearn_clusterer.py
+        symbol: SklearnClusterer
+  metadata:
+    created_at: 2026-11-19T14:51:53.023Z
+    updated_at: 2026-11-19T14:51:53.023Z
+    version: 1
+application.applicationcomponent.request-guard:
+  id: 2294f8b2-f479-4608-a254-301489c6bacd
+  path: application.applicationcomponent.request-guard
+  spec_node_id: application.applicationcomponent
+  type: applicationcomponent
+  layer_id: application
+  name: Request Guard
+  description: ASGI middleware refusing disallowed Origin and, when loopback-only,
+    Host headers.
+  attributes:
+    type: internal
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/request_guard.py
+        symbol: RequestGuard
+  metadata:
+    created_at: 2026-11-19T14:51:53.023Z
+    updated_at: 2026-11-19T14:51:53.023Z
+    version: 1
+application.applicationcomponent.telemetry-lifecycle:
+  id: 21d6ab74-dceb-4a94-b888-791d47a96c16
+  path: application.applicationcomponent.telemetry-lifecycle
+  spec_node_id: application.applicationcomponent
+  type: applicationcomponent
+  layer_id: application
+  name: Telemetry Lifecycle
+  description: Initializes and shuts down OpenTelemetry tracing and log export for
+    the server.
+  attributes:
+    type: internal
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/telemetry/__init__.py
+        symbol: TelemetryLifecycle
+  metadata:
+    created_at: 2026-11-19T14:51:53.023Z
+    updated_at: 2026-11-19T14:51:53.023Z
     version: 1

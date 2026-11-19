@@ -6,11 +6,6 @@ api.responses.add-parent-class-to-individual-responses:
   layer_id: api
   name: add-parent-class-to-individual-responses
   description: Responses map of the add-parent-class-to-individual operation.
-  source_reference:
-    provenance: inferred
-    locations:
-      - file: local-server/adapters/web/ontology_routes.py
-        symbol: add_parent_class_to_individual
   metadata:
     created_at: 2026-11-17T17:56:41.413Z
     updated_at: 2026-11-17T17:56:41.413Z
@@ -23,65 +18,9 @@ api.responses.analyze-text-responses:
   layer_id: api
   name: analyze-text-responses
   description: Responses map of the analyze-text operation.
-  source_reference:
-    provenance: inferred
-    locations:
-      - file: local-server/adapters/web/extraction_routes.py
-        symbol: analyze_text
   metadata:
     created_at: 2026-11-17T17:56:50.214Z
     updated_at: 2026-11-17T17:56:50.214Z
-    version: 1
-api.responses.approve-proposal-responses:
-  id: 65f12b26-f246-4e2c-bc44-f02c721e4c05
-  path: api.responses.approve-proposal-responses
-  spec_node_id: api.responses
-  type: responses
-  layer_id: api
-  name: approve-proposal-responses
-  description: Responses map of the approve-proposal operation.
-  source_reference:
-    provenance: inferred
-    locations:
-      - file: local-server/adapters/web/versioning_routes.py
-        symbol: approve_proposal
-  metadata:
-    created_at: 2026-11-17T17:56:50.616Z
-    updated_at: 2026-11-17T17:56:50.616Z
-    version: 1
-api.responses.auto-resolve-conflicts-responses:
-  id: 21ff4e83-914d-4cfb-9b1b-baafbae6b395
-  path: api.responses.auto-resolve-conflicts-responses
-  spec_node_id: api.responses
-  type: responses
-  layer_id: api
-  name: auto-resolve-conflicts-responses
-  description: Responses map of the auto-resolve-conflicts operation.
-  source_reference:
-    provenance: inferred
-    locations:
-      - file: local-server/adapters/web/versioning_routes.py
-        symbol: auto_resolve_conflicts
-  metadata:
-    created_at: 2026-11-17T17:56:50.942Z
-    updated_at: 2026-11-17T17:56:50.942Z
-    version: 1
-api.responses.build-knowledge-graph-responses:
-  id: 8cb847a2-3c6f-4162-acb3-179980e437b4
-  path: api.responses.build-knowledge-graph-responses
-  spec_node_id: api.responses
-  type: responses
-  layer_id: api
-  name: build-knowledge-graph-responses
-  description: Responses map of the build-knowledge-graph operation.
-  source_reference:
-    provenance: inferred
-    locations:
-      - file: local-server/adapters/web/graph_routes.py
-        symbol: build_graph
-  metadata:
-    created_at: 2026-11-17T17:56:51.239Z
-    updated_at: 2026-11-17T17:56:51.239Z
     version: 1
 api.responses.check-cycle-responses:
   id: e1943172-3437-4c37-94a7-4de5a9dbcab1
@@ -91,31 +30,9 @@ api.responses.check-cycle-responses:
   layer_id: api
   name: check-cycle-responses
   description: Responses map of the check-cycle operation.
-  source_reference:
-    provenance: inferred
-    locations:
-      - file: local-server/adapters/web/graph_routes.py
-        symbol: check_cycle
   metadata:
     created_at: 2026-11-17T17:56:51.513Z
     updated_at: 2026-11-17T17:56:51.513Z
-    version: 1
-api.responses.create-changeset-responses:
-  id: 14125938-4e56-4daf-8d1b-f943685d00c6
-  path: api.responses.create-changeset-responses
-  spec_node_id: api.responses
-  type: responses
-  layer_id: api
-  name: create-changeset-responses
-  description: Responses map of the create-changeset operation.
-  source_reference:
-    provenance: inferred
-    locations:
-      - file: local-server/adapters/web/versioning_routes.py
-        symbol: create_changeset
-  metadata:
-    created_at: 2026-11-17T17:56:51.780Z
-    updated_at: 2026-11-17T17:56:51.780Z
     version: 1
 api.responses.create-class-responses:
   id: 8c1a5465-c098-4d03-902c-ba1a64274feb
@@ -125,11 +42,6 @@ api.responses.create-class-responses:
   layer_id: api
   name: create-class-responses
   description: Responses map of the create-class operation.
-  source_reference:
-    provenance: inferred
-    locations:
-      - file: local-server/adapters/web/ontology_routes.py
-        symbol: create_class
   metadata:
     created_at: 2026-11-17T17:56:52.084Z
     updated_at: 2026-11-17T17:56:52.084Z
@@ -142,11 +54,6 @@ api.responses.create-concept-scheme-responses:
   layer_id: api
   name: create-concept-scheme-responses
   description: Responses map of the create-concept-scheme operation.
-  source_reference:
-    provenance: inferred
-    locations:
-      - file: local-server/adapters/web/ontology_routes.py
-        symbol: create_concept_scheme
   metadata:
     created_at: 2026-11-17T17:56:52.366Z
     updated_at: 2026-11-17T17:56:52.366Z
@@ -159,11 +66,6 @@ api.responses.create-individual-responses:
   layer_id: api
   name: create-individual-responses
   description: Responses map of the create-individual operation.
-  source_reference:
-    provenance: inferred
-    locations:
-      - file: local-server/adapters/web/ontology_routes.py
-        symbol: create_individual
   metadata:
     created_at: 2026-11-17T17:56:52.669Z
     updated_at: 2026-11-17T17:56:52.669Z
@@ -176,11 +78,6 @@ api.responses.create-pipeline-configuration-responses:
   layer_id: api
   name: create-pipeline-configuration-responses
   description: Responses map of the create-pipeline-configuration operation.
-  source_reference:
-    provenance: inferred
-    locations:
-      - file: local-server/adapters/web/pipeline_routes.py
-        symbol: create_pipeline_configuration
   metadata:
     created_at: 2026-11-17T17:56:52.978Z
     updated_at: 2026-11-17T17:56:52.978Z
@@ -193,11 +90,6 @@ api.responses.create-property-definition-responses:
   layer_id: api
   name: create-property-definition-responses
   description: Responses map of the create-property-definition operation.
-  source_reference:
-    provenance: inferred
-    locations:
-      - file: local-server/adapters/web/ontology_routes.py
-        symbol: create_property_definition
   metadata:
     created_at: 2026-11-17T17:56:53.232Z
     updated_at: 2026-11-17T17:56:53.232Z
@@ -210,11 +102,6 @@ api.responses.create-relationship-responses:
   layer_id: api
   name: create-relationship-responses
   description: Responses map of the create-relationship operation.
-  source_reference:
-    provenance: inferred
-    locations:
-      - file: local-server/adapters/web/ontology_routes.py
-        symbol: create_relationship
   metadata:
     created_at: 2026-11-17T17:56:53.489Z
     updated_at: 2026-11-17T17:56:53.489Z
@@ -227,11 +114,6 @@ api.responses.create-taxonomy-responses:
   layer_id: api
   name: create-taxonomy-responses
   description: Responses map of the create-taxonomy operation.
-  source_reference:
-    provenance: inferred
-    locations:
-      - file: local-server/adapters/web/ontology_routes.py
-        symbol: create_taxonomy
   metadata:
     created_at: 2026-11-17T17:56:53.749Z
     updated_at: 2026-11-17T17:56:53.749Z
@@ -244,11 +126,6 @@ api.responses.delete-class-responses:
   layer_id: api
   name: delete-class-responses
   description: Responses map of the delete-class operation.
-  source_reference:
-    provenance: inferred
-    locations:
-      - file: local-server/adapters/web/ontology_routes.py
-        symbol: delete_class
   metadata:
     created_at: 2026-11-17T17:56:54.044Z
     updated_at: 2026-11-17T17:56:54.044Z
@@ -261,11 +138,6 @@ api.responses.delete-concept-scheme-responses:
   layer_id: api
   name: delete-concept-scheme-responses
   description: Responses map of the delete-concept-scheme operation.
-  source_reference:
-    provenance: inferred
-    locations:
-      - file: local-server/adapters/web/ontology_routes.py
-        symbol: delete_concept_scheme
   metadata:
     created_at: 2026-11-17T17:56:54.309Z
     updated_at: 2026-11-17T17:56:54.309Z
@@ -278,11 +150,6 @@ api.responses.delete-individual-responses:
   layer_id: api
   name: delete-individual-responses
   description: Responses map of the delete-individual operation.
-  source_reference:
-    provenance: inferred
-    locations:
-      - file: local-server/adapters/web/ontology_routes.py
-        symbol: delete_individual
   metadata:
     created_at: 2026-11-17T17:56:54.572Z
     updated_at: 2026-11-17T17:56:54.572Z
@@ -295,11 +162,6 @@ api.responses.delete-pipeline-configuration-responses:
   layer_id: api
   name: delete-pipeline-configuration-responses
   description: Responses map of the delete-pipeline-configuration operation.
-  source_reference:
-    provenance: inferred
-    locations:
-      - file: local-server/adapters/web/pipeline_routes.py
-        symbol: delete_pipeline_configuration
   metadata:
     created_at: 2026-11-17T17:56:54.872Z
     updated_at: 2026-11-17T17:56:54.872Z
@@ -312,11 +174,6 @@ api.responses.delete-property-definition-responses:
   layer_id: api
   name: delete-property-definition-responses
   description: Responses map of the delete-property-definition operation.
-  source_reference:
-    provenance: inferred
-    locations:
-      - file: local-server/adapters/web/ontology_routes.py
-        symbol: delete_property_definition
   metadata:
     created_at: 2026-11-17T17:56:55.347Z
     updated_at: 2026-11-17T17:56:55.347Z
@@ -329,11 +186,6 @@ api.responses.delete-relationship-responses:
   layer_id: api
   name: delete-relationship-responses
   description: Responses map of the delete-relationship operation.
-  source_reference:
-    provenance: inferred
-    locations:
-      - file: local-server/adapters/web/ontology_routes.py
-        symbol: delete_relationship
   metadata:
     created_at: 2026-11-17T17:56:55.659Z
     updated_at: 2026-11-17T17:56:55.659Z
@@ -346,31 +198,9 @@ api.responses.delete-taxonomy-responses:
   layer_id: api
   name: delete-taxonomy-responses
   description: Responses map of the delete-taxonomy operation.
-  source_reference:
-    provenance: inferred
-    locations:
-      - file: local-server/adapters/web/ontology_routes.py
-        symbol: delete_taxonomy
   metadata:
     created_at: 2026-11-17T17:56:55.914Z
     updated_at: 2026-11-17T17:56:55.914Z
-    version: 1
-api.responses.detect-conflicts-responses:
-  id: 60c59513-1286-4214-b1c2-d6b4a1e096dc
-  path: api.responses.detect-conflicts-responses
-  spec_node_id: api.responses
-  type: responses
-  layer_id: api
-  name: detect-conflicts-responses
-  description: Responses map of the detect-conflicts operation.
-  source_reference:
-    provenance: inferred
-    locations:
-      - file: local-server/adapters/web/versioning_routes.py
-        symbol: detect_conflicts
-  metadata:
-    created_at: 2026-11-17T17:56:56.205Z
-    updated_at: 2026-11-17T17:56:56.205Z
     version: 1
 api.responses.enrich-from-references-responses:
   id: 9cfb4228-81f3-417d-9912-b30c90e1f034
@@ -380,11 +210,6 @@ api.responses.enrich-from-references-responses:
   layer_id: api
   name: enrich-from-references-responses
   description: Responses map of the enrich-from-references operation.
-  source_reference:
-    provenance: inferred
-    locations:
-      - file: local-server/adapters/web/extraction_routes.py
-        symbol: enrich_from_references
   metadata:
     created_at: 2026-11-17T17:56:56.459Z
     updated_at: 2026-11-17T17:56:56.459Z
@@ -397,11 +222,6 @@ api.responses.execute-pipeline-responses:
   layer_id: api
   name: execute-pipeline-responses
   description: Responses map of the execute-pipeline operation.
-  source_reference:
-    provenance: inferred
-    locations:
-      - file: local-server/adapters/web/pipeline_routes.py
-        symbol: execute_pipeline
   metadata:
     created_at: 2026-11-17T17:56:56.710Z
     updated_at: 2026-11-17T17:56:56.710Z
@@ -414,11 +234,6 @@ api.responses.execute-sparql-responses:
   layer_id: api
   name: execute-sparql-responses
   description: Responses map of the execute-sparql operation.
-  source_reference:
-    provenance: inferred
-    locations:
-      - file: local-server/adapters/web/graph_routes.py
-        symbol: execute_sparql
   metadata:
     created_at: 2026-11-17T17:56:56.973Z
     updated_at: 2026-11-17T17:56:56.973Z
@@ -431,11 +246,6 @@ api.responses.export-ontology-responses:
   layer_id: api
   name: export-ontology-responses
   description: Responses map of the export-ontology operation.
-  source_reference:
-    provenance: inferred
-    locations:
-      - file: local-server/adapters/web/interchange_routes.py
-        symbol: export_ontology
   metadata:
     created_at: 2026-11-17T17:56:57.245Z
     updated_at: 2026-11-17T17:56:57.245Z
@@ -448,31 +258,9 @@ api.responses.extract-entities-responses:
   layer_id: api
   name: extract-entities-responses
   description: Responses map of the extract-entities operation.
-  source_reference:
-    provenance: inferred
-    locations:
-      - file: local-server/adapters/web/extraction_routes.py
-        symbol: extract_entities
   metadata:
     created_at: 2026-11-17T17:56:57.513Z
     updated_at: 2026-11-17T17:56:57.513Z
-    version: 1
-api.responses.extract-triples-responses:
-  id: bcd8d4d6-776c-4251-818f-8825c236cc78
-  path: api.responses.extract-triples-responses
-  spec_node_id: api.responses
-  type: responses
-  layer_id: api
-  name: extract-triples-responses
-  description: Responses map of the extract-triples operation.
-  source_reference:
-    provenance: inferred
-    locations:
-      - file: local-server/adapters/web/extraction_routes.py
-        symbol: extract_triples
-  metadata:
-    created_at: 2026-11-17T17:56:57.805Z
-    updated_at: 2026-11-17T17:56:57.805Z
     version: 1
 api.responses.get-all-paths-responses:
   id: a293754f-9afe-44a5-98a6-3462797165a7
@@ -482,11 +270,6 @@ api.responses.get-all-paths-responses:
   layer_id: api
   name: get-all-paths-responses
   description: Responses map of the get-all-paths operation.
-  source_reference:
-    provenance: inferred
-    locations:
-      - file: local-server/adapters/web/graph_routes.py
-        symbol: get_all_paths
   metadata:
     created_at: 2026-11-17T17:56:58.068Z
     updated_at: 2026-11-17T17:56:58.068Z
@@ -499,31 +282,9 @@ api.responses.get-background-task-responses:
   layer_id: api
   name: get-background-task-responses
   description: Responses map of the get-background-task operation.
-  source_reference:
-    provenance: inferred
-    locations:
-      - file: local-server/adapters/web/admin_routes.py
-        symbol: get_background_task
   metadata:
     created_at: 2026-11-17T17:56:58.337Z
     updated_at: 2026-11-17T17:56:58.337Z
-    version: 1
-api.responses.get-background-tasks-summary-responses:
-  id: 119de5df-0b0c-4389-b761-d1ba5d9d16ee
-  path: api.responses.get-background-tasks-summary-responses
-  spec_node_id: api.responses
-  type: responses
-  layer_id: api
-  name: get-background-tasks-summary-responses
-  description: Responses map of the get-background-tasks-summary operation.
-  source_reference:
-    provenance: inferred
-    locations:
-      - file: local-server/adapters/web/admin_routes.py
-        symbol: get_background_tasks_summary
-  metadata:
-    created_at: 2026-11-17T17:56:58.597Z
-    updated_at: 2026-11-17T17:56:58.597Z
     version: 1
 api.responses.get-centrality-responses:
   id: 6d7c05a2-3805-4f66-a5be-349880b2f380
@@ -533,11 +294,6 @@ api.responses.get-centrality-responses:
   layer_id: api
   name: get-centrality-responses
   description: Responses map of the get-centrality operation.
-  source_reference:
-    provenance: inferred
-    locations:
-      - file: local-server/adapters/web/graph_routes.py
-        symbol: get_centrality
   metadata:
     created_at: 2026-11-17T17:56:58.872Z
     updated_at: 2026-11-17T17:56:58.872Z
@@ -550,11 +306,6 @@ api.responses.get-change-history-all-responses:
   layer_id: api
   name: get-change-history-all-responses
   description: Responses map of the get-change-history-all operation.
-  source_reference:
-    provenance: inferred
-    locations:
-      - file: local-server/adapters/web/versioning_routes.py
-        symbol: get_change_history_all
   metadata:
     created_at: 2026-11-17T17:56:59.275Z
     updated_at: 2026-11-17T17:56:59.275Z
@@ -567,31 +318,9 @@ api.responses.get-change-history-by-entity-responses:
   layer_id: api
   name: get-change-history-by-entity-responses
   description: Responses map of the get-change-history-by-entity operation.
-  source_reference:
-    provenance: inferred
-    locations:
-      - file: local-server/adapters/web/versioning_routes.py
-        symbol: get_change_history_by_entity
   metadata:
     created_at: 2026-11-17T17:56:59.576Z
     updated_at: 2026-11-17T17:56:59.576Z
-    version: 1
-api.responses.get-changeset-responses:
-  id: 5e2eead7-63d7-4d6f-ba56-6b763ac2326d
-  path: api.responses.get-changeset-responses
-  spec_node_id: api.responses
-  type: responses
-  layer_id: api
-  name: get-changeset-responses
-  description: Responses map of the get-changeset operation.
-  source_reference:
-    provenance: inferred
-    locations:
-      - file: local-server/adapters/web/versioning_routes.py
-        symbol: get_changeset
-  metadata:
-    created_at: 2026-11-17T17:56:59.844Z
-    updated_at: 2026-11-17T17:56:59.844Z
     version: 1
 api.responses.get-class-responses:
   id: d2ebbdf9-1460-457a-acff-5407ea958b1f
@@ -601,11 +330,6 @@ api.responses.get-class-responses:
   layer_id: api
   name: get-class-responses
   description: Responses map of the get-class operation.
-  source_reference:
-    provenance: inferred
-    locations:
-      - file: local-server/adapters/web/ontology_routes.py
-        symbol: get_class
   metadata:
     created_at: 2026-11-17T17:57:00.126Z
     updated_at: 2026-11-17T17:57:00.126Z
@@ -618,11 +342,6 @@ api.responses.get-communities-responses:
   layer_id: api
   name: get-communities-responses
   description: Responses map of the get-communities operation.
-  source_reference:
-    provenance: inferred
-    locations:
-      - file: local-server/adapters/web/graph_routes.py
-        symbol: get_communities
   metadata:
     created_at: 2026-11-17T17:57:00.388Z
     updated_at: 2026-11-17T17:57:00.388Z
@@ -635,11 +354,6 @@ api.responses.get-concept-scheme-responses:
   layer_id: api
   name: get-concept-scheme-responses
   description: Responses map of the get-concept-scheme operation.
-  source_reference:
-    provenance: inferred
-    locations:
-      - file: local-server/adapters/web/ontology_routes.py
-        symbol: get_concept_scheme
   metadata:
     created_at: 2026-11-17T17:57:00.662Z
     updated_at: 2026-11-17T17:57:00.662Z
@@ -652,11 +366,6 @@ api.responses.get-configuration-responses:
   layer_id: api
   name: get-configuration-responses
   description: Responses map of the get-configuration operation.
-  source_reference:
-    provenance: inferred
-    locations:
-      - file: local-server/adapters/web/admin_routes.py
-        symbol: get_configuration
   metadata:
     created_at: 2026-11-17T17:57:00.935Z
     updated_at: 2026-11-17T17:57:00.935Z
@@ -669,11 +378,6 @@ api.responses.get-database-health-responses:
   layer_id: api
   name: get-database-health-responses
   description: Responses map of the get-database-health operation.
-  source_reference:
-    provenance: inferred
-    locations:
-      - file: local-server/adapters/web/admin_routes.py
-        symbol: get_database_health
   metadata:
     created_at: 2026-11-17T17:57:01.206Z
     updated_at: 2026-11-17T17:57:01.206Z
@@ -686,11 +390,6 @@ api.responses.get-degree-distribution-responses:
   layer_id: api
   name: get-degree-distribution-responses
   description: Responses map of the get-degree-distribution operation.
-  source_reference:
-    provenance: inferred
-    locations:
-      - file: local-server/adapters/web/graph_routes.py
-        symbol: get_degree_distribution
   metadata:
     created_at: 2026-11-17T17:57:01.474Z
     updated_at: 2026-11-17T17:57:01.474Z
@@ -703,31 +402,9 @@ api.responses.get-embedding-health-responses:
   layer_id: api
   name: get-embedding-health-responses
   description: Responses map of the get-embedding-health operation.
-  source_reference:
-    provenance: inferred
-    locations:
-      - file: local-server/adapters/web/admin_routes.py
-        symbol: get_embedding_health
   metadata:
     created_at: 2026-11-17T17:57:01.773Z
     updated_at: 2026-11-17T17:57:01.773Z
-    version: 1
-api.responses.get-entity-version-responses:
-  id: 7e2ec249-56bf-42a6-b864-18a5494d90a4
-  path: api.responses.get-entity-version-responses
-  spec_node_id: api.responses
-  type: responses
-  layer_id: api
-  name: get-entity-version-responses
-  description: Responses map of the get-entity-version operation.
-  source_reference:
-    provenance: inferred
-    locations:
-      - file: local-server/adapters/web/versioning_routes.py
-        symbol: get_entity_version
-  metadata:
-    created_at: 2026-11-17T17:57:02.060Z
-    updated_at: 2026-11-17T17:57:02.060Z
     version: 1
 api.responses.get-graph-metrics-responses:
   id: 6f29dd7d-5eda-4a34-821d-f6bbe3c97664
@@ -737,11 +414,6 @@ api.responses.get-graph-metrics-responses:
   layer_id: api
   name: get-graph-metrics-responses
   description: Responses map of the get-graph-metrics operation.
-  source_reference:
-    provenance: inferred
-    locations:
-      - file: local-server/adapters/web/graph_routes.py
-        symbol: get_metrics
   metadata:
     created_at: 2026-11-17T17:57:02.352Z
     updated_at: 2026-11-17T17:57:02.352Z
@@ -754,11 +426,6 @@ api.responses.get-import-run-responses:
   layer_id: api
   name: get-import-run-responses
   description: Responses map of the get-import-run operation.
-  source_reference:
-    provenance: inferred
-    locations:
-      - file: local-server/adapters/web/interchange_routes.py
-        symbol: get_import_run
   metadata:
     created_at: 2026-11-17T17:57:02.645Z
     updated_at: 2026-11-17T17:57:02.645Z
@@ -771,11 +438,6 @@ api.responses.get-individual-responses:
   layer_id: api
   name: get-individual-responses
   description: Responses map of the get-individual operation.
-  source_reference:
-    provenance: inferred
-    locations:
-      - file: local-server/adapters/web/ontology_routes.py
-        symbol: get_individual
   metadata:
     created_at: 2026-11-17T17:57:03.122Z
     updated_at: 2026-11-17T17:57:03.122Z
@@ -788,11 +450,6 @@ api.responses.get-individual-inherited-properties-responses:
   layer_id: api
   name: get-individual-inherited-properties-responses
   description: Responses map of the get-individual-inherited-properties operation.
-  source_reference:
-    provenance: inferred
-    locations:
-      - file: local-server/adapters/web/ontology_routes.py
-        symbol: get_individual_inherited_properties
   metadata:
     created_at: 2026-11-17T17:57:03.594Z
     updated_at: 2026-11-17T17:57:03.594Z
@@ -805,11 +462,6 @@ api.responses.get-neighbors-responses:
   layer_id: api
   name: get-neighbors-responses
   description: Responses map of the get-neighbors operation.
-  source_reference:
-    provenance: inferred
-    locations:
-      - file: local-server/adapters/web/graph_routes.py
-        symbol: get_neighbors
   metadata:
     created_at: 2026-11-17T17:57:04.084Z
     updated_at: 2026-11-17T17:57:04.084Z
@@ -822,11 +474,6 @@ api.responses.get-nlp-health-responses:
   layer_id: api
   name: get-nlp-health-responses
   description: Responses map of the get-nlp-health operation.
-  source_reference:
-    provenance: inferred
-    locations:
-      - file: local-server/adapters/web/admin_routes.py
-        symbol: get_nlp_health
   metadata:
     created_at: 2026-11-17T17:57:04.369Z
     updated_at: 2026-11-17T17:57:04.369Z
@@ -839,11 +486,6 @@ api.responses.get-pipeline-configuration-responses:
   layer_id: api
   name: get-pipeline-configuration-responses
   description: Responses map of the get-pipeline-configuration operation.
-  source_reference:
-    provenance: inferred
-    locations:
-      - file: local-server/adapters/web/pipeline_routes.py
-        symbol: get_pipeline_configuration
   metadata:
     created_at: 2026-11-17T17:57:04.657Z
     updated_at: 2026-11-17T17:57:04.657Z
@@ -856,11 +498,6 @@ api.responses.get-pipeline-executions-responses:
   layer_id: api
   name: get-pipeline-executions-responses
   description: Responses map of the get-pipeline-executions operation.
-  source_reference:
-    provenance: inferred
-    locations:
-      - file: local-server/adapters/web/pipeline_routes.py
-        symbol: get_pipeline_executions
   metadata:
     created_at: 2026-11-17T17:57:04.944Z
     updated_at: 2026-11-17T17:57:04.944Z
@@ -873,11 +510,6 @@ api.responses.get-property-definition-responses:
   layer_id: api
   name: get-property-definition-responses
   description: Responses map of the get-property-definition operation.
-  source_reference:
-    provenance: inferred
-    locations:
-      - file: local-server/adapters/web/ontology_routes.py
-        symbol: get_property_definition
   metadata:
     created_at: 2026-11-17T17:57:05.246Z
     updated_at: 2026-11-17T17:57:05.246Z
@@ -890,11 +522,6 @@ api.responses.get-publish-diff-stats-responses:
   layer_id: api
   name: get-publish-diff-stats-responses
   description: Responses map of the get-publish-diff-stats operation.
-  source_reference:
-    provenance: inferred
-    locations:
-      - file: local-server/adapters/web/ontology_routes.py
-        symbol: get_publish_diff_stats
   metadata:
     created_at: 2026-11-17T17:57:05.525Z
     updated_at: 2026-11-17T17:57:05.525Z
@@ -907,11 +534,6 @@ api.responses.get-rdf-triple-count-responses:
   layer_id: api
   name: get-rdf-triple-count-responses
   description: Responses map of the get-rdf-triple-count operation.
-  source_reference:
-    provenance: inferred
-    locations:
-      - file: local-server/adapters/web/graph_routes.py
-        symbol: get_rdf_triple_count
   metadata:
     created_at: 2026-11-17T17:57:05.821Z
     updated_at: 2026-11-17T17:57:05.821Z
@@ -924,11 +546,6 @@ api.responses.get-rdf-triples-responses:
   layer_id: api
   name: get-rdf-triples-responses
   description: Responses map of the get-rdf-triples operation.
-  source_reference:
-    provenance: inferred
-    locations:
-      - file: local-server/adapters/web/graph_routes.py
-        symbol: get_rdf_triples
   metadata:
     created_at: 2026-11-17T17:57:06.104Z
     updated_at: 2026-11-17T17:57:06.104Z
@@ -941,11 +558,6 @@ api.responses.get-reference-relations-responses:
   layer_id: api
   name: get-reference-relations-responses
   description: Responses map of the get-reference-relations operation.
-  source_reference:
-    provenance: inferred
-    locations:
-      - file: local-server/adapters/web/reference_routes.py
-        symbol: get_reference_relations
   metadata:
     created_at: 2026-11-17T17:57:06.381Z
     updated_at: 2026-11-17T17:57:06.381Z
@@ -958,11 +570,6 @@ api.responses.get-reference-status-responses:
   layer_id: api
   name: get-reference-status-responses
   description: Responses map of the get-reference-status operation.
-  source_reference:
-    provenance: inferred
-    locations:
-      - file: local-server/adapters/web/reference_routes.py
-        symbol: reference_status
   metadata:
     created_at: 2026-11-17T17:57:06.662Z
     updated_at: 2026-11-17T17:57:06.662Z
@@ -975,11 +582,6 @@ api.responses.get-relationship-responses:
   layer_id: api
   name: get-relationship-responses
   description: Responses map of the get-relationship operation.
-  source_reference:
-    provenance: inferred
-    locations:
-      - file: local-server/adapters/web/ontology_routes.py
-        symbol: get_relationship
   metadata:
     created_at: 2026-11-17T17:57:06.980Z
     updated_at: 2026-11-17T17:57:06.980Z
@@ -992,11 +594,6 @@ api.responses.get-run-change-events-responses:
   layer_id: api
   name: get-run-change-events-responses
   description: Responses map of the get-run-change-events operation.
-  source_reference:
-    provenance: inferred
-    locations:
-      - file: local-server/adapters/web/interchange_routes.py
-        symbol: get_run_change_events
   metadata:
     created_at: 2026-11-17T17:57:07.357Z
     updated_at: 2026-11-17T17:57:07.357Z
@@ -1009,11 +606,6 @@ api.responses.get-service-metrics-responses:
   layer_id: api
   name: get-service-metrics-responses
   description: Responses map of the get-service-metrics operation.
-  source_reference:
-    provenance: inferred
-    locations:
-      - file: local-server/adapters/web/admin_routes.py
-        symbol: get_service_metrics
   metadata:
     created_at: 2026-11-17T17:57:07.674Z
     updated_at: 2026-11-17T17:57:07.674Z
@@ -1026,11 +618,6 @@ api.responses.get-shortest-path-responses:
   layer_id: api
   name: get-shortest-path-responses
   description: Responses map of the get-shortest-path operation.
-  source_reference:
-    provenance: inferred
-    locations:
-      - file: local-server/adapters/web/graph_routes.py
-        symbol: get_shortest_path
   metadata:
     created_at: 2026-11-17T17:57:08.036Z
     updated_at: 2026-11-17T17:57:08.036Z
@@ -1043,11 +630,6 @@ api.responses.get-subgraph-responses:
   layer_id: api
   name: get-subgraph-responses
   description: Responses map of the get-subgraph operation.
-  source_reference:
-    provenance: inferred
-    locations:
-      - file: local-server/adapters/web/graph_routes.py
-        symbol: get_subgraph
   metadata:
     created_at: 2026-11-17T17:57:08.381Z
     updated_at: 2026-11-17T17:57:08.381Z
@@ -1060,11 +642,6 @@ api.responses.get-subgraph-by-depth-responses:
   layer_id: api
   name: get-subgraph-by-depth-responses
   description: Responses map of the get-subgraph-by-depth operation.
-  source_reference:
-    provenance: inferred
-    locations:
-      - file: local-server/adapters/web/graph_routes.py
-        symbol: get_subgraph_by_depth
   metadata:
     created_at: 2026-11-17T17:57:08.712Z
     updated_at: 2026-11-17T17:57:08.712Z
@@ -1077,11 +654,6 @@ api.responses.get-sync-status-responses:
   layer_id: api
   name: get-sync-status-responses
   description: Responses map of the get-sync-status operation.
-  source_reference:
-    provenance: inferred
-    locations:
-      - file: local-server/adapters/web/versioning_routes.py
-        symbol: get_sync_status
   metadata:
     created_at: 2026-11-17T17:57:09.263Z
     updated_at: 2026-11-17T17:57:09.263Z
@@ -1094,11 +666,6 @@ api.responses.get-system-health-responses:
   layer_id: api
   name: get-system-health-responses
   description: Responses map of the get-system-health operation.
-  source_reference:
-    provenance: inferred
-    locations:
-      - file: local-server/adapters/web/admin_routes.py
-        symbol: get_system_health
   metadata:
     created_at: 2026-11-17T17:57:09.792Z
     updated_at: 2026-11-17T17:57:09.792Z
@@ -1111,11 +678,6 @@ api.responses.get-taxonomy-responses:
   layer_id: api
   name: get-taxonomy-responses
   description: Responses map of the get-taxonomy operation.
-  source_reference:
-    provenance: inferred
-    locations:
-      - file: local-server/adapters/web/ontology_routes.py
-        symbol: get_taxonomy
   metadata:
     created_at: 2026-11-17T17:57:10.178Z
     updated_at: 2026-11-17T17:57:10.178Z
@@ -1128,11 +690,6 @@ api.responses.import-ontology-responses:
   layer_id: api
   name: import-ontology-responses
   description: Responses map of the import-ontology operation.
-  source_reference:
-    provenance: inferred
-    locations:
-      - file: local-server/adapters/web/interchange_routes.py
-        symbol: import_ontology
   metadata:
     created_at: 2026-11-17T17:57:10.661Z
     updated_at: 2026-11-17T17:57:10.661Z
@@ -1145,11 +702,6 @@ api.responses.list-background-tasks-responses:
   layer_id: api
   name: list-background-tasks-responses
   description: Responses map of the list-background-tasks operation.
-  source_reference:
-    provenance: inferred
-    locations:
-      - file: local-server/adapters/web/admin_routes.py
-        symbol: list_background_tasks
   metadata:
     created_at: 2026-11-17T17:57:11.158Z
     updated_at: 2026-11-17T17:57:11.158Z
@@ -1162,11 +714,6 @@ api.responses.list-classes-responses:
   layer_id: api
   name: list-classes-responses
   description: Responses map of the list-classes operation.
-  source_reference:
-    provenance: inferred
-    locations:
-      - file: local-server/adapters/web/ontology_routes.py
-        symbol: list_classes
   metadata:
     created_at: 2026-11-17T17:57:11.619Z
     updated_at: 2026-11-17T17:57:11.619Z
@@ -1179,31 +726,9 @@ api.responses.list-concept-schemes-responses:
   layer_id: api
   name: list-concept-schemes-responses
   description: Responses map of the list-concept-schemes operation.
-  source_reference:
-    provenance: inferred
-    locations:
-      - file: local-server/adapters/web/ontology_routes.py
-        symbol: list_concept_schemes
   metadata:
     created_at: 2026-11-17T17:57:11.957Z
     updated_at: 2026-11-17T17:57:11.957Z
-    version: 1
-api.responses.list-entity-versions-responses:
-  id: 25a255aa-9e67-4230-a313-df219935af0b
-  path: api.responses.list-entity-versions-responses
-  spec_node_id: api.responses
-  type: responses
-  layer_id: api
-  name: list-entity-versions-responses
-  description: Responses map of the list-entity-versions operation.
-  source_reference:
-    provenance: inferred
-    locations:
-      - file: local-server/adapters/web/versioning_routes.py
-        symbol: list_versions
-  metadata:
-    created_at: 2026-11-17T17:57:12.243Z
-    updated_at: 2026-11-17T17:57:12.243Z
     version: 1
 api.responses.list-import-runs-responses:
   id: bdbea5aa-187b-4fb8-8ba1-5fdc0f85057d
@@ -1213,11 +738,6 @@ api.responses.list-import-runs-responses:
   layer_id: api
   name: list-import-runs-responses
   description: Responses map of the list-import-runs operation.
-  source_reference:
-    provenance: inferred
-    locations:
-      - file: local-server/adapters/web/interchange_routes.py
-        symbol: list_import_runs
   metadata:
     created_at: 2026-11-17T17:57:12.616Z
     updated_at: 2026-11-17T17:57:12.616Z
@@ -1230,11 +750,6 @@ api.responses.list-individuals-responses:
   layer_id: api
   name: list-individuals-responses
   description: Responses map of the list-individuals operation.
-  source_reference:
-    provenance: inferred
-    locations:
-      - file: local-server/adapters/web/ontology_routes.py
-        symbol: list_individuals
   metadata:
     created_at: 2026-11-17T17:57:12.948Z
     updated_at: 2026-11-17T17:57:12.948Z
@@ -1247,11 +762,6 @@ api.responses.list-pipeline-configurations-responses:
   layer_id: api
   name: list-pipeline-configurations-responses
   description: Responses map of the list-pipeline-configurations operation.
-  source_reference:
-    provenance: inferred
-    locations:
-      - file: local-server/adapters/web/pipeline_routes.py
-        symbol: list_pipeline_configurations
   metadata:
     created_at: 2026-11-17T17:57:13.283Z
     updated_at: 2026-11-17T17:57:13.283Z
@@ -1264,11 +774,6 @@ api.responses.list-property-definitions-responses:
   layer_id: api
   name: list-property-definitions-responses
   description: Responses map of the list-property-definitions operation.
-  source_reference:
-    provenance: inferred
-    locations:
-      - file: local-server/adapters/web/ontology_routes.py
-        symbol: list_property_definitions
   metadata:
     created_at: 2026-11-17T17:57:13.617Z
     updated_at: 2026-11-17T17:57:13.617Z
@@ -1281,11 +786,6 @@ api.responses.list-relationships-responses:
   layer_id: api
   name: list-relationships-responses
   description: Responses map of the list-relationships operation.
-  source_reference:
-    provenance: inferred
-    locations:
-      - file: local-server/adapters/web/ontology_routes.py
-        symbol: list_relationships
   metadata:
     created_at: 2026-11-17T17:57:13.948Z
     updated_at: 2026-11-17T17:57:13.948Z
@@ -1298,31 +798,9 @@ api.responses.list-taxonomies-responses:
   layer_id: api
   name: list-taxonomies-responses
   description: Responses map of the list-taxonomies operation.
-  source_reference:
-    provenance: inferred
-    locations:
-      - file: local-server/adapters/web/ontology_routes.py
-        symbol: list_taxonomies
   metadata:
     created_at: 2026-11-17T17:57:14.270Z
     updated_at: 2026-11-17T17:57:14.270Z
-    version: 1
-api.responses.merge-proposal-responses:
-  id: b64d105a-260e-4fec-a387-6be80e7abf63
-  path: api.responses.merge-proposal-responses
-  spec_node_id: api.responses
-  type: responses
-  layer_id: api
-  name: merge-proposal-responses
-  description: Responses map of the merge-proposal operation.
-  source_reference:
-    provenance: inferred
-    locations:
-      - file: local-server/adapters/web/versioning_routes.py
-        symbol: merge_proposal
-  metadata:
-    created_at: 2026-11-17T17:57:14.601Z
-    updated_at: 2026-11-17T17:57:14.601Z
     version: 1
 api.responses.move-class-responses:
   id: 375b53d8-2cb6-459d-a301-ffac613c9797
@@ -1332,11 +810,6 @@ api.responses.move-class-responses:
   layer_id: api
   name: move-class-responses
   description: Responses map of the move-class operation.
-  source_reference:
-    provenance: inferred
-    locations:
-      - file: local-server/adapters/web/ontology_routes.py
-        symbol: move_class
   metadata:
     created_at: 2026-11-17T17:57:14.897Z
     updated_at: 2026-11-17T17:57:14.897Z
@@ -1349,11 +822,6 @@ api.responses.publish-taxonomy-responses:
   layer_id: api
   name: publish-taxonomy-responses
   description: Responses map of the publish-taxonomy operation.
-  source_reference:
-    provenance: inferred
-    locations:
-      - file: local-server/adapters/web/ontology_routes.py
-        symbol: publish_taxonomy
   metadata:
     created_at: 2026-11-17T17:57:15.201Z
     updated_at: 2026-11-17T17:57:15.201Z
@@ -1366,11 +834,6 @@ api.responses.pull-changes-responses:
   layer_id: api
   name: pull-changes-responses
   description: Responses map of the pull-changes operation.
-  source_reference:
-    provenance: inferred
-    locations:
-      - file: local-server/adapters/web/versioning_routes.py
-        symbol: pull_changes
   metadata:
     created_at: 2026-11-17T17:57:15.497Z
     updated_at: 2026-11-17T17:57:15.497Z
@@ -1383,11 +846,6 @@ api.responses.push-changes-responses:
   layer_id: api
   name: push-changes-responses
   description: Responses map of the push-changes operation.
-  source_reference:
-    provenance: inferred
-    locations:
-      - file: local-server/adapters/web/versioning_routes.py
-        symbol: push_changes
   metadata:
     created_at: 2026-11-17T17:57:16.450Z
     updated_at: 2026-11-17T17:57:16.450Z
@@ -1400,11 +858,6 @@ api.responses.reject-proposal-responses:
   layer_id: api
   name: reject-proposal-responses
   description: Responses map of the reject-proposal operation.
-  source_reference:
-    provenance: inferred
-    locations:
-      - file: local-server/adapters/web/versioning_routes.py
-        symbol: reject_proposal
   metadata:
     created_at: 2026-11-17T17:57:17.012Z
     updated_at: 2026-11-17T17:57:17.012Z
@@ -1417,11 +870,6 @@ api.responses.remove-parent-class-from-individual-responses:
   layer_id: api
   name: remove-parent-class-from-individual-responses
   description: Responses map of the remove-parent-class-from-individual operation.
-  source_reference:
-    provenance: inferred
-    locations:
-      - file: local-server/adapters/web/ontology_routes.py
-        symbol: remove_parent_class_from_individual
   metadata:
     created_at: 2026-11-17T17:57:17.581Z
     updated_at: 2026-11-17T17:57:17.581Z
@@ -1434,11 +882,6 @@ api.responses.reorder-individual-classes-responses:
   layer_id: api
   name: reorder-individual-classes-responses
   description: Responses map of the reorder-individual-classes operation.
-  source_reference:
-    provenance: inferred
-    locations:
-      - file: local-server/adapters/web/ontology_routes.py
-        symbol: reorder_individual_classes
   metadata:
     created_at: 2026-11-17T17:57:18.094Z
     updated_at: 2026-11-17T17:57:18.094Z
@@ -1451,31 +894,9 @@ api.responses.reset-configuration-responses:
   layer_id: api
   name: reset-configuration-responses
   description: Responses map of the reset-configuration operation.
-  source_reference:
-    provenance: inferred
-    locations:
-      - file: local-server/adapters/web/admin_routes.py
-        symbol: reset_configuration
   metadata:
     created_at: 2026-11-17T17:57:18.395Z
     updated_at: 2026-11-17T17:57:18.395Z
-    version: 1
-api.responses.resolve-conflicts-responses:
-  id: 52e15278-d824-44ac-b8aa-a851f5b49c02
-  path: api.responses.resolve-conflicts-responses
-  spec_node_id: api.responses
-  type: responses
-  layer_id: api
-  name: resolve-conflicts-responses
-  description: Responses map of the resolve-conflicts operation.
-  source_reference:
-    provenance: inferred
-    locations:
-      - file: local-server/adapters/web/versioning_routes.py
-        symbol: resolve_conflicts
-  metadata:
-    created_at: 2026-11-17T17:57:18.938Z
-    updated_at: 2026-11-17T17:57:18.938Z
     version: 1
 api.responses.search-references-responses:
   id: 72012e04-a34f-4823-9f45-724bec0686f1
@@ -1485,48 +906,9 @@ api.responses.search-references-responses:
   layer_id: api
   name: search-references-responses
   description: Responses map of the search-references operation.
-  source_reference:
-    provenance: inferred
-    locations:
-      - file: local-server/adapters/web/reference_routes.py
-        symbol: search_references
   metadata:
     created_at: 2026-11-17T17:57:19.368Z
     updated_at: 2026-11-17T17:57:19.368Z
-    version: 1
-api.responses.stage-changeset-responses:
-  id: 003ca3ca-3db4-405c-aeb4-0e6385fae41d
-  path: api.responses.stage-changeset-responses
-  spec_node_id: api.responses
-  type: responses
-  layer_id: api
-  name: stage-changeset-responses
-  description: Responses map of the stage-changeset operation.
-  source_reference:
-    provenance: inferred
-    locations:
-      - file: local-server/adapters/web/versioning_routes.py
-        symbol: stage_changeset
-  metadata:
-    created_at: 2026-11-17T17:57:19.797Z
-    updated_at: 2026-11-17T17:57:19.797Z
-    version: 1
-api.responses.submit-proposal-responses:
-  id: 2cf59709-9548-4bf2-8976-6ad84618a925
-  path: api.responses.submit-proposal-responses
-  spec_node_id: api.responses
-  type: responses
-  layer_id: api
-  name: submit-proposal-responses
-  description: Responses map of the submit-proposal operation.
-  source_reference:
-    provenance: inferred
-    locations:
-      - file: local-server/adapters/web/versioning_routes.py
-        symbol: submit_proposal
-  metadata:
-    created_at: 2026-11-17T17:57:20.117Z
-    updated_at: 2026-11-17T17:57:20.117Z
     version: 1
 api.responses.update-class-responses:
   id: 5d556f80-ba1f-4397-8a69-61bac696c140
@@ -1536,11 +918,6 @@ api.responses.update-class-responses:
   layer_id: api
   name: update-class-responses
   description: Responses map of the update-class operation.
-  source_reference:
-    provenance: inferred
-    locations:
-      - file: local-server/adapters/web/ontology_routes.py
-        symbol: update_class
   metadata:
     created_at: 2026-11-17T17:57:20.459Z
     updated_at: 2026-11-17T17:57:20.459Z
@@ -1553,11 +930,6 @@ api.responses.update-concept-scheme-responses:
   layer_id: api
   name: update-concept-scheme-responses
   description: Responses map of the update-concept-scheme operation.
-  source_reference:
-    provenance: inferred
-    locations:
-      - file: local-server/adapters/web/ontology_routes.py
-        symbol: update_concept_scheme
   metadata:
     created_at: 2026-11-17T17:57:20.896Z
     updated_at: 2026-11-17T17:57:20.896Z
@@ -1570,11 +942,6 @@ api.responses.update-configuration-section-responses:
   layer_id: api
   name: update-configuration-section-responses
   description: Responses map of the update-configuration-section operation.
-  source_reference:
-    provenance: inferred
-    locations:
-      - file: local-server/adapters/web/admin_routes.py
-        symbol: update_configuration_section
   metadata:
     created_at: 2026-11-17T17:57:21.263Z
     updated_at: 2026-11-17T17:57:21.263Z
@@ -1587,11 +954,6 @@ api.responses.update-individual-responses:
   layer_id: api
   name: update-individual-responses
   description: Responses map of the update-individual operation.
-  source_reference:
-    provenance: inferred
-    locations:
-      - file: local-server/adapters/web/ontology_routes.py
-        symbol: update_individual
   metadata:
     created_at: 2026-11-17T17:57:21.604Z
     updated_at: 2026-11-17T17:57:21.604Z
@@ -1604,11 +966,6 @@ api.responses.update-pipeline-configuration-responses:
   layer_id: api
   name: update-pipeline-configuration-responses
   description: Responses map of the update-pipeline-configuration operation.
-  source_reference:
-    provenance: inferred
-    locations:
-      - file: local-server/adapters/web/pipeline_routes.py
-        symbol: update_pipeline_configuration
   metadata:
     created_at: 2026-11-17T17:57:21.925Z
     updated_at: 2026-11-17T17:57:21.925Z
@@ -1621,11 +978,6 @@ api.responses.update-property-definition-responses:
   layer_id: api
   name: update-property-definition-responses
   description: Responses map of the update-property-definition operation.
-  source_reference:
-    provenance: inferred
-    locations:
-      - file: local-server/adapters/web/ontology_routes.py
-        symbol: update_property_definition
   metadata:
     created_at: 2026-11-17T17:57:22.277Z
     updated_at: 2026-11-17T17:57:22.277Z
@@ -1638,12 +990,898 @@ api.responses.update-taxonomy-responses:
   layer_id: api
   name: update-taxonomy-responses
   description: Responses map of the update-taxonomy operation.
-  source_reference:
-    provenance: inferred
-    locations:
-      - file: local-server/adapters/web/ontology_routes.py
-        symbol: update_taxonomy
   metadata:
     created_at: 2026-11-17T17:57:22.598Z
     updated_at: 2026-11-17T17:57:22.598Z
+    version: 1
+api.responses.get-tasks-health-responses:
+  id: 0669acb1-bc92-4fca-8df6-1f0d57ed6cca
+  path: api.responses.get-tasks-health-responses
+  spec_node_id: api.responses
+  type: responses
+  layer_id: api
+  name: get-tasks-health-responses
+  metadata:
+    created_at: 2026-11-19T15:11:21.428Z
+    updated_at: 2026-11-19T15:11:21.428Z
+    version: 1
+api.responses.list-taxonomy-predicates-responses:
+  id: 6906e8cc-5922-4b84-8a56-90ad62fa3454
+  path: api.responses.list-taxonomy-predicates-responses
+  spec_node_id: api.responses
+  type: responses
+  layer_id: api
+  name: list-taxonomy-predicates-responses
+  metadata:
+    created_at: 2026-11-19T15:16:15.178Z
+    updated_at: 2026-11-19T15:16:15.178Z
+    version: 1
+api.responses.list-taxonomy-classes-responses:
+  id: 7a756655-b0be-41a1-904c-c1d5eb841f64
+  path: api.responses.list-taxonomy-classes-responses
+  spec_node_id: api.responses
+  type: responses
+  layer_id: api
+  name: list-taxonomy-classes-responses
+  metadata:
+    created_at: 2026-11-19T15:16:15.178Z
+    updated_at: 2026-11-19T15:16:15.178Z
+    version: 1
+api.responses.list-predicates-by-ids-responses:
+  id: 8f2003bc-2a37-4353-b472-4d3425b92cbf
+  path: api.responses.list-predicates-by-ids-responses
+  spec_node_id: api.responses
+  type: responses
+  layer_id: api
+  name: list-predicates-by-ids-responses
+  metadata:
+    created_at: 2026-11-19T15:16:15.178Z
+    updated_at: 2026-11-19T15:16:15.178Z
+    version: 1
+api.responses.get-taxonomy-scheme-counts-responses:
+  id: 6cfe2148-7652-41d9-8117-40df6a7363b0
+  path: api.responses.get-taxonomy-scheme-counts-responses
+  spec_node_id: api.responses
+  type: responses
+  layer_id: api
+  name: get-taxonomy-scheme-counts-responses
+  metadata:
+    created_at: 2026-11-19T15:16:15.178Z
+    updated_at: 2026-11-19T15:16:15.178Z
+    version: 1
+api.responses.get-scheme-class-counts-responses:
+  id: 23db4fdd-68c6-4a71-9c50-825ee8a96a14
+  path: api.responses.get-scheme-class-counts-responses
+  spec_node_id: api.responses
+  type: responses
+  layer_id: api
+  name: get-scheme-class-counts-responses
+  metadata:
+    created_at: 2026-11-19T15:16:15.178Z
+    updated_at: 2026-11-19T15:16:15.178Z
+    version: 1
+api.responses.get-relationship-sources-responses:
+  id: 66484101-422b-4897-8134-7cfc57e1d053
+  path: api.responses.get-relationship-sources-responses
+  spec_node_id: api.responses
+  type: responses
+  layer_id: api
+  name: get-relationship-sources-responses
+  metadata:
+    created_at: 2026-11-19T15:16:15.178Z
+    updated_at: 2026-11-19T15:16:15.178Z
+    version: 1
+api.responses.list-edge-attributes-responses:
+  id: 542a0e19-84f0-4f18-9fa4-d2992026e2f4
+  path: api.responses.list-edge-attributes-responses
+  spec_node_id: api.responses
+  type: responses
+  layer_id: api
+  name: list-edge-attributes-responses
+  metadata:
+    created_at: 2026-11-19T15:16:15.178Z
+    updated_at: 2026-11-19T15:16:15.178Z
+    version: 1
+api.responses.create-attribute-definition-responses:
+  id: 607f50cf-253f-4f46-b51a-9237aa3bc9b4
+  path: api.responses.create-attribute-definition-responses
+  spec_node_id: api.responses
+  type: responses
+  layer_id: api
+  name: create-attribute-definition-responses
+  metadata:
+    created_at: 2026-11-19T15:16:15.178Z
+    updated_at: 2026-11-19T15:16:15.178Z
+    version: 1
+api.responses.list-class-attribute-definitions-responses:
+  id: a148e671-3580-4027-b5a1-d6d5efe99510
+  path: api.responses.list-class-attribute-definitions-responses
+  spec_node_id: api.responses
+  type: responses
+  layer_id: api
+  name: list-class-attribute-definitions-responses
+  metadata:
+    created_at: 2026-11-19T15:16:15.178Z
+    updated_at: 2026-11-19T15:16:15.178Z
+    version: 1
+api.responses.get-attribute-definition-responses:
+  id: 914b46b9-1a59-4d7d-b651-801fcf8af019
+  path: api.responses.get-attribute-definition-responses
+  spec_node_id: api.responses
+  type: responses
+  layer_id: api
+  name: get-attribute-definition-responses
+  metadata:
+    created_at: 2026-11-19T15:16:15.178Z
+    updated_at: 2026-11-19T15:16:15.178Z
+    version: 1
+api.responses.update-attribute-definition-responses:
+  id: 35d4a7b2-e2d8-4897-9e34-954d50deccbf
+  path: api.responses.update-attribute-definition-responses
+  spec_node_id: api.responses
+  type: responses
+  layer_id: api
+  name: update-attribute-definition-responses
+  metadata:
+    created_at: 2026-11-19T15:16:15.178Z
+    updated_at: 2026-11-19T15:16:15.178Z
+    version: 1
+api.responses.get-individual-sources-responses:
+  id: 271063b7-65f0-45e0-90fd-0f4b992d7b20
+  path: api.responses.get-individual-sources-responses
+  spec_node_id: api.responses
+  type: responses
+  layer_id: api
+  name: get-individual-sources-responses
+  metadata:
+    created_at: 2026-11-19T15:16:15.178Z
+    updated_at: 2026-11-19T15:16:15.178Z
+    version: 1
+api.responses.list-datasets-responses:
+  id: 58ae310b-2dd7-45c6-a138-546d0e186a59
+  path: api.responses.list-datasets-responses
+  spec_node_id: api.responses
+  type: responses
+  layer_id: api
+  name: list-datasets-responses
+  metadata:
+    created_at: 2026-11-19T15:16:15.178Z
+    updated_at: 2026-11-19T15:16:15.178Z
+    version: 1
+api.responses.create-dataset-responses:
+  id: d9897a13-8ad5-46b0-a653-a9abdb56d3d1
+  path: api.responses.create-dataset-responses
+  spec_node_id: api.responses
+  type: responses
+  layer_id: api
+  name: create-dataset-responses
+  metadata:
+    created_at: 2026-11-19T15:16:15.178Z
+    updated_at: 2026-11-19T15:16:15.178Z
+    version: 1
+api.responses.delete-dataset-responses:
+  id: 51398037-aac0-4d84-9e78-526837e89f59
+  path: api.responses.delete-dataset-responses
+  spec_node_id: api.responses
+  type: responses
+  layer_id: api
+  name: delete-dataset-responses
+  metadata:
+    created_at: 2026-11-19T15:16:15.178Z
+    updated_at: 2026-11-19T15:16:15.178Z
+    version: 1
+api.responses.get-graph-view-responses:
+  id: 53363086-e9c9-45e9-aa94-0620423009b2
+  path: api.responses.get-graph-view-responses
+  spec_node_id: api.responses
+  type: responses
+  layer_id: api
+  name: get-graph-view-responses
+  metadata:
+    created_at: 2026-11-19T15:16:15.178Z
+    updated_at: 2026-11-19T15:16:15.178Z
+    version: 1
+api.responses.list-pipeline-types-responses:
+  id: 9e2f62a3-0f67-475b-b9d7-9094a80df9a8
+  path: api.responses.list-pipeline-types-responses
+  spec_node_id: api.responses
+  type: responses
+  layer_id: api
+  name: list-pipeline-types-responses
+  metadata:
+    created_at: 2026-11-19T15:16:15.178Z
+    updated_at: 2026-11-19T15:16:15.178Z
+    version: 1
+api.responses.list-implementations-responses:
+  id: de0ec324-7921-4a91-9db7-c24870fd8af4
+  path: api.responses.list-implementations-responses
+  spec_node_id: api.responses
+  type: responses
+  layer_id: api
+  name: list-implementations-responses
+  metadata:
+    created_at: 2026-11-19T15:16:15.178Z
+    updated_at: 2026-11-19T15:16:15.178Z
+    version: 1
+api.responses.get-pipeline-run-responses:
+  id: 262a2e41-0b1c-4512-8322-ccfe5a2b1742
+  path: api.responses.get-pipeline-run-responses
+  spec_node_id: api.responses
+  type: responses
+  layer_id: api
+  name: get-pipeline-run-responses
+  metadata:
+    created_at: 2026-11-19T15:16:15.178Z
+    updated_at: 2026-11-19T15:16:15.178Z
+    version: 1
+api.responses.cancel-pipeline-run-responses:
+  id: c97273e2-f889-45be-8b76-d1ba341d01b1
+  path: api.responses.cancel-pipeline-run-responses
+  spec_node_id: api.responses
+  type: responses
+  layer_id: api
+  name: cancel-pipeline-run-responses
+  metadata:
+    created_at: 2026-11-19T15:16:15.178Z
+    updated_at: 2026-11-19T15:16:15.178Z
+    version: 1
+api.responses.get-pipeline-run-change-events-responses:
+  id: 7b822604-961b-4ef6-9a88-f58fbd02f222
+  path: api.responses.get-pipeline-run-change-events-responses
+  spec_node_id: api.responses
+  type: responses
+  layer_id: api
+  name: get-pipeline-run-change-events-responses
+  metadata:
+    created_at: 2026-11-19T15:16:15.178Z
+    updated_at: 2026-11-19T15:16:15.178Z
+    version: 1
+api.responses.list-extraction-examples-responses:
+  id: ce6fdb53-2caf-4d90-b45f-209328ce529a
+  path: api.responses.list-extraction-examples-responses
+  spec_node_id: api.responses
+  type: responses
+  layer_id: api
+  name: list-extraction-examples-responses
+  metadata:
+    created_at: 2026-11-19T15:16:15.178Z
+    updated_at: 2026-11-19T15:16:15.178Z
+    version: 1
+api.responses.apply-pipeline-run-responses:
+  id: bd57b1fb-aabc-4c56-9f94-d4ce883d993a
+  path: api.responses.apply-pipeline-run-responses
+  spec_node_id: api.responses
+  type: responses
+  layer_id: api
+  name: apply-pipeline-run-responses
+  metadata:
+    created_at: 2026-11-19T15:16:15.178Z
+    updated_at: 2026-11-19T15:16:15.178Z
+    version: 1
+api.responses.preview-recognition-responses:
+  id: 5b95bc0f-ce7d-476f-a99c-05cc4a58d84d
+  path: api.responses.preview-recognition-responses
+  spec_node_id: api.responses
+  type: responses
+  layer_id: api
+  name: preview-recognition-responses
+  metadata:
+    created_at: 2026-11-19T15:16:15.178Z
+    updated_at: 2026-11-19T15:16:15.178Z
+    version: 1
+api.responses.revert-pipeline-run-responses:
+  id: ec8ba9c8-6c2d-4e26-9a03-7e1e91d464f4
+  path: api.responses.revert-pipeline-run-responses
+  spec_node_id: api.responses
+  type: responses
+  layer_id: api
+  name: revert-pipeline-run-responses
+  metadata:
+    created_at: 2026-11-19T15:16:15.178Z
+    updated_at: 2026-11-19T15:16:15.178Z
+    version: 1
+api.responses.create-batch-responses:
+  id: e1081cfa-3009-4531-926e-9db3988b5b4c
+  path: api.responses.create-batch-responses
+  spec_node_id: api.responses
+  type: responses
+  layer_id: api
+  name: create-batch-responses
+  metadata:
+    created_at: 2026-11-19T15:16:15.178Z
+    updated_at: 2026-11-19T15:16:15.178Z
+    version: 1
+api.responses.get-batch-responses:
+  id: d6bf8fb7-2564-47a7-8708-555f14488294
+  path: api.responses.get-batch-responses
+  spec_node_id: api.responses
+  type: responses
+  layer_id: api
+  name: get-batch-responses
+  metadata:
+    created_at: 2026-11-19T15:16:15.178Z
+    updated_at: 2026-11-19T15:16:15.178Z
+    version: 1
+api.responses.enqueue-batch-runs-responses:
+  id: 019d8fb3-d102-4658-9f68-df9988198de4
+  path: api.responses.enqueue-batch-runs-responses
+  spec_node_id: api.responses
+  type: responses
+  layer_id: api
+  name: enqueue-batch-runs-responses
+  metadata:
+    created_at: 2026-11-19T15:16:15.178Z
+    updated_at: 2026-11-19T15:16:15.178Z
+    version: 1
+api.responses.cancel-batch-runs-responses:
+  id: 381d3600-0c42-49b6-8028-a2539f497e77
+  path: api.responses.cancel-batch-runs-responses
+  spec_node_id: api.responses
+  type: responses
+  layer_id: api
+  name: cancel-batch-runs-responses
+  metadata:
+    created_at: 2026-11-19T15:16:15.178Z
+    updated_at: 2026-11-19T15:16:15.178Z
+    version: 1
+api.responses.resume-batch-runs-responses:
+  id: 83ecd48f-8ef2-4ac3-a69e-5d74ccc746e7
+  path: api.responses.resume-batch-runs-responses
+  spec_node_id: api.responses
+  type: responses
+  layer_id: api
+  name: resume-batch-runs-responses
+  metadata:
+    created_at: 2026-11-19T15:16:15.178Z
+    updated_at: 2026-11-19T15:16:15.178Z
+    version: 1
+api.responses.list-grounding-workflows-responses:
+  id: 8e88059f-7394-4c36-bb00-3a969ffc14ca
+  path: api.responses.list-grounding-workflows-responses
+  spec_node_id: api.responses
+  type: responses
+  layer_id: api
+  name: list-grounding-workflows-responses
+  metadata:
+    created_at: 2026-11-19T15:16:15.178Z
+    updated_at: 2026-11-19T15:16:15.178Z
+    version: 1
+api.responses.create-grounding-workflow-responses:
+  id: 2e044d3e-a7e2-4bed-b02c-05ad3d869d1b
+  path: api.responses.create-grounding-workflow-responses
+  spec_node_id: api.responses
+  type: responses
+  layer_id: api
+  name: create-grounding-workflow-responses
+  metadata:
+    created_at: 2026-11-19T15:16:15.178Z
+    updated_at: 2026-11-19T15:16:15.178Z
+    version: 1
+api.responses.get-grounding-workflow-responses:
+  id: e1703640-293d-4431-88f5-ad9cad2e58a4
+  path: api.responses.get-grounding-workflow-responses
+  spec_node_id: api.responses
+  type: responses
+  layer_id: api
+  name: get-grounding-workflow-responses
+  metadata:
+    created_at: 2026-11-19T15:16:15.178Z
+    updated_at: 2026-11-19T15:16:15.178Z
+    version: 1
+api.responses.update-grounding-workflow-responses:
+  id: 539025ea-c5ed-4a89-bf83-0a1dc8fca533
+  path: api.responses.update-grounding-workflow-responses
+  spec_node_id: api.responses
+  type: responses
+  layer_id: api
+  name: update-grounding-workflow-responses
+  metadata:
+    created_at: 2026-11-19T15:16:15.178Z
+    updated_at: 2026-11-19T15:16:15.178Z
+    version: 1
+api.responses.run-grounding-workflow-responses:
+  id: 0b50ddac-cf17-4e31-a205-38921aca99f6
+  path: api.responses.run-grounding-workflow-responses
+  spec_node_id: api.responses
+  type: responses
+  layer_id: api
+  name: run-grounding-workflow-responses
+  metadata:
+    created_at: 2026-11-19T15:16:15.178Z
+    updated_at: 2026-11-19T15:16:15.178Z
+    version: 1
+api.responses.list-workflow-runs-responses:
+  id: d8a32beb-4ef0-467c-aaf8-efdbad27bcda
+  path: api.responses.list-workflow-runs-responses
+  spec_node_id: api.responses
+  type: responses
+  layer_id: api
+  name: list-workflow-runs-responses
+  metadata:
+    created_at: 2026-11-19T15:16:15.178Z
+    updated_at: 2026-11-19T15:16:15.178Z
+    version: 1
+api.responses.get-mcp-connection-details-responses:
+  id: e9303666-8b20-4df0-b7e5-92eef09a12d9
+  path: api.responses.get-mcp-connection-details-responses
+  spec_node_id: api.responses
+  type: responses
+  layer_id: api
+  name: get-mcp-connection-details-responses
+  metadata:
+    created_at: 2026-11-19T15:16:15.178Z
+    updated_at: 2026-11-19T15:16:15.178Z
+    version: 1
+api.responses.get-stats-trends-responses:
+  id: 6a55d3b0-b71f-4ba5-a420-1eaf60791bd9
+  path: api.responses.get-stats-trends-responses
+  spec_node_id: api.responses
+  type: responses
+  layer_id: api
+  name: get-stats-trends-responses
+  metadata:
+    created_at: 2026-11-19T15:16:15.178Z
+    updated_at: 2026-11-19T15:16:15.178Z
+    version: 1
+api.responses.list-demo-datasets-responses:
+  id: 11bd769e-18b7-4ecb-ba90-b1e8770433d0
+  path: api.responses.list-demo-datasets-responses
+  spec_node_id: api.responses
+  type: responses
+  layer_id: api
+  name: list-demo-datasets-responses
+  metadata:
+    created_at: 2026-11-19T15:16:15.178Z
+    updated_at: 2026-11-19T15:16:15.178Z
+    version: 1
+api.responses.load-demo-dataset-responses:
+  id: 70867c5c-13ca-48f1-ae5d-a90890bf402e
+  path: api.responses.load-demo-dataset-responses
+  spec_node_id: api.responses
+  type: responses
+  layer_id: api
+  name: load-demo-dataset-responses
+  metadata:
+    created_at: 2026-11-19T15:16:15.178Z
+    updated_at: 2026-11-19T15:16:15.178Z
+    version: 1
+api.responses.get-chat-status-responses:
+  id: 24a4052e-9155-4a30-9bfa-7f780f140d6b
+  path: api.responses.get-chat-status-responses
+  spec_node_id: api.responses
+  type: responses
+  layer_id: api
+  name: get-chat-status-responses
+  metadata:
+    created_at: 2026-11-19T15:16:15.178Z
+    updated_at: 2026-11-19T15:16:15.178Z
+    version: 1
+api.responses.create-conversation-responses:
+  id: 88cca52a-ecaa-4135-b788-b09cbc5d7b65
+  path: api.responses.create-conversation-responses
+  spec_node_id: api.responses
+  type: responses
+  layer_id: api
+  name: create-conversation-responses
+  metadata:
+    created_at: 2026-11-19T15:16:15.178Z
+    updated_at: 2026-11-19T15:16:15.178Z
+    version: 1
+api.responses.list-conversations-responses:
+  id: 66687693-e6d9-42d2-a312-18de54625d66
+  path: api.responses.list-conversations-responses
+  spec_node_id: api.responses
+  type: responses
+  layer_id: api
+  name: list-conversations-responses
+  metadata:
+    created_at: 2026-11-19T15:16:15.178Z
+    updated_at: 2026-11-19T15:16:15.178Z
+    version: 1
+api.responses.get-conversation-responses:
+  id: dfd448bc-cb6c-464f-b3d0-1f5cac003f9d
+  path: api.responses.get-conversation-responses
+  spec_node_id: api.responses
+  type: responses
+  layer_id: api
+  name: get-conversation-responses
+  metadata:
+    created_at: 2026-11-19T15:16:15.178Z
+    updated_at: 2026-11-19T15:16:15.178Z
+    version: 1
+api.responses.list-proposals-responses:
+  id: 42e738c2-333b-4af1-abe5-208607481274
+  path: api.responses.list-proposals-responses
+  spec_node_id: api.responses
+  type: responses
+  layer_id: api
+  name: list-proposals-responses
+  metadata:
+    created_at: 2026-11-19T15:16:15.178Z
+    updated_at: 2026-11-19T15:16:15.178Z
+    version: 1
+api.responses.create-proposal-responses:
+  id: 994b4927-8328-47af-89c1-0c15a48ddafa
+  path: api.responses.create-proposal-responses
+  spec_node_id: api.responses
+  type: responses
+  layer_id: api
+  name: create-proposal-responses
+  metadata:
+    created_at: 2026-11-19T15:16:15.178Z
+    updated_at: 2026-11-19T15:16:15.178Z
+    version: 1
+api.responses.get-proposal-responses:
+  id: 43c47b72-b7e1-4a2f-abd7-490fb6b71dea
+  path: api.responses.get-proposal-responses
+  spec_node_id: api.responses
+  type: responses
+  layer_id: api
+  name: get-proposal-responses
+  metadata:
+    created_at: 2026-11-19T15:16:15.178Z
+    updated_at: 2026-11-19T15:16:15.178Z
+    version: 1
+api.responses.get-proposal-decisions-responses:
+  id: 5533a971-6df7-42ba-9992-cc37774d2dde
+  path: api.responses.get-proposal-decisions-responses
+  spec_node_id: api.responses
+  type: responses
+  layer_id: api
+  name: get-proposal-decisions-responses
+  metadata:
+    created_at: 2026-11-19T15:16:15.178Z
+    updated_at: 2026-11-19T15:16:15.178Z
+    version: 1
+api.responses.add-proposal-operations-responses:
+  id: e2826e7f-02e4-4b00-9f5e-b7f253921082
+  path: api.responses.add-proposal-operations-responses
+  spec_node_id: api.responses
+  type: responses
+  layer_id: api
+  name: add-proposal-operations-responses
+  metadata:
+    created_at: 2026-11-19T15:16:15.178Z
+    updated_at: 2026-11-19T15:16:15.178Z
+    version: 1
+api.responses.apply-proposal-responses:
+  id: ab92030d-0763-4e97-b0ed-91335a89fa66
+  path: api.responses.apply-proposal-responses
+  spec_node_id: api.responses
+  type: responses
+  layer_id: api
+  name: apply-proposal-responses
+  metadata:
+    created_at: 2026-11-19T15:16:15.178Z
+    updated_at: 2026-11-19T15:16:15.178Z
+    version: 1
+api.responses.reopen-operations-responses:
+  id: 37151cf8-91f9-4711-877c-f50623932db4
+  path: api.responses.reopen-operations-responses
+  spec_node_id: api.responses
+  type: responses
+  layer_id: api
+  name: reopen-operations-responses
+  metadata:
+    created_at: 2026-11-19T15:16:15.178Z
+    updated_at: 2026-11-19T15:16:15.178Z
+    version: 1
+api.responses.revert-proposal-responses:
+  id: 20ce8b81-270c-439e-b310-51d8d5005014
+  path: api.responses.revert-proposal-responses
+  spec_node_id: api.responses
+  type: responses
+  layer_id: api
+  name: revert-proposal-responses
+  metadata:
+    created_at: 2026-11-19T15:16:15.178Z
+    updated_at: 2026-11-19T15:16:15.178Z
+    version: 1
+api.responses.mark-proposal-landed-responses:
+  id: 2a755909-f361-49a5-8b0a-a3914b1a5212
+  path: api.responses.mark-proposal-landed-responses
+  spec_node_id: api.responses
+  type: responses
+  layer_id: api
+  name: mark-proposal-landed-responses
+  metadata:
+    created_at: 2026-11-19T15:16:15.178Z
+    updated_at: 2026-11-19T15:16:15.178Z
+    version: 1
+api.responses.clear-proposal-landed-responses:
+  id: b8da04d6-da1b-4ff2-b37a-903d37373e70
+  path: api.responses.clear-proposal-landed-responses
+  spec_node_id: api.responses
+  type: responses
+  layer_id: api
+  name: clear-proposal-landed-responses
+  metadata:
+    created_at: 2026-11-19T15:16:15.178Z
+    updated_at: 2026-11-19T15:16:15.178Z
+    version: 1
+api.responses.list-gold-responses:
+  id: 46d19a32-9784-46de-9dc3-9e551dca9ace
+  path: api.responses.list-gold-responses
+  spec_node_id: api.responses
+  type: responses
+  layer_id: api
+  name: list-gold-responses
+  metadata:
+    created_at: 2026-11-19T15:16:15.178Z
+    updated_at: 2026-11-19T15:16:15.178Z
+    version: 1
+api.responses.get-approval-policy-responses:
+  id: 29b88254-fa61-46ee-8852-7ca85b1b2bd2
+  path: api.responses.get-approval-policy-responses
+  spec_node_id: api.responses
+  type: responses
+  layer_id: api
+  name: get-approval-policy-responses
+  metadata:
+    created_at: 2026-11-19T15:16:15.178Z
+    updated_at: 2026-11-19T15:16:15.178Z
+    version: 1
+api.responses.set-approval-policy-responses:
+  id: 362b2e39-b716-40ae-b72f-904837c29b92
+  path: api.responses.set-approval-policy-responses
+  spec_node_id: api.responses
+  type: responses
+  layer_id: api
+  name: set-approval-policy-responses
+  metadata:
+    created_at: 2026-11-19T15:16:15.178Z
+    updated_at: 2026-11-19T15:16:15.178Z
+    version: 1
+api.responses.compare-proposals-responses:
+  id: 50ea4e0c-4d4a-4d12-906e-3951b776ee3e
+  path: api.responses.compare-proposals-responses
+  spec_node_id: api.responses
+  type: responses
+  layer_id: api
+  name: compare-proposals-responses
+  metadata:
+    created_at: 2026-11-19T15:16:15.178Z
+    updated_at: 2026-11-19T15:16:15.178Z
+    version: 1
+api.responses.decide-comparison-pair-responses:
+  id: 1dc69cb7-2bbe-4425-8d75-3f64db4eef36
+  path: api.responses.decide-comparison-pair-responses
+  spec_node_id: api.responses
+  type: responses
+  layer_id: api
+  name: decide-comparison-pair-responses
+  metadata:
+    created_at: 2026-11-19T15:16:15.178Z
+    updated_at: 2026-11-19T15:16:15.178Z
+    version: 1
+api.responses.accept-rest-of-comparison-responses:
+  id: 8457fe5d-a4e5-4a67-ac0a-d30f7ab17354
+  path: api.responses.accept-rest-of-comparison-responses
+  spec_node_id: api.responses
+  type: responses
+  layer_id: api
+  name: accept-rest-of-comparison-responses
+  metadata:
+    created_at: 2026-11-19T15:16:15.178Z
+    updated_at: 2026-11-19T15:16:15.178Z
+    version: 1
+api.responses.list-claims-responses:
+  id: 9a053d8a-81cd-4b06-ad6b-f3ecc5096f48
+  path: api.responses.list-claims-responses
+  spec_node_id: api.responses
+  type: responses
+  layer_id: api
+  name: list-claims-responses
+  metadata:
+    created_at: 2026-11-19T15:16:15.178Z
+    updated_at: 2026-11-19T15:16:15.178Z
+    version: 1
+api.responses.submit-claims-responses:
+  id: f00dcd0b-9dc0-49ed-b3d2-28347d0300c0
+  path: api.responses.submit-claims-responses
+  spec_node_id: api.responses
+  type: responses
+  layer_id: api
+  name: submit-claims-responses
+  metadata:
+    created_at: 2026-11-19T15:16:15.178Z
+    updated_at: 2026-11-19T15:16:15.178Z
+    version: 1
+api.responses.get-claim-responses:
+  id: 2cba191e-ddad-4424-8103-3c30b8a4e915
+  path: api.responses.get-claim-responses
+  spec_node_id: api.responses
+  type: responses
+  layer_id: api
+  name: get-claim-responses
+  metadata:
+    created_at: 2026-11-19T15:16:15.178Z
+    updated_at: 2026-11-19T15:16:15.178Z
+    version: 1
+api.responses.set-claim-verdict-responses:
+  id: eac9274b-7e5e-4df9-abe9-bb818df1b845
+  path: api.responses.set-claim-verdict-responses
+  spec_node_id: api.responses
+  type: responses
+  layer_id: api
+  name: set-claim-verdict-responses
+  metadata:
+    created_at: 2026-11-19T15:16:15.178Z
+    updated_at: 2026-11-19T15:16:15.178Z
+    version: 1
+api.responses.clear-claim-verdict-responses:
+  id: fa574979-0a70-4e93-a511-d03f9ec1e7c7
+  path: api.responses.clear-claim-verdict-responses
+  spec_node_id: api.responses
+  type: responses
+  layer_id: api
+  name: clear-claim-verdict-responses
+  metadata:
+    created_at: 2026-11-19T15:16:15.178Z
+    updated_at: 2026-11-19T15:16:15.178Z
+    version: 1
+api.responses.add-source-responses:
+  id: 59def67c-0011-44fe-996b-519a6f150a9c
+  path: api.responses.add-source-responses
+  spec_node_id: api.responses
+  type: responses
+  layer_id: api
+  name: add-source-responses
+  metadata:
+    created_at: 2026-11-19T15:16:15.178Z
+    updated_at: 2026-11-19T15:16:15.178Z
+    version: 1
+api.responses.list-sources-responses:
+  id: c192f146-f65c-4fb9-aab7-256e6048ecea
+  path: api.responses.list-sources-responses
+  spec_node_id: api.responses
+  type: responses
+  layer_id: api
+  name: list-sources-responses
+  metadata:
+    created_at: 2026-11-19T15:16:15.178Z
+    updated_at: 2026-11-19T15:16:15.178Z
+    version: 1
+api.responses.get-source-responses:
+  id: 36adce5a-888a-4307-b4e3-7d551b627468
+  path: api.responses.get-source-responses
+  spec_node_id: api.responses
+  type: responses
+  layer_id: api
+  name: get-source-responses
+  metadata:
+    created_at: 2026-11-19T15:16:15.178Z
+    updated_at: 2026-11-19T15:16:15.178Z
+    version: 1
+api.responses.remove-source-responses:
+  id: 1b57d750-294a-4d8f-adc5-919b12928cce
+  path: api.responses.remove-source-responses
+  spec_node_id: api.responses
+  type: responses
+  layer_id: api
+  name: remove-source-responses
+  metadata:
+    created_at: 2026-11-19T15:16:15.178Z
+    updated_at: 2026-11-19T15:16:15.178Z
+    version: 1
+api.responses.get-source-text-responses:
+  id: 08edbbe7-4dcc-4b22-a969-fed4f06b288e
+  path: api.responses.get-source-text-responses
+  spec_node_id: api.responses
+  type: responses
+  layer_id: api
+  name: get-source-text-responses
+  metadata:
+    created_at: 2026-11-19T15:16:15.179Z
+    updated_at: 2026-11-19T15:16:15.179Z
+    version: 1
+api.responses.extract-source-responses:
+  id: 495c4d55-815c-48f0-a10f-daed005cfefe
+  path: api.responses.extract-source-responses
+  spec_node_id: api.responses
+  type: responses
+  layer_id: api
+  name: extract-source-responses
+  metadata:
+    created_at: 2026-11-19T15:16:15.179Z
+    updated_at: 2026-11-19T15:16:15.179Z
+    version: 1
+api.responses.import-bundle-responses:
+  id: 787e889f-0637-430e-8a30-dbaef47c52d2
+  path: api.responses.import-bundle-responses
+  spec_node_id: api.responses
+  type: responses
+  layer_id: api
+  name: import-bundle-responses
+  metadata:
+    created_at: 2026-11-19T15:16:15.179Z
+    updated_at: 2026-11-19T15:16:15.179Z
+    version: 1
+api.responses.dr-spec-drift-responses:
+  id: e00440b3-2f21-4680-b7bb-1055d2f35c90
+  path: api.responses.dr-spec-drift-responses
+  spec_node_id: api.responses
+  type: responses
+  layer_id: api
+  name: dr-spec-drift-responses
+  metadata:
+    created_at: 2026-11-19T15:16:15.179Z
+    updated_at: 2026-11-19T15:16:15.179Z
+    version: 1
+api.responses.list-decision-models-responses:
+  id: e755bdab-434f-474d-9d17-9c38099cd88c
+  path: api.responses.list-decision-models-responses
+  spec_node_id: api.responses
+  type: responses
+  layer_id: api
+  name: list-decision-models-responses
+  metadata:
+    created_at: 2026-11-19T15:16:15.179Z
+    updated_at: 2026-11-19T15:16:15.179Z
+    version: 1
+api.responses.build-graph-responses:
+  id: aa7a31e7-fa8e-48eb-992e-fbe69d1ba92c
+  path: api.responses.build-graph-responses
+  spec_node_id: api.responses
+  type: responses
+  layer_id: api
+  name: build-graph-responses
+  metadata:
+    created_at: 2026-11-19T15:45:33.526Z
+    updated_at: 2026-11-19T15:45:33.526Z
+    version: 1
+api.responses.get-pipeline-candidates-generic-responses:
+  id: 73022c29-7752-4697-9346-98dcf3c6c3c1
+  path: api.responses.get-pipeline-candidates-generic-responses
+  spec_node_id: api.responses
+  type: responses
+  layer_id: api
+  name: get-pipeline-candidates-generic-responses
+  metadata:
+    created_at: 2026-11-19T15:45:33.526Z
+    updated_at: 2026-11-19T15:45:33.526Z
+    version: 1
+api.responses.get-schema-extraction-candidates-responses:
+  id: b4ff0fac-e27f-4925-ab9e-7ac74a988424
+  path: api.responses.get-schema-extraction-candidates-responses
+  spec_node_id: api.responses
+  type: responses
+  layer_id: api
+  name: get-schema-extraction-candidates-responses
+  metadata:
+    created_at: 2026-11-19T15:45:33.526Z
+    updated_at: 2026-11-19T15:45:33.526Z
+    version: 1
+api.responses.get-individual-extraction-candidates-responses:
+  id: daad1ce9-72b8-4bf4-8542-9a117e88c909
+  path: api.responses.get-individual-extraction-candidates-responses
+  spec_node_id: api.responses
+  type: responses
+  layer_id: api
+  name: get-individual-extraction-candidates-responses
+  metadata:
+    created_at: 2026-11-19T15:45:33.526Z
+    updated_at: 2026-11-19T15:45:33.526Z
+    version: 1
+api.responses.get-schema-grounding-candidates-responses:
+  id: fe4291e7-27b9-4b0a-bea2-c606fe2e250d
+  path: api.responses.get-schema-grounding-candidates-responses
+  spec_node_id: api.responses
+  type: responses
+  layer_id: api
+  name: get-schema-grounding-candidates-responses
+  metadata:
+    created_at: 2026-11-19T15:45:33.526Z
+    updated_at: 2026-11-19T15:45:33.526Z
+    version: 1
+api.responses.get-schema-refinement-candidates-responses:
+  id: b881a094-ad12-4abc-a1ed-3fe4f3c0daf3
+  path: api.responses.get-schema-refinement-candidates-responses
+  spec_node_id: api.responses
+  type: responses
+  layer_id: api
+  name: get-schema-refinement-candidates-responses
+  metadata:
+    created_at: 2026-11-19T15:45:33.526Z
+    updated_at: 2026-11-19T15:45:33.526Z
     version: 1

@@ -68,3 +68,177 @@ application.applicationfunction.llm-provider-routing:
     created_at: 2026-03-24T09:22:53.703Z
     updated_at: 2026-03-24T09:22:53.703Z
     version: 1
+application.applicationfunction.individual-extraction-apply:
+  id: a2497ebd-e318-48df-a297-701496296129
+  path: application.applicationfunction.individual-extraction-apply
+  spec_node_id: application.applicationfunction
+  type: applicationfunction
+  layer_id: application
+  name: Individual Extraction Apply
+  description: Turns an individual-extraction run's candidates into a change
+    proposal (individuals, classes, relationships, provenance).
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/domain/pipelines/individual_extraction/apply_service.py
+        symbol: IndividualExtractionApplyService
+  metadata:
+    created_at: 2026-11-19T14:52:33.537Z
+    updated_at: 2026-11-19T14:52:33.537Z
+    version: 1
+application.applicationfunction.schema-extraction-apply:
+  id: 53361b3b-b706-4d31-aba3-d20ff7e057ef
+  path: application.applicationfunction.schema-extraction-apply
+  spec_node_id: application.applicationfunction
+  type: applicationfunction
+  layer_id: application
+  name: Schema Extraction Apply
+  description: Turns a schema-extraction run's candidates into a change proposal.
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/domain/pipelines/schema_extraction/apply_service.py
+        symbol: SchemaExtractionApplyService
+  metadata:
+    created_at: 2026-11-19T14:52:33.537Z
+    updated_at: 2026-11-19T14:52:33.537Z
+    version: 1
+application.applicationfunction.schema-grounding-apply:
+  id: 913ef84e-7675-4968-84e2-38fa429d6b0c
+  path: application.applicationfunction.schema-grounding-apply
+  spec_node_id: application.applicationfunction
+  type: applicationfunction
+  layer_id: application
+  name: Schema Grounding Apply
+  description: Applies a grounding run's chosen external references as a proposal.
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/domain/pipelines/schema_node_grounding/apply_service.py
+        symbol: SchemaGroundingApplyService
+  metadata:
+    created_at: 2026-11-19T14:52:33.537Z
+    updated_at: 2026-11-19T14:52:33.537Z
+    version: 1
+application.applicationfunction.schema-definition-refinement-apply:
+  id: c68874ce-54aa-4212-b2a5-655dbedbdd47
+  path: application.applicationfunction.schema-definition-refinement-apply
+  spec_node_id: application.applicationfunction
+  type: applicationfunction
+  layer_id: application
+  name: Schema Definition Refinement Apply
+  description: Applies a definition-refinement run's definitions as a proposal.
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/domain/pipelines/schema_node_definition_refinement/apply_service.py
+        symbol: SchemaDefinitionRefinementApplyService
+  metadata:
+    created_at: 2026-11-19T14:52:33.537Z
+    updated_at: 2026-11-19T14:52:33.537Z
+    version: 1
+application.applicationfunction.schema-connection-refinement-apply:
+  id: 82e1733d-fbec-4d69-a0ba-6803dda34b43
+  path: application.applicationfunction.schema-connection-refinement-apply
+  spec_node_id: application.applicationfunction
+  type: applicationfunction
+  layer_id: application
+  name: Schema Connection Refinement Apply
+  description: Applies a connection-refinement run's connections as a proposal.
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/domain/pipelines/schema_node_connection_refinement/apply_service.py
+        symbol: SchemaConnectionRefinementApplyService
+  metadata:
+    created_at: 2026-11-19T14:52:33.537Z
+    updated_at: 2026-11-19T14:52:33.537Z
+    version: 1
+application.applicationfunction.in-use-inspection:
+  id: 20fb0102-7e43-43b2-b0c0-341339bdb767
+  path: application.applicationfunction.in-use-inspection
+  spec_node_id: application.applicationfunction
+  type: applicationfunction
+  layer_id: application
+  name: In-Use Inspection
+  description: Finds what blocks deleting or retyping a schema entity (edges,
+    individuals) and checks replacements.
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/domain/versioning/in_use.py
+        symbol: InUseInspector
+  metadata:
+    created_at: 2026-11-19T14:52:33.537Z
+    updated_at: 2026-11-19T14:52:33.537Z
+    version: 1
+application.applicationfunction.evidence-pack-building:
+  id: dadc4ca9-d0c6-4033-8c07-8d483afe57ad
+  path: application.applicationfunction.evidence-pack-building
+  spec_node_id: application.applicationfunction
+  type: applicationfunction
+  layer_id: application
+  name: Evidence Pack Building
+  description: Assembles the evidence (definitions, peers, edges, intent) a
+    decision model sees for a schema question.
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/domain/ontology/evidence.py
+        symbol: EvidencePackBuilder
+  metadata:
+    created_at: 2026-11-19T14:52:33.537Z
+    updated_at: 2026-11-19T14:52:33.537Z
+    version: 1
+application.applicationfunction.grounding-scoring:
+  id: 411aeb37-0ce3-4777-8f8b-54ea10162169
+  path: application.applicationfunction.grounding-scoring
+  spec_node_id: application.applicationfunction
+  type: applicationfunction
+  layer_id: application
+  name: Grounding Scoring
+  description: Scores external grounding candidates for a schema node.
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/domain/pipelines/schema_node_grounding/scoring.py
+        symbol: GroundingScorer
+  metadata:
+    created_at: 2026-11-19T14:52:33.537Z
+    updated_at: 2026-11-19T14:52:33.537Z
+    version: 1
+application.applicationfunction.definition-enrichment:
+  id: bdf246d5-10d5-4d11-8a59-00fb12e81d48
+  path: application.applicationfunction.definition-enrichment
+  spec_node_id: application.applicationfunction
+  type: applicationfunction
+  layer_id: application
+  name: Definition Enrichment
+  description: Enriches schema-node definitions in the background and proposes them.
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/domain/pipelines/schema_node_definition_refinement/enrichment.py
+        symbol: DefinitionEnrichment
+  metadata:
+    created_at: 2026-11-19T14:52:33.537Z
+    updated_at: 2026-11-19T14:52:33.537Z
+    version: 1
+application.applicationfunction.schema-neighborhood-traversal:
+  id: 11a58016-ee7a-4ec5-97dc-a4c22df985f4
+  path: application.applicationfunction.schema-neighborhood-traversal
+  spec_node_id: application.applicationfunction
+  type: applicationfunction
+  layer_id: application
+  name: Schema Neighborhood Traversal
+  description: Collects a class's or property's neighborhood and extraction usage
+    for refinement prompts.
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/domain/pipelines/refinement/neighborhood.py
+        symbol: SchemaNeighborhoodTraversal
+  metadata:
+    created_at: 2026-11-19T14:52:33.537Z
+    updated_at: 2026-11-19T14:52:33.537Z
+    version: 1

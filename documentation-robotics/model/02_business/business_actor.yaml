@@ -1,0 +1,51 @@
+business.businessactor.ontology-maintainer:
+  id: e39d2759-5994-406f-ba04-a5dfbc1ee210
+  path: business.businessactor.ontology-maintainer
+  spec_node_id: business.businessactor
+  type: businessactor
+  layer_id: business
+  name: Ontology Maintainer
+  description: The person who owns the Context Studio workspace and decides proposals.
+  source_reference:
+    provenance: manual
+    locations:
+      - file: README.md
+  metadata:
+    created_at: 2026-11-19T16:16:28.345Z
+    updated_at: 2026-11-19T16:16:28.345Z
+    version: 1
+business.businessactor.documentation-robotics-project:
+  id: 77669409-d859-4625-b63b-376a6c9a18b7
+  path: business.businessactor.documentation-robotics-project
+  spec_node_id: business.businessactor
+  type: businessactor
+  layer_id: business
+  name: Documentation Robotics Project
+  description: Client project whose spec is the mirrored dr_spec taxonomy; its
+    maintainer agent submits reflection plans and lands decisions and spec
+    changes.
+  source_reference:
+    provenance: manual
+    locations:
+      - file: documentation/field-guide/index.html
+  metadata:
+    created_at: 2026-11-19T16:16:28.347Z
+    updated_at: 2026-11-19T16:16:28.347Z
+    version: 1
+business.businessactor.house-project:
+  id: cee95a9f-68ff-452c-91cb-3158b0842b17
+  path: business.businessactor.house-project
+  spec_node_id: business.businessactor
+  type: businessactor
+  layer_id: business
+  name: House Project
+  description: Client project that round-trips its schema via bundle v1 and a
+    per-taxonomy approval policy.
+  source_reference:
+    provenance: manual
+    locations:
+      - file: documentation/field-guide/index.html
+  metadata:
+    created_at: 2026-11-19T16:16:28.347Z
+    updated_at: 2026-11-19T16:16:28.347Z
+    version: 1

@@ -1,42 +1,3 @@
-motivation.stakeholder.knowledge-manager:
-  id: 98c60dc5-bdbc-4c89-89ea-b2dec8c53ef9
-  path: motivation.stakeholder.knowledge-manager
-  spec_node_id: motivation.stakeholder
-  type: stakeholder
-  layer_id: motivation
-  name: Knowledge Manager
-  description: "Internal stakeholder: domain experts and ontology authors who
-    create and curate the knowledge graph using the new hexagonal architecture
-    back-end"
-  attributes:
-    type: end-user
-  source_reference:
-    provenance: extracted
-    locations:
-      - file: local-server/app.py
-  metadata:
-    created_at: 2026-03-24T09:20:35.128Z
-    updated_at: 2026-03-24T09:20:35.128Z
-    version: 1
-motivation.stakeholder.ai-agent-consumer:
-  id: e8e6dd1a-dafc-4a98-a711-25692406c66d
-  path: motivation.stakeholder.ai-agent-consumer
-  spec_node_id: motivation.stakeholder
-  type: stakeholder
-  layer_id: motivation
-  name: AI Agent Consumer
-  description: "System stakeholder: AI agents and RAG pipelines that query the
-    knowledge graph via REST API for contextual knowledge retrieval"
-  attributes:
-    type: system
-  source_reference:
-    provenance: extracted
-    locations:
-      - file: local-server/domain/extraction/services.py
-  metadata:
-    created_at: 2026-03-24T09:20:35.437Z
-    updated_at: 2026-03-24T09:20:35.437Z
-    version: 1
 motivation.stakeholder.desktop-application-user:
   id: 7e570955-63c1-4de1-9c3d-717b5876350e
   path: motivation.stakeholder.desktop-application-user
@@ -44,14 +5,15 @@ motivation.stakeholder.desktop-application-user:
   type: stakeholder
   layer_id: motivation
   name: Desktop Application User
-  description: "End-user stakeholder: individuals running Context Studio as a
-    local-first desktop application on their own workstation"
+  description: People who will run Context Studio as an installable local-first
+    desktop application (Tauri, /app) on their own workstation. Packaging is a
+    near-term goal; today the app runs from ./dev.sh in a browser.
   attributes:
     type: end-user
   source_reference:
-    provenance: extracted
+    provenance: manual
     locations:
-      - file: local-server/config.py
+      - file: app/README.md
   metadata:
     created_at: 2026-03-24T09:20:40.875Z
     updated_at: 2026-03-24T09:20:40.875Z
@@ -63,15 +25,97 @@ motivation.stakeholder.platform-developer:
   type: stakeholder
   layer_id: motivation
   name: Platform Developer
-  description: "Internal stakeholder: developers extending or maintaining Context
-    Studio and the underlying hexagonal architecture bounded contexts"
+  description: "The developers who build and maintain Context Studio: the
+    maintainer plus Claude Code subagent sessions, which are also the main users
+    of the DR and CS tooling while building it."
   attributes:
     type: internal
   source_reference:
-    provenance: extracted
+    provenance: manual
     locations:
-      - file: local-server/app.py
+      - file: CLAUDE.md
   metadata:
     created_at: 2026-03-24T09:20:41.167Z
     updated_at: 2026-03-24T09:20:41.167Z
+    version: 1
+motivation.stakeholder.ontology-owner-and-reviewer:
+  id: 70f2da86-265e-43a0-9651-c713185cd31a
+  path: motivation.stakeholder.ontology-owner-and-reviewer
+  spec_node_id: motivation.stakeholder
+  type: stakeholder
+  layer_id: motivation
+  name: Ontology Owner and Reviewer
+  description: The person who writes taxonomy visions, adjudicates proposals
+    (accept, edit, reject, revert), checks gold and decides extraction
+    direction. Today one person (the maintainer) working local-first on their
+    own workstation.
+  attributes:
+    type: end-user
+  source_reference:
+    provenance: manual
+    locations:
+      - file: README.md
+  metadata:
+    created_at: 2026-11-19T16:14:23.186Z
+    updated_at: 2026-11-19T16:14:23.186Z
+    version: 1
+motivation.stakeholder.agent-claude-code-and-in-app-chat:
+  id: 42235e1c-8863-4fb4-ba06-f3a14f696827
+  path: motivation.stakeholder.agent-claude-code-and-in-app-chat
+  spec_node_id: motivation.stakeholder
+  type: stakeholder
+  layer_id: motivation
+  name: Agent (Claude Code and In-App Chat)
+  description: Agents that read the model through the shared tool registry (MCP
+    tools and resources; the in-app chat uses the same tools) and suggest
+    changes only as proposals.
+  attributes:
+    type: system
+  source_reference:
+    provenance: manual
+    locations:
+      - file: README.md
+  metadata:
+    created_at: 2026-11-19T16:14:23.186Z
+    updated_at: 2026-11-19T16:14:23.186Z
+    version: 1
+motivation.stakeholder.documentation-robotics-project:
+  id: cbedceac-26cb-4a6f-821c-3eaa9fe39371
+  path: motivation.stakeholder.documentation-robotics-project
+  spec_node_id: motivation.stakeholder
+  type: stakeholder
+  layer_id: motivation
+  name: Documentation Robotics Project
+  description: Client project whose spec is mirrored as the dr_spec taxonomy (and
+    whose own model is the dataset context-studio); its maintainer agent submits
+    reflection plans over MCP and lands decisions and spec changes in the DR
+    repo.
+  attributes:
+    type: external
+  source_reference:
+    provenance: manual
+    locations:
+      - file: documentation/field-guide/index.html
+  metadata:
+    created_at: 2026-11-19T16:14:23.186Z
+    updated_at: 2026-11-19T16:14:23.186Z
+    version: 1
+motivation.stakeholder.house-project:
+  id: 943cd69d-6b42-4423-b87b-c2304e3a7419
+  path: motivation.stakeholder.house-project
+  spec_node_id: motivation.stakeholder
+  type: stakeholder
+  layer_id: motivation
+  name: House Project
+  description: Client project that round-trips its schema through bundle v1 and a
+    per-taxonomy approval policy, and generates its code from the CS bundle.
+  attributes:
+    type: external
+  source_reference:
+    provenance: manual
+    locations:
+      - file: documentation/field-guide/index.html
+  metadata:
+    created_at: 2026-11-19T16:14:23.186Z
+    updated_at: 2026-11-19T16:14:23.186Z
     version: 1

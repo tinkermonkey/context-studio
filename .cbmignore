@@ -1,0 +1,28 @@
+# Added by Documentation Robotics: its model, changesets and analyzer state are not code.
+/documentation-robotics/
+/.dr/
+# Context Studio: reference-only and inactive code is not part of the system the model describes.
+/legacy/
+/app/
+/openapi_extracts/
+/documentation/
+/rearchitecture/
+# Not the running system: design prototype, dev/benchmark scripts, throwaway experiments, test data fixtures.
+/ux/design/
+/ux/scripts/
+/local-server/scripts/
+/local-server/benchmark/
+/local-server/experiments/
+/local-server/nlp_sandbox/
+/local-server/triage_scripts/
+/local-server/documentation/
+/local-server/documentation-robotics/
+/local-server/tests/fixtures/
+/local-server/tests/integration/fixtures/
+/local-server/tests/**/_cassettes/
+# Agent development container (switchyard orchestrator image), not the shipped system.
+/Dockerfile.agent
+# Generated code: the TanStack route tree, the OpenAPI types and the OpenAPI copy the frontend generates them from.
+/ux/src/routeTree.gen.ts
+/ux/src/api/types/index.ts
+/ux/documentation/

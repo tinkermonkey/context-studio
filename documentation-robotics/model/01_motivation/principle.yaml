@@ -1,0 +1,135 @@
+motivation.principle.agents-propose-and-people-decide:
+  id: 9e60ffb9-4579-4586-8761-d24c4055164e
+  path: motivation.principle.agents-propose-and-people-decide
+  spec_node_id: motivation.principle
+  type: principle
+  layer_id: motivation
+  name: Agents Propose and People Decide
+  description: Every agent, chat or pipeline write lands as a proposal with
+    source, rationale, evidence and probability; only a per-taxonomy approval
+    policy may auto-apply routine changes.
+  attributes:
+    category: operational
+  source_reference:
+    provenance: manual
+    locations:
+      - file: rearchitecture/ontology_workbench_proposal.md
+  metadata:
+    created_at: 2026-11-19T16:14:23.185Z
+    updated_at: 2026-11-19T16:14:23.185Z
+    version: 1
+motivation.principle.one-tool-registry-for-every-face:
+  id: c56b0f5e-d9b6-4055-8cf6-f18e6bb7a97e
+  path: motivation.principle.one-tool-registry-for-every-face
+  spec_node_id: motivation.principle
+  type: principle
+  layer_id: motivation
+  name: One Tool Registry for Every Face
+  description: Chat tools and MCP tools come from one registry, so anything the
+    chat can do an agent can do.
+  attributes:
+    category: architecture
+  source_reference:
+    provenance: manual
+    locations:
+      - file: rearchitecture/ontology_workbench_proposal.md
+  metadata:
+    created_at: 2026-11-19T16:14:23.185Z
+    updated_at: 2026-11-19T16:14:23.185Z
+    version: 1
+motivation.principle.the-repo-releases-and-context-studio-refines:
+  id: 8a84eb65-0965-4e8e-9a65-3d29f53e5a38
+  path: motivation.principle.the-repo-releases-and-context-studio-refines
+  spec_node_id: motivation.principle
+  type: principle
+  layer_id: motivation
+  name: The Repo Releases and Context Studio Refines
+  description: Client specs ship from their own repos, gated by their own evals;
+    CS keeps claims, decisions, gold, provenance and history.
+  attributes:
+    category: integration
+  source_reference:
+    provenance: manual
+    locations:
+      - file: rearchitecture/ontology_workbench_proposal.md
+  metadata:
+    created_at: 2026-11-19T16:14:23.185Z
+    updated_at: 2026-11-19T16:14:23.185Z
+    version: 1
+motivation.principle.intent-travels-with-every-call:
+  id: f5b9ed12-9d5a-4e6e-a924-0f6abf04ad0f
+  path: motivation.principle.intent-travels-with-every-call
+  spec_node_id: motivation.principle
+  type: principle
+  layer_id: motivation
+  name: Intent Travels with Every Call
+  description: Taxonomy vision and summary, scheme scope notes and class
+    definitions go into every agent's and pipeline's context.
+  attributes:
+    category: data
+  source_reference:
+    provenance: manual
+    locations:
+      - file: rearchitecture/ontology_workbench_proposal.md
+  metadata:
+    created_at: 2026-11-19T16:14:23.186Z
+    updated_at: 2026-11-19T16:14:23.186Z
+    version: 1
+motivation.principle.clients-drive-proposals:
+  id: 5e94837c-51c2-4405-ba98-5f4547fc8b15
+  path: motivation.principle.clients-drive-proposals
+  spec_node_id: motivation.principle
+  type: principle
+  layer_id: motivation
+  name: Clients Drive Proposals
+  description: CS adjudicates; it does not originate proposals or run its own
+    reflections on a client's taxonomy (catch-up after a re-import excepted).
+  attributes:
+    category: integration
+  source_reference:
+    provenance: manual
+    locations:
+      - file: rearchitecture/ontology_workbench_proposal.md
+  metadata:
+    created_at: 2026-11-19T16:14:23.186Z
+    updated_at: 2026-11-19T16:14:23.186Z
+    version: 1
+motivation.principle.keep-several-implementations-and-garden-them:
+  id: 12db0d66-04c3-4b5a-8864-ab204c625349
+  path: motivation.principle.keep-several-implementations-and-garden-them
+  spec_node_id: motivation.principle
+  type: principle
+  layer_id: motivation
+  name: Keep Several Implementations and Garden Them
+  description: Each pipeline type keeps several selectable implementations; the
+    registry names the default; dead ones are removed rather than one winner
+    kept.
+  attributes:
+    category: development
+  source_reference:
+    provenance: manual
+    locations:
+      - file: documentation/extraction/README.md
+  metadata:
+    created_at: 2026-11-19T16:14:23.186Z
+    updated_at: 2026-11-19T16:14:23.186Z
+    version: 1
+motivation.principle.hexagonal-domain-purity:
+  id: 7f74e4ff-2fec-420d-9dbb-4f81fb7117ce
+  path: motivation.principle.hexagonal-domain-purity
+  spec_node_id: motivation.principle
+  type: principle
+  layer_id: motivation
+  name: Hexagonal Domain Purity
+  description: domain/ has no infrastructure imports; adapters implement the
+    domain's ports (checked by scripts/check_domain_imports.py).
+  attributes:
+    category: architecture
+  source_reference:
+    provenance: manual
+    locations:
+      - file: rearchitecture/architecture_design.md
+  metadata:
+    created_at: 2026-11-19T16:14:23.186Z
+    updated_at: 2026-11-19T16:14:23.186Z
+    version: 1

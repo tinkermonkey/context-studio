@@ -5,18 +5,19 @@ security.securitymodel.context-studio-security-model:
   type: securitymodel
   layer_id: security
   name: Context Studio Security Model
-  description: "Security model for the Context Studio local-first desktop app:
-    optional API key authentication, SQL injection prevention via SQLAlchemy
-    ORM, and global exception handler sanitization"
+  description: "Single-user local-first posture: unauthenticated REST guarded by
+    Origin/Host checks and loopback binding; bearer-token MCP on loopback only;
+    agent writes limited to proposals adjudicated by a person; path allowlist
+    for agent file sources. Open gaps to fix: LAN exposure via the Vite dev
+    server (#1655) and SSRF via URL sources (#1656)."
   attributes:
-    version: "1.0"
+    version: "2.0"
     application: context-studio-local-server
-    accessControlModel: rbac
+    accessControlModel: dac
   source_reference:
-    provenance: extracted
+    provenance: manual
     locations:
-      - file: local-server/app.py
-        symbol: create_app
+      - file: README.md
   metadata:
     created_at: 2026-03-24T09:17:26.149Z
     updated_at: 2026-03-24T09:17:26.149Z

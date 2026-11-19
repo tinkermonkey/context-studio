@@ -5,19 +5,60 @@ motivation.assessment.security-posture-assessment:
   type: assessment
   layer_id: motivation
   name: Security Posture Assessment
-  description: "Security gap analysis: SQL injection prevention (SQLAlchemy ORM),
-    optional API key auth (require_secure_key in config.json), and global
-    exception handler sanitization are present; HTTPS enforcement, role-based
-    access control, and multi-user auth are absent in the new hexagonal
-    architecture"
+  description: "Single-user, loopback-only posture. The REST API has no login, so
+    anything that can reach the port can read and change the workspace.
+    RequestGuard refuses foreign Origin and non-loopback Host headers. MCP needs
+    a bearer token and starts only on loopback. Agent writes are proposals.
+    Gaps, tracked as requirements to fix: the Vite dev server exposes /api
+    (including the MCP token endpoint) to the LAN (#1655), and URL sources have
+    no private-address (SSRF) check (#1656). Source text and ontology content go
+    to external LLM providers."
   attributes:
     assessmentType: gap
   source_reference:
-    provenance: extracted
+    provenance: manual
     locations:
-      - file: local-server/app.py
-        symbol: global_exception_handler
+      - file: README.md
   metadata:
     created_at: 2026-03-24T09:21:11.216Z
     updated_at: 2026-03-24T09:21:11.216Z
+    version: 1
+motivation.assessment.benchmark-gold-is-thin-and-mostly-model-made:
+  id: 1b7e02aa-a837-4092-98d5-1dd006ec4229
+  path: motivation.assessment.benchmark-gold-is-thin-and-mostly-model-made
+  spec_node_id: motivation.assessment
+  type: assessment
+  layer_id: motivation
+  name: Benchmark Gold Is Thin and Mostly Model-Made
+  description: The extraction benchmark has 3 documents and 294 gold individuals
+    covering 51 of 193 classes; only edit_check is human-checked; differences
+    under 0.08 typed F1 are noise.
+  attributes:
+    assessmentType: risk
+  source_reference:
+    provenance: manual
+    locations:
+      - file: documentation/extraction/README.md
+  metadata:
+    created_at: 2026-11-19T16:14:23.186Z
+    updated_at: 2026-11-19T16:14:23.186Z
+    version: 1
+motivation.assessment.relationship-extraction-is-unsolved:
+  id: c5a56ec2-4dad-4ed3-a6f5-a06fbee84af5
+  path: motivation.assessment.relationship-extraction-is-unsolved
+  spec_node_id: motivation.assessment
+  type: assessment
+  layer_id: motivation
+  name: Relationship Extraction Is Unsolved
+  description: Best relationship recall is 0.32 dev / 0.16 holdout, limited mostly
+    by the individuals found.
+  attributes:
+    assessmentType: gap
+  source_reference:
+    provenance: manual
+    locations:
+      - file: documentation/extraction/README.md
+  metadata:
+    created_at: 2026-11-19T16:14:23.186Z
+    updated_at: 2026-11-19T16:14:23.186Z
     version: 1

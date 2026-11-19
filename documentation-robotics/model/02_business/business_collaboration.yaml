@@ -1,17 +1,20 @@
-business.businesscollaboration.knowledge-graph-collaboration:
-  id: b62743cc-3edb-4fe2-bbe3-0399997369a8
-  path: business.businesscollaboration.knowledge-graph-collaboration
+business.businesscollaboration.client-round-trip-collaboration:
+  id: 413e196e-7cbe-4df9-a78c-83fc9c1c7abf
+  path: business.businesscollaboration.client-round-trip-collaboration
   spec_node_id: business.businesscollaboration
   type: businesscollaboration
   layer_id: business
-  name: Knowledge Graph Collaboration
-  description: Business collaboration between Knowledge Managers sharing a
-    knowledge graph through changeset-based editing and conflict resolution
+  name: Client Round-Trip Collaboration
+  description: "A client project (DR's or House's maintainer agent), the reviewer
+    and CS jointly carry the round trip: the client submits a plan, the reviewer
+    adjudicates in CS, CS exports decisions and spec changes, and the client
+    lands them and marks the proposal landed. Changeset editing and conflict
+    resolution were retired (#1369, #1400)."
   source_reference:
-    provenance: extracted
+    provenance: manual
     locations:
-      - file: local-server/domain/versioning/services.py
+      - file: rearchitecture/architecture_design.md
   metadata:
-    created_at: 2026-03-24T09:22:31.995Z
-    updated_at: 2026-03-24T09:22:31.995Z
+    created_at: 2026-11-19T16:16:28.348Z
+    updated_at: 2026-11-19T16:16:28.348Z
     version: 1

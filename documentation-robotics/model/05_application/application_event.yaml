@@ -59,45 +59,6 @@ application.applicationevent.extraction-completed-event:
     created_at: 2026-05-11T12:03:20.400Z
     updated_at: 2026-05-11T12:03:20.400Z
     version: 1
-application.applicationevent.pipeline-executed-event:
-  id: 3b4de693-9d9b-4e31-8656-eb1cfb0746fa
-  path: application.applicationevent.pipeline-executed-event
-  spec_node_id: application.applicationevent
-  type: applicationevent
-  layer_id: application
-  name: Pipeline Executed Event
-  description: Domain event fired when an LLM pipeline execution completes
-  attributes:
-    eventType: domain
-  source_reference:
-    provenance: extracted
-    locations:
-      - file: local-server/domain/pipeline/events.py
-        symbol: PipelineExecuted
-  metadata:
-    created_at: 2026-05-11T12:03:20.932Z
-    updated_at: 2026-05-11T12:03:20.932Z
-    version: 1
-application.applicationevent.changeset-merged-event:
-  id: 9f215618-57f0-4125-8075-41af5ac31ac6
-  path: application.applicationevent.changeset-merged-event
-  spec_node_id: application.applicationevent
-  type: applicationevent
-  layer_id: application
-  name: Changeset Merged Event
-  description: Domain event fired when a versioning changeset proposal is merged
-    into the main graph
-  attributes:
-    eventType: domain
-  source_reference:
-    provenance: extracted
-    locations:
-      - file: local-server/domain/versioning/events.py
-        symbol: ChangesetMerged
-  metadata:
-    created_at: 2026-05-11T12:03:21.467Z
-    updated_at: 2026-05-11T12:03:21.467Z
-    version: 1
 application.applicationevent.sync-completed-event:
   id: f5547717-1f69-4d92-8925-50ac56132e42
   path: application.applicationevent.sync-completed-event

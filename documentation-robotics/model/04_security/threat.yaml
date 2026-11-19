@@ -28,20 +28,222 @@ security.threat.information-disclosure-via-error-messages:
   type: threat
   layer_id: security
   name: Information Disclosure via Error Messages
-  description: "Threat: internal file paths and stack traces leaking through
-    unhandled exception responses in the FastAPI application"
+  description: "Internal details or secret values leaking through error responses.
+    There is no global exception handler: routes map domain exceptions to HTTP
+    codes, unhandled errors fall back to FastAPI's plain 500, and configuration
+    models that may hold credentials hide input values in validation errors."
   attributes:
     threatens: api
-    likelihood: moderate
+    likelihood: low
     impact: moderate
     description: File path leakage via error responses
-    criticality: medium
+    criticality: low
   source_reference:
-    provenance: extracted
+    provenance: manual
     locations:
-      - file: local-server/app.py
-        symbol: global_exception_handler
+      - file: local-server/config.py
   metadata:
     created_at: 2026-03-24T09:17:49.054Z
     updated_at: 2026-03-24T09:17:49.054Z
+    version: 1
+security.threat.cross-site-request-and-dns-rebinding-against-the-local-api:
+  id: 9df8b96f-029a-4c37-acdd-43eae5e159fd
+  path: security.threat.cross-site-request-and-dns-rebinding-against-the-local-api
+  spec_node_id: security.threat
+  type: threat
+  layer_id: security
+  name: Cross-Site Request and DNS Rebinding against the Local API
+  description: A web page open in the user's browser drives the unauthenticated
+    local API, directly or through DNS rebinding.
+  attributes:
+    threatens: api
+    likelihood: moderate
+    impact: high
+    criticality: high
+    description: Browser-borne requests to the unauthenticated loopback API
+  source_reference:
+    provenance: manual
+    locations:
+      - file: README.md
+  metadata:
+    created_at: 2026-11-19T16:18:36.733Z
+    updated_at: 2026-11-19T16:18:36.733Z
+    version: 1
+security.threat.lan-exposure-via-the-vite-dev-server:
+  id: 27eab9a2-e886-4205-8dc9-ad793fe8fcf0
+  path: security.threat.lan-exposure-via-the-vite-dev-server
+  spec_node_id: security.threat
+  type: threat
+  layer_id: security
+  name: LAN Exposure via the Vite Dev Server
+  description: "npm run dev listens on all interfaces and proxies /api, including
+    the endpoint that returns the MCP token, so another machine on the network
+    can read and change the workspace. Not accepted: to fix under #1655."
+  attributes:
+    threatens: api
+    likelihood: moderate
+    impact: high
+    criticality: high
+    description: Dev server exposes the API and MCP token to the LAN (#1655)
+  source_reference:
+    provenance: manual
+    locations:
+      - file: README.md
+  accepted_gaps:
+    - direction: incoming
+      predicate: mitigates
+      other_spec_node_id: security.countermeasure
+      reason: "Unmitigated today; the fix is tracked as requirement
+        dev-server-not-reachable-from-the-lan and GitHub issue #1655. Add the
+        countermeasure when that lands."
+      decided_by: agent
+      decided_at: 2026-11-19T16:36:27.928Z
+      changeset: changeset-1795099306929-dmd727eav
+  metadata:
+    created_at: 2026-11-19T16:18:36.733Z
+    updated_at: 2026-11-19T16:18:36.733Z
+    version: 1
+security.threat.server-side-request-forgery-via-url-sources:
+  id: 8e630d6a-17a8-44a7-acc4-f35291bccb71
+  path: security.threat.server-side-request-forgery-via-url-sources
+  spec_node_id: security.threat
+  type: threat
+  layer_id: security
+  name: Server-Side Request Forgery via URL Sources
+  description: "Adding a URL source fetches any http(s) URL and follows redirects
+    with no private-address check, so the server can be made to reach internal
+    services. Not accepted: to fix under #1656."
+  attributes:
+    threatens: api
+    likelihood: low
+    impact: moderate
+    criticality: medium
+    description: URL sources can reach private addresses (#1656)
+  source_reference:
+    provenance: manual
+    locations:
+      - file: local-server/adapters/sources/fetcher.py
+  accepted_gaps:
+    - direction: incoming
+      predicate: mitigates
+      other_spec_node_id: security.countermeasure
+      reason: "Unmitigated today (check_url checks the scheme only); the fix is
+        tracked as requirement url-sources-refuse-private-network-addresses and
+        GitHub issue #1656."
+      decided_by: agent
+      decided_at: 2026-11-19T16:36:30.945Z
+      changeset: changeset-1795099306929-dmd727eav
+    - direction: outgoing
+      predicate: influence
+      other_spec_node_id: security.dataclassification
+      reason: SSRF reaches services on the private network, not a workspace data
+        classification; its impact is on whatever internal service answers.
+      decided_by: agent
+      decided_at: 2026-11-19T16:36:34.016Z
+      changeset: changeset-1795099306929-dmd727eav
+  metadata:
+    created_at: 2026-11-19T16:18:36.733Z
+    updated_at: 2026-11-19T16:18:36.733Z
+    version: 1
+security.threat.arbitrary-file-read-via-mcp-sources:
+  id: 87e4dc19-0d4c-4eb0-9cf5-a1e0ad02a163
+  path: security.threat.arbitrary-file-read-via-mcp-sources
+  spec_node_id: security.threat
+  type: threat
+  layer_id: security
+  name: Arbitrary File Read via MCP Sources
+  description: An agent asks to add a local path outside the intended folders as a
+    source and reads it back.
+  attributes:
+    threatens: file
+    likelihood: moderate
+    impact: high
+    criticality: high
+    description: Agent reads arbitrary local files through add_source
+  source_reference:
+    provenance: manual
+    locations:
+      - file: README.md
+  metadata:
+    created_at: 2026-11-19T16:18:36.733Z
+    updated_at: 2026-11-19T16:18:36.733Z
+    version: 1
+security.threat.prompt-injection-via-sources-or-client-plans:
+  id: dae8634d-3fff-4f61-b3ed-093c79e77325
+  path: security.threat.prompt-injection-via-sources-or-client-plans
+  spec_node_id: security.threat
+  type: threat
+  layer_id: security
+  name: Prompt Injection via Sources or Client Plans
+  description: Document text or a client plan steers an LLM pipeline or the chat
+    into proposing harmful changes.
+  attributes:
+    threatens: business-process
+    likelihood: moderate
+    impact: moderate
+    criticality: medium
+    description: Untrusted text steers LLM-produced proposals
+  source_reference:
+    provenance: manual
+    locations:
+      - file: README.md
+  metadata:
+    created_at: 2026-11-19T16:18:36.733Z
+    updated_at: 2026-11-19T16:18:36.733Z
+    version: 1
+security.threat.workspace-data-sent-to-llm-providers:
+  id: f22d390b-c708-4255-af6c-d65597b61440
+  path: security.threat.workspace-data-sent-to-llm-providers
+  spec_node_id: security.threat
+  type: threat
+  layer_id: security
+  name: Workspace Data Sent to LLM Providers
+  description: Source text, ontology content and chat go to Anthropic, OpenAI,
+    OpenRouter or Cloudflare during extraction, chat, refinement and triage.
+  attributes:
+    threatens: data
+    likelihood: high
+    impact: moderate
+    criticality: medium
+    description: Workspace content leaves the machine for LLM calls
+  source_reference:
+    provenance: manual
+    locations:
+      - file: README.md
+  accepted_gaps:
+    - direction: incoming
+      predicate: mitigates
+      other_spec_node_id: security.countermeasure
+      reason: Inherent to using external LLM providers (constraint
+        external-llm-provider-required); no technical countermeasure exists. The
+        owner chooses the provider in config.json.
+      decided_by: agent
+      decided_at: 2026-11-19T16:36:37.056Z
+      changeset: changeset-1795099306929-dmd727eav
+  metadata:
+    created_at: 2026-11-19T16:18:36.733Z
+    updated_at: 2026-11-19T16:18:36.733Z
+    version: 1
+security.threat.unauthorized-mcp-access:
+  id: 12f472d3-3fb8-493e-8019-b4074e519528
+  path: security.threat.unauthorized-mcp-access
+  spec_node_id: security.threat
+  type: threat
+  layer_id: security
+  name: Unauthorized MCP Access
+  description: A local or remote process without the token calls MCP tools to read
+    the model or submit proposals.
+  attributes:
+    threatens: api
+    likelihood: moderate
+    impact: high
+    criticality: high
+    description: MCP tools used without authorization
+  source_reference:
+    provenance: manual
+    locations:
+      - file: README.md
+  metadata:
+    created_at: 2026-11-19T16:18:36.733Z
+    updated_at: 2026-11-19T16:18:36.733Z
     version: 1

@@ -1,0 +1,51 @@
+business.businessrole.reviewer:
+  id: 120fd0b4-8703-4efd-9a58-e3cd0506c289
+  path: business.businessrole.reviewer
+  spec_node_id: business.businessrole
+  type: businessrole
+  layer_id: business
+  name: Reviewer
+  description: Decides proposals (accept, edit then accept, reject with reason,
+    apply, revert) and claim verdicts, and checks benchmark gold.
+  source_reference:
+    provenance: manual
+    locations:
+      - file: documentation/field-guide/index.html
+  metadata:
+    created_at: 2026-11-19T16:16:28.347Z
+    updated_at: 2026-11-19T16:16:28.347Z
+    version: 1
+business.businessrole.proposer:
+  id: f5155708-6d5c-4e41-86de-f05b756c9f12
+  path: business.businessrole.proposer
+  spec_node_id: business.businessrole
+  type: businessrole
+  layer_id: business
+  name: Proposer
+  description: "Any party that suggests a change: an agent over MCP, the chat, a
+    pipeline, a bundle import, or the user."
+  source_reference:
+    provenance: manual
+    locations:
+      - file: documentation/field-guide/index.html
+  metadata:
+    created_at: 2026-11-19T16:16:28.347Z
+    updated_at: 2026-11-19T16:16:28.347Z
+    version: 1
+business.businessrole.client-lander:
+  id: 29511afd-48de-45ef-8c31-e0d61d4180eb
+  path: business.businessrole.client-lander
+  spec_node_id: business.businessrole
+  type: businessrole
+  layer_id: business
+  name: Client Lander
+  description: The client-side role that reads decisions and spec changes, writes
+    them into its own spec and records where they landed.
+  source_reference:
+    provenance: manual
+    locations:
+      - file: documentation/field-guide/index.html
+  metadata:
+    created_at: 2026-11-19T16:16:28.347Z
+    updated_at: 2026-11-19T16:16:28.347Z
+    version: 1

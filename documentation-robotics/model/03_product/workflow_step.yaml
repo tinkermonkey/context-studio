@@ -1,0 +1,274 @@
+product.workflowstep.open-the-proposal-from-the-queue:
+  id: 2cd1679d-1570-4243-a6d1-24075e2f3d1c
+  path: product.workflowstep.open-the-proposal-from-the-queue
+  spec_node_id: product.workflowstep
+  type: workflowstep
+  layer_id: product
+  name: Open the Proposal from the Queue
+  attributes:
+    sequence: 1
+    action: Open a proposal that needs a decision from the proposal list
+    outcome: The proposal's operations, tiers and source are shown
+  metadata:
+    created_at: 2026-11-19T16:21:41.308Z
+    updated_at: 2026-11-19T16:21:41.308Z
+    version: 1
+product.workflowstep.clear-mechanical-operations-by-threshold:
+  id: 56089954-41ec-4e17-a7fd-4ef63131f836
+  path: product.workflowstep.clear-mechanical-operations-by-threshold
+  spec_node_id: product.workflowstep
+  type: workflowstep
+  layer_id: product
+  name: Clear Mechanical Operations by Threshold
+  attributes:
+    sequence: 2
+    action: Accept the mechanical tier in bulk above the probability threshold
+    outcome: Only judgment rows remain
+  metadata:
+    created_at: 2026-11-19T16:21:41.309Z
+    updated_at: 2026-11-19T16:21:41.309Z
+    version: 1
+product.workflowstep.judge-the-remaining-operations:
+  id: 2003ebf7-47d7-4a44-9272-e9e46bd3fa05
+  path: product.workflowstep.judge-the-remaining-operations
+  spec_node_id: product.workflowstep
+  type: workflowstep
+  layer_id: product
+  name: Judge the Remaining Operations
+  attributes:
+    sequence: 3
+    action: Accept, edit or reject each remaining candidate beside its source passage
+    outcome: Every operation has a decision
+  metadata:
+    created_at: 2026-11-19T16:21:41.309Z
+    updated_at: 2026-11-19T16:21:41.309Z
+    version: 1
+product.workflowstep.apply-the-decisions:
+  id: 9ab3656a-bb69-4b4e-9075-6820fa9a22d4
+  path: product.workflowstep.apply-the-decisions
+  spec_node_id: product.workflowstep
+  type: workflowstep
+  layer_id: product
+  name: Apply the Decisions
+  attributes:
+    sequence: 4
+    action: Apply the accepted operations
+    outcome: Change events and gold are written
+  metadata:
+    created_at: 2026-11-19T16:21:41.309Z
+    updated_at: 2026-11-19T16:21:41.309Z
+    version: 1
+product.workflowstep.revert-an-applied-proposal:
+  id: 5df5d74a-d88e-4533-a5de-eda4419e6563
+  path: product.workflowstep.revert-an-applied-proposal
+  spec_node_id: product.workflowstep
+  type: workflowstep
+  layer_id: product
+  name: Revert an Applied Proposal
+  attributes:
+    sequence: 5
+    action: Revert the applied proposal after reading any conflicts
+    outcome: The changes are undone in one transaction
+    optional: true
+  metadata:
+    created_at: 2026-11-19T16:21:41.309Z
+    updated_at: 2026-11-19T16:21:41.309Z
+    version: 1
+product.workflowstep.add-a-source:
+  id: 688cf7fc-7bc5-4257-8e50-fd0a994cc677
+  path: product.workflowstep.add-a-source
+  spec_node_id: product.workflowstep
+  type: workflowstep
+  layer_id: product
+  name: Add a Source
+  attributes:
+    sequence: 1
+    action: Upload a file, paste text or give a URL on the Sources page
+    outcome: The source is stored and readable
+  metadata:
+    created_at: 2026-11-19T16:21:41.309Z
+    updated_at: 2026-11-19T16:21:41.309Z
+    version: 1
+product.workflowstep.extract-into-a-dataset:
+  id: acc9d000-f5a0-41eb-a7b7-840e17518850
+  path: product.workflowstep.extract-into-a-dataset
+  spec_node_id: product.workflowstep
+  type: workflowstep
+  layer_id: product
+  name: Extract into a Dataset
+  attributes:
+    sequence: 2
+    action: Pick a dataset and configuration and start extraction
+    outcome: One proposal of cited candidates
+  metadata:
+    created_at: 2026-11-19T16:21:41.309Z
+    updated_at: 2026-11-19T16:21:41.309Z
+    version: 1
+product.workflowstep.review-the-extraction-proposal:
+  id: 9fc489ee-b768-4ae2-96bb-0f6f846ead6f
+  path: product.workflowstep.review-the-extraction-proposal
+  spec_node_id: product.workflowstep
+  type: workflowstep
+  layer_id: product
+  name: Review the Extraction Proposal
+  attributes:
+    sequence: 3
+    action: Review the candidates on the Review page and apply
+    outcome: Individuals and relationships land in the dataset
+  metadata:
+    created_at: 2026-11-19T16:21:41.309Z
+    updated_at: 2026-11-19T16:21:41.309Z
+    version: 1
+product.workflowstep.see-the-citations:
+  id: 45591f3a-4b8d-48eb-9273-566fca513fd5
+  path: product.workflowstep.see-the-citations
+  spec_node_id: product.workflowstep
+  type: workflowstep
+  layer_id: product
+  name: See the Citations
+  attributes:
+    sequence: 4
+    action: Open an individual to see its source, page and quote
+    outcome: Each fact is traceable to its passage
+    optional: true
+  metadata:
+    created_at: 2026-11-19T16:21:41.309Z
+    updated_at: 2026-11-19T16:21:41.309Z
+    version: 1
+product.workflowstep.receive-the-client-plan:
+  id: 18f7a2d1-681a-466b-a832-44bc9148324e
+  path: product.workflowstep.receive-the-client-plan
+  spec_node_id: product.workflowstep
+  type: workflowstep
+  layer_id: product
+  name: Receive the Client Plan
+  attributes:
+    sequence: 1
+    action: The client's agent submits a reflection plan or bundle over MCP
+    outcome: The plan is a proposal in the queue
+  metadata:
+    created_at: 2026-11-19T16:21:41.309Z
+    updated_at: 2026-11-19T16:21:41.309Z
+    version: 1
+product.workflowstep.review-the-client-plan:
+  id: 0d5faa76-2afd-41ba-ac10-3faac2cafe4e
+  path: product.workflowstep.review-the-client-plan
+  spec_node_id: product.workflowstep
+  type: workflowstep
+  layer_id: product
+  name: Review the Client Plan
+  attributes:
+    sequence: 2
+    action: Review and decide the plan's operations
+    outcome: Decisions are recorded and applied
+  metadata:
+    created_at: 2026-11-19T16:21:41.309Z
+    updated_at: 2026-11-19T16:21:41.309Z
+    version: 1
+product.workflowstep.check-drift-against-the-client-spec:
+  id: 1299494f-be26-4d70-9da7-54efeedca01b
+  path: product.workflowstep.check-drift-against-the-client-spec
+  spec_node_id: product.workflowstep
+  type: workflowstep
+  layer_id: product
+  name: Check Drift Against the Client Spec
+  attributes:
+    sequence: 3
+    action: Compare the mirrored taxonomy with the client's spec on disk
+    outcome: Any difference becomes a proposal
+    optional: true
+  metadata:
+    created_at: 2026-11-19T16:21:41.309Z
+    updated_at: 2026-11-19T16:21:41.309Z
+    version: 1
+product.workflowstep.client-lands-the-decisions:
+  id: ac1591d7-560e-4a3c-a257-0bae2ee47a7a
+  path: product.workflowstep.client-lands-the-decisions
+  spec_node_id: product.workflowstep
+  type: workflowstep
+  layer_id: product
+  name: Client Lands the Decisions
+  attributes:
+    sequence: 4
+    action: The client reads decisions and spec changes, lands them and marks the
+      proposal landed
+    outcome: The proposal shows where it landed
+  metadata:
+    created_at: 2026-11-19T16:21:41.309Z
+    updated_at: 2026-11-19T16:21:41.309Z
+    version: 1
+product.workflowstep.open-the-gold-check:
+  id: 173125fb-c9e6-43e3-98e3-d23238744b4a
+  path: product.workflowstep.open-the-gold-check
+  spec_node_id: product.workflowstep
+  type: workflowstep
+  layer_id: product
+  name: Open the Gold Check
+  attributes:
+    sequence: 1
+    action: Open a benchmark document's gold-check proposal in gold mode
+    outcome: Gold candidates are shown beside the document
+  metadata:
+    created_at: 2026-11-19T16:21:41.309Z
+    updated_at: 2026-11-19T16:21:41.309Z
+    version: 1
+product.workflowstep.judge-the-gold-candidates:
+  id: 7cfce739-cd98-4285-ad63-085e70925766
+  path: product.workflowstep.judge-the-gold-candidates
+  spec_node_id: product.workflowstep
+  type: workflowstep
+  layer_id: product
+  name: Judge the Gold Candidates
+  attributes:
+    sequence: 2
+    action: Accept, fix or reject each gold candidate on the Review page
+    outcome: The gold is human-checked
+  metadata:
+    created_at: 2026-11-19T16:21:41.309Z
+    updated_at: 2026-11-19T16:21:41.309Z
+    version: 1
+product.workflowstep.write-the-gold-back:
+  id: 8f9d6ba9-cd45-4910-90a4-44d1845055ab
+  path: product.workflowstep.write-the-gold-back
+  spec_node_id: product.workflowstep
+  type: workflowstep
+  layer_id: product
+  name: Write the Gold Back
+  attributes:
+    sequence: 3
+    action: Export the gold and replay the benchmark
+    outcome: Pipelines are re-scored on checked gold
+  metadata:
+    created_at: 2026-11-19T16:21:41.309Z
+    updated_at: 2026-11-19T16:21:41.309Z
+    version: 1
+product.workflowstep.copy-the-mcp-command:
+  id: 1f77bfc1-4273-40e3-8c90-0463140e1196
+  path: product.workflowstep.copy-the-mcp-command
+  spec_node_id: product.workflowstep
+  type: workflowstep
+  layer_id: product
+  name: Copy the MCP Command
+  attributes:
+    sequence: 1
+    action: Copy the token and the claude mcp add command from Settings, Integrations
+    outcome: The agent can be registered
+  metadata:
+    created_at: 2026-11-19T16:21:41.309Z
+    updated_at: 2026-11-19T16:21:41.309Z
+    version: 1
+product.workflowstep.ask-the-agent-about-the-model:
+  id: faa82e66-fdf0-4f34-a7a3-52159cf11627
+  path: product.workflowstep.ask-the-agent-about-the-model
+  spec_node_id: product.workflowstep
+  type: workflowstep
+  layer_id: product
+  name: Ask the Agent About the Model
+  attributes:
+    sequence: 2
+    action: Ask the connected agent about classes and relationships
+    outcome: The agent answers in the model's vocabulary
+  metadata:
+    created_at: 2026-11-19T16:21:41.309Z
+    updated_at: 2026-11-19T16:21:41.309Z
+    version: 1
