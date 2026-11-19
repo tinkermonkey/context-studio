@@ -7,13 +7,15 @@ import {
   retainSearchParams,
   useRouterState,
 } from "@tanstack/react-router";
-import { ShellLayout, Icon, Chip, Badge } from "@tinkermonkey/heimdall-ui";
+import { ShellLayout, Icon, Badge } from "@tinkermonkey/heimdall-ui";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import { useCommandPaletteActions } from "@/hooks/useCommandPaletteActions";
 import { createStaticPaletteActions } from "@/config/staticPaletteActions";
 import { getWorkspacePath } from "@/lib/workspaceStorage";
 import { useCommandPaletteStore } from "@/stores/commandPalette";
 import { handTopbarSearchToPalette } from "@/components/shell/topbarSearch";
+import { TopbarActions } from "@/components/shell/TopbarActions";
+import { useCanvasStore } from "@/stores/canvas";
 import { useBreadcrumbStore } from "@/stores/breadcrumbs";
 import { useNavigatorStore } from "@/stores/navigator";
 import { useChatPanelStore } from "@/stores/chatPanel";
@@ -81,7 +83,7 @@ function SidebarUserFooter({ workspaceName }: SidebarUserFooterProps) {
       </div>
       <div className="sidebar-user-footer__meta">
         <div className="sidebar-user-footer__name">{name}</div>
-        <div className="sidebar-user-footer__context">{workspaceName} · main</div>
+        <div className="sidebar-user-footer__context">{workspaceName}</div>
       </div>
       <Icon name="chevronDown" size={14} className="sidebar-user-footer__caret" />
     </div>
@@ -96,7 +98,6 @@ function AppShell() {
   useCommandPaletteActions();
   useChatEntryPoints();
   const chatOpen = useChatPanelStore((s) => s.open);
-  const toggleChat = useChatPanelStore((s) => s.togglePanel);
   // Mount the panel the first time it opens, then keep it mounted (hidden when
   // closed) so a streaming answer and the conversation survive closing it.
   const [chatMounted, setChatMounted] = useState(chatOpen);
@@ -141,9 +142,11 @@ function AppShell() {
     return base.replace(/\.db$/i, "") || "workspace";
   })();
 
+  // The canvas mode is the persisted choice from the top bar toggle.
+  const darkCanvas = useCanvasStore((s) => s.darkCanvas);
   useEffect(() => {
-    document.body.classList.add("dark-canvas");
-  }, []);
+    document.body.classList.toggle("dark-canvas", darkCanvas);
+  }, [darkCanvas]);
 
   useEffect(() => {
     const navActions = NAV_ACTIONS.map((item) => ({
@@ -212,13 +215,6 @@ function AppShell() {
 
   const statusbarRight = (
     <>
-      <div className="statusbar__item statusbar__item--branch">
-        <span className="statusbar__branch-glyph" aria-hidden="true">
-          ⎇
-        </span>
-        <span className="statusbar__label--mono">main</span>
-      </div>
-      <div className="statusbar__divider" />
       <div className="statusbar__item">
         <span className="statusbar__label--mono">UTF-8 · LF</span>
       </div>
@@ -250,45 +246,7 @@ function AppShell() {
         searchPlaceholder: "Search workspace, run command, jump to…",
         onSearch: handTopbarSearchToPalette,
         searchHint: "⌘K",
-        children: (
-          <div className="topbar-actions" data-testid="topbar-actions">
-            <button
-              type="button"
-              className="topbar-iconbtn"
-              aria-label="Chat assistant (⌘J)"
-              title="Chat assistant (⌘J)"
-              aria-pressed={chatOpen}
-              aria-controls="chat-panel"
-              onClick={toggleChat}
-              data-testid="topbar-chat-button"
-            >
-              <Icon name="bot" size={16} />
-            </button>
-            <button
-              type="button"
-              className="topbar-iconbtn"
-              aria-label="Notifications"
-              data-testid="topbar-notifications"
-            >
-              <Icon name="bell" size={16} />
-              <span className="topbar-iconbtn__badge">2</span>
-            </button>
-            <button
-              type="button"
-              className="topbar-iconbtn"
-              aria-label="Documentation"
-              data-testid="topbar-docs"
-            >
-              <Icon name="help" size={16} />
-            </button>
-            <Chip variant="amber">
-              <span className="topbar-branch">
-                <Badge color="amber" />
-                main
-              </span>
-            </Chip>
-          </div>
-        ),
+        children: <TopbarActions />,
       }}
       sidebar={{
         sections: [

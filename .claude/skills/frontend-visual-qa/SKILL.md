@@ -43,7 +43,7 @@ For each screenshot, verify visually:
 
 ## 2. Dark Canvas Screenshots
 
-Toggle dark canvas (the moon icon in the topbar) and re-take the same screenshots from section 1.
+Toggle the canvas mode with the theme button in the topbar (`topbar-theme-toggle`: a moon on the light canvas, a sun on the dark one; the choice persists across reloads) and re-take the same screenshots from section 1.
 
 For each dark canvas screenshot, verify:
 
@@ -54,7 +54,7 @@ For each dark canvas screenshot, verify:
 - [ ] Skeleton states use `--canvas-bg-2`, not hardcoded colors
 - [ ] Cyan name links are still readable against the dark canvas
 
-Toggle back to light canvas when done.
+Toggle back to the mode you started in when done.
 
 ---
 
