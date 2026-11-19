@@ -549,12 +549,15 @@ def test_a_summary_says_what_was_run():
 # Split means of the committed recordings that the accept gate reads (dev
 # typed F1 and found F1, holdout typed F1): what experiments/README.md and the
 # ledger's 2026-11-14 baseline_reset entry state.
+# Dev scores since 2026-11-18 are against edit_check's human-checked gold
+# (before: two-pass 0.1138 / 0.4112, find_then_type 0.4648 / 0.5343,
+# single_call 0.5762 / 0.6107 typed / found F1).
 COMMITTED_SCORES = {
-    TWO_PASS: {"dev": {"typed_f1": 0.1138, "f1": 0.4112}, "holdout": {"typed_f1": 0.156}},
-    FIND_THEN_TYPE: {"dev": {"typed_f1": 0.4648, "f1": 0.5343}, "holdout": {"typed_f1": 0.4813}},
+    TWO_PASS: {"dev": {"typed_f1": 0.1006, "f1": 0.3999}, "holdout": {"typed_f1": 0.156}},
+    FIND_THEN_TYPE: {"dev": {"typed_f1": 0.4456, "f1": 0.5267}, "holdout": {"typed_f1": 0.4813}},
     # One take (2026-11-17), stated on its experiment page; the loop has no
     # backlog for it, so no ledger baseline
-    SINGLE_CALL: {"dev": {"typed_f1": 0.5762, "f1": 0.6107}, "holdout": {"typed_f1": 0.625}},
+    SINGLE_CALL: {"dev": {"typed_f1": 0.535, "f1": 0.598}, "holdout": {"typed_f1": 0.625}},
 }
 _REPLAYED: dict[tuple[str, str], DocumentResult] = {}
 

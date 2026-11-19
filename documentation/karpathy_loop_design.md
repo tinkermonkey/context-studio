@@ -302,6 +302,13 @@ Tried in those scratch runs and not in the backlog: whole class definitions in t
 
 **Baseline of `default` (recorded 2026-11-12 with `google/gemini-3-flash-preview`, configuration `extraction-openrouter-default`):** dev found F1 0.411, typed F1 0.114; holdout found F1 0.326, typed F1 0.156; triple-corpus guard dev strict-F1 0.932. On the dev documents 126 gold individuals are not found (41 core), 52 are found but not typed correctly (16 of those carry an accepted class beside one that is not: the pipeline proposes an individual in every class any chunk typed it with), 57 predictions match nothing, and 133 of 136 stated relationships are missing. Statements are the largest gap: 2 of the dev documents' 41 motivation-layer individuals are found, and 1 of the holdout document's 43. Per-document numbers and the run-to-run spread are in `local-server/experiments/README.md`.
 
+**Re-scored 2026-11-18 against the human-checked `edit_check` gold, from the same recordings,** each recorded as a ledger baseline reset:
+- `find_then_type`: dev found F1 0.527, typed F1 0.446.
+- `default`: dev found F1 0.400, typed F1 0.101.
+- The holdout is unchanged.
+
+Accept gates compare against these.
+
 Found while building the benchmark, not loop hypotheses: a response the provider errors on part-way (OpenRouter `finish_reason: "error"`) or cuts at the output-token limit (then a fixed 8,000; since PR #1598 the configuration's) fails to parse and is treated as a chunk with no individuals, with only a warning (it happened on the first recording: a chunk that yields about 30 individuals came back empty); the merge key drops corporate suffixes, so "Wikimedia Enterprise" (the product) and "Wikimedia Enterprise LLC" (the legal entity) would merge into one individual; and applying a proposal re-reads all its operations for each one applied, so a 2,000-operation proposal (a schema bundle) takes minutes.
 
 ### Still open

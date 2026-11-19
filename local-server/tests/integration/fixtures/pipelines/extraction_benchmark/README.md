@@ -3,7 +3,8 @@
 > **Current state of the extraction pipelines:** [`documentation/extraction/README.md`](../../../../../../documentation/extraction/README.md). Experiments and results: [`documentation/extraction/experiments/`](../../../../../../documentation/extraction/experiments/README.md).
 
 Model-made extractions of three prose documents against the Documentation Robotics (DR) schema,
-drafted and checked by models (see "How they were made"); no person has checked them yet.
+drafted and checked by models (see "How they were made"). A person checked `edit_check` on
+2026-11-18 through the Review page's gold mode; the other two have not been checked by a person.
 They are the baseline the individual-extraction pipelines are scored against: each `gold.json`
 holds every individual a careful modeller finds in its `source.md`, typed against DR, with the
 passages that evidence it.

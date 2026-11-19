@@ -1,6 +1,6 @@
 # Extraction pipelines: current state
 
-**As of 2026-11-17.** This is the single place that says what the extraction pipelines are, how good they are, and what is undecided. Experiments and their results are in [experiments/](experiments/README.md). When something here changes, update this page in the same pull request.
+**As of 2026-11-18.** This is the single place that says what the extraction pipelines are, how good they are, and what is undecided. Experiments and their results are in [experiments/](experiments/README.md). When something here changes, update this page in the same pull request.
 
 ## The task
 
@@ -49,8 +49,10 @@ python scripts/benchmark_relationships.py report                 # the relations
 
 How much to trust it:
 
-- **The gold is model-made.** It was drafted by Claude Fable 5.2 from the DR definitions, re-extracted blind by a second model pass and adjudicated by a model; no person has checked it. It may favour approaches that, like the drafting, read whole documents with full definitions.
-- **It is small:** three documents, 297 gold individuals, 51 of the 193 classes represented. The holdout document has been used in earlier prompt work.
+- **The gold is mostly model-made.** It was drafted by Claude Fable 5.2 from the DR definitions, re-extracted blind by a second model pass and adjudicated by a model. It may favour approaches that, like the drafting, read whole documents with full definitions.
+  - **`edit_check` is the exception.** A person checked every element of its gold on 2026-11-18, using the Review page's gold mode.
+  - **`gitlab_architecture` and `wikimedia_enterprise` are not checked yet.**
+- **It is small:** three documents, 294 gold individuals, 51 of the 193 classes represented. The holdout document has been used in earlier prompt work.
 - **Noise threshold: 0.08 typed F1.** A smaller difference between two approaches is not a result. `find_then_type` typed F1 ranges 0.426-0.465 on dev and 0.393-0.481 on the holdout over three takes, and the independent review put the threshold for a real difference at about 0.08. This is the one place the threshold is stated; the [rules for recording an experiment](experiments/README.md#recording-an-experiment) refer to it.
 
 To have a person check a gold file and write the verdicts back (`extraction_benchmark.py check`, review, `write-gold`, re-score), see "Checking the gold" in the [benchmark README](../../local-server/tests/integration/fixtures/pipelines/extraction_benchmark/README.md).
@@ -69,6 +71,26 @@ Three takes per arm, mean typed F1, from the [head-to-head](experiments/2026-11-
 | One Claude Sonnet 5.5 call | 0.371 | 0.445 | 0.008 / 0.006 | $0.21-0.27 |
 | One Claude Haiku 5.5 call | 0.450 | 0.439 | 0.011 / 0.018 | about $0.02 |
 | Two-pass `default`, Gemini 3 Flash (one take, [baseline](experiments/2026-11-13-two-pass-baseline-and-stronger-models.md)) | 0.114 | 0.156 | 0.018 / 0.000 | |
+
+**`edit_check` against the human-checked gold.** The table above was scored against the model-made gold. Its `edit_check` share has not been recomputed for the head-to-head's three takes.
+
+**What the check changed:**
+- 7 of 76 individuals got another class: six risks went from `motivation.assessment` to `motivation.driver`, and one principle became `motivation.goal`.
+- 3 individuals were excluded, along with the 8 relationships that used them.
+- The gold now holds 73 individuals and 45 relationships.
+
+Re-scoring each implementation's saved recordings costs nothing; each is **one take**, on `edit_check` only:
+
+| implementation | typed F1, model-made gold | typed F1, checked gold | type accuracy | relationship recall |
+|---|---|---|---|---|
+| `single_call` | 0.467 | 0.384 | 0.913 → 0.791 | 0.207 → 0.222 |
+| `find_then_type` | 0.389 | 0.350 | 0.897 → 0.838 | 0.094 → 0.111 |
+| two-pass `default` | 0.068 | 0.042 | 0.263 → 0.176 | 0.000 → 0.000 |
+
+- **Typing is what changed.** The pipelines type risks the way the model-made gold did.
+- **Recall and the ranking hardly move.**
+
+Replay with `python scripts/benchmark_replay.py --all --document edit_check` from `local-server/`.
 
 In user terms, in its one take `single_call` finds about 65% of what the gold holds (88% of core items on dev), about 40% of what it proposes on dev matches nothing in gold, and it finds about a third of the gold relationships on dev and a sixth on the holdout. `find_then_type` finds about 56-58% (81-84% of core items on dev), about half of what it proposes matches nothing in gold, and it proposes almost no correct relationships on the holdout.
 
@@ -116,7 +138,7 @@ None yet.
 
 From the [direction review](experiments/2026-11-14-direction-review.md), the [head-to-head](experiments/2026-11-15-head-to-head.md) and the [relationship experiment](experiments/2026-11-17-relationships.md), in order. The core's adoption (step 3, in part) and a first relationship measurement are done.
 
-1. **Human-check the gold:** a person adjudicates the holdout gold and the "spurious" items, then the benchmark grows to 10 or more documents with human-confirmed gold and a real holdout nobody prompts against. Relationship gold needs it most: the measured gain is on dev only.
+1. **Human-check the gold:** `edit_check` was checked on 2026-11-18. Still to check are `gitlab_architecture`, the holdout gold and the "spurious" items. Then the benchmark grows to 10 or more documents with human-confirmed gold and a real holdout nobody prompts against. Relationship gold needs it most: the measured gain is on dev only.
 2. **Relationships in `single_call`:** measure R1 (one call given the allowed types, its relationships validated) against `single_call`'s Opus relate step, three takes each; R1 has only beaten a Haiku relate step. Switch only if R1 wins by the noise threshold, since it would also save the relate step's cost. A whole-document Opus relate call (R2-opus) is the other candidate; a whole-document Haiku call is not.
 3. **The extraction core:** `single_call` was adopted on 2026-11-17 (decision 1). Still to do: confirm it on human-checked gold, measure its whole-take noise (three takes), and delete what loses, including `open_v1`.
 4. **Measure value to a reviewer**, not only F1: time and acceptance when reviewing a proposal against modelling from scratch.

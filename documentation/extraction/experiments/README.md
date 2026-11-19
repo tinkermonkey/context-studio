@@ -2,7 +2,7 @@
 
 One page per experiment or review, oldest first. The current state they led to is in [../README.md](../README.md).
 
-Read the numbers with these limits in mind: since 2026-11 everything is measured on a three-document benchmark whose gold was drafted and checked by models, not people; on that benchmark a difference under the noise threshold stated in [the current state](../README.md#how-quality-is-measured) is noise. Results before 2026-11 were measured on a different corpus and are not comparable. How to add a page: [Recording an experiment](#recording-an-experiment).
+Read the numbers with these limits in mind: since 2026-11 everything is measured on a three-document benchmark whose gold was drafted and checked by models, not people (except `edit_check`, which a person checked on 2026-11-18; pages before that date were scored against its model-made version); on that benchmark a difference under the noise threshold stated in [the current state](../README.md#how-quality-is-measured) is noise. Results before 2026-11 were measured on a different corpus and are not comparable. How to add a page: [Recording an experiment](#recording-an-experiment).
 
 | date | page | question | result | verdict |
 |---|---|---|---|---|
