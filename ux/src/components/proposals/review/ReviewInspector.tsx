@@ -2,7 +2,7 @@ import { useEffect, useState, type ReactNode, type RefObject } from "react";
 import { Button, Chip, FormCallout, Panel, TextArea } from "@tinkermonkey/heimdall-ui";
 import type { ProposedOperation, RejectionReason } from "@/api/services/proposals";
 import type { components } from "@/api/types";
-import { formatProbability } from "../proposalModel";
+import { formatProbability, isAwaiting } from "../proposalModel";
 import { NearMatchChoice } from "../SourcePassage";
 import {
   CREATE_NEW,
@@ -31,8 +31,10 @@ import {
 import type { ReviewSchema } from "./reviewSchema";
 import type { GoldDraft, Tier } from "./goldModel";
 import {
+  END_REJECTED_REASON,
   REJECTION_REASONS,
   VERDICT_CHIP,
+  endRejectedNote,
   endsToDecide,
   isElement,
   proposedClassId,
@@ -100,6 +102,8 @@ interface ReviewInspectorProps {
   /** Accept a relationship with another predicate, source or target. */
   onAcceptEdited: (edit: Record<string, string>) => void;
   onReject: (reasonCode: RejectionReason, note: string) => void;
+  /** A rejected element: reject the relationships still awaiting a decision that use it. */
+  onRejectRelationships?: () => void;
   /** Show one of the operation's passages in the source. */
   onShowPassage: (quote: string) => void;
   /** Gold mode: the operation's gold tier and aliases, and what the reviewer has noted. */
@@ -308,6 +312,7 @@ export function ReviewInspector({
   onPickClass,
   onAcceptEdited,
   onReject,
+  onRejectRelationships,
   onShowPassage,
   gold,
   classesLoading = false,
@@ -331,6 +336,8 @@ export function ReviewInspector({
   const cls = names.classOf(classId);
   const quotes = sourcePassagesOf(operation).flatMap((p) => (p.quote ? [p.quote] : []));
   const relationships = element ? relationshipsOf(operation, operations) : [];
+  // A rejected element's relationships still awaiting a decision: rejected with it, on request.
+  const awaitingRelationships = verdict === "rejected" ? relationships.filter(isAwaiting) : [];
   const probability =
     operation.probability === null || operation.probability === undefined
       ? ""
@@ -351,6 +358,10 @@ export function ReviewInspector({
   const alreadyCorrect = verdict === "correct" && !operation.matched;
   // The ends no longer fit its type (an end's class changed): it can't apply as it is.
   const misfit = !!relationshipEnds && !!misfitOf(operation, relationshipEnds, schema);
+  // An end was rejected: rejecting this too is the decision left (one click, or key X).
+  const endRejected = ends.rejected.length > 0;
+  const rejectForEnd = () =>
+    onReject(END_REJECTED_REASON, note.trim() || endRejectedNote(ends.rejected.map((e) => e.seq)));
   /** Focus the first reason (the "Not …" button and key X). */
   const focusReasons = () =>
     reasonsRef.current?.querySelector<HTMLButtonElement>("button:not(:disabled)")?.focus();
@@ -393,7 +404,7 @@ export function ReviewInspector({
       {ends.rejected.length > 0 ? (
         <FormCallout variant="warn" icon="alert" data-testid="review-ends-callout">
           {seqList(ends.rejected)} {ends.rejected.length === 1 ? "was" : "were"} rejected, so this
-          relationship can&apos;t apply as proposed. Reject it, or give it another end.
+          relationship can&apos;t apply as proposed. Reject it too, or give it another end.
         </FormCallout>
       ) : (
         ends.undecided.length > 0 && (
@@ -414,7 +425,19 @@ export function ReviewInspector({
         />
       )}
       <div className="review-chips">
-        {ends.rejected.length === 0 && (
+        {endRejected && (
+          <Button
+            variant="primary"
+            size="sm"
+            disabled={busy}
+            onClick={rejectForEnd}
+            aria-keyshortcuts={awaiting ? "X" : undefined}
+            data-testid="review-reject-end"
+          >
+            Reject: an end was rejected
+          </Button>
+        )}
+        {!endRejected && (
           <Button
             variant="primary"
             size="sm"
@@ -431,14 +454,18 @@ export function ReviewInspector({
           size="sm"
           disabled={busy}
           onClick={focusReasons}
-          aria-keyshortcuts={awaiting ? "X" : undefined}
+          aria-keyshortcuts={awaiting && !endRejected ? "X" : undefined}
           data-testid="review-not"
         >
           {element ? "Not an element" : "Not a relationship"}
         </Button>
         {awaiting && (
           <span className="review-keys">
-            {element ? "A · 1-3 · X · J / K next" : "A · X · J / K next"}
+            {element
+              ? "A · 1-3 · X · J / K next"
+              : endRejected
+                ? "X · J / K next"
+                : "A · X · J / K next"}
           </span>
         )}
       </div>
@@ -555,7 +582,7 @@ export function ReviewInspector({
         className="review-reasons"
         role="group"
         aria-label={element ? "Not an element, because" : "Not a relationship, because"}
-        aria-keyshortcuts={awaiting ? "X" : undefined}
+        aria-keyshortcuts={awaiting && !endRejected ? "X" : undefined}
         data-testid="review-reasons"
       >
         {REJECTION_REASONS.map((reason) => (
@@ -733,6 +760,26 @@ export function ReviewInspector({
         {element && (
           <Block label="Its relationships" data-testid="review-relationships">
             <Eyebrow>{`ITS RELATIONSHIPS · ${relationships.length}`}</Eyebrow>
+            {deciding && onRejectRelationships && awaitingRelationships.length > 0 && (
+              <FormCallout variant="warn" icon="alert" data-testid="review-relationships-callout">
+                <span className="review-callout-action">
+                  <span>
+                    {awaitingRelationships.length === 1
+                      ? "1 relationship uses it and still awaits a decision."
+                      : `${awaitingRelationships.length} relationships use it and still await a decision.`}
+                  </span>
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    disabled={busy}
+                    onClick={onRejectRelationships}
+                    data-testid="review-reject-relationships"
+                  >
+                    {awaitingRelationships.length === 1 ? "Reject it too" : "Reject them too"}
+                  </Button>
+                </span>
+              </FormCallout>
+            )}
             {relationships.length === 0 ? (
               <span className="review-muted">
                 None proposed. Relationships are decided after their ends.

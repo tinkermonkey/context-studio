@@ -53,7 +53,10 @@ import {
   type SelectedPassage,
 } from "./addFromText";
 import {
+  END_REJECTED_REASON,
+  awaitingRelationshipsOf,
   endOperation,
+  endRejectedNote,
   endsToDecide,
   filterGroups,
   forgetPick,
@@ -69,6 +72,7 @@ import {
   reviewProgress,
   reviewSourceId,
   reviewSpans,
+  seqList,
   shownClassId,
   shownFields,
   shownTitle,
@@ -202,7 +206,9 @@ function plainClick(event: MouseEvent): boolean {
  * An extraction proposal reviewed against its whole source: the source with
  * every element's passages highlighted by verdict, the elements grouped by
  * layer, and the selected one in the inspector, decided by button or key
- * (A correct, 1-3 a class picked earlier, X a reason, J / K next and previous).
+ * (A correct, 1-3 a class picked earlier, X a reason, J / K next and previous;
+ * on a relationship whose end was rejected, X rejects it too). Rejecting an
+ * element offers to reject the awaiting relationships that use it.
  * Each decision records the active time spent on the element.
  */
 export function ReviewPage({
@@ -217,6 +223,9 @@ export function ReviewPage({
   const { data: proposal, error, refetch } = useChangeProposal(id);
   const taxonomyId = proposal?.taxonomy_id ?? "";
   const operations = useMemo(() => proposal?.operations ?? [], [proposal]);
+  // The operations as they stand now, for a toast's action clicked after later renders.
+  const operationsRef = useRef(operations);
+  operationsRef.current = operations;
   const refs = useMemo(() => (proposal ? refsByOperation([proposal]) : undefined), [proposal]);
   const context = useOperationContext(operations, refs);
   const actions = useProposalActions(proposal);
@@ -598,6 +607,39 @@ export function ReviewPage({
     if (next) setSelectedId(next);
   };
 
+  /**
+   * Reject the relationships still awaiting a decision that use a rejected element,
+   * noting that an end was rejected (the counterpart of a reopen reopening them).
+   */
+  const rejectRelationshipsOf = async (element: ProposedOperation) => {
+    const using = awaitingRelationshipsOf(element, operationsRef.current);
+    if (using.length === 0) return;
+    await actions.rejectOperations(
+      using.map((o) => o.id),
+      endRejectedNote([element.seq]),
+      { reasonCode: END_REJECTED_REASON },
+    );
+  };
+
+  /** After rejecting an element: offer to reject the awaiting relationships that use it. */
+  const offerToRejectRelationships = (element: ProposedOperation, after: ProposedOperation[]) => {
+    const using = awaitingRelationshipsOf(element, after);
+    if (using.length === 0) return;
+    const one = using.length === 1;
+    toast(
+      "info",
+      `${using.length} relationship${one ? " uses" : "s use"} ${shownTitle(element)}: reject ${one ? "it" : "them"} too?`,
+      `${using.map((o) => `#${o.seq}`).join(", ")} would be rejected as "an end was rejected".`,
+      {
+        action: {
+          label: one ? "Reject it too" : "Reject them too",
+          onAction: () => void rejectRelationshipsOf(element),
+        },
+        autoDismissMs: 15000,
+      },
+    );
+  };
+
   /** The applied outcome of one operation, or why it didn't apply (the toast says so). */
   const appliedOutcome = (operation: ProposedOperation, outcome: ApplyOutcome) => {
     if (outcome.error || outcome.cancelled || !outcome.proposal) return undefined;
@@ -642,7 +684,9 @@ export function ReviewPage({
         reviewMs,
         annotations: goldAnnotations(operation),
       });
-      if (rejected) moveOn(current);
+      if (!rejected) return;
+      if (isElement(operation)) offerToRejectRelationships(operation, current);
+      moveOn(current);
       return;
     }
     const outcome = await actions.accept([operation.id], {
@@ -687,9 +731,25 @@ export function ReviewPage({
     }
     // Holding a key down decides once.
     if (event.repeat || !selected || !deciding || !isAwaiting(selected)) return;
-    if (key === "a") {
+    // A relationship with an end rejected can only be rejected: X does it, A says so.
+    const endRejected = isRelationship(selected) ? endsToDecide(selected, operations).rejected : [];
+    if (key === "a" && endRejected.length > 0) {
+      event.preventDefault();
+      toast(
+        "info",
+        "This relationship can't be accepted",
+        `${seqList(endRejected)} ${endRejected.length === 1 ? "was" : "were"} rejected: press X to reject it too, or give it another end.`,
+      );
+    } else if (key === "a") {
       event.preventDefault();
       void decide(selected, { kind: "correct" });
+    } else if (key === "x" && endRejected.length > 0) {
+      event.preventDefault();
+      void decide(selected, {
+        kind: "reject",
+        reasonCode: END_REJECTED_REASON,
+        note: endRejectedNote(endRejected.map((e) => e.seq)),
+      });
     } else if (key === "x") {
       event.preventDefault();
       // A reason, or (in gold mode, before a note is written) the note it needs.
@@ -923,6 +983,7 @@ export function ReviewPage({
                 void decide(selected, { kind: "reject", reasonCode, note })
               }
               onAcceptEdited={(edit) => void decide(selected, { kind: "edit", edit })}
+              onRejectRelationships={() => void rejectRelationshipsOf(selected)}
               onShowPassage={(quote) => showPassage(selected.id, quote)}
               gold={
                 gold

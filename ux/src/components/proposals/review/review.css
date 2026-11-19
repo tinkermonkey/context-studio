@@ -543,6 +543,14 @@
     gap: 6px 8px;
   }
 
+  /* A callout's sentence with the action it offers beside it (wraps under when narrow). */
+  .review-callout-action {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 10px;
+  }
+
   /* ---- evidence: each passage a block that shows itself in the source ---- */
   .review-evidence {
     display: block;
