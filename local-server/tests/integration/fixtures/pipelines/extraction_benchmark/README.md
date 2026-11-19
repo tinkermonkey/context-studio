@@ -20,7 +20,7 @@ reach the review queue.
 | id | perspective | source | individuals (core) | relationships |
 |---|---|---|---|---|
 | `gitlab_architecture` | engineering | [GitLab architecture overview](https://docs.gitlab.com/development/architecture/) | 122 (63) | 83 |
-| `edit_check` | product | [Edit check](https://www.mediawiki.org/wiki/Edit_check), MediaWiki.org | 76 (42) | 53 |
+| `edit_check` | product | [Edit check](https://www.mediawiki.org/wiki/Edit_check), MediaWiki.org | 73 (39) | 45 |
 | `wikimedia_enterprise` | platform | [Wikimedia Enterprise](https://meta.wikimedia.org/wiki/Wikimedia_Enterprise), Meta-Wiki | 99 (38) | 56 |
 
 All three are CC BY-SA 4.0; each `gold.json` records the revision, the retrieval date and the
