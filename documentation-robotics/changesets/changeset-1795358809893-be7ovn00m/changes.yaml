@@ -13,16 +13,18 @@
       down to two questions: one item or several (4 House nodes naming two or
       three tools or kits) and the better class (11 retypes, 5 on the DR viewer
       README). The DR document had no splits; its other 5 rejections were 'not
-      an element' (dependencies or facts stated as elements). Source:
+      an element' (dependencies or facts stated as elements). Only DR's half
+      reflects real use. Source:
       documentation/extraction/experiments/2026-11-21-gate-d-real-documents.md
-      (branch claude/gate-d-value-log)."
+      and the Gate D reading in rearchitecture/ontology_workbench_proposal.md
+      (not yet committed, 2026-11-22)."
     attributes:
       assessmentType: gap
     metadata:
       created_at: 2026-11-22T14:48:01.245Z
       updated_at: 2026-11-22T14:48:01.245Z
       version: 1
-  timestamp: 2026-11-22T14:48:01.295Z
+  timestamp: 2026-11-22T14:51:40.924Z
   sequenceNumber: 0
 - type: add
   elementId: motivation.requirement.pre-review-changes-show-what-changed-and-why
