@@ -1,0 +1,26 @@
+id: changeset-1795358809893-be7ovn00m
+name: extraction-pre-review-stage
+description: "Design of an optional pre-review stage in single_call individual
+  extraction (issue to be filed). After find_individuals and before relate, one
+  LLM call per section asks two questions of every extracted individual: is it
+  one item or several (split), and is its class the best fit compared with the
+  classes it could be confused with (retype). Each verdict reaches the proposal
+  as a visible change: a retype keeps the extracted class as an alternative, a
+  split's parts name the item they came from, and both carry the stage's
+  reasoning, shown in the Review inspector with a one-key way back. It is off by
+  default and turned on by a configuration setting; whether it becomes the
+  default is decided by a decision rule fixed before any paid run (seeded
+  errors, the human-checked benchmark gold and Gate D's reviewed runs, three
+  takes). Plan only: nothing is built until the user approves."
+created: 2026-11-22T14:46:49.907Z
+modified: 2026-11-22T14:48:45.640Z
+status: staged
+baseSnapshot: v2:sha256:53252d39ed1357a9afdd6132507b497bf81313353af91142ccb6b590b147594c
+origin:
+  kind: plan
+purpose: plan
+stats:
+  additions: 57
+  modifications: 0
+  deletions: 0
+lastSequence: 56
