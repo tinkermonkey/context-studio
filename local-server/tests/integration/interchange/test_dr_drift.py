@@ -40,7 +40,7 @@ from domain.versioning.proposals import OperationStatus, ProposalSource, Proposa
 from domain.versioning.revert_service import RevertService
 from scripts.dr_ontology_loader import import_dr_ontology
 from tests.fakes.fake_embedding_service import FakeEmbeddingService
-from tests.integration.pipelines._harness.dr_spec import MODEL_DR_SPEC_VERSION, dr_spec_dir
+from tests.integration.pipelines._harness.dr_spec import GOLDEN_DR_SPEC_VERSION, dr_spec_dir
 from tests.utils.change_recording import wire_change_recorder
 
 
@@ -53,7 +53,7 @@ def spec_db():
         Base.metadata.create_all(engine)
         repo = SQLiteOntologyRepository(session_factory=sessionmaker(bind=engine))
         service = OntologyService(repo, FakeEmbeddingService(), InProcessEventPublisher())
-        import_dr_ontology(service, repo, dr_spec_dir(MODEL_DR_SPEC_VERSION))
+        import_dr_ontology(service, repo, dr_spec_dir(GOLDEN_DR_SPEC_VERSION))
         engine.dispose()
         yield path
 
@@ -62,7 +62,7 @@ def spec_db():
 def spec(tmp_path):
     """A copy of the 0.10.0 spec to hand-edit."""
     copy = tmp_path / "spec"
-    shutil.copytree(dr_spec_dir(MODEL_DR_SPEC_VERSION), copy)
+    shutil.copytree(dr_spec_dir(GOLDEN_DR_SPEC_VERSION), copy)
     return copy
 
 
@@ -264,7 +264,7 @@ def test_hand_edits_are_reported_proposed_and_cleared_once_applied(world, spec):
     proposal = real.proposal
     assert proposal.source is ProposalSource.BUNDLE
     assert proposal.source_detail == "bundle:dr_spec"
-    assert proposal.source_revision.spec_version == MODEL_DR_SPEC_VERSION
+    assert proposal.source_revision.spec_version == GOLDEN_DR_SPEC_VERSION
     assert all(o.status is OperationStatus.PENDING for o in proposal.operations)
     _apply_all(world, proposal)
 
@@ -527,7 +527,7 @@ def test_no_drift_records_the_spec_revision_on_the_taxonomy(world, spec):
     world.drift.reimport(str(spec), dry_run=False)
 
     revision = world.repo.get_by_identifier(DR_TAXONOMY_IDENTIFIER).source_revision
-    assert revision.spec_version == MODEL_DR_SPEC_VERSION
+    assert revision.spec_version == GOLDEN_DR_SPEC_VERSION
 
 
 def test_a_directory_that_isnt_a_spec_is_refused(world, tmp_path):
@@ -555,7 +555,7 @@ def test_rest_dry_run_reports_and_the_real_run_proposes(client, world, spec):
     assert dry.status_code == 200, dry.text
     body = dry.json()
     assert body["dry_run"] is True
-    assert body["source_revision"]["spec_version"] == MODEL_DR_SPEC_VERSION
+    assert body["source_revision"]["spec_version"] == GOLDEN_DR_SPEC_VERSION
     (entry,) = body["entries"]
     assert (entry["kind"], entry["source_id"], entry["change"]) == (
         "class",

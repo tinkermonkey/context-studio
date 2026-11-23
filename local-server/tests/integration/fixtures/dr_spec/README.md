@@ -10,12 +10,17 @@ sibling checkout, so expected row counts and recorded cassettes stay stable.
 | Snapshot | Source commit | Used by |
 |---|---|---|
 | `dr_spec_0.8.4.tar.xz` | `89f87e94` ("Bump spec version to 0.8.4") | `PINNED_DR_SPEC_VERSION`: the DR ontology integration tests and `scripts/record_recognition_episode_cassettes.py` |
-| `dr_spec_0.10.0.tar.xz` | `9aaf1317` ("spec: retire supports-goals and fulfills-requirements; fix 18 four-part relationship ids") | `MODEL_DR_SPEC_VERSION`: `test_dr_model_import.py`, which imports Context Studio's own DR model (`documentation-robotics/model/`) |
+| `dr_spec_0.10.0.tar.xz` | `9aaf1317` ("spec: retire supports-goals and fulfills-requirements; fix 18 four-part relationship ids") | `GOLDEN_DR_SPEC_VERSION`: the DR golden tests (`test_dr_claims.py`, `test_dr_drift.py`, `test_evidence_pack_dr_golden.py`, `test_notes_to_claims_dr_golden.py`), whose fixtures DR made from this spec |
 | `dr_spec_0.11.0.tar.xz` | `a06f0564` (the commit the workspace's DR taxonomy mirrored when the extraction benchmark was made) | `BENCHMARK_DR_SPEC_VERSION` in `scripts/benchmark_replay.py`: the ontology the benchmark documents are extracted against. `test_extraction_benchmark_replay.py` checks it builds the same classes, definitions and relationship types as `fixtures/pipelines/extraction_benchmark/dr_spec.bundle.json.xz` |
+| `dr_spec_0.13.0.tar.xz` | `f79d4dd9` ("release: CLI 0.5.0 with spec 0.13.0") | `MODEL_DR_SPEC_VERSION`: `test_dr_model_import.py` and `test_dr_model_type_changes.py`, which import Context Studio's own DR model (`documentation-robotics/model/`) |
 
 Moving `PINNED_DR_SPEC_VERSION` to a new spec version means updating the expected
-counts and re-recording the cassettes. Moving `MODEL_DR_SPEC_VERSION` only needs
-a snapshot that matches the model's `spec_version`.
+counts and re-recording the cassettes. Moving `MODEL_DR_SPEC_VERSION` needs
+a snapshot that matches the model's `spec_version`, the expected counts in
+`test_dr_model_import.py`, and relationship types in `test_dr_model_type_changes.py`
+that the model still uses (and, for the rename, reverse and retarget, types the
+spec does not have yet). `GOLDEN_DR_SPEC_VERSION` stays put until the golden
+fixtures are regenerated from a newer spec.
 
 To regenerate a snapshot, or add one for a new spec version, run from the
 `documentation_robotics` checkout:

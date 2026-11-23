@@ -9,7 +9,10 @@ also run on CI. See that directory's README for the source commits and how to
 regenerate a snapshot.
 
 Context Studio's own DR model is written for a newer spec than the cassette
-pin, so its import test uses its own snapshot (`MODEL_DR_SPEC_VERSION`).
+pin, so its import test uses its own snapshot (`MODEL_DR_SPEC_VERSION`). The
+DR golden tests (DR's claims and bench gold, its claimEvidence strings, spec
+drift) compare against output DR made from one spec, so they keep that
+snapshot (`GOLDEN_DR_SPEC_VERSION`) when the model moves on.
 """
 
 import atexit
@@ -21,7 +24,9 @@ from pathlib import Path
 
 PINNED_DR_SPEC_VERSION = "0.8.4"
 # The spec version documentation-robotics/model/ is written for.
-MODEL_DR_SPEC_VERSION = "0.10.0"
+MODEL_DR_SPEC_VERSION = "0.13.0"
+# The spec version the DR golden fixtures were made against.
+GOLDEN_DR_SPEC_VERSION = "0.10.0"
 DR_SPEC_FIXTURE_DIR = Path(__file__).resolve().parents[2] / "fixtures" / "dr_spec"
 
 

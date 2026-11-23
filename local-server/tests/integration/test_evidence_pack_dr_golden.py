@@ -51,7 +51,7 @@ from domain.ontology.evidence import ContextPolicy, EvidencePackBuilder
 from scripts.dr_ontology_loader import import_dr_ontology, slugify_spec_node_id
 from scripts.import_dr_model import build_import_service
 from tests.fakes.fake_embedding_service import FakeEmbeddingService
-from tests.integration.pipelines._harness.dr_spec import MODEL_DR_SPEC_VERSION, dr_spec_dir
+from tests.integration.pipelines._harness.dr_spec import GOLDEN_DR_SPEC_VERSION, dr_spec_dir
 
 DR_EVIDENCE = {
     "motivation.requirement.realizes.motivation.goal": """\
@@ -179,7 +179,7 @@ def workspace(tmp_path_factory):
     Base.metadata.create_all(engine)
     session_factory = create_session_factory(engine)
     repo = SQLiteOntologyRepository(session_factory)
-    spec_dir = dr_spec_dir(MODEL_DR_SPEC_VERSION)
+    spec_dir = dr_spec_dir(GOLDEN_DR_SPEC_VERSION)
     import_dr_ontology(
         build_import_service(session_factory, FakeEmbeddingService()), repo, spec_dir
     )
