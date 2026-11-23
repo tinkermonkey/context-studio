@@ -11,7 +11,7 @@ reproducible: yes
 
 # A pre-review stage before the person: splits and retypes (2026-11-22)
 
-**Status: planned, not run.** The design is the DR changeset `extraction-pre-review-stage` (13 elements, staged on branch `claude/llm-review-stage-design-639ead`). Nothing is built and nothing has been spent. This page holds the decision rule before any paid run, as [the rules](README.md#recording-an-experiment) require. The user approves it, or changes it, before the first paid call.
+**Status: Phase 0 done (free); Phase 1 not started.** The design is the DR changeset `extraction-pre-review-stage` (13 elements, staged on branch `claude/llm-review-stage-design-639ead`). The user approved the design and the run, with a $40 cap, on 2026-11-23. Phase 0 is built and passes. Nothing has been spent. The decision rule below was set before any paid run, as [the rules](README.md#recording-an-experiment) require.
 
 ## Question
 
@@ -174,7 +174,40 @@ From DR's assessment pass (tinkermonkey/documentation_robotics#1248: `docs/analy
 
 ## Results
 
-None yet.
+### Phase 0 (2026-11-23, free, no model calls)
+
+**The split witness marks all four of Gate D's splits**, so Phase 0's condition holds. It also marks many titles that are one item:
+
+| document | gold titles marked | single_call's recorded titles marked |
+|---|---|---|
+| `edit_check` | 16 of 73 | 17 of 105 |
+| `gitlab_architecture` | 6 of 122 | 12 of 124 |
+| `wikimedia_enterprise` | 10 of 99 | 10 of 93 |
+
+- Every marked gold title is one item by the gold, so on DR text the split question is asked mostly of traps: 32 of the 294 gold individuals.
+- In the recordings, the split question would be asked of 39 of 322 extracted items, about one in eight.
+
+**The seeds, as built** (`seeded`, same for any stage), per take:
+
+| document | items | merges | realistic retypes | same-layer retypes | controls | split traps |
+|---|---|---|---|---|---|---|
+| `edit_check` | 70 | 3 | 6 | 6 | 41-44 | 11-14 |
+| `gitlab_architecture` | 114 | 8 | 6 | 6 | 88-89 | 5-6 |
+
+- **Fewer merges than planned.** `edit_check` has only three pairs of named, same-class individuals in one paragraph whose titles do not already read as lists, against the rule's 8. Over three takes Phase 1 has 33 merges, not 48. The split gate's 60% then rests on 33 trials, Wilson ±0.16 at 0.6. This is a fact about the gold, found before the prompt was frozen; the rule is unchanged.
+- **Realistic retypes have plenty of candidates.** Every one of the 193 DR class definitions has a "Use X instead" sentence, and single_call's recordings add mistypes matched by name: 6 on `edit_check`, 2 on `gitlab_architecture` and 3 on the holdout. The holdout's are not used: Phase 1 seeds dev only.
+- **The untouched items:** 447 controls and split traps over the three takes. A stage that harms none has a Wilson upper bound of 0.009, well inside the 6% bound.
+
+**The scorer, checked with fake stages:**
+
+| fake stage | outcome |
+|---|---|
+| keeps everything | recovers nothing, harms nothing, fails both gates |
+| knows every seed | recovers all, harms nothing, passes both gates |
+
+The unit tests cover fixes, harms, neutral changes, misses, splits whose parts miss a gold name, unsure answers and the Wilson interval (`tests/unit/test_harness_pre_review_seeded.py`, `tests/unit/domain/extraction/test_pre_review.py`).
+
+**Input size, for the cost estimate.** single_call's recorded find call read 69,000-80,000 input tokens per document (most of it the cached catalog) and wrote 8,500-12,600 output tokens. The stage reads about as much, plus its numbered list of items, and should write less.
 
 ## Limits
 
@@ -194,7 +227,15 @@ Open: the user decides whether to run it.
 
 ## Reproduce
 
-Planned: `python scripts/benchmark_pre_review.py seeded|benchmark|gate-d` from `local-server/`. Saved takes go under `tests/integration/fixtures/pipelines/extraction_benchmark_pre_review/`. Gate D's inputs come from the workspace database and are scratch; not reproducible from the repository.
+Phase 0, from `local-server/`, free:
+
+```bash
+python scripts/benchmark_pre_review.py witness
+python scripts/benchmark_pre_review.py seeded --fake keep
+python scripts/benchmark_pre_review.py seeded --fake oracle
+```
+
+Planned for the paid phases: `benchmark_pre_review.py seeded` with the real stage, then `benchmark` and `gate-d`. Saved takes go under `tests/integration/fixtures/pipelines/extraction_benchmark_pre_review/`. Gate D's inputs come from the workspace database and are scratch; not reproducible from the repository.
 
 ## Links
 

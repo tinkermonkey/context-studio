@@ -355,6 +355,81 @@ class FoundIndividual:
     class_ref: str
 
 
+class PreReviewQuestion(str, Enum):
+    """A question the pre-review stage asks of an extracted individual."""
+
+    # Is it one item or several?
+    SPLIT = "split"
+    # Is its class the best fit, compared with the classes it could be?
+    RETYPE = "retype"
+
+
+class PreReviewAnswer(str, Enum):
+    """What the pre-review stage answers for one extracted individual."""
+
+    KEEP = "keep"
+    SPLIT = "split"
+    RETYPE = "retype"
+    # It could not decide: a question for the reviewer, nothing changed
+    UNSURE = "unsure"
+
+
+@dataclass(frozen=True)
+class PreReviewPart:
+    """One part of an individual the pre-review stage split: what it is called, its class, its passage."""
+
+    title: str
+    class_ref: str
+    quote: str | None = None
+
+
+@dataclass(frozen=True)
+class PreReviewVerdict:
+    """
+    The pre-review stage's answer for one extracted individual
+    (documentation/extraction/experiments/2026-11-22-pre-review-stage.md).
+
+    Attributes:
+        answer: Keep, split, retype or unsure
+        question: The question the answer is to (keep answers every question asked)
+        reasoning: Why, in the stage's words: the deciding sentence of a
+            definition, or what the reviewer is asked
+        original_title: The individual's title as extracted
+        original_class_ref: Its class as extracted
+        class_ref: A retype's class
+        compared: The class references the stage weighed
+        parts: A split's parts (at least two)
+        model: The model that answered
+    """
+
+    answer: PreReviewAnswer
+    question: PreReviewQuestion | None
+    reasoning: str
+    original_title: str
+    original_class_ref: str
+    class_ref: str | None = None
+    compared: tuple[str, ...] = ()
+    parts: tuple[PreReviewPart, ...] = ()
+    model: str = ""
+
+    def __post_init__(self) -> None:
+        if self.answer is PreReviewAnswer.RETYPE and (
+            not self.class_ref or self.class_ref == self.original_class_ref
+        ):
+            raise ValueError("A retype names a class other than the original")
+        if self.answer is PreReviewAnswer.SPLIT and len(self.parts) < 2:
+            raise ValueError("A split has at least two parts")
+        if self.answer is not PreReviewAnswer.SPLIT and self.parts:
+            raise ValueError("Only a split has parts")
+        if self.answer is not PreReviewAnswer.RETYPE and self.class_ref is not None:
+            raise ValueError("Only a retype names a class")
+
+    @property
+    def changes(self) -> bool:
+        """Whether the verdict changes the individual (a split or a retype)."""
+        return self.answer in (PreReviewAnswer.SPLIT, PreReviewAnswer.RETYPE)
+
+
 @dataclass
 class FoundIndividualsResult:
     """

@@ -61,6 +61,16 @@ JSONL metrics emission and floor gating.
 - `FloorGate`: Asserts metrics against configurable floors
 - `ABReport`: Formats side-by-side A/B comparison output
 
+### `pre_review_seeded.py`
+
+Seeded errors for the pre-review stage
+(`documentation/extraction/experiments/2026-11-22-pre-review-stage.md`), built on `benchmark.py`'s gold.
+
+- `build_seeded`: A document's gold as the stage's input, with merges and retypes planted
+- `score_seeded`: Fixes, harms, neutral changes and misses per stratum
+- `gate`: Phase 1's per-question gate (recovery, harms on untouched items, Wilson upper bound)
+- Driven by `scripts/benchmark_pre_review.py`; free until a real stage is run
+
 ## Execution Modes
 
 ### Recorded (Default)
