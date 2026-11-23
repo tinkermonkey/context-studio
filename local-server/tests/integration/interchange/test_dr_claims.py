@@ -21,7 +21,7 @@ from domain.versioning.claims import ClaimFilter, ClaimService, ClaimVerdict, Va
 from scripts.dr_ontology_loader import import_dr_ontology
 from scripts.import_dr_model import build_import_service
 from tests.fakes.fake_embedding_service import FakeEmbeddingService
-from tests.integration.pipelines._harness.dr_spec import MODEL_DR_SPEC_VERSION, dr_spec_dir
+from tests.integration.pipelines._harness.dr_spec import GOLDEN_DR_SPEC_VERSION, dr_spec_dir
 
 FIXTURES = Path(__file__).resolve().parents[1] / "fixtures" / "dr_triage"
 CLAIMS = read_jsonl(FIXTURES / "claims.jsonl.xz")
@@ -40,7 +40,7 @@ def workspace(tmp_path_factory):
     import_dr_ontology(
         build_import_service(session_factory, FakeEmbeddingService()),
         repo,
-        dr_spec_dir(MODEL_DR_SPEC_VERSION),
+        dr_spec_dir(GOLDEN_DR_SPEC_VERSION),
     )
     service = ClaimService(SQLiteClaimRepository(session_factory), repo)
     result = import_dr_claims(service, repo, CLAIMS, GOLD)

@@ -54,15 +54,17 @@ from tests.integration.pipelines._harness.dr_spec import MODEL_DR_SPEC_VERSION, 
 from tests.utils.change_recording import wire_change_recorder
 from tests.utils.parent_rows import create_batch_run_row
 
-# Used by the model: 29 relationships, and 36.
+# Used by the model: 22 relationships, and 52.
 REVERSED = "data-model.objectschema.maps-to.api.response"
-RENAMED = "api.operation.aggregates.api.requestbody"
+RENAMED = "api.operation.composes.api.requestbody"
 AFTER_REVERSE = "api.response.maps-to.data-model.objectschema"
 AFTER_RENAME = "api.operation.uses.api.requestbody"
-# Used by 6 relationships; its pair reversed is another type's.
+# Used by 4 relationships; its pair reversed is another type's. The spec has no
+# applicationevent-triggers-applicationservice type, so retargeting to it makes a new one.
 RETARGETED = "application.applicationevent.triggers.application.applicationprocess"
 REVERSED_TWIN = "application.applicationprocess.triggers.application.applicationevent"
-AFTER_RETARGET = "application.applicationevent.triggers.application.applicationfunction"
+RETARGET_RANGE = "application.applicationservice"
+AFTER_RETARGET = f"application.applicationevent.triggers.{RETARGET_RANGE}"
 MOVE = ResolutionStrategy.MOVE
 
 
@@ -195,8 +197,8 @@ def reverse_and_rename(parts):
 
 def test_the_model_uses_both_types(parts):
     repo = parts.repo
-    assert len(edges(repo, prop_by_dr_id(repo, REVERSED))) == 29
-    assert len(edges(repo, prop_by_dr_id(repo, RENAMED))) == 36
+    assert len(edges(repo, prop_by_dr_id(repo, REVERSED))) == 22
+    assert len(edges(repo, prop_by_dr_id(repo, RENAMED))) == 52
 
 
 def test_a_reverse_swaps_in_place_and_a_rename_keeps_the_models_relationships(parts):
@@ -344,7 +346,7 @@ def test_an_in_use_retarget_waits_for_a_resolution(parts):
     before = edges(repo, retargeted)
     proposal = propose_edits(parts, "Retarget", retargeted)
     (op,) = proposal.operations
-    edit = {"range_class_id": class_by_dr_id(repo, "application.applicationfunction").id}
+    edit = {"range_class_id": class_by_dr_id(repo, RETARGET_RANGE).id}
 
     (failed,) = parts.proposals.apply(proposal.id, [op.id], edits={op.id: edit}).operations
 
@@ -361,7 +363,7 @@ def test_a_retarget_that_moved_its_relationships_exports_like_a_moved_delete(par
     moved = edges(repo, retargeted)
     proposal = propose_edits(parts, "Retarget", retargeted)
     (op,) = proposal.operations
-    edit = {"range_class_id": class_by_dr_id(repo, "application.applicationfunction").id}
+    edit = {"range_class_id": class_by_dr_id(repo, RETARGET_RANGE).id}
     resolution = InUseResolution(strategy=MOVE, replacement_property_id=replacement.id)
 
     applied = parts.proposals.apply(
@@ -386,7 +388,7 @@ def test_the_sample_model_yields_to_a_retarget_and_a_revert_restores_it(parts):
     before = edges(repo, retargeted)
     proposal = propose_edits(parts, "Retarget", retargeted)
     (op,) = proposal.operations
-    edit = {"range_class_id": class_by_dr_id(repo, "application.applicationfunction").id}
+    edit = {"range_class_id": class_by_dr_id(repo, RETARGET_RANGE).id}
 
     (applied,) = parts.proposals.apply(proposal.id, [op.id], edits={op.id: edit}).operations
 

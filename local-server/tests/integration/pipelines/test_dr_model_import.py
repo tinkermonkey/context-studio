@@ -37,8 +37,8 @@ MODEL_DIR = DEFAULT_VIEWER_DIR / "documentation-robotics" / "model"
 
 # The model as committed in documentation-robotics/model/. Update these when the
 # model is regenerated; the per-layer checks below derive from the manifest.
-EXPECTED_INDIVIDUALS = 450
-EXPECTED_RELATIONSHIPS = 584
+EXPECTED_INDIVIDUALS = 1313
+EXPECTED_RELATIONSHIPS = 2807
 
 
 def _manifest_layer_counts() -> dict[str, int]:
