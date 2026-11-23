@@ -199,6 +199,6 @@ Planned: `python scripts/benchmark_pre_review.py seeded|benchmark|gate-d` from `
 ## Links
 
 - Design: DR changeset `extraction-pre-review-stage`
-- Evidence: [Gate D](2026-11-21-gate-d-real-documents.md), [#1453](https://github.com/tinkermonkey/context-studio/issues/1453)
+- Evidence: [Gate D](2026-11-21-gate-d-real-documents.md) (in [#1675](https://github.com/tinkermonkey/context-studio/pull/1675) until it merges), [#1453](https://github.com/tinkermonkey/context-studio/issues/1453)
 - Review page limits it works around: [#1673](https://github.com/tinkermonkey/context-studio/issues/1673)
 - DR's assessment pass: tinkermonkey/documentation_robotics#1248
