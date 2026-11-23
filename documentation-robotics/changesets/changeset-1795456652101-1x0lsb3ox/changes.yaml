@@ -1,0 +1,1838 @@
+- type: add
+  elementId: testing.testcasesketch.test-a-retype-names-another-class-and-is-a-change
+  layerName: testing
+  after:
+    id: 84a33a18-8902-43dd-bee5-745d244b4d3c
+    path: testing.testcasesketch.test-a-retype-names-another-class-and-is-a-change
+    spec_node_id: testing.testcasesketch
+    type: testcasesketch
+    layer_id: testing
+    name: test_a_retype_names_another_class_and_is_a_change
+    attributes:
+      status: automated
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/tests/unit/domain/extraction/test_pre_review.py
+          symbol: test_a_retype_names_another_class_and_is_a_change
+    metadata:
+      created_at: 2026-11-23T17:57:32.010Z
+      updated_at: 2026-11-23T17:57:32.010Z
+      version: 1
+  timestamp: 2026-11-23T17:57:32.152Z
+  sequenceNumber: 0
+  origin:
+    by: tier0
+    rule: tier0_test_case_name
+- type: add
+  elementId: testing.testcasesketch.test-a-retype-without-another-class-is-refused
+  layerName: testing
+  after:
+    id: 1beadb81-f2de-4952-8f22-a93450c9caf6
+    path: testing.testcasesketch.test-a-retype-without-another-class-is-refused
+    spec_node_id: testing.testcasesketch
+    type: testcasesketch
+    layer_id: testing
+    name: test_a_retype_without_another_class_is_refused
+    attributes:
+      status: automated
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/tests/unit/domain/extraction/test_pre_review.py
+          symbol: test_a_retype_without_another_class_is_refused
+    metadata:
+      created_at: 2026-11-23T17:57:32.010Z
+      updated_at: 2026-11-23T17:57:32.010Z
+      version: 1
+  timestamp: 2026-11-23T17:57:32.152Z
+  sequenceNumber: 1
+  origin:
+    by: tier0
+    rule: tier0_test_case_annotation
+- type: add
+  elementId: testing.testcasesketch.test-a-split-and-a-retype-are-read-with-their-reasoning
+  layerName: testing
+  after:
+    id: 8440f77d-622c-4d85-be82-55cd36c578a8
+    path: testing.testcasesketch.test-a-split-and-a-retype-are-read-with-their-reasoning
+    spec_node_id: testing.testcasesketch
+    type: testcasesketch
+    layer_id: testing
+    name: test_a_split_and_a_retype_are_read_with_their_reasoning
+    attributes:
+      status: automated
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/tests/unit/domain/extraction/test_pre_review.py
+          symbol: test_a_split_and_a_retype_are_read_with_their_reasoning
+    metadata:
+      created_at: 2026-11-23T17:57:32.010Z
+      updated_at: 2026-11-23T17:57:32.010Z
+      version: 1
+  timestamp: 2026-11-23T17:57:32.152Z
+  sequenceNumber: 2
+  origin:
+    by: tier0
+    rule: tier0_test_case_name
+- type: add
+  elementId: testing.testcasesketch.test-a-split-has-at-least-two-parts
+  layerName: testing
+  after:
+    id: b5376d34-bb2c-471d-bd5c-d4244fac1ca4
+    path: testing.testcasesketch.test-a-split-has-at-least-two-parts
+    spec_node_id: testing.testcasesketch
+    type: testcasesketch
+    layer_id: testing
+    name: test_a_split_has_at_least_two_parts
+    attributes:
+      status: automated
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/tests/unit/domain/extraction/test_pre_review.py
+          symbol: test_a_split_has_at_least_two_parts
+    metadata:
+      created_at: 2026-11-23T17:57:32.010Z
+      updated_at: 2026-11-23T17:57:32.010Z
+      version: 1
+  timestamp: 2026-11-23T17:57:32.152Z
+  sequenceNumber: 3
+  origin:
+    by: tier0
+    rule: tier0_test_case_name
+- type: add
+  elementId: testing.testcasesketch.test-an-answer-to-a-question-not-asked-is-left-out
+  layerName: testing
+  after:
+    id: eb748cb9-4033-4b48-b83a-056c69373a1c
+    path: testing.testcasesketch.test-an-answer-to-a-question-not-asked-is-left-out
+    spec_node_id: testing.testcasesketch
+    type: testcasesketch
+    layer_id: testing
+    name: test_an_answer_to_a_question_not_asked_is_left_out
+    attributes:
+      status: automated
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/tests/unit/domain/extraction/test_pre_review.py
+          symbol: test_an_answer_to_a_question_not_asked_is_left_out
+    metadata:
+      created_at: 2026-11-23T17:57:32.010Z
+      updated_at: 2026-11-23T17:57:32.010Z
+      version: 1
+  timestamp: 2026-11-23T17:57:32.152Z
+  sequenceNumber: 4
+  origin:
+    by: tier0
+    rule: tier0_test_case_name
+- type: add
+  elementId: testing.testcasesketch.test-an-answer-with-no-reviews-list-is-asked-again-then-fails-without-changing-anything
+  layerName: testing
+  after:
+    id: bbf06d00-486f-43a7-a191-0dd2e76220e4
+    path: testing.testcasesketch.test-an-answer-with-no-reviews-list-is-asked-again-then-fails-without-changing-anything
+    spec_node_id: testing.testcasesketch
+    type: testcasesketch
+    layer_id: testing
+    name: test_an_answer_with_no_reviews_list_is_asked_again_then_fails_without_changing_anything
+    attributes:
+      status: automated
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/tests/unit/domain/extraction/test_pre_review.py
+          symbol: test_an_answer_with_no_reviews_list_is_asked_again_then_fails_without_changing_anything
+    metadata:
+      created_at: 2026-11-23T17:57:32.010Z
+      updated_at: 2026-11-23T17:57:32.010Z
+      version: 1
+  timestamp: 2026-11-23T17:57:32.152Z
+  sequenceNumber: 5
+  origin:
+    by: tier0
+    rule: tier0_test_case_name
+- type: add
+  elementId: testing.testcasesketch.test-an-unusable-answer-is-left-out-and-its-individual-kept
+  layerName: testing
+  after:
+    id: 5d8e5a77-5650-48ba-8e38-eb88bc361520
+    path: testing.testcasesketch.test-an-unusable-answer-is-left-out-and-its-individual-kept
+    spec_node_id: testing.testcasesketch
+    type: testcasesketch
+    layer_id: testing
+    name: test_an_unusable_answer_is_left_out_and_its_individual_kept
+    attributes:
+      status: automated
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/tests/unit/domain/extraction/test_pre_review.py
+          symbol: test_an_unusable_answer_is_left_out_and_its_individual_kept
+    metadata:
+      created_at: 2026-11-23T17:57:32.010Z
+      updated_at: 2026-11-23T17:57:32.010Z
+      version: 1
+  timestamp: 2026-11-23T17:57:32.152Z
+  sequenceNumber: 6
+  origin:
+    by: tier0
+    rule: tier0_test_case_name
+- type: add
+  elementId: testing.testcasesketch.test-keep-and-unsure-change-nothing
+  layerName: testing
+  after:
+    id: e11d7242-cb66-40d7-8acc-3360c336ac94
+    path: testing.testcasesketch.test-keep-and-unsure-change-nothing
+    spec_node_id: testing.testcasesketch
+    type: testcasesketch
+    layer_id: testing
+    name: test_keep_and_unsure_change_nothing
+    attributes:
+      status: automated
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/tests/unit/domain/extraction/test_pre_review.py
+          symbol: test_keep_and_unsure_change_nothing
+    metadata:
+      created_at: 2026-11-23T17:57:32.010Z
+      updated_at: 2026-11-23T17:57:32.010Z
+      version: 1
+  timestamp: 2026-11-23T17:57:32.152Z
+  sequenceNumber: 7
+  origin:
+    by: tier0
+    rule: tier0_test_case_annotation
+- type: add
+  elementId: testing.testcasesketch.test-keep-needs-no-entry-and-unsure-asks-the-reviewer
+  layerName: testing
+  after:
+    id: b5ced2f1-17fb-4501-ad52-23fa96ba49be
+    path: testing.testcasesketch.test-keep-needs-no-entry-and-unsure-asks-the-reviewer
+    spec_node_id: testing.testcasesketch
+    type: testcasesketch
+    layer_id: testing
+    name: test_keep_needs_no_entry_and_unsure_asks_the_reviewer
+    attributes:
+      status: automated
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/tests/unit/domain/extraction/test_pre_review.py
+          symbol: test_keep_needs_no_entry_and_unsure_asks_the_reviewer
+    metadata:
+      created_at: 2026-11-23T17:57:32.010Z
+      updated_at: 2026-11-23T17:57:32.010Z
+      version: 1
+  timestamp: 2026-11-23T17:57:32.152Z
+  sequenceNumber: 8
+  origin:
+    by: tier0
+    rule: tier0_test_case_name
+- type: add
+  elementId: testing.testcasesketch.test-no-individuals-means-no-call
+  layerName: testing
+  after:
+    id: 3b6edba1-8e99-409c-a436-95e6616024bb
+    path: testing.testcasesketch.test-no-individuals-means-no-call
+    spec_node_id: testing.testcasesketch
+    type: testcasesketch
+    layer_id: testing
+    name: test_no_individuals_means_no_call
+    attributes:
+      status: automated
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/tests/unit/domain/extraction/test_pre_review.py
+          symbol: test_no_individuals_means_no_call
+    metadata:
+      created_at: 2026-11-23T17:57:32.010Z
+      updated_at: 2026-11-23T17:57:32.010Z
+      version: 1
+  timestamp: 2026-11-23T17:57:32.152Z
+  sequenceNumber: 9
+  origin:
+    by: tier0
+    rule: tier0_test_case_name
+- type: add
+  elementId: testing.testcasesketch.test-the-call-carries-the-catalog-text-and-list
+  layerName: testing
+  after:
+    id: 37f74b60-bae1-4952-8431-924846b3d4c8
+    path: testing.testcasesketch.test-the-call-carries-the-catalog-text-and-list
+    spec_node_id: testing.testcasesketch
+    type: testcasesketch
+    layer_id: testing
+    name: test_the_call_carries_the_catalog_text_and_list
+    attributes:
+      status: automated
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/tests/unit/domain/extraction/test_pre_review.py
+          symbol: test_the_call_carries_the_catalog_text_and_list
+    metadata:
+      created_at: 2026-11-23T17:57:32.010Z
+      updated_at: 2026-11-23T17:57:32.010Z
+      version: 1
+  timestamp: 2026-11-23T17:57:32.152Z
+  sequenceNumber: 10
+  origin:
+    by: tier0
+    rule: tier0_test_case_name
+- type: add
+  elementId: testing.testcasesketch.test-the-list-numbers-each-individual-and-marks-where-split-is-asked
+  layerName: testing
+  after:
+    id: 20e8b706-0d7c-49b1-a7e9-e6a3f1c84ee3
+    path: testing.testcasesketch.test-the-list-numbers-each-individual-and-marks-where-split-is-asked
+    spec_node_id: testing.testcasesketch
+    type: testcasesketch
+    layer_id: testing
+    name: test_the_list_numbers_each_individual_and_marks_where_split_is_asked
+    attributes:
+      status: automated
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/tests/unit/domain/extraction/test_pre_review.py
+          symbol: test_the_list_numbers_each_individual_and_marks_where_split_is_asked
+    metadata:
+      created_at: 2026-11-23T17:57:32.010Z
+      updated_at: 2026-11-23T17:57:32.010Z
+      version: 1
+  timestamp: 2026-11-23T17:57:32.152Z
+  sequenceNumber: 11
+  origin:
+    by: tier0
+    rule: tier0_test_case_name
+- type: add
+  elementId: testing.testcasesketch.test-the-witness-leaves-a-single-name-alone
+  layerName: testing
+  after:
+    id: 1589f78b-7d73-48cc-bfad-5f38566e1792
+    path: testing.testcasesketch.test-the-witness-leaves-a-single-name-alone
+    spec_node_id: testing.testcasesketch
+    type: testcasesketch
+    layer_id: testing
+    name: test_the_witness_leaves_a_single_name_alone
+    attributes:
+      status: automated
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/tests/unit/domain/extraction/test_pre_review.py
+          symbol: test_the_witness_leaves_a_single_name_alone
+    metadata:
+      created_at: 2026-11-23T17:57:32.010Z
+      updated_at: 2026-11-23T17:57:32.010Z
+      version: 1
+  timestamp: 2026-11-23T17:57:32.152Z
+  sequenceNumber: 12
+  origin:
+    by: tier0
+    rule: tier0_test_case_annotation
+- type: add
+  elementId: testing.testcasesketch.test-the-witness-marks-any-list-shaped-title
+  layerName: testing
+  after:
+    id: 396db980-1a43-44d8-a245-ca64db2060d8
+    path: testing.testcasesketch.test-the-witness-marks-any-list-shaped-title
+    spec_node_id: testing.testcasesketch
+    type: testcasesketch
+    layer_id: testing
+    name: test_the_witness_marks_any_list_shaped_title
+    attributes:
+      status: automated
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/tests/unit/domain/extraction/test_pre_review.py
+          symbol: test_the_witness_marks_any_list_shaped_title
+    metadata:
+      created_at: 2026-11-23T17:57:32.010Z
+      updated_at: 2026-11-23T17:57:32.010Z
+      version: 1
+  timestamp: 2026-11-23T17:57:32.152Z
+  sequenceNumber: 13
+  origin:
+    by: tier0
+    rule: tier0_test_case_annotation
+- type: add
+  elementId: testing.testcasesketch.test-the-witness-marks-every-split-from-gate-d
+  layerName: testing
+  after:
+    id: 7e6fb5ab-1e21-401f-aecb-8ef5a2d780df
+    path: testing.testcasesketch.test-the-witness-marks-every-split-from-gate-d
+    spec_node_id: testing.testcasesketch
+    type: testcasesketch
+    layer_id: testing
+    name: test_the_witness_marks_every_split_from_gate_d
+    attributes:
+      status: automated
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/tests/unit/domain/extraction/test_pre_review.py
+          symbol: test_the_witness_marks_every_split_from_gate_d
+    metadata:
+      created_at: 2026-11-23T17:57:32.010Z
+      updated_at: 2026-11-23T17:57:32.010Z
+      version: 1
+  timestamp: 2026-11-23T17:57:32.152Z
+  sequenceNumber: 14
+  origin:
+    by: tier0
+    rule: tier0_test_case_annotation
+- type: add
+  elementId: testing.testcasesketch.test-a-passage-is-placed-in-its-chunk-with-offsets-into-it
+  layerName: testing
+  after:
+    id: 717761ea-c378-47f1-b0b1-e1113a39df16
+    path: testing.testcasesketch.test-a-passage-is-placed-in-its-chunk-with-offsets-into-it
+    spec_node_id: testing.testcasesketch
+    type: testcasesketch
+    layer_id: testing
+    name: test_a_passage_is_placed_in_its_chunk_with_offsets_into_it
+    attributes:
+      status: automated
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/tests/unit/domain/pipelines/test_single_call_orchestrator.py
+          symbol: test_a_passage_is_placed_in_its_chunk_with_offsets_into_it
+    metadata:
+      created_at: 2026-11-23T17:57:32.010Z
+      updated_at: 2026-11-23T17:57:32.010Z
+      version: 1
+  timestamp: 2026-11-23T17:57:32.152Z
+  sequenceNumber: 15
+  origin:
+    by: tier0
+    rule: tier0_test_case_name
+- type: add
+  elementId: testing.testcasesketch.test-placements-without-any-passage-go-to-the-first-chunk
+  layerName: testing
+  after:
+    id: e926d055-dc0e-4a55-8415-37d23002703a
+    path: testing.testcasesketch.test-placements-without-any-passage-go-to-the-first-chunk
+    spec_node_id: testing.testcasesketch
+    type: testcasesketch
+    layer_id: testing
+    name: test_placements_without_any_passage_go_to_the_first_chunk
+    attributes:
+      status: automated
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/tests/unit/domain/pipelines/test_single_call_orchestrator.py
+          symbol: test_placements_without_any_passage_go_to_the_first_chunk
+    metadata:
+      created_at: 2026-11-23T17:57:32.010Z
+      updated_at: 2026-11-23T17:57:32.010Z
+      version: 1
+  timestamp: 2026-11-23T17:57:32.152Z
+  sequenceNumber: 16
+  origin:
+    by: tier0
+    rule: tier0_test_case_name
+- type: add
+  elementId: testing.testcasesketch.test-failed-sections-test-a-failed-section-makes-its-chunks-failed-chunks
+  layerName: testing
+  after:
+    id: 0062bb99-577f-45e4-a09a-e8fe72393015
+    path: testing.testcasesketch.test-failed-sections-test-a-failed-section-makes-its-chunks-failed-chunks
+    spec_node_id: testing.testcasesketch
+    type: testcasesketch
+    layer_id: testing
+    name: TestFailedSections.test_a_failed_section_makes_its_chunks_failed_chunks
+    attributes:
+      status: automated
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/tests/unit/domain/pipelines/test_single_call_orchestrator.py
+          symbol: TestFailedSections.test_a_failed_section_makes_its_chunks_failed_chunks
+    metadata:
+      created_at: 2026-11-23T17:57:32.010Z
+      updated_at: 2026-11-23T17:57:32.010Z
+      version: 1
+  timestamp: 2026-11-23T17:57:32.152Z
+  sequenceNumber: 17
+  origin:
+    by: tier0
+    rule: tier0_test_case_name
+- type: add
+  elementId: testing.testcasesketch.test-failed-sections-test-a-reason-not-written-for-the-caller-is-not-shown
+  layerName: testing
+  after:
+    id: 8f136aef-0dd6-4d08-a33c-b773a94d9095
+    path: testing.testcasesketch.test-failed-sections-test-a-reason-not-written-for-the-caller-is-not-shown
+    spec_node_id: testing.testcasesketch
+    type: testcasesketch
+    layer_id: testing
+    name: TestFailedSections.test_a_reason_not_written_for_the_caller_is_not_shown
+    attributes:
+      status: automated
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/tests/unit/domain/pipelines/test_single_call_orchestrator.py
+          symbol: TestFailedSections.test_a_reason_not_written_for_the_caller_is_not_shown
+    metadata:
+      created_at: 2026-11-23T17:57:32.010Z
+      updated_at: 2026-11-23T17:57:32.010Z
+      version: 1
+  timestamp: 2026-11-23T17:57:32.152Z
+  sequenceNumber: 18
+  origin:
+    by: tier0
+    rule: tier0_test_case_name
+- type: add
+  elementId: testing.testcasesketch.test-failed-sections-test-a-refused-call-stops-the-run-there
+  layerName: testing
+  after:
+    id: cb3a0362-fedd-4263-bf6c-e5b2af832ca4
+    path: testing.testcasesketch.test-failed-sections-test-a-refused-call-stops-the-run-there
+    spec_node_id: testing.testcasesketch
+    type: testcasesketch
+    layer_id: testing
+    name: TestFailedSections.test_a_refused_call_stops_the_run_there
+    attributes:
+      status: automated
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/tests/unit/domain/pipelines/test_single_call_orchestrator.py
+          symbol: TestFailedSections.test_a_refused_call_stops_the_run_there
+    metadata:
+      created_at: 2026-11-23T17:57:32.010Z
+      updated_at: 2026-11-23T17:57:32.010Z
+      version: 1
+  timestamp: 2026-11-23T17:57:32.152Z
+  sequenceNumber: 19
+  origin:
+    by: tier0
+    rule: tier0_test_case_name
+- type: add
+  elementId: testing.testcasesketch.test-failed-sections-test-a-source-of-one-section-that-failed-fails-the-run
+  layerName: testing
+  after:
+    id: 5d3f3e5a-ebea-45bf-9d0c-65ac1974de3f
+    path: testing.testcasesketch.test-failed-sections-test-a-source-of-one-section-that-failed-fails-the-run
+    spec_node_id: testing.testcasesketch
+    type: testcasesketch
+    layer_id: testing
+    name: TestFailedSections.test_a_source_of_one_section_that_failed_fails_the_run
+    attributes:
+      status: automated
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/tests/unit/domain/pipelines/test_single_call_orchestrator.py
+          symbol: TestFailedSections.test_a_source_of_one_section_that_failed_fails_the_run
+    metadata:
+      created_at: 2026-11-23T17:57:32.010Z
+      updated_at: 2026-11-23T17:57:32.010Z
+      version: 1
+  timestamp: 2026-11-23T17:57:32.152Z
+  sequenceNumber: 20
+  origin:
+    by: tier0
+    rule: tier0_test_case_name
+- type: add
+  elementId: testing.testcasesketch.test-failed-sections-test-relationships-that-could-not-be-read-keep-the-individuals
+  layerName: testing
+  after:
+    id: 2b4f98b7-f7c8-4d1c-be0b-3c6015827121
+    path: testing.testcasesketch.test-failed-sections-test-relationships-that-could-not-be-read-keep-the-individuals
+    spec_node_id: testing.testcasesketch
+    type: testcasesketch
+    layer_id: testing
+    name: TestFailedSections.test_relationships_that_could_not_be_read_keep_the_individuals
+    attributes:
+      status: automated
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/tests/unit/domain/pipelines/test_single_call_orchestrator.py
+          symbol: TestFailedSections.test_relationships_that_could_not_be_read_keep_the_individuals
+    metadata:
+      created_at: 2026-11-23T17:57:32.010Z
+      updated_at: 2026-11-23T17:57:32.010Z
+      version: 1
+  timestamp: 2026-11-23T17:57:32.152Z
+  sequenceNumber: 21
+  origin:
+    by: tier0
+    rule: tier0_test_case_name
+- type: add
+  elementId: testing.testcasesketch.test-failed-sections-test-the-run-fails-when-every-section-failed
+  layerName: testing
+  after:
+    id: e5f238aa-59ab-436d-81ca-6dfff87b2cc7
+    path: testing.testcasesketch.test-failed-sections-test-the-run-fails-when-every-section-failed
+    spec_node_id: testing.testcasesketch
+    type: testcasesketch
+    layer_id: testing
+    name: TestFailedSections.test_the_run_fails_when_every_section_failed
+    attributes:
+      status: automated
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/tests/unit/domain/pipelines/test_single_call_orchestrator.py
+          symbol: TestFailedSections.test_the_run_fails_when_every_section_failed
+    metadata:
+      created_at: 2026-11-23T17:57:32.010Z
+      updated_at: 2026-11-23T17:57:32.010Z
+      version: 1
+  timestamp: 2026-11-23T17:57:32.152Z
+  sequenceNumber: 22
+  origin:
+    by: tier0
+    rule: tier0_test_case_name
+- type: add
+  elementId: testing.testcasesketch.test-pasted-text-test-a-failed-call-fails-the-run
+  layerName: testing
+  after:
+    id: 3a8c9616-a799-4b29-9f1f-8b0574578dd4
+    path: testing.testcasesketch.test-pasted-text-test-a-failed-call-fails-the-run
+    spec_node_id: testing.testcasesketch
+    type: testcasesketch
+    layer_id: testing
+    name: TestPastedText.test_a_failed_call_fails_the_run
+    attributes:
+      status: automated
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/tests/unit/domain/pipelines/test_single_call_orchestrator.py
+          symbol: TestPastedText.test_a_failed_call_fails_the_run
+    metadata:
+      created_at: 2026-11-23T17:57:32.010Z
+      updated_at: 2026-11-23T17:57:32.010Z
+      version: 1
+  timestamp: 2026-11-23T17:57:32.152Z
+  sequenceNumber: 23
+  origin:
+    by: tier0
+    rule: tier0_test_case_name
+- type: add
+  elementId: testing.testcasesketch.test-pasted-text-test-pasted-text-is-one-call-without-progress-or-sections
+  layerName: testing
+  after:
+    id: 5177cb89-0a4b-438b-99e2-9e82c5bd1ce3
+    path: testing.testcasesketch.test-pasted-text-test-pasted-text-is-one-call-without-progress-or-sections
+    spec_node_id: testing.testcasesketch
+    type: testcasesketch
+    layer_id: testing
+    name: TestPastedText.test_pasted_text_is_one_call_without_progress_or_sections
+    attributes:
+      status: automated
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/tests/unit/domain/pipelines/test_single_call_orchestrator.py
+          symbol: TestPastedText.test_pasted_text_is_one_call_without_progress_or_sections
+    metadata:
+      created_at: 2026-11-23T17:57:32.010Z
+      updated_at: 2026-11-23T17:57:32.010Z
+      version: 1
+  timestamp: 2026-11-23T17:57:32.152Z
+  sequenceNumber: 24
+  origin:
+    by: tier0
+    rule: tier0_test_case_name
+- type: add
+  elementId: testing.testcasesketch.test-pre-review-test-a-disabled-or-modelless-setting-reviews-nothing
+  layerName: testing
+  after:
+    id: 0377e092-2254-4c6d-bb8b-5070a87461e8
+    path: testing.testcasesketch.test-pre-review-test-a-disabled-or-modelless-setting-reviews-nothing
+    spec_node_id: testing.testcasesketch
+    type: testcasesketch
+    layer_id: testing
+    name: TestPreReview.test_a_disabled_or_modelless_setting_reviews_nothing
+    attributes:
+      status: automated
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/tests/unit/domain/pipelines/test_single_call_orchestrator.py
+          symbol: TestPreReview.test_a_disabled_or_modelless_setting_reviews_nothing
+    metadata:
+      created_at: 2026-11-23T17:57:32.010Z
+      updated_at: 2026-11-23T17:57:32.010Z
+      version: 1
+  timestamp: 2026-11-23T17:57:32.152Z
+  sequenceNumber: 25
+  origin:
+    by: tier0
+    rule: tier0_test_case_annotation
+- type: add
+  elementId: testing.testcasesketch.test-pre-review-test-a-failed-review-keeps-the-individuals-and-the-run
+  layerName: testing
+  after:
+    id: 2dee6bb3-8721-43bb-8ad8-26316c1861f1
+    path: testing.testcasesketch.test-pre-review-test-a-failed-review-keeps-the-individuals-and-the-run
+    spec_node_id: testing.testcasesketch
+    type: testcasesketch
+    layer_id: testing
+    name: TestPreReview.test_a_failed_review_keeps_the_individuals_and_the_run
+    attributes:
+      status: automated
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/tests/unit/domain/pipelines/test_single_call_orchestrator.py
+          symbol: TestPreReview.test_a_failed_review_keeps_the_individuals_and_the_run
+    metadata:
+      created_at: 2026-11-23T17:57:32.010Z
+      updated_at: 2026-11-23T17:57:32.010Z
+      version: 1
+  timestamp: 2026-11-23T17:57:32.152Z
+  sequenceNumber: 26
+  origin:
+    by: tier0
+    rule: tier0_test_case_name
+- type: add
+  elementId: testing.testcasesketch.test-pre-review-test-the-verdicts-are-applied-before-relating
+  layerName: testing
+  after:
+    id: 85c413d0-7c6b-4e80-bef6-68f849a8cd1e
+    path: testing.testcasesketch.test-pre-review-test-the-verdicts-are-applied-before-relating
+    spec_node_id: testing.testcasesketch
+    type: testcasesketch
+    layer_id: testing
+    name: TestPreReview.test_the_verdicts_are_applied_before_relating
+    attributes:
+      status: automated
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/tests/unit/domain/pipelines/test_single_call_orchestrator.py
+          symbol: TestPreReview.test_the_verdicts_are_applied_before_relating
+    metadata:
+      created_at: 2026-11-23T17:57:32.010Z
+      updated_at: 2026-11-23T17:57:32.010Z
+      version: 1
+  timestamp: 2026-11-23T17:57:32.152Z
+  sequenceNumber: 27
+  origin:
+    by: tier0
+    rule: tier0_test_case_name
+- type: add
+  elementId: testing.testcasesketch.test-pre-review-test-without-the-setting-nothing-is-reviewed
+  layerName: testing
+  after:
+    id: 57dcf7a5-c99f-4e9f-894b-374bb720d9e1
+    path: testing.testcasesketch.test-pre-review-test-without-the-setting-nothing-is-reviewed
+    spec_node_id: testing.testcasesketch
+    type: testcasesketch
+    layer_id: testing
+    name: TestPreReview.test_without_the_setting_nothing_is_reviewed
+    attributes:
+      status: automated
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/tests/unit/domain/pipelines/test_single_call_orchestrator.py
+          symbol: TestPreReview.test_without_the_setting_nothing_is_reviewed
+    metadata:
+      created_at: 2026-11-23T17:57:32.010Z
+      updated_at: 2026-11-23T17:57:32.010Z
+      version: 1
+  timestamp: 2026-11-23T17:57:32.152Z
+  sequenceNumber: 28
+  origin:
+    by: tier0
+    rule: tier0_test_case_name
+- type: add
+  elementId: testing.testcasesketch.test-sections-test-a-section-never-passes-the-limit-and-takes-as-many-chunks-as-fit
+  layerName: testing
+  after:
+    id: 4711f01d-b5b8-4c47-9f55-a20bb711e1b8
+    path: testing.testcasesketch.test-sections-test-a-section-never-passes-the-limit-and-takes-as-many-chunks-as-fit
+    spec_node_id: testing.testcasesketch
+    type: testcasesketch
+    layer_id: testing
+    name: TestSections.test_a_section_never_passes_the_limit_and_takes_as_many_chunks_as_fit
+    attributes:
+      status: automated
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/tests/unit/domain/pipelines/test_single_call_orchestrator.py
+          symbol: TestSections.test_a_section_never_passes_the_limit_and_takes_as_many_chunks_as_fit
+    metadata:
+      created_at: 2026-11-23T17:57:32.010Z
+      updated_at: 2026-11-23T17:57:32.010Z
+      version: 1
+  timestamp: 2026-11-23T17:57:32.152Z
+  sequenceNumber: 29
+  origin:
+    by: tier0
+    rule: tier0_test_case_name
+- type: add
+  elementId: testing.testcasesketch.test-sections-test-chunks-that-fit-are-one-section
+  layerName: testing
+  after:
+    id: 25164d74-7f8b-4b2e-9860-219bb645322e
+    path: testing.testcasesketch.test-sections-test-chunks-that-fit-are-one-section
+    spec_node_id: testing.testcasesketch
+    type: testcasesketch
+    layer_id: testing
+    name: TestSections.test_chunks_that_fit_are_one_section
+    attributes:
+      status: automated
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/tests/unit/domain/pipelines/test_single_call_orchestrator.py
+          symbol: TestSections.test_chunks_that_fit_are_one_section
+    metadata:
+      created_at: 2026-11-23T17:57:32.010Z
+      updated_at: 2026-11-23T17:57:32.010Z
+      version: 1
+  timestamp: 2026-11-23T17:57:32.152Z
+  sequenceNumber: 30
+  origin:
+    by: tier0
+    rule: tier0_test_case_name
+- type: add
+  elementId: testing.testcasesketch.test-sections-test-text-left-out-of-the-chunks-breaks-a-section
+  layerName: testing
+  after:
+    id: a57e2a9b-4f72-44de-b3be-88710b8bebe5
+    path: testing.testcasesketch.test-sections-test-text-left-out-of-the-chunks-breaks-a-section
+    spec_node_id: testing.testcasesketch
+    type: testcasesketch
+    layer_id: testing
+    name: TestSections.test_text_left_out_of_the_chunks_breaks_a_section
+    attributes:
+      status: automated
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/tests/unit/domain/pipelines/test_single_call_orchestrator.py
+          symbol: TestSections.test_text_left_out_of_the_chunks_breaks_a_section
+    metadata:
+      created_at: 2026-11-23T17:57:32.010Z
+      updated_at: 2026-11-23T17:57:32.010Z
+      version: 1
+  timestamp: 2026-11-23T17:57:32.152Z
+  sequenceNumber: 31
+  origin:
+    by: tier0
+    rule: tier0_test_case_name
+- type: add
+  elementId: testing.testcasesketch.test-sections-test-white-space-between-chunks-does-not
+  layerName: testing
+  after:
+    id: d64c0e58-ae9e-4bb0-9b6e-b5a9294a448b
+    path: testing.testcasesketch.test-sections-test-white-space-between-chunks-does-not
+    spec_node_id: testing.testcasesketch
+    type: testcasesketch
+    layer_id: testing
+    name: TestSections.test_white_space_between_chunks_does_not
+    attributes:
+      status: automated
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/tests/unit/domain/pipelines/test_single_call_orchestrator.py
+          symbol: TestSections.test_white_space_between_chunks_does_not
+    metadata:
+      created_at: 2026-11-23T17:57:32.010Z
+      updated_at: 2026-11-23T17:57:32.010Z
+      version: 1
+  timestamp: 2026-11-23T17:57:32.152Z
+  sequenceNumber: 32
+  origin:
+    by: tier0
+    rule: tier0_test_case_name
+- type: add
+  elementId: testing.testcasesketch.test-single-call-flow-test-a-long-source-is-read-in-the-fewest-sections-that-fit
+  layerName: testing
+  after:
+    id: 7fde34f4-6baf-436a-a50e-617cde0f1827
+    path: testing.testcasesketch.test-single-call-flow-test-a-long-source-is-read-in-the-fewest-sections-that-fit
+    spec_node_id: testing.testcasesketch
+    type: testcasesketch
+    layer_id: testing
+    name: TestSingleCallFlow.test_a_long_source_is_read_in_the_fewest_sections_that_fit
+    attributes:
+      status: automated
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/tests/unit/domain/pipelines/test_single_call_orchestrator.py
+          symbol: TestSingleCallFlow.test_a_long_source_is_read_in_the_fewest_sections_that_fit
+    metadata:
+      created_at: 2026-11-23T17:57:32.010Z
+      updated_at: 2026-11-23T17:57:32.010Z
+      version: 1
+  timestamp: 2026-11-23T17:57:32.152Z
+  sequenceNumber: 33
+  origin:
+    by: tier0
+    rule: tier0_test_case_name
+- type: add
+  elementId: testing.testcasesketch.test-single-call-flow-test-a-relate-call-gets-the-run-s-limit-when-it-is-lower
+  layerName: testing
+  after:
+    id: 7b1f5482-f662-4cec-a6a3-92036cb397e7
+    path: testing.testcasesketch.test-single-call-flow-test-a-relate-call-gets-the-run-s-limit-when-it-is-lower
+    spec_node_id: testing.testcasesketch
+    type: testcasesketch
+    layer_id: testing
+    name: TestSingleCallFlow.test_a_relate_call_gets_the_run_s_limit_when_it_is_lower
+    attributes:
+      status: automated
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/tests/unit/domain/pipelines/test_single_call_orchestrator.py
+          symbol: TestSingleCallFlow.test_a_relate_call_gets_the_run_s_limit_when_it_is_lower
+    metadata:
+      created_at: 2026-11-23T17:57:32.010Z
+      updated_at: 2026-11-23T17:57:32.010Z
+      version: 1
+  timestamp: 2026-11-23T17:57:32.152Z
+  sequenceNumber: 34
+  origin:
+    by: tier0
+    rule: tier0_test_case_annotation
+- type: add
+  elementId: testing.testcasesketch.test-single-call-flow-test-a-source-that-fits-is-read-in-one-call
+  layerName: testing
+  after:
+    id: 1ab41904-3253-4c4b-b888-ddb832d23f1f
+    path: testing.testcasesketch.test-single-call-flow-test-a-source-that-fits-is-read-in-one-call
+    spec_node_id: testing.testcasesketch
+    type: testcasesketch
+    layer_id: testing
+    name: TestSingleCallFlow.test_a_source_that_fits_is_read_in_one_call
+    attributes:
+      status: automated
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/tests/unit/domain/pipelines/test_single_call_orchestrator.py
+          symbol: TestSingleCallFlow.test_a_source_that_fits_is_read_in_one_call
+    metadata:
+      created_at: 2026-11-23T17:57:32.010Z
+      updated_at: 2026-11-23T17:57:32.010Z
+      version: 1
+  timestamp: 2026-11-23T17:57:32.152Z
+  sequenceNumber: 35
+  origin:
+    by: tier0
+    rule: tier0_test_case_name
+- type: add
+  elementId: testing.testcasesketch.test-single-call-flow-test-an-individual-is-related-in-every-chunk-that-names-it
+  layerName: testing
+  after:
+    id: 0a7b8f45-255a-41e8-838f-b6166c2f4c03
+    path: testing.testcasesketch.test-single-call-flow-test-an-individual-is-related-in-every-chunk-that-names-it
+    spec_node_id: testing.testcasesketch
+    type: testcasesketch
+    layer_id: testing
+    name: TestSingleCallFlow.test_an_individual_is_related_in_every_chunk_that_names_it
+    attributes:
+      status: automated
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/tests/unit/domain/pipelines/test_single_call_orchestrator.py
+          symbol: TestSingleCallFlow.test_an_individual_is_related_in_every_chunk_that_names_it
+    metadata:
+      created_at: 2026-11-23T17:57:32.010Z
+      updated_at: 2026-11-23T17:57:32.010Z
+      version: 1
+  timestamp: 2026-11-23T17:57:32.152Z
+  sequenceNumber: 36
+  origin:
+    by: tier0
+    rule: tier0_test_case_name
+- type: add
+  elementId: testing.testcasesketch.test-single-call-flow-test-it-is-find-then-type-with-its-own-find-stage
+  layerName: testing
+  after:
+    id: 258c4a87-4f72-4300-8f6d-978542730559
+    path: testing.testcasesketch.test-single-call-flow-test-it-is-find-then-type-with-its-own-find-stage
+    spec_node_id: testing.testcasesketch
+    type: testcasesketch
+    layer_id: testing
+    name: TestSingleCallFlow.test_it_is_find_then_type_with_its_own_find_stage
+    attributes:
+      status: automated
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/tests/unit/domain/pipelines/test_single_call_orchestrator.py
+          symbol: TestSingleCallFlow.test_it_is_find_then_type_with_its_own_find_stage
+    metadata:
+      created_at: 2026-11-23T17:57:32.010Z
+      updated_at: 2026-11-23T17:57:32.010Z
+      version: 1
+  timestamp: 2026-11-23T17:57:32.152Z
+  sequenceNumber: 37
+  origin:
+    by: tier0
+    rule: tier0_test_case_name
+- type: add
+  elementId: testing.testcasesketch.test-single-call-flow-test-relationships-are-merged-with-the-individuals
+  layerName: testing
+  after:
+    id: ef3a8336-fc1f-4b2c-a13e-51524b617297
+    path: testing.testcasesketch.test-single-call-flow-test-relationships-are-merged-with-the-individuals
+    spec_node_id: testing.testcasesketch
+    type: testcasesketch
+    layer_id: testing
+    name: TestSingleCallFlow.test_relationships_are_merged_with_the_individuals
+    attributes:
+      status: automated
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/tests/unit/domain/pipelines/test_single_call_orchestrator.py
+          symbol: TestSingleCallFlow.test_relationships_are_merged_with_the_individuals
+    metadata:
+      created_at: 2026-11-23T17:57:32.010Z
+      updated_at: 2026-11-23T17:57:32.010Z
+      version: 1
+  timestamp: 2026-11-23T17:57:32.152Z
+  sequenceNumber: 38
+  origin:
+    by: tier0
+    rule: tier0_test_case_name
+- type: add
+  elementId: testing.testcasesketch.test-single-call-flow-test-stages-are-find-individuals-by-section-then-relationships-by-chunk
+  layerName: testing
+  after:
+    id: 757a5a42-393c-488b-88d6-613e15879710
+    path: testing.testcasesketch.test-single-call-flow-test-stages-are-find-individuals-by-section-then-relationships-by-chunk
+    spec_node_id: testing.testcasesketch
+    type: testcasesketch
+    layer_id: testing
+    name: TestSingleCallFlow.test_stages_are_find_individuals_by_section_then_relationships_by_chunk
+    attributes:
+      status: automated
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/tests/unit/domain/pipelines/test_single_call_orchestrator.py
+          symbol: TestSingleCallFlow.test_stages_are_find_individuals_by_section_then_relationships_by_chunk
+    metadata:
+      created_at: 2026-11-23T17:57:32.010Z
+      updated_at: 2026-11-23T17:57:32.010Z
+      version: 1
+  timestamp: 2026-11-23T17:57:32.152Z
+  sequenceNumber: 39
+  origin:
+    by: tier0
+    rule: tier0_test_case_name
+- type: add
+  elementId: testing.testcasesketch.test-single-call-flow-test-the-configuration-s-effort-and-the-run-s-limit-reach-the-call
+  layerName: testing
+  after:
+    id: 454c6f83-099c-4ee5-813c-b1d6681b21aa
+    path: testing.testcasesketch.test-single-call-flow-test-the-configuration-s-effort-and-the-run-s-limit-reach-the-call
+    spec_node_id: testing.testcasesketch
+    type: testcasesketch
+    layer_id: testing
+    name: TestSingleCallFlow.test_the_configuration_s_effort_and_the_run_s_limit_reach_the_call
+    attributes:
+      status: automated
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/tests/unit/domain/pipelines/test_single_call_orchestrator.py
+          symbol: TestSingleCallFlow.test_the_configuration_s_effort_and_the_run_s_limit_reach_the_call
+    metadata:
+      created_at: 2026-11-23T17:57:32.010Z
+      updated_at: 2026-11-23T17:57:32.010Z
+      version: 1
+  timestamp: 2026-11-23T17:57:32.152Z
+  sequenceNumber: 40
+  origin:
+    by: tier0
+    rule: tier0_test_case_name
+- type: add
+  elementId: testing.testcasesketch.test-single-call-flow-test-with-no-effort-configured-none-is-asked-for
+  layerName: testing
+  after:
+    id: 7004c9b1-e671-45dc-bb24-8868e04c128f
+    path: testing.testcasesketch.test-single-call-flow-test-with-no-effort-configured-none-is-asked-for
+    spec_node_id: testing.testcasesketch
+    type: testcasesketch
+    layer_id: testing
+    name: TestSingleCallFlow.test_with_no_effort_configured_none_is_asked_for
+    attributes:
+      status: automated
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/tests/unit/domain/pipelines/test_single_call_orchestrator.py
+          symbol: TestSingleCallFlow.test_with_no_effort_configured_none_is_asked_for
+    metadata:
+      created_at: 2026-11-23T17:57:32.010Z
+      updated_at: 2026-11-23T17:57:32.010Z
+      version: 1
+  timestamp: 2026-11-23T17:57:32.152Z
+  sequenceNumber: 41
+  origin:
+    by: tier0
+    rule: tier0_test_case_name
+- type: add
+  elementId: testing.testcasesketch.test-a-list-shaped-gold-title-is-a-split-trap-and-never-merged
+  layerName: testing
+  after:
+    id: 76adafd6-610a-40ef-866c-2256816d2d78
+    path: testing.testcasesketch.test-a-list-shaped-gold-title-is-a-split-trap-and-never-merged
+    spec_node_id: testing.testcasesketch
+    type: testcasesketch
+    layer_id: testing
+    name: test_a_list_shaped_gold_title_is_a_split_trap_and_never_merged
+    attributes:
+      status: automated
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/tests/unit/test_harness_pre_review_seeded.py
+          symbol: test_a_list_shaped_gold_title_is_a_split_trap_and_never_merged
+    metadata:
+      created_at: 2026-11-23T17:57:32.010Z
+      updated_at: 2026-11-23T17:57:32.010Z
+      version: 1
+  timestamp: 2026-11-23T17:57:32.152Z
+  sequenceNumber: 42
+  origin:
+    by: tier0
+    rule: tier0_test_case_name
+- type: add
+  elementId: testing.testcasesketch.test-a-merge-joins-two-individuals-of-one-class-in-one-paragraph
+  layerName: testing
+  after:
+    id: df704e42-6266-47f5-bafc-1f60b691ce9e
+    path: testing.testcasesketch.test-a-merge-joins-two-individuals-of-one-class-in-one-paragraph
+    spec_node_id: testing.testcasesketch
+    type: testcasesketch
+    layer_id: testing
+    name: test_a_merge_joins_two_individuals_of_one_class_in_one_paragraph
+    attributes:
+      status: automated
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/tests/unit/test_harness_pre_review_seeded.py
+          symbol: test_a_merge_joins_two_individuals_of_one_class_in_one_paragraph
+    metadata:
+      created_at: 2026-11-23T17:57:32.010Z
+      updated_at: 2026-11-23T17:57:32.010Z
+      version: 1
+  timestamp: 2026-11-23T17:57:32.152Z
+  sequenceNumber: 43
+  origin:
+    by: tier0
+    rule: tier0_test_case_name
+- type: add
+  elementId: testing.testcasesketch.test-a-retype-plants-a-class-gold-does-not-accept
+  layerName: testing
+  after:
+    id: ebf37dc4-4f2d-431b-83c3-7bdd240fe136
+    path: testing.testcasesketch.test-a-retype-plants-a-class-gold-does-not-accept
+    spec_node_id: testing.testcasesketch
+    type: testcasesketch
+    layer_id: testing
+    name: test_a_retype_plants_a_class_gold_does_not_accept
+    attributes:
+      status: automated
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/tests/unit/test_harness_pre_review_seeded.py
+          symbol: test_a_retype_plants_a_class_gold_does_not_accept
+    metadata:
+      created_at: 2026-11-23T17:57:32.010Z
+      updated_at: 2026-11-23T17:57:32.010Z
+      version: 1
+  timestamp: 2026-11-23T17:57:32.152Z
+  sequenceNumber: 44
+  origin:
+    by: tier0
+    rule: tier0_test_case_name
+- type: add
+  elementId: testing.testcasesketch.test-a-split-whose-parts-miss-a-gold-name-is-changed-wrongly
+  layerName: testing
+  after:
+    id: 367ad47a-39c4-4e9a-a014-d59244ecada9
+    path: testing.testcasesketch.test-a-split-whose-parts-miss-a-gold-name-is-changed-wrongly
+    spec_node_id: testing.testcasesketch
+    type: testcasesketch
+    layer_id: testing
+    name: test_a_split_whose_parts_miss_a_gold_name_is_changed_wrongly
+    attributes:
+      status: automated
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/tests/unit/test_harness_pre_review_seeded.py
+          symbol: test_a_split_whose_parts_miss_a_gold_name_is_changed_wrongly
+    metadata:
+      created_at: 2026-11-23T17:57:32.010Z
+      updated_at: 2026-11-23T17:57:32.010Z
+      version: 1
+  timestamp: 2026-11-23T17:57:32.152Z
+  sequenceNumber: 45
+  origin:
+    by: tier0
+    rule: tier0_test_case_name
+- type: add
+  elementId: testing.testcasesketch.test-a-stage-that-keeps-everything-misses-every-seed-and-harms-nothing
+  layerName: testing
+  after:
+    id: b8be4cce-f606-49c7-b664-b390d360666b
+    path: testing.testcasesketch.test-a-stage-that-keeps-everything-misses-every-seed-and-harms-nothing
+    spec_node_id: testing.testcasesketch
+    type: testcasesketch
+    layer_id: testing
+    name: test_a_stage_that_keeps_everything_misses_every_seed_and_harms_nothing
+    attributes:
+      status: automated
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/tests/unit/test_harness_pre_review_seeded.py
+          symbol: test_a_stage_that_keeps_everything_misses_every_seed_and_harms_nothing
+    metadata:
+      created_at: 2026-11-23T17:57:32.010Z
+      updated_at: 2026-11-23T17:57:32.010Z
+      version: 1
+  timestamp: 2026-11-23T17:57:32.152Z
+  sequenceNumber: 46
+  origin:
+    by: tier0
+    rule: tier0_test_case_name
+- type: add
+  elementId: testing.testcasesketch.test-changing-a-correct-item-is-a-harm-unless-gold-accepts-it
+  layerName: testing
+  after:
+    id: c3beb7e0-bc56-47f8-b614-074774800438
+    path: testing.testcasesketch.test-changing-a-correct-item-is-a-harm-unless-gold-accepts-it
+    spec_node_id: testing.testcasesketch
+    type: testcasesketch
+    layer_id: testing
+    name: test_changing_a_correct_item_is_a_harm_unless_gold_accepts_it
+    attributes:
+      status: automated
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/tests/unit/test_harness_pre_review_seeded.py
+          symbol: test_changing_a_correct_item_is_a_harm_unless_gold_accepts_it
+    metadata:
+      created_at: 2026-11-23T17:57:32.010Z
+      updated_at: 2026-11-23T17:57:32.010Z
+      version: 1
+  timestamp: 2026-11-23T17:57:32.152Z
+  sequenceNumber: 47
+  origin:
+    by: tier0
+    rule: tier0_test_case_name
+- type: add
+  elementId: testing.testcasesketch.test-fewer-seeds-are-planted-when-gold-has-too-few-candidates
+  layerName: testing
+  after:
+    id: a5c261c7-18dc-4e1a-b668-ddfebeb2710c
+    path: testing.testcasesketch.test-fewer-seeds-are-planted-when-gold-has-too-few-candidates
+    spec_node_id: testing.testcasesketch
+    type: testcasesketch
+    layer_id: testing
+    name: test_fewer_seeds_are_planted_when_gold_has_too_few_candidates
+    attributes:
+      status: automated
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/tests/unit/test_harness_pre_review_seeded.py
+          symbol: test_fewer_seeds_are_planted_when_gold_has_too_few_candidates
+    metadata:
+      created_at: 2026-11-23T17:57:32.010Z
+      updated_at: 2026-11-23T17:57:32.010Z
+      version: 1
+  timestamp: 2026-11-23T17:57:32.152Z
+  sequenceNumber: 48
+  origin:
+    by: tier0
+    rule: tier0_test_case_name
+- type: add
+  elementId: testing.testcasesketch.test-putting-seeds-right-is-counted-as-fixes
+  layerName: testing
+  after:
+    id: adcab33d-9191-4f85-a289-0af5fa8ae5d0
+    path: testing.testcasesketch.test-putting-seeds-right-is-counted-as-fixes
+    spec_node_id: testing.testcasesketch
+    type: testcasesketch
+    layer_id: testing
+    name: test_putting_seeds_right_is_counted_as_fixes
+    attributes:
+      status: automated
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/tests/unit/test_harness_pre_review_seeded.py
+          symbol: test_putting_seeds_right_is_counted_as_fixes
+    metadata:
+      created_at: 2026-11-23T17:57:32.010Z
+      updated_at: 2026-11-23T17:57:32.010Z
+      version: 1
+  timestamp: 2026-11-23T17:57:32.152Z
+  sequenceNumber: 49
+  origin:
+    by: tier0
+    rule: tier0_test_case_name
+- type: add
+  elementId: testing.testcasesketch.test-recorded-mistypes-are-the-classes-gold-does-not-accept
+  layerName: testing
+  after:
+    id: b3d6e5fb-60c7-4a83-8fa6-8dab1b1cfe61
+    path: testing.testcasesketch.test-recorded-mistypes-are-the-classes-gold-does-not-accept
+    spec_node_id: testing.testcasesketch
+    type: testcasesketch
+    layer_id: testing
+    name: test_recorded_mistypes_are_the_classes_gold_does_not_accept
+    attributes:
+      status: automated
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/tests/unit/test_harness_pre_review_seeded.py
+          symbol: test_recorded_mistypes_are_the_classes_gold_does_not_accept
+    metadata:
+      created_at: 2026-11-23T17:57:32.010Z
+      updated_at: 2026-11-23T17:57:32.010Z
+      version: 1
+  timestamp: 2026-11-23T17:57:32.152Z
+  sequenceNumber: 50
+  origin:
+    by: tier0
+    rule: tier0_test_case_name
+- type: add
+  elementId: testing.testcasesketch.test-the-gate-needs-recovery-and-few-harms
+  layerName: testing
+  after:
+    id: 61390417-d0e4-4a5a-93bb-b291ae35c75b
+    path: testing.testcasesketch.test-the-gate-needs-recovery-and-few-harms
+    spec_node_id: testing.testcasesketch
+    type: testcasesketch
+    layer_id: testing
+    name: test_the_gate_needs_recovery_and_few_harms
+    attributes:
+      status: automated
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/tests/unit/test_harness_pre_review_seeded.py
+          symbol: test_the_gate_needs_recovery_and_few_harms
+    metadata:
+      created_at: 2026-11-23T17:57:32.010Z
+      updated_at: 2026-11-23T17:57:32.010Z
+      version: 1
+  timestamp: 2026-11-23T17:57:32.152Z
+  sequenceNumber: 51
+  origin:
+    by: tier0
+    rule: tier0_test_case_name
+- type: add
+  elementId: testing.testcasesketch.test-the-real-benchmark-seeds-every-stratum
+  layerName: testing
+  after:
+    id: 33479607-431a-4711-9a4d-35c0c807bca0
+    path: testing.testcasesketch.test-the-real-benchmark-seeds-every-stratum
+    spec_node_id: testing.testcasesketch
+    type: testcasesketch
+    layer_id: testing
+    name: test_the_real_benchmark_seeds_every_stratum
+    description: The dev gold and the DR schema give every stratum for every take
+      (no model call).
+    attributes:
+      status: automated
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/tests/unit/test_harness_pre_review_seeded.py
+          symbol: test_the_real_benchmark_seeds_every_stratum
+    metadata:
+      created_at: 2026-11-23T17:57:32.010Z
+      updated_at: 2026-11-23T17:57:32.010Z
+      version: 1
+  timestamp: 2026-11-23T17:57:32.152Z
+  sequenceNumber: 52
+  origin:
+    by: tier0
+    rule: tier0_test_case_name
+- type: add
+  elementId: testing.testcasesketch.test-the-same-take-plants-the-same-seeds
+  layerName: testing
+  after:
+    id: c6d7521b-393b-437e-807e-0f4b8fc19a56
+    path: testing.testcasesketch.test-the-same-take-plants-the-same-seeds
+    spec_node_id: testing.testcasesketch
+    type: testcasesketch
+    layer_id: testing
+    name: test_the_same_take_plants_the_same_seeds
+    attributes:
+      status: automated
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/tests/unit/test_harness_pre_review_seeded.py
+          symbol: test_the_same_take_plants_the_same_seeds
+    metadata:
+      created_at: 2026-11-23T17:57:32.010Z
+      updated_at: 2026-11-23T17:57:32.010Z
+      version: 1
+  timestamp: 2026-11-23T17:57:32.152Z
+  sequenceNumber: 53
+  origin:
+    by: tier0
+    rule: tier0_test_case_name
+- type: add
+  elementId: testing.testcasesketch.test-the-wilson-interval
+  layerName: testing
+  after:
+    id: 1cc80ca6-cf00-4bbd-b179-79fb808af255
+    path: testing.testcasesketch.test-the-wilson-interval
+    spec_node_id: testing.testcasesketch
+    type: testcasesketch
+    layer_id: testing
+    name: test_the_wilson_interval
+    attributes:
+      status: automated
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/tests/unit/test_harness_pre_review_seeded.py
+          symbol: test_the_wilson_interval
+    metadata:
+      created_at: 2026-11-23T17:57:32.010Z
+      updated_at: 2026-11-23T17:57:32.010Z
+      version: 1
+  timestamp: 2026-11-23T17:57:32.152Z
+  sequenceNumber: 54
+  origin:
+    by: tier0
+    rule: tier0_test_case_name
+- type: add
+  elementId: testing.testcasesketch.test-unsure-is-counted-and-changes-nothing
+  layerName: testing
+  after:
+    id: 9bb0c7f7-2e0d-4be7-bde9-431aac68a27d
+    path: testing.testcasesketch.test-unsure-is-counted-and-changes-nothing
+    spec_node_id: testing.testcasesketch
+    type: testcasesketch
+    layer_id: testing
+    name: test_unsure_is_counted_and_changes_nothing
+    attributes:
+      status: automated
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/tests/unit/test_harness_pre_review_seeded.py
+          symbol: test_unsure_is_counted_and_changes_nothing
+    metadata:
+      created_at: 2026-11-23T17:57:32.010Z
+      updated_at: 2026-11-23T17:57:32.010Z
+      version: 1
+  timestamp: 2026-11-23T17:57:32.152Z
+  sequenceNumber: 55
+  origin:
+    by: tier0
+    rule: tier0_test_case_name
+- type: relationship-add
+  elementId: application.applicationprocess.single-call-individual-extraction::flows-to::application.applicationprocess.individual-extraction-pipeline
+  layerName: application
+  after:
+    source: application.applicationprocess.single-call-individual-extraction
+    target: application.applicationprocess.individual-extraction-pipeline
+    predicate: flows-to
+    layer: application
+    category: structural
+  timestamp: 2026-11-23T17:57:32.152Z
+  sequenceNumber: 56
+  origin:
+    by: tier0
+    rule: edge:CALLS
+- type: relationship-add
+  elementId: application.applicationservice.extraction-service::accesses::data-model.objectschema.extracted-entity
+  layerName: application
+  after:
+    source: application.applicationservice.extraction-service
+    target: data-model.objectschema.extracted-entity
+    predicate: accesses
+    layer: application
+    targetLayer: data-model
+    category: structural
+  timestamp: 2026-11-23T17:57:32.152Z
+  sequenceNumber: 57
+  origin:
+    by: tier0
+    rule: edge:CALLS
+- type: relationship-add
+  elementId: application.applicationservice.extraction-service::accesses::data-model.objectschema.extraction-run
+  layerName: application
+  after:
+    source: application.applicationservice.extraction-service
+    target: data-model.objectschema.extraction-run
+    predicate: accesses
+    layer: application
+    targetLayer: data-model
+    category: structural
+  timestamp: 2026-11-23T17:57:32.152Z
+  sequenceNumber: 58
+  origin:
+    by: tier0
+    rule: edge:CALLS
+- type: relationship-add
+  elementId: application.applicationservice.extraction-service::accesses::data-model.objectschema.triple-extraction-result
+  layerName: application
+  after:
+    source: application.applicationservice.extraction-service
+    target: data-model.objectschema.triple-extraction-result
+    predicate: accesses
+    layer: application
+    targetLayer: data-model
+    category: structural
+  timestamp: 2026-11-23T17:57:32.152Z
+  sequenceNumber: 59
+  origin:
+    by: tier0
+    rule: edge:CALLS
+- type: relationship-add
+  elementId: application.applicationservice.extraction-service::depends-on::application.applicationservice.import-run-service
+  layerName: application
+  after:
+    source: application.applicationservice.extraction-service
+    target: application.applicationservice.import-run-service
+    predicate: depends-on
+    layer: application
+    category: structural
+  timestamp: 2026-11-23T17:57:32.152Z
+  sequenceNumber: 60
+  origin:
+    by: tier0
+    rule: edge:CALLS
+- type: relationship-add
+  elementId: application.applicationservice.extraction-service::serves::application.applicationfunction.individual-extraction-apply
+  layerName: application
+  after:
+    source: application.applicationservice.extraction-service
+    target: application.applicationfunction.individual-extraction-apply
+    predicate: serves
+    layer: application
+    category: structural
+  timestamp: 2026-11-23T17:57:32.152Z
+  sequenceNumber: 61
+  origin:
+    by: tier0
+    rule: edge:CALLS
+- type: relationship-add
+  elementId: application.applicationservice.llmprovider::serves::application.applicationcomponent.decision-model-registry
+  layerName: application
+  after:
+    source: application.applicationservice.llmprovider
+    target: application.applicationcomponent.decision-model-registry
+    predicate: serves
+    layer: application
+    category: structural
+  timestamp: 2026-11-23T17:57:32.152Z
+  sequenceNumber: 62
+  origin:
+    by: tier0
+    rule: edge:IMPORTS
+- type: relationship-add
+  elementId: testing.testcasesketch.test-a-passage-is-placed-in-its-chunk-with-offsets-into-it::tests::application.applicationprocess.single-call-individual-extraction
+  layerName: testing
+  after:
+    source: testing.testcasesketch.test-a-passage-is-placed-in-its-chunk-with-offsets-into-it
+    target: application.applicationprocess.single-call-individual-extraction
+    predicate: tests
+    layer: testing
+    targetLayer: application
+    category: structural
+  timestamp: 2026-11-23T17:57:32.152Z
+  sequenceNumber: 63
+  origin:
+    by: tier0
+    rule: tier0_test_case_name
+- type: relationship-add
+  elementId: testing.testcasesketch.test-failed-sections-test-a-failed-section-makes-its-chunks-failed-chunks::tests::application.applicationprocess.single-call-individual-extraction
+  layerName: testing
+  after:
+    source: testing.testcasesketch.test-failed-sections-test-a-failed-section-makes-its-chunks-failed-chunks
+    target: application.applicationprocess.single-call-individual-extraction
+    predicate: tests
+    layer: testing
+    targetLayer: application
+    category: structural
+  timestamp: 2026-11-23T17:57:32.152Z
+  sequenceNumber: 64
+  origin:
+    by: tier0
+    rule: tier0_test_case_name
+- type: relationship-add
+  elementId: testing.testcasesketch.test-placements-without-any-passage-go-to-the-first-chunk::tests::application.applicationprocess.single-call-individual-extraction
+  layerName: testing
+  after:
+    source: testing.testcasesketch.test-placements-without-any-passage-go-to-the-first-chunk
+    target: application.applicationprocess.single-call-individual-extraction
+    predicate: tests
+    layer: testing
+    targetLayer: application
+    category: structural
+  timestamp: 2026-11-23T17:57:32.152Z
+  sequenceNumber: 65
+  origin:
+    by: tier0
+    rule: tier0_test_case_name
+- type: relationship-add
+  elementId: testing.testcasesketch.test-sections-test-a-section-never-passes-the-limit-and-takes-as-many-chunks-as-fit::tests::application.applicationprocess.single-call-individual-extraction
+  layerName: testing
+  after:
+    source: testing.testcasesketch.test-sections-test-a-section-never-passes-the-limit-and-takes-as-many-chunks-as-fit
+    target: application.applicationprocess.single-call-individual-extraction
+    predicate: tests
+    layer: testing
+    targetLayer: application
+    category: structural
+  timestamp: 2026-11-23T17:57:32.152Z
+  sequenceNumber: 66
+  origin:
+    by: tier0
+    rule: tier0_test_case_name
+- type: relationship-add
+  elementId: testing.testcasesketch.test-sections-test-chunks-that-fit-are-one-section::tests::application.applicationprocess.single-call-individual-extraction
+  layerName: testing
+  after:
+    source: testing.testcasesketch.test-sections-test-chunks-that-fit-are-one-section
+    target: application.applicationprocess.single-call-individual-extraction
+    predicate: tests
+    layer: testing
+    targetLayer: application
+    category: structural
+  timestamp: 2026-11-23T17:57:32.152Z
+  sequenceNumber: 67
+  origin:
+    by: tier0
+    rule: tier0_test_case_name
+- type: relationship-add
+  elementId: testing.testcasesketch.test-sections-test-text-left-out-of-the-chunks-breaks-a-section::tests::application.applicationprocess.single-call-individual-extraction
+  layerName: testing
+  after:
+    source: testing.testcasesketch.test-sections-test-text-left-out-of-the-chunks-breaks-a-section
+    target: application.applicationprocess.single-call-individual-extraction
+    predicate: tests
+    layer: testing
+    targetLayer: application
+    category: structural
+  timestamp: 2026-11-23T17:57:32.152Z
+  sequenceNumber: 68
+  origin:
+    by: tier0
+    rule: tier0_test_case_name
+- type: relationship-add
+  elementId: testing.testcasesketch.test-sections-test-white-space-between-chunks-does-not::tests::application.applicationprocess.single-call-individual-extraction
+  layerName: testing
+  after:
+    source: testing.testcasesketch.test-sections-test-white-space-between-chunks-does-not
+    target: application.applicationprocess.single-call-individual-extraction
+    predicate: tests
+    layer: testing
+    targetLayer: application
+    category: structural
+  timestamp: 2026-11-23T17:57:32.152Z
+  sequenceNumber: 69
+  origin:
+    by: tier0
+    rule: tier0_test_case_name
+- type: add
+  elementId: data-model.objectschema.pre-review-verdict
+  layerName: data-model
+  after:
+    id: 73ca1c15-711e-4594-b8f6-eae61d18fbb7
+    path: data-model.objectschema.pre-review-verdict
+    spec_node_id: data-model.objectschema
+    type: objectschema
+    layer_id: data-model
+    name: PreReviewVerdict
+    description: The pre-review stage's answer for one extracted individual.
+    attributes:
+      type: object
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/domain/extraction/entities.py
+          symbol: PreReviewVerdict
+    metadata:
+      created_at: 2026-11-23T17:57:52.658Z
+      updated_at: 2026-11-23T17:57:52.658Z
+      version: 1
+  timestamp: 2026-11-23T17:57:52.695Z
+  sequenceNumber: 70
+- type: add
+  elementId: application.applicationfunction.split-witness
+  layerName: application
+  after:
+    id: e1ab8e01-426e-42b2-b479-18713a59d49b
+    path: application.applicationfunction.split-witness
+    spec_node_id: application.applicationfunction
+    type: applicationfunction
+    layer_id: application
+    name: split_witness
+    description: Whether a title looks like a list of several things, so the split
+      question applies.
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/domain/extraction/pre_review.py
+          symbol: split_witness
+    metadata:
+      created_at: 2026-11-23T17:57:52.662Z
+      updated_at: 2026-11-23T17:57:52.662Z
+      version: 1
+  timestamp: 2026-11-23T17:57:52.695Z
+  sequenceNumber: 71
+- type: add
+  elementId: application.applicationfunction.review-individuals
+  layerName: application
+  after:
+    id: 82c4db99-5a4a-4d38-96ae-87e80a1c8ee8
+    path: application.applicationfunction.review-individuals
+    spec_node_id: application.applicationfunction
+    type: applicationfunction
+    layer_id: application
+    name: review_individuals
+    description: "Review a text's extracted individuals (the pre_review stage): one
+      LLM call."
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/domain/extraction/pre_review.py
+          symbol: review_individuals
+    metadata:
+      created_at: 2026-11-23T17:57:52.664Z
+      updated_at: 2026-11-23T17:57:52.664Z
+      version: 1
+  timestamp: 2026-11-23T17:57:52.695Z
+  sequenceNumber: 72
+- type: relationship-add
+  elementId: application.applicationcomponent.dr-spec-changes-exporter::accesses::data-model.objectschema.pre-review-verdict
+  layerName: application
+  after:
+    source: application.applicationcomponent.dr-spec-changes-exporter
+    target: data-model.objectschema.pre-review-verdict
+    predicate: accesses
+    layer: application
+    targetLayer: data-model
+    category: structural
+  origin:
+    by: tier0
+    rule: edge:WRITES
+  timestamp: 2026-11-23T17:58:11.546Z
+  sequenceNumber: 73
+- type: relationship-add
+  elementId: application.applicationfunction.review-individuals::realizes::application.applicationservice.extraction-service
+  layerName: application
+  after:
+    source: application.applicationfunction.review-individuals
+    target: application.applicationservice.extraction-service
+    predicate: realizes
+    layer: application
+    category: structural
+  origin:
+    by: tier0
+    rule: edge:CALLS
+  timestamp: 2026-11-23T17:58:11.546Z
+  sequenceNumber: 74
+- type: relationship-add
+  elementId: testing.testcasesketch.test-no-individuals-means-no-call::tests::application.applicationfunction.review-individuals
+  layerName: testing
+  after:
+    source: testing.testcasesketch.test-no-individuals-means-no-call
+    target: application.applicationfunction.review-individuals
+    predicate: tests
+    layer: testing
+    targetLayer: application
+    category: structural
+  origin:
+    by: tier0
+    rule: tier0_test_case_name
+  timestamp: 2026-11-23T17:58:11.546Z
+  sequenceNumber: 75
+- type: relationship-add
+  elementId: testing.testcasesketch.test-the-witness-leaves-a-single-name-alone::tests::application.applicationfunction.split-witness
+  layerName: testing
+  after:
+    source: testing.testcasesketch.test-the-witness-leaves-a-single-name-alone
+    target: application.applicationfunction.split-witness
+    predicate: tests
+    layer: testing
+    targetLayer: application
+    category: structural
+  origin:
+    by: tier0
+    rule: tier0_test_case_annotation
+  timestamp: 2026-11-23T17:58:11.546Z
+  sequenceNumber: 76
+- type: relationship-add
+  elementId: testing.testcasesketch.test-the-witness-marks-any-list-shaped-title::tests::application.applicationfunction.split-witness
+  layerName: testing
+  after:
+    source: testing.testcasesketch.test-the-witness-marks-any-list-shaped-title
+    target: application.applicationfunction.split-witness
+    predicate: tests
+    layer: testing
+    targetLayer: application
+    category: structural
+  origin:
+    by: tier0
+    rule: tier0_test_case_annotation
+  timestamp: 2026-11-23T17:58:11.546Z
+  sequenceNumber: 77
+- type: relationship-add
+  elementId: testing.testcasesketch.test-the-witness-marks-every-split-from-gate-d::tests::application.applicationfunction.split-witness
+  layerName: testing
+  after:
+    source: testing.testcasesketch.test-the-witness-marks-every-split-from-gate-d
+    target: application.applicationfunction.split-witness
+    predicate: tests
+    layer: testing
+    targetLayer: application
+    category: structural
+  origin:
+    by: tier0
+    rule: tier0_test_case_annotation
+  timestamp: 2026-11-23T17:58:11.546Z
+  sequenceNumber: 78
+- type: relationship-add
+  elementId: testing.testcasesketch.test-unsure-is-counted-and-changes-nothing::tests::data-model.objectschema.pre-review-verdict
+  layerName: testing
+  after:
+    source: testing.testcasesketch.test-unsure-is-counted-and-changes-nothing
+    target: data-model.objectschema.pre-review-verdict
+    predicate: tests
+    layer: testing
+    targetLayer: data-model
+    category: structural
+  origin:
+    by: tier0
+    rule: tier0_test_case_name
+  timestamp: 2026-11-23T17:58:11.546Z
+  sequenceNumber: 79

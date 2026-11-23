@@ -13,17 +13,17 @@ description: "Design of an optional pre-review stage in single_call individual
   errors, the human-checked benchmark gold and Gate D's reviewed runs, three
   takes). Plan only: nothing is built until the user approves."
 created: 2026-11-22T14:46:49.907Z
-modified: 2026-11-23T16:27:35.296Z
+modified: 2026-11-23T17:58:49.572Z
 status: staged
 baseSnapshot: v2:sha256:53252d39ed1357a9afdd6132507b497bf81313353af91142ccb6b590b147594c
 origin:
   kind: plan
 purpose: plan
 stats:
-  additions: 57
+  additions: 35
   modifications: 0
   deletions: 0
-lastSequence: 58
+lastSequence: 69
 unstaged:
   - sequence: 0
     removedAt: 57
@@ -86,4 +86,661 @@ unstaged:
           updated_at: 2026-11-22T14:48:01.245Z
           version: 1
       timestamp: 2026-11-22T14:51:40.924Z
+    rewritten: true
+  - sequence: 1
+    removedAt: 59
+    change:
+      type: add
+      elementId: motivation.requirement.pre-review-changes-show-what-changed-and-why
+      layerName: motivation
+      after:
+        id: 395d8262-4e37-4bd3-9de5-a0a3118e173a
+        path: motivation.requirement.pre-review-changes-show-what-changed-and-why
+        spec_node_id: motivation.requirement
+        type: requirement
+        layer_id: motivation
+        name: Pre-Review Changes Show What Changed and Why
+        description: "Every change the pre-review stage makes to an extracted element (a
+          retype or a split) reaches the proposal as a visible change: the
+          reviewer sees the element as extracted, what the stage changed, and
+          the stage's reasoning, and restores the original in one action. The
+          stage never changes an element silently, and an element it did not
+          review (its call failed or was cut off) is reported as not reviewed,
+          never dropped."
+        attributes:
+          requirementType: functional
+          priority: high
+        metadata:
+          created_at: 2026-11-22T14:48:01.259Z
+          updated_at: 2026-11-22T14:48:01.259Z
+          version: 1
+      timestamp: 2026-11-22T14:48:01.295Z
+  - sequence: 7
+    removedAt: 59
+    change:
+      type: add
+      elementId: data-model.schemaproperty.pre-review
+      layerName: data-model
+      after:
+        id: b3acdb27-e5ca-4c96-a169-3ed93c0fb133
+        path: data-model.schemaproperty.pre-review
+        spec_node_id: data-model.schemaproperty
+        type: schemaproperty
+        layer_id: data-model
+        name: pre_review
+        description: "Proposed Operation's pre_review: the Pre-Review Verdict behind an
+          individual create the stage changed or questioned (null otherwise). A
+          retype also lists the extracted class as an alternative {kind: class,
+          class_id, by: extraction}, so restoring it is choosing that
+          alternative and the gold record keeps it as chosen_alternative. A
+          split part names the element it came from. An operation with a
+          pre_review other than keep never auto-applies under an approval
+          policy."
+        attributes:
+          type: object
+        metadata:
+          created_at: 2026-11-22T14:48:01.267Z
+          updated_at: 2026-11-22T14:48:01.267Z
+          version: 1
+      timestamp: 2026-11-22T14:48:01.295Z
+  - sequence: 8
+    removedAt: 59
+    change:
+      type: add
+      elementId: data-store.field.proposal-operations-pre-review
+      layerName: data-store
+      after:
+        id: cff4d36e-1ec3-4386-bd8a-35d861040800
+        path: data-store.field.proposal-operations-pre-review
+        spec_node_id: data-store.field
+        type: field
+        layer_id: data-store
+        name: proposal_operations.pre_review
+        description: Nullable JSON column on proposal_operations holding an operation's
+          Pre-Review Verdict (Alembic autogenerate migration of local.db).
+        attributes:
+          dataType: JSON
+        metadata:
+          created_at: 2026-11-22T14:48:01.268Z
+          updated_at: 2026-11-22T14:48:01.268Z
+          version: 1
+      timestamp: 2026-11-22T14:48:01.295Z
+  - sequence: 9
+    removedAt: 59
+    change:
+      type: add
+      elementId: ux.subview.pre-review-note
+      layerName: ux
+      after:
+        id: b306c632-6f1f-4ac0-ae2a-ad70d2b78687
+        path: ux.subview.pre-review-note
+        spec_node_id: ux.subview
+        type: subview
+        layer_id: ux
+        name: Pre-Review Note
+        description: "A block of the review inspector for an element the stage changed
+          or questioned: 'Retyped from <class> by pre-review' or 'Split from
+          <original title>', the stage's reasoning and the class it compared,
+          with Restore (key R) choosing the extracted class alternative; an
+          unsure verdict shows its question. Its pill carries a marker so the
+          reviewer sees what the stage touched before opening it. A split's
+          restore is not offered (the Review page cannot merge, #1673): the
+          reviewer rejects the extra parts and edits one part's title."
+        attributes:
+          title: Pre-review
+          description: What the pre-review stage changed on this element and why, with a
+            one-key restore.
+        metadata:
+          created_at: 2026-11-22T14:48:01.270Z
+          updated_at: 2026-11-22T14:48:01.270Z
+          version: 1
+      timestamp: 2026-11-22T14:48:01.295Z
+  - sequence: 10
+    removedAt: 59
+    change:
+      type: relationship-add
+      elementId: motivation.requirement.pre-review-changes-show-what-changed-and-why::realizes::motivation.outcome.extraction-proposals-worth-a-reviewers-time
+      layerName: motivation
+      after:
+        source: motivation.requirement.pre-review-changes-show-what-changed-and-why
+        target: motivation.outcome.extraction-proposals-worth-a-reviewers-time
+        predicate: realizes
+        layer: motivation
+        category: structural
+      timestamp: 2026-11-22T14:48:01.295Z
+  - sequence: 14
+    removedAt: 59
+    change:
+      type: relationship-add
+      elementId: product.feature.extraction-pre-review::satisfies::motivation.requirement.pre-review-changes-show-what-changed-and-why
+      layerName: product
+      after:
+        source: product.feature.extraction-pre-review
+        target: motivation.requirement.pre-review-changes-show-what-changed-and-why
+        predicate: satisfies
+        layer: product
+        targetLayer: motivation
+        category: structural
+      timestamp: 2026-11-22T14:48:01.295Z
+  - sequence: 16
+    removedAt: 59
+    change:
+      type: relationship-add
+      elementId: product.feature.extraction-pre-review::depends-on::product.feature.proposal-review-page
+      layerName: product
+      after:
+        source: product.feature.extraction-pre-review
+        target: product.feature.proposal-review-page
+        predicate: depends-on
+        layer: product
+        category: structural
+      timestamp: 2026-11-22T14:48:01.295Z
+  - sequence: 20
+    removedAt: 59
+    change:
+      type: relationship-add
+      elementId: application.applicationfunction.individual-pre-review::satisfies::motivation.requirement.pre-review-changes-show-what-changed-and-why
+      layerName: application
+      after:
+        source: application.applicationfunction.individual-pre-review
+        target: motivation.requirement.pre-review-changes-show-what-changed-and-why
+        predicate: satisfies
+        layer: application
+        targetLayer: motivation
+        category: structural
+      timestamp: 2026-11-22T14:48:01.295Z
+  - sequence: 24
+    removedAt: 59
+    change:
+      type: relationship-add
+      elementId: data-model.objectschema.pre-review-verdict::satisfies::motivation.requirement.pre-review-changes-show-what-changed-and-why
+      layerName: data-model
+      after:
+        source: data-model.objectschema.pre-review-verdict
+        target: motivation.requirement.pre-review-changes-show-what-changed-and-why
+        predicate: satisfies
+        layer: data-model
+        targetLayer: motivation
+        category: structural
+      timestamp: 2026-11-22T14:48:01.295Z
+  - sequence: 25
+    removedAt: 59
+    change:
+      type: relationship-add
+      elementId: data-model.objectschema.pre-review-verdict::maps-to::data-store.collection.proposal-operations
+      layerName: data-model
+      after:
+        source: data-model.objectschema.pre-review-verdict
+        target: data-store.collection.proposal-operations
+        predicate: maps-to
+        layer: data-model
+        targetLayer: data-store
+        category: structural
+      timestamp: 2026-11-22T14:48:01.295Z
+  - sequence: 26
+    removedAt: 59
+    change:
+      type: relationship-add
+      elementId: data-model.objectschema.pre-review-verdict::maps-to::api.response.change-proposal-response
+      layerName: data-model
+      after:
+        source: data-model.objectschema.pre-review-verdict
+        target: api.response.change-proposal-response
+        predicate: maps-to
+        layer: data-model
+        targetLayer: api
+        category: structural
+      timestamp: 2026-11-22T14:48:01.295Z
+  - sequence: 27
+    removedAt: 59
+    change:
+      type: relationship-add
+      elementId: data-model.objectschema.proposed-operation::composes::data-model.schemaproperty.pre-review
+      layerName: data-model
+      after:
+        source: data-model.objectschema.proposed-operation
+        target: data-model.schemaproperty.pre-review
+        predicate: composes
+        layer: data-model
+        category: structural
+      timestamp: 2026-11-22T14:48:01.295Z
+  - sequence: 28
+    removedAt: 59
+    change:
+      type: relationship-add
+      elementId: data-model.schemaproperty.pre-review::references::data-model.objectschema.pre-review-verdict
+      layerName: data-model
+      after:
+        source: data-model.schemaproperty.pre-review
+        target: data-model.objectschema.pre-review-verdict
+        predicate: references
+        layer: data-model
+        category: structural
+      timestamp: 2026-11-22T14:48:01.295Z
+  - sequence: 29
+    removedAt: 59
+    change:
+      type: relationship-add
+      elementId: data-store.collection.proposal-operations::composes::data-store.field.proposal-operations-pre-review
+      layerName: data-store
+      after:
+        source: data-store.collection.proposal-operations
+        target: data-store.field.proposal-operations-pre-review
+        predicate: composes
+        layer: data-store
+        category: structural
+      timestamp: 2026-11-22T14:48:01.295Z
+  - sequence: 30
+    removedAt: 59
+    change:
+      type: relationship-add
+      elementId: ux.view.proposal-detail-view::composes::ux.subview.pre-review-note
+      layerName: ux
+      after:
+        source: ux.view.proposal-detail-view
+        target: ux.subview.pre-review-note
+        predicate: composes
+        layer: ux
+        category: structural
+      timestamp: 2026-11-22T14:48:01.295Z
+  - sequence: 31
+    removedAt: 59
+    change:
+      type: relationship-add
+      elementId: ux.subview.pre-review-note::binds-to::ux.dataconfig.use-change-proposal
+      layerName: ux
+      after:
+        source: ux.subview.pre-review-note
+        target: ux.dataconfig.use-change-proposal
+        predicate: binds-to
+        layer: ux
+        category: structural
+      timestamp: 2026-11-22T14:48:01.295Z
+  - sequence: 32
+    removedAt: 59
+    change:
+      type: relationship-add
+      elementId: motivation.assessment.splits-and-retypes-are-half-of-reviewer-changes::influence::motivation.requirement.pre-review-changes-show-what-changed-and-why
+      layerName: motivation
+      after:
+        source: motivation.assessment.splits-and-retypes-are-half-of-reviewer-changes
+        target: motivation.requirement.pre-review-changes-show-what-changed-and-why
+        predicate: influence
+        layer: motivation
+        category: structural
+      timestamp: 2026-11-22T14:48:04.978Z
+  - sequence: 38
+    removedAt: 59
+    change:
+      type: relationship-add
+      elementId: ux.view.proposal-detail-view::realizes::product.feature.extraction-pre-review
+      layerName: ux
+      after:
+        source: ux.view.proposal-detail-view
+        target: product.feature.extraction-pre-review
+        predicate: realizes
+        layer: ux
+        targetLayer: product
+        category: structural
+      timestamp: 2026-11-22T14:48:19.864Z
+  - sequence: 39
+    removedAt: 59
+    change:
+      type: relationship-add
+      elementId: api.operation.get-proposal::exposes::product.feature.extraction-pre-review
+      layerName: api
+      after:
+        source: api.operation.get-proposal
+        target: product.feature.extraction-pre-review
+        predicate: exposes
+        layer: api
+        targetLayer: product
+        category: structural
+      timestamp: 2026-11-22T14:48:19.864Z
+  - sequence: 43
+    removedAt: 59
+    change:
+      type: relationship-add
+      elementId: application.applicationservice.approval-policy-service::accesses::data-model.objectschema.pre-review-verdict
+      layerName: application
+      after:
+        source: application.applicationservice.approval-policy-service
+        target: data-model.objectschema.pre-review-verdict
+        predicate: accesses
+        layer: application
+        targetLayer: data-model
+        category: structural
+      timestamp: 2026-11-22T14:48:19.864Z
+  - sequence: 54
+    removedAt: 59
+    change:
+      type: relationship-add
+      elementId: testing.testcasesketch.pre-review-verdicts-reach-the-proposal-visibly::satisfies::motivation.requirement.pre-review-changes-show-what-changed-and-why
+      layerName: testing
+      after:
+        source: testing.testcasesketch.pre-review-verdicts-reach-the-proposal-visibly
+        target: motivation.requirement.pre-review-changes-show-what-changed-and-why
+        predicate: satisfies
+        layer: testing
+        targetLayer: motivation
+        category: structural
+      timestamp: 2026-11-22T14:48:32.985Z
+  - sequence: 56
+    removedAt: 59
+    change:
+      type: relationship-add
+      elementId: application.applicationcomponent.sqlite-change-proposal-repository::accesses::data-model.objectschema.pre-review-verdict
+      layerName: application
+      after:
+        source: application.applicationcomponent.sqlite-change-proposal-repository
+        target: data-model.objectschema.pre-review-verdict
+        predicate: accesses
+        layer: application
+        targetLayer: data-model
+        category: structural
+      timestamp: 2026-11-22T14:48:45.632Z
+  - sequence: 3
+    removedAt: 60
+    change:
+      type: add
+      elementId: product.feature.extraction-pre-review
+      layerName: product
+      after:
+        id: 1c728762-652b-4b4a-836b-1a90b968303d
+        path: product.feature.extraction-pre-review
+        spec_node_id: product.feature
+        type: feature
+        layer_id: product
+        name: Extraction Pre-Review
+        description: "An optional stage of individual extraction that reviews each
+          extracted element before a person does: it splits an element that
+          names several things and retypes one whose class is not the best fit,
+          showing each change and its reason in the Review inspector. Turned on
+          per pipeline configuration (extraction-single-call-reviewed); off in
+          the default configuration until its assessment adopts it."
+        attributes:
+          priority: medium
+          status: proposed
+          size: m
+        metadata:
+          created_at: 2026-11-22T14:48:01.260Z
+          updated_at: 2026-11-22T14:48:01.260Z
+          version: 1
+      timestamp: 2026-11-22T14:48:01.295Z
+    rewritten: true
+  - sequence: 4
+    removedAt: 61
+    change:
+      type: add
+      elementId: application.applicationfunction.individual-pre-review
+      layerName: application
+      after:
+        id: a70825fd-8882-4682-9bff-f8c25814c6b6
+        path: application.applicationfunction.individual-pre-review
+        spec_node_id: application.applicationfunction
+        type: applicationfunction
+        layer_id: application
+        name: Individual Pre-Review
+        description: "The pre_review stage of single_call
+          (domain/extraction/pre_review.py, called from SingleCallOrchestrator
+          between find_individuals and derive_relationships, so relationships
+          are read between the reviewed individuals and their reviewed classes).
+          One LLM call per section (the same sections find_individuals read),
+          against the same class catalog with whole definitions in a cached
+          system prompt, given the section's text and its numbered individuals
+          (title, class, quote). It asks two questions from a small bank kept as
+          data: split (applies only where the split witness fires) and retype
+          (applies to every element: name the strongest other class, compare the
+          two definitions, and change only when the other is clearly better,
+          citing the deciding sentence). It answers per element with keep, split
+          (the parts, each with a title, class and quote), retype (the class,
+          the class compared, the reasoning) or unsure (a question for the
+          reviewer). An answer naming an unknown class or a part with no quote
+          in the text is dropped with a warning and the element kept as
+          extracted; a failed or cut-off call leaves its section's elements
+          unreviewed, reported in the run's metadata (reviewed, changed and
+          not-reviewed counts, tokens split by input, cache and output), never
+          failing the run. Settings in the configuration: pre_review {enabled,
+          model, effort, max_tokens, questions}; the configuration's digest
+          records them in the proposal's origin."
+        attributes:
+          documentation: "Input: section text, catalog, individuals. Output:
+            per-individual PreReviewVerdict; the orchestrator replaces a split
+            individual by its parts and a retyped one's class before relating."
+        metadata:
+          created_at: 2026-11-22T14:48:01.263Z
+          updated_at: 2026-11-22T14:48:01.263Z
+          version: 1
+      timestamp: 2026-11-22T14:48:01.295Z
+    rewritten: true
+  - sequence: 6
+    removedAt: 62
+    change:
+      type: add
+      elementId: data-model.objectschema.pre-review-verdict
+      layerName: data-model
+      after:
+        id: 29379db6-dbf6-4a07-81cf-ba3c90368552
+        path: data-model.objectschema.pre-review-verdict
+        spec_node_id: data-model.objectschema
+        type: objectschema
+        layer_id: data-model
+        name: Pre-Review Verdict
+        description: "Domain value (dataclass, domain/extraction/entities.py): the
+          pre-review stage's answer for one extracted element. verdict (keep,
+          split, retype, unsure), question (split or retype), reasoning,
+          original {title, class_ref}, compared (the class references weighed),
+          parts (for a split), model. Kept on each proposed individual create
+          the stage changed or questioned, as its pre_review field."
+        attributes:
+          type: object
+          required:
+            - verdict
+            - question
+            - reasoning
+            - original
+            - model
+        metadata:
+          created_at: 2026-11-22T14:48:01.265Z
+          updated_at: 2026-11-22T14:48:01.265Z
+          version: 1
+      timestamp: 2026-11-22T14:48:01.295Z
+    rewritten: true
+  - sequence: 46
+    removedAt: 63
+    change:
+      type: add
+      elementId: testing.testcasesketch.pre-review-verdicts-reach-the-proposal-visibly
+      layerName: testing
+      after:
+        id: defda2fe-9dfd-45a2-b302-2c49c44f9acf
+        path: testing.testcasesketch.pre-review-verdicts-reach-the-proposal-visibly
+        spec_node_id: testing.testcasesketch
+        type: testcasesketch
+        layer_id: testing
+        name: Pre-review verdicts reach the proposal visibly
+        description: "Unit, fake LLM: a retype answer changes class_ids, keeps the
+          extracted class as a class alternative and sets pre_review; a split
+          answer replaces the element by its parts, each naming the original; an
+          answer naming an unknown class or a part whose quote is not in the
+          text keeps the element as extracted with a warning; a failed call
+          leaves its section unreviewed and the run succeeds; relate reads the
+          reviewed classes."
+        attributes:
+          status: draft
+        metadata:
+          created_at: 2026-11-22T14:48:32.973Z
+          updated_at: 2026-11-22T14:48:32.973Z
+          version: 1
+      timestamp: 2026-11-22T14:48:32.985Z
+    rewritten: true
+  - sequence: 5
+    removedAt: 64
+    change:
+      type: add
+      elementId: application.applicationfunction.split-witness
+      layerName: application
+      after:
+        id: 1161928f-6219-40a9-bb81-99e8ca10dc1c
+        path: application.applicationfunction.split-witness
+        spec_node_id: application.applicationfunction
+        type: applicationfunction
+        layer_id: application
+        name: Split Witness
+        description: "Deterministic and free: marks the extracted titles the split
+          question applies to (a list separator such as a comma, 'and', '&' or
+          '/' between noun phrases, or several part or model numbers). It
+          catches all 4 of Gate D's splits and fires on 10-20% of single_call's
+          recorded benchmark titles, most of them legitimately compound goals
+          and outcomes, so it is a precondition for asking, never a verdict."
+        metadata:
+          created_at: 2026-11-22T14:48:01.264Z
+          updated_at: 2026-11-22T14:48:01.264Z
+          version: 1
+      timestamp: 2026-11-22T14:48:01.295Z
+    rewritten: true
+  - sequence: 6
+    removedAt: 65
+    change:
+      type: add
+      elementId: data-model.objectschema.pre-review-verdict
+      layerName: data-model
+      after:
+        id: 29379db6-dbf6-4a07-81cf-ba3c90368552
+        path: data-model.objectschema.pre-review-verdict
+        spec_node_id: data-model.objectschema
+        type: objectschema
+        layer_id: data-model
+        name: Pre-Review Verdict
+        description: "Domain value (dataclass, domain/extraction/entities.py): the
+          pre-review stage's answer for one extracted individual. answer (keep,
+          split, retype, unsure), question, reasoning, original title and class,
+          the retype's class, the classes compared, a split's parts (each with
+          title, class and passage), model."
+        attributes:
+          type: object
+          required:
+            - verdict
+            - question
+            - reasoning
+            - original
+            - model
+        metadata:
+          created_at: 2026-11-22T14:48:01.265Z
+          updated_at: 2026-11-22T14:48:01.265Z
+          version: 1
+      timestamp: 2026-11-23T17:58:47.383Z
+    rewritten: true
+  - sequence: 4
+    removedAt: 66
+    change:
+      type: add
+      elementId: application.applicationfunction.individual-pre-review
+      layerName: application
+      after:
+        id: a70825fd-8882-4682-9bff-f8c25814c6b6
+        path: application.applicationfunction.individual-pre-review
+        spec_node_id: application.applicationfunction
+        type: applicationfunction
+        layer_id: application
+        name: Individual Pre-Review
+        description: The pre_review stage (domain/extraction/pre_review.py
+          review_individuals; ExtractionService.review_individuals), called by
+          SingleCallOrchestrator between find_individuals and
+          derive_relationships when the configuration has a pre_review setting
+          {model, effort, max_tokens}. One LLM call per section, against the
+          same class catalog in a cached system prompt, given the section's text
+          and its numbered individuals. It asks the split question where the
+          split witness fires and the retype question of every individual, and
+          answers split, retype or unsure per individual. The orchestrator
+          replaces a split individual by its parts and gives a retyped one its
+          new class before relating. An unusable answer keeps its individual as
+          extracted; a failed call keeps the section's individuals and counts
+          them as not reviewed in the run's metadata, never failing the run.
+        attributes:
+          documentation: "Input: section text, catalog, individuals. Output:
+            per-individual PreReviewVerdict; the orchestrator replaces a split
+            individual by its parts and a retyped one's class before relating."
+        metadata:
+          created_at: 2026-11-22T14:48:01.263Z
+          updated_at: 2026-11-22T14:48:01.263Z
+          version: 1
+      timestamp: 2026-11-23T17:58:47.346Z
+    rewritten: true
+  - sequence: 45
+    removedAt: 67
+    change:
+      type: add
+      elementId: testing.testcasesketch.split-witness-fires-on-gate-ds-four-splits
+      layerName: testing
+      after:
+        id: 52e12c37-806a-4776-b6d3-da525f31ab23
+        path: testing.testcasesketch.split-witness-fires-on-gate-ds-four-splits
+        spec_node_id: testing.testcasesketch
+        type: testcasesketch
+        layer_id: testing
+        name: Split witness fires on Gate D's four splits
+        description: "Unit: the split witness marks 'Torx T20, T25', 'Copper water
+          supply kits WX8X2, WX8X3, WX8X4', 'Straight and Phillips blade
+          screwdriver' and 'Compression nut and ferrule', and its fire rate on
+          single_call's recorded benchmark titles is reported."
+        attributes:
+          status: draft
+        metadata:
+          created_at: 2026-11-22T14:48:32.970Z
+          updated_at: 2026-11-22T14:48:32.970Z
+          version: 1
+      timestamp: 2026-11-22T14:48:32.985Z
+    rewritten: true
+  - sequence: 46
+    removedAt: 68
+    change:
+      type: add
+      elementId: testing.testcasesketch.pre-review-verdicts-reach-the-proposal-visibly
+      layerName: testing
+      after:
+        id: defda2fe-9dfd-45a2-b302-2c49c44f9acf
+        path: testing.testcasesketch.pre-review-verdicts-reach-the-proposal-visibly
+        spec_node_id: testing.testcasesketch
+        type: testcasesketch
+        layer_id: testing
+        name: Pre-review verdicts reach the proposal visibly
+        description: "Unit, fake extraction service (TestPreReview in
+          test_single_call_orchestrator.py): with no or a disabled pre_review
+          setting nothing is reviewed; with one, a retype changes the
+          individual's class and a split replaces it by its parts before
+          relating, unsure changes nothing, the counts and tokens reach the
+          run's metadata; a failed review keeps the individuals and the run."
+        attributes:
+          status: draft
+        metadata:
+          created_at: 2026-11-22T14:48:32.973Z
+          updated_at: 2026-11-22T14:48:32.973Z
+          version: 1
+      timestamp: 2026-11-23T17:58:47.430Z
+    rewritten: true
+  - sequence: 47
+    removedAt: 69
+    change:
+      type: add
+      elementId: testing.testcasesketch.seeded-errors-are-built-and-scored-offline
+      layerName: testing
+      after:
+        id: 2438511c-4928-4bf4-aa56-c785252873f7
+        path: testing.testcasesketch.seeded-errors-are-built-and-scored-offline
+        spec_node_id: testing.testcasesketch
+        type: testcasesketch
+        layer_id: testing
+        name: Seeded errors are built and scored offline
+        description: "Unit, fake stage: the seeded-error builder merges gold pairs and
+          retypes gold elements by stratum, and the scorer counts recovered,
+          changed wrongly and missed seeds and false changes on the untouched
+          controls, with Wilson intervals. No model call."
+        attributes:
+          status: draft
+        metadata:
+          created_at: 2026-11-22T14:48:32.973Z
+          updated_at: 2026-11-22T14:48:32.973Z
+          version: 1
+      timestamp: 2026-11-22T14:48:32.985Z
     rewritten: true
