@@ -4,14 +4,14 @@ kind: experiment
 implementations: [single_call]
 models: [claude-opus-5-5, claude-haiku-5-5]
 takes: 3
-cost_usd: null
+cost_usd: 1.37
 verdict: open
 reproducible: yes
 ---
 
 # A pre-review stage before the person: splits and retypes (2026-11-22)
 
-**Status: Phase 0 done (free); Phase 1 not started.** The design is the DR changeset `extraction-pre-review-stage` (13 elements, staged on branch `claude/llm-review-stage-design-639ead`). The user approved the design and the run, with a $40 cap, on 2026-11-23. Phase 0 is built and passes. Nothing has been spent. The decision rule below was set before any paid run, as [the rules](README.md#recording-an-experiment) require.
+**Status: Phases 0 and 1 done; Phase 2 not started.** The design is the DR changeset `extraction-pre-review-stage` (13 elements, staged on branch `claude/llm-review-stage-design-639ead`). The user approved the design and the run, with a $40 cap, on 2026-11-23. Both arms passed Phase 1's gate for both questions, for $1.37 of the cap. The decision rule below was set before any paid run, as [the rules](README.md#recording-an-experiment) require, and the stage's prompt was frozen in commit 0025ca74 before the first paid call.
 
 ## Question
 
@@ -209,6 +209,59 @@ The unit tests cover fixes, harms, neutral changes, misses, splits whose parts m
 
 **Input size, for the cost estimate.** single_call's recorded find call read 69,000-80,000 input tokens per document (most of it the cached catalog) and wrote 8,500-12,600 output tokens. The stage reads about as much, plus its numbered list of items, and should write less.
 
+
+### Phase 1 (2026-11-23): seeded errors, two arms, three takes
+
+**Both arms pass both questions' gates.** Spend: $1.37 of the $40 cap (12 calls: Haiku $0.05, Opus $1.32).
+
+| arm | retype recovery (realistic) | split recovery | harms on 447 untouched items | Wilson upper | stage precision | gate |
+|---|---|---|---|---|---|---|
+| Haiku 5.5 | 0.86 (31 of 36) | 0.94 (31 of 33) | 4 retype, 0 split | 0.023 / 0.009 | 0.96 | pass, pass |
+| Opus 5.5, effort medium | 0.83 (30 of 36) | 0.91 (30 of 33) | 4 retype, 1 split | 0.023 / 0.013 | 0.95 | pass, pass |
+
+| arm | same-layer retype recovery | neutral changes (acceptable to acceptable) | unsure |
+|---|---|---|---|
+| Haiku | 0.81 (29 of 36) | 7 | 3 |
+| Opus | 0.94 (34 of 36) | 4 | 0 |
+
+**Harms come in bursts, one judgment applied to a group in one take.**
+
+- **Haiku, `edit_check` take 1:** four rates moved from `apm.metricinstrument` to `motivation.assessment`, as "an experimental measurement reported as a finding".
+- **Opus, `edit_check` take 3:** four risks moved from `motivation.driver` to `motivation.assessment`. These are the same items the person retyped from assessment to driver when checking this gold on 2026-11-18. In that take the stage reintroduced the model-made gold's reading, the one the person had rejected.
+- Opus also split one split trap ("Link check and Reference reliability"). Haiku split none of the 54.
+- Every other take had no harms.
+
+**The human-checked document is the harder one.**
+
+- Every harm, and most misses, are on `edit_check`.
+- Realistic retype recovery on `edit_check`, per take:
+  - Haiku: 0.50, 1.00 and 1.00;
+  - Opus: 0.50, 0.83 and 0.67.
+- On `gitlab_architecture` (model-made gold) both arms recover 0.83-1.00.
+- Merges on `edit_check` (3 per take) were split in 2 or 3 of 3 by both arms, and all 8 per take on `gitlab_architecture`.
+
+**Neutral changes are reviewer churn.** Both arms moved `editcheck/init.js` from application component to artifact in most takes, and Haiku moved the two persona groups to stakeholder. These count against no score, but the person sees each one.
+
+**Cost per document pass, measured:**
+
+| arm | first call, writing the catalog cache | later calls, reading it |
+|---|---|---|
+| Opus | $0.45 | $0.14-0.21 |
+| Haiku | $0.014 | $0.006-0.009 |
+
+- The catalog system prompt is 62,573 tokens, read from cache after the first call.
+- The text and list are 15,700-23,500 tokens.
+- Output was 3,200-5,100 tokens on Opus and 6,800-11,800 on Haiku.
+
+**Limits of this phase:**
+- The input is gold, so every item has a quote and a sensible title. Real extractions are noisier.
+- The seeds are planted errors, not the errors single_call makes. Realistic retypes come from its recordings and from the definitions' "Use X instead" sentences.
+- Six takes per arm, with seeds that differ by take, cannot separate the stage's noise from the seeds'.
+
+**What it means for Phase 2.** Both arms go on with both questions.
+- By the cheapest-source rule, Haiku is the likely pick unless Phase 2 separates the two by more than 10 points.
+- The bursts of harms are the risk to watch: on `edit_check`, one take's group retype is enough to move typed F1 by about 0.05 on its own.
+
 ## Limits
 
 - **The decision rests on thin evidence:**
@@ -235,7 +288,16 @@ python scripts/benchmark_pre_review.py seeded --fake keep
 python scripts/benchmark_pre_review.py seeded --fake oracle
 ```
 
-Planned for the paid phases: `benchmark_pre_review.py seeded` with the real stage, then `benchmark` and `gate-d`. Saved takes go under `tests/integration/fixtures/pipelines/extraction_benchmark_pre_review/`. Gate D's inputs come from the workspace database and are scratch; not reproducible from the repository.
+Phase 1, replayed free from the committed cassettes (`tests/integration/fixtures/cassettes/pre_review_seeded/`), with reports and the spend ledger under `tests/integration/fixtures/pipelines/extraction_benchmark_pre_review/`:
+
+```bash
+python scripts/benchmark_pre_review.py seeded --arm haiku
+python scripts/benchmark_pre_review.py seeded --arm opus
+```
+
+Recording a missing take adds `--spend`, and needs a working Anthropic key in the configuration file. A worktree reads `local-server/.env`, whose `ANTHROPIC_API_KEY` was rejected on 2026-11-23, so these takes were recorded with `CONFIG_PATH` naming the main checkout's `config.json`.
+
+Planned for Phases 2 and 3: `benchmark` and `gate-d` subcommands. Saved takes go under `tests/integration/fixtures/pipelines/extraction_benchmark_pre_review/`. Gate D's inputs come from the workspace database and are scratch; not reproducible from the repository.
 
 ## Links
 

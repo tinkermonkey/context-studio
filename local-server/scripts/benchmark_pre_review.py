@@ -340,6 +340,10 @@ def record_seeded(arm: str) -> None:
         recorder = RecordingLLMProvider(router, path)
         began = time.perf_counter()
         result = run_stage(document, arm, recorder)
+        if result.failure_reason:
+            # Nothing usable was recorded: leave no cassette, so the take is recorded again
+            print(f"{arm} {document.document_id} take{document.take}: FAILED: {result.failure_reason}")
+            raise SystemExit(1)
         recorder.flush()
         print(
             f"{arm} {document.document_id} take{document.take}: {len(result.verdicts)} verdicts,"
