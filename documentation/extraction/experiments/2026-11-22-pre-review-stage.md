@@ -4,14 +4,16 @@ kind: experiment
 implementations: [single_call]
 models: [claude-opus-5-5, claude-haiku-5-5]
 takes: 3
-cost_usd: 1.37
-verdict: open
+cost_usd: 10.02
+verdict: inconclusive
 reproducible: yes
 ---
 
 # A pre-review stage before the person: splits and retypes (2026-11-22)
 
-**Status: Phases 0 and 1 done; Phase 2 not started.** The design is the DR changeset `extraction-pre-review-stage` (13 elements, staged on branch `claude/llm-review-stage-design-639ead`). The user approved the design and the run, with a $40 cap, on 2026-11-23. Both arms passed Phase 1's gate for both questions, for $1.37 of the cap. The decision rule below was set before any paid run, as [the rules](README.md#recording-an-experiment) require, and the stage's prompt was frozen in commit 0025ca74 before the first paid call.
+**Status: inconclusive by the rule set in advance (2026-11-23); the stage stays an optional configuration, off by default.** Phases 0-2 ran; Phase 3 did not, since it can only veto an adoption. The design is the DR changeset `extraction-pre-review-stage`. The user approved the design and the run, with a $40 cap, on 2026-11-23, and $10.02 was spent. The decision rule below was set before any paid run, and the stage's prompt was frozen in commit 0025ca74 before the first paid call.
+
+**In short:** the stage catches errors that were planted (Phase 1) and almost none of the errors `single_call` makes (Phase 2). On real output it proposes 0-3 changes a document. The errors that matter on the human-checked document are risks typed as assessment, and the stage reads the definitions the same way the extractor does, so it leaves them alone. A second pass by a model of the same family does not catch a shared misreading.
 
 ## Question
 
@@ -262,6 +264,71 @@ The unit tests cover fixes, harms, neutral changes, misses, splits whose parts m
 - By the cheapest-source rule, Haiku is the likely pick unless Phase 2 separates the two by more than 10 points.
 - The bursts of harms are the risk to watch: on `edit_check`, one take's group retype is enough to move typed F1 by about 0.05 on its own.
 
+
+### Phase 2 (2026-11-23): the stage inside single_call, three paired takes
+
+**Inconclusive for both arms.** Neither cut the reviewer's targeted edits. Neither lost typed F1 or relationship recall beyond the rule's guards.
+
+**Spend:** $8.65 of the cap.
+- $5.48 for the incumbent's takes 2 and 3. Take 1 is the committed recording.
+- $1.27 for the Haiku arm and $1.95 for the Opus arm. Most of each arm's spend is the relate calls its changes made new.
+
+**Targeted edits needed on `edit_check`** (retypes plus merged items, incumbent → arm, per take):
+
+| arm | take 1 | take 2 | take 3 | cut |
+|---|---|---|---|---|
+| Haiku | 9 → 9 | 6 → 6 | 8 → 8 | 0% |
+| Opus | 9 → 9 | 6 → 6 | 8 → 8 | 0% |
+
+**Paired deltas against the incumbent, per take:**
+
+| arm | typed F1, dev | typed F1, holdout | relationship recall, dev |
+|---|---|---|---|
+| Haiku | 0, 0, 0 | −0.006, 0, +0.010 | −0.028, 0, 0 |
+| Opus | +0.007, 0, 0 | 0, 0, +0.004 | 0, 0, 0 |
+
+**Fixes and harms on matched dev individuals:** 0 and 0 for both arms, so stage precision is undefined.
+
+Check by check against the rule:
+
+| check | Haiku | Opus |
+|---|---|---|
+| (a) edits cut by 30% in every take | fails | fails |
+| (b) typed F1 guard | passes | passes |
+| (c) relationship recall guard | passes | passes |
+| (d) stage precision | undefined | undefined |
+| reject condition | not met | not met |
+
+**What the stage did on real output.**
+
+- **Very few changes.** 0-3 per document per take on Haiku, 0-3 on Opus, mostly 0-1. In Phase 1 it gave 15-21 verdicts per seeded document.
+- **What it changed:**
+  - persona groups retyped to stakeholder;
+  - two product editions retyped to artifact;
+  - a launch retyped to business event;
+  - "Systems administrators and GitLab Support Engineers" split. This is the one change that found a gold individual, worth +0.013 typed F1 on `gitlab_architecture` take 1;
+  - "Link check and Reference reliability" split in two takes. That is one item in the gold;
+  - a few multi-recommendation statements split on the holdout.
+- **What the person would fix on `edit_check`, and the stage never touched:**
+  - the six risks, typed as `motivation.assessment` in every take where the checked gold says `motivation.driver`;
+  - a phase-1 analysis typed as `business.businessprocess`;
+  - `Special:EditChecks`, typed as a feature, which the gold has as a view.
+
+  The DR definition of Assessment, which the stage is given, names "an identified ... risk" as an example. Phase 1's Opus moved the same risks back to assessment. The extractor and the stage share the reading the person rejected when checking the gold.
+
+**The incumbent's own spread, a by-product** (next step 3 of the current state):
+
+| | take 1 | take 2 | take 3 |
+|---|---|---|---|
+| dev typed F1 | 0.535 | 0.557 | 0.587 |
+| holdout typed F1 | 0.625 | 0.642 | 0.577 |
+| `edit_check` relationship recall | 0.222 | 0.133 | 0.022 |
+
+- Typed F1 spreads about 0.05 on dev and 0.065 on the holdout across takes.
+- `edit_check`'s relationship recall swings widely between takes.
+
+**Why Phase 3 was not run.** Phase 2 is inconclusive, and Phase 3 can only veto an adoption. Run for information, it would show whether the stage recovers your own 11 Gate D retypes. Five of them are DR retypes the extractor made, and on this evidence the stage is unlikely to catch them for the same reason.
+
 ## Limits
 
 - **The decision rests on thin evidence:**
@@ -276,7 +343,19 @@ The unit tests cover fixes, harms, neutral changes, misses, splits whose parts m
 
 ## Verdict
 
-Open: the user decides whether to run it.
+**Inconclusive, by the rule set in advance.**
+
+- Phase 1 passed for both arms and both questions.
+- In Phase 2 neither arm cut the targeted edits, and neither arm was harmful.
+- The stage stays an optional configuration, off by default. `SingleCallOrchestrator` runs it when a configuration has a `pre_review` setting; no built-in configuration has one.
+- The changeset's parts that carry verdicts into a proposal (the `pre_review` field, the class alternative, the inspector note) are not built.
+
+**What the evidence points to instead.** The reviewer's typing changes on DR text come from definitions the model reads differently from the person, not from a slip a second look would catch. Two places to act:
+
+- **The class definitions themselves**, for example where Assessment and Driver draw their line on risks. These are DR spec matters, so they go to Context Studio as proposals.
+- **Examples of the person's own decisions offered to the extractor.** The gold check's decisions are exactly these.
+
+Splitting merged items found one real case on DR text in nine takes.
 
 ## Reproduce
 
@@ -297,7 +376,13 @@ python scripts/benchmark_pre_review.py seeded --arm opus
 
 Recording a missing take adds `--spend`, and needs a working Anthropic key in the configuration file. A worktree reads `local-server/.env`, whose `ANTHROPIC_API_KEY` was rejected on 2026-11-23, so these takes were recorded with `CONFIG_PATH` naming the main checkout's `config.json`.
 
-Planned for Phases 2 and 3: `benchmark` and `gate-d` subcommands. Saved takes go under `tests/integration/fixtures/pipelines/extraction_benchmark_pre_review/`. Gate D's inputs come from the workspace database and are scratch; not reproducible from the repository.
+Phase 2, replayed free from the committed cassettes (`tests/integration/fixtures/cassettes/pre_review_benchmark/` and single_call's committed recording as take 1), scored and judged by the rule:
+
+```bash
+python scripts/benchmark_pre_review.py benchmark
+```
+
+Recording the takes used `benchmark --arm off|haiku|opus --spend`, under the same `CONFIG_PATH`. Phase 3 has no subcommand: it was not run. Saved takes go under `tests/integration/fixtures/pipelines/extraction_benchmark_pre_review/`. Gate D's inputs come from the workspace database and are scratch; not reproducible from the repository.
 
 ## Links
 

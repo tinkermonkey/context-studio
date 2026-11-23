@@ -1,0 +1,9 @@
+{
+  "7932ba8403e1d4923018363492a61ad0f43eee9286b46a8e92cb0f730b5e95dd": {
+    "content": "{\"reviews\": []}",
+    "tokens_in": 80096,
+    "tokens_out": 4045,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  }
+}

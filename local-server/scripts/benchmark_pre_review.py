@@ -23,6 +23,18 @@ and every paid call is metered in
 tests/integration/fixtures/pipelines/extraction_benchmark_pre_review/ledger.jsonl
 against the experiment's cap; a call whose worst case would pass it is not made.
 
+Phase 2, the stage inside single_call on the benchmark, paired with the
+incumbent's takes (take 1 is single_call's committed recording; takes 2 and 3
+are recorded here):
+
+    python scripts/benchmark_pre_review.py benchmark --arm off --spend    # record the incumbent's takes 2-3 (costs)
+    python scripts/benchmark_pre_review.py benchmark --arm haiku --spend  # each arm over each incumbent take (costs)
+    python scripts/benchmark_pre_review.py benchmark                      # replay every arm, score, apply the rule (free)
+
+An arm's take reads the incumbent take's recording first, so its
+find_individuals call and every relate call the review left unchanged cost
+nothing; only the review and the relate calls it changed are new.
+
 Run from local-server/ with the venv active. Add --json for machine-readable output.
 """
 
@@ -342,7 +354,9 @@ def record_seeded(arm: str) -> None:
         result = run_stage(document, arm, recorder)
         if result.failure_reason:
             # Nothing usable was recorded: leave no cassette, so the take is recorded again
-            print(f"{arm} {document.document_id} take{document.take}: FAILED: {result.failure_reason}")
+            print(
+                f"{arm} {document.document_id} take{document.take}: FAILED: {result.failure_reason}"
+            )
             raise SystemExit(1)
         recorder.flush()
         print(
@@ -428,6 +442,376 @@ def spend_report() -> dict[str, Any]:
     }
 
 
+# ---------------------------------------------------------------- Phase 2: the benchmark
+
+DOCUMENTS = (*DEV_DOCUMENTS, *HOLDOUT_DOCUMENTS)
+PHASE2_CASSETTES = RECORDINGS.parent / "pre_review_benchmark"
+# The stage's setting per arm, as the configuration carries it
+REVIEW_SETTINGS = {
+    "haiku": {"model": "claude-haiku-5-5"},
+    "opus": {"model": "claude-opus-5-5", "effort": "medium"},
+}
+
+
+class _ArmTarget:
+    """single_call's target with the arm's pre_review setting in its configuration."""
+
+    def __init__(self, base: Any, setting: Mapping[str, Any] | None) -> None:
+        self._base = base
+        self.config = {**base.config, **({"pre_review": dict(setting)} if setting else {})}
+
+    def __getattr__(self, name: str) -> Any:
+        return getattr(self._base, name)
+
+
+class _Chain:
+    """
+    Answers from the first recording that has the prompt; with none, from the
+    live recorder when there is one, else counts a miss and raises.
+    """
+
+    def __init__(self, replays: list[Any], live: Any = None) -> None:
+        self.replays, self.live, self.misses = replays, live, 0
+
+    def complete(self, **request: Any) -> Any:
+        from tests.integration.pipelines._harness.cassettes import CassetteStaleError
+
+        for replay in self.replays:
+            try:
+                return replay.complete(**request)
+            except CassetteStaleError:
+                continue
+        if self.live is None:
+            self.misses += 1
+            raise CassetteStaleError("no recording answers this prompt")
+        return self.live.complete(**request)
+
+    def forget(self, **request: Any) -> None:
+        if self.live is not None:
+            self.live.forget(**request)
+
+    def is_model_available(self, model: str) -> bool:
+        return True
+
+
+def base_target() -> Any:
+    from scripts.benchmark_replay import resolve_target
+
+    return resolve_target("single_call", "extraction-single-call")
+
+
+def off_cassette(document_id: str, take: int) -> Path:
+    if take == 1:
+        return RECORDINGS / f"{document_id}.json"
+    return PHASE2_CASSETTES / "off" / f"take{take}" / f"{document_id}.json"
+
+
+def arm_cassette(arm: str, document_id: str, take: int) -> Path:
+    return PHASE2_CASSETTES / arm / f"take{take}" / f"{document_id}.json"
+
+
+def _metered_router(ledger: Any, where: dict[str, Any], phase: int) -> Any:
+    """The Anthropic router with every call, streamed or not, metered on the ledger."""
+    from adapters.llm.provider_router import LLMProviderRouter
+    from scripts.benchmark_external import anthropic_key, cost_usd, usage_of
+
+    router = LLMProviderRouter(anthropic_api_key=anthropic_key())  # Anthropic only
+    client = router._providers["anthropic"]._client
+    create, stream = client.messages.create, client.messages.stream
+
+    def worst(kwargs: Mapping[str, Any]) -> float:
+        chars = len(json.dumps(kwargs.get("system", ""))) + len(
+            json.dumps(kwargs.get("messages", ""))
+        )
+        return cost_usd(
+            kwargs["model"],
+            {
+                "input": 0,
+                "cache_write": chars // 3,
+                "cache_read": 0,
+                "output": kwargs.get("max_tokens", 16000),
+            },
+        )
+
+    def record(kwargs: Mapping[str, Any], message: Any, reserved: float) -> None:
+        usage = usage_of(message.usage)
+        ledger.record(
+            {
+                "phase": phase,
+                **where,
+                "model": kwargs["model"],
+                "usage": usage,
+                "usd": cost_usd(kwargs["model"], usage),
+            },
+            reserved,
+        )
+
+    def metered_create(**kwargs: Any) -> Any:
+        reserved = worst(kwargs)
+        ledger.reserve(reserved)
+        try:
+            message = create(**kwargs)
+        except BaseException:
+            ledger.release(reserved)
+            raise
+        record(kwargs, message, reserved)
+        return message
+
+    class _MeteredStream:
+        def __init__(self, kwargs: Mapping[str, Any]) -> None:
+            self.kwargs, self.reserved = kwargs, worst(kwargs)
+            ledger.reserve(self.reserved)
+            try:
+                self.manager = stream(**kwargs)
+            except BaseException:
+                ledger.release(self.reserved)
+                raise
+
+        def __enter__(self) -> Any:
+            self.inner = self.manager.__enter__()
+            return self.inner
+
+        def __exit__(self, *exc: Any) -> Any:
+            if exc[0] is not None:
+                ledger.release(self.reserved)
+                return self.manager.__exit__(*exc)
+            try:
+                message = self.inner.get_final_message()
+            except BaseException:
+                ledger.release(self.reserved)
+                raise
+            record(self.kwargs, message, self.reserved)
+            return self.manager.__exit__(*exc)
+
+    client.messages.create = metered_create
+    client.messages.stream = lambda **kwargs: _MeteredStream(kwargs)
+    return router
+
+
+def record_benchmark(arm: str) -> None:
+    """Record every missing take of an arm (off: the incumbent's takes 2-3), each call metered."""
+    import asyncio
+
+    from scripts.benchmark_external import Ledger
+    from scripts.benchmark_replay import benchmark_ontology, extract_document
+    from tests.integration.pipelines._harness.cassettes import (
+        CassetteLLMProvider,
+        RecordingLLMProvider,
+    )
+
+    ledger = Ledger(RESULTS / "ledger.jsonl", BUDGET_USD)
+    where: dict[str, Any] = {"phase": 2, "arm": arm}
+    router = _metered_router(ledger, where, 2)
+    target = _ArmTarget(base_target(), REVIEW_SETTINGS.get(arm))
+    for take in TAKES:
+        for document_id in DOCUMENTS:
+            if arm == "off":
+                path = off_cassette(document_id, take)
+                replays: list[Any] = []
+            else:
+                path = arm_cassette(arm, document_id, take)
+                incumbent = off_cassette(document_id, take)
+                if not incumbent.exists():
+                    print(f"{arm} {document_id} take{take}: no incumbent take yet, skipped")
+                    continue
+                replays = [CassetteLLMProvider(incumbent)]
+            if path.exists():
+                continue
+            where.update(document=document_id, take=take)
+            recorder = RecordingLLMProvider(router, path)
+            began = time.perf_counter()
+            try:
+                asyncio.run(
+                    extract_document(
+                        benchmark_ontology(), _Chain(replays, recorder), document_id, target
+                    )
+                )
+            except Exception as exc:  # a failed take records nothing, so it is recorded again
+                print(f"{arm} {document_id} take{take}: FAILED: {exc}", flush=True)
+                raise SystemExit(1)
+            recorder.flush()
+            print(
+                f"{arm} {document_id} take{take}: {time.perf_counter() - began:.0f}s,"
+                f" spent so far ${ledger.spent():.2f}",
+                flush=True,
+            )
+
+
+def _merged_predictions(gold: Any, individuals: list[Any]) -> int:
+    """
+    Predictions that are several gold individuals in one, so a person would
+    split them: not a statement, the title is no gold name, and cut at its list separators it
+    gives two or more pieces that are each a different gold individual's name.
+    """
+    import re as _re
+
+    from tests.integration.pipelines._harness.benchmark import name_key
+
+    owner = {name: g.key for g in gold.individuals for name in g.names}
+    count = 0
+    for prediction in individuals:
+        # A statement (a goal, requirement...) names several things and is still one item
+        statement = any(ref.startswith("motivation.") for ref in prediction.class_refs)
+        if statement or name_key(prediction.title) in owner:
+            continue
+        pieces = _re.split(r",\s+|\s+(?:and|&|\+)\s+|/", prediction.title)
+        named = {owner[name_key(piece)] for piece in pieces if name_key(piece) in owner}
+        count += len(named) >= 2
+    return count
+
+
+def score_benchmark_take(arm: str, document_id: str, take: int) -> dict[str, Any] | None:
+    """Replay one take of an arm and score it; None when it is not recorded or stale."""
+    import asyncio
+
+    from scripts.benchmark_replay import benchmark_ontology, extract_document
+    from tests.integration.pipelines._harness.benchmark import score
+    from tests.integration.pipelines._harness.cassettes import CassetteLLMProvider
+
+    incumbent = off_cassette(document_id, take)
+    paths = [incumbent] if arm == "off" else [arm_cassette(arm, document_id, take), incumbent]
+    if not all(p.exists() for p in paths):
+        return None
+    chain = _Chain([CassetteLLMProvider(p) for p in paths])
+    target = _ArmTarget(base_target(), REVIEW_SETTINGS.get(arm))
+    try:
+        individuals, relationships = asyncio.run(
+            extract_document(benchmark_ontology(), chain, document_id, target)
+        )
+    except Exception as exc:
+        return {"status": "stale" if chain.misses else "failed", "detail": str(exc)[:200]}
+    gold = load_gold(document_id)
+    result = score(gold, individuals, relationships)
+    missed = {m["key"] for m in result.missed}
+    mistyped = {m["key"] for m in result.mistyped}
+    found = {g.key for g in gold.individuals} - missed
+    merged = _merged_predictions(gold, individuals)
+    return {
+        "status": "scored",
+        "metrics": {
+            k: result.metrics[k]
+            for k in (
+                "typed_f1",
+                "f1",
+                "type_accuracy",
+                "relationship_recall",
+                "relationship_precision",
+            )
+        },
+        "mistyped": sorted(mistyped),
+        "typed": sorted(found - mistyped),
+        "merged": merged,
+        "edits_needed": len(mistyped) + merged,
+        "predicted": len(individuals),
+    }
+
+
+def benchmark_report() -> dict[str, Any]:
+    """Every arm's takes against the incumbent's, paired by take, and the decision rule applied."""
+    from statistics import mean
+
+    rows: dict[str, dict[tuple[str, int], Any]] = {}
+    for arm in ("off", *REVIEW_SETTINGS):
+        rows[arm] = {(d, t): score_benchmark_take(arm, d, t) for d in DOCUMENTS for t in TAKES}
+    report: dict[str, Any] = {"takes": {}, "arms": {}}
+    for arm, cells in rows.items():
+        report["takes"][arm] = {f"{d} take{t}": cell for (d, t), cell in cells.items()}
+    for arm in REVIEW_SETTINGS:
+        paired = {}
+        for (d, t), cell in rows[arm].items():
+            off = rows["off"][(d, t)]
+            if not (cell and off and cell.get("status") == off.get("status") == "scored"):
+                continue
+            fixes = len(set(cell["typed"]) - set(off["typed"]) & set(off["mistyped"]))
+            harms = len(set(off["typed"]) & set(cell["mistyped"]))
+            paired[(d, t)] = {
+                "typed_f1": cell["metrics"]["typed_f1"] - off["metrics"]["typed_f1"],
+                "relationship_recall": (
+                    cell["metrics"]["relationship_recall"] - off["metrics"]["relationship_recall"]
+                ),
+                "edits_off": off["edits_needed"],
+                "edits_arm": cell["edits_needed"],
+                "fixes": fixes,
+                "harms": harms,
+            }
+        if not paired:
+            report["arms"][arm] = {"status": "no paired takes"}
+            continue
+
+        def split(docs: tuple[str, ...], key: str) -> list[float]:
+            per_take = []
+            for t in TAKES:
+                values = [paired[(d, t)][key] for d in docs if (d, t) in paired]
+                if values:
+                    per_take.append(mean(values))
+            return per_take
+
+        edit_takes = [
+            (paired[("edit_check", t)]["edits_off"], paired[("edit_check", t)]["edits_arm"])
+            for t in TAKES
+            if ("edit_check", t) in paired
+        ]
+        gitlab_takes = [
+            (
+                paired[("gitlab_architecture", t)]["edits_off"],
+                paired[("gitlab_architecture", t)]["edits_arm"],
+            )
+            for t in TAKES
+            if ("gitlab_architecture", t) in paired
+        ]
+        cut = (
+            (1 - sum(a for _, a in edit_takes) / sum(o for o, _ in edit_takes))
+            if edit_takes and sum(o for o, _ in edit_takes)
+            else 0.0
+        )
+        dev_f1, hold_f1 = split(DEV_DOCUMENTS, "typed_f1"), split(HOLDOUT_DOCUMENTS, "typed_f1")
+        dev_rel = split(DEV_DOCUMENTS, "relationship_recall")
+        dev_cells = [v for (d, _), v in paired.items() if d in DEV_DOCUMENTS]
+        fixes, harms = sum(v["fixes"] for v in dev_cells), sum(v["harms"] for v in dev_cells)
+        precision = fixes / (fixes + harms) if fixes + harms else None
+        complete = len(paired) == len(DOCUMENTS) * len(TAKES)
+        checks = {
+            "a_edits_cut_30pct_every_take": (
+                bool(edit_takes) and cut >= 0.30 and all(a < o for o, a in edit_takes)
+            ),
+            "a_gitlab_not_the_other_way": (
+                sum(a for _, a in gitlab_takes) <= sum(o for o, _ in gitlab_takes)
+            ),
+            "b_typed_f1_mean_drop_le_0.02": (
+                bool(dev_f1 and hold_f1) and mean(dev_f1) >= -0.02 and mean(hold_f1) >= -0.02
+            ),
+            "b_no_take_below_-0.04": all(v >= -0.04 for v in dev_f1 + hold_f1),
+            "c_relationship_recall_drop_le_0.03": bool(dev_rel) and mean(dev_rel) >= -0.03,
+            "d_stage_precision_ge_0.7": precision is not None and precision >= 0.7,
+        }
+        rejected = (precision is not None and precision < 0.5) or bool(
+            dev_f1 and mean(dev_f1) < -0.04
+        )
+        report["arms"][arm] = {
+            "complete": complete,
+            "edit_check_edits_off_vs_arm": edit_takes,
+            "gitlab_edits_off_vs_arm": gitlab_takes,
+            "edit_cut": round(cut, 3),
+            "typed_f1_delta_dev_by_take": [round(v, 4) for v in dev_f1],
+            "typed_f1_delta_holdout_by_take": [round(v, 4) for v in hold_f1],
+            "relationship_recall_delta_dev_by_take": [round(v, 4) for v in dev_rel],
+            "dev_fixes": fixes,
+            "dev_harms": harms,
+            "stage_precision": precision,
+            "checks": checks,
+            "verdict_phase2": (
+                "incomplete"
+                if not complete
+                else (
+                    "reject"
+                    if rejected
+                    else "adopt (pending Phase 3 veto)" if all(checks.values()) else "inconclusive"
+                )
+            ),
+        }
+    return report
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
@@ -441,7 +825,27 @@ def main() -> None:
     stage.add_argument("--arm", choices=sorted(ARMS))
     seeded.add_argument("--spend", action="store_true", help="Record missing takes (costs)")
     seeded.add_argument("--json", action="store_true")
+    bench = commands.add_parser("benchmark", help="Phase 2: the stage in single_call, paired takes")
+    bench.add_argument("--arm", choices=("off", *sorted(REVIEW_SETTINGS)))
+    bench.add_argument(
+        "--spend", action="store_true", help="Record the arm's missing takes (costs)"
+    )
     args = parser.parse_args()
+
+    if args.command == "benchmark":
+        if args.spend:
+            if not args.arm:
+                raise SystemExit("--spend needs --arm")
+            record_benchmark(args.arm)
+        report = benchmark_report()
+        report["spend"] = spend_report()
+        out = RESULTS / "benchmark.json"
+        out.parent.mkdir(parents=True, exist_ok=True)
+        out.write_text(json.dumps(report, indent=2, default=list) + "\n", encoding="utf-8")
+        for arm, summary in report["arms"].items():
+            print(f"{arm}: {json.dumps(summary, default=list)}")
+        print(f"spent: {report['spend']}; report in {out}")
+        return
 
     if args.command == "seeded" and args.arm:
         if args.spend:

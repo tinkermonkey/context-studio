@@ -33,7 +33,7 @@ from domain.ports import EventPublisher
 if TYPE_CHECKING:
     from domain.extraction.ports import IndividualRecognizer
 
-from . import find_then_type, layers, single_call
+from . import find_then_type, layers, pre_review, single_call
 from .entities import (
     ExtractedEntity,
     ExtractionResult,
@@ -59,6 +59,7 @@ from .ports import (
     ReferenceSource,
 )
 from .prompts import (
+    PRE_REVIEW_STAGE,
     DERIVE_RELATIONSHIPS,
     FIND_INDIVIDUALS,
     FIND_MENTIONS,
@@ -915,6 +916,56 @@ class ExtractionService:
             model,
             temperature,
             prompts[FIND_INDIVIDUALS],
+            max_tokens,
+            effort,
+        )
+
+    def review_individuals(
+        self,
+        text: str,
+        individuals: Any,
+        ontology_id: str,
+        model: str,
+        temperature: float,
+        max_tokens: int | None = None,
+        effort: str | None = None,
+    ) -> pre_review.PreReviewResult:
+        """
+        Review a text's extracted individuals in one LLM call (the pre_review
+        stage), against the same class catalog find_individuals offers.
+
+        Args:
+            text: The text the individuals were found in (a section of a source)
+            individuals: The FoundIndividuals, in the order they are numbered
+            ontology_id: ID of the target ontology
+            max_tokens: The most output tokens the call may produce; the
+                stage's own when None
+            effort: How much the model thinks; its default when None
+
+        Returns:
+            The verdicts by index of the individuals it split, retyped or was
+            unsure about; a failure_reason when nothing was reviewed
+
+        Raises:
+            InvalidInputError: If no ontology has ontology_id
+            ValueError: If temperature is out of range
+        """
+        if not 0.0 <= temperature <= 2.0:
+            raise ValueError(f"temperature must be 0.0–2.0, got {temperature}")
+        ontology = self._taxonomy(ontology_id)
+        catalog, class_refs = single_call.build_catalog(
+            ontology.title, self._catalog_classes(ontology)
+        )
+        return pre_review.review_individuals(
+            self._llm,
+            self._sleep,
+            text,
+            list(individuals),
+            catalog,
+            class_refs,
+            model,
+            temperature,
+            PRE_REVIEW_STAGE.default,
             max_tokens,
             effort,
         )
@@ -1945,8 +1996,7 @@ class ExtractionService:
                 # No class was answered (an empty answer, or one cut short while the
                 # model was still thinking): that is not "none of the candidates"
                 _logger.error(
-                    "NLP-grounded typing for chunk '%s' got no class answer "
-                    "(finish_reason=%s)",
+                    "NLP-grounded typing for chunk '%s' got no class answer " "(finish_reason=%s)",
                     label,
                     response.finish_reason,
                 )

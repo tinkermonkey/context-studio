@@ -376,11 +376,17 @@ class PreReviewAnswer(str, Enum):
 
 @dataclass(frozen=True)
 class PreReviewPart:
-    """One part of an individual the pre-review stage split: what it is called, its class, its passage."""
+    """
+    One part of an individual the pre-review stage split: what it is called,
+    its class, and its passage (offsets into the text the stage read; None
+    when its quote was not found there).
+    """
 
     title: str
     class_ref: str
     quote: str | None = None
+    start: int | None = None
+    end: int | None = None
 
 
 @dataclass(frozen=True)

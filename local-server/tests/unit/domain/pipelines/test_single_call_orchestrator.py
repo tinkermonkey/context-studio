@@ -437,3 +437,122 @@ def test_a_passage_is_placed_in_its_chunk_with_offsets_into_it():
     placed = _placements(Mention("Foo", "thing", "Foo", 14, 17), 0, [0, 1], chunks, texts)
 
     assert placed == [(1, Mention("Foo", "thing", "Foo", 4, 7))]
+
+
+# ---------------------------------------------------------------- pre-review
+
+
+from domain.extraction.entities import (  # noqa: E402
+    PreReviewAnswer,
+    PreReviewPart,
+    PreReviewQuestion,
+    PreReviewVerdict,
+)
+
+REVIEW = {"model": "claude-haiku-5-5", "effort": None, "max_tokens": 9000}
+
+
+class _Reviewing(_FakeExtraction):
+    """The fake extraction, with a pre-review that retypes Part001 and splits Part002."""
+
+    def __init__(self, fail=False, **kwargs):
+        super().__init__(**kwargs)
+        self.fail = fail
+        self.reviews: list[dict] = []
+
+    def review_individuals(
+        self, text, individuals, ontology_id, model, temperature, max_tokens=None, effort=None
+    ):
+        self.reviews.append(
+            {"text": text, "model": model, "max_tokens": max_tokens, "n": len(individuals)}
+        )
+        spent = {"model": model, "tokens_used": 300, "duration_ms": 2}
+        if self.fail:
+            return _Result(
+                metadata=spent, failure_reason=REFUSED, warnings=["Pre-review failed: x"]
+            )
+        verdicts = {}
+        for index, individual in enumerate(individuals):
+            name = individual.mention.name
+            if name == "Part001":
+                verdicts[index] = PreReviewVerdict(
+                    PreReviewAnswer.RETYPE,
+                    PreReviewQuestion.RETYPE,
+                    "r",
+                    name,
+                    individual.class_ref,
+                    class_ref="app.service",
+                )
+            elif name == "Part002":
+                start = text.index("Part002")
+                verdicts[index] = PreReviewVerdict(
+                    PreReviewAnswer.SPLIT,
+                    PreReviewQuestion.SPLIT,
+                    "s",
+                    name,
+                    individual.class_ref,
+                    parts=(
+                        PreReviewPart("Part002", "app.component", "Part002", start, start + 7),
+                        PreReviewPart("Part002b", "app.component"),
+                    ),
+                )
+            elif name == "Part003":
+                verdicts[index] = PreReviewVerdict(
+                    PreReviewAnswer.UNSURE, None, "Which?", name, individual.class_ref
+                )
+        result = _Result(metadata=spent, warnings=["1 pre-review answers were left out (x)"])
+        result.verdicts = verdicts
+        return result
+
+
+class TestPreReview:
+    async def test_without_the_setting_nothing_is_reviewed(self):
+        extraction = _Reviewing()
+
+        state = await _run(extraction)
+
+        assert extraction.reviews == []
+        assert "pre_review" not in state.result["metadata"]
+
+    @pytest.mark.parametrize("setting", [{"enabled": False, "model": "m"}, {"effort": "low"}])
+    async def test_a_disabled_or_modelless_setting_reviews_nothing(self, setting):
+        extraction = _Reviewing()
+
+        await _run(extraction, config={"pre_review": setting})
+
+        assert extraction.reviews == []
+
+    async def test_the_verdicts_are_applied_before_relating(self):
+        extraction = _Reviewing()
+
+        state = await _run(extraction, config={"pre_review": REVIEW})
+
+        review = extraction.reviews[0]
+        assert review["model"] == "claude-haiku-5-5" and review["max_tokens"] == 9000
+        assert review["text"] == extraction.read[0] and review["n"] == 301
+        typed = _typed(state)
+        assert typed["Part001"]["object"]["label"] == "app.service"
+        assert "Part002b" in typed and typed["Part002"]["object"]["label"] == "app.component"
+        assert typed["Part003"]["object"]["label"] == "app.component"  # unsure changes nothing
+        related = {name for names in extraction.related for name in names}
+        assert {"Part001", "Part002", "Part002b"} <= related
+        assert state.result["metadata"]["pre_review"] == {
+            "model": "claude-haiku-5-5",
+            "reviewed": 301,
+            "not_reviewed": 0,
+            "split": 1,
+            "retype": 1,
+            "unsure": 1,
+        }
+        assert "1 pre-review answers were left out (x)" in state.result["warnings"]
+        # The review's tokens are part of what the run cost
+        assert state.result["metadata"]["tokens_used"] == 1000 + 300 + 50 * len(extraction.related)
+
+    async def test_a_failed_review_keeps_the_individuals_and_the_run(self):
+        extraction = _Reviewing(fail=True)
+
+        state = await _run(extraction, config={"pre_review": REVIEW})
+
+        assert _typed(state)["Part001"]["object"]["label"] == "app.component"
+        assert state.result["metadata"]["pre_review"]["not_reviewed"] == 301
+        assert "Pre-review failed: x" in state.result["warnings"]

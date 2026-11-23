@@ -22,8 +22,11 @@ individual's does (single_call.parse_individuals). The call is made under the
 rules of llm_calls.complete_parsed and reports a failure on its result: a
 failed review changes nothing and is never read as "everything is right".
 
-This module does not wire the stage into an orchestrator or a proposal; the
-experiment decides whether it is.
+SingleCallOrchestrator runs the stage when its configuration has a
+``pre_review`` setting (off by default) and applies the verdicts with
+``apply_verdicts`` before relating. How verdicts reach a proposal (the
+changeset's pre_review field, class alternative and inspector note) waits on
+the experiment's verdict.
 """
 
 from __future__ import annotations
@@ -40,6 +43,7 @@ from domain.pipelines.stage_prompts import StagePrompt, render
 
 from .entities import (
     FoundIndividual,
+    Mention,
     PreReviewAnswer,
     PreReviewPart,
     PreReviewQuestion,
@@ -295,7 +299,40 @@ def _verdict(
         span = resolve_span(
             quote if isinstance(quote, str) and quote.strip() else None, None, None, text
         )
-        parts.append(PreReviewPart(title, class_ref, span.quote))
+        parts.append(PreReviewPart(title, class_ref, span.quote, span.start, span.end))
     if len(parts) < 2:
         return f"item {number}: a split needs two parts with a title and a listed class"
     return index, PreReviewVerdict(answer, question, parts=tuple(parts), **common)
+
+
+def apply_verdicts(
+    individuals: Sequence[FoundIndividual], verdicts: Mapping[int, PreReviewVerdict]
+) -> list[FoundIndividual]:
+    """
+    The individuals as the stage leaves them, in order: a retyped one with its
+    new class, a split one replaced by its parts (each with its own passage,
+    or none), any other as it was.
+    """
+    reviewed: list[FoundIndividual] = []
+    for index, individual in enumerate(individuals):
+        verdict = verdicts.get(index)
+        if verdict is None or not verdict.changes:
+            reviewed.append(individual)
+        elif verdict.answer is PreReviewAnswer.RETYPE:
+            reviewed.append(FoundIndividual(individual.mention, verdict.class_ref or ""))
+        else:
+            reviewed.extend(
+                FoundIndividual(
+                    Mention(part.title, "thing", part.quote, part.start, part.end), part.class_ref
+                )
+                for part in verdict.parts
+            )
+    return reviewed
+
+
+def verdict_counts(verdicts: Mapping[int, PreReviewVerdict]) -> dict[str, int]:
+    """How many individuals each answer was given (keep is everything not listed)."""
+    counts = {answer.value: 0 for answer in PreReviewAnswer if answer is not PreReviewAnswer.KEEP}
+    for verdict in verdicts.values():
+        counts[verdict.answer.value] += 1
+    return counts

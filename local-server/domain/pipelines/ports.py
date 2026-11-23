@@ -10,7 +10,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime
-from typing import TYPE_CHECKING, Any, Literal, Mapping, Protocol
+from typing import TYPE_CHECKING, Any, Literal, Mapping, Protocol, Sequence
 
 from .entities import (
     Batch,
@@ -24,12 +24,14 @@ from .entities import (
 
 if TYPE_CHECKING:
     from domain.extraction.entities import (
+        FoundIndividual,
         FoundIndividualsResult,
         Mention,
         MentionsResult,
         TypingPrompt,
         TypingResult,
     )
+    from domain.extraction.pre_review import PreReviewResult
 
 # ============================================================================
 # LLM provider value types and port
@@ -254,6 +256,24 @@ class ExtractionPort(Protocol):
         whole class catalog (SingleCallOrchestrator). effort is how much the
         model thinks; None leaves its default. A failure_reason on the result
         means the text was not read.
+        """
+        ...
+
+    def review_individuals(
+        self,
+        text: str,
+        individuals: "Sequence[FoundIndividual]",
+        ontology_id: str,
+        model: str,
+        temperature: float,
+        max_tokens: int | None = None,
+        effort: str | None = None,
+    ) -> "PreReviewResult":
+        """
+        Review a text's extracted individuals in one call against the whole
+        class catalog (the pre_review stage): split one that names several
+        things, retype one whose class is not the best fit. A failure_reason
+        on the result means nothing was reviewed.
         """
         ...
 
