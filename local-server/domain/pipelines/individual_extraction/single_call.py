@@ -21,6 +21,14 @@ was not found and no chunk names it as written) goes in the section's first
 chunk, without a passage.
 The single call gives no confidence: its typing triples carry none.
 
+Pre-review (optional, documentation/extraction/experiments/2026-11-22-pre-review-stage.md):
+when the configuration has a ``pre_review`` setting ({model, effort,
+max_tokens}; ``enabled: false`` turns it off), each section's individuals are
+reviewed in one more call before they are placed: a split individual is
+replaced by its parts, a retyped one takes its new class, so relationships
+are read between the reviewed individuals. A section whose review fails keeps
+its individuals as found, and the run's metadata counts them as not reviewed.
+
 The call asks for the configuration's ``effort`` ("high" for
 extraction-single-call); the relate calls for the model's default. The run's
 output limit (64,000 for extraction-single-call) is the single call's; a relate
@@ -45,6 +53,7 @@ from typing import Any
 from domain.extraction.chunking import Chunk
 from domain.extraction.entities import Mention
 from domain.extraction.find_then_type import typing_triple
+from domain.extraction.pre_review import apply_verdicts, verdict_counts
 from domain.extraction.prompts import FIND_INDIVIDUALS, SINGLE_CALL_STAGES
 from domain.extraction.single_call import name_spans
 from domain.pipelines.entities import StageProgress
@@ -117,6 +126,8 @@ class SingleCallOrchestrator(FindThenTypeOrchestrator):
             self._report_progress(0, len(chunks), StageProgress(FIND_INDIVIDUALS, 0, total))
         chunk_triples: list[list[dict[str, Any]]] = [[] for _ in chunks]
         listed = 0
+        review = self._pre_review_settings()
+        reviewed: dict[str, int] = {"reviewed": 0, "not_reviewed": 0}
         for number, members in enumerate(groups):
             await asyncio.sleep(0)  # a cancelled run stops here
             start, end = chunks[members[0]].start, chunks[members[-1]].end
@@ -148,7 +159,19 @@ class SingleCallOrchestrator(FindThenTypeOrchestrator):
                     problems[index].append((result.failure_reason, result))
             warnings.extend(where + warning for warning in result.warnings)
             listed += len(result.individuals)
-            for individual in result.individuals:
+            found = result.individuals
+            if review is not None and found and not result.failure_reason:
+                found = self._pre_review(
+                    state,
+                    state.source_text[start:end],
+                    found,
+                    review,
+                    spent,
+                    warnings,
+                    where,
+                    reviewed,
+                )
+            for individual in found:
                 for index, mention in _placements(
                     individual.mention, start, members, chunks, texts
                 ):
@@ -168,7 +191,53 @@ class SingleCallOrchestrator(FindThenTypeOrchestrator):
                 state.model,
                 spent,
             )
-        return chunk_triples, {"individuals": {"found": listed, "sections": total}}
+        counts: dict[str, Any] = {"individuals": {"found": listed, "sections": total}}
+        if review is not None:
+            counts["pre_review"] = {"model": review["model"], **reviewed}
+        return chunk_triples, counts
+
+    def _pre_review_settings(self) -> dict[str, Any] | None:
+        """The configuration's pre_review setting, or None when the stage is off."""
+        setting = self._config.get("pre_review")
+        if not isinstance(setting, dict) or setting.get("enabled") is False:
+            return None
+        if not setting.get("model"):
+            return None
+        return setting
+
+    def _pre_review(
+        self,
+        state: IndividualExtractionState,
+        text: str,
+        found: list[Any],
+        review: dict[str, Any],
+        spent: list[Any],
+        warnings: list[str],
+        where: str,
+        reviewed: dict[str, int],
+    ) -> list[Any]:
+        """
+        Review one section's individuals and apply the verdicts; on failure,
+        keep them as found. Counts what happened in ``reviewed``.
+        """
+        result = self._extraction_service.review_individuals(
+            text=text,
+            individuals=found,
+            ontology_id=state.ontology_id,
+            model=review["model"],
+            temperature=state.temperature,
+            max_tokens=review.get("max_tokens"),
+            effort=review.get("effort"),
+        )
+        spent.append(result)
+        warnings.extend(where + warning for warning in result.warnings)
+        if result.failure_reason:
+            reviewed["not_reviewed"] += len(found)
+            return found
+        reviewed["reviewed"] += len(found)
+        for answer, count in verdict_counts(result.verdicts).items():
+            reviewed[answer] = reviewed.get(answer, 0) + count
+        return apply_verdicts(found, result.verdicts)
 
 
 def sections(text: str, chunks: list[Chunk]) -> list[list[int]]:

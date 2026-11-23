@@ -1,0 +1,1549 @@
+{
+  "arm": "haiku",
+  "model": "claude-haiku-5-5",
+  "takes": [
+    {
+      "document": "edit_check",
+      "take": 1,
+      "status": "scored",
+      "score": {
+        "merge": {
+          "items": 3,
+          "fixed": 3,
+          "harmed": 0,
+          "neutral": 0,
+          "missed": 0,
+          "changed_wrongly": 0,
+          "unsure": 0,
+          "harmed_by": {
+            "split": 0,
+            "retype": 0
+          }
+        },
+        "retype_realistic": {
+          "items": 6,
+          "fixed": 3,
+          "harmed": 0,
+          "neutral": 0,
+          "missed": 2,
+          "changed_wrongly": 1,
+          "unsure": 1,
+          "harmed_by": {
+            "split": 0,
+            "retype": 0
+          }
+        },
+        "retype_same_layer": {
+          "items": 6,
+          "fixed": 3,
+          "harmed": 0,
+          "neutral": 0,
+          "missed": 2,
+          "changed_wrongly": 1,
+          "unsure": 0,
+          "harmed_by": {
+            "split": 0,
+            "retype": 0
+          }
+        },
+        "control": {
+          "items": 41,
+          "fixed": 0,
+          "harmed": 4,
+          "neutral": 0,
+          "missed": 0,
+          "changed_wrongly": 0,
+          "unsure": 0,
+          "harmed_by": {
+            "split": 0,
+            "retype": 4
+          }
+        },
+        "split_trap": {
+          "items": 14,
+          "fixed": 0,
+          "harmed": 0,
+          "neutral": 3,
+          "missed": 0,
+          "changed_wrongly": 0,
+          "unsure": 0,
+          "harmed_by": {
+            "split": 0,
+            "retype": 0
+          }
+        }
+      },
+      "precision": 0.6923076923076923,
+      "warnings": [],
+      "verdicts": {
+        "3": {
+          "item": "Link check and Reference reliability",
+          "stratum": "retype_realistic",
+          "answer": "retype",
+          "class": "product.feature",
+          "parts": [],
+          "reasoning": "Listed under 'Several features are available within Edit Check' alongside Reference check and Paste Check, which are product.feature. A user-visible, prioritisable feature fits better than an enabling ability."
+        },
+        "8": {
+          "item": "Add an image suggestion and Add a link suggestion",
+          "stratum": "merge",
+          "answer": "split",
+          "class": null,
+          "parts": [
+            "Add an image suggestion",
+            "Add a link suggestion"
+          ],
+          "reasoning": "The title joins two suggestion types that the document describes separately: 'Add an image' is a new experimental type, and work on 'Add a link' is ongoing."
+        },
+        "9": {
+          "item": "Growth team",
+          "stratum": "retype_same_layer",
+          "answer": "retype",
+          "class": "business.businessactor",
+          "parts": [],
+          "reasoning": "'Growth team' names an organisational team, which is a BusinessActor ('a team or department'), not a joint behaviour."
+        },
+        "10": {
+          "item": "LLMs can evaluate whether sources corroborate claims (English)",
+          "stratum": "retype_same_layer",
+          "answer": "retype",
+          "class": "motivation.assessment",
+          "parts": [],
+          "reasoning": "The sentence reports a research finding about what LLMs were shown to do. Assessment records a finding from analysis; Principle is a normative rule, which this is not."
+        },
+        "20": {
+          "item": "Reference Check",
+          "stratum": "retype_realistic",
+          "answer": "retype",
+          "class": "product.feature",
+          "parts": [],
+          "reasoning": "Reference Check is a single user-perceivable check that prompts users, not an ordered journey of steps. Its definition fits product.feature ('functionality a persona can directly perceive and invoke')."
+        },
+        "21": {
+          "item": "Reference",
+          "stratum": "retype_realistic",
+          "answer": "unsure",
+          "class": null,
+          "parts": [],
+          "reasoning": "The quote describes content added without a corresponding reference, not a product bundle. Is 'Reference' a concept, an information object, or something else? Should the person name what the item is meant to be?"
+        },
+        "22": {
+          "item": "Editing interfaces do not make people aware of policies",
+          "stratum": "retype_realistic",
+          "answer": "retype",
+          "class": "motivation.assessment",
+          "parts": [],
+          "reasoning": "The sentence states a current-state gap ('the trouble is that...'). Assessment covers findings about present conditions such as gaps; Requirement would be a need the system must meet, which this is not."
+        },
+        "25": {
+          "item": "Experienced volunteers and moderators",
+          "stratum": "split_trap",
+          "answer": "retype",
+          "class": "motivation.stakeholder",
+          "parts": [],
+          "reasoning": "The document names a group of people by role, not a fictional archetype with goals and behaviours. Stakeholder ('a group... by its role or perspective') fits better than Persona."
+        },
+        "31": {
+          "item": "Newcomers and Junior Contributors",
+          "stratum": "split_trap",
+          "answer": "retype",
+          "class": "motivation.stakeholder",
+          "parts": [],
+          "reasoning": "'Newcomers and Junior Contributors' is a real audience group selected by criteria, not a fictional archetype. Stakeholder ('a group... whose concerns are traced') fits better than Persona."
+        },
+        "38": {
+          "item": "editcheck/init.js",
+          "stratum": "split_trap",
+          "answer": "retype",
+          "class": "technology.artifact",
+          "parts": [],
+          "reasoning": "editcheck/init.js is a code file that holds the activation conditions. A passive file is a technology.artifact, not an application component with behaviour of its own."
+        },
+        "41": {
+          "item": "Edit Check configurability",
+          "stratum": "retype_same_layer",
+          "answer": "retype",
+          "class": "product.softwarecapability",
+          "parts": [],
+          "reasoning": "The item is an enabling capability (volunteers can audit and review edits), not an ordered step in a user workflow, since no workflow is named. Software capability fits."
+        },
+        "46": {
+          "item": "Proportion of new content edits with a reference, Proportion of users who publish a new content edit with a reference",
+          "stratum": "merge",
+          "answer": "split",
+          "class": null,
+          "parts": [
+            "Proportion of new content edits with a reference",
+            "Proportion of users who publish a new content edit with a reference"
+          ],
+          "reasoning": "The title lists two distinct metrics, each given as a separate bullet in the Findings. They are measured findings, which fit assessment better than OpenTelemetry instruments."
+        },
+        "50": {
+          "item": "Revert rate",
+          "stratum": "retype_same_layer",
+          "answer": "retype",
+          "class": "motivation.assessment",
+          "parts": [],
+          "reasoning": "A revert rate measured in an A/B test is a finding about current results, not a log processing stage. Assessment fits; LogProcessor is clearly wrong."
+        },
+        "51": {
+          "item": "Constructive retention rate",
+          "stratum": "control",
+          "answer": "retype",
+          "class": "motivation.assessment",
+          "parts": [],
+          "reasoning": "The constructive retention rate is an experimental measurement reported as a finding, not an OpenTelemetry instrument defined in code."
+        },
+        "52": {
+          "item": "Block rate",
+          "stratum": "control",
+          "answer": "retype",
+          "class": "motivation.assessment",
+          "parts": [],
+          "reasoning": "The block rate is an experimental measurement reported as a finding, not an OpenTelemetry instrument defined in code."
+        },
+        "53": {
+          "item": "False negative rate",
+          "stratum": "control",
+          "answer": "retype",
+          "class": "motivation.assessment",
+          "parts": [],
+          "reasoning": "The false negative rate is an experimental measurement reported as a finding, not an OpenTelemetry instrument defined in code."
+        },
+        "54": {
+          "item": "False positive rate",
+          "stratum": "control",
+          "answer": "retype",
+          "class": "motivation.assessment",
+          "parts": [],
+          "reasoning": "The false positive rate is an experimental measurement reported as a finding, not an OpenTelemetry instrument defined in code."
+        },
+        "63": {
+          "item": "Risk: edit completion rate drastically decreases",
+          "stratum": "retype_realistic",
+          "answer": "retype",
+          "class": "motivation.assessment",
+          "parts": [],
+          "reasoning": "'Edit completion rate drastically decreases' is an unwanted risk the team is assessing, not a desired end state. Assessment ('risk') matches items 63 and 67, which are rated the same way."
+        },
+        "64": {
+          "item": "Edit completion rate and Edit abandonment rate",
+          "stratum": "merge",
+          "answer": "split",
+          "class": null,
+          "parts": [
+            "Edit completion rate",
+            "Edit abandonment rate"
+          ],
+          "reasoning": "The title joins two metrics that the risk table lists as separate rows with different definitions: completion rate and abandonment rate. Both are measured findings."
+        }
+      }
+    },
+    {
+      "document": "edit_check",
+      "take": 2,
+      "status": "scored",
+      "score": {
+        "merge": {
+          "items": 3,
+          "fixed": 2,
+          "harmed": 0,
+          "neutral": 0,
+          "missed": 0,
+          "changed_wrongly": 1,
+          "unsure": 0,
+          "harmed_by": {
+            "split": 0,
+            "retype": 0
+          }
+        },
+        "retype_realistic": {
+          "items": 6,
+          "fixed": 6,
+          "harmed": 0,
+          "neutral": 0,
+          "missed": 0,
+          "changed_wrongly": 0,
+          "unsure": 0,
+          "harmed_by": {
+            "split": 0,
+            "retype": 0
+          }
+        },
+        "retype_same_layer": {
+          "items": 6,
+          "fixed": 5,
+          "harmed": 0,
+          "neutral": 0,
+          "missed": 0,
+          "changed_wrongly": 1,
+          "unsure": 0,
+          "harmed_by": {
+            "split": 0,
+            "retype": 0
+          }
+        },
+        "control": {
+          "items": 43,
+          "fixed": 0,
+          "harmed": 0,
+          "neutral": 0,
+          "missed": 0,
+          "changed_wrongly": 0,
+          "unsure": 0,
+          "harmed_by": {
+            "split": 0,
+            "retype": 0
+          }
+        },
+        "split_trap": {
+          "items": 12,
+          "fixed": 0,
+          "harmed": 0,
+          "neutral": 2,
+          "missed": 0,
+          "changed_wrongly": 0,
+          "unsure": 1,
+          "harmed_by": {
+            "split": 0,
+            "retype": 0
+          }
+        }
+      },
+      "precision": 1.0,
+      "warnings": [],
+      "verdicts": {
+        "0": {
+          "item": "Edit Check",
+          "stratum": "retype_same_layer",
+          "answer": "retype",
+          "class": "business.product",
+          "parts": [],
+          "reasoning": "Edit Check is a named, offered bundle of Checks and features delivered to wikis, not a dated delivery target. Product is defined as a named offering bundling services, which fits."
+        },
+        "1": {
+          "item": "Editing Team",
+          "stratum": "retype_realistic",
+          "answer": "retype",
+          "class": "business.businessactor",
+          "parts": [],
+          "reasoning": "The Editing Team is a team with its own identity, which fits BusinessActor ('a team or department'). BusinessInterface is a channel or access point, not an organisation."
+        },
+        "3": {
+          "item": "Link check and Reference reliability",
+          "stratum": "retype_realistic",
+          "answer": "retype",
+          "class": "product.feature",
+          "parts": [],
+          "reasoning": "'Link check and Reference reliability' is listed under 'Features' as a named product function, not a dated delivery target. Product feature fits."
+        },
+        "7": {
+          "item": "Moderators see better newcomer edits and configure Edit Check",
+          "stratum": "retype_realistic",
+          "answer": "retype",
+          "class": "motivation.goal",
+          "parts": [],
+          "reasoning": "The statement is an intended end state (moderators will notice improvements and be motivated), not a worth to a stakeholder. Goal fits better than Value."
+        },
+        "8": {
+          "item": "Add an image suggestion, Add a link suggestion",
+          "stratum": "merge",
+          "answer": "split",
+          "class": null,
+          "parts": [
+            "Add an image suggestion",
+            "Add a link suggestion"
+          ],
+          "reasoning": "The title joins two suggestion types that the document describes separately: 'Add an image' is newly created, while 'Add a link' is being improved."
+        },
+        "9": {
+          "item": "Growth team",
+          "stratum": "retype_same_layer",
+          "answer": "retype",
+          "class": "business.businessactor",
+          "parts": [],
+          "reasoning": "The Growth team is an organisational team with its own identity, which matches BusinessActor. It is not a joint behaviour performed by roles."
+        },
+        "10": {
+          "item": "LLMs can evaluate whether sources corroborate claims (English)",
+          "stratum": "retype_same_layer",
+          "answer": "retype",
+          "class": "motivation.assessment",
+          "parts": [],
+          "reasoning": "The sentence reports a research finding that LLMs are effective at a task in English. That is an analytical finding, which Assessment defines, not a principle prescribing decisions."
+        },
+        "19": {
+          "item": "Visual editor",
+          "stratum": "retype_realistic",
+          "answer": "retype",
+          "class": "application.applicationcomponent",
+          "parts": [],
+          "reasoning": "The visual editor is a single editing software product with desktop and mobile variants, a deployable application component. It is not a grouping of several components acting together."
+        },
+        "23": {
+          "item": "Wikipedia policies and guidelines",
+          "stratum": "split_trap",
+          "answer": "unsure",
+          "class": null,
+          "parts": [],
+          "reasoning": "Wikipedia policies are normative rules rather than information records the business acts on. Whether they fit motivation.principle or business.businessobject is unclear. Question: are policies treated as norms that govern decisions, or as documents?"
+        },
+        "25": {
+          "item": "Experienced volunteers and moderators",
+          "stratum": "split_trap",
+          "answer": "retype",
+          "class": "motivation.stakeholder",
+          "parts": [],
+          "reasoning": "The item names a real stakeholder group (experienced volunteers and moderators) whose concerns motivate the project. A persona is a fictional archetype, so it does not fit."
+        },
+        "27": {
+          "item": "Wikipedia projects",
+          "stratum": "retype_same_layer",
+          "answer": "retype",
+          "class": "motivation.stakeholder",
+          "parts": [],
+          "reasoning": "'Wikipedia projects' names a stakeholder group whose concerns drive the work. It is not an end result, so Outcome does not fit."
+        },
+        "31": {
+          "item": "Newcomers and Junior Contributors",
+          "stratum": "retype_realistic",
+          "answer": "retype",
+          "class": "motivation.stakeholder",
+          "parts": [],
+          "reasoning": "'Newcomers and Junior Contributors' is the primary audience group whose needs motivate the project. It is not a sequence of user actions, so UserWorkflow does not fit."
+        },
+        "38": {
+          "item": "editcheck/init.js",
+          "stratum": "split_trap",
+          "answer": "retype",
+          "class": "technology.artifact",
+          "parts": [],
+          "reasoning": "editcheck/init.js is a code file holding the activation rules, a passive file artifact. It is not a deployable application module with its own behaviour."
+        },
+        "46": {
+          "item": "Proportion of new content edits with a reference and Proportion of users who publish a new content edit with a reference",
+          "stratum": "merge",
+          "answer": "split",
+          "class": null,
+          "parts": [
+            "Proportion of new content edits with a reference",
+            "Proportion of users that publish at least one new content edit with a reference"
+          ],
+          "reasoning": "The title joins two distinct metrics, the share of edits with a reference and the share of users who publish one. The document defines each separately."
+        },
+        "55": {
+          "item": "Higher quality of newcomer edits in the main namespace",
+          "stratum": "retype_realistic",
+          "answer": "retype",
+          "class": "motivation.outcome",
+          "parts": [],
+          "reasoning": "'Increase the quality of edits' is a desired end result listed in the Outcome column of the impact table, not a statement of current state. Outcome fits better than Assessment."
+        },
+        "57": {
+          "item": "Newcomers accompany new content with a reference",
+          "stratum": "retype_same_layer",
+          "answer": "retype",
+          "class": "motivation.outcome",
+          "parts": [],
+          "reasoning": "The statement is a target end result in the impact table ('Increase the likelihood...'), not a restriction on design options. Outcome fits better than Constraint."
+        },
+        "59": {
+          "item": "Experienced volunteers audit and iterate on the default configurations",
+          "stratum": "retype_same_layer",
+          "answer": "retype",
+          "class": "motivation.outcome",
+          "parts": [],
+          "reasoning": "The statement appears in the Outcome column of the impact table as an expected result to achieve. It is not a standing normative rule guiding designs."
+        },
+        "64": {
+          "item": "Edit completion rate and Edit abandonment rate",
+          "stratum": "merge",
+          "answer": "split",
+          "class": null,
+          "parts": [
+            "Edit completion rate",
+            "Edit abandonment rate"
+          ],
+          "reasoning": "The title joins two metrics: edit completion rate, whose definition is given here, and edit abandonment rate, which is defined separately in another table row."
+        }
+      }
+    },
+    {
+      "document": "edit_check",
+      "take": 3,
+      "status": "scored",
+      "score": {
+        "merge": {
+          "items": 3,
+          "fixed": 2,
+          "harmed": 0,
+          "neutral": 0,
+          "missed": 0,
+          "changed_wrongly": 1,
+          "unsure": 0,
+          "harmed_by": {
+            "split": 0,
+            "retype": 0
+          }
+        },
+        "retype_realistic": {
+          "items": 6,
+          "fixed": 6,
+          "harmed": 0,
+          "neutral": 0,
+          "missed": 0,
+          "changed_wrongly": 0,
+          "unsure": 0,
+          "harmed_by": {
+            "split": 0,
+            "retype": 0
+          }
+        },
+        "retype_same_layer": {
+          "items": 6,
+          "fixed": 6,
+          "harmed": 0,
+          "neutral": 0,
+          "missed": 0,
+          "changed_wrongly": 0,
+          "unsure": 0,
+          "harmed_by": {
+            "split": 0,
+            "retype": 0
+          }
+        },
+        "control": {
+          "items": 44,
+          "fixed": 0,
+          "harmed": 0,
+          "neutral": 0,
+          "missed": 0,
+          "changed_wrongly": 0,
+          "unsure": 0,
+          "harmed_by": {
+            "split": 0,
+            "retype": 0
+          }
+        },
+        "split_trap": {
+          "items": 11,
+          "fixed": 0,
+          "harmed": 0,
+          "neutral": 1,
+          "missed": 0,
+          "changed_wrongly": 0,
+          "unsure": 0,
+          "harmed_by": {
+            "split": 0,
+            "retype": 0
+          }
+        }
+      },
+      "precision": 1.0,
+      "warnings": [],
+      "verdicts": {
+        "4": {
+          "item": "Paste Check",
+          "stratum": "retype_same_layer",
+          "answer": "retype",
+          "class": "product.feature",
+          "parts": [],
+          "reasoning": "Paste Check is named as one of several features ('Several features are available within Edit Check'), a user-visible unit of functionality, not a dated delivery target."
+        },
+        "6": {
+          "item": "Newcomers feel safe and confident publishing changes they are proud of",
+          "stratum": "retype_realistic",
+          "answer": "retype",
+          "class": "motivation.goal",
+          "parts": [],
+          "reasoning": "The statement is an objective describing a desired end state ('will feel safe and confident enough'), not a worth to a stakeholder. Goal's definition, a qualitative end state refined by outcomes, fits better."
+        },
+        "8": {
+          "item": "Add an image suggestion, Add a link suggestion",
+          "stratum": "merge",
+          "answer": "split",
+          "class": null,
+          "parts": [
+            "Add an image suggestion",
+            "Add a link suggestion"
+          ],
+          "reasoning": "The title names two suggestion types the document describes separately: the new experimental 'Add an image' type and ongoing work on the 'Add a link' type."
+        },
+        "13": {
+          "item": "Suggestion Mode Beta Feature release",
+          "stratum": "retype_same_layer",
+          "answer": "retype",
+          "class": "product.milestone",
+          "parts": [],
+          "reasoning": "The item records a dated release ('available as a Beta Feature globally since early March'), a delivery point, matching Milestone rather than a workflow step."
+        },
+        "23": {
+          "item": "Wikipedia policies and guidelines",
+          "stratum": "retype_realistic",
+          "answer": "retype",
+          "class": "motivation.principle",
+          "parts": [],
+          "reasoning": "Contract requires an agreement binding identified parties with obligations and rights. Wikipedia policies are normative rules guiding editing decisions across projects, which is the Principle definition."
+        },
+        "25": {
+          "item": "Experienced volunteers and moderators",
+          "stratum": "retype_realistic",
+          "answer": "retype",
+          "class": "motivation.stakeholder",
+          "parts": [],
+          "reasoning": "The item names a group of people by role ('Experienced volunteers/moderators') whose interests are affected, which is a Stakeholder, not a workflow step."
+        },
+        "26": {
+          "item": "Moderation burden on experienced volunteers",
+          "stratum": "retype_realistic",
+          "answer": "retype",
+          "class": "motivation.driver",
+          "parts": [],
+          "reasoning": "The statement describes an ongoing problem ('Continually needing to educate... can lead to... skeptical') that prompts change. Driver names such a condition; Goal denotes a desired end state."
+        },
+        "27": {
+          "item": "Wikipedia projects",
+          "stratum": "retype_realistic",
+          "answer": "retype",
+          "class": "motivation.stakeholder",
+          "parts": [],
+          "reasoning": "'Wikipedia projects' is a party whose concerns are traced to drivers and goals, and the text describes it as struggling, not as a worth. Stakeholder fits better than Value."
+        },
+        "28": {
+          "item": "Wikipedia projects struggle to grow and diversify their volunteers",
+          "stratum": "retype_same_layer",
+          "answer": "retype",
+          "class": "motivation.driver",
+          "parts": [],
+          "reasoning": "'struggle to grow and diversify' describes a problem condition prompting change, not a normative rule. Driver's definition fits."
+        },
+        "30": {
+          "item": "Make existing norms legible and actionable while editing",
+          "stratum": "retype_same_layer",
+          "answer": "retype",
+          "class": "motivation.goal",
+          "parts": [],
+          "reasoning": "The statement gives a direction of intent ('we first need to make the norms... legible and actionable') with no measurable target, which matches Goal rather than Outcome."
+        },
+        "31": {
+          "item": "Newcomers and Junior Contributors",
+          "stratum": "split_trap",
+          "answer": "retype",
+          "class": "motivation.stakeholder",
+          "parts": [],
+          "reasoning": "Persona is a fictional archetype, but the document defines a real audience by criteria (under 100 edits, Sub-Saharan Africa). Stakeholder, a group identified by role whose interests are traced, fits better."
+        },
+        "46": {
+          "item": "Proportion of new content edits with a reference and Proportion of users who publish a new content edit with a reference",
+          "stratum": "merge",
+          "answer": "split",
+          "class": null,
+          "parts": [
+            "Proportion of new content edits with a reference",
+            "Proportion of users publishing a new content edit with a reference"
+          ],
+          "reasoning": "The title joins two distinct metrics that the document lists as separate bullets, each of which could be described on its own."
+        },
+        "55": {
+          "item": "Higher quality of newcomer edits in the main namespace",
+          "stratum": "retype_same_layer",
+          "answer": "retype",
+          "class": "motivation.outcome",
+          "parts": [],
+          "reasoning": "This is an evaluation outcome with measurable data in the impact table ('Increase the quality of edits...', evaluated by A/B test), not a system requirement that must be verified."
+        },
+        "64": {
+          "item": "Edit completion rate and Edit abandonment rate",
+          "stratum": "merge",
+          "answer": "split",
+          "class": null,
+          "parts": [
+            "Edit completion rate",
+            "Edit abandonment rate"
+          ],
+          "reasoning": "The title joins two risk indicators the document lists as separate rows: edit completion rate and edit abandonment rate, each with its own data definition."
+        },
+        "65": {
+          "item": "Risk: edit abandonment rate drastically increases",
+          "stratum": "retype_realistic",
+          "answer": "retype",
+          "class": "motivation.driver",
+          "parts": [],
+          "reasoning": "'Edit abandonment rate drastically increases' names an adverse condition to be avoided, not a desired end state. Driver, a condition prompting concern, fits better than Goal."
+        },
+        "66": {
+          "item": "Risk: blocks increase",
+          "stratum": "retype_same_layer",
+          "answer": "retype",
+          "class": "motivation.driver",
+          "parts": [],
+          "reasoning": "'Blocks increase' is an adverse risk condition, not a normative rule. Principle prescribes how to decide, which this does not."
+        }
+      }
+    },
+    {
+      "document": "gitlab_architecture",
+      "take": 1,
+      "status": "scored",
+      "score": {
+        "merge": {
+          "items": 8,
+          "fixed": 8,
+          "harmed": 0,
+          "neutral": 0,
+          "missed": 0,
+          "changed_wrongly": 0,
+          "unsure": 0,
+          "harmed_by": {
+            "split": 0,
+            "retype": 0
+          }
+        },
+        "retype_realistic": {
+          "items": 6,
+          "fixed": 5,
+          "harmed": 0,
+          "neutral": 0,
+          "missed": 1,
+          "changed_wrongly": 0,
+          "unsure": 0,
+          "harmed_by": {
+            "split": 0,
+            "retype": 0
+          }
+        },
+        "retype_same_layer": {
+          "items": 6,
+          "fixed": 5,
+          "harmed": 0,
+          "neutral": 0,
+          "missed": 0,
+          "changed_wrongly": 1,
+          "unsure": 0,
+          "harmed_by": {
+            "split": 0,
+            "retype": 0
+          }
+        },
+        "control": {
+          "items": 88,
+          "fixed": 0,
+          "harmed": 0,
+          "neutral": 0,
+          "missed": 0,
+          "changed_wrongly": 0,
+          "unsure": 0,
+          "harmed_by": {
+            "split": 0,
+            "retype": 0
+          }
+        },
+        "split_trap": {
+          "items": 6,
+          "fixed": 0,
+          "harmed": 0,
+          "neutral": 0,
+          "missed": 0,
+          "changed_wrongly": 0,
+          "unsure": 0,
+          "harmed_by": {
+            "split": 0,
+            "retype": 0
+          }
+        }
+      },
+      "precision": 1.0,
+      "warnings": [],
+      "verdicts": {
+        "0": {
+          "item": "Community Edition",
+          "stratum": "retype_same_layer",
+          "answer": "retype",
+          "class": "business.product",
+          "parts": [],
+          "reasoning": "A software distribution offered to users is a named offering, not an instantaneous occurrence. Business.product bundles offerings, while businessevent is a point-in-time state change."
+        },
+        "32": {
+          "item": "Inbound email and Outbound email",
+          "stratum": "merge",
+          "answer": "split",
+          "class": null,
+          "parts": [
+            "Inbound email",
+            "Outbound email"
+          ],
+          "reasoning": "Inbound and outbound email are separate services in the document, each with its own table row and section."
+        },
+        "33": {
+          "item": "Jaeger integration and Sentry integration",
+          "stratum": "merge",
+          "answer": "split",
+          "class": null,
+          "parts": [
+            "Jaeger integration",
+            "Sentry integration"
+          ],
+          "reasoning": "Jaeger integration and Sentry integration are two separate table rows with distinct descriptions."
+        },
+        "37": {
+          "item": "Token Revocation API",
+          "stratum": "retype_same_layer",
+          "answer": "retype",
+          "class": "application.applicationservice",
+          "parts": [],
+          "reasoning": "The Token Revocation API is a single service that receives and revokes secrets for consumers. It is not a group of cooperating components, so applicationservice fits better."
+        },
+        "38": {
+          "item": "Systems administrator, GitLab Support Engineer",
+          "stratum": "merge",
+          "answer": "split",
+          "class": null,
+          "parts": [
+            "Systems administrator",
+            "GitLab Support Engineer"
+          ],
+          "reasoning": "The sentence names two distinct audiences, systems administrators and GitLab Support Engineers, each a separate role the document could describe on its own."
+        },
+        "42": {
+          "item": "GitLab Self-Managed and GitLab Dedicated",
+          "stratum": "merge",
+          "answer": "split",
+          "class": null,
+          "parts": [
+            "GitLab Self-Managed",
+            "GitLab Dedicated"
+          ],
+          "reasoning": "The document names Self-Managed and Dedicated as distinct deployment types of GitLab offered separately, so each is its own product."
+        },
+        "45": {
+          "item": "Consul",
+          "stratum": "retype_same_layer",
+          "answer": "retype",
+          "class": "technology.systemsoftware",
+          "parts": [],
+          "reasoning": "Consul is service discovery and configuration software installed and run on hosts, not a physical device. Its description matches systemsoftware."
+        },
+        "46": {
+          "item": "Elasticsearch",
+          "stratum": "retype_same_layer",
+          "answer": "retype",
+          "class": "technology.systemsoftware",
+          "parts": [],
+          "reasoning": "Elasticsearch is described as a distributed search engine that is installed and run, like PostgreSQL or Redis, rather than an externally consumed capability."
+        },
+        "59": {
+          "item": "GitLab Workhorse",
+          "stratum": "retype_realistic",
+          "answer": "retype",
+          "class": "application.applicationcomponent",
+          "parts": [],
+          "reasoning": "Workhorse is a program that acts as a smart reverse proxy. It is a deployable component, not merely an access point owned by another component."
+        },
+        "64": {
+          "item": "Object storage, Azure Blob Storage",
+          "stratum": "merge",
+          "answer": "split",
+          "class": null,
+          "parts": [
+            "Object storage",
+            "Azure Blob Storage"
+          ],
+          "reasoning": "The title joins generic object storage with Azure Blob Storage, which the document names as a separate example of a cloud-managed service."
+        },
+        "65": {
+          "item": "CI artifacts, LFS objects",
+          "stratum": "merge",
+          "answer": "split",
+          "class": null,
+          "parts": [
+            "CI artifacts",
+            "LFS objects"
+          ],
+          "reasoning": "CI artifacts and LFS objects are distinct data kinds that GitLab stores, listed as separate items in the same sentence."
+        },
+        "66": {
+          "item": "Amazon S3, Google Cloud Storage",
+          "stratum": "merge",
+          "answer": "split",
+          "class": null,
+          "parts": [
+            "Amazon S3",
+            "Google Cloud Storage"
+          ],
+          "reasoning": "Amazon S3 and Google Cloud Storage are two separate named cloud services, each usable on its own as object storage."
+        },
+        "69": {
+          "item": "PgBouncer",
+          "stratum": "retype_same_layer",
+          "answer": "retype",
+          "class": "technology.systemsoftware",
+          "parts": [],
+          "reasoning": "PgBouncer is a connection-pooling program for PostgreSQL that runs on a host. It is software, not a physical device."
+        },
+        "82": {
+          "item": "GitLab Rails",
+          "stratum": "retype_realistic",
+          "answer": "retype",
+          "class": "application.applicationcomponent",
+          "parts": [],
+          "reasoning": "The Rails application is a deployable unit that provides user-facing features as a whole, not a single unit of automated behaviour. Applicationcomponent fits better."
+        },
+        "83": {
+          "item": "GitLab user",
+          "stratum": "retype_same_layer",
+          "answer": "retype",
+          "class": "business.businessactor",
+          "parts": [],
+          "reasoning": "The item names the end users who access GitLab, which are actors. It is not an authentication configuration."
+        },
+        "91": {
+          "item": "SSH key authentication",
+          "stratum": "retype_realistic",
+          "answer": "retype",
+          "class": "security.authenticationconfig",
+          "parts": [],
+          "reasoning": "The item describes how the SSH server authenticates connections by key, which is the mechanism by which principals prove identity. That is the authentication configuration, not an atomic permission grant."
+        },
+        "93": {
+          "item": "Fast SSH key lookup",
+          "stratum": "retype_realistic",
+          "answer": "retype",
+          "class": "product.feature",
+          "parts": [],
+          "reasoning": "Fast SSH key lookup is a switchable functionality the user can enable, which matches a feature. It is not an ordered workflow step in a user journey."
+        },
+        "103": {
+          "item": "git user",
+          "stratum": "retype_realistic",
+          "answer": "retype",
+          "class": "security.actor",
+          "parts": [],
+          "reasoning": "The git user is the system account under which GitLab runs, a principal in the security model. It is not a delegation of authority."
+        },
+        "107": {
+          "item": "gitlab.yml and puma.rb",
+          "stratum": "merge",
+          "answer": "split",
+          "class": null,
+          "parts": [
+            "gitlab.yml",
+            "puma.rb"
+          ],
+          "reasoning": "gitlab.yml and puma.rb are separate configuration files, each described in its own bullet with its own purpose."
+        }
+      }
+    },
+    {
+      "document": "gitlab_architecture",
+      "take": 2,
+      "status": "scored",
+      "score": {
+        "merge": {
+          "items": 8,
+          "fixed": 8,
+          "harmed": 0,
+          "neutral": 0,
+          "missed": 0,
+          "changed_wrongly": 0,
+          "unsure": 0,
+          "harmed_by": {
+            "split": 0,
+            "retype": 0
+          }
+        },
+        "retype_realistic": {
+          "items": 6,
+          "fixed": 6,
+          "harmed": 0,
+          "neutral": 0,
+          "missed": 0,
+          "changed_wrongly": 0,
+          "unsure": 0,
+          "harmed_by": {
+            "split": 0,
+            "retype": 0
+          }
+        },
+        "retype_same_layer": {
+          "items": 6,
+          "fixed": 4,
+          "harmed": 0,
+          "neutral": 0,
+          "missed": 2,
+          "changed_wrongly": 0,
+          "unsure": 0,
+          "harmed_by": {
+            "split": 0,
+            "retype": 0
+          }
+        },
+        "control": {
+          "items": 89,
+          "fixed": 0,
+          "harmed": 0,
+          "neutral": 0,
+          "missed": 0,
+          "changed_wrongly": 0,
+          "unsure": 0,
+          "harmed_by": {
+            "split": 0,
+            "retype": 0
+          }
+        },
+        "split_trap": {
+          "items": 5,
+          "fixed": 0,
+          "harmed": 0,
+          "neutral": 0,
+          "missed": 0,
+          "changed_wrongly": 0,
+          "unsure": 0,
+          "harmed_by": {
+            "split": 0,
+            "retype": 0
+          }
+        }
+      },
+      "precision": 1.0,
+      "warnings": [],
+      "verdicts": {
+        "0": {
+          "item": "Community Edition, Enterprise Edition",
+          "stratum": "merge",
+          "answer": "split",
+          "class": null,
+          "parts": [
+            "Community Edition",
+            "Enterprise Edition"
+          ],
+          "reasoning": "The title lists two distributions that the document describes as separate editions."
+        },
+        "2": {
+          "item": "Kubernetes",
+          "stratum": "retype_realistic",
+          "answer": "retype",
+          "class": "technology.systemsoftware",
+          "parts": [],
+          "reasoning": "Kubernetes is described as a platform that deployments run on, which matches installed platform software rather than an internal behaviour of a node."
+        },
+        "30": {
+          "item": "Advanced search, Sentry integration",
+          "stratum": "merge",
+          "answer": "split",
+          "class": null,
+          "parts": [
+            "Advanced search",
+            "Sentry integration"
+          ],
+          "reasoning": "The title names two things, advanced search and Sentry integration, which the document describes in separate table rows. The quote supports only the search part."
+        },
+        "38": {
+          "item": "Systems administrator, GitLab Support Engineer",
+          "stratum": "merge",
+          "answer": "split",
+          "class": null,
+          "parts": [
+            "Systems administrator",
+            "GitLab Support Engineer"
+          ],
+          "reasoning": "Two distinct roles, systems administrators and GitLab Support Engineers, are named as the document's audience."
+        },
+        "41": {
+          "item": "AI Gateway",
+          "stratum": "retype_realistic",
+          "answer": "retype",
+          "class": "application.applicationcomponent",
+          "parts": [],
+          "reasoning": "The AI Gateway is described as a standalone service, which fits an application component better than a function."
+        },
+        "42": {
+          "item": "GitLab Self-Managed, GitLab Dedicated",
+          "stratum": "merge",
+          "answer": "split",
+          "class": null,
+          "parts": [
+            "GitLab Self-Managed",
+            "GitLab Dedicated"
+          ],
+          "reasoning": "GitLab Self-Managed and GitLab Dedicated are named as distinct deployment options."
+        },
+        "44": {
+          "item": "Runway",
+          "stratum": "retype_realistic",
+          "answer": "retype",
+          "class": "technology.technologyservice",
+          "parts": [],
+          "reasoning": "Runway is a deployment service that hosts the Duo Workflow Service, not a communication link between nodes."
+        },
+        "49": {
+          "item": "Praefect",
+          "stratum": "retype_realistic",
+          "answer": "retype",
+          "class": "application.applicationcomponent",
+          "parts": [],
+          "reasoning": "Praefect is described as a single transparent proxy service, not a grouping of two or more collaborating components."
+        },
+        "54": {
+          "item": "GitLab agent for Kubernetes",
+          "stratum": "retype_same_layer",
+          "answer": "retype",
+          "class": "application.applicationcomponent",
+          "parts": [],
+          "reasoning": "The GitLab agent for Kubernetes is described as an active in-cluster component, which is a component rather than a process."
+        },
+        "63": {
+          "item": "Logrotate",
+          "stratum": "retype_realistic",
+          "answer": "retype",
+          "class": "technology.systemsoftware",
+          "parts": [],
+          "reasoning": "Logrotate is a bundled program that rotates logs, which is system software rather than an interface."
+        },
+        "64": {
+          "item": "Object storage and Google Cloud Storage",
+          "stratum": "merge",
+          "answer": "split",
+          "class": null,
+          "parts": [
+            "Object storage",
+            "Google Cloud Storage"
+          ],
+          "reasoning": "The title joins object storage and Google Cloud Storage, which the document names as separate options."
+        },
+        "65": {
+          "item": "CI artifacts and LFS objects",
+          "stratum": "merge",
+          "answer": "split",
+          "class": null,
+          "parts": [
+            "CI artifacts",
+            "LFS objects"
+          ],
+          "reasoning": "CI artifacts and LFS objects are two distinct data kinds listed separately in the document."
+        },
+        "66": {
+          "item": "Amazon S3 and Azure Blob Storage",
+          "stratum": "merge",
+          "answer": "split",
+          "class": null,
+          "parts": [
+            "Amazon S3",
+            "Azure Blob Storage"
+          ],
+          "reasoning": "Amazon S3 and Azure Blob Storage are two named cloud services in one list."
+        },
+        "72": {
+          "item": "Prometheus",
+          "stratum": "retype_same_layer",
+          "answer": "retype",
+          "class": "technology.systemsoftware",
+          "parts": [],
+          "reasoning": "Prometheus is described as a time-series tool that collects and serves metrics, which is an installed software product rather than an interaction."
+        },
+        "91": {
+          "item": "SSH key authentication",
+          "stratum": "retype_same_layer",
+          "answer": "retype",
+          "class": "security.authenticationconfig",
+          "parts": [],
+          "reasoning": "SSH key authentication is the mechanism by which principals prove identity, which matches an authentication configuration rather than a data classification."
+        },
+        "96": {
+          "item": "GET /internal/api/allowed",
+          "stratum": "retype_same_layer",
+          "answer": "retype",
+          "class": "api.operation",
+          "parts": [],
+          "reasoning": "This is an HTTP call to an internal API endpoint, which matches an operation rather than a header."
+        },
+        "103": {
+          "item": "git user",
+          "stratum": "retype_realistic",
+          "answer": "retype",
+          "class": "security.actor",
+          "parts": [],
+          "reasoning": "The git user is a principal, an OS account under which GitLab runs, not a delegation of authority."
+        },
+        "107": {
+          "item": "gitlab.yml and database.yml",
+          "stratum": "merge",
+          "answer": "split",
+          "class": null,
+          "parts": [
+            "gitlab.yml",
+            "database.yml"
+          ],
+          "reasoning": "gitlab.yml and database.yml are two separate configuration files named together in one item."
+        }
+      }
+    },
+    {
+      "document": "gitlab_architecture",
+      "take": 3,
+      "status": "scored",
+      "score": {
+        "merge": {
+          "items": 8,
+          "fixed": 8,
+          "harmed": 0,
+          "neutral": 0,
+          "missed": 0,
+          "changed_wrongly": 0,
+          "unsure": 0,
+          "harmed_by": {
+            "split": 0,
+            "retype": 0
+          }
+        },
+        "retype_realistic": {
+          "items": 6,
+          "fixed": 5,
+          "harmed": 0,
+          "neutral": 0,
+          "missed": 1,
+          "changed_wrongly": 0,
+          "unsure": 1,
+          "harmed_by": {
+            "split": 0,
+            "retype": 0
+          }
+        },
+        "retype_same_layer": {
+          "items": 6,
+          "fixed": 6,
+          "harmed": 0,
+          "neutral": 0,
+          "missed": 0,
+          "changed_wrongly": 0,
+          "unsure": 0,
+          "harmed_by": {
+            "split": 0,
+            "retype": 0
+          }
+        },
+        "control": {
+          "items": 88,
+          "fixed": 0,
+          "harmed": 0,
+          "neutral": 1,
+          "missed": 0,
+          "changed_wrongly": 0,
+          "unsure": 0,
+          "harmed_by": {
+            "split": 0,
+            "retype": 0
+          }
+        },
+        "split_trap": {
+          "items": 6,
+          "fixed": 0,
+          "harmed": 0,
+          "neutral": 0,
+          "missed": 0,
+          "changed_wrongly": 0,
+          "unsure": 0,
+          "harmed_by": {
+            "split": 0,
+            "retype": 0
+          }
+        }
+      },
+      "precision": 1.0,
+      "warnings": [
+        "1 pre-review answers were left out (item 35: not marked as a list)"
+      ],
+      "verdicts": {
+        "0": {
+          "item": "Community Edition, Enterprise Edition",
+          "stratum": "merge",
+          "answer": "split",
+          "class": null,
+          "parts": [
+            "Community Edition",
+            "Enterprise Edition"
+          ],
+          "reasoning": "The title names two distributions that the document describes as separate editions, each with its own definition."
+        },
+        "6": {
+          "item": "GitLab API",
+          "stratum": "retype_same_layer",
+          "answer": "retype",
+          "class": "application.applicationinterface",
+          "parts": [],
+          "reasoning": "The GitLab API is the HTTP access point through which services are reached, not an ordered sequence of steps. ApplicationInterface fits the channel definition."
+        },
+        "23": {
+          "item": "Mailroom",
+          "stratum": "retype_realistic",
+          "answer": "unsure",
+          "class": null,
+          "parts": [],
+          "reasoning": "Mailroom is a GitLab service that handles inbound mail, which suggests an application component, but the document gives no hosting detail. Is Mailroom a deployable service or a host node?"
+        },
+        "24": {
+          "item": "Zoekt",
+          "stratum": "retype_realistic",
+          "answer": "retype",
+          "class": "technology.systemsoftware",
+          "parts": [],
+          "reasoning": "Zoekt is a named search engine that the document shows connecting to Praefect. It is not an access point with a protocol endpoint, so TechnologyInterface does not fit."
+        },
+        "30": {
+          "item": "Advanced search and Jaeger integration",
+          "stratum": "merge",
+          "answer": "split",
+          "class": null,
+          "parts": [
+            "Advanced search",
+            "Jaeger integration"
+          ],
+          "reasoning": "The title joins two distinct features, advanced search and Jaeger integration, which the document describes separately."
+        },
+        "31": {
+          "item": "Inbound email, Outbound email",
+          "stratum": "merge",
+          "answer": "split",
+          "class": null,
+          "parts": [
+            "Inbound email",
+            "Outbound email"
+          ],
+          "reasoning": "Inbound and outbound email are separate sections with separate descriptions, so the title names two distinct services."
+        },
+        "42": {
+          "item": "GitLab Self-Managed and GitLab Dedicated",
+          "stratum": "merge",
+          "answer": "split",
+          "class": null,
+          "parts": [
+            "GitLab Self-Managed",
+            "GitLab Dedicated"
+          ],
+          "reasoning": "Self-Managed and Dedicated are separate GitLab deployment offerings named as distinct instance types."
+        },
+        "44": {
+          "item": "Runway",
+          "stratum": "retype_same_layer",
+          "answer": "retype",
+          "class": "technology.technologyservice",
+          "parts": [],
+          "reasoning": "Runway is a platform service on which Duo Workflow Service is deployed. It is not a connectivity fabric, so CommunicationNetwork does not fit."
+        },
+        "47": {
+          "item": "Gitaly",
+          "stratum": "retype_same_layer",
+          "answer": "retype",
+          "class": "application.applicationcomponent",
+          "parts": [],
+          "reasoning": "Gitaly is a GitLab-built service that handles Git RPCs and is a deployable unit. It is not merely an access channel, so ApplicationComponent fits better."
+        },
+        "48": {
+          "item": "Remove the need for NFS for Git storage",
+          "stratum": "retype_same_layer",
+          "answer": "retype",
+          "class": "motivation.goal",
+          "parts": [],
+          "reasoning": "The clause states what the project intends to achieve (removing NFS need), which is an intended end state rather than an interpretation of a concept."
+        },
+        "55": {
+          "item": "GitLab Pages",
+          "stratum": "retype_realistic",
+          "answer": "retype",
+          "class": "application.applicationcomponent",
+          "parts": [],
+          "reasoning": "GitLab Pages is described as a single feature and component that publishes static sites. It is not a grouping of several components, so ApplicationComponent fits."
+        },
+        "59": {
+          "item": "GitLab Workhorse",
+          "stratum": "retype_same_layer",
+          "answer": "retype",
+          "class": "application.applicationcomponent",
+          "parts": [],
+          "reasoning": "GitLab Workhorse is described as one program that relieves pressure on Puma. It is a single deployable unit, not a collaboration of components."
+        },
+        "64": {
+          "item": "Object storage, Amazon S3",
+          "stratum": "merge",
+          "answer": "split",
+          "class": null,
+          "parts": [
+            "Object storage",
+            "Amazon S3"
+          ],
+          "reasoning": "The title joins the generic category, object storage, with Amazon S3, which the document names as a distinct commonly used provider."
+        },
+        "65": {
+          "item": "CI artifacts and LFS objects",
+          "stratum": "merge",
+          "answer": "split",
+          "class": null,
+          "parts": [
+            "CI artifacts",
+            "LFS objects"
+          ],
+          "reasoning": "CI artifacts and LFS objects are two distinct kinds of stored data that the document lists separately."
+        },
+        "66": {
+          "item": "Google Cloud Storage, Azure Blob Storage",
+          "stratum": "merge",
+          "answer": "split",
+          "class": null,
+          "parts": [
+            "Google Cloud Storage",
+            "Azure Blob Storage"
+          ],
+          "reasoning": "Google Cloud Storage and Azure Blob Storage are two distinct named providers listed as separate options."
+        },
+        "75": {
+          "item": "Registry",
+          "stratum": "retype_realistic",
+          "answer": "retype",
+          "class": "application.applicationcomponent",
+          "parts": [],
+          "reasoning": "The registry actively authenticates clients and serves images, behaving as a running component. It is not a passive data structure."
+        },
+        "76": {
+          "item": "Docker image",
+          "stratum": "control",
+          "answer": "retype",
+          "class": "technology.artifact",
+          "parts": [],
+          "reasoning": "A Docker image is a packaged, deployable unit produced by a build. The Artifact definition explicitly covers container images, so it fits better than a business object."
+        },
+        "79": {
+          "item": "Sidekiq",
+          "stratum": "retype_realistic",
+          "answer": "retype",
+          "class": "application.applicationcomponent",
+          "parts": [],
+          "reasoning": "Sidekiq is a background job processor that runs as a GitLab component. TechnologyFunction is for infrastructure behaviour, not an application job runner."
+        },
+        "88": {
+          "item": "POST /git-upload-pack",
+          "stratum": "retype_same_layer",
+          "answer": "retype",
+          "class": "api.operation",
+          "parts": [],
+          "reasoning": "This is an HTTP method and path that the server serves, so it is an Operation. The Header definition covers a named header declaration, not an endpoint."
+        },
+        "108": {
+          "item": "puma.rb and database.yml",
+          "stratum": "merge",
+          "answer": "split",
+          "class": null,
+          "parts": [
+            "puma.rb",
+            "database.yml"
+          ],
+          "reasoning": "puma.rb and database.yml are two separate configuration files, each with its own purpose described separately."
+        },
+        "109": {
+          "item": "GitLab Shell config.yml",
+          "stratum": "retype_realistic",
+          "answer": "retype",
+          "class": "technology.artifact",
+          "parts": [],
+          "reasoning": "The item is a configuration file at a path, which is a passive file. Artifact fits, not a technology service offered to consumers."
+        }
+      }
+    }
+  ],
+  "score": {
+    "merge": {
+      "items": 33,
+      "fixed": 31,
+      "harmed": 0,
+      "neutral": 0,
+      "missed": 0,
+      "changed_wrongly": 2,
+      "unsure": 0,
+      "harmed_by": {
+        "split": 0,
+        "retype": 0
+      }
+    },
+    "retype_realistic": {
+      "items": 36,
+      "fixed": 31,
+      "harmed": 0,
+      "neutral": 0,
+      "missed": 4,
+      "changed_wrongly": 1,
+      "unsure": 2,
+      "harmed_by": {
+        "split": 0,
+        "retype": 0
+      }
+    },
+    "retype_same_layer": {
+      "items": 36,
+      "fixed": 29,
+      "harmed": 0,
+      "neutral": 0,
+      "missed": 4,
+      "changed_wrongly": 3,
+      "unsure": 0,
+      "harmed_by": {
+        "split": 0,
+        "retype": 0
+      }
+    },
+    "control": {
+      "items": 393,
+      "fixed": 0,
+      "harmed": 4,
+      "neutral": 1,
+      "missed": 0,
+      "changed_wrongly": 0,
+      "unsure": 0,
+      "harmed_by": {
+        "split": 0,
+        "retype": 4
+      }
+    },
+    "split_trap": {
+      "items": 54,
+      "fixed": 0,
+      "harmed": 0,
+      "neutral": 6,
+      "missed": 0,
+      "changed_wrongly": 0,
+      "unsure": 1,
+      "harmed_by": {
+        "split": 0,
+        "retype": 0
+      }
+    }
+  },
+  "precision": 0.9578947368421052,
+  "gate": [
+    {
+      "question": "retype",
+      "recovery": 0.8611111111111112,
+      "needed": 0.5,
+      "harms": 4,
+      "controls": 447,
+      "harm_rate": 0.008948545861297539,
+      "harm_upper": 0.022780339630825413,
+      "passed": true
+    },
+    {
+      "question": "split",
+      "recovery": 0.9393939393939394,
+      "needed": 0.6,
+      "harms": 0,
+      "controls": 447,
+      "harm_rate": 0.0,
+      "harm_upper": 0.008520952813582418,
+      "passed": true
+    }
+  ],
+  "spend": {
+    "calls": 12,
+    "usd": 1.3704,
+    "by_arm": {
+      "haiku": 0.0506,
+      "opus": 1.3198
+    }
+  }
+}

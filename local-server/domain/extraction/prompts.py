@@ -310,3 +310,90 @@ SINGLE_CALL_STAGES: tuple[StageDefinition, ...] = (
     ),
     next(stage for stage in INDIVIDUAL_EXTRACTION_STAGES if stage.key == DERIVE_RELATIONSHIPS),
 )
+
+PRE_REVIEW = "pre_review"
+
+# The prompt of the pre-review stage (domain/extraction/pre_review.py), frozen
+# for documentation/extraction/experiments/2026-11-22-pre-review-stage.md on
+# 2026-11-23 before its first paid run. It quotes no benchmark or Gate D
+# example. Changing it makes a new arm of that experiment.
+_PRE_REVIEW_SYSTEM = """You are an expert reviewer of knowledge graph extractions.
+Another pass has read a document and listed the individuals it states, each with one class
+of the ontology below. Before a person reviews that list, you check each listed individual
+and answer two questions about it.
+
+The classes are listed below by kind, each as: class reference (title): definition.
+
+{catalog}
+
+# Question 1: one item or several?
+
+Ask it only of the individuals marked [list?]. An individual is one item when the document
+treats it as one thing, even if its title contains "and", "&", a comma or a slash: the name
+of a product, a team, a role or a document; a statement that joins two verbs or two aims;
+a pair the document always names together. It is several items only when its title lists
+distinct things that the document could describe separately, each of which would itself be
+an individual of a class in the ontology. Split only then, into one part per thing. Give each
+part a title (the name the document uses for it), a class reference, and a quote: the exact
+words of the document, at most 300 characters, that name it.
+
+# Question 2: is the class the best fit?
+
+Ask it of every individual. Find the class it could most plausibly be besides its own; class
+definitions often say "Use ... instead when", and that is where to look first. Compare the two
+definitions with what the document says about the individual. Change the class only when the
+other definition clearly fits better than the given one. When both fit, keep the given class.
+Judge by the definitions, never by which class name sounds closer.
+
+# When you cannot decide
+
+Answer "unsure" and put the question you would ask the person in the reasoning. Use it
+sparingly: most individuals are right as listed.
+
+# Your answer
+
+List only the individuals you split, retype or are unsure about. Every individual you leave
+out is kept as it is. For each, give:
+- item: its number in the list;
+- answer: "split", "retype" or "unsure";
+- reasoning: at most 40 words; for a retype, quote the sentence of a definition that decides;
+- compared: the class references you weighed;
+- class: for a retype, the class reference it should have, copied exactly from the list;
+- parts: for a split, the parts as described under question 1.
+
+Return only valid JSON in this format:
+{"reviews": [
+  {"item": 3, "answer": "retype", "reasoning": "...", "compared": ["...", "..."], "class": "..."},
+  {"item": 7, "answer": "split", "reasoning": "...", "compared": [],
+   "parts": [{"title": "...", "class": "...", "quote": "..."}, {"title": "...", "class": "...", "quote": "..."}]}
+]}
+If every individual is right as listed, return {"reviews": []}."""
+
+_PRE_REVIEW_USER = """<document>
+{text}
+</document>
+
+The individuals listed from this document, one per line as: number. title | class | quote,
+with [list?] where question 1 applies:
+
+{items}
+
+Review each individual."""
+
+PRE_REVIEW_STAGE = StageDefinition(
+    key=PRE_REVIEW,
+    label="Pre-review",
+    description=(
+        "Reviews the individuals a text's extraction listed before a person does: splits one "
+        "that names several things and retypes one whose class is not the best fit, saying why."
+    ),
+    placeholders={
+        "catalog": (
+            "(system prompt) The ontology title and every class by kind: reference, title and "
+            "definition"
+        ),
+        "text": "The text the individuals were found in",
+        "items": "The individuals, numbered: title | class | quote, marked [list?] where asked",
+    },
+    default=StagePrompt(system=_PRE_REVIEW_SYSTEM, user=_PRE_REVIEW_USER),
+)

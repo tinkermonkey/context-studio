@@ -1,0 +1,556 @@
+- type: add
+  elementId: motivation.assessment.splits-and-retypes-are-half-of-reviewer-changes
+  layerName: motivation
+  after:
+    id: 2c70a84a-685c-4f98-b4a4-a28096a97531
+    path: motivation.assessment.splits-and-retypes-are-half-of-reviewer-changes
+    spec_node_id: motivation.assessment
+    type: assessment
+    layer_id: motivation
+    name: Splits and Retypes Are Half of Reviewer Changes
+    description: "Gate D (2026-11-21, one take per document, one reviewer): 15 of
+      the 29 rejections and retypes the person made on two real documents came
+      down to two questions: one item or several (4 House nodes naming two or
+      three tools or kits) and the better class (11 retypes, 5 on the DR viewer
+      README). The DR document had no splits; its other 5 rejections were 'not
+      an element' (dependencies or facts stated as elements). Only DR's half
+      reflects real use. Source:
+      documentation/extraction/experiments/2026-11-21-gate-d-real-documents.md
+      and the Gate D reading in rearchitecture/ontology_workbench_proposal.md
+      (PR tinkermonkey/context-studio#1675, branch claude/gate-d-value-log)."
+    attributes:
+      assessmentType: gap
+    metadata:
+      created_at: 2026-11-22T14:48:01.245Z
+      updated_at: 2026-11-22T14:48:01.245Z
+      version: 1
+  timestamp: 2026-11-23T16:27:35.287Z
+  sequenceNumber: 0
+- type: add
+  elementId: motivation.requirement.pre-review-is-adopted-only-by-a-rule-set-in-advance
+  layerName: motivation
+  after:
+    id: dac63203-d159-46aa-b5f3-952ec5cdfebc
+    path: motivation.requirement.pre-review-is-adopted-only-by-a-rule-set-in-advance
+    spec_node_id: motivation.requirement
+    type: requirement
+    layer_id: motivation
+    name: Pre-Review Is Adopted Only by a Rule Set in Advance
+    description: "The pre-review stage stays off by default until a decision rule
+      written on its experiment page before the first paid run adopts it: it
+      must cut the reviewer's split and retype changes without losing typed F1,
+      measured over three paired takes on human-checked gold, with its own
+      changes' precision and its false-change rate on correct elements bounded."
+    attributes:
+      requirementType: quality
+      priority: high
+    metadata:
+      created_at: 2026-11-22T14:48:01.260Z
+      updated_at: 2026-11-22T14:48:01.260Z
+      version: 1
+  timestamp: 2026-11-22T14:48:01.295Z
+  sequenceNumber: 2
+- type: add
+  elementId: product.feature.extraction-pre-review
+  layerName: product
+  after:
+    id: 1c728762-652b-4b4a-836b-1a90b968303d
+    path: product.feature.extraction-pre-review
+    spec_node_id: product.feature
+    type: feature
+    layer_id: product
+    name: Extraction Pre-Review
+    description: "An optional stage of individual extraction that reviews each
+      extracted element before a person does: it splits an element that names
+      several things and retypes one whose class is not the best fit. Built
+      behind a pipeline configuration's pre_review setting, which no built-in
+      configuration has. Assessed 2026-11-23
+      (documentation/extraction/experiments/2026-11-22-pre-review-stage.md):
+      inconclusive, so it stays off; showing its verdicts in a proposal is not
+      built."
+    attributes:
+      priority: medium
+      status: proposed
+      size: m
+    metadata:
+      created_at: 2026-11-22T14:48:01.260Z
+      updated_at: 2026-11-22T14:48:01.260Z
+      version: 1
+  timestamp: 2026-11-23T17:58:47.310Z
+  sequenceNumber: 3
+- type: add
+  elementId: application.applicationfunction.individual-pre-review
+  layerName: application
+  after:
+    id: a70825fd-8882-4682-9bff-f8c25814c6b6
+    path: application.applicationfunction.individual-pre-review
+    spec_node_id: application.applicationfunction
+    type: applicationfunction
+    layer_id: application
+    name: Individual Pre-Review
+    description: The pre_review stage (domain/extraction/pre_review.py
+      review_individuals; ExtractionService.review_individuals), called by
+      SingleCallOrchestrator between find_individuals and derive_relationships
+      when the configuration has a pre_review setting {model, effort,
+      max_tokens}. One LLM call per section, against the same class catalog in a
+      cached system prompt, given the section's text and its numbered
+      individuals. It asks the split question where the split witness fires and
+      the retype question of every individual, and answers split, retype or
+      unsure per individual. The orchestrator replaces a split individual by its
+      parts and gives a retyped one its new class before relating. An unusable
+      answer keeps its individual as extracted; a failed call keeps the
+      section's individuals and counts them as not reviewed in the run's
+      metadata, never failing the run.
+    attributes:
+      documentation: "Input: section text, catalog, individuals. Output:
+        per-individual PreReviewVerdict; the orchestrator replaces a split
+        individual by its parts and a retyped one's class before relating."
+    metadata:
+      created_at: 2026-11-22T14:48:01.263Z
+      updated_at: 2026-11-22T14:48:01.263Z
+      version: 1
+    source_reference:
+      provenance: manual
+      locations:
+        - file: local-server/domain/extraction/pre_review.py
+          symbol: review_individuals
+  timestamp: 2026-11-23T17:58:49.568Z
+  sequenceNumber: 4
+- type: add
+  elementId: application.applicationfunction.split-witness
+  layerName: application
+  after:
+    id: 1161928f-6219-40a9-bb81-99e8ca10dc1c
+    path: application.applicationfunction.split-witness
+    spec_node_id: application.applicationfunction
+    type: applicationfunction
+    layer_id: application
+    name: Split Witness
+    description: "Deterministic and free: marks the extracted titles the split
+      question applies to (a list separator such as a comma, 'and', '&' or '/'
+      between noun phrases, or several part or model numbers). It catches all 4
+      of Gate D's splits and fires on 10-20% of single_call's recorded benchmark
+      titles, most of them legitimately compound goals and outcomes, so it is a
+      precondition for asking, never a verdict."
+    metadata:
+      created_at: 2026-11-22T14:48:01.264Z
+      updated_at: 2026-11-22T14:48:01.264Z
+      version: 1
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/domain/extraction/pre_review.py
+          symbol: split_witness
+  timestamp: 2026-11-23T17:58:49.548Z
+  sequenceNumber: 5
+- type: add
+  elementId: data-model.objectschema.pre-review-verdict
+  layerName: data-model
+  after:
+    id: 29379db6-dbf6-4a07-81cf-ba3c90368552
+    path: data-model.objectschema.pre-review-verdict
+    spec_node_id: data-model.objectschema
+    type: objectschema
+    layer_id: data-model
+    name: Pre-Review Verdict
+    description: "Domain value (dataclass, domain/extraction/entities.py): the
+      pre-review stage's answer for one extracted individual. answer (keep,
+      split, retype, unsure), question, reasoning, original title and class, the
+      retype's class, the classes compared, a split's parts (each with title,
+      class and passage), model."
+    attributes:
+      type: object
+      required:
+        - verdict
+        - question
+        - reasoning
+        - original
+        - model
+    metadata:
+      created_at: 2026-11-22T14:48:01.265Z
+      updated_at: 2026-11-22T14:48:01.265Z
+      version: 1
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/domain/extraction/entities.py
+          symbol: PreReviewVerdict
+  timestamp: 2026-11-23T17:58:49.548Z
+  sequenceNumber: 6
+- type: relationship-add
+  elementId: motivation.requirement.pre-review-is-adopted-only-by-a-rule-set-in-advance::realizes::motivation.outcome.extraction-proposals-worth-a-reviewers-time
+  layerName: motivation
+  after:
+    source: motivation.requirement.pre-review-is-adopted-only-by-a-rule-set-in-advance
+    target: motivation.outcome.extraction-proposals-worth-a-reviewers-time
+    predicate: realizes
+    layer: motivation
+    category: structural
+  timestamp: 2026-11-22T14:48:01.295Z
+  sequenceNumber: 11
+- type: relationship-add
+  elementId: product.feature.extraction-pre-review::realizes::product.softwarecapability.source-extraction
+  layerName: product
+  after:
+    source: product.feature.extraction-pre-review
+    target: product.softwarecapability.source-extraction
+    predicate: realizes
+    layer: product
+    category: structural
+  timestamp: 2026-11-22T14:48:01.295Z
+  sequenceNumber: 12
+- type: relationship-add
+  elementId: product.feature.extraction-pre-review::delivers::motivation.value.reviewer-time-goes-to-judgment-calls
+  layerName: product
+  after:
+    source: product.feature.extraction-pre-review
+    target: motivation.value.reviewer-time-goes-to-judgment-calls
+    predicate: delivers
+    layer: product
+    targetLayer: motivation
+    category: structural
+  timestamp: 2026-11-22T14:48:01.295Z
+  sequenceNumber: 13
+- type: relationship-add
+  elementId: product.feature.extraction-pre-review::satisfies::motivation.requirement.pre-review-is-adopted-only-by-a-rule-set-in-advance
+  layerName: product
+  after:
+    source: product.feature.extraction-pre-review
+    target: motivation.requirement.pre-review-is-adopted-only-by-a-rule-set-in-advance
+    predicate: satisfies
+    layer: product
+    targetLayer: motivation
+    category: structural
+  timestamp: 2026-11-22T14:48:01.295Z
+  sequenceNumber: 15
+- type: relationship-add
+  elementId: application.applicationprocess.single-call-individual-extraction::depends-on::application.applicationfunction.individual-pre-review
+  layerName: application
+  after:
+    source: application.applicationprocess.single-call-individual-extraction
+    target: application.applicationfunction.individual-pre-review
+    predicate: depends-on
+    layer: application
+    category: structural
+  timestamp: 2026-11-22T14:48:01.295Z
+  sequenceNumber: 17
+- type: relationship-add
+  elementId: application.applicationfunction.individual-pre-review::depends-on::application.applicationfunction.split-witness
+  layerName: application
+  after:
+    source: application.applicationfunction.individual-pre-review
+    target: application.applicationfunction.split-witness
+    predicate: depends-on
+    layer: application
+    category: structural
+  timestamp: 2026-11-22T14:48:01.295Z
+  sequenceNumber: 18
+- type: relationship-add
+  elementId: application.applicationfunction.individual-pre-review::realizes::application.applicationservice.source-extraction-service
+  layerName: application
+  after:
+    source: application.applicationfunction.individual-pre-review
+    target: application.applicationservice.source-extraction-service
+    predicate: realizes
+    layer: application
+    category: structural
+  timestamp: 2026-11-22T14:48:01.295Z
+  sequenceNumber: 19
+- type: relationship-add
+  elementId: application.applicationfunction.individual-pre-review::accesses::data-model.objectschema.pre-review-verdict
+  layerName: application
+  after:
+    source: application.applicationfunction.individual-pre-review
+    target: data-model.objectschema.pre-review-verdict
+    predicate: accesses
+    layer: application
+    targetLayer: data-model
+    category: structural
+  timestamp: 2026-11-22T14:48:01.295Z
+  sequenceNumber: 21
+- type: relationship-add
+  elementId: application.applicationservice.llmprovider::serves::application.applicationfunction.individual-pre-review
+  layerName: application
+  after:
+    source: application.applicationservice.llmprovider
+    target: application.applicationfunction.individual-pre-review
+    predicate: serves
+    layer: application
+    category: structural
+  timestamp: 2026-11-22T14:48:01.295Z
+  sequenceNumber: 22
+- type: relationship-add
+  elementId: application.applicationservice.extraction-port::serves::application.applicationfunction.individual-pre-review
+  layerName: application
+  after:
+    source: application.applicationservice.extraction-port
+    target: application.applicationfunction.individual-pre-review
+    predicate: serves
+    layer: application
+    category: structural
+  timestamp: 2026-11-22T14:48:01.295Z
+  sequenceNumber: 23
+- type: relationship-add
+  elementId: motivation.assessment.splits-and-retypes-are-half-of-reviewer-changes::influence::motivation.outcome.extraction-proposals-worth-a-reviewers-time
+  layerName: motivation
+  after:
+    source: motivation.assessment.splits-and-retypes-are-half-of-reviewer-changes
+    target: motivation.outcome.extraction-proposals-worth-a-reviewers-time
+    predicate: influence
+    layer: motivation
+    category: structural
+  timestamp: 2026-11-22T14:48:04.978Z
+  sequenceNumber: 33
+- type: relationship-add
+  elementId: motivation.assessment.benchmark-gold-is-thin-and-mostly-model-made::influence::motivation.requirement.pre-review-is-adopted-only-by-a-rule-set-in-advance
+  layerName: motivation
+  after:
+    source: motivation.assessment.benchmark-gold-is-thin-and-mostly-model-made
+    target: motivation.requirement.pre-review-is-adopted-only-by-a-rule-set-in-advance
+    predicate: influence
+    layer: motivation
+    category: structural
+  timestamp: 2026-11-22T14:48:04.978Z
+  sequenceNumber: 34
+- type: relationship-add
+  elementId: motivation.assessment.splits-and-retypes-are-half-of-reviewer-changes::associated-with::motivation.driver.review-is-the-normal-workflow
+  layerName: motivation
+  after:
+    source: motivation.assessment.splits-and-retypes-are-half-of-reviewer-changes
+    target: motivation.driver.review-is-the-normal-workflow
+    predicate: associated-with
+    layer: motivation
+    category: structural
+  timestamp: 2026-11-22T14:48:19.864Z
+  sequenceNumber: 35
+- type: relationship-add
+  elementId: product.feature.extraction-pre-review::serves::product.persona.ontology-curator
+  layerName: product
+  after:
+    source: product.feature.extraction-pre-review
+    target: product.persona.ontology-curator
+    predicate: serves
+    layer: product
+    category: structural
+  timestamp: 2026-11-22T14:48:19.864Z
+  sequenceNumber: 36
+- type: relationship-add
+  elementId: product.workflowstep.review-the-extraction-proposal::uses::product.feature.extraction-pre-review
+  layerName: product
+  after:
+    source: product.workflowstep.review-the-extraction-proposal
+    target: product.feature.extraction-pre-review
+    predicate: uses
+    layer: product
+    category: structural
+  timestamp: 2026-11-22T14:48:19.864Z
+  sequenceNumber: 37
+- type: relationship-add
+  elementId: application.applicationservice.source-extraction-service::realizes::product.feature.extraction-pre-review
+  layerName: application
+  after:
+    source: application.applicationservice.source-extraction-service
+    target: product.feature.extraction-pre-review
+    predicate: realizes
+    layer: application
+    targetLayer: product
+    category: structural
+  timestamp: 2026-11-22T14:48:19.864Z
+  sequenceNumber: 40
+- type: relationship-add
+  elementId: application.applicationfunction.individual-pre-review::realizes::application.applicationservice.extraction-service
+  layerName: application
+  after:
+    source: application.applicationfunction.individual-pre-review
+    target: application.applicationservice.extraction-service
+    predicate: realizes
+    layer: application
+    category: structural
+  timestamp: 2026-11-22T14:48:19.864Z
+  sequenceNumber: 41
+- type: relationship-add
+  elementId: application.applicationfunction.individual-pre-review::accesses::data-model.objectschema.pipeline-configuration-entity
+  layerName: application
+  after:
+    source: application.applicationfunction.individual-pre-review
+    target: data-model.objectschema.pipeline-configuration-entity
+    predicate: accesses
+    layer: application
+    targetLayer: data-model
+    category: structural
+  timestamp: 2026-11-22T14:48:19.864Z
+  sequenceNumber: 42
+- type: relationship-add
+  elementId: application.applicationfunction.split-witness::flows-to::application.applicationfunction.individual-pre-review
+  layerName: application
+  after:
+    source: application.applicationfunction.split-witness
+    target: application.applicationfunction.individual-pre-review
+    predicate: flows-to
+    layer: application
+    category: structural
+  timestamp: 2026-11-22T14:48:19.864Z
+  sequenceNumber: 44
+- type: add
+  elementId: testing.testcasesketch.split-witness-fires-on-gate-ds-four-splits
+  layerName: testing
+  after:
+    id: 52e12c37-806a-4776-b6d3-da525f31ab23
+    path: testing.testcasesketch.split-witness-fires-on-gate-ds-four-splits
+    spec_node_id: testing.testcasesketch
+    type: testcasesketch
+    layer_id: testing
+    name: Split witness fires on Gate D's four splits
+    description: "Unit: the split witness marks 'Torx T20, T25', 'Copper water
+      supply kits WX8X2, WX8X3, WX8X4', 'Straight and Phillips blade
+      screwdriver' and 'Compression nut and ferrule', and its fire rate on
+      single_call's recorded benchmark titles is reported."
+    attributes:
+      status: draft
+    metadata:
+      created_at: 2026-11-22T14:48:32.970Z
+      updated_at: 2026-11-22T14:48:32.970Z
+      version: 1
+    source_reference:
+      provenance: manual
+      locations:
+        - file: local-server/tests/unit/domain/extraction/test_pre_review.py
+          symbol: test_the_witness_marks_every_split_from_gate_d
+  timestamp: 2026-11-23T17:58:49.568Z
+  sequenceNumber: 45
+- type: add
+  elementId: testing.testcasesketch.pre-review-verdicts-reach-the-proposal-visibly
+  layerName: testing
+  after:
+    id: defda2fe-9dfd-45a2-b302-2c49c44f9acf
+    path: testing.testcasesketch.pre-review-verdicts-reach-the-proposal-visibly
+    spec_node_id: testing.testcasesketch
+    type: testcasesketch
+    layer_id: testing
+    name: Pre-review verdicts reach the proposal visibly
+    description: "Unit, fake extraction service (TestPreReview in
+      test_single_call_orchestrator.py): with no or a disabled pre_review
+      setting nothing is reviewed; with one, a retype changes the individual's
+      class and a split replaces it by its parts before relating, unsure changes
+      nothing, the counts and tokens reach the run's metadata; a failed review
+      keeps the individuals and the run."
+    attributes:
+      status: draft
+    metadata:
+      created_at: 2026-11-22T14:48:32.973Z
+      updated_at: 2026-11-22T14:48:32.973Z
+      version: 1
+    source_reference:
+      provenance: manual
+      locations:
+        - file: local-server/tests/unit/domain/pipelines/test_single_call_orchestrator.py
+          symbol: TestPreReview
+  timestamp: 2026-11-23T17:58:49.568Z
+  sequenceNumber: 46
+- type: add
+  elementId: testing.testcasesketch.seeded-errors-are-built-and-scored-offline
+  layerName: testing
+  after:
+    id: 2438511c-4928-4bf4-aa56-c785252873f7
+    path: testing.testcasesketch.seeded-errors-are-built-and-scored-offline
+    spec_node_id: testing.testcasesketch
+    type: testcasesketch
+    layer_id: testing
+    name: Seeded errors are built and scored offline
+    description: "Unit, fake stage: the seeded-error builder merges gold pairs and
+      retypes gold elements by stratum, and the scorer counts recovered, changed
+      wrongly and missed seeds and false changes on the untouched controls, with
+      Wilson intervals. No model call."
+    attributes:
+      status: draft
+    metadata:
+      created_at: 2026-11-22T14:48:32.973Z
+      updated_at: 2026-11-22T14:48:32.973Z
+      version: 1
+    source_reference:
+      provenance: manual
+      locations:
+        - file: local-server/tests/unit/test_harness_pre_review_seeded.py
+  timestamp: 2026-11-23T17:58:49.568Z
+  sequenceNumber: 47
+- type: relationship-add
+  elementId: testing.testcoveragetarget.extraction-pipeline::composes::testing.testcasesketch.split-witness-fires-on-gate-ds-four-splits
+  layerName: testing
+  after:
+    source: testing.testcoveragetarget.extraction-pipeline
+    target: testing.testcasesketch.split-witness-fires-on-gate-ds-four-splits
+    predicate: composes
+    layer: testing
+    category: structural
+  timestamp: 2026-11-22T14:48:32.985Z
+  sequenceNumber: 48
+- type: relationship-add
+  elementId: testing.testcoveragetarget.extraction-pipeline::composes::testing.testcasesketch.pre-review-verdicts-reach-the-proposal-visibly
+  layerName: testing
+  after:
+    source: testing.testcoveragetarget.extraction-pipeline
+    target: testing.testcasesketch.pre-review-verdicts-reach-the-proposal-visibly
+    predicate: composes
+    layer: testing
+    category: structural
+  timestamp: 2026-11-22T14:48:32.985Z
+  sequenceNumber: 49
+- type: relationship-add
+  elementId: testing.testcoveragetarget.extraction-pipeline::composes::testing.testcasesketch.seeded-errors-are-built-and-scored-offline
+  layerName: testing
+  after:
+    source: testing.testcoveragetarget.extraction-pipeline
+    target: testing.testcasesketch.seeded-errors-are-built-and-scored-offline
+    predicate: composes
+    layer: testing
+    category: structural
+  timestamp: 2026-11-22T14:48:32.985Z
+  sequenceNumber: 50
+- type: relationship-add
+  elementId: testing.testcasesketch.split-witness-fires-on-gate-ds-four-splits::tests::application.applicationfunction.split-witness
+  layerName: testing
+  after:
+    source: testing.testcasesketch.split-witness-fires-on-gate-ds-four-splits
+    target: application.applicationfunction.split-witness
+    predicate: tests
+    layer: testing
+    targetLayer: application
+    category: structural
+  timestamp: 2026-11-22T14:48:32.985Z
+  sequenceNumber: 51
+- type: relationship-add
+  elementId: testing.testcasesketch.pre-review-verdicts-reach-the-proposal-visibly::tests::application.applicationfunction.individual-pre-review
+  layerName: testing
+  after:
+    source: testing.testcasesketch.pre-review-verdicts-reach-the-proposal-visibly
+    target: application.applicationfunction.individual-pre-review
+    predicate: tests
+    layer: testing
+    targetLayer: application
+    category: structural
+  timestamp: 2026-11-22T14:48:32.985Z
+  sequenceNumber: 52
+- type: relationship-add
+  elementId: testing.testcasesketch.seeded-errors-are-built-and-scored-offline::tests::application.applicationfunction.individual-pre-review
+  layerName: testing
+  after:
+    source: testing.testcasesketch.seeded-errors-are-built-and-scored-offline
+    target: application.applicationfunction.individual-pre-review
+    predicate: tests
+    layer: testing
+    targetLayer: application
+    category: structural
+  timestamp: 2026-11-22T14:48:32.985Z
+  sequenceNumber: 53
+- type: relationship-add
+  elementId: testing.testcasesketch.seeded-errors-are-built-and-scored-offline::satisfies::motivation.requirement.pre-review-is-adopted-only-by-a-rule-set-in-advance
+  layerName: testing
+  after:
+    source: testing.testcasesketch.seeded-errors-are-built-and-scored-offline
+    target: motivation.requirement.pre-review-is-adopted-only-by-a-rule-set-in-advance
+    predicate: satisfies
+    layer: testing
+    targetLayer: motivation
+    category: structural
+  timestamp: 2026-11-22T14:48:32.985Z
+  sequenceNumber: 55
