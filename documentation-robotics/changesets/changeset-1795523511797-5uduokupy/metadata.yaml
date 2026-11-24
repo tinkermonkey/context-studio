@@ -1,0 +1,20 @@
+id: changeset-1795523511797-5uduokupy
+name: heimdall-upgrade-0-14-as-built
+description: As-built record of the Heimdall 0.14.0 upgrade (#1683), extracted
+  since main to verify the heimdall-upgrade-0-14 plan.
+created: 2026-11-24T12:31:51.809Z
+modified: 2026-11-24T12:31:51.817Z
+status: staged
+baseSnapshot: v2:sha256:53252d39ed1357a9afdd6132507b497bf81313353af91142ccb6b590b147594c
+origin:
+  kind: extract
+purpose: verification
+verifies: changeset-1795523129400-ucmmo6vqq
+scope:
+  since: main
+  codeCommit: 08aeb78d2e4a781275d40d52ae2cceb777042686
+stats:
+  additions: 25
+  modifications: 0
+  deletions: 0
+lastSequence: 24
