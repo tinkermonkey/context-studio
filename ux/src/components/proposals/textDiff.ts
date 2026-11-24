@@ -168,3 +168,50 @@ export function textDiffOf(before: unknown, after: unknown): DiffLine[] | undefi
   const lines = textDiffLines(before as string | null, after as string | null);
   return lines.some((l) => l.type === "added" || l.type === "removed") ? lines : undefined;
 }
+
+// ==================== Inline word diff (the review inspector) ====================
+
+/** One run of an inline word diff: kept, removed, added, or unchanged words folded away. */
+export interface WordSegment {
+  type: "same" | "removed" | "added" | "folded";
+  text: string;
+  /** For a folded run: how many unchanged words it stands for. */
+  count?: number;
+}
+
+/** Unchanged words kept on each side of a change; a longer unchanged run is folded. */
+export const WORD_CONTEXT = 6;
+
+/**
+ * `before` changed into `after` as one inline run of words, for a narrow
+ * inspector: removed words, then added ones, between the words both keep.
+ * Unchanged stretches longer than the context around a change fold to "…".
+ */
+export function wordDiff(
+  before: string | null | undefined,
+  after: string | null | undefined,
+): WordSegment[] {
+  const words = (text: string | null | undefined) => (text ?? "").split(/\s+/).filter(Boolean);
+  const steps = editScript(words(before), words(after));
+  const runs: { type: "same" | "removed" | "added"; words: string[] }[] = [];
+  for (const step of steps) {
+    const type = step.type === "context" ? "same" : step.type;
+    const last = runs[runs.length - 1];
+    if (last?.type === type) last.words.push(step.text);
+    else runs.push({ type, words: [step.text] });
+  }
+  return runs.flatMap((run, index): WordSegment[] => {
+    if (run.type !== "same") return [{ type: run.type, text: run.words.join(" ") }];
+    const first = index === 0;
+    const last = index === runs.length - 1;
+    const head = first ? 0 : WORD_CONTEXT;
+    const tail = last ? 0 : WORD_CONTEXT;
+    if (run.words.length <= head + tail + 2) return [{ type: "same", text: run.words.join(" ") }];
+    const hidden = run.words.length - head - tail;
+    return [
+      ...(head > 0 ? [{ type: "same" as const, text: run.words.slice(0, head).join(" ") }] : []),
+      { type: "folded" as const, text: "…", count: hidden },
+      ...(tail > 0 ? [{ type: "same" as const, text: run.words.slice(-tail).join(" ") }] : []),
+    ];
+  });
+}

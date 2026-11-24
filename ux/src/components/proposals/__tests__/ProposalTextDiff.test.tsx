@@ -1,7 +1,7 @@
 /**
- * Text changes as a diff (#1454): a changed long text field (a definition) in
- * the inspector shows as Heimdall's line diff, marking the sentence that
- * changed; short values such as a rename stay inline.
+ * Text changes as a diff (#1454, #1660): a changed long text field (a
+ * definition) in the review inspector shows as one inline word diff, marking
+ * the words that changed; short values such as a rename stay inline.
  */
 import { describe, it, expect, beforeAll, beforeEach, afterEach, afterAll, vi } from "vitest";
 import { screen, within } from "@testing-library/react";
@@ -46,27 +46,21 @@ function renderPage(selectedOperationId: string) {
   );
 }
 
-function rowsOf(diff: HTMLElement, type: string): string {
-  return [...diff.querySelectorAll(`.side-by-side-diff__row--${type}`)]
-    .map((r) => r.textContent)
-    .join(" ");
-}
-
 describe("a changed definition in the inspector", () => {
-  it("shows as a diff marking the sentence that changed", async () => {
+  it("shows as one inline word diff marking the words that changed (#1660)", async () => {
     renderPage("op-class");
-    const row = await screen.findByTestId("operation-change-row-description");
-    const diff = within(row).getByTestId("operation-text-diff-description");
-    expect(diff).toHaveClass("side-by-side-diff");
+    const row = await screen.findByTestId("review-diff-row-description");
+    const diff = within(row).getByTestId("review-diff-text-description");
+    expect(diff).toHaveClass("review-word-diff");
     expect(diff).toHaveAttribute("aria-label", "description: what changed");
-
-    expect(rowsOf(diff, "removed")).toBe("It exposes interfaces to other components.");
-    expect(rowsOf(diff, "added")).toBe("It exposes services and interfaces to other components.");
-    // The unchanged sentences around it read as context, not as changes.
-    expect(rowsOf(diff, "context")).toContain("It is owned by one team.");
-    expect(rowsOf(diff, "removed")).not.toContain("owned by one team");
-    // No plain before / after values for the field.
-    expect(row.querySelector(".op-change__before--changed")).toBeNull();
+    const added = [...diff.querySelectorAll("ins")].map((e) => e.textContent);
+    expect(added).toEqual(["services and"]);
+    expect(diff.querySelector("del")).toBeNull();
+    // The unchanged words around it read as they are; a long run folds.
+    expect(diff).toHaveTextContent("interfaces to other components.");
+    expect(diff.querySelector(".review-word-diff__folded")).toHaveTextContent("…");
+    // No plain was / now values for the field.
+    expect(row.querySelector(".review-diff__was")).toBeNull();
   });
 
   it("keeps a whitespace-only change inline: a diff would mark nothing", async () => {
@@ -74,9 +68,9 @@ describe("a changed definition in the inspector", () => {
     classOp.base = { description: `${BEFORE}\n` };
     classOp.fields = { description: BEFORE };
     renderPage("op-class");
-    const row = await screen.findByTestId("operation-change-row-description");
-    expect(within(row).queryByTestId("operation-text-diff-description")).not.toBeInTheDocument();
-    expect(row.querySelector(".op-change__after--changed")).toHaveTextContent(BEFORE);
+    const row = await screen.findByTestId("review-diff-row-description");
+    expect(within(row).queryByTestId("review-diff-text-description")).not.toBeInTheDocument();
+    expect(row.querySelector(".review-diff__now")).toHaveTextContent(BEFORE);
   });
 
   it("keeps a short value change inline", async () => {

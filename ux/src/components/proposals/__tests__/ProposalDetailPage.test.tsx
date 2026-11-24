@@ -288,7 +288,7 @@ describe("ProposalDetailPage", () => {
     const scrollIntoView = vi.fn();
     Element.prototype.scrollIntoView = scrollIntoView;
     renderPage("op-class");
-    await screen.findByTestId("operation-inspector");
+    await screen.findByTestId("review-inspector");
     expect(scrollIntoView).toHaveBeenCalledTimes(1);
     expect(scrollIntoView.mock.contexts[0]).toHaveAttribute("data-row-key", "op-class");
   });

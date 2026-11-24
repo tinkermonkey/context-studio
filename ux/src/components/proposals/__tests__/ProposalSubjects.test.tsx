@@ -161,9 +161,12 @@ function renderPage(selectedOperationId?: string) {
   );
 }
 
+/** The inspector's title: OperationInspector's for a relationship type, else the review inspector's. */
 async function inspectorTitle() {
-  const inspector = await screen.findByTestId("operation-inspector");
-  return inspector.querySelector(".inspector-panel__title")!;
+  const inspector = await screen.findByTestId(/^(operation|review)-inspector$/);
+  return inspector.querySelector(
+    '.inspector-panel__title, [data-testid="review-inspector-title"]',
+  )!;
 }
 
 describe("an attribute update", () => {
@@ -179,8 +182,11 @@ describe("an attribute update", () => {
     const title = await inspectorTitle();
     await waitFor(() => expect(title).toHaveTextContent("ApplicationComponent · Status"));
     expect(title).not.toHaveTextContent("attr-1");
-    const inspector = screen.getByTestId("operation-inspector");
-    expect(within(inspector).getByText("op-attr")).toHaveClass("inspector-panel__id");
+    const inspector = screen.getByTestId("review-inspector");
+    expect(within(inspector).getByText("op-attr")).toHaveAttribute(
+      "data-testid",
+      "review-inspector-id",
+    );
   });
 });
 
@@ -193,7 +199,7 @@ describe("other kinds named by id", () => {
 
   it("shows an attribute's class by label in the inspector's change list", async () => {
     renderPage("op-attr-new");
-    const row = await screen.findByTestId("operation-change-row-class_id");
+    const row = await screen.findByTestId("review-diff-row-class_id");
     await waitFor(() => expect(row).not.toHaveTextContent("class-2"));
     expect(row).toHaveTextContent("ApplicationService");
   });
@@ -221,8 +227,12 @@ describe("other kinds named by id", () => {
     await waitFor(() =>
       expect(cell).toHaveTextContent("relationship LLM Provider Router realizes Gateway"),
     );
+    // The review inspector's title is the relationship as a sentence of pills (#1660).
     await waitFor(async () =>
-      expect(await inspectorTitle()).toHaveTextContent("LLM Provider Router realizes Gateway"),
+      expect(await inspectorTitle()).toHaveAttribute(
+        "aria-label",
+        "LLM Provider Router realizes Gateway",
+      ),
     );
   });
 

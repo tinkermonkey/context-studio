@@ -1,6 +1,6 @@
 /**
- * The inspector's Change section reads the entities an operation names by id
- * (#1450): an individual's classes and a class's scheme by title, a
+ * The review inspector reads the entities an operation names by id (#1450,
+ * #1660): an individual's classes and a class's scheme by title, a
  * relationship's ends and type by name, and a "$ref" to an earlier create as
  * "#seq title (new in this proposal)". The raw id stays in the tooltip.
  */
@@ -82,58 +82,39 @@ function renderPage(selectedOperationId: string) {
   );
 }
 
-function refsOf(field: string) {
-  return within(screen.getByTestId(`operation-change-refs-${field}`));
-}
-
-describe("the inspector's Change section names what an operation refers to", () => {
+describe("the review inspector names what an operation refers to (#1450, #1660)", () => {
   it("reads an individual's classes by name, a $ref class as new in this proposal", async () => {
     renderPage("op-ind");
-    const row = await screen.findByTestId("operation-change-row-class_ids");
-    await waitFor(() => expect(row).toHaveTextContent("ApplicationService"));
-    expect(row).not.toHaveTextContent("application_service");
-    expect(row).not.toHaveTextContent('["class-2"');
-    expect(row).not.toHaveTextContent("$c1");
-
-    const existing = refsOf("class_ids").getByText("ApplicationService");
-    expect(existing).toHaveClass("op-ref");
-    expect(existing).not.toHaveClass("op-ref--new");
+    const first = await screen.findByTestId("review-inspector-class");
+    await waitFor(() => expect(first).toHaveTextContent("ApplicationService"));
+    expect(first).not.toHaveTextContent("class-2");
+    const others = screen.getByTestId("review-inspector-other-classes");
+    const created = within(others).getByText("#1 Heat Pump (new in this proposal)");
+    expect(created).toHaveClass("review-diff__name", "review-diff__name--new");
     // The raw id stays in the tooltip.
-    expect(existing).toHaveAttribute("title", "class-2");
-
-    const created = refsOf("class_ids").getByText("#1 Heat Pump (new in this proposal)");
-    expect(created).toHaveClass("op-ref", "op-ref--new");
     expect(created).toHaveAttribute("title", "$c1");
+    expect(others).not.toHaveTextContent("$c1");
   });
 
   it("reads a class's scheme by its title", async () => {
     renderPage("op-class");
-    const row = await screen.findByTestId("operation-change-row-concept_scheme_id");
+    const row = await screen.findByTestId("review-diff-row-concept_scheme_id");
     await waitFor(() => expect(row).toHaveTextContent("Application Layer"));
     expect(row).not.toHaveTextContent("scheme-1");
-    expect(refsOf("concept_scheme_id").getByText("Application Layer")).toHaveAttribute(
-      "title",
-      "scheme-1",
-    );
+    expect(within(row).getByText("Application Layer")).toHaveAttribute("title", "scheme-1");
   });
 
   it("reads a relationship's ends and type by name, a $ref end by its create", async () => {
     renderPage("op-rel");
-    const source = await screen.findByTestId("operation-change-row-source_id");
+    const source = await screen.findByTestId("review-end-source");
     await waitFor(() => expect(source).toHaveTextContent("LLM Provider Router"));
     expect(source).not.toHaveTextContent("ind-1");
-    expect(refsOf("source_id").getByText("LLM Provider Router")).toHaveAttribute("title", "ind-1");
-
-    const target = screen.getByTestId("operation-change-row-target_id");
-    expect(target).toHaveTextContent("#2 Basement heat pump (new in this proposal)");
+    const target = screen.getByTestId("review-end-target");
+    expect(target).toHaveTextContent("Basement heat pump");
     expect(target).not.toHaveTextContent("$t2");
-    expect(
-      refsOf("target_id").getByText("#2 Basement heat pump (new in this proposal)"),
-    ).toHaveAttribute("title", "$t2");
-
-    const type = screen.getByTestId("operation-change-row-property_definition_id");
-    await waitFor(() => expect(type).toHaveTextContent("realizes"));
-    expect(type).not.toHaveTextContent("prop-1");
+    await waitFor(() =>
+      expect(screen.getByTestId("review-inspector-title")).toHaveTextContent("realizes"),
+    );
   });
 
   it("keeps an id it can't resolve, so nothing reads blank", async () => {
@@ -155,8 +136,8 @@ describe("the inspector's Change section names what an operation refers to", () 
       ],
     });
     renderPage("op-ghost");
-    const target = await screen.findByTestId("operation-change-row-target_id");
-    expect(refsOf("target_id").getByText("$gone")).toHaveAttribute("title", "$gone");
-    expect(target).not.toHaveTextContent("new in this proposal");
+    const target = await screen.findByTestId("review-end-target");
+    expect(target).toHaveTextContent("$gone");
+    expect(screen.getByTestId("review-end-target-status")).toHaveTextContent("not found");
   });
 });

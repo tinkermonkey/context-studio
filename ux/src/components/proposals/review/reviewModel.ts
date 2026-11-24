@@ -165,19 +165,12 @@ export function extractedFromSource(proposal: ChangeProposal | undefined): boole
 }
 
 /**
- * Whether proposal detail opens `operation` in the review inspector: an
- * individual or relationship create of an extraction from a source. Other
- * operations keep OperationInspector until the inspector learns them (#1660, #1662).
+ * Whether proposal detail opens `operation` in the review inspector: every
+ * operation but a DR relationship type's (a property operation, a reflection
+ * or a replacement), which keeps OperationInspector until #1662.
  */
-export function opensReviewInspector(
-  proposal: ChangeProposal | undefined,
-  operation: ProposedOperation,
-): boolean {
-  return (
-    operation.op === "create" &&
-    (isElement(operation) || isRelationship(operation)) &&
-    extractedFromSource(proposal)
-  );
+export function opensReviewInspector(operation: ProposedOperation): boolean {
+  return operation.kind !== "property" && !operation.reflection && !operation.replacement_check;
 }
 
 /** The source most of the elements' passages are in. */
