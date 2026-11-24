@@ -420,3 +420,7 @@ class DatasetDeletion:
     dataset_id: str
     individual_count: int
     relationship_count: int
+
+
+# A relationship type's structure (see PropertyDefinition): cardinality, hierarchy, symmetric
+STRUCTURE_FIELDS = ("min_per_source", "max_per_source", "max_per_target", "hierarchy", "symmetric")

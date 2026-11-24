@@ -9,7 +9,8 @@ Check the domain layer's dependency rules.
    methods of its application service. So, inside another context, it never
    - imports a private (``_``) name or a private module,
    - imports anything but the service class from an application service module
-     (``*_service.py``); value objects come from the value-object module,
+     (``services.py`` or ``*_service.py``); value objects, constants and pure
+     functions come from their own modules,
    - constructs that context's application service (``*Service(...)``): the
      service is injected at the composition root.
 """
@@ -66,6 +67,23 @@ class ImportChecker(ast.NodeVisitor):
         self.generic_visit(node)
 
 
+# The one cross-context import of shared ambient state the rule still allows
+# (rearchitecture/domain_model_design.md §11, "Known exception"): proposal apply
+# sets the change-event correlation context around its writes.
+KNOWN_EXCEPTIONS: dict[tuple[str, str], frozenset[str]] = {
+    ("versioning", "domain.interchange.services"): frozenset(
+        {"get_current_batch_run_id", "set_batch_run_context"}
+    ),
+}
+
+
+def _is_service_module(module_parts: list[str]) -> bool:
+    """Whether a module (its parts under domain.<context>) is an application service module."""
+    return bool(module_parts) and (
+        module_parts[-1] == "services" or module_parts[-1].endswith("_service")
+    )
+
+
 def _context_of(path: Path, domain_path: Path) -> str | None:
     """The bounded context a domain file belongs to; None for the shared kernel (domain/*.py)."""
     parts = path.relative_to(domain_path).parts
@@ -99,10 +117,13 @@ class CrossContextChecker(ast.NodeVisitor):
 
     def visit_Import(self, node: ast.Import) -> None:
         for alias in node.names:
-            if self._foreign_context(alias.name) and any(
-                _is_private(part) for part in alias.name.split(".")[2:]
-            ):
+            if not self._foreign_context(alias.name):
+                continue
+            if any(_is_private(part) for part in alias.name.split(".")[2:]):
                 self.violations.append((node.lineno, f"import {alias.name}: a private module"))
+            # import domain.x.services as s, then s.FooService(...); unaliased,
+            # the call names the whole dotted path
+            self._foreign_modules.add(alias.asname or alias.name)
         self.generic_visit(node)
 
     def visit_ImportFrom(self, node: ast.ImportFrom) -> None:
@@ -111,19 +132,25 @@ class CrossContextChecker(ast.NodeVisitor):
             module_parts = module.split(".")[2:]
             if any(_is_private(part) for part in module_parts):
                 self.violations.append((node.lineno, f"from {module} import ...: a private module"))
-            service_module = bool(module_parts) and module_parts[-1].endswith("_service")
+            service_module = _is_service_module(module_parts)
+            allowed = KNOWN_EXCEPTIONS.get((self.own_context, module), frozenset())
             for alias in node.names:
                 local = alias.asname or alias.name
                 if _is_private(alias.name):
                     self.violations.append(
                         (node.lineno, f"from {module} import {alias.name}: a private name")
                     )
-                elif service_module and not alias.name.endswith("Service"):
+                elif (
+                    service_module
+                    and not alias.name.endswith("Service")
+                    and alias.name not in allowed
+                ):
                     self.violations.append(
                         (
                             node.lineno,
                             f"from {module} import {alias.name}: import it from its own "
-                            "module (value objects, ports, exceptions), not the service's",
+                            "module (value objects, ports, exceptions, functions), not the "
+                            "service module",
                         )
                     )
                 if alias.name.endswith("Service"):
@@ -139,11 +166,10 @@ class CrossContextChecker(ast.NodeVisitor):
             name = func.id
         elif (
             isinstance(func, ast.Attribute)
-            and isinstance(func.value, ast.Name)
-            and func.value.id in self._foreign_modules
+            and _dotted(func.value) in self._foreign_modules
             and func.attr.endswith("Service")
         ):
-            name = f"{func.value.id}.{func.attr}"
+            name = f"{_dotted(func.value)}.{func.attr}"
         if name:
             self.violations.append(
                 (
@@ -153,6 +179,16 @@ class CrossContextChecker(ast.NodeVisitor):
                 )
             )
         self.generic_visit(node)
+
+
+def _dotted(node: ast.expr) -> str | None:
+    """a.b.c for a Name or an Attribute chain of Names, else None."""
+    if isinstance(node, ast.Name):
+        return node.id
+    if isinstance(node, ast.Attribute):
+        base = _dotted(node.value)
+        return f"{base}.{node.attr}" if base else None
+    return None
 
 
 def check_domain_imports() -> int:

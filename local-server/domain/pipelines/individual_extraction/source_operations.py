@@ -44,7 +44,7 @@ from collections.abc import Sequence
 from dataclasses import dataclass, field
 from typing import Any
 
-from domain.extraction.services import class_reference_aliases, is_typing_triple
+from domain.extraction.triples import class_reference_aliases, is_typing_triple
 from domain.ontology.entities import Class
 from domain.ontology.ports import OntologyRepository
 from domain.ontology.relationship_fit import RelationshipFit

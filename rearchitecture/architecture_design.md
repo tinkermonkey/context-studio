@@ -116,7 +116,7 @@ All dependencies point inward. The domain core has **zero imports** from infrast
 
 ## 4. Bounded Contexts
 
-The system decomposes into six bounded contexts. Each context owns its domain entities, ports, and use cases. A context may depend on another context's ports, entities, value objects, exceptions, public functions and its application service's public methods; the service is injected at the composition root, never constructed. It never touches another context's adapters or private members, and never shares state through ambient globals. The rule, the dependency graph and its one known exception are in `domain_model_design.md` §11, and `scripts/check_domain_imports.py` checks it.
+The system decomposes into six bounded contexts. Each context owns its domain entities, ports, and use cases. A context may depend on another context's ports (reading its repository ports included), entities, value objects, exceptions, public functions and its application service's public methods; the service is injected at the composition root, never constructed. It never touches another context's repository implementations, adapters or private members, and never shares state through ambient globals. The rule, the dependency graph and its one known exception are in `domain_model_design.md` §11, and `scripts/check_domain_imports.py` checks it.
 
 ### 4.1 Ontology Management (Core)
 

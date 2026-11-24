@@ -12,7 +12,7 @@ import pytest
 
 from scripts.check_domain_imports import CrossContextChecker, check_domain_imports
 
-CONTEXTS = {"pipelines", "versioning", "ontology"}
+CONTEXTS = {"pipelines", "versioning", "ontology", "extraction", "interchange"}
 
 
 def violations(source: str, own_context: str = "pipelines") -> list[str]:
@@ -69,6 +69,49 @@ class TestRefused:
         found = violations("from domain.ontology import services\nservices.OntologyService(repo)")
 
         assert len(found) == 1
+
+
+class TestServicesModules:
+    """services.py is a service module too, the form most contexts use (review of #1693)."""
+
+    def test_a_function_through_a_services_module_is_refused(self):
+        found = violations(
+            "from domain.interchange.services import set_batch_run_context",
+            own_context="extraction",
+        )
+
+        assert len(found) == 1
+        assert "set_batch_run_context" in found[0]
+
+    def test_a_constant_through_a_services_module_is_refused(self):
+        assert violations("from domain.ontology.services import STRUCTURE_FIELDS")
+
+    def test_the_service_class_from_a_services_module_is_allowed(self):
+        assert violations("from domain.ontology.services import OntologyService") == []
+
+    def test_the_known_exception_is_allowed_only_where_it_is_known(self):
+        source = (
+            "from domain.interchange.services import"
+            " get_current_batch_run_id, set_batch_run_context"
+        )
+        assert violations(source, own_context="versioning") == []
+        assert len(violations(source, own_context="pipelines")) == 2
+
+
+class TestAliasedImports:
+    def test_constructing_a_service_through_an_aliased_module_is_refused(self):
+        found = violations(
+            "import domain.versioning.proposal_service as ps\nps.ProposalService(repo)"
+        )
+
+        assert len(found) == 1 and "constructs" in found[0]
+
+    def test_constructing_a_service_through_its_dotted_path_is_refused(self):
+        found = violations(
+            "import domain.ontology.services\ndomain.ontology.services.OntologyService(repo)"
+        )
+
+        assert len(found) == 1 and "constructs" in found[0]
 
 
 def test_the_domain_layer_keeps_the_rule(capsys):
