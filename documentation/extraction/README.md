@@ -1,6 +1,6 @@
 # Extraction pipelines: current state
 
-**As of 2026-11-18.** This is the single place that says what the extraction pipelines are, how good they are, and what is undecided. Experiments and their results are in [experiments/](experiments/README.md). When something here changes, update this page in the same pull request.
+**As of 2026-11-22.** This is the single place that says what the extraction pipelines are, how good they are, and what is undecided. Experiments and their results are in [experiments/](experiments/README.md). When something here changes, update this page in the same pull request.
 
 ## The task
 
@@ -142,12 +142,16 @@ From the [direction review](experiments/2026-11-14-direction-review.md), the [he
 2. **Relationships in `single_call`:** measure R1 (one call given the allowed types, its relationships validated) against `single_call`'s Opus relate step, three takes each; R1 has only beaten a Haiku relate step. Switch only if R1 wins by the noise threshold, since it would also save the relate step's cost. A whole-document Opus relate call (R2-opus) is the other candidate; a whole-document Haiku call is not.
 3. **The extraction core:** `single_call` was adopted on 2026-11-17 (decision 1). Still to do: confirm it on human-checked gold, measure its whole-take noise (three takes), and delete what loses, including `open_v1`.
 4. **Measure value to a reviewer**, not only F1: time and acceptance when reviewing a proposal against modelling from scratch.
+5. **An optional LLM review stage before the person:** it reviews the extraction before a person does, and reasons through two questions: is this extraction one item or several, and is this class the best fit for this node compared with the others? Gate D's [review of two real documents](experiments/2026-11-21-gate-d-real-documents.md) turned on these questions in 15 of the 29 changes the person made (4 splits, 11 retypes) (2026-11-22, the user's direction). [Assessed on 2026-11-22](experiments/2026-11-22-pre-review-stage.md): inconclusive. It catches seeded errors but cut none of the real edits, because the stage shares the extractor's reading of the class definitions behind the real mistypes. It stays an optional configuration (`pre_review`), off by default.
 
 Stop doing: drawing conclusions from single recordings or differences under the noise threshold; scoring prompt experiments on the holdout; building more variants and tournament machinery before the measurement is trustworthy.
 
 ## Known gaps
 
-None known.
+Found in [Gate D](experiments/2026-11-21-gate-d-real-documents.md) (2026-11-21):
+
+- **A PDF with no detected headings defeats the boilerplate skip.** The refrigerator manual came in with none, so its French and Spanish copies and its warranty would have been extracted. Only 3 safety sections were skipped, and nothing warned about it. A page range chosen by hand worked around it.
+- **A run doesn't record its cost.** It keeps one total token count with no split into input, cache and output, so spend can only be bounded. This is the run-cost item of #1573.
 
 ## Where things live
 
