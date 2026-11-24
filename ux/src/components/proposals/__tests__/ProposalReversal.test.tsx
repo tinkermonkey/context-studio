@@ -129,7 +129,7 @@ describe("the revert control", () => {
     expect(dialog).toHaveTextContent("can't be undone here");
     expect(dialog).toHaveTextContent("reviewed, applied and landed like any proposal");
     expect(screen.getByTestId("propose-reversal-contents")).toHaveTextContent(
-      "undo the 1 change it applied",
+      "undo the change it applied, unless it is already undone",
     );
     await user.click(screen.getByRole("button", { name: "Propose the reversal" }));
 
@@ -142,15 +142,18 @@ describe("the revert control", () => {
     expect(screen.queryByTestId("propose-reversal-dialog")).not.toBeInTheDocument();
   });
 
-  it("says why a reversal was refused, and stays on the page", async () => {
-    serve(proposalWith({ landed: LANDED }));
+  it("says why a reversal was refused, and shows the reversal opened elsewhere", async () => {
+    // Someone else proposed the reversal after this page loaded: the server refuses this one.
+    let current = proposalWith({ landed: LANDED });
     server.use(
-      http.post("*/api/proposals/:id/reversal", () =>
-        HttpResponse.json(
-          { detail: "Nothing is left to undo of change proposal proposal-2" },
+      http.get("*/api/proposals/proposal-2", () => HttpResponse.json(current)),
+      http.post("*/api/proposals/:id/reversal", () => {
+        current = { ...current, links: [reversedBy("open")] };
+        return HttpResponse.json(
+          { detail: "Change proposal proposal-2 already has an open reversal, reversal-1" },
           { status: 409 },
-        ),
-      ),
+        );
+      }),
     );
     const user = userEvent.setup();
     renderPage();
@@ -159,9 +162,11 @@ describe("the revert control", () => {
     await user.click(screen.getByRole("button", { name: "Propose the reversal" }));
 
     expect(await screen.findByTestId("toast-error")).toHaveTextContent(
-      "Couldn't propose the reversal | Nothing is left to undo of change proposal proposal-2",
+      "Couldn't propose the reversal | Change proposal proposal-2 already has an open reversal",
     );
-    expect(screen.getByTestId("proposal-propose-reversal")).toBeEnabled();
+    const strip = await screen.findByTestId("proposal-reversal-reversed_by");
+    expect(within(strip).getByText("reversal open")).toBeInTheDocument();
+    expect(screen.queryByTestId("proposal-propose-reversal")).not.toBeInTheDocument();
     expect(navigate).not.toHaveBeenCalled();
   });
 
@@ -190,7 +195,16 @@ describe("the revert control", () => {
     expect(screen.queryByTestId("proposal-propose-reversal")).not.toBeInTheDocument();
   });
 
-  it("links a reversal back to the original, and never offers to reverse it", async () => {
+  it("offers an unlanded reversal's in-place revert, never its reversal", async () => {
+    serve(proposalWith({ id: "reversal-1", title: "Reversal", landed: null, links: [reverses] }));
+    renderPage("reversal-1");
+
+    expect(await screen.findByTestId("proposal-revert")).toHaveTextContent("Revert proposal");
+    expect(screen.getByTestId("proposal-reversal-reverses")).toBeInTheDocument();
+    expect(screen.queryByTestId("proposal-propose-reversal")).not.toBeInTheDocument();
+  });
+
+  it("links a landed reversal back to the original, and never offers to reverse it", async () => {
     serve(proposalWith({ id: "reversal-1", title: "Reversal", landed: LANDED, links: [reverses] }));
     renderPage("reversal-1");
 
@@ -203,7 +217,9 @@ describe("the revert control", () => {
 });
 
 describe("the Proposals list", () => {
-  it("says a reversal is open on the proposal it undoes", async () => {
+  /** The list with proposal-2, with these links, and proposal-1, with none. */
+  function renderList(links: Link[]) {
+    const plain = proposalWith({ id: "proposal-1", title: "Another", links: [] });
     server.use(
       http.get("*/api/taxonomies", () =>
         HttpResponse.json({
@@ -215,18 +231,38 @@ describe("the Proposals list", () => {
       ),
       http.get("*/api/proposals", () =>
         HttpResponse.json({
-          items: [proposalWith({ landed: LANDED, links: [reversedBy("open")] })],
-          total: 1,
+          items: [proposalWith({ landed: LANDED, links }), plain],
+          total: 2,
           limit: 500,
           offset: 0,
         }),
       ),
     );
     render(<ProposalsListPage status="all" onFiltersChange={vi.fn()} />);
+  }
 
-    const chip = await screen.findByTestId("proposal-reversal-proposal-2");
+  it("says a reversal is open on the proposal it undoes", async () => {
+    renderList([reversedBy("open")]);
+
+    const chip = await screen.findByTestId("proposals-list-reversal-proposal-2");
     expect(chip).toHaveTextContent("reversal open");
     expect(chip).toHaveClass("chip--amber");
+    expect(screen.queryByTestId("proposals-list-reversal-proposal-1")).not.toBeInTheDocument();
+  });
+
+  it("says a decided reversal is not landed yet", async () => {
+    renderList([reversedBy("done", 1, 1)]);
+
+    expect(await screen.findByTestId("proposals-list-reversal-proposal-2")).toHaveTextContent(
+      "reversal not landed",
+    );
+  });
+
+  it("shows no chip for a withdrawn reversal", async () => {
+    renderList([reversedBy("withdrawn")]);
+
+    await screen.findByTestId("proposal-link-proposal-2");
+    expect(screen.queryByTestId("proposals-list-reversal-proposal-2")).not.toBeInTheDocument();
   });
 });
 
@@ -249,6 +285,21 @@ describe("reversalModel", () => {
     expect(pendingReversal(decided)?.proposal_id).toBe("reversal-1");
     expect(revertOffer(decided)).toBeUndefined();
     expect(reversalChips(decided).map((c) => c.label)).toEqual(["reversal not landed"]);
+  });
+
+  it("lets a reversal whose changes were all rejected be proposed again", () => {
+    const rejected = { ...landed, links: [reversedBy("done", 0, 2)] };
+    expect(pendingReversal(rejected)).toBeUndefined();
+    expect(revertOffer(rejected)).toBe("reversal");
+    expect(reversalChips(rejected)).toMatchObject([
+      { label: "reversal rejected", variant: "neutral" },
+    ]);
+  });
+
+  it("offers a reversal only its in-place revert, while unlanded", () => {
+    const reversal = proposalWith({ id: "reversal-1", links: [reverses] });
+    expect(revertOffer({ ...reversal, landed: null })).toBe("revert");
+    expect(revertOffer({ ...reversal, landed: LANDED })).toBeUndefined();
   });
 
   it("lets a withdrawn reversal be proposed again", () => {

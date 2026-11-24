@@ -115,7 +115,7 @@ const columns: Column<ProposalRow>[] = [
           </Chip>
         )}
         {row.reversal && (
-          <Chip variant={row.reversal.variant} data-testid={`proposal-reversal-${row.id}`}>
+          <Chip variant={row.reversal.variant} data-testid={`proposals-list-reversal-${row.id}`}>
             {row.reversal.label}
           </Chip>
         )}

@@ -2,7 +2,7 @@ import { ConfirmDialog } from "@tinkermonkey/heimdall-ui";
 
 interface ProposeReversalDialogProps {
   isOpen: boolean;
-  /** How many changes the proposal applied: what the reversal undoes. */
+  /** How many changes the proposal applied: the most the reversal undoes. */
   applied: number;
   onClose: () => void;
   onConfirm: () => void;
@@ -18,7 +18,11 @@ export function ProposeReversalDialog({
   onClose,
   onConfirm,
 }: ProposeReversalDialogProps) {
-  const changes = `${applied} change${applied === 1 ? "" : "s"}`;
+  // The server leaves out changes already undone, so the count is a ceiling.
+  const changes =
+    applied === 1
+      ? "the change it applied, unless it is already undone"
+      : `up to ${applied} changes it applied (any already undone are left out)`;
   return (
     <ConfirmDialog
       isOpen={isOpen}
@@ -33,8 +37,8 @@ export function ProposeReversalDialog({
             the source would bring its changes back.
           </p>
           <p data-testid="propose-reversal-contents">
-            A new proposal will undo the {changes} it applied: what it created is deleted, what it
-            updated or moved is set back, and what it deleted is restored.
+            A new proposal will undo {changes}: what it created is deleted, what it updated or moved
+            is set back, and what it deleted is restored.
           </p>
           <p>
             The reversal is reviewed, applied and landed like any proposal. Once it lands, this one

@@ -14,22 +14,30 @@ export function reversalOf(proposal: ChangeProposal): ProposalLinkInfo | undefin
   return proposal.links?.find((link) => link.kind === "reverses");
 }
 
+/** A decided reversal whose every change was rejected: the reviewer kept the original. */
+function rejectedReversal(link: ProposalLinkInfo): boolean {
+  return link.status === "done" && link.operations_applied === 0;
+}
+
 /**
- * Its reversal still under way: open, or decided but not yet landed (only
- * landing it marks this proposal reversed).
+ * Its reversal still under way: open, or decided with changes applied but not
+ * yet landed (only landing it marks this proposal reversed). One whose changes
+ * were all rejected is over: a new reversal can be proposed.
  */
 export function pendingReversal(proposal: ChangeProposal): ProposalLinkInfo | undefined {
   if (proposal.status === "reversed") return undefined;
   return proposal.links?.find(
-    (link) => link.kind === "reversed_by" && (link.status === "open" || link.status === "done"),
+    (link) =>
+      link.kind === "reversed_by" &&
+      (link.status === "open" || (link.status === "done" && !rejectedReversal(link))),
   );
 }
 
 /**
  * What the header's revert control offers: the in-place revert while the
- * proposal is unlanded, the reversal proposal once landed, or nothing (nothing
- * applied, no more decisions, a reversal under way, or a reversal itself, whose
- * changes are proposed again instead).
+ * proposal is unlanded (a reversal too), the reversal proposal once landed, or
+ * nothing (nothing applied, no more decisions, a reversal under way, or a
+ * landed reversal: its changes are proposed again instead, never reversed).
  */
 export function revertOffer(proposal: ChangeProposal): "revert" | "reversal" | undefined {
   if (!takesDecisions(proposal)) return undefined;
@@ -64,6 +72,7 @@ export function reversalChips(proposal: ChangeProposal): ReversalChip[] {
     if (link.status === "done" && proposal.status === "reversed") {
       return [{ link, label: "reversed by", variant: "neutral", count: reversedCount(link) }];
     }
+    if (rejectedReversal(link)) return [{ link, label: "reversal rejected", variant: "neutral" }];
     if (link.status === "done") return [{ link, label: "reversal not landed", variant: "amber" }];
     return [{ link, label: `reversal ${link.status ?? "missing"}`, variant: "neutral" }];
   });

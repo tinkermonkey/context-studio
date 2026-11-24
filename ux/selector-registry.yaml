@@ -3652,14 +3652,20 @@ selectors:
   - selector: propose-reversal-contents
     component: src/components/proposals/ProposeReversalDialog.tsx
     description: "Propose-reversal dialog: what the new proposal undoes (the count of changes the proposal applied)"
-  - selector: proposal-reversal-*
+  - selector: proposal-reversal-reverses
     component: src/components/proposals/ProposalDetailPage.tsx
-    description: "Reversal links (#1668): in the status strip proposal-reversal-reverses (a reversal, linking its original) and proposal-reversal-reversed_by (reversal open, reversal not landed, or reversed by, linking the reversal); in the Proposals list proposal-reversal-{id}, the chip of a reversal under way"
+    description: "On a reversal's status strip (#1668): a \"reverses\" chip and a link to the proposal it undoes"
+  - selector: proposal-reversal-reversed_by
+    component: src/components/proposals/ProposalDetailPage.tsx
+    description: "On the original's status strip (#1668): its reversal's state (reversal open, reversal not landed, reversal rejected, reversed by) and a link to it"
+  - selector: proposals-list-reversal-*
+    component: src/components/proposals/ProposalsListPage.tsx
+    description: "proposals-list-reversal-{id}: in the Proposals list's status cell, the chip of a reversal under way (reversal open, reversal not landed)"
   - selector: proposal-reversal-count
     component: src/components/proposals/ProposalDetailPage.tsx
     description: "On a reversed proposal's strip: how many of its changes the reversal undid (\"N of M changes reversed\")"
   - selector: proposal-revert-message
-    component: src/components/proposals/ProposalDetailPage.tsx
+    component: src/components/proposals/RevertProposalDialog.tsx
     description: "What a revert undoes, in the revert ConfirmDialog"
   - selector: proposal-busy
     component: src/components/proposals/ProposalDetailPage.tsx

@@ -245,4 +245,20 @@ describe("change proposal mutation invalidation", () => {
       expect(invalidated(queryKey), JSON.stringify(queryKey)).toBe(false);
     }
   });
+
+  it("a refused reversal refetches the proposal, which changed elsewhere", async () => {
+    vi.spyOn(proposalsService, "proposeReversal").mockRejectedValue(
+      new ApiError("Conflict", 409, "already has an open reversal"),
+    );
+    const { wrapper, invalidated } = setup();
+    const { result } = renderHook(() => useProposeReversal(), { wrapper });
+
+    result.current.mutate("proposal-1");
+
+    await waitFor(() => expect(result.current.isError).toBe(true));
+    expect(invalidated(QUERY_KEYS.changeProposal("proposal-1"))).toBe(true);
+    for (const queryKey of [...ONTOLOGY_QUERIES, ...UNRELATED_QUERIES]) {
+      expect(invalidated(queryKey), JSON.stringify(queryKey)).toBe(false);
+    }
+  });
 });
