@@ -1,0 +1,86 @@
+- type: update
+  elementId: security.countermeasure.secret-safe-configuration
+  layerName: security
+  before:
+    id: 8abde7a2-27bf-4f75-bde9-afd4daf8860e
+    path: security.countermeasure.secret-safe-configuration
+    spec_node_id: security.countermeasure
+    type: countermeasure
+    layer_id: security
+    name: Secret-Safe Configuration
+    description: config.json is untracked (config.example.json is the template);
+      keys derived from the environment are not written back; configuration
+      models that may hold credentials hide input values in validation errors.
+    attributes: &a1
+      type: technical
+      effectiveness: medium
+      implemented: true
+      description: Secrets kept out of the repo and out of error messages
+    source_reference: &a2
+      provenance: manual
+      locations:
+        - file: local-server/config.py
+    metadata: &a3
+      created_at: 2026-11-19T16:18:36.733Z
+      updated_at: 2026-11-19T16:18:36.733Z
+      version: 1
+  after:
+    id: 8abde7a2-27bf-4f75-bde9-afd4daf8860e
+    path: security.countermeasure.secret-safe-configuration
+    spec_node_id: security.countermeasure
+    type: countermeasure
+    layer_id: security
+    name: Secret-Safe Configuration
+    description: config.json is untracked (config.example.json is the template);
+      keys derived from the environment are not written back; configuration
+      models that may hold credentials hide input values in validation errors.
+      Loading sets an invalid value aside with its field named (never its value)
+      and loads the rest, rather than discarding the file.
+    attributes: *a1
+    source_reference: *a2
+    metadata: *a3
+  timestamp: 2026-11-24T12:36:12.507Z
+  sequenceNumber: 0
+- type: update
+  elementId: application.applicationcomponent.llm-provider-router
+  layerName: application
+  before:
+    id: fb040a66-cac1-4907-8612-c8468399e183
+    path: application.applicationcomponent.llm-provider-router
+    spec_node_id: application.applicationcomponent
+    type: applicationcomponent
+    layer_id: application
+    name: LLM Provider Router
+    description: Infrastructure adapter routing LLM completion requests to the
+      appropriate provider — selects between OpenAI and Anthropic providers
+      based on pipeline configuration and exposes available provider list for
+      health checks
+    attributes: &a4
+      type: service-component
+    source_reference: &a5
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/llm/provider_router.py
+          symbol: LLMProviderRouter
+    metadata: &a6
+      created_at: 2026-05-07T22:15:35.396Z
+      updated_at: 2026-05-07T22:15:35.396Z
+      version: 1
+  after:
+    id: fb040a66-cac1-4907-8612-c8468399e183
+    path: application.applicationcomponent.llm-provider-router
+    spec_node_id: application.applicationcomponent
+    type: applicationcomponent
+    layer_id: application
+    name: LLM Provider Router
+    description: "Infrastructure adapter routing LLM completion requests to the
+      appropriate provider — selects between OpenAI, Anthropic and OpenRouter
+      providers based on the model and exposes the available provider list for
+      health checks. With no key configured it is built with no providers: the
+      app starts, and every completion or chat turn refuses with a message
+      naming the llm.* config fields."
+    attributes: *a4
+    source_reference: *a5
+    metadata: *a6
+  timestamp: 2026-11-24T12:36:12.515Z
+  sequenceNumber: 1

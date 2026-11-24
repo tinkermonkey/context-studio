@@ -509,7 +509,7 @@ class TestAdminServiceHealthMonitoring:
 
         assert health.status == SystemHealthStatus.DEGRADED
         assert health.llm_providers_available == []
-        assert any("No LLM providers configured" in issue for issue in health.issues)
+        assert any("No LLM provider key is configured" in issue for issue in health.issues)
 
 
 class TestAdminServiceConfigurationReset:
