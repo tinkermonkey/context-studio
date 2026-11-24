@@ -173,7 +173,13 @@ class AlternativeKind(str, Enum):
 
 
 class RejectionReason(str, Enum):
-    """Why a reviewer rejected an operation, as a code (beside the free-text note)."""
+    """
+    Why a reviewer rejected an operation, as a code (beside the free-text note).
+
+    One set for every operation kind. Which codes a reviewer is offered for which
+    operation is a matter for the client; the server accepts any of them on any
+    rejection. System rejections (a conflict, a reverted proposal) carry no code.
+    """
 
     # What it proposes is not in the source text
     NOT_IN_TEXT = "not_in_text"
@@ -185,6 +191,13 @@ class RejectionReason(str, Enum):
     OUT_OF_SCOPE = "out_of_scope"
     # Already there, or proposed twice
     DUPLICATE = "duplicate"
+    # The proposed change is wrong (an update, move, delete or type change)
+    INCORRECT = "incorrect"
+    # What is there now is right, so leave it as it is (an update, move, delete
+    # or type change)
+    KEEP_CURRENT = "keep_current"
+    # The proposal was made against a state that has since changed
+    OUTDATED = "outdated"
     OTHER = "other"
 
 

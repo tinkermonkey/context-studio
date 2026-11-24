@@ -418,7 +418,11 @@ describe("selection and the bulk bar", () => {
     expect(dialog).toHaveTextContent("Reject 2 selected?");
     await user.click(within(dialog).getByRole("button", { name: "Reject 2" }));
     await waitFor(() => expect(rejected).toHaveLength(1));
-    expect(rejected[0]).toEqual({ operation_ids: ["op-rename", "op-class"], note: null });
+    expect(rejected[0]).toEqual({
+      operation_ids: ["op-rename", "op-class"],
+      note: null,
+      reason_code: "other",
+    });
     await waitFor(() =>
       expect(screen.queryByTestId("proposal-selection-bar")).not.toBeInTheDocument(),
     );
@@ -431,10 +435,14 @@ describe("selection and the bulk bar", () => {
     await user.click(screen.getByTestId("operation-check-op-class"));
     await user.click(screen.getByTestId("proposal-selection-reject"));
     const dialog = await screen.findByRole("dialog");
-    await user.type(within(dialog).getByRole("textbox", { name: /Reason/ }), "Out of scope");
+    await user.type(within(dialog).getByRole("textbox", { name: /Note/ }), "Out of scope");
     await user.click(within(dialog).getByRole("button", { name: "Reject 2" }));
     await waitFor(() => expect(rejected).toHaveLength(1));
-    expect(rejected[0]).toEqual({ operation_ids: ["op-rename", "op-class"], note: "Out of scope" });
+    expect(rejected[0]).toEqual({
+      operation_ids: ["op-rename", "op-class"],
+      note: "Out of scope",
+      reason_code: "other",
+    });
   });
 
   it("leaves the checked operations checked when Reject selected is cancelled", async () => {
@@ -504,6 +512,7 @@ describe("accept all and the results", () => {
     expect(rejected[0]).toEqual({
       operation_ids: ["op-rename", "op-delete", "op-class"],
       note: null,
+      reason_code: "other",
     });
   });
 
@@ -513,7 +522,7 @@ describe("accept all and the results", () => {
     await user.click(await screen.findByTestId("proposal-reject-all"));
     const dialog = await screen.findByRole("dialog");
     await user.type(
-      within(dialog).getByRole("textbox", { name: /Reason/ }),
+      within(dialog).getByRole("textbox", { name: /Note/ }),
       "  superseded by the next export  ",
     );
     await user.click(within(dialog).getByRole("button", { name: "Reject 3" }));
@@ -521,7 +530,36 @@ describe("accept all and the results", () => {
     expect(rejected[0]).toEqual({
       operation_ids: ["op-rename", "op-delete", "op-class"],
       note: "superseded by the next export",
+      reason_code: "other",
     });
+  });
+
+  it("offers the codes that fit updates and deletes, Out of date first for a stale one, and sends the one picked for every operation", async () => {
+    const user = userEvent.setup();
+    renderPage();
+    await user.click(await screen.findByTestId("proposal-reject-all"));
+    const dialog = await screen.findByRole("dialog");
+    const picker = within(dialog).getByTestId("reject-reason-picker");
+    expect(picker).toHaveAttribute("role", "radiogroup");
+    expect(
+      within(picker)
+        .getAllByRole("radio")
+        .map((b) => b.textContent),
+    ).toEqual(["Out of date", "Out of scope", "Wrong", "Keep as it is", "Other"]);
+    expect(within(picker).getByRole("radio", { name: "Other" })).toBeChecked();
+
+    await user.click(within(picker).getByRole("radio", { name: "Keep as it is" }));
+    expect(within(picker).getByRole("radio", { name: "Keep as it is" })).toBeChecked();
+    expect(within(picker).getByRole("radio", { name: "Keep as it is" })).toHaveClass(
+      "reject-reason",
+      "reject-reason--selected",
+    );
+    expect(within(picker).getByRole("radio", { name: "Other" })).not.toHaveClass(
+      "reject-reason--selected",
+    );
+    await user.click(within(dialog).getByRole("button", { name: "Reject 3" }));
+    await waitFor(() => expect(rejected).toHaveLength(1));
+    expect(rejected[0]).toMatchObject({ reason_code: "keep_current" });
   });
 });
 

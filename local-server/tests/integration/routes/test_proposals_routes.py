@@ -1033,6 +1033,22 @@ class TestReviewDecisions:
         assert [json.loads(line)["reason_code"] for line in lines] == ["mentioned_only"] * 2
         assert [json.loads(line)["review_ms"] for line in lines] == [800, None]
 
+    @pytest.mark.parametrize("code", ["incorrect", "keep_current", "outdated"])
+    def test_an_update_is_rejected_with_the_new_reason_codes(self, client, graph, code):
+        proposal = _propose(client, graph, _describe_room(graph, seq=1))
+        [op_id] = _op_ids(proposal, 1)
+
+        response = client.post(
+            f"/api/proposals/{proposal['id']}/reject",
+            json={"operation_ids": [op_id], "reason_code": code, "note": "as it stands"},
+        )
+
+        assert response.status_code == 200, response.text
+        [op] = response.json()["operations"]
+        assert (op["status"], op["reason_code"], op["reason"]) == ("rejected", code, "as it stands")
+        [decision] = client.get(f"/api/taxonomies/{graph['taxonomy']}/gold").json()["items"]
+        assert (decision["decision"], decision["reason_code"]) == ("rejected", code)
+
     def test_an_unknown_reason_code_is_422(self, client, graph):
         proposal = _propose(client, graph, self._study(graph))
 

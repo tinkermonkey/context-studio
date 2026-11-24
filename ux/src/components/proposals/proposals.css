@@ -1258,4 +1258,36 @@
     font-size: 12px;
     color: rgb(var(--canvas-fg-3));
   }
+  /* ---- bulk reject dialog: one reason code for every operation ---- */
+  .reject-reasons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .reject-reason {
+    padding: 3px 10px;
+    border: 1px solid rgb(var(--canvas-border));
+    border-radius: 6px;
+    background: transparent;
+    color: rgb(var(--canvas-fg-2));
+    font: inherit;
+    font-size: 13px;
+    cursor: pointer;
+  }
+
+  .reject-reason:hover {
+    border-color: rgb(var(--canvas-border-strong));
+  }
+
+  .reject-reason--selected {
+    border-color: rgb(var(--status-rose));
+    background: rgb(var(--status-rose) / 0.12);
+    color: rgb(var(--canvas-fg-1));
+  }
+
+  .reject-reason:focus-visible {
+    outline: 2px solid rgb(var(--status-rose));
+    outline-offset: 1px;
+  }
 }

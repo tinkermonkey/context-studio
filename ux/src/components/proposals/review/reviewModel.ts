@@ -436,14 +436,54 @@ export function awaitingRelationshipsOf(
 
 // ==================== Not an element ====================
 
-export const REJECTION_REASONS: { code: RejectionReason; label: string }[] = [
-  { code: "not_in_text", label: "Not in this text" },
-  { code: "too_generic", label: "Too generic" },
-  { code: "mentioned_only", label: "Mentioned only" },
-  { code: "out_of_scope", label: "Out of scope" },
-  { code: "duplicate", label: "Duplicate" },
-  { code: "other", label: "Other" },
+/** What an operation does: a create adds something, any other operation changes what is there. */
+export type OperationScope = "create" | "change";
+
+/**
+ * Every reason code with the operations it applies to. A create is rejected
+ * because of what it proposes; an update, move, delete or type change because
+ * of what is there now. The server takes any code on any operation; the offer
+ * is the client's.
+ */
+export const REJECTION_REASONS: {
+  code: RejectionReason;
+  label: string;
+  appliesTo: OperationScope[];
+}[] = [
+  { code: "not_in_text", label: "Not in this text", appliesTo: ["create"] },
+  { code: "too_generic", label: "Too generic", appliesTo: ["create"] },
+  { code: "mentioned_only", label: "Mentioned only", appliesTo: ["create"] },
+  { code: "out_of_scope", label: "Out of scope", appliesTo: ["create", "change"] },
+  { code: "duplicate", label: "Duplicate", appliesTo: ["create"] },
+  { code: "incorrect", label: "Wrong", appliesTo: ["change"] },
+  { code: "keep_current", label: "Keep as it is", appliesTo: ["change"] },
+  { code: "outdated", label: "Out of date", appliesTo: ["change"] },
+  { code: "other", label: "Other", appliesTo: ["create", "change"] },
 ];
+
+export function scopeOf(operation: ProposedOperation): OperationScope {
+  return operation.op === "create" ? "create" : "change";
+}
+
+/**
+ * The reason codes to offer for rejecting these operations with one code:
+ * those that apply to every one of them, with "Out of date" first when any is
+ * stale. No operations give the codes for a create.
+ */
+export function reasonsFor(
+  operations: ProposedOperation[],
+): { code: RejectionReason; label: string }[] {
+  const scopes = new Set(operations.map(scopeOf));
+  if (scopes.size === 0) scopes.add("create");
+  const offered = REJECTION_REASONS.filter((r) =>
+    [...scopes].every((scope) => r.appliesTo.includes(scope)),
+  );
+  if (!operations.some((o) => o.stale)) return offered;
+  return [
+    ...offered.filter((r) => r.code === "outdated"),
+    ...offered.filter((r) => r.code !== "outdated"),
+  ];
+}
 
 export function reasonLabel(code: RejectionReason | null | undefined): string | undefined {
   return REJECTION_REASONS.find((r) => r.code === code)?.label;

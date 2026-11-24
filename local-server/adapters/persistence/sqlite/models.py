@@ -1691,7 +1691,8 @@ class ProposalOperation(Base):  # type: ignore[valid-type,misc]
         result_entity_id: Entity created or changed, once applied
         reason: Why it failed or was rejected
         reason_code: Why a reviewer rejected it, as a code (not_in_text, too_generic,
-            mentioned_only, out_of_scope, duplicate, other); null otherwise
+            mentioned_only, out_of_scope, duplicate, incorrect, keep_current, outdated,
+            other); null otherwise
         applied_fields: JSON of the fields actually applied when a reviewer edited the
             operation (as an update, or an individual create's merged fields); null when
             applied as proposed or not applied

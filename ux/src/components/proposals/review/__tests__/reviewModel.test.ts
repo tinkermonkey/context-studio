@@ -8,6 +8,7 @@ import type { ProposedOperation } from "@/api/services/proposals";
 import {
   RELATIONSHIPS_GROUP,
   REJECTION_REASONS,
+  reasonsFor,
   VERDICT_CHIP,
   VERDICT_LABEL,
   classLabel,
@@ -294,10 +295,50 @@ describe("classes and reasons", () => {
       "Mentioned only",
       "Out of scope",
       "Duplicate",
+      "Wrong",
+      "Keep as it is",
+      "Out of date",
       "Other",
     ]);
     expect(reasonLabel("mentioned_only")).toBe("Mentioned only");
     expect(reasonLabel(null)).toBeUndefined();
+  });
+
+  it("offers the codes for creates, for changes, and for a mix", () => {
+    const create = createProposedOperation({ op: "create", kind: "individual" });
+    const update = createProposedOperation({ op: "update" });
+    const remove = createProposedOperation({ op: "delete" });
+    const codes = (ops: ProposedOperation[]) => reasonsFor(ops).map((r) => r.code);
+
+    expect(codes([create])).toEqual([
+      "not_in_text",
+      "too_generic",
+      "mentioned_only",
+      "out_of_scope",
+      "duplicate",
+      "other",
+    ]);
+    expect(codes([])).toEqual(codes([create]));
+    expect(codes([update, remove])).toEqual([
+      "out_of_scope",
+      "incorrect",
+      "keep_current",
+      "outdated",
+      "other",
+    ]);
+    // One code for a create and an update is a code that fits both.
+    expect(codes([create, update])).toEqual(["out_of_scope", "other"]);
+  });
+
+  it("leads with Out of date when an operation is stale", () => {
+    const stale = createProposedOperation({ op: "update", stale: true });
+    expect(reasonsFor([stale]).map((r) => r.code)).toEqual([
+      "outdated",
+      "out_of_scope",
+      "incorrect",
+      "keep_current",
+      "other",
+    ]);
   });
 
   it("formats a duration as minutes and seconds", () => {

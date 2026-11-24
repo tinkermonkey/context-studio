@@ -10540,6 +10540,10 @@ export interface components {
     /**
      * RejectionReason
      * @description Why a reviewer rejected an operation, as a code (beside the free-text note).
+     *
+     *     One set for every operation kind. Which codes a reviewer is offered for which
+     *     operation is a matter for the client; the server accepts any of them on any
+     *     rejection. System rejections (a conflict, a reverted proposal) carry no code.
      * @enum {string}
      */
     RejectionReason:
@@ -10548,6 +10552,9 @@ export interface components {
       | "mentioned_only"
       | "out_of_scope"
       | "duplicate"
+      | "incorrect"
+      | "keep_current"
+      | "outdated"
       | "other";
     /**
      * RelationshipCreateRequest
