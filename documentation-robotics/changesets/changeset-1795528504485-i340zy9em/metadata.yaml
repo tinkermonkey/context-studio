@@ -1,0 +1,211 @@
+id: changeset-1795528504485-i340zy9em
+name: desktop-packaging
+description: "#1671, technology layer, decided by the owner on 2026-11-24
+  (notarization still open): package Context Studio
+  (com.tinkermonkey.contextstudio) as a Tauri v2 desktop app for macOS on Apple
+  Silicon. The Tauri shell starts the back end from a bundled standalone CPython
+  3.14 (no PyInstaller), waits for health, supervises it and stops it with the
+  app; the back end binds its own loopback sockets (127.0.0.1 and ::1, #1692) on
+  port 8765 with a free-port fallback and runtime.json for MCP clients, serves
+  the built /ux at the same origin, runs Alembic on start, and keeps config.json
+  (with the LLM keys and MCP token, 0600), the databases and logs in the
+  platform's app-data and log folders. The bundle carries the runtime, the
+  server package, the UI build and the embedding model; certifi supplies TLS
+  roots (#1509). No updater: signed DMGs on GitHub Releases. Done when the build
+  issues filed from it are built and verified."
+created: 2026-11-24T13:55:04.494Z
+modified: 2026-11-24T14:12:27.199Z
+status: staged
+baseSnapshot: v2:sha256:53252d39ed1357a9afdd6132507b497bf81313353af91142ccb6b590b147594c
+origin:
+  kind: plan
+purpose: plan
+stats:
+  additions: 84
+  modifications: 4
+  deletions: 0
+lastSequence: 94
+unstaged:
+  - sequence: 56
+    removedAt: 88
+    change:
+      type: add
+      elementId: motivation.requirement.desktop-size-and-start-up-budget
+      layerName: motivation
+      after:
+        id: f175910c-edd8-4d31-a859-a595adbeb246
+        path: motivation.requirement.desktop-size-and-start-up-budget
+        spec_node_id: motivation.requirement
+        type: requirement
+        layer_id: motivation
+        name: Desktop Size and Start-up Budget
+        description: "Proposed on #1671, for the owner to set: the signed DMG at most
+          600 MB and the installed app at most 1.6 GB with torch; a window
+          (splash) within 1 s; the UI usable within 10 s on a warm start and 30
+          s on the first launch after install (Gatekeeper's first scan,
+          migrations and the first reindex included). A tighter size forces
+          replacing torch with ONNX Runtime for embeddings."
+        attributes:
+          requirementType: non-functional
+          priority: high
+        metadata:
+          created_at: 2026-11-24T13:56:24.128Z
+          updated_at: 2026-11-24T13:56:24.128Z
+          version: 1
+      timestamp: 2026-11-24T13:56:24.148Z
+    rewritten: true
+  - sequence: 57
+    removedAt: 89
+    change:
+      type: add
+      elementId: motivation.constraint.mac-os-on-apple-silicon-first
+      layerName: motivation
+      after:
+        id: 909162a5-6482-4878-9380-88858c245e70
+        path: motivation.constraint.mac-os-on-apple-silicon-first
+        spec_node_id: motivation.constraint
+        type: constraint
+        layer_id: motivation
+        name: macOS on Apple Silicon First
+        description: "Proposed on #1671: the first packaged build targets macOS on Apple
+          Silicon (aarch64-apple-darwin) only. Intel Macs cannot run torch 2.3
+          or later, which publishes no macOS x86_64 wheels; Windows and Linux
+          are later work with their own CI runners, signing and torch builds."
+        attributes:
+          constraintType: technical
+        metadata:
+          created_at: 2026-11-24T13:56:24.128Z
+          updated_at: 2026-11-24T13:56:24.128Z
+          version: 1
+      timestamp: 2026-11-24T13:56:24.148Z
+    rewritten: true
+  - sequence: 10
+    removedAt: 90
+    change:
+      type: add
+      elementId: technology.artifact.embedding-model-files
+      layerName: technology
+      after:
+        id: 7d941efe-528f-4ad6-acf6-3db15274afd5
+        path: technology.artifact.embedding-model-files
+        spec_node_id: technology.artifact
+        type: artifact
+        layer_id: technology
+        name: Embedding Model Files
+        description: "all-MiniLM-L12-v2 (about 130 MB), loaded from a path in the bundle
+          with the Hugging Face hub offline, so embeddings work with no network.
+          The alternative, for the owner: download it to app-data on first run."
+        attributes:
+          artifactType: file
+        metadata:
+          created_at: 2026-11-24T13:56:14.956Z
+          updated_at: 2026-11-24T13:56:14.956Z
+          version: 1
+      timestamp: 2026-11-24T13:56:14.983Z
+    rewritten: true
+  - sequence: 4
+    removedAt: 91
+    change:
+      type: add
+      elementId: technology.artifact.context-studio-app-bundle
+      layerName: technology
+      after:
+        id: ba567042-c334-45ab-92a1-f0c51d16f8bd
+        path: technology.artifact.context-studio-app-bundle
+        spec_node_id: technology.artifact
+        type: artifact
+        layer_id: technology
+        name: Context Studio App Bundle
+        description: "Context Studio.app in a DMG: the signed, notarized and stapled
+          desktop app. Contents/MacOS holds the shell; Contents/Resources holds
+          the Python runtime, the local server package, the UI build and the
+          embedding model."
+        attributes:
+          artifactType: archive
+          documentation: Built by the desktop release build. Every Mach-O inside it is
+            signed with the Developer ID, hardened runtime and a timestamp,
+            inside-out, before Tauri signs the app.
+        metadata:
+          created_at: 2026-11-24T13:56:14.954Z
+          updated_at: 2026-11-24T13:56:14.954Z
+          version: 1
+      timestamp: 2026-11-24T13:56:14.983Z
+    rewritten: true
+  - sequence: 11
+    removedAt: 92
+    change:
+      type: add
+      elementId: technology.artifact.desktop-config-file
+      layerName: technology
+      after:
+        id: 9e4251ac-63d0-4041-95ae-531f61d2b060
+        path: technology.artifact.desktop-config-file
+        spec_node_id: technology.artifact
+        type: artifact
+        layer_id: technology
+        name: Desktop Config File
+        description: "config.json in the app-data folder (~/Library/Application
+          Support/<bundle id>/), written with defaults on first run: absolute
+          paths for local.db, operations.db and reference_api_cache.db in the
+          same folder, the preferred port, a generated MCP token. LLM keys stay
+          here (file mode 0600) until a keychain store is built."
+        attributes:
+          artifactType: configuration
+        metadata:
+          created_at: 2026-11-24T13:56:14.956Z
+          updated_at: 2026-11-24T13:56:14.956Z
+          version: 1
+      timestamp: 2026-11-24T13:56:14.983Z
+    rewritten: true
+  - sequence: 3
+    removedAt: 93
+    change:
+      type: add
+      elementId: technology.technologyinterface.local-server-loopback-port
+      layerName: technology
+      after:
+        id: 576fae10-45fb-42d9-927e-0cc6f31a505a
+        path: technology.technologyinterface.local-server-loopback-port
+        spec_node_id: technology.technologyinterface
+        type: technologyinterface
+        layer_id: technology
+        name: Local Server Loopback Port
+        description: "The back end's HTTP port, bound by the server itself on 127.0.0.1
+          and ::1 (both loopback names reach it, #1692; never a LAN address). A
+          stable preferred port from config.json (distinct from dev's 8000),
+          else a free port the OS picks; the bound port is announced to the
+          shell on stdout and written to the runtime discovery file. Carries the
+          UI, /api and /mcp at one origin."
+        attributes:
+          protocol: http
+        metadata:
+          created_at: 2026-11-24T13:56:14.952Z
+          updated_at: 2026-11-24T13:56:14.952Z
+          version: 1
+      timestamp: 2026-11-24T13:56:14.983Z
+    rewritten: true
+  - sequence: 13
+    removedAt: 94
+    change:
+      type: add
+      elementId: technology.technologyprocess.desktop-release-build
+      layerName: technology
+      after:
+        id: 03920ab5-d694-4d2a-aad4-d2282842c5df
+        path: technology.technologyprocess.desktop-release-build
+        spec_node_id: technology.technologyprocess
+        type: technologyprocess
+        layer_id: technology
+        name: Desktop Release Build
+        description: "Builds the app on macOS: build /ux; install the runtime-only
+          requirements into the standalone CPython; compile bytecode; place the
+          server package and the embedding model; sign every .so, .dylib and
+          executable in Resources (about 670 today) with the Developer ID,
+          hardened runtime and timestamp; tauri build signs the shell and the
+          app; notarytool submit, staple; sign and notarize the DMG."
+        metadata:
+          created_at: 2026-11-24T13:56:14.957Z
+          updated_at: 2026-11-24T13:56:14.957Z
+          version: 1
+      timestamp: 2026-11-24T13:56:14.983Z
+    rewritten: true
