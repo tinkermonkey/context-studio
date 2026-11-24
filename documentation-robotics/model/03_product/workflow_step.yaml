@@ -67,8 +67,11 @@ product.workflowstep.revert-an-applied-proposal:
   name: Revert an Applied Proposal
   attributes:
     sequence: 5
-    action: Revert the applied proposal after reading any conflicts
-    outcome: The changes are undone in one transaction
+    action: Revert the applied proposal in place while unlanded, after reading
+      conflicts and the edits it would overwrite; once landed, propose its
+      reversal
+    outcome: "Unlanded: the changes are undone in one transaction. Landed: a linked
+      reversal proposal is opened for review"
     optional: true
   metadata:
     created_at: 2026-11-19T16:21:41.309Z

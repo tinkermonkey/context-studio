@@ -3,7 +3,7 @@ schema: documentation-robotics-v1
 cli_version: 0.7.1
 spec_version: 0.13.0
 created: 2026-03-23T12:18:08.630Z
-updated: 2026-11-24T18:43:49.867Z
+updated: 2026-11-24T21:17:13.771Z
 project:
   name: Context Studio
   description: Local-first knowledge graph application for RAG and communication
@@ -19,11 +19,11 @@ layers:
       assessment: 4
       constraint: 7
       driver: 4
-      goal: 6
+      goal: 7
       meaning: 1
       outcome: 4
-      principle: 7
-      requirement: 25
+      principle: 8
+      requirement: 34
       stakeholder: 6
       value: 4
   business:
@@ -34,7 +34,7 @@ layers:
     elements:
       businessactor: 3
       businesscollaboration: 1
-      businessevent: 8
+      businessevent: 9
       businessfunction: 2
       businessobject: 6
       businessprocess: 6
@@ -47,7 +47,7 @@ layers:
     path: documentation-robotics/model/03_product/
     enabled: true
     elements:
-      feature: 28
+      feature: 29
       persona: 2
       softwarecapability: 15
       userworkflow: 5
@@ -75,7 +75,7 @@ layers:
       applicationcollaboration: 1
       applicationcomponent: 78
       applicationevent: 4
-      applicationfunction: 21
+      applicationfunction: 23
       applicationinteraction: 3
       applicationinterface: 2
       applicationprocess: 16
@@ -100,11 +100,11 @@ layers:
     elements:
       info: 1
       openapidocument: 1
-      operation: 174
+      operation: 176
       ratelimit: 1
       requestbody: 54
-      response: 87
-      responses: 166
+      response: 88
+      responses: 168
       securityscheme: 1
   data-model:
     order: 8
@@ -113,7 +113,7 @@ layers:
     enabled: true
     elements:
       arrayschema: 1
-      objectschema: 51
+      objectschema: 52
       stringschema: 2
   data-store:
     order: 9
@@ -125,25 +125,26 @@ layers:
       collection: 38
       database: 4
       field: 3
+      index: 1
       retentionpolicy: 1
       validationrule: 13
-      index: 1
   ux:
     order: 10
     name: Ux
     path: documentation-robotics/model/10_ux/
     enabled: true
     elements:
-      actioncomponent: 2
-      dataconfig: 141
+      actioncomponent: 6
+      dataconfig: 145
       experiencestate: 1
-      librarycomponent: 8
+      librarycomponent: 10
       statepattern: 1
       subview: 28
       uxapplication: 1
       uxlibrary: 1
       uxspec: 1
-      view: 50
+      view: 52
+      componentinstance: 3
   navigation:
     order: 11
     name: Navigation
@@ -175,9 +176,9 @@ layers:
       coveragerequirement: 3
       inputspacepartition: 1
       outcomecategory: 2
-      testcasesketch: 8
+      testcasesketch: 18
       testcoveragemodel: 2
-      testcoveragetarget: 22
+      testcoveragetarget: 29
 changeset_history:
   - name: restore-upgrade-drops
     committed_at: 2026-11-17T18:49:10.641Z
@@ -241,6 +242,9 @@ changeset_history:
     action: committed
   - name: proposal-links
     committed_at: 2026-11-24T18:43:49.867Z
+    action: committed
+  - name: one-review-surface
+    committed_at: 2026-11-24T21:17:13.771Z
     action: committed
 reconciled:
   changeset: rebuild-model-from-code

@@ -133,7 +133,8 @@ data-store.collection.proposals-table:
   layer_id: data-store
   name: change_proposals
   description: "Change proposals (a batch_runs subtype): taxonomy, origin, status
-    and landing of each proposal."
+    and landing of each proposal. Links between proposals, a reversal's to the
+    proposal it reverses among them, are in proposal_links (#1624)."
   attributes:
     collectionType: TABLE
   source_reference:

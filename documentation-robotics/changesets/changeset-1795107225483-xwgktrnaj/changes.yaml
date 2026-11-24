@@ -5813,3 +5813,216 @@
     metadata: *a72
   timestamp: 2026-11-24T20:22:34.106Z
   sequenceNumber: 434
+- type: update
+  elementId: data-model.objectschema.proposal-entity
+  layerName: data-model
+  before:
+    id: 2ff8aa70-673e-4390-97c0-5ebca5cea559
+    path: data-model.objectschema.proposal-entity
+    spec_node_id: data-model.objectschema
+    type: objectschema
+    layer_id: data-model
+    name: Proposal Entity
+    description: "Domain entity: a change proposal to one taxonomy, with its ordered
+      proposed operations, origin, status (open, done, reverted, withdrawn,
+      reversed) and landing; a reversal is linked to the proposal it reverses by
+      a proposal link of kind reverses (#1624's link model), so the original
+      knows its reversal (reversed_by) and how many of the reversal's changes
+      were applied."
+    attributes: &a73
+      type: object
+    source_reference: &a74
+      provenance: extracted
+      locations:
+        - file: local-server/domain/versioning/proposals.py
+          symbol: ChangeProposal
+    metadata: &a75
+      created_at: 2026-05-09T10:25:00.196Z
+      updated_at: 2026-05-09T10:25:00.196Z
+      version: 1
+  after:
+    id: 2ff8aa70-673e-4390-97c0-5ebca5cea559
+    path: data-model.objectschema.proposal-entity
+    spec_node_id: data-model.objectschema
+    type: objectschema
+    layer_id: data-model
+    name: Proposal Entity
+    description: "ChangeProposal: a set of proposed ontology changes on one
+      taxonomy, decided per operation, with its ordered proposed operations,
+      origin and landing; review_only keeps the approval policy off it (#1628).
+      Status open, done, reverted, withdrawn (its proposer withdrew it; anything
+      it had applied is rolled back) or reversed. Its links to other proposals
+      (supersedes / superseded_by, reverses / reversed_by) come from
+      proposal_links (#1624): a reversal is linked to the proposal it reverses
+      by a link of kind reverses, so the original knows its reversal
+      (reversed_by) and how many of the reversal's changes were applied."
+    attributes: *a73
+    source_reference: *a74
+    metadata: *a75
+  timestamp: 2026-11-24T21:06:10.860Z
+  sequenceNumber: 441
+- type: update
+  elementId: data-model.objectschema.proposed-operation
+  layerName: data-model
+  before:
+    id: 066a86b3-e78a-438c-a0ad-5e94092bb955
+    path: data-model.objectschema.proposed-operation
+    spec_node_id: data-model.objectschema
+    type: objectschema
+    layer_id: data-model
+    name: Proposed Operation
+    description: "Domain value: one operation in a change proposal
+      (create/update/delete of an entity), with its status and decision. A
+      restore create names a free target id (the deleted entity's snapshot id)
+      so a reversal recreates it with its old id; a rejection carries a
+      RejectionReason code (incorrect, keep_current and outdated added)."
+    attributes: &a76
+      type: object
+    source_reference: &a77
+      provenance: extracted
+      locations:
+        - file: local-server/domain/versioning/proposals.py
+          symbol: ProposedOperation
+    metadata: &a78
+      created_at: 2026-11-19T14:54:15.821Z
+      updated_at: 2026-11-19T14:54:15.821Z
+      version: 1
+  after:
+    id: 066a86b3-e78a-438c-a0ad-5e94092bb955
+    path: data-model.objectschema.proposed-operation
+    spec_node_id: data-model.objectschema
+    type: objectschema
+    layer_id: data-model
+    name: Proposed Operation
+    description: "ProposedOperation: one proposed change (create, update or delete
+      of an entity), with its status and decision. Status pending, applied,
+      rejected, failed, or withdrawn (removed by its proposer, or its proposal
+      withdrawn: not a decision). amended_at and amendments record changes its
+      proposer made while it was pending. A restore create names a free target
+      id (the deleted entity's snapshot id), so a reversal recreates it with its
+      old id; a rejection carries a RejectionReason code (incorrect,
+      keep_current and outdated added)."
+    attributes: *a76
+    source_reference: *a77
+    metadata: *a78
+  timestamp: 2026-11-24T21:06:11.093Z
+  sequenceNumber: 442
+- type: update
+  elementId: api.response.change-proposal-response
+  layerName: api
+  before:
+    id: 2f4dc526-a1c7-40c9-8173-5cc609b51427
+    path: api.response.change-proposal-response
+    spec_node_id: api.response
+    type: response
+    layer_id: api
+    name: ChangeProposalResponse
+    description: "A change proposal with its operations, status (open, done,
+      reverted, withdrawn, reversed), landing and its links to other proposals
+      (supersedes, superseded_by, reverses, reversed_by). On a reversed_by link:
+      operations_applied and operations_total, how many of the reversal's
+      changes were applied ('38 of 41 changes reversed')."
+    attributes: &a79
+      description: ChangeProposalResponse
+    source_reference: &a80
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/schemas/proposals.py
+          symbol: ChangeProposalResponse
+    metadata: &a81
+      created_at: 2026-11-19T15:15:02.501Z
+      updated_at: 2026-11-19T15:15:02.501Z
+      version: 1
+  after:
+    id: 2f4dc526-a1c7-40c9-8173-5cc609b51427
+    path: api.response.change-proposal-response
+    spec_node_id: api.response
+    type: response
+    layer_id: api
+    name: ChangeProposalResponse
+    description: "A change proposal with its operations in seq order, status (open,
+      done, reverted, withdrawn, reversed), landing and counts: how many
+      operations share each op, kind, status and scope. In a list's summary
+      form, operations is empty and counts still holds. It also carries
+      review_only (true: the approval policy never applies it) and its links to
+      other proposals seen from it (supersedes, superseded_by, reverses,
+      reversed_by); on a reversed_by link, operations_applied and
+      operations_total say how many of the reversal's changes were applied ('38
+      of 41 changes reversed'). Each operation carries amended_at and
+      amendments."
+    attributes: *a79
+    source_reference: *a80
+    metadata: *a81
+  timestamp: 2026-11-24T21:06:11.266Z
+  sequenceNumber: 443
+- type: update
+  elementId: api.operation.list-proposals
+  layerName: api
+  before:
+    id: b744441c-2bc3-4858-9a50-1355d63027e5
+    path: api.operation.list-proposals
+    spec_node_id: api.operation
+    type: operation
+    layer_id: api
+    name: List Proposals
+    description: List proposals, newest first, each operation with its stale flag;
+      filterable by status, reversed included. Its summary form (fields=summary)
+      carries each proposal's links too, so the Proposals list can show a
+      reversal under way (#1668).
+    attributes: &a82
+      operationId: list_proposals_api_proposals_get
+      summary: List Proposals
+      tags: proposals
+      http_method: GET
+      http_path: /api/proposals
+    source_reference: &a83
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/proposals_routes.py
+          symbol: list_proposals
+    metadata: &a84
+      created_at: 2026-11-19T14:46:21.105Z
+      updated_at: 2026-11-19T14:46:21.105Z
+      version: 1
+  after:
+    id: b744441c-2bc3-4858-9a50-1355d63027e5
+    path: api.operation.list-proposals
+    spec_node_id: api.operation
+    type: operation
+    layer_id: api
+    name: List Proposals
+    description: "List proposals, newest first, each operation with its stale flag.
+      Filters (in the query, so total is right): taxonomy_id, status (reversed
+      included), source, landed, implementation_id, dataset_id, source_id,
+      pipeline_type. landed=false lists only proposals with applied operations a
+      client can land (no re-imports, no dataset proposals). fields=summary
+      returns counts (by op, kind, status, scope) and no operations, and carries
+      each proposal's links, so the Proposals list can show a reversal under way
+      (#1668)."
+    attributes: *a82
+    source_reference: *a83
+    metadata: *a84
+  timestamp: 2026-11-24T21:06:11.475Z
+  sequenceNumber: 444
+- type: relationship-add
+  elementId: ux.view.proposal-detail-view::composes::ux.actioncomponent.not-an-element-button
+  layerName: ux
+  after:
+    source: ux.view.proposal-detail-view
+    target: ux.actioncomponent.not-an-element-button
+    predicate: composes
+    layer: ux
+    category: structural
+  timestamp: 2026-11-24T21:06:11.950Z
+  sequenceNumber: 445
+- type: relationship-add
+  elementId: ux.view.proposal-detail-view::composes::ux.actioncomponent.reverse-relationship-button
+  layerName: ux
+  after:
+    source: ux.view.proposal-detail-view
+    target: ux.actioncomponent.reverse-relationship-button
+    predicate: composes
+    layer: ux
+    category: structural
+  timestamp: 2026-11-24T21:06:11.950Z
+  sequenceNumber: 446

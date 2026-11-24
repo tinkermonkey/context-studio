@@ -1,0 +1,59 @@
+ux.componentinstance.source-rail:
+  id: d23d65de-b4ee-4220-ace9-cb78315b8c51
+  path: ux.componentinstance.source-rail
+  spec_node_id: ux.componentinstance
+  type: componentinstance
+  layer_id: ux
+  name: Source Rail
+  description: "The source pane folded ([): highlights at their positions in the
+    text in verdict colours."
+  attributes:
+    ref: ux.librarycomponent.pane-rail
+  source_reference:
+    provenance: manual
+    locations:
+      - file: ux/src/components/proposals/ProposalDetailPage.tsx
+        symbol: ProposalDetailPage
+  metadata:
+    created_at: 2026-11-19T17:00:51.603Z
+    updated_at: 2026-11-19T17:00:51.603Z
+    version: 1
+ux.componentinstance.list-rail:
+  id: 6b2f4954-8525-4a9b-ab63-852ca3e86b92
+  path: ux.componentinstance.list-rail
+  spec_node_id: ux.componentinstance
+  type: componentinstance
+  layer_id: ux
+  name: List Rail
+  description: "The list folded (]): rows in list order with the position (5 /
+    37). Only when the proposal has source text."
+  attributes:
+    ref: ux.librarycomponent.pane-rail
+  source_reference:
+    provenance: manual
+    locations:
+      - file: ux/src/components/proposals/ProposalDetailPage.tsx
+        symbol: ProposalDetailPage
+  metadata:
+    created_at: 2026-11-19T17:00:51.604Z
+    updated_at: 2026-11-19T17:00:51.604Z
+    version: 1
+ux.componentinstance.wide-field-diff:
+  id: 062ba140-64a7-40a5-8485-d3b99f53525b
+  path: ux.componentinstance.wide-field-diff
+  spec_node_id: ux.componentinstance
+  type: componentinstance
+  layer_id: ux
+  name: Wide Field Diff
+  description: The side-by-side diff of the selected field in the wide diff overlay.
+  attributes:
+    ref: ux.librarycomponent.side-by-side-diff
+  source_reference:
+    provenance: manual
+    locations:
+      - file: ux/src/components/proposals/review/WideDiffOverlay.tsx
+        symbol: WideDiffOverlay
+  metadata:
+    created_at: 2026-11-19T17:00:51.604Z
+    updated_at: 2026-11-19T17:00:51.604Z
+    version: 1

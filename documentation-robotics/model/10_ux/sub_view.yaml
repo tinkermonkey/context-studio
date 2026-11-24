@@ -75,25 +75,6 @@ ux.subview.extract-run-panel:
     created_at: 2026-11-19T15:02:28.473Z
     updated_at: 2026-11-19T15:02:28.473Z
     version: 1
-ux.subview.operation-inspector:
-  id: f8e8425c-edf7-494b-8044-292e4c1e797b
-  path: ux.subview.operation-inspector
-  spec_node_id: ux.subview
-  type: subview
-  layer_id: ux
-  name: Operation Inspector
-  description: "Inspector for one proposal operation: diff, decision and in-use resolution."
-  source_reference:
-    provenance: extracted
-    locations:
-      - file: ux/src/components/proposals/OperationInspector.tsx
-        symbol: OperationInspector
-      - file: ux/src/components/proposals/OperationInspector.tsx
-        symbol: ux.src.components.proposals.OperationInspector
-  metadata:
-    created_at: 2026-11-19T15:02:28.473Z
-    updated_at: 2026-11-19T15:02:28.473Z
-    version: 1
 ux.subview.in-use-resolver:
   id: 3883b32b-7467-44b2-b41f-64d403977e7b
   path: ux.subview.in-use-resolver
@@ -120,8 +101,15 @@ ux.subview.review-inspector:
   type: subview
   layer_id: ux
   name: Review Inspector
-  description: "Inspector for one reviewed element: class, relationship, decision
-    and reason code."
+  description: "Inspector for one operation of any kind (the #1631 inspector,
+    extended): pills and evidence (quotes with captions when sourceless), 'The
+    change' as was/now rows with a word diff for long text, Why, the decided
+    record, stale and failed verbs with callouts, DR relationship types
+    (class-ended triple, reflection quick picks, 'Or correct it'), replacement
+    and in-use blocks, and reason-code buttons filtered by operation kind.
+    Replaces OperationInspector, OperationDecision, OperationDecided,
+    DecisionBars, the ReflectionAnswers and DrTripleEditor UIs, and the source
+    passage sections."
   source_reference:
     provenance: extracted
     locations:
@@ -527,4 +515,28 @@ ux.subview.status-bar-sync:
   metadata:
     created_at: 2026-11-24T13:48:37.772Z
     updated_at: 2026-11-24T13:48:37.772Z
+    version: 1
+ux.subview.review-elements-pane:
+  id: 827a11f3-63ad-4952-9003-bcd759a51ef3
+  path: ux.subview.review-elements-pane
+  spec_node_id: ux.subview
+  type: subview
+  layer_id: ux
+  name: Review Elements Pane
+  description: "The one operation list of the review surface (ReviewElementsPane,
+    rebuilt): groupings by change kind, layer or sequence, inline conflict
+    cards, op and scope filters, inline update diffs, Select ▾ and the bulk bar
+    (hidden on gold checks), J/K and ?selected= selection. Replaces
+    OperationColumns, the Heimdall Table and TieredOperations on proposal
+    detail."
+  attributes:
+    title: Operations
+  source_reference:
+    provenance: manual
+    locations:
+      - file: ux/src/components/proposals/review/ReviewElementsPane.tsx
+        symbol: ReviewElementsPane
+  metadata:
+    created_at: 2026-11-19T17:00:51.603Z
+    updated_at: 2026-11-19T17:00:51.603Z
     version: 1

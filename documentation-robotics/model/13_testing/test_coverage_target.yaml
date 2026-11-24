@@ -458,3 +458,156 @@ testing.testcoveragetarget.proposal-amend-withdraw-and-links:
     created_at: 2026-11-24T12:40:02.838Z
     updated_at: 2026-11-24T12:40:02.838Z
     version: 1
+testing.testcoveragetarget.reject-reason-codes:
+  id: c33aee09-82a0-491d-9954-d006e4a34706
+  path: testing.testcoveragetarget.reject-reason-codes
+  spec_node_id: testing.testcoveragetarget
+  type: testcoveragetarget
+  layer_id: testing
+  name: Reject Reason Codes
+  description: Rejecting any operation kind, singly and in bulk, with each reason
+    code including incorrect, keep_current and outdated; gold only special-cases
+    duplicate; system rejections keep their text and no code.
+  attributes:
+    targetType: api-endpoint
+    priority: high
+  source_reference:
+    provenance: manual
+    locations:
+      - file: local-server/tests/integration/routes/test_proposals_routes.py
+        symbol: test_an_update_is_rejected_with_the_new_reason_codes
+  metadata:
+    created_at: 2026-11-19T17:01:49.996Z
+    updated_at: 2026-11-19T17:01:49.996Z
+    version: 1
+testing.testcoveragetarget.revert-preview:
+  id: 4040ae69-00cc-4851-8d7c-311bef7e9052
+  path: testing.testcoveragetarget.revert-preview
+  spec_node_id: testing.testcoveragetarget
+  type: testcoveragetarget
+  layer_id: testing
+  name: Revert Preview
+  description: "The fields an in-place revert would overwrite: none when untouched
+    since the apply; each later edit listed with applied and current value;
+    deletes and creates do not appear."
+  attributes:
+    targetType: api-endpoint
+    priority: high
+  source_reference:
+    provenance: manual
+    locations:
+      - file: local-server/tests/unit/domain/versioning/test_revert_service.py
+        symbol: test_preview_lists_a_field_edited_after_the_apply
+  metadata:
+    created_at: 2026-11-19T17:01:49.996Z
+    updated_at: 2026-11-19T17:01:49.996Z
+    version: 1
+testing.testcoveragetarget.proposal-reversal:
+  id: a1cf1d62-91ea-494a-b079-c26bf3143e03
+  path: testing.testcoveragetarget.proposal-reversal
+  spec_node_id: testing.testcoveragetarget
+  type: testcoveragetarget
+  layer_id: testing
+  name: Proposal Reversal
+  description: "Reversal planning and the reversal endpoint: event-to-operation
+    mapping (create, update, move, delete as restore create, relationship side
+    effects), $ref wiring, refusals (not landed, open reversal exists, id now
+    taken), the reverses link both ways (proposal_links, #1624), and the
+    original moving to reversed when the reversal lands, also in part."
+  attributes:
+    targetType: application-component
+    priority: critical
+  source_reference:
+    provenance: manual
+    locations:
+      - file: local-server/tests/integration/routes/test_proposal_reversal_routes.py
+        symbol: TestPlanning
+  metadata:
+    created_at: 2026-11-19T17:01:49.996Z
+    updated_at: 2026-11-19T17:01:49.996Z
+    version: 1
+testing.testcoveragetarget.one-review-page:
+  id: 8e4bb446-1ff3-46bc-b490-a9798acea6a7
+  path: testing.testcoveragetarget.one-review-page
+  spec_node_id: testing.testcoveragetarget
+  type: testcoveragetarget
+  layer_id: testing
+  name: One Review Page
+  description: "Proposal detail as the one review surface: source pane only when
+    cited, the list's groupings, Select and bulk bar (hidden on gold checks),
+    the inspector for every operation kind, reason buttons per kind, keys,
+    ?selected= and the /review and ?op= redirects."
+  attributes:
+    targetType: ui-component
+    priority: critical
+  source_reference:
+    provenance: manual
+    locations:
+      - file: ux/src/components/proposals/__tests__/ProposalReviewAgainstSource.test.tsx
+  metadata:
+    created_at: 2026-11-19T17:01:49.996Z
+    updated_at: 2026-11-19T17:01:49.996Z
+    version: 1
+testing.testcoveragetarget.pane-rails:
+  id: 2b23489f-c273-4236-b17c-1fbbb865e902
+  path: testing.testcoveragetarget.pane-rails
+  spec_node_id: testing.testcoveragetarget
+  type: testcoveragetarget
+  layer_id: testing
+  name: Pane Rails
+  description: "Folding the source or list pane to a rail: the map, notch and
+    position, [ and ] keys, one rail at a time, the list never folds without
+    source text, J/K and A/X while folded, the choice remembered."
+  attributes:
+    targetType: library
+    priority: medium
+  source_reference:
+    provenance: manual
+    locations:
+      - file: ux/src/components/proposals/__tests__/ProposalPaneRails.test.tsx
+  metadata:
+    created_at: 2026-11-19T17:01:49.996Z
+    updated_at: 2026-11-19T17:01:49.996Z
+    version: 1
+testing.testcoveragetarget.wide-diff-overlay:
+  id: e7c09edb-c083-43a3-8cd7-6e846aa31c49
+  path: testing.testcoveragetarget.wide-diff-overlay
+  spec_node_id: testing.testcoveragetarget
+  type: testcoveragetarget
+  layer_id: testing
+  name: Wide Diff Overlay
+  description: "The wide side-by-side diff: opening from the row or W, field tabs
+    and arrows, J/K following, Esc/Back returning focus, &diff= in the URL,
+    sentence pairing and folded unchanged runs."
+  attributes:
+    targetType: ui-component
+    priority: medium
+  source_reference:
+    provenance: manual
+    locations:
+      - file: ux/src/components/proposals/__tests__/ProposalWideDiff.test.tsx
+  metadata:
+    created_at: 2026-11-19T17:01:49.996Z
+    updated_at: 2026-11-19T17:01:49.996Z
+    version: 1
+testing.testcoveragetarget.revert-and-reversal-ui:
+  id: 70063fe9-dd24-41d3-b5d0-7db40eb36448
+  path: testing.testcoveragetarget.revert-and-reversal-ui
+  spec_node_id: testing.testcoveragetarget
+  type: testcoveragetarget
+  layer_id: testing
+  name: Revert and Reversal UI
+  description: The Revert control by landing state, the in-place revert dialog
+    listing overwritten edits, the propose-reversal dialog, and the reversal
+    links and chips (reversal open, reversed, N of M changes reversed).
+  attributes:
+    targetType: ui-component
+    priority: high
+  source_reference:
+    provenance: manual
+    locations:
+      - file: ux/src/components/proposals/__tests__/ProposalReversal.test.tsx
+  metadata:
+    created_at: 2026-11-19T17:01:49.996Z
+    updated_at: 2026-11-19T17:01:49.996Z
+    version: 1

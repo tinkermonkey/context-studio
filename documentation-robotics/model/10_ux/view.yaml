@@ -447,7 +447,13 @@ ux.view.proposal-detail-view:
   type: view
   layer_id: ux
   name: Proposal Detail View
-  description: One proposal's operations with decide, apply, reject, reopen and revert.
+  description: "The one review surface for a proposal (ProposalDetailPage): header
+    and status strip (apply, revert in place or propose the reversal, landed and
+    reversal chips, review timer, export, compare, apply results and revert
+    conflicts), a source pane only when an operation cites a passage
+    (highlights, pills, add from text), the operation list and the review
+    inspector. Either left pane folds to a rail; long changes open in the wide
+    diff overlay; gold checks open here in gold mode without bulk."
   attributes:
     type: page
     routable: true
@@ -476,27 +482,6 @@ ux.view.proposal-compare-view:
     locations:
       - file: ux/src/routes/app/proposals_.$proposalId_.compare.$otherId.tsx
         symbol: ProposalCompareRoute
-  metadata:
-    created_at: 2026-11-19T14:59:11.248Z
-    updated_at: 2026-11-19T14:59:11.248Z
-    version: 1
-ux.view.proposal-review-view:
-  id: 5c4d5894-ea25-4f7f-b304-c7ea451aa4bb
-  path: ux.view.proposal-review-view
-  spec_node_id: ux.view
-  type: view
-  layer_id: ux
-  name: Proposal Review View
-  description: Review an extraction proposal against its source text, with
-    highlights and reason codes.
-  attributes:
-    type: page
-    routable: true
-  source_reference:
-    provenance: extracted
-    locations:
-      - file: ux/src/routes/app/proposals_.$proposalId_.review.tsx
-        symbol: ProposalReviewRoute
   metadata:
     created_at: 2026-11-19T14:59:11.248Z
     updated_at: 2026-11-19T14:59:11.248Z
@@ -1029,4 +1014,107 @@ ux.view.command-palette:
   metadata:
     created_at: 2026-11-19T15:02:28.474Z
     updated_at: 2026-11-19T15:02:28.474Z
+    version: 1
+ux.view.wide-diff-overlay:
+  id: 61e659fc-bace-427b-8bfe-50e7ee2295a6
+  path: ux.view.wide-diff-overlay
+  spec_node_id: ux.view
+  type: view
+  layer_id: ux
+  name: Wide Diff Overlay
+  description: "Wide side-by-side diff over the source and list panes (the
+    inspector stays beside it): changed fields as tabs, ↑↓/‹› between fields,
+    J/K to the next operation with a long change, Esc/✕/Back close and return
+    focus to the row; &diff=<field> in the URL."
+  attributes:
+    type: overlay
+    routable: false
+    title: Wide diff
+  source_reference:
+    provenance: manual
+    locations:
+      - file: ux/src/components/proposals/review/WideDiffOverlay.tsx
+        symbol: WideDiffOverlay
+  accepted_gaps:
+    - direction: incoming
+      predicate: maps-to
+      other_spec_node_id: navigation.route
+      reason: "The overlay has no route of its own: it opens on the proposal detail
+        route via the &diff=<field> search param."
+      decided_by: agent
+      decided_at: 2026-11-19T17:02:34.275Z
+      changeset: changeset-1795107225483-xwgktrnaj
+    - direction: outgoing
+      predicate: composes
+      other_spec_node_id: ux.subview
+      reason: The overlay is one Heimdall SideBySideDiff instance with field tabs; it
+        has no sub-regions worth a subview.
+      decided_by: agent
+      decided_at: 2026-11-19T17:02:34.914Z
+      changeset: changeset-1795107225483-xwgktrnaj
+  metadata:
+    created_at: 2026-11-19T17:00:51.603Z
+    updated_at: 2026-11-19T17:00:51.603Z
+    version: 1
+ux.view.revert-proposal-dialog:
+  id: f7379813-a848-4a09-a138-dc67c5bce04d
+  path: ux.view.revert-proposal-dialog
+  spec_node_id: ux.view
+  type: view
+  layer_id: ux
+  name: Revert Proposal Dialog
+  description: "Confirm an in-place revert of an unlanded proposal: names the
+    fields edited since the apply that the revert will overwrite, and the revert
+    conflicts."
+  attributes:
+    type: dialog
+    routable: false
+    title: Revert proposal
+  source_reference:
+    provenance: manual
+    locations:
+      - file: ux/src/components/proposals/RevertProposalDialog.tsx
+        symbol: RevertProposalDialog
+  accepted_gaps:
+    - direction: incoming
+      predicate: maps-to
+      other_spec_node_id: navigation.route
+      reason: A confirm dialog opened from the Revert control; not routable.
+      decided_by: agent
+      decided_at: 2026-11-19T17:02:35.568Z
+      changeset: changeset-1795107225483-xwgktrnaj
+  metadata:
+    created_at: 2026-11-19T17:00:51.603Z
+    updated_at: 2026-11-19T17:00:51.603Z
+    version: 1
+ux.view.propose-reversal-dialog:
+  id: 3229ad9a-b320-4bcf-ac9b-f42c683d011d
+  path: ux.view.propose-reversal-dialog
+  spec_node_id: ux.view
+  type: view
+  layer_id: ux
+  name: Propose Reversal Dialog
+  description: "For a landed proposal: explains why it cannot be undone in place
+    and what the reversal proposal will contain, then creates it and opens it."
+  attributes:
+    type: dialog
+    routable: false
+    title: Propose the reversal
+  source_reference:
+    provenance: manual
+    locations:
+      - file: ux/src/components/proposals/ProposeReversalDialog.tsx
+        symbol: ProposeReversalDialog
+  accepted_gaps:
+    - direction: incoming
+      predicate: maps-to
+      other_spec_node_id: navigation.route
+      reason: A dialog opened from the Revert control on a landed proposal; not
+        routable.
+      decided_by: agent
+      decided_at: 2026-11-19T17:02:52.566Z
+      changeset: changeset-1795107225483-xwgktrnaj
+  metadata:
+    created_at: 2026-11-19T17:00:51.603Z
+    updated_at: 2026-11-19T17:00:51.603Z
     version: 1

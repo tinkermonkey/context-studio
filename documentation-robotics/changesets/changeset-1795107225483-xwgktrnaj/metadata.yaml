@@ -6,16 +6,16 @@ description: "Merge proposal detail and the Review page into one review surface
   a revert preview, and reversal proposals for landed changes (restore by id, a
   new reversed status)."
 created: 2026-11-19T16:53:45.487Z
-modified: 2026-11-24T20:23:31.662Z
-status: staged
+modified: 2026-11-24T21:17:13.748Z
+status: committed
 baseSnapshot: sha256:47cbf69a029fe1c405c7234a6260ff5326c53c044a37424fe686965c3c0497d6
 origin:
   kind: plan
 stats:
-  additions: 289
-  modifications: 26
+  additions: 291
+  modifications: 30
   deletions: 44
-lastSequence: 440
+lastSequence: 446
 unstaged:
   - sequence: 255
     removedAt: 256

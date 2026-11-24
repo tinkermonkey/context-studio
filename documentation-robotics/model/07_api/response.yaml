@@ -947,12 +947,15 @@ api.response.change-proposal-response:
   type: response
   layer_id: api
   name: ChangeProposalResponse
-  description: "A change proposal with its operations in seq order and counts: how
-    many operations share each op, kind, status and scope. In a list's summary
-    form, operations is empty and counts still holds. It also carries
-    review_only (true: the approval policy never applies it) and its links to
-    other proposals seen from it (supersedes, superseded_by, reverses,
-    reversed_by). Each operation carries amended_at and amendments."
+  description: "A change proposal with its operations in seq order, status (open,
+    done, reverted, withdrawn, reversed), landing and counts: how many
+    operations share each op, kind, status and scope. In a list's summary form,
+    operations is empty and counts still holds. It also carries review_only
+    (true: the approval policy never applies it) and its links to other
+    proposals seen from it (supersedes, superseded_by, reverses, reversed_by);
+    on a reversed_by link, operations_applied and operations_total say how many
+    of the reversal's changes were applied ('38 of 41 changes reversed'). Each
+    operation carries amended_at and amendments."
   attributes:
     description: ChangeProposalResponse
   source_reference:
@@ -1657,4 +1660,24 @@ api.response.proposal-link-response:
   metadata:
     created_at: 2026-11-24T12:39:53.770Z
     updated_at: 2026-11-24T12:39:53.770Z
+    version: 1
+api.response.revert-preview-response:
+  id: 2e9fbd2d-83e6-4b0c-8204-3545d786e191
+  path: api.response.revert-preview-response
+  spec_node_id: api.response
+  type: response
+  layer_id: api
+  name: RevertPreviewResponse
+  description: "Fields an in-place revert would overwrite: entity id, kind and
+    label, field, applied value and current value."
+  attributes:
+    description: RevertPreviewResponse
+  source_reference:
+    provenance: manual
+    locations:
+      - file: local-server/adapters/web/schemas/proposals.py
+        symbol: RevertPreviewResponse
+  metadata:
+    created_at: 2026-11-19T16:59:46.682Z
+    updated_at: 2026-11-19T16:59:46.682Z
     version: 1

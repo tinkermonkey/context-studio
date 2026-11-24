@@ -16,11 +16,11 @@ Application components, services, and interactions.
 
 | Metric                    | Count |
 | ------------------------- | ----- |
-| Elements                  | 197   |
-| Intra-Layer Relationships | 429   |
-| Inter-Layer Relationships | 434   |
-| Inbound Relationships     | 234   |
-| Outbound Relationships    | 200   |
+| Elements                  | 199   |
+| Intra-Layer Relationships | 434   |
+| Inter-Layer Relationships | 460   |
+| Inbound Relationships     | 243   |
+| Outbound Relationships    | 217   |
 
 **Cross-Layer References**:
 
@@ -129,6 +129,8 @@ Application components, services, and interactions.
 | `application.applicationfunction.proposal-amendment`                        | `applicationfunction`      | 2             |
 | `application.applicationfunction.proposal-linking`                          | `applicationfunction`      | 3             |
 | `application.applicationfunction.proposal-withdrawal`                       | `applicationfunction`      | 3             |
+| `application.applicationfunction.reversal-planning`                         | `applicationfunction`      | 2             |
+| `application.applicationfunction.revert-preview`                            | `applicationfunction`      | 3             |
 | `application.applicationfunction.schema-connection-refinement-apply`        | `applicationfunction`      | 2             |
 | `application.applicationfunction.schema-definition-refinement-apply`        | `applicationfunction`      | 2             |
 | `application.applicationfunction.schema-extraction-apply`                   | `applicationfunction`      | 2             |
@@ -167,7 +169,7 @@ Application components, services, and interactions.
 | `application.applicationservice.bundle-import-service`                      | `applicationservice`       | 1             |
 | `application.applicationservice.change-proposal-repository`                 | `applicationservice`       | 3             |
 | `application.applicationservice.change-record-port`                         | `applicationservice`       | 2             |
-| `application.applicationservice.change-repository`                          | `applicationservice`       | 5             |
+| `application.applicationservice.change-repository`                          | `applicationservice`       | 7             |
 | `application.applicationservice.chat-model`                                 | `applicationservice`       | 4             |
 | `application.applicationservice.chat-service`                               | `applicationservice`       | 15            |
 | `application.applicationservice.chat-settings`                              | `applicationservice`       | 2             |
@@ -203,7 +205,7 @@ Application components, services, and interactions.
 | `application.applicationservice.metrics-collector`                          | `applicationservice`       | 3             |
 | `application.applicationservice.nlpprocessor`                               | `applicationservice`       | 4             |
 | `application.applicationservice.ontology-deserializer`                      | `applicationservice`       | 3             |
-| `application.applicationservice.ontology-repository`                        | `applicationservice`       | 38            |
+| `application.applicationservice.ontology-repository`                        | `applicationservice`       | 39            |
 | `application.applicationservice.ontology-serializer`                        | `applicationservice`       | 3             |
 | `application.applicationservice.ontology-service`                           | `applicationservice`       | 25            |
 | `application.applicationservice.page-fetcher`                               | `applicationservice`       | 2             |
@@ -214,9 +216,9 @@ Application components, services, and interactions.
 | `application.applicationservice.pipeline-selection-service`                 | `applicationservice`       | 23            |
 | `application.applicationservice.proposal-apply-rules`                       | `applicationservice`       | 3             |
 | `application.applicationservice.proposal-comparison-service`                | `applicationservice`       | 2             |
-| `application.applicationservice.proposal-service`                           | `applicationservice`       | 32            |
+| `application.applicationservice.proposal-service`                           | `applicationservice`       | 33            |
 | `application.applicationservice.reference-source`                           | `applicationservice`       | 6             |
-| `application.applicationservice.revert-service`                             | `applicationservice`       | 5             |
+| `application.applicationservice.revert-service`                             | `applicationservice`       | 6             |
 | `application.applicationservice.schema-recognition-preview-service`         | `applicationservice`       | 3             |
 | `application.applicationservice.schema-vector-index`                        | `applicationservice`       | 7             |
 | `application.applicationservice.semantic-query-engine`                      | `applicationservice`       | 2             |
@@ -412,6 +414,10 @@ flowchart TB
 | `api.operation.uses.application.applicationinterface`                | `api.operation.mcp-endpoint`                                                | `application.applicationinterface.mcp-interface`                                             | `application` | `uses`       | many-to-many | medium   |
 | `api.operation.references.application.applicationservice`            | `api.operation.move-class`                                                  | `application.applicationservice.ontology-service`                                            | `application` | `references` | many-to-many | medium   |
 | `api.operation.references.application.applicationservice`            | `api.operation.preview-recognition`                                         | `application.applicationservice.schema-recognition-preview-service`                          | `application` | `references` | many-to-many | medium   |
+| `api.operation.realizes.application.applicationfunction`             | `api.operation.preview-revert`                                              | `application.applicationfunction.revert-preview`                                             | `application` | `realizes`   | many-to-many | medium   |
+| `api.operation.references.application.applicationservice`            | `api.operation.preview-revert`                                              | `application.applicationservice.revert-service`                                              | `application` | `references` | many-to-many | medium   |
+| `api.operation.realizes.application.applicationfunction`             | `api.operation.propose-reversal`                                            | `application.applicationfunction.reversal-planning`                                          | `application` | `realizes`   | many-to-many | medium   |
+| `api.operation.references.application.applicationservice`            | `api.operation.propose-reversal`                                            | `application.applicationservice.proposal-service`                                            | `application` | `references` | many-to-many | medium   |
 | `api.operation.references.application.applicationservice`            | `api.operation.publish-taxonomy`                                            | `application.applicationservice.ontology-service`                                            | `application` | `references` | many-to-many | medium   |
 | `api.operation.references.application.applicationservice`            | `api.operation.pull-changes`                                                | `application.applicationservice.versioning-service`                                          | `application` | `references` | many-to-many | medium   |
 | `api.operation.references.application.applicationservice`            | `api.operation.push-changes`                                                | `application.applicationservice.versioning-service`                                          | `application` | `references` | many-to-many | medium   |
@@ -553,6 +559,17 @@ flowchart TB
 | `application.applicationfunction.accesses.data-model.objectschema`   | `application.applicationfunction.proposal-linking`                          | `data-model.objectschema.proposal-link`                                                      | `data-model`  | `accesses`   | many-to-many | medium   |
 | `application.applicationfunction.satisfies.motivation.requirement`   | `application.applicationfunction.proposal-linking`                          | `motivation.requirement.proposals-link-to-each-other-through-one-link-model`                 | `motivation`  | `satisfies`  | many-to-many | medium   |
 | `application.applicationfunction.satisfies.motivation.requirement`   | `application.applicationfunction.proposal-withdrawal`                       | `motivation.requirement.a-proposer-withdraws-its-open-proposal`                              | `motivation`  | `satisfies`  | many-to-many | medium   |
+| `application.applicationfunction.accesses.data-model.objectschema`   | `application.applicationfunction.reversal-planning`                         | `data-model.objectschema.change-event-entity`                                                | `data-model`  | `accesses`   | many-to-many | medium   |
+| `application.applicationfunction.accesses.data-model.objectschema`   | `application.applicationfunction.reversal-planning`                         | `data-model.objectschema.proposal-entity`                                                    | `data-model`  | `accesses`   | many-to-many | medium   |
+| `application.applicationfunction.accesses.data-model.objectschema`   | `application.applicationfunction.reversal-planning`                         | `data-model.objectschema.proposed-operation`                                                 | `data-model`  | `accesses`   | many-to-many | medium   |
+| `application.applicationfunction.accesses.data-store.collection`     | `application.applicationfunction.reversal-planning`                         | `data-store.collection.change-events`                                                        | `data-store`  | `accesses`   | many-to-many | medium   |
+| `application.applicationfunction.accesses.data-store.collection`     | `application.applicationfunction.reversal-planning`                         | `data-store.collection.proposals-table`                                                      | `data-store`  | `accesses`   | many-to-many | medium   |
+| `application.applicationfunction.satisfies.motivation.requirement`   | `application.applicationfunction.reversal-planning`                         | `motivation.requirement.landed-proposals-are-undone-by-a-reversal-proposal`                  | `motivation`  | `satisfies`  | many-to-many | medium   |
+| `application.applicationfunction.satisfies.motivation.requirement`   | `application.applicationfunction.reversal-planning`                         | `motivation.requirement.reversal-restores-deleted-entities-with-their-ids`                   | `motivation`  | `satisfies`  | many-to-many | medium   |
+| `application.applicationfunction.accesses.data-model.objectschema`   | `application.applicationfunction.revert-preview`                            | `data-model.objectschema.change-event-entity`                                                | `data-model`  | `accesses`   | many-to-many | medium   |
+| `application.applicationfunction.accesses.data-model.objectschema`   | `application.applicationfunction.revert-preview`                            | `data-model.objectschema.revert-preview-result`                                              | `data-model`  | `accesses`   | many-to-many | medium   |
+| `application.applicationfunction.accesses.data-store.collection`     | `application.applicationfunction.revert-preview`                            | `data-store.collection.change-events`                                                        | `data-store`  | `accesses`   | many-to-many | medium   |
+| `application.applicationfunction.satisfies.motivation.requirement`   | `application.applicationfunction.revert-preview`                            | `motivation.requirement.in-place-revert-warns-of-overwritten-edits`                          | `motivation`  | `satisfies`  | many-to-many | medium   |
 | `application.applicationfunction.realizes.business.businessfunction` | `application.applicationfunction.schema-connection-refinement-apply`        | `business.businessfunction.schema-refinement`                                                | `business`    | `realizes`   | many-to-many | medium   |
 | `application.applicationfunction.realizes.business.businessfunction` | `application.applicationfunction.schema-definition-refinement-apply`        | `business.businessfunction.schema-refinement`                                                | `business`    | `realizes`   | many-to-many | medium   |
 | `application.applicationfunction.realizes.business.businessfunction` | `application.applicationfunction.schema-extraction-apply`                   | `business.businessfunction.schema-refinement`                                                | `business`    | `realizes`   | many-to-many | medium   |
@@ -620,16 +637,22 @@ flowchart TB
 | `application.applicationservice.realizes.business.businessservice`   | `application.applicationservice.proposal-comparison-service`                | `business.businessservice.pipeline-benchmarking-service`                                     | `business`    | `realizes`   | many-to-many | medium   |
 | `application.applicationservice.realizes.product.feature`            | `application.applicationservice.proposal-comparison-service`                | `product.feature.compare-two-pipelines`                                                      | `product`     | `realizes`   | many-to-many | medium   |
 | `application.applicationservice.realizes.business.businessservice`   | `application.applicationservice.proposal-service`                           | `business.businessservice.proposal-adjudication-service`                                     | `business`    | `realizes`   | many-to-many | medium   |
+| `application.applicationservice.realizes.product.feature`            | `application.applicationservice.proposal-service`                           | `product.feature.reversal-proposals`                                                         | `product`     | `realizes`   | many-to-many | medium   |
 | `application.applicationservice.realizes.product.softwarecapability` | `application.applicationservice.proposal-service`                           | `product.softwarecapability.proposal-review-and-apply`                                       | `product`     | `realizes`   | many-to-many | medium   |
 | `application.applicationservice.satisfies.motivation.requirement`    | `application.applicationservice.proposal-service`                           | `motivation.requirement.a-proposer-amends-its-open-proposal-in-place`                        | `motivation`  | `satisfies`  | many-to-many | medium   |
 | `application.applicationservice.satisfies.motivation.requirement`    | `application.applicationservice.proposal-service`                           | `motivation.requirement.a-proposer-withdraws-its-open-proposal`                              | `motivation`  | `satisfies`  | many-to-many | medium   |
 | `application.applicationservice.satisfies.motivation.requirement`    | `application.applicationservice.proposal-service`                           | `motivation.requirement.a-review-only-proposal-is-never-auto-applied`                        | `motivation`  | `satisfies`  | many-to-many | medium   |
+| `application.applicationservice.satisfies.motivation.requirement`    | `application.applicationservice.proposal-service`                           | `motivation.requirement.landed-proposals-are-undone-by-a-reversal-proposal`                  | `motivation`  | `satisfies`  | many-to-many | medium   |
 | `application.applicationservice.satisfies.motivation.requirement`    | `application.applicationservice.proposal-service`                           | `motivation.requirement.mirrored-taxonomies-accept-schema-changes-only-from-their-client`    | `motivation`  | `satisfies`  | many-to-many | medium   |
 | `application.applicationservice.satisfies.motivation.requirement`    | `application.applicationservice.proposal-service`                           | `motivation.requirement.proposals-link-to-each-other-through-one-link-model`                 | `motivation`  | `satisfies`  | many-to-many | medium   |
+| `application.applicationservice.satisfies.motivation.requirement`    | `application.applicationservice.proposal-service`                           | `motivation.requirement.reason-codes-for-every-reject`                                       | `motivation`  | `satisfies`  | many-to-many | medium   |
+| `application.applicationservice.satisfies.motivation.requirement`    | `application.applicationservice.proposal-service`                           | `motivation.requirement.reversal-is-decided-like-any-proposal`                               | `motivation`  | `satisfies`  | many-to-many | medium   |
+| `application.applicationservice.satisfies.motivation.requirement`    | `application.applicationservice.proposal-service`                           | `motivation.requirement.reversed-proposal-status`                                            | `motivation`  | `satisfies`  | many-to-many | medium   |
 | `application.applicationservice.realizes.product.softwarecapability` | `application.applicationservice.reference-source`                           | `product.softwarecapability.reference-grounding`                                             | `product`     | `realizes`   | many-to-many | medium   |
 | `application.applicationservice.realizes.business.businessservice`   | `application.applicationservice.revert-service`                             | `business.businessservice.proposal-adjudication-service`                                     | `business`    | `realizes`   | many-to-many | medium   |
 | `application.applicationservice.realizes.product.softwarecapability` | `application.applicationservice.revert-service`                             | `product.softwarecapability.proposal-review-and-apply`                                       | `product`     | `realizes`   | many-to-many | medium   |
 | `application.applicationservice.satisfies.motivation.requirement`    | `application.applicationservice.revert-service`                             | `motivation.requirement.every-applied-proposal-is-revertible`                                | `motivation`  | `satisfies`  | many-to-many | medium   |
+| `application.applicationservice.satisfies.motivation.requirement`    | `application.applicationservice.revert-service`                             | `motivation.requirement.in-place-revert-warns-of-overwritten-edits`                          | `motivation`  | `satisfies`  | many-to-many | medium   |
 | `application.applicationservice.realizes.product.feature`            | `application.applicationservice.schema-recognition-preview-service`         | `product.feature.extraction-review-bench`                                                    | `product`     | `realizes`   | many-to-many | medium   |
 | `application.applicationservice.realizes.business.businessservice`   | `application.applicationservice.source-extraction-service`                  | `business.businessservice.source-extraction-service`                                         | `business`    | `realizes`   | many-to-many | medium   |
 | `application.applicationservice.realizes.product.feature`            | `application.applicationservice.source-extraction-service`                  | `product.feature.extraction-pre-review`                                                      | `product`     | `realizes`   | many-to-many | medium   |
@@ -679,7 +702,10 @@ flowchart TB
 | `technology.systemsoftware.serves.application.applicationcomponent`  | `technology.systemsoftware.sqlalchemy`                                      | `application.applicationcomponent.sqlite-ontology-repository`                                | `application` | `serves`     | many-to-many | medium   |
 | `technology.systemsoftware.serves.application.applicationcomponent`  | `technology.systemsoftware.sqlite`                                          | `application.applicationcomponent.database-manager`                                          | `application` | `serves`     | many-to-many | medium   |
 | `technology.systemsoftware.serves.application.applicationcomponent`  | `technology.systemsoftware.trafilatura`                                     | `application.applicationcomponent.html-reader`                                               | `application` | `serves`     | many-to-many | medium   |
+| `testing.testcasesketch.tests.application.applicationservice`        | `testing.testcasesketch.partial-reversal-marks-the-original-reversed`       | `application.applicationservice.proposal-service`                                            | `application` | `tests`      | many-to-many | medium   |
 | `testing.testcasesketch.tests.application.applicationfunction`       | `testing.testcasesketch.pre-review-verdicts-reach-the-proposal-visibly`     | `application.applicationfunction.individual-pre-review`                                      | `application` | `tests`      | many-to-many | medium   |
+| `testing.testcasesketch.tests.application.applicationfunction`       | `testing.testcasesketch.reversal-restores-a-deleted-entity-with-its-id`     | `application.applicationfunction.reversal-planning`                                          | `application` | `tests`      | many-to-many | medium   |
+| `testing.testcasesketch.tests.application.applicationfunction`       | `testing.testcasesketch.revert-preview-lists-a-later-edit`                  | `application.applicationfunction.revert-preview`                                             | `application` | `tests`      | many-to-many | medium   |
 | `testing.testcasesketch.tests.application.applicationfunction`       | `testing.testcasesketch.seeded-errors-are-built-and-scored-offline`         | `application.applicationfunction.individual-pre-review`                                      | `application` | `tests`      | many-to-many | medium   |
 | `testing.testcasesketch.tests.application.applicationfunction`       | `testing.testcasesketch.split-witness-fires-on-gate-ds-four-splits`         | `application.applicationfunction.split-witness`                                              | `application` | `tests`      | many-to-many | medium   |
 | `testing.testcoveragetarget.covers.application.applicationcomponent` | `testing.testcoveragetarget.adapter-integration-tests`                      | `application.applicationcomponent.sqlite-change-proposal-repository`                         | `application` | `covers`     | many-to-many | medium   |
@@ -696,6 +722,8 @@ flowchart TB
 | `testing.testcoveragetarget.covers.application.applicationservice`   | `testing.testcoveragetarget.interchange-integration-tests`                  | `application.applicationservice.bundle-import-service`                                       | `application` | `covers`     | many-to-many | medium   |
 | `testing.testcoveragetarget.covers.application.applicationservice`   | `testing.testcoveragetarget.pipeline-integration-tests`                     | `application.applicationservice.pipeline-selection-service`                                  | `application` | `covers`     | many-to-many | medium   |
 | `testing.testcoveragetarget.covers.application.applicationservice`   | `testing.testcoveragetarget.pipeline-integration-tests`                     | `application.applicationservice.source-extraction-service`                                   | `application` | `covers`     | many-to-many | medium   |
+| `testing.testcoveragetarget.covers.application.applicationservice`   | `testing.testcoveragetarget.proposal-reversal`                              | `application.applicationservice.proposal-service`                                            | `application` | `covers`     | many-to-many | medium   |
+| `testing.testcoveragetarget.covers.application.applicationservice`   | `testing.testcoveragetarget.revert-preview`                                 | `application.applicationservice.revert-service`                                              | `application` | `covers`     | many-to-many | medium   |
 | `testing.testcoveragetarget.covers.application.applicationcomponent` | `testing.testcoveragetarget.route-integration-tests`                        | `application.applicationcomponent.sqlite-ontology-repository`                                | `application` | `covers`     | many-to-many | medium   |
 | `testing.testcoveragetarget.covers.application.applicationservice`   | `testing.testcoveragetarget.source-integration-tests`                       | `application.applicationservice.source-service`                                              | `application` | `covers`     | many-to-many | medium   |
 | `testing.testcoveragetarget.covers.application.applicationcomponent` | `testing.testcoveragetarget.versioning-integration-tests`                   | `application.applicationcomponent.sqlite-change-repository`                                  | `application` | `covers`     | many-to-many | medium   |
@@ -2914,6 +2942,64 @@ ProposalService.withdraw: on an open proposal, rolls back what it applied (the r
 | intra-layer | `application.applicationservice.proposal-service`               | `realizes`   | outbound  |
 | intra-layer | `application.applicationservice.proposal-service`               | `serves`     | inbound   |
 
+### Reversal Planning {#reversal-planning}
+
+**ID**: `application.applicationfunction.reversal-planning`
+
+**Type**: `applicationfunction`
+
+Plans the reversal of a landed proposal from its run's change events, newest first: create to delete, update to update with fields = previous_state (base = current values, so staleness is detected), move fields to move, delete to a restore create that keeps the snapshot's id, relationship side effects to delete plus create; wires $refs between the planned operations (domain/versioning/reversal.py).
+
+#### Attributes
+
+| Name          | Value                                                                                                         |
+| ------------- | ------------------------------------------------------------------------------------------------------------- |
+| documentation | PR 10. Owned by ProposalService.propose_reversal; refuses while an open reversal of the same proposal exists. |
+
+#### Relationships
+
+| Type        | Related Element                                                             | Predicate   | Direction |
+| ----------- | --------------------------------------------------------------------------- | ----------- | --------- |
+| inter-layer | `api.operation.propose-reversal`                                            | `realizes`  | inbound   |
+| inter-layer | `data-model.objectschema.change-event-entity`                               | `accesses`  | outbound  |
+| inter-layer | `data-model.objectschema.proposal-entity`                                   | `accesses`  | outbound  |
+| inter-layer | `data-model.objectschema.proposed-operation`                                | `accesses`  | outbound  |
+| inter-layer | `data-store.collection.change-events`                                       | `accesses`  | outbound  |
+| inter-layer | `data-store.collection.proposals-table`                                     | `accesses`  | outbound  |
+| inter-layer | `motivation.requirement.landed-proposals-are-undone-by-a-reversal-proposal` | `satisfies` | outbound  |
+| inter-layer | `motivation.requirement.reversal-restores-deleted-entities-with-their-ids`  | `satisfies` | outbound  |
+| inter-layer | `testing.testcasesketch.reversal-restores-a-deleted-entity-with-its-id`     | `tests`     | inbound   |
+| intra-layer | `application.applicationservice.proposal-service`                           | `realizes`  | outbound  |
+| intra-layer | `application.applicationservice.change-repository`                          | `serves`    | inbound   |
+
+### Revert Preview {#revert-preview}
+
+**ID**: `application.applicationfunction.revert-preview`
+
+**Type**: `applicationfunction`
+
+Lists the fields an in-place revert would overwrite: for each update event of the run, the fields whose current value differs from the event's new_state (edited since the apply). Read-only; no transaction.
+
+#### Attributes
+
+| Name          | Value                         |
+| ------------- | ----------------------------- |
+| documentation | PR 9. Lives on RevertService. |
+
+#### Relationships
+
+| Type        | Related Element                                                     | Predicate   | Direction |
+| ----------- | ------------------------------------------------------------------- | ----------- | --------- |
+| inter-layer | `api.operation.preview-revert`                                      | `realizes`  | inbound   |
+| inter-layer | `data-model.objectschema.change-event-entity`                       | `accesses`  | outbound  |
+| inter-layer | `data-model.objectschema.revert-preview-result`                     | `accesses`  | outbound  |
+| inter-layer | `data-store.collection.change-events`                               | `accesses`  | outbound  |
+| inter-layer | `motivation.requirement.in-place-revert-warns-of-overwritten-edits` | `satisfies` | outbound  |
+| inter-layer | `testing.testcasesketch.revert-preview-lists-a-later-edit`          | `tests`     | inbound   |
+| intra-layer | `application.applicationservice.revert-service`                     | `realizes`  | outbound  |
+| intra-layer | `application.applicationservice.change-repository`                  | `serves`    | inbound   |
+| intra-layer | `application.applicationservice.ontology-repository`                | `serves`    | inbound   |
+
 ### Schema Connection Refinement Apply {#schema-connection-refinement-apply}
 
 **ID**: `application.applicationfunction.schema-connection-refinement-apply`
@@ -3692,6 +3778,8 @@ Hexagonal port: persists and queries change events.
 | intra-layer | `application.applicationcomponent.sqlite-change-repository` | `realizes`   | inbound   |
 | intra-layer | `application.applicationcomponent.duck-db-sync-adapter`     | `serves`     | outbound  |
 | intra-layer | `application.applicationcomponent.s3-sync-adapter`          | `serves`     | outbound  |
+| intra-layer | `application.applicationfunction.reversal-planning`         | `serves`     | outbound  |
+| intra-layer | `application.applicationfunction.revert-preview`            | `serves`     | outbound  |
 | intra-layer | `application.applicationservice.revert-service`             | `depends-on` | inbound   |
 | intra-layer | `application.applicationservice.versioning-service`         | `depends-on` | inbound   |
 
@@ -4661,6 +4749,7 @@ Hexagonal port: persists and retrieves ontology entities (taxonomies, schemes, c
 | intra-layer | `application.applicationfunction.evidence-pack-building`                 | `serves`     | outbound  |
 | intra-layer | `application.applicationfunction.in-use-inspection`                      | `serves`     | outbound  |
 | intra-layer | `application.applicationfunction.individual-extraction-apply`            | `serves`     | outbound  |
+| intra-layer | `application.applicationfunction.revert-preview`                         | `serves`     | outbound  |
 | intra-layer | `application.applicationfunction.schema-connection-refinement-apply`     | `serves`     | outbound  |
 | intra-layer | `application.applicationfunction.schema-definition-refinement-apply`     | `serves`     | outbound  |
 | intra-layer | `application.applicationfunction.schema-extraction-apply`                | `serves`     | outbound  |
@@ -5044,7 +5133,7 @@ Compares two pipelines' proposals for one source: pairs their individual creates
 
 **Type**: `applicationservice`
 
-Change proposals: create, decide, apply, reject, reopen, land and read operations; applies them under a run with approval rules.
+Change proposals: create, decide, apply, reject (always with a reason code), reopen, land and read operations; applies them under a run with approval rules. Proposes the reversal of a landed proposal (one open reversal at a time), applies its restore creates with the snapshot's ids, and marks the original reversed when the reversal lands, recording how many of its changes were reversed.
 
 #### Attributes
 
@@ -5068,17 +5157,25 @@ Change proposals: create, decide, apply, reject, reopen, land and read operation
 | inter-layer | `api.operation.list-gold`                                                                 | `references` | inbound   |
 | inter-layer | `api.operation.list-proposals`                                                            | `references` | inbound   |
 | inter-layer | `api.operation.mark-proposal-landed`                                                      | `references` | inbound   |
+| inter-layer | `api.operation.propose-reversal`                                                          | `references` | inbound   |
 | inter-layer | `api.operation.reject-proposal`                                                           | `references` | inbound   |
 | inter-layer | `api.operation.reopen-operations`                                                         | `references` | inbound   |
 | inter-layer | `api.operation.withdraw-proposal`                                                         | `references` | inbound   |
 | inter-layer | `business.businessservice.proposal-adjudication-service`                                  | `realizes`   | outbound  |
+| inter-layer | `product.feature.reversal-proposals`                                                      | `realizes`   | outbound  |
 | inter-layer | `product.softwarecapability.proposal-review-and-apply`                                    | `realizes`   | outbound  |
 | inter-layer | `motivation.requirement.a-proposer-amends-its-open-proposal-in-place`                     | `satisfies`  | outbound  |
 | inter-layer | `motivation.requirement.a-proposer-withdraws-its-open-proposal`                           | `satisfies`  | outbound  |
 | inter-layer | `motivation.requirement.a-review-only-proposal-is-never-auto-applied`                     | `satisfies`  | outbound  |
+| inter-layer | `motivation.requirement.landed-proposals-are-undone-by-a-reversal-proposal`               | `satisfies`  | outbound  |
 | inter-layer | `motivation.requirement.mirrored-taxonomies-accept-schema-changes-only-from-their-client` | `satisfies`  | outbound  |
 | inter-layer | `motivation.requirement.proposals-link-to-each-other-through-one-link-model`              | `satisfies`  | outbound  |
+| inter-layer | `motivation.requirement.reason-codes-for-every-reject`                                    | `satisfies`  | outbound  |
+| inter-layer | `motivation.requirement.reversal-is-decided-like-any-proposal`                            | `satisfies`  | outbound  |
+| inter-layer | `motivation.requirement.reversed-proposal-status`                                         | `satisfies`  | outbound  |
+| inter-layer | `testing.testcasesketch.partial-reversal-marks-the-original-reversed`                     | `tests`      | inbound   |
 | inter-layer | `testing.testcoveragetarget.domain-unit-tests`                                            | `covers`     | inbound   |
+| inter-layer | `testing.testcoveragetarget.proposal-reversal`                                            | `covers`     | inbound   |
 | inter-layer | `testing.testcoveragetarget.versioning-integration-tests`                                 | `covers`     | inbound   |
 | intra-layer | `application.applicationcomponent.dr-decisions-exporter`                                  | `realizes`   | inbound   |
 | intra-layer | `application.applicationcomponent.dr-predicate-rules`                                     | `realizes`   | inbound   |
@@ -5091,6 +5188,7 @@ Change proposals: create, decide, apply, reject, reopen, land and read operation
 | intra-layer | `application.applicationfunction.proposal-amendment`                                      | `realizes`   | inbound   |
 | intra-layer | `application.applicationfunction.proposal-linking`                                        | `realizes`   | inbound   |
 | intra-layer | `application.applicationfunction.proposal-withdrawal`                                     | `realizes`   | inbound   |
+| intra-layer | `application.applicationfunction.reversal-planning`                                       | `realizes`   | inbound   |
 | intra-layer | `application.applicationfunction.schema-connection-refinement-apply`                      | `realizes`   | inbound   |
 | intra-layer | `application.applicationfunction.schema-definition-refinement-apply`                      | `realizes`   | inbound   |
 | intra-layer | `application.applicationfunction.schema-extraction-apply`                                 | `realizes`   | inbound   |
@@ -5145,7 +5243,7 @@ Hexagonal port: an external reference knowledge source (search, relations, avail
 
 **Type**: `applicationservice`
 
-Reverts everything a run or proposal applied, from its change events.
+Reverts everything a run or proposal applied, from its change events; previews the later edits an in-place revert would overwrite (fields whose current value differs from the event's new_state).
 
 #### Attributes
 
@@ -5155,18 +5253,22 @@ Reverts everything a run or proposal applied, from its change events.
 
 #### Relationships
 
-| Type        | Related Element                                               | Predicate    | Direction |
-| ----------- | ------------------------------------------------------------- | ------------ | --------- |
-| inter-layer | `api.operation.revert-pipeline-run`                           | `references` | inbound   |
-| inter-layer | `api.operation.revert-proposal`                               | `references` | inbound   |
-| inter-layer | `business.businessservice.proposal-adjudication-service`      | `realizes`   | outbound  |
-| inter-layer | `product.softwarecapability.proposal-review-and-apply`        | `realizes`   | outbound  |
-| inter-layer | `motivation.requirement.every-applied-proposal-is-revertible` | `satisfies`  | outbound  |
-| intra-layer | `application.applicationservice.change-repository`            | `depends-on` | outbound  |
-| intra-layer | `application.applicationservice.individual-vector-index`      | `depends-on` | outbound  |
-| intra-layer | `application.applicationservice.ontology-repository`          | `depends-on` | outbound  |
-| intra-layer | `application.applicationservice.schema-vector-index`          | `depends-on` | outbound  |
-| intra-layer | `application.applicationservice.transaction-scope`            | `depends-on` | outbound  |
+| Type        | Related Element                                                     | Predicate    | Direction |
+| ----------- | ------------------------------------------------------------------- | ------------ | --------- |
+| inter-layer | `api.operation.preview-revert`                                      | `references` | inbound   |
+| inter-layer | `api.operation.revert-pipeline-run`                                 | `references` | inbound   |
+| inter-layer | `api.operation.revert-proposal`                                     | `references` | inbound   |
+| inter-layer | `business.businessservice.proposal-adjudication-service`            | `realizes`   | outbound  |
+| inter-layer | `product.softwarecapability.proposal-review-and-apply`              | `realizes`   | outbound  |
+| inter-layer | `motivation.requirement.every-applied-proposal-is-revertible`       | `satisfies`  | outbound  |
+| inter-layer | `motivation.requirement.in-place-revert-warns-of-overwritten-edits` | `satisfies`  | outbound  |
+| inter-layer | `testing.testcoveragetarget.revert-preview`                         | `covers`     | inbound   |
+| intra-layer | `application.applicationfunction.revert-preview`                    | `realizes`   | inbound   |
+| intra-layer | `application.applicationservice.change-repository`                  | `depends-on` | outbound  |
+| intra-layer | `application.applicationservice.individual-vector-index`            | `depends-on` | outbound  |
+| intra-layer | `application.applicationservice.ontology-repository`                | `depends-on` | outbound  |
+| intra-layer | `application.applicationservice.schema-vector-index`                | `depends-on` | outbound  |
+| intra-layer | `application.applicationservice.transaction-scope`                  | `depends-on` | outbound  |
 
 ### Schema Recognition Preview Service {#schema-recognition-preview-service}
 
@@ -5519,4 +5621,4 @@ Hexagonal port: describes the workspace and the viewed page to the chat model.
 
 ---
 
-Generated: 2026-11-24T18:43:49.876Z | Model Version: 0.1.0
+Generated: 2026-11-24T21:17:13.774Z | Model Version: 0.1.0

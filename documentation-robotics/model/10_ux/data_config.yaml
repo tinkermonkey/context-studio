@@ -2828,3 +2828,109 @@ ux.dataconfig.use-enqueue-batch-runs:
     created_at: 2026-11-24T13:56:46.248Z
     updated_at: 2026-11-24T13:56:46.248Z
     version: 1
+ux.dataconfig.use-inspector-model:
+  id: 71644fa2-805f-4aaa-83a6-70d5d04e7614
+  path: ux.dataconfig.use-inspector-model
+  spec_node_id: ux.dataconfig
+  type: dataconfig
+  layer_id: ux
+  name: useInspectorModel
+  description: Derives the inspector's data for any operation of a proposal
+    (pills, evidence, the change, why, decided record, verbs, applicable reason
+    codes) from the proposal and the entities it names.
+  attributes:
+    source: state
+    target: api.response.change-proposal-response
+  source_reference:
+    provenance: manual
+    locations:
+      - file: ux/src/components/proposals/review/useInspectorModel.ts
+        symbol: useInspectorModel
+  metadata:
+    created_at: 2026-11-19T17:00:51.604Z
+    updated_at: 2026-11-19T17:00:51.604Z
+    version: 1
+ux.dataconfig.use-revert-preview:
+  id: 2d490c95-5462-44d2-84d6-46e9e2f3caf1
+  path: ux.dataconfig.use-revert-preview
+  spec_node_id: ux.dataconfig
+  type: dataconfig
+  layer_id: ux
+  name: useRevertPreview
+  description: GET /api/proposals/{proposal_id}/revert/preview.
+  attributes:
+    source: api
+    target: api.operation.preview-revert
+  source_reference:
+    provenance: manual
+    locations:
+      - file: ux/src/api/hooks/proposals/useProposals.ts
+        symbol: useRevertPreview
+  metadata:
+    created_at: 2026-11-19T17:00:51.604Z
+    updated_at: 2026-11-19T17:00:51.604Z
+    version: 1
+ux.dataconfig.use-propose-reversal:
+  id: b7aa8378-6f6f-4389-a828-fdb4e775f4c7
+  path: ux.dataconfig.use-propose-reversal
+  spec_node_id: ux.dataconfig
+  type: dataconfig
+  layer_id: ux
+  name: useProposeReversal
+  description: POST /api/proposals/{proposal_id}/reversal.
+  attributes:
+    source: api
+    target: api.operation.propose-reversal
+  source_reference:
+    provenance: manual
+    locations:
+      - file: ux/src/api/hooks/proposals/useProposalMutations.ts
+        symbol: useProposeReversal
+  accepted_gaps:
+    - direction: outgoing
+      predicate: maps-to
+      other_spec_node_id: api.requestbody
+      reason: The mutation sends no body (POST /reversal takes only the path id).
+      decided_by: agent
+      decided_at: 2026-11-19T17:02:36.245Z
+      changeset: changeset-1795107225483-xwgktrnaj
+  metadata:
+    created_at: 2026-11-19T17:00:51.604Z
+    updated_at: 2026-11-19T17:00:51.604Z
+    version: 1
+ux.dataconfig.pane-rail-preference:
+  id: 99cabef0-ea7b-4aa5-99ab-58ffe9813012
+  path: ux.dataconfig.pane-rail-preference
+  spec_node_id: ux.dataconfig
+  type: dataconfig
+  layer_id: ux
+  name: Pane Rail Preference
+  description: Which left pane is folded, remembered per viewer in local storage.
+  attributes:
+    source: local-storage
+    target: ux.librarycomponent.pane-rail
+  source_reference:
+    provenance: manual
+    locations:
+      - file: ux/src/components/proposals/review/paneFold.ts
+        symbol: usePaneFold
+  accepted_gaps:
+    - direction: outgoing
+      predicate: maps-to
+      other_spec_node_id: api.response
+      reason: A per-viewer UI preference kept in local storage; no API behind it.
+      decided_by: agent
+      decided_at: 2026-11-19T17:02:36.894Z
+      changeset: changeset-1795107225483-xwgktrnaj
+    - direction: incoming
+      predicate: binds-to
+      other_spec_node_id: ux.subview
+      reason: Bound by the proposal detail view and its two rail instances, which own
+        the fold state; no subview reads it.
+      decided_by: agent
+      decided_at: 2026-11-19T17:02:37.569Z
+      changeset: changeset-1795107225483-xwgktrnaj
+  metadata:
+    created_at: 2026-11-19T17:00:51.604Z
+    updated_at: 2026-11-19T17:00:51.604Z
+    version: 1

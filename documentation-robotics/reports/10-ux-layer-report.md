@@ -16,257 +16,272 @@ User interface components, screens, and user experience elements.
 
 | Metric                    | Count |
 | ------------------------- | ----- |
-| Elements                  | 234   |
-| Intra-Layer Relationships | 475   |
-| Inter-Layer Relationships | 329   |
-| Inbound Relationships     | 58    |
-| Outbound Relationships    | 271   |
+| Elements                  | 249   |
+| Intra-Layer Relationships | 482   |
+| Inter-Layer Relationships | 373   |
+| Inbound Relationships     | 70    |
+| Outbound Relationships    | 303   |
 
 **Cross-Layer References**:
 
 - **Upstream layers**: [APM](./12-apm-layer-report.md), [Navigation](./11-navigation-layer-report.md), [Testing](./13-testing-layer-report.md)
-- **Downstream layers**: [API](./07-api-layer-report.md), [Business](./02-business-layer-report.md), [Product](./03-product-layer-report.md), [Security](./04-security-layer-report.md), [Technology](./06-technology-layer-report.md)
+- **Downstream layers**: [API](./07-api-layer-report.md), [Business](./02-business-layer-report.md), [Motivation](./01-motivation-layer-report.md), [Product](./03-product-layer-report.md), [Security](./04-security-layer-report.md), [Technology](./06-technology-layer-report.md)
 
 ## Intra-Layer Relationships
 
 *This layer has >30 elements. Summary table shown instead of diagram.*
 
-| Element                                              | Type               | Relationships |
-| ---------------------------------------------------- | ------------------ | ------------- |
-| `ux.actioncomponent.not-an-element-button`           | `actioncomponent`  | 1             |
-| `ux.actioncomponent.reverse-relationship-button`     | `actioncomponent`  | 1             |
-| `ux.dataconfig.use-accept-rest`                      | `dataconfig`       | 1             |
-| `ux.dataconfig.use-add-class-to-individual`          | `dataconfig`       | 1             |
-| `ux.dataconfig.use-add-proposal-individual`          | `dataconfig`       | 1             |
-| `ux.dataconfig.use-add-source`                       | `dataconfig`       | 1             |
-| `ux.dataconfig.use-all-change-proposals`             | `dataconfig`       | 1             |
-| `ux.dataconfig.use-apply-change-proposal`            | `dataconfig`       | 2             |
-| `ux.dataconfig.use-apply-reviewed-run`               | `dataconfig`       | 2             |
-| `ux.dataconfig.use-apply-run`                        | `dataconfig`       | 6             |
-| `ux.dataconfig.use-attribute-definitions-by-ids`     | `dataconfig`       | 6             |
-| `ux.dataconfig.use-build-graph`                      | `dataconfig`       | 1             |
-| `ux.dataconfig.use-cancel-extraction-run`            | `dataconfig`       | 1             |
-| `ux.dataconfig.use-change-proposal`                  | `dataconfig`       | 5             |
-| `ux.dataconfig.use-change-proposals`                 | `dataconfig`       | 7             |
-| `ux.dataconfig.use-changes`                          | `dataconfig`       | 2             |
-| `ux.dataconfig.use-chat-session`                     | `dataconfig`       | 1             |
-| `ux.dataconfig.use-chat-status`                      | `dataconfig`       | 2             |
-| `ux.dataconfig.use-claim`                            | `dataconfig`       | 1             |
-| `ux.dataconfig.use-claims`                           | `dataconfig`       | 1             |
-| `ux.dataconfig.use-class`                            | `dataconfig`       | 6             |
-| `ux.dataconfig.use-class-attribute-definitions`      | `dataconfig`       | 1             |
-| `ux.dataconfig.use-class-counts`                     | `dataconfig`       | 3             |
-| `ux.dataconfig.use-class-counts-by-scheme`           | `dataconfig`       | 2             |
-| `ux.dataconfig.use-class-search`                     | `dataconfig`       | 7             |
-| `ux.dataconfig.use-classes`                          | `dataconfig`       | 8             |
-| `ux.dataconfig.use-classes-by-ids`                   | `dataconfig`       | 17            |
-| `ux.dataconfig.use-clear-claim-verdict`              | `dataconfig`       | 1             |
-| `ux.dataconfig.use-config`                           | `dataconfig`       | 4             |
-| `ux.dataconfig.use-create-class`                     | `dataconfig`       | 2             |
-| `ux.dataconfig.use-create-configuration`             | `dataconfig`       | 1             |
-| `ux.dataconfig.use-create-dataset`                   | `dataconfig`       | 1             |
-| `ux.dataconfig.use-create-grounding-workflow`        | `dataconfig`       | 1             |
-| `ux.dataconfig.use-create-individual`                | `dataconfig`       | 2             |
-| `ux.dataconfig.use-create-property`                  | `dataconfig`       | 2             |
-| `ux.dataconfig.use-create-relationship`              | `dataconfig`       | 2             |
-| `ux.dataconfig.use-create-scheme`                    | `dataconfig`       | 2             |
-| `ux.dataconfig.use-create-taxonomy`                  | `dataconfig`       | 2             |
-| `ux.dataconfig.use-datasets`                         | `dataconfig`       | 21            |
-| `ux.dataconfig.use-decide-pair`                      | `dataconfig`       | 1             |
-| `ux.dataconfig.use-delete-class`                     | `dataconfig`       | 2             |
-| `ux.dataconfig.use-delete-configuration`             | `dataconfig`       | 1             |
-| `ux.dataconfig.use-delete-dataset`                   | `dataconfig`       | 1             |
-| `ux.dataconfig.use-delete-grounding-workflow`        | `dataconfig`       | 2             |
-| `ux.dataconfig.use-delete-individual`                | `dataconfig`       | 2             |
-| `ux.dataconfig.use-delete-property`                  | `dataconfig`       | 2             |
-| `ux.dataconfig.use-delete-relationship`              | `dataconfig`       | 2             |
-| `ux.dataconfig.use-delete-scheme`                    | `dataconfig`       | 2             |
-| `ux.dataconfig.use-delete-taxonomy`                  | `dataconfig`       | 2             |
-| `ux.dataconfig.use-demo-datasets`                    | `dataconfig`       | 1             |
-| `ux.dataconfig.use-dr-spec-drift`                    | `dataconfig`       | 1             |
-| `ux.dataconfig.use-edge-attributes`                  | `dataconfig`       | 1             |
-| `ux.dataconfig.use-enqueue-batch-runs`               | `dataconfig`       | 1             |
-| `ux.dataconfig.use-entities-by-id`                   | `dataconfig`       | 6             |
-| `ux.dataconfig.use-entity-counts`                    | `dataconfig`       | 6             |
-| `ux.dataconfig.use-entity-sources`                   | `dataconfig`       | 2             |
-| `ux.dataconfig.use-entity-type-query`                | `dataconfig`       | 6             |
-| `ux.dataconfig.use-export-bundle`                    | `dataconfig`       | 1             |
-| `ux.dataconfig.use-export-claims`                    | `dataconfig`       | 1             |
-| `ux.dataconfig.use-export-proposal-decisions`        | `dataconfig`       | 2             |
-| `ux.dataconfig.use-extract-source`                   | `dataconfig`       | 1             |
-| `ux.dataconfig.use-extraction-examples`              | `dataconfig`       | 3             |
-| `ux.dataconfig.use-extraction-review-runs`           | `dataconfig`       | 3             |
-| `ux.dataconfig.use-extraction-run`                   | `dataconfig`       | 2             |
-| `ux.dataconfig.use-graph-metrics`                    | `dataconfig`       | 1             |
-| `ux.dataconfig.use-graph-view`                       | `dataconfig`       | 1             |
-| `ux.dataconfig.use-grounding-workflow`               | `dataconfig`       | 1             |
-| `ux.dataconfig.use-grounding-workflow-runs`          | `dataconfig`       | 1             |
-| `ux.dataconfig.use-grounding-workflows`              | `dataconfig`       | 1             |
-| `ux.dataconfig.use-health`                           | `dataconfig`       | 3             |
-| `ux.dataconfig.use-individual`                       | `dataconfig`       | 2             |
-| `ux.dataconfig.use-individual-extraction-candidates` | `dataconfig`       | 3             |
-| `ux.dataconfig.use-individual-inherited-properties`  | `dataconfig`       | 1             |
-| `ux.dataconfig.use-individual-search`                | `dataconfig`       | 1             |
-| `ux.dataconfig.use-individuals`                      | `dataconfig`       | 8             |
-| `ux.dataconfig.use-individuals-by-ids`               | `dataconfig`       | 6             |
-| `ux.dataconfig.use-individuals-in-classes`           | `dataconfig`       | 1             |
-| `ux.dataconfig.use-load-demo-dataset`                | `dataconfig`       | 1             |
-| `ux.dataconfig.use-mcp-connection`                   | `dataconfig`       | 1             |
-| `ux.dataconfig.use-move-class`                       | `dataconfig`       | 2             |
-| `ux.dataconfig.use-move-scheme`                      | `dataconfig`       | 1             |
-| `ux.dataconfig.use-parameter-bounds`                 | `dataconfig`       | 1             |
-| `ux.dataconfig.use-pipeline-candidates`              | `dataconfig`       | 5             |
-| `ux.dataconfig.use-pipeline-configurations`          | `dataconfig`       | 10            |
-| `ux.dataconfig.use-pipeline-implementations`         | `dataconfig`       | 11            |
-| `ux.dataconfig.use-pipeline-run`                     | `dataconfig`       | 9             |
-| `ux.dataconfig.use-pipeline-run-change-events`       | `dataconfig`       | 1             |
-| `ux.dataconfig.use-pipeline-runs`                    | `dataconfig`       | 4             |
-| `ux.dataconfig.use-pipeline-types`                   | `dataconfig`       | 2             |
-| `ux.dataconfig.use-predicates-by-ids`                | `dataconfig`       | 6             |
-| `ux.dataconfig.use-properties`                       | `dataconfig`       | 7             |
-| `ux.dataconfig.use-properties-by-ids`                | `dataconfig`       | 13            |
-| `ux.dataconfig.use-proposal-comparison`              | `dataconfig`       | 1             |
-| `ux.dataconfig.use-proposal-decisions`               | `dataconfig`       | 1             |
-| `ux.dataconfig.use-publish-diff-stats`               | `dataconfig`       | 1             |
-| `ux.dataconfig.use-publish-taxonomy`                 | `dataconfig`       | 1             |
-| `ux.dataconfig.use-pull-sync`                        | `dataconfig`       | 1             |
-| `ux.dataconfig.use-push-sync`                        | `dataconfig`       | 1             |
-| `ux.dataconfig.use-recognition-preview`              | `dataconfig`       | 2             |
-| `ux.dataconfig.use-reference-status`                 | `dataconfig`       | 4             |
-| `ux.dataconfig.use-registered-models`                | `dataconfig`       | 1             |
-| `ux.dataconfig.use-reject-change-proposal`           | `dataconfig`       | 2             |
-| `ux.dataconfig.use-relationships`                    | `dataconfig`       | 4             |
-| `ux.dataconfig.use-relationships-by-ids`             | `dataconfig`       | 6             |
-| `ux.dataconfig.use-relationships-touching`           | `dataconfig`       | 1             |
-| `ux.dataconfig.use-remove-class-from-individual`     | `dataconfig`       | 1             |
-| `ux.dataconfig.use-remove-source`                    | `dataconfig`       | 1             |
-| `ux.dataconfig.use-reopen-proposal-operations`       | `dataconfig`       | 2             |
-| `ux.dataconfig.use-reorder-individual-classes`       | `dataconfig`       | 1             |
-| `ux.dataconfig.use-revert-change-proposal`           | `dataconfig`       | 2             |
-| `ux.dataconfig.use-revert-run`                       | `dataconfig`       | 3             |
-| `ux.dataconfig.use-run-grounding-workflow`           | `dataconfig`       | 2             |
-| `ux.dataconfig.use-run-pipeline`                     | `dataconfig`       | 5             |
-| `ux.dataconfig.use-run-wizard`                       | `dataconfig`       | 5             |
-| `ux.dataconfig.use-schema-extraction-candidates`     | `dataconfig`       | 3             |
-| `ux.dataconfig.use-scheme`                           | `dataconfig`       | 3             |
-| `ux.dataconfig.use-scheme-counts`                    | `dataconfig`       | 2             |
-| `ux.dataconfig.use-scheme-counts-for-taxonomies`     | `dataconfig`       | 1             |
-| `ux.dataconfig.use-schemes`                          | `dataconfig`       | 13            |
-| `ux.dataconfig.use-schemes-by-ids`                   | `dataconfig`       | 8             |
-| `ux.dataconfig.use-set-claim-verdict`                | `dataconfig`       | 1             |
-| `ux.dataconfig.use-set-property-relevance`           | `dataconfig`       | 1             |
-| `ux.dataconfig.use-shortest-path`                    | `dataconfig`       | 1             |
-| `ux.dataconfig.use-source`                           | `dataconfig`       | 6             |
-| `ux.dataconfig.use-source-text`                      | `dataconfig`       | 4             |
-| `ux.dataconfig.use-sources`                          | `dataconfig`       | 1             |
-| `ux.dataconfig.use-sources-by-ids`                   | `dataconfig`       | 2             |
-| `ux.dataconfig.use-sparql-query`                     | `dataconfig`       | 1             |
-| `ux.dataconfig.use-stats-trends`                     | `dataconfig`       | 1             |
-| `ux.dataconfig.use-sync-status`                      | `dataconfig`       | 2             |
-| `ux.dataconfig.use-taxonomies`                       | `dataconfig`       | 15            |
-| `ux.dataconfig.use-taxonomies-by-ids`                | `dataconfig`       | 6             |
-| `ux.dataconfig.use-taxonomy`                         | `dataconfig`       | 7             |
-| `ux.dataconfig.use-taxonomy-classes`                 | `dataconfig`       | 3             |
-| `ux.dataconfig.use-taxonomy-predicates`              | `dataconfig`       | 3             |
-| `ux.dataconfig.use-update-class`                     | `dataconfig`       | 2             |
-| `ux.dataconfig.use-update-config`                    | `dataconfig`       | 1             |
-| `ux.dataconfig.use-update-configuration`             | `dataconfig`       | 1             |
-| `ux.dataconfig.use-update-grounding-workflow`        | `dataconfig`       | 1             |
-| `ux.dataconfig.use-update-individual`                | `dataconfig`       | 1             |
-| `ux.dataconfig.use-update-property`                  | `dataconfig`       | 1             |
-| `ux.dataconfig.use-update-scheme`                    | `dataconfig`       | 2             |
-| `ux.dataconfig.use-update-taxonomy`                  | `dataconfig`       | 2             |
-| `ux.experiencestate.entity-crud-state`               | `experiencestate`  | 1             |
-| `ux.librarycomponent.app-ui-primitives`              | `librarycomponent` | 7             |
-| `ux.librarycomponent.editable-field`                 | `librarycomponent` | 1             |
-| `ux.librarycomponent.empty-state`                    | `librarycomponent` | 1             |
-| `ux.librarycomponent.error-banner`                   | `librarycomponent` | 1             |
-| `ux.librarycomponent.error-boundary`                 | `librarycomponent` | 1             |
-| `ux.librarycomponent.inline-inspector`               | `librarycomponent` | 1             |
-| `ux.librarycomponent.toast`                          | `librarycomponent` | 1             |
-| `ux.librarycomponent.type-to-confirm-dialog`         | `librarycomponent` | 1             |
-| `ux.statepattern.crud-entity-pattern`                | `statepattern`     | 1             |
-| `ux.subview.add-source-panel`                        | `subview`          | 2             |
-| `ux.subview.change-history-list`                     | `subview`          | 2             |
-| `ux.subview.chat-panel`                              | `subview`          | 5             |
-| `ux.subview.claim-inspector`                         | `subview`          | 6             |
-| `ux.subview.connection-refinement-review`            | `subview`          | 1             |
-| `ux.subview.connection-refinement-wizard`            | `subview`          | 7             |
-| `ux.subview.definition-refinement-review`            | `subview`          | 1             |
-| `ux.subview.definition-refinement-wizard`            | `subview`          | 7             |
-| `ux.subview.entity-navigator`                        | `subview`          | 14            |
-| `ux.subview.extract-run-panel`                       | `subview`          | 2             |
-| `ux.subview.graph-canvas`                            | `subview`          | 1             |
-| `ux.subview.graph-node-inspector`                    | `subview`          | 1             |
-| `ux.subview.grounding-review`                        | `subview`          | 1             |
-| `ux.subview.hierarchy-tree`                          | `subview`          | 8             |
-| `ux.subview.in-use-resolver`                         | `subview`          | 1             |
-| `ux.subview.individual-candidate-review`             | `subview`          | 15            |
-| `ux.subview.individual-extraction-wizard`            | `subview`          | 7             |
-| `ux.subview.mcp-connection-panel`                    | `subview`          | 2             |
-| `ux.subview.metrics-panel`                           | `subview`          | 2             |
-| `ux.subview.operation-inspector`                     | `subview`          | 12            |
-| `ux.subview.path-finder`                             | `subview`          | 3             |
-| `ux.subview.review-inspector`                        | `subview`          | 4             |
-| `ux.subview.schema-candidate-review`                 | `subview`          | 16            |
-| `ux.subview.schema-extraction-wizard`                | `subview`          | 6             |
-| `ux.subview.schema-grounding-wizard`                 | `subview`          | 8             |
-| `ux.subview.sparql-editor`                           | `subview`          | 2             |
-| `ux.subview.status-bar-sync`                         | `subview`          | 2             |
-| `ux.subview.sync-status`                             | `subview`          | 5             |
-| `ux.uxapplication.context-studio-spa`                | `uxapplication`    | 1             |
-| `ux.uxlibrary.heimdall-ui-library`                   | `uxlibrary`        | 1             |
-| `ux.uxspec.ontology-editor-ux-spec`                  | `uxspec`           | 2             |
-| `ux.view.app-shell-view`                             | `view`             | 10            |
-| `ux.view.batch-detail-view`                          | `view`             | 0             |
-| `ux.view.benchmark-gold-view`                        | `view`             | 1             |
-| `ux.view.cascade-delete-dialog`                      | `view`             | 0             |
-| `ux.view.claims-view`                                | `view`             | 10            |
-| `ux.view.class-detail-view`                          | `view`             | 20            |
-| `ux.view.class-drawer`                               | `view`             | 16            |
-| `ux.view.classes-view`                               | `view`             | 7             |
-| `ux.view.command-palette`                            | `view`             | 0             |
-| `ux.view.concept-scheme-detail-view`                 | `view`             | 8             |
-| `ux.view.concept-schemes-index-view`                 | `view`             | 6             |
-| `ux.view.concept-schemes-view`                       | `view`             | 0             |
-| `ux.view.contact-sheet-view`                         | `view`             | 0             |
-| `ux.view.create-dataset-modal`                       | `view`             | 1             |
-| `ux.view.create-drawer`                              | `view`             | 17            |
-| `ux.view.dashboard-view`                             | `view`             | 9             |
-| `ux.view.datasets-view`                              | `view`             | 3             |
-| `ux.view.delete-dataset-dialog`                      | `view`             | 0             |
-| `ux.view.dr-spec-drift-dialog`                       | `view`             | 1             |
-| `ux.view.extract-source-view`                        | `view`             | 9             |
-| `ux.view.extraction-review-view`                     | `view`             | 12            |
-| `ux.view.graph-view`                                 | `view`             | 9             |
-| `ux.view.grounding-workflow-drawer`                  | `view`             | 5             |
-| `ux.view.grounding-workflows-view`                   | `view`             | 7             |
-| `ux.view.individual-detail-view`                     | `view`             | 11            |
-| `ux.view.individual-drawer`                          | `view`             | 13            |
-| `ux.view.individuals-view`                           | `view`             | 5             |
-| `ux.view.pipeline-runs-view`                         | `view`             | 3             |
-| `ux.view.pipelines-view`                             | `view`             | 9             |
-| `ux.view.properties-view`                            | `view`             | 4             |
-| `ux.view.property-drawer`                            | `view`             | 18            |
-| `ux.view.proposal-compare-view`                      | `view`             | 9             |
-| `ux.view.proposal-detail-view`                       | `view`             | 25            |
-| `ux.view.proposal-review-view`                       | `view`             | 27            |
-| `ux.view.proposals-view`                             | `view`             | 2             |
-| `ux.view.reference-source-drawer`                    | `view`             | 1             |
-| `ux.view.reference-sources-view`                     | `view`             | 1             |
-| `ux.view.relationship-drawer`                        | `view`             | 7             |
-| `ux.view.relationships-view`                         | `view`             | 7             |
-| `ux.view.run-detail-drawer`                          | `view`             | 7             |
-| `ux.view.run-wizard-view`                            | `view`             | 5             |
-| `ux.view.scheme-drawer`                              | `view`             | 8             |
-| `ux.view.settings-view`                              | `view`             | 4             |
-| `ux.view.sources-view`                               | `view`             | 6             |
-| `ux.view.taxonomies-view`                            | `view`             | 4             |
-| `ux.view.taxonomy-detail-view`                       | `view`             | 16            |
-| `ux.view.taxonomy-drawer`                            | `view`             | 9             |
-| `ux.view.taxonomy-publish-dialog`                    | `view`             | 2             |
-| `ux.view.versioning-view`                            | `view`             | 2             |
-| `ux.view.welcome-view`                               | `view`             | 1             |
+| Element                                              | Type                | Relationships |
+| ---------------------------------------------------- | ------------------- | ------------- |
+| `ux.actioncomponent.bulk-select`                     | `actioncomponent`   | 3             |
+| `ux.actioncomponent.not-an-element-button`           | `actioncomponent`   | 1             |
+| `ux.actioncomponent.reject-reason-picker`            | `actioncomponent`   | 2             |
+| `ux.actioncomponent.reverse-relationship-button`     | `actioncomponent`   | 1             |
+| `ux.actioncomponent.revert-control`                  | `actioncomponent`   | 4             |
+| `ux.actioncomponent.wide-diff-button`                | `actioncomponent`   | 3             |
+| `ux.componentinstance.list-rail`                     | `componentinstance` | 3             |
+| `ux.componentinstance.source-rail`                   | `componentinstance` | 3             |
+| `ux.componentinstance.wide-field-diff`               | `componentinstance` | 2             |
+| `ux.dataconfig.pane-rail-preference`                 | `dataconfig`        | 3             |
+| `ux.dataconfig.use-accept-rest`                      | `dataconfig`        | 1             |
+| `ux.dataconfig.use-add-class-to-individual`          | `dataconfig`        | 1             |
+| `ux.dataconfig.use-add-proposal-individual`          | `dataconfig`        | 1             |
+| `ux.dataconfig.use-add-source`                       | `dataconfig`        | 1             |
+| `ux.dataconfig.use-all-change-proposals`             | `dataconfig`        | 1             |
+| `ux.dataconfig.use-apply-change-proposal`            | `dataconfig`        | 2             |
+| `ux.dataconfig.use-apply-reviewed-run`               | `dataconfig`        | 2             |
+| `ux.dataconfig.use-apply-run`                        | `dataconfig`        | 6             |
+| `ux.dataconfig.use-attribute-definitions-by-ids`     | `dataconfig`        | 5             |
+| `ux.dataconfig.use-build-graph`                      | `dataconfig`        | 1             |
+| `ux.dataconfig.use-cancel-extraction-run`            | `dataconfig`        | 1             |
+| `ux.dataconfig.use-change-proposal`                  | `dataconfig`        | 6             |
+| `ux.dataconfig.use-change-proposals`                 | `dataconfig`        | 6             |
+| `ux.dataconfig.use-changes`                          | `dataconfig`        | 2             |
+| `ux.dataconfig.use-chat-session`                     | `dataconfig`        | 1             |
+| `ux.dataconfig.use-chat-status`                      | `dataconfig`        | 2             |
+| `ux.dataconfig.use-claim`                            | `dataconfig`        | 1             |
+| `ux.dataconfig.use-claims`                           | `dataconfig`        | 1             |
+| `ux.dataconfig.use-class`                            | `dataconfig`        | 6             |
+| `ux.dataconfig.use-class-attribute-definitions`      | `dataconfig`        | 1             |
+| `ux.dataconfig.use-class-counts`                     | `dataconfig`        | 3             |
+| `ux.dataconfig.use-class-counts-by-scheme`           | `dataconfig`        | 2             |
+| `ux.dataconfig.use-class-search`                     | `dataconfig`        | 7             |
+| `ux.dataconfig.use-classes`                          | `dataconfig`        | 8             |
+| `ux.dataconfig.use-classes-by-ids`                   | `dataconfig`        | 16            |
+| `ux.dataconfig.use-clear-claim-verdict`              | `dataconfig`        | 1             |
+| `ux.dataconfig.use-config`                           | `dataconfig`        | 4             |
+| `ux.dataconfig.use-create-class`                     | `dataconfig`        | 2             |
+| `ux.dataconfig.use-create-configuration`             | `dataconfig`        | 1             |
+| `ux.dataconfig.use-create-dataset`                   | `dataconfig`        | 1             |
+| `ux.dataconfig.use-create-grounding-workflow`        | `dataconfig`        | 1             |
+| `ux.dataconfig.use-create-individual`                | `dataconfig`        | 2             |
+| `ux.dataconfig.use-create-property`                  | `dataconfig`        | 2             |
+| `ux.dataconfig.use-create-relationship`              | `dataconfig`        | 2             |
+| `ux.dataconfig.use-create-scheme`                    | `dataconfig`        | 2             |
+| `ux.dataconfig.use-create-taxonomy`                  | `dataconfig`        | 2             |
+| `ux.dataconfig.use-datasets`                         | `dataconfig`        | 19            |
+| `ux.dataconfig.use-decide-pair`                      | `dataconfig`        | 1             |
+| `ux.dataconfig.use-delete-class`                     | `dataconfig`        | 2             |
+| `ux.dataconfig.use-delete-configuration`             | `dataconfig`        | 1             |
+| `ux.dataconfig.use-delete-dataset`                   | `dataconfig`        | 1             |
+| `ux.dataconfig.use-delete-grounding-workflow`        | `dataconfig`        | 2             |
+| `ux.dataconfig.use-delete-individual`                | `dataconfig`        | 2             |
+| `ux.dataconfig.use-delete-property`                  | `dataconfig`        | 2             |
+| `ux.dataconfig.use-delete-relationship`              | `dataconfig`        | 2             |
+| `ux.dataconfig.use-delete-scheme`                    | `dataconfig`        | 2             |
+| `ux.dataconfig.use-delete-taxonomy`                  | `dataconfig`        | 2             |
+| `ux.dataconfig.use-demo-datasets`                    | `dataconfig`        | 1             |
+| `ux.dataconfig.use-dr-spec-drift`                    | `dataconfig`        | 1             |
+| `ux.dataconfig.use-edge-attributes`                  | `dataconfig`        | 1             |
+| `ux.dataconfig.use-enqueue-batch-runs`               | `dataconfig`        | 1             |
+| `ux.dataconfig.use-entities-by-id`                   | `dataconfig`        | 6             |
+| `ux.dataconfig.use-entity-counts`                    | `dataconfig`        | 6             |
+| `ux.dataconfig.use-entity-sources`                   | `dataconfig`        | 2             |
+| `ux.dataconfig.use-entity-type-query`                | `dataconfig`        | 6             |
+| `ux.dataconfig.use-export-bundle`                    | `dataconfig`        | 1             |
+| `ux.dataconfig.use-export-claims`                    | `dataconfig`        | 1             |
+| `ux.dataconfig.use-export-proposal-decisions`        | `dataconfig`        | 1             |
+| `ux.dataconfig.use-extract-source`                   | `dataconfig`        | 1             |
+| `ux.dataconfig.use-extraction-examples`              | `dataconfig`        | 3             |
+| `ux.dataconfig.use-extraction-review-runs`           | `dataconfig`        | 3             |
+| `ux.dataconfig.use-extraction-run`                   | `dataconfig`        | 2             |
+| `ux.dataconfig.use-graph-metrics`                    | `dataconfig`        | 1             |
+| `ux.dataconfig.use-graph-view`                       | `dataconfig`        | 1             |
+| `ux.dataconfig.use-grounding-workflow`               | `dataconfig`        | 1             |
+| `ux.dataconfig.use-grounding-workflow-runs`          | `dataconfig`        | 1             |
+| `ux.dataconfig.use-grounding-workflows`              | `dataconfig`        | 1             |
+| `ux.dataconfig.use-health`                           | `dataconfig`        | 3             |
+| `ux.dataconfig.use-individual`                       | `dataconfig`        | 2             |
+| `ux.dataconfig.use-individual-extraction-candidates` | `dataconfig`        | 3             |
+| `ux.dataconfig.use-individual-inherited-properties`  | `dataconfig`        | 1             |
+| `ux.dataconfig.use-individual-search`                | `dataconfig`        | 1             |
+| `ux.dataconfig.use-individuals`                      | `dataconfig`        | 8             |
+| `ux.dataconfig.use-individuals-by-ids`               | `dataconfig`        | 5             |
+| `ux.dataconfig.use-individuals-in-classes`           | `dataconfig`        | 1             |
+| `ux.dataconfig.use-inspector-model`                  | `dataconfig`        | 5             |
+| `ux.dataconfig.use-load-demo-dataset`                | `dataconfig`        | 1             |
+| `ux.dataconfig.use-mcp-connection`                   | `dataconfig`        | 1             |
+| `ux.dataconfig.use-move-class`                       | `dataconfig`        | 2             |
+| `ux.dataconfig.use-move-scheme`                      | `dataconfig`        | 1             |
+| `ux.dataconfig.use-parameter-bounds`                 | `dataconfig`        | 1             |
+| `ux.dataconfig.use-pipeline-candidates`              | `dataconfig`        | 5             |
+| `ux.dataconfig.use-pipeline-configurations`          | `dataconfig`        | 10            |
+| `ux.dataconfig.use-pipeline-implementations`         | `dataconfig`        | 11            |
+| `ux.dataconfig.use-pipeline-run`                     | `dataconfig`        | 9             |
+| `ux.dataconfig.use-pipeline-run-change-events`       | `dataconfig`        | 1             |
+| `ux.dataconfig.use-pipeline-runs`                    | `dataconfig`        | 4             |
+| `ux.dataconfig.use-pipeline-types`                   | `dataconfig`        | 2             |
+| `ux.dataconfig.use-predicates-by-ids`                | `dataconfig`        | 5             |
+| `ux.dataconfig.use-properties`                       | `dataconfig`        | 6             |
+| `ux.dataconfig.use-properties-by-ids`                | `dataconfig`        | 12            |
+| `ux.dataconfig.use-proposal-comparison`              | `dataconfig`        | 1             |
+| `ux.dataconfig.use-proposal-decisions`               | `dataconfig`        | 1             |
+| `ux.dataconfig.use-propose-reversal`                 | `dataconfig`        | 1             |
+| `ux.dataconfig.use-publish-diff-stats`               | `dataconfig`        | 1             |
+| `ux.dataconfig.use-publish-taxonomy`                 | `dataconfig`        | 1             |
+| `ux.dataconfig.use-pull-sync`                        | `dataconfig`        | 1             |
+| `ux.dataconfig.use-push-sync`                        | `dataconfig`        | 1             |
+| `ux.dataconfig.use-recognition-preview`              | `dataconfig`        | 2             |
+| `ux.dataconfig.use-reference-status`                 | `dataconfig`        | 4             |
+| `ux.dataconfig.use-registered-models`                | `dataconfig`        | 1             |
+| `ux.dataconfig.use-reject-change-proposal`           | `dataconfig`        | 3             |
+| `ux.dataconfig.use-relationships`                    | `dataconfig`        | 4             |
+| `ux.dataconfig.use-relationships-by-ids`             | `dataconfig`        | 5             |
+| `ux.dataconfig.use-relationships-touching`           | `dataconfig`        | 1             |
+| `ux.dataconfig.use-remove-class-from-individual`     | `dataconfig`        | 1             |
+| `ux.dataconfig.use-remove-source`                    | `dataconfig`        | 1             |
+| `ux.dataconfig.use-reopen-proposal-operations`       | `dataconfig`        | 1             |
+| `ux.dataconfig.use-reorder-individual-classes`       | `dataconfig`        | 1             |
+| `ux.dataconfig.use-revert-change-proposal`           | `dataconfig`        | 2             |
+| `ux.dataconfig.use-revert-preview`                   | `dataconfig`        | 1             |
+| `ux.dataconfig.use-revert-run`                       | `dataconfig`        | 3             |
+| `ux.dataconfig.use-run-grounding-workflow`           | `dataconfig`        | 2             |
+| `ux.dataconfig.use-run-pipeline`                     | `dataconfig`        | 5             |
+| `ux.dataconfig.use-run-wizard`                       | `dataconfig`        | 5             |
+| `ux.dataconfig.use-schema-extraction-candidates`     | `dataconfig`        | 3             |
+| `ux.dataconfig.use-scheme`                           | `dataconfig`        | 3             |
+| `ux.dataconfig.use-scheme-counts`                    | `dataconfig`        | 2             |
+| `ux.dataconfig.use-scheme-counts-for-taxonomies`     | `dataconfig`        | 1             |
+| `ux.dataconfig.use-schemes`                          | `dataconfig`        | 13            |
+| `ux.dataconfig.use-schemes-by-ids`                   | `dataconfig`        | 7             |
+| `ux.dataconfig.use-set-claim-verdict`                | `dataconfig`        | 1             |
+| `ux.dataconfig.use-set-property-relevance`           | `dataconfig`        | 1             |
+| `ux.dataconfig.use-shortest-path`                    | `dataconfig`        | 1             |
+| `ux.dataconfig.use-source`                           | `dataconfig`        | 4             |
+| `ux.dataconfig.use-source-text`                      | `dataconfig`        | 2             |
+| `ux.dataconfig.use-sources`                          | `dataconfig`        | 1             |
+| `ux.dataconfig.use-sources-by-ids`                   | `dataconfig`        | 2             |
+| `ux.dataconfig.use-sparql-query`                     | `dataconfig`        | 1             |
+| `ux.dataconfig.use-stats-trends`                     | `dataconfig`        | 1             |
+| `ux.dataconfig.use-sync-status`                      | `dataconfig`        | 2             |
+| `ux.dataconfig.use-taxonomies`                       | `dataconfig`        | 15            |
+| `ux.dataconfig.use-taxonomies-by-ids`                | `dataconfig`        | 5             |
+| `ux.dataconfig.use-taxonomy`                         | `dataconfig`        | 7             |
+| `ux.dataconfig.use-taxonomy-classes`                 | `dataconfig`        | 2             |
+| `ux.dataconfig.use-taxonomy-predicates`              | `dataconfig`        | 2             |
+| `ux.dataconfig.use-update-class`                     | `dataconfig`        | 2             |
+| `ux.dataconfig.use-update-config`                    | `dataconfig`        | 1             |
+| `ux.dataconfig.use-update-configuration`             | `dataconfig`        | 1             |
+| `ux.dataconfig.use-update-grounding-workflow`        | `dataconfig`        | 1             |
+| `ux.dataconfig.use-update-individual`                | `dataconfig`        | 1             |
+| `ux.dataconfig.use-update-property`                  | `dataconfig`        | 1             |
+| `ux.dataconfig.use-update-scheme`                    | `dataconfig`        | 2             |
+| `ux.dataconfig.use-update-taxonomy`                  | `dataconfig`        | 2             |
+| `ux.experiencestate.entity-crud-state`               | `experiencestate`   | 1             |
+| `ux.librarycomponent.app-ui-primitives`              | `librarycomponent`  | 7             |
+| `ux.librarycomponent.editable-field`                 | `librarycomponent`  | 1             |
+| `ux.librarycomponent.empty-state`                    | `librarycomponent`  | 1             |
+| `ux.librarycomponent.error-banner`                   | `librarycomponent`  | 1             |
+| `ux.librarycomponent.error-boundary`                 | `librarycomponent`  | 1             |
+| `ux.librarycomponent.inline-inspector`               | `librarycomponent`  | 1             |
+| `ux.librarycomponent.pane-rail`                      | `librarycomponent`  | 3             |
+| `ux.librarycomponent.side-by-side-diff`              | `librarycomponent`  | 2             |
+| `ux.librarycomponent.toast`                          | `librarycomponent`  | 1             |
+| `ux.librarycomponent.type-to-confirm-dialog`         | `librarycomponent`  | 1             |
+| `ux.statepattern.crud-entity-pattern`                | `statepattern`      | 1             |
+| `ux.subview.add-source-panel`                        | `subview`           | 2             |
+| `ux.subview.change-history-list`                     | `subview`           | 2             |
+| `ux.subview.chat-panel`                              | `subview`           | 5             |
+| `ux.subview.claim-inspector`                         | `subview`           | 6             |
+| `ux.subview.connection-refinement-review`            | `subview`           | 1             |
+| `ux.subview.connection-refinement-wizard`            | `subview`           | 7             |
+| `ux.subview.definition-refinement-review`            | `subview`           | 1             |
+| `ux.subview.definition-refinement-wizard`            | `subview`           | 7             |
+| `ux.subview.entity-navigator`                        | `subview`           | 14            |
+| `ux.subview.extract-run-panel`                       | `subview`           | 2             |
+| `ux.subview.graph-canvas`                            | `subview`           | 1             |
+| `ux.subview.graph-node-inspector`                    | `subview`           | 1             |
+| `ux.subview.grounding-review`                        | `subview`           | 1             |
+| `ux.subview.hierarchy-tree`                          | `subview`           | 8             |
+| `ux.subview.in-use-resolver`                         | `subview`           | 1             |
+| `ux.subview.individual-candidate-review`             | `subview`           | 15            |
+| `ux.subview.individual-extraction-wizard`            | `subview`           | 7             |
+| `ux.subview.mcp-connection-panel`                    | `subview`           | 2             |
+| `ux.subview.metrics-panel`                           | `subview`           | 2             |
+| `ux.subview.path-finder`                             | `subview`           | 3             |
+| `ux.subview.review-elements-pane`                    | `subview`           | 3             |
+| `ux.subview.review-inspector`                        | `subview`           | 13            |
+| `ux.subview.schema-candidate-review`                 | `subview`           | 16            |
+| `ux.subview.schema-extraction-wizard`                | `subview`           | 6             |
+| `ux.subview.schema-grounding-wizard`                 | `subview`           | 8             |
+| `ux.subview.sparql-editor`                           | `subview`           | 2             |
+| `ux.subview.status-bar-sync`                         | `subview`           | 2             |
+| `ux.subview.sync-status`                             | `subview`           | 5             |
+| `ux.uxapplication.context-studio-spa`                | `uxapplication`     | 1             |
+| `ux.uxlibrary.heimdall-ui-library`                   | `uxlibrary`         | 3             |
+| `ux.uxspec.ontology-editor-ux-spec`                  | `uxspec`            | 2             |
+| `ux.view.app-shell-view`                             | `view`              | 10            |
+| `ux.view.batch-detail-view`                          | `view`              | 0             |
+| `ux.view.benchmark-gold-view`                        | `view`              | 1             |
+| `ux.view.cascade-delete-dialog`                      | `view`              | 0             |
+| `ux.view.claims-view`                                | `view`              | 10            |
+| `ux.view.class-detail-view`                          | `view`              | 20            |
+| `ux.view.class-drawer`                               | `view`              | 16            |
+| `ux.view.classes-view`                               | `view`              | 7             |
+| `ux.view.command-palette`                            | `view`              | 0             |
+| `ux.view.concept-scheme-detail-view`                 | `view`              | 8             |
+| `ux.view.concept-schemes-index-view`                 | `view`              | 6             |
+| `ux.view.concept-schemes-view`                       | `view`              | 0             |
+| `ux.view.contact-sheet-view`                         | `view`              | 0             |
+| `ux.view.create-dataset-modal`                       | `view`              | 1             |
+| `ux.view.create-drawer`                              | `view`              | 17            |
+| `ux.view.dashboard-view`                             | `view`              | 9             |
+| `ux.view.datasets-view`                              | `view`              | 3             |
+| `ux.view.delete-dataset-dialog`                      | `view`              | 0             |
+| `ux.view.dr-spec-drift-dialog`                       | `view`              | 1             |
+| `ux.view.extract-source-view`                        | `view`              | 9             |
+| `ux.view.extraction-review-view`                     | `view`              | 12            |
+| `ux.view.graph-view`                                 | `view`              | 9             |
+| `ux.view.grounding-workflow-drawer`                  | `view`              | 5             |
+| `ux.view.grounding-workflows-view`                   | `view`              | 7             |
+| `ux.view.individual-detail-view`                     | `view`              | 11            |
+| `ux.view.individual-drawer`                          | `view`              | 13            |
+| `ux.view.individuals-view`                           | `view`              | 5             |
+| `ux.view.pipeline-runs-view`                         | `view`              | 3             |
+| `ux.view.pipelines-view`                             | `view`              | 9             |
+| `ux.view.properties-view`                            | `view`              | 4             |
+| `ux.view.property-drawer`                            | `view`              | 18            |
+| `ux.view.proposal-compare-view`                      | `view`              | 9             |
+| `ux.view.proposal-detail-view`                       | `view`              | 39            |
+| `ux.view.proposals-view`                             | `view`              | 2             |
+| `ux.view.propose-reversal-dialog`                    | `view`              | 2             |
+| `ux.view.reference-source-drawer`                    | `view`              | 1             |
+| `ux.view.reference-sources-view`                     | `view`              | 1             |
+| `ux.view.relationship-drawer`                        | `view`              | 7             |
+| `ux.view.relationships-view`                         | `view`              | 7             |
+| `ux.view.revert-proposal-dialog`                     | `view`              | 3             |
+| `ux.view.run-detail-drawer`                          | `view`              | 7             |
+| `ux.view.run-wizard-view`                            | `view`              | 5             |
+| `ux.view.scheme-drawer`                              | `view`              | 8             |
+| `ux.view.settings-view`                              | `view`              | 4             |
+| `ux.view.sources-view`                               | `view`              | 6             |
+| `ux.view.taxonomies-view`                            | `view`              | 4             |
+| `ux.view.taxonomy-detail-view`                       | `view`              | 16            |
+| `ux.view.taxonomy-drawer`                            | `view`              | 9             |
+| `ux.view.taxonomy-publish-dialog`                    | `view`              | 2             |
+| `ux.view.versioning-view`                            | `view`              | 2             |
+| `ux.view.welcome-view`                               | `view`              | 1             |
+| `ux.view.wide-diff-overlay`                          | `view`              | 3             |
 
 ## Inter-Layer Dependencies
 
@@ -291,6 +306,7 @@ flowchart TB
   testing --> ux
   ux --> api
   ux --> business
+  ux --> motivation
   ux --> product
   ux --> security
   ux --> technology
@@ -299,339 +315,410 @@ flowchart TB
 
 ## Inter-Layer Relationships Table
 
-| Relationship ID                                         | Source Node                                                                            | Dest Node                                                   | Dest Layer   | Predicate    | Cardinality  | Strength |
-| ------------------------------------------------------- | -------------------------------------------------------------------------------------- | ----------------------------------------------------------- | ------------ | ------------ | ------------ | -------- |
-| `apm.span.monitors.ux.view`                             | `apm.span.api-request-span`                                                            | `ux.view.pipelines-view`                                    | `ux`         | `monitors`   | many-to-many | medium   |
-| `apm.span.monitors.ux.view`                             | `apm.span.browser-http-client-span`                                                    | `ux.view.app-shell-view`                                    | `ux`         | `monitors`   | many-to-many | medium   |
-| `apm.span.monitors.ux.view`                             | `apm.span.browser-navigation-span`                                                     | `ux.view.app-shell-view`                                    | `ux`         | `monitors`   | many-to-many | medium   |
-| `apm.span.monitors.ux.view`                             | `apm.span.database-query-span`                                                         | `ux.view.datasets-view`                                     | `ux`         | `monitors`   | many-to-many | medium   |
-| `navigation.route.maps-to.ux.view`                      | `navigation.route.app-shell-route`                                                     | `ux.view.app-shell-view`                                    | `ux`         | `maps-to`    | many-to-many | medium   |
-| `navigation.route.maps-to.ux.view`                      | `navigation.route.batch-detail-route`                                                  | `ux.view.batch-detail-view`                                 | `ux`         | `maps-to`    | many-to-many | medium   |
-| `navigation.route.maps-to.ux.view`                      | `navigation.route.benchmark-gold-route`                                                | `ux.view.benchmark-gold-view`                               | `ux`         | `maps-to`    | many-to-many | medium   |
-| `navigation.route.maps-to.ux.view`                      | `navigation.route.claims-route`                                                        | `ux.view.claims-view`                                       | `ux`         | `maps-to`    | many-to-many | medium   |
-| `navigation.route.maps-to.ux.view`                      | `navigation.route.class-detail-route`                                                  | `ux.view.class-detail-view`                                 | `ux`         | `maps-to`    | many-to-many | medium   |
-| `navigation.route.maps-to.ux.view`                      | `navigation.route.classes-route`                                                       | `ux.view.classes-view`                                      | `ux`         | `maps-to`    | many-to-many | medium   |
-| `navigation.route.maps-to.ux.view`                      | `navigation.route.concept-scheme-detail-route`                                         | `ux.view.concept-scheme-detail-view`                        | `ux`         | `maps-to`    | many-to-many | medium   |
-| `navigation.route.maps-to.ux.view`                      | `navigation.route.concept-schemes-index-route`                                         | `ux.view.concept-schemes-index-view`                        | `ux`         | `maps-to`    | many-to-many | medium   |
-| `navigation.route.maps-to.ux.view`                      | `navigation.route.concept-schemes-route`                                               | `ux.view.concept-schemes-view`                              | `ux`         | `maps-to`    | many-to-many | medium   |
-| `navigation.route.maps-to.ux.view`                      | `navigation.route.contact-sheet-route`                                                 | `ux.view.contact-sheet-view`                                | `ux`         | `maps-to`    | many-to-many | medium   |
-| `navigation.route.maps-to.ux.view`                      | `navigation.route.dashboard-route`                                                     | `ux.view.dashboard-view`                                    | `ux`         | `maps-to`    | many-to-many | medium   |
-| `navigation.route.maps-to.ux.view`                      | `navigation.route.datasets-route`                                                      | `ux.view.datasets-view`                                     | `ux`         | `maps-to`    | many-to-many | medium   |
-| `navigation.route.maps-to.ux.view`                      | `navigation.route.extract-source-route`                                                | `ux.view.extract-source-view`                               | `ux`         | `maps-to`    | many-to-many | medium   |
-| `navigation.route.maps-to.ux.view`                      | `navigation.route.extraction-review-route`                                             | `ux.view.extraction-review-view`                            | `ux`         | `maps-to`    | many-to-many | medium   |
-| `navigation.route.maps-to.ux.view`                      | `navigation.route.graph-route`                                                         | `ux.view.graph-view`                                        | `ux`         | `maps-to`    | many-to-many | medium   |
-| `navigation.route.maps-to.ux.view`                      | `navigation.route.grounding-workflows-route`                                           | `ux.view.grounding-workflows-view`                          | `ux`         | `maps-to`    | many-to-many | medium   |
-| `navigation.route.maps-to.ux.view`                      | `navigation.route.individual-detail-route`                                             | `ux.view.individual-detail-view`                            | `ux`         | `maps-to`    | many-to-many | medium   |
-| `navigation.route.maps-to.ux.view`                      | `navigation.route.individuals-route`                                                   | `ux.view.individuals-view`                                  | `ux`         | `maps-to`    | many-to-many | medium   |
-| `navigation.route.maps-to.ux.view`                      | `navigation.route.pipeline-runs-route`                                                 | `ux.view.pipeline-runs-view`                                | `ux`         | `maps-to`    | many-to-many | medium   |
-| `navigation.route.maps-to.ux.view`                      | `navigation.route.pipelines-route`                                                     | `ux.view.pipelines-view`                                    | `ux`         | `maps-to`    | many-to-many | medium   |
-| `navigation.route.maps-to.ux.view`                      | `navigation.route.properties-route`                                                    | `ux.view.properties-view`                                   | `ux`         | `maps-to`    | many-to-many | medium   |
-| `navigation.route.maps-to.ux.view`                      | `navigation.route.proposal-compare-route`                                              | `ux.view.proposal-compare-view`                             | `ux`         | `maps-to`    | many-to-many | medium   |
-| `navigation.route.maps-to.ux.view`                      | `navigation.route.proposal-detail-route`                                               | `ux.view.proposal-detail-view`                              | `ux`         | `maps-to`    | many-to-many | medium   |
-| `navigation.route.maps-to.ux.view`                      | `navigation.route.proposal-review-route`                                               | `ux.view.proposal-review-view`                              | `ux`         | `maps-to`    | many-to-many | medium   |
-| `navigation.route.maps-to.ux.view`                      | `navigation.route.proposals-route`                                                     | `ux.view.proposals-view`                                    | `ux`         | `maps-to`    | many-to-many | medium   |
-| `navigation.route.maps-to.ux.view`                      | `navigation.route.reference-sources-route`                                             | `ux.view.reference-sources-view`                            | `ux`         | `maps-to`    | many-to-many | medium   |
-| `navigation.route.maps-to.ux.view`                      | `navigation.route.relationships-route`                                                 | `ux.view.relationships-view`                                | `ux`         | `maps-to`    | many-to-many | medium   |
-| `navigation.route.maps-to.ux.view`                      | `navigation.route.run-wizard-route`                                                    | `ux.view.run-wizard-view`                                   | `ux`         | `maps-to`    | many-to-many | medium   |
-| `navigation.route.maps-to.ux.view`                      | `navigation.route.settings-route`                                                      | `ux.view.settings-view`                                     | `ux`         | `maps-to`    | many-to-many | medium   |
-| `navigation.route.maps-to.ux.view`                      | `navigation.route.sources-route`                                                       | `ux.view.sources-view`                                      | `ux`         | `maps-to`    | many-to-many | medium   |
-| `navigation.route.maps-to.ux.view`                      | `navigation.route.taxonomies-route`                                                    | `ux.view.taxonomies-view`                                   | `ux`         | `maps-to`    | many-to-many | medium   |
-| `navigation.route.maps-to.ux.view`                      | `navigation.route.taxonomy-detail-route`                                               | `ux.view.taxonomy-detail-view`                              | `ux`         | `maps-to`    | many-to-many | medium   |
-| `navigation.route.maps-to.ux.view`                      | `navigation.route.versioning-route`                                                    | `ux.view.versioning-view`                                   | `ux`         | `maps-to`    | many-to-many | medium   |
-| `navigation.route.maps-to.ux.view`                      | `navigation.route.welcome-route`                                                       | `ux.view.welcome-view`                                      | `ux`         | `maps-to`    | many-to-many | medium   |
-| `testing.testcasesketch.tests.ux.actioncomponent`       | `testing.testcasesketch.end-search-finds-a-pending-element-and-reverse-swaps-the-ends` | `ux.actioncomponent.reverse-relationship-button`            | `ux`         | `tests`      | many-to-many | medium   |
-| `testing.testcasesketch.tests.ux.subview`               | `testing.testcasesketch.end-search-finds-a-pending-element-and-reverse-swaps-the-ends` | `ux.subview.review-inspector`                               | `ux`         | `tests`      | many-to-many | medium   |
-| `testing.testcasesketch.tests.ux.actioncomponent`       | `testing.testcasesketch.not-an-element-opens-the-reason-step`                          | `ux.actioncomponent.not-an-element-button`                  | `ux`         | `tests`      | many-to-many | medium   |
-| `testing.testcasesketch.tests.ux.subview`               | `testing.testcasesketch.not-an-element-opens-the-reason-step`                          | `ux.subview.review-inspector`                               | `ux`         | `tests`      | many-to-many | medium   |
-| `testing.testcoveragemodel.covers.ux.uxapplication`     | `testing.testcoveragemodel.context-studio-ux-test-coverage-model`                      | `ux.uxapplication.context-studio-spa`                       | `ux`         | `covers`     | many-to-many | medium   |
-| `testing.testcoveragetarget.covers.ux.view`             | `testing.testcoveragetarget.admin-health`                                              | `ux.view.settings-view`                                     | `ux`         | `covers`     | many-to-many | medium   |
-| `testing.testcoveragetarget.covers.ux.view`             | `testing.testcoveragetarget.extraction-pipeline`                                       | `ux.view.pipelines-view`                                    | `ux`         | `covers`     | many-to-many | medium   |
-| `testing.testcoveragetarget.covers.ux.view`             | `testing.testcoveragetarget.graph-analysis`                                            | `ux.view.graph-view`                                        | `ux`         | `covers`     | many-to-many | medium   |
-| `testing.testcoveragetarget.covers.ux.view`             | `testing.testcoveragetarget.llm-pipeline-execution`                                    | `ux.view.pipeline-runs-view`                                | `ux`         | `covers`     | many-to-many | medium   |
-| `testing.testcoveragetarget.covers.ux.view`             | `testing.testcoveragetarget.playwright-e2e-tests`                                      | `ux.view.classes-view`                                      | `ux`         | `covers`     | many-to-many | medium   |
-| `testing.testcoveragetarget.covers.ux.view`             | `testing.testcoveragetarget.playwright-e2e-tests`                                      | `ux.view.extraction-review-view`                            | `ux`         | `covers`     | many-to-many | medium   |
-| `testing.testcoveragetarget.covers.ux.view`             | `testing.testcoveragetarget.playwright-e2e-tests`                                      | `ux.view.graph-view`                                        | `ux`         | `covers`     | many-to-many | medium   |
-| `testing.testcoveragetarget.covers.ux.view`             | `testing.testcoveragetarget.playwright-e2e-tests`                                      | `ux.view.proposals-view`                                    | `ux`         | `covers`     | many-to-many | medium   |
-| `testing.testcoveragetarget.covers.ux.librarycomponent` | `testing.testcoveragetarget.ux-component-tests`                                        | `ux.librarycomponent.app-ui-primitives`                     | `ux`         | `covers`     | many-to-many | medium   |
-| `testing.testcoveragetarget.covers.ux.view`             | `testing.testcoveragetarget.ux-component-tests`                                        | `ux.view.proposal-detail-view`                              | `ux`         | `covers`     | many-to-many | medium   |
-| `testing.testcoveragetarget.covers.ux.view`             | `testing.testcoveragetarget.ux-component-tests`                                        | `ux.view.proposal-review-view`                              | `ux`         | `covers`     | many-to-many | medium   |
-| `testing.testcoveragetarget.covers.ux.view`             | `testing.testcoveragetarget.ux-component-tests`                                        | `ux.view.run-detail-drawer`                                 | `ux`         | `covers`     | many-to-many | medium   |
-| `testing.testcoveragetarget.covers.ux.view`             | `testing.testcoveragetarget.ux-route-tests`                                            | `ux.view.dashboard-view`                                    | `ux`         | `covers`     | many-to-many | medium   |
-| `testing.testcoveragetarget.covers.ux.view`             | `testing.testcoveragetarget.ux-route-tests`                                            | `ux.view.individuals-view`                                  | `ux`         | `covers`     | many-to-many | medium   |
-| `testing.testcoveragetarget.covers.ux.view`             | `testing.testcoveragetarget.versioning-workflow`                                       | `ux.view.datasets-view`                                     | `ux`         | `covers`     | many-to-many | medium   |
-| `ux.dataconfig.maps-to.api.requestbody`                 | `ux.dataconfig.use-accept-rest`                                                        | `api.requestbody.accept-rest-request`                       | `api`        | `maps-to`    | many-to-many | medium   |
-| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-accept-rest`                                                        | `api.response.accept-rest-response`                         | `api`        | `maps-to`    | many-to-many | medium   |
-| `ux.dataconfig.maps-to.api.requestbody`                 | `ux.dataconfig.use-add-class-to-individual`                                            | `api.requestbody.individual-class-request`                  | `api`        | `maps-to`    | many-to-many | medium   |
-| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-add-class-to-individual`                                            | `api.response.individual-response`                          | `api`        | `maps-to`    | many-to-many | medium   |
-| `ux.dataconfig.maps-to.api.requestbody`                 | `ux.dataconfig.use-add-proposal-individual`                                            | `api.requestbody.add-individual-request`                    | `api`        | `maps-to`    | many-to-many | medium   |
-| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-add-proposal-individual`                                            | `api.response.change-proposal-response`                     | `api`        | `maps-to`    | many-to-many | medium   |
-| `ux.dataconfig.maps-to.api.requestbody`                 | `ux.dataconfig.use-add-source`                                                         | `api.requestbody.add-source-request`                        | `api`        | `maps-to`    | many-to-many | medium   |
-| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-add-source`                                                         | `api.response.source-response`                              | `api`        | `maps-to`    | many-to-many | medium   |
-| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-all-change-proposals`                                               | `api.response.change-proposal-response`                     | `api`        | `maps-to`    | many-to-many | medium   |
-| `ux.dataconfig.maps-to.api.requestbody`                 | `ux.dataconfig.use-apply-change-proposal`                                              | `api.requestbody.change-proposal-apply-request`             | `api`        | `maps-to`    | many-to-many | medium   |
-| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-apply-change-proposal`                                              | `api.response.change-proposal-response`                     | `api`        | `maps-to`    | many-to-many | medium   |
-| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-apply-reviewed-run`                                                 | `api.response.apply-run-response`                           | `api`        | `maps-to`    | many-to-many | medium   |
-| `ux.dataconfig.maps-to.api.requestbody`                 | `ux.dataconfig.use-apply-run`                                                          | `api.requestbody.apply-run-request`                         | `api`        | `maps-to`    | many-to-many | medium   |
-| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-apply-run`                                                          | `api.response.apply-run-response`                           | `api`        | `maps-to`    | many-to-many | medium   |
-| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-attribute-definitions-by-ids`                                       | `api.response.attribute-definition-response`                | `api`        | `maps-to`    | many-to-many | medium   |
-| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-build-graph`                                                        | `api.response.knowledge-graph-response`                     | `api`        | `maps-to`    | many-to-many | medium   |
-| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-cancel-extraction-run`                                              | `api.response.pipeline-run-response`                        | `api`        | `maps-to`    | many-to-many | medium   |
-| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-change-proposal`                                                    | `api.response.change-proposal-response`                     | `api`        | `maps-to`    | many-to-many | medium   |
-| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-change-proposals`                                                   | `api.response.change-proposal-response`                     | `api`        | `maps-to`    | many-to-many | medium   |
-| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-changes`                                                            | `api.response.change-history-response`                      | `api`        | `maps-to`    | many-to-many | medium   |
-| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-chat-session`                                                       | `api.response.chat-status-response`                         | `api`        | `maps-to`    | many-to-many | medium   |
-| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-chat-session`                                                       | `api.response.conversation-detail-response`                 | `api`        | `maps-to`    | many-to-many | medium   |
-| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-chat-session`                                                       | `api.response.conversation-response`                        | `api`        | `maps-to`    | many-to-many | medium   |
-| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-chat-status`                                                        | `api.response.chat-status-response`                         | `api`        | `maps-to`    | many-to-many | medium   |
-| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-claim`                                                              | `api.response.claim-response`                               | `api`        | `maps-to`    | many-to-many | medium   |
-| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-claims`                                                             | `api.response.claim-response`                               | `api`        | `maps-to`    | many-to-many | medium   |
-| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-class-attribute-definitions`                                        | `api.response.attribute-definition-response`                | `api`        | `maps-to`    | many-to-many | medium   |
-| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-class-counts-by-scheme`                                             | `api.response.class-response`                               | `api`        | `maps-to`    | many-to-many | medium   |
-| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-class-counts`                                                       | `api.response.class-counts-response`                        | `api`        | `maps-to`    | many-to-many | medium   |
-| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-class`                                                              | `api.response.class-response`                               | `api`        | `maps-to`    | many-to-many | medium   |
-| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-class-search`                                                       | `api.response.class-response`                               | `api`        | `maps-to`    | many-to-many | medium   |
-| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-classes-by-ids`                                                     | `api.response.class-response`                               | `api`        | `maps-to`    | many-to-many | medium   |
-| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-classes`                                                            | `api.response.class-response`                               | `api`        | `maps-to`    | many-to-many | medium   |
-| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-clear-claim-verdict`                                                | `api.response.claim-response`                               | `api`        | `maps-to`    | many-to-many | medium   |
-| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-config`                                                             | `api.response.app-configuration-response`                   | `api`        | `maps-to`    | many-to-many | medium   |
-| `ux.dataconfig.maps-to.api.requestbody`                 | `ux.dataconfig.use-create-class`                                                       | `api.requestbody.class-create-request`                      | `api`        | `maps-to`    | many-to-many | medium   |
-| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-create-class`                                                       | `api.response.class-response`                               | `api`        | `maps-to`    | many-to-many | medium   |
-| `ux.dataconfig.maps-to.api.requestbody`                 | `ux.dataconfig.use-create-configuration`                                               | `api.requestbody.pipeline-configuration-create-request`     | `api`        | `maps-to`    | many-to-many | medium   |
-| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-create-configuration`                                               | `api.response.pipeline-configuration-response`              | `api`        | `maps-to`    | many-to-many | medium   |
-| `ux.dataconfig.maps-to.api.requestbody`                 | `ux.dataconfig.use-create-dataset`                                                     | `api.requestbody.dataset-create-request`                    | `api`        | `maps-to`    | many-to-many | medium   |
-| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-create-dataset`                                                     | `api.response.dataset-response`                             | `api`        | `maps-to`    | many-to-many | medium   |
-| `ux.dataconfig.maps-to.api.requestbody`                 | `ux.dataconfig.use-create-grounding-workflow`                                          | `api.requestbody.grounding-workflow-create`                 | `api`        | `maps-to`    | many-to-many | medium   |
-| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-create-grounding-workflow`                                          | `api.response.grounding-workflow-response`                  | `api`        | `maps-to`    | many-to-many | medium   |
-| `ux.dataconfig.maps-to.api.requestbody`                 | `ux.dataconfig.use-create-individual`                                                  | `api.requestbody.individual-create-request`                 | `api`        | `maps-to`    | many-to-many | medium   |
-| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-create-individual`                                                  | `api.response.individual-response`                          | `api`        | `maps-to`    | many-to-many | medium   |
-| `ux.dataconfig.maps-to.api.requestbody`                 | `ux.dataconfig.use-create-property`                                                    | `api.requestbody.property-definition-create-request`        | `api`        | `maps-to`    | many-to-many | medium   |
-| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-create-property`                                                    | `api.response.property-definition-response`                 | `api`        | `maps-to`    | many-to-many | medium   |
-| `ux.dataconfig.maps-to.api.requestbody`                 | `ux.dataconfig.use-create-relationship`                                                | `api.requestbody.relationship-create-request`               | `api`        | `maps-to`    | many-to-many | medium   |
-| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-create-relationship`                                                | `api.response.relationship-response`                        | `api`        | `maps-to`    | many-to-many | medium   |
-| `ux.dataconfig.maps-to.api.requestbody`                 | `ux.dataconfig.use-create-scheme`                                                      | `api.requestbody.concept-scheme-create-request`             | `api`        | `maps-to`    | many-to-many | medium   |
-| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-create-scheme`                                                      | `api.response.concept-scheme-response`                      | `api`        | `maps-to`    | many-to-many | medium   |
-| `ux.dataconfig.maps-to.api.requestbody`                 | `ux.dataconfig.use-create-taxonomy`                                                    | `api.requestbody.taxonomy-create-request`                   | `api`        | `maps-to`    | many-to-many | medium   |
-| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-create-taxonomy`                                                    | `api.response.taxonomy-response`                            | `api`        | `maps-to`    | many-to-many | medium   |
-| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-datasets`                                                           | `api.response.dataset-response`                             | `api`        | `maps-to`    | many-to-many | medium   |
-| `ux.dataconfig.maps-to.api.requestbody`                 | `ux.dataconfig.use-decide-pair`                                                        | `api.requestbody.pair-decision-request`                     | `api`        | `maps-to`    | many-to-many | medium   |
-| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-decide-pair`                                                        | `api.response.pair-decision-response`                       | `api`        | `maps-to`    | many-to-many | medium   |
-| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-delete-dataset`                                                     | `api.response.dataset-deletion-response`                    | `api`        | `maps-to`    | many-to-many | medium   |
-| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-demo-datasets`                                                      | `api.response.demo-dataset-descriptor-response`             | `api`        | `maps-to`    | many-to-many | medium   |
-| `ux.dataconfig.maps-to.api.requestbody`                 | `ux.dataconfig.use-dr-spec-drift`                                                      | `api.requestbody.dr-spec-drift-request`                     | `api`        | `maps-to`    | many-to-many | medium   |
-| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-dr-spec-drift`                                                      | `api.response.drift-response`                               | `api`        | `maps-to`    | many-to-many | medium   |
-| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-edge-attributes`                                                    | `api.response.attribute-definition-response`                | `api`        | `maps-to`    | many-to-many | medium   |
-| `ux.dataconfig.maps-to.api.requestbody`                 | `ux.dataconfig.use-enqueue-batch-runs`                                                 | `api.requestbody.enqueue-batch-runs-request`                | `api`        | `maps-to`    | many-to-many | medium   |
-| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-enqueue-batch-runs`                                                 | `api.response.enqueue-batch-runs-response`                  | `api`        | `maps-to`    | many-to-many | medium   |
-| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-entities-by-id`                                                     | `api.response.class-response`                               | `api`        | `maps-to`    | many-to-many | medium   |
-| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-entities-by-id`                                                     | `api.response.concept-scheme-response`                      | `api`        | `maps-to`    | many-to-many | medium   |
-| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-entities-by-id`                                                     | `api.response.individual-response`                          | `api`        | `maps-to`    | many-to-many | medium   |
-| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-entities-by-id`                                                     | `api.response.property-definition-response`                 | `api`        | `maps-to`    | many-to-many | medium   |
-| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-entities-by-id`                                                     | `api.response.taxonomy-response`                            | `api`        | `maps-to`    | many-to-many | medium   |
-| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-entity-counts`                                                      | `api.response.class-response`                               | `api`        | `maps-to`    | many-to-many | medium   |
-| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-entity-counts`                                                      | `api.response.concept-scheme-response`                      | `api`        | `maps-to`    | many-to-many | medium   |
-| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-entity-counts`                                                      | `api.response.individual-response`                          | `api`        | `maps-to`    | many-to-many | medium   |
-| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-entity-counts`                                                      | `api.response.property-definition-response`                 | `api`        | `maps-to`    | many-to-many | medium   |
-| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-entity-counts`                                                      | `api.response.relationship-response`                        | `api`        | `maps-to`    | many-to-many | medium   |
-| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-entity-counts`                                                      | `api.response.taxonomy-response`                            | `api`        | `maps-to`    | many-to-many | medium   |
-| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-entity-sources`                                                     | `api.response.entity-source-response`                       | `api`        | `maps-to`    | many-to-many | medium   |
-| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-entity-type-query`                                                  | `api.response.class-response`                               | `api`        | `maps-to`    | many-to-many | medium   |
-| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-entity-type-query`                                                  | `api.response.concept-scheme-response`                      | `api`        | `maps-to`    | many-to-many | medium   |
-| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-entity-type-query`                                                  | `api.response.individual-response`                          | `api`        | `maps-to`    | many-to-many | medium   |
-| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-entity-type-query`                                                  | `api.response.property-definition-response`                 | `api`        | `maps-to`    | many-to-many | medium   |
-| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-entity-type-query`                                                  | `api.response.taxonomy-response`                            | `api`        | `maps-to`    | many-to-many | medium   |
-| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-export-proposal-decisions`                                          | `api.response.dr-decision-response`                         | `api`        | `maps-to`    | many-to-many | medium   |
-| `ux.dataconfig.maps-to.api.requestbody`                 | `ux.dataconfig.use-extract-source`                                                     | `api.requestbody.source-extract-request`                    | `api`        | `maps-to`    | many-to-many | medium   |
-| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-extract-source`                                                     | `api.response.source-extract-response`                      | `api`        | `maps-to`    | many-to-many | medium   |
-| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-extraction-examples`                                                | `api.response.extraction-example-response`                  | `api`        | `maps-to`    | many-to-many | medium   |
-| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-extraction-review-runs`                                             | `api.response.pipeline-run-response`                        | `api`        | `maps-to`    | many-to-many | medium   |
-| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-extraction-run`                                                     | `api.response.pipeline-run-response`                        | `api`        | `maps-to`    | many-to-many | medium   |
-| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-graph-metrics`                                                      | `api.response.graph-metrics-response`                       | `api`        | `maps-to`    | many-to-many | medium   |
-| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-graph-view`                                                         | `api.response.graph-view-response`                          | `api`        | `maps-to`    | many-to-many | medium   |
-| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-grounding-workflow`                                                 | `api.response.grounding-workflow-response`                  | `api`        | `maps-to`    | many-to-many | medium   |
-| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-grounding-workflow-runs`                                            | `api.response.workflow-run-response`                        | `api`        | `maps-to`    | many-to-many | medium   |
-| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-grounding-workflows`                                                | `api.response.grounding-workflow-response`                  | `api`        | `maps-to`    | many-to-many | medium   |
-| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-health`                                                             | `api.response.system-health-response`                       | `api`        | `maps-to`    | many-to-many | medium   |
-| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-individual-extraction-candidates`                                   | `api.response.candidate-item`                               | `api`        | `maps-to`    | many-to-many | medium   |
-| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-individual-inherited-properties`                                    | `api.response.data-property-value-response`                 | `api`        | `maps-to`    | many-to-many | medium   |
-| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-individual`                                                         | `api.response.individual-response`                          | `api`        | `maps-to`    | many-to-many | medium   |
-| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-individual-search`                                                  | `api.response.individual-response`                          | `api`        | `maps-to`    | many-to-many | medium   |
-| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-individuals-by-ids`                                                 | `api.response.individual-response`                          | `api`        | `maps-to`    | many-to-many | medium   |
-| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-individuals-in-classes`                                             | `api.response.individual-response`                          | `api`        | `maps-to`    | many-to-many | medium   |
-| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-individuals`                                                        | `api.response.individual-response`                          | `api`        | `maps-to`    | many-to-many | medium   |
-| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-load-demo-dataset`                                                  | `api.response.demo-dataset-load-response`                   | `api`        | `maps-to`    | many-to-many | medium   |
-| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-mcp-connection`                                                     | `api.response.mcp-connection-response`                      | `api`        | `maps-to`    | many-to-many | medium   |
-| `ux.dataconfig.maps-to.api.requestbody`                 | `ux.dataconfig.use-move-class`                                                         | `api.requestbody.class-move-request`                        | `api`        | `maps-to`    | many-to-many | medium   |
-| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-move-class`                                                         | `api.response.class-response`                               | `api`        | `maps-to`    | many-to-many | medium   |
-| `ux.dataconfig.maps-to.api.requestbody`                 | `ux.dataconfig.use-move-scheme`                                                        | `api.requestbody.concept-scheme-update-request`             | `api`        | `maps-to`    | many-to-many | medium   |
-| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-move-scheme`                                                        | `api.response.concept-scheme-response`                      | `api`        | `maps-to`    | many-to-many | medium   |
-| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-pipeline-candidates`                                                | `api.response.candidate-item`                               | `api`        | `maps-to`    | many-to-many | medium   |
-| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-pipeline-configurations`                                            | `api.response.pipeline-configuration-response`              | `api`        | `maps-to`    | many-to-many | medium   |
-| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-pipeline-implementations`                                           | `api.response.implementation-response`                      | `api`        | `maps-to`    | many-to-many | medium   |
-| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-pipeline-run-change-events`                                         | `api.response.versioning-change-event-response`             | `api`        | `maps-to`    | many-to-many | medium   |
-| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-pipeline-run`                                                       | `api.response.pipeline-run-response`                        | `api`        | `maps-to`    | many-to-many | medium   |
-| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-pipeline-runs`                                                      | `api.response.pipeline-run-response`                        | `api`        | `maps-to`    | many-to-many | medium   |
-| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-pipeline-types`                                                     | `api.response.pipeline-type-response`                       | `api`        | `maps-to`    | many-to-many | medium   |
-| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-predicates-by-ids`                                                  | `api.response.predicate-response`                           | `api`        | `maps-to`    | many-to-many | medium   |
-| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-properties-by-ids`                                                  | `api.response.property-definition-response`                 | `api`        | `maps-to`    | many-to-many | medium   |
-| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-properties`                                                         | `api.response.property-definition-response`                 | `api`        | `maps-to`    | many-to-many | medium   |
-| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-proposal-comparison`                                                | `api.response.proposal-comparison-response`                 | `api`        | `maps-to`    | many-to-many | medium   |
-| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-proposal-decisions`                                                 | `api.response.gold-decision-response`                       | `api`        | `maps-to`    | many-to-many | medium   |
-| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-publish-diff-stats`                                                 | `api.response.publish-diff-stats`                           | `api`        | `maps-to`    | many-to-many | medium   |
-| `ux.dataconfig.maps-to.api.requestbody`                 | `ux.dataconfig.use-publish-taxonomy`                                                   | `api.requestbody.taxonomy-publish-request`                  | `api`        | `maps-to`    | many-to-many | medium   |
-| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-publish-taxonomy`                                                   | `api.response.taxonomy-response`                            | `api`        | `maps-to`    | many-to-many | medium   |
-| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-pull-sync`                                                          | `api.response.sync-result-response`                         | `api`        | `maps-to`    | many-to-many | medium   |
-| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-push-sync`                                                          | `api.response.sync-result-response`                         | `api`        | `maps-to`    | many-to-many | medium   |
-| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-recognition-preview`                                                | `api.response.recognition-preview-response`                 | `api`        | `maps-to`    | many-to-many | medium   |
-| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-reference-status`                                                   | `api.response.reference-status-response-schema`             | `api`        | `maps-to`    | many-to-many | medium   |
-| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-registered-models`                                                  | `api.response.pipeline-configuration-response`              | `api`        | `maps-to`    | many-to-many | medium   |
-| `ux.dataconfig.maps-to.api.requestbody`                 | `ux.dataconfig.use-reject-change-proposal`                                             | `api.requestbody.change-proposal-reject-request`            | `api`        | `maps-to`    | many-to-many | medium   |
-| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-reject-change-proposal`                                             | `api.response.change-proposal-response`                     | `api`        | `maps-to`    | many-to-many | medium   |
-| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-relationships-by-ids`                                               | `api.response.relationship-response`                        | `api`        | `maps-to`    | many-to-many | medium   |
-| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-relationships`                                                      | `api.response.relationship-response`                        | `api`        | `maps-to`    | many-to-many | medium   |
-| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-relationships-touching`                                             | `api.response.relationship-response`                        | `api`        | `maps-to`    | many-to-many | medium   |
-| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-remove-source`                                                      | `api.response.source-response`                              | `api`        | `maps-to`    | many-to-many | medium   |
-| `ux.dataconfig.maps-to.api.requestbody`                 | `ux.dataconfig.use-reopen-proposal-operations`                                         | `api.requestbody.change-proposal-reopen-request`            | `api`        | `maps-to`    | many-to-many | medium   |
-| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-reopen-proposal-operations`                                         | `api.response.change-proposal-response`                     | `api`        | `maps-to`    | many-to-many | medium   |
-| `ux.dataconfig.maps-to.api.requestbody`                 | `ux.dataconfig.use-reorder-individual-classes`                                         | `api.requestbody.individual-class-list-request`             | `api`        | `maps-to`    | many-to-many | medium   |
-| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-reorder-individual-classes`                                         | `api.response.individual-response`                          | `api`        | `maps-to`    | many-to-many | medium   |
-| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-revert-change-proposal`                                             | `api.response.change-proposal-revert-response`              | `api`        | `maps-to`    | many-to-many | medium   |
-| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-revert-run`                                                         | `api.response.revert-run-response`                          | `api`        | `maps-to`    | many-to-many | medium   |
-| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-run-grounding-workflow`                                             | `api.response.workflow-run-response`                        | `api`        | `maps-to`    | many-to-many | medium   |
-| `ux.dataconfig.maps-to.api.requestbody`                 | `ux.dataconfig.use-run-pipeline`                                                       | `api.requestbody.pipeline-run-request`                      | `api`        | `maps-to`    | many-to-many | medium   |
-| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-run-pipeline`                                                       | `api.response.pipeline-run-response`                        | `api`        | `maps-to`    | many-to-many | medium   |
-| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-run-wizard`                                                         | `api.response.pipeline-run-response`                        | `api`        | `maps-to`    | many-to-many | medium   |
-| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-schema-extraction-candidates`                                       | `api.response.candidate-item`                               | `api`        | `maps-to`    | many-to-many | medium   |
-| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-scheme-counts-for-taxonomies`                                       | `api.response.scheme-counts-response`                       | `api`        | `maps-to`    | many-to-many | medium   |
-| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-scheme-counts`                                                      | `api.response.scheme-counts-response`                       | `api`        | `maps-to`    | many-to-many | medium   |
-| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-scheme`                                                             | `api.response.concept-scheme-response`                      | `api`        | `maps-to`    | many-to-many | medium   |
-| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-schemes-by-ids`                                                     | `api.response.concept-scheme-response`                      | `api`        | `maps-to`    | many-to-many | medium   |
-| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-schemes`                                                            | `api.response.concept-scheme-response`                      | `api`        | `maps-to`    | many-to-many | medium   |
-| `ux.dataconfig.maps-to.api.requestbody`                 | `ux.dataconfig.use-set-claim-verdict`                                                  | `api.requestbody.claim-verdict-request`                     | `api`        | `maps-to`    | many-to-many | medium   |
-| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-set-claim-verdict`                                                  | `api.response.claim-response`                               | `api`        | `maps-to`    | many-to-many | medium   |
-| `ux.dataconfig.maps-to.api.requestbody`                 | `ux.dataconfig.use-set-property-relevance`                                             | `api.requestbody.property-definition-update-request`        | `api`        | `maps-to`    | many-to-many | medium   |
-| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-set-property-relevance`                                             | `api.response.property-definition-response`                 | `api`        | `maps-to`    | many-to-many | medium   |
-| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-shortest-path`                                                      | `api.response.path-result-response`                         | `api`        | `maps-to`    | many-to-many | medium   |
-| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-source`                                                             | `api.response.source-response`                              | `api`        | `maps-to`    | many-to-many | medium   |
-| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-source-text`                                                        | `api.response.source-text-response`                         | `api`        | `maps-to`    | many-to-many | medium   |
-| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-sources-by-ids`                                                     | `api.response.source-response`                              | `api`        | `maps-to`    | many-to-many | medium   |
-| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-sources`                                                            | `api.response.source-response`                              | `api`        | `maps-to`    | many-to-many | medium   |
-| `ux.dataconfig.maps-to.api.requestbody`                 | `ux.dataconfig.use-sparql-query`                                                       | `api.requestbody.sparqlrequest`                             | `api`        | `maps-to`    | many-to-many | medium   |
-| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-sparql-query`                                                       | `api.response.sparqlresponse`                               | `api`        | `maps-to`    | many-to-many | medium   |
-| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-stats-trends`                                                       | `api.response.stats-trends-response`                        | `api`        | `maps-to`    | many-to-many | medium   |
-| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-sync-status`                                                        | `api.response.sync-status-response`                         | `api`        | `maps-to`    | many-to-many | medium   |
-| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-taxonomies-by-ids`                                                  | `api.response.taxonomy-response`                            | `api`        | `maps-to`    | many-to-many | medium   |
-| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-taxonomies`                                                         | `api.response.taxonomy-response`                            | `api`        | `maps-to`    | many-to-many | medium   |
-| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-taxonomy-classes`                                                   | `api.response.class-response`                               | `api`        | `maps-to`    | many-to-many | medium   |
-| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-taxonomy`                                                           | `api.response.taxonomy-response`                            | `api`        | `maps-to`    | many-to-many | medium   |
-| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-taxonomy-predicates`                                                | `api.response.predicate-response`                           | `api`        | `maps-to`    | many-to-many | medium   |
-| `ux.dataconfig.maps-to.api.requestbody`                 | `ux.dataconfig.use-update-class`                                                       | `api.requestbody.class-update-request`                      | `api`        | `maps-to`    | many-to-many | medium   |
-| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-update-class`                                                       | `api.response.class-response`                               | `api`        | `maps-to`    | many-to-many | medium   |
-| `ux.dataconfig.maps-to.api.requestbody`                 | `ux.dataconfig.use-update-config`                                                      | `api.requestbody.config-section-update-request`             | `api`        | `maps-to`    | many-to-many | medium   |
-| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-update-config`                                                      | `api.response.app-configuration-response`                   | `api`        | `maps-to`    | many-to-many | medium   |
-| `ux.dataconfig.maps-to.api.requestbody`                 | `ux.dataconfig.use-update-configuration`                                               | `api.requestbody.pipeline-configuration-update-request`     | `api`        | `maps-to`    | many-to-many | medium   |
-| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-update-configuration`                                               | `api.response.pipeline-configuration-response`              | `api`        | `maps-to`    | many-to-many | medium   |
-| `ux.dataconfig.maps-to.api.requestbody`                 | `ux.dataconfig.use-update-grounding-workflow`                                          | `api.requestbody.grounding-workflow-update`                 | `api`        | `maps-to`    | many-to-many | medium   |
-| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-update-grounding-workflow`                                          | `api.response.grounding-workflow-response`                  | `api`        | `maps-to`    | many-to-many | medium   |
-| `ux.dataconfig.maps-to.api.requestbody`                 | `ux.dataconfig.use-update-individual`                                                  | `api.requestbody.individual-update-request`                 | `api`        | `maps-to`    | many-to-many | medium   |
-| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-update-individual`                                                  | `api.response.individual-response`                          | `api`        | `maps-to`    | many-to-many | medium   |
-| `ux.dataconfig.maps-to.api.requestbody`                 | `ux.dataconfig.use-update-property`                                                    | `api.requestbody.property-definition-update-request`        | `api`        | `maps-to`    | many-to-many | medium   |
-| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-update-property`                                                    | `api.response.property-definition-response`                 | `api`        | `maps-to`    | many-to-many | medium   |
-| `ux.dataconfig.maps-to.api.requestbody`                 | `ux.dataconfig.use-update-scheme`                                                      | `api.requestbody.concept-scheme-update-request`             | `api`        | `maps-to`    | many-to-many | medium   |
-| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-update-scheme`                                                      | `api.response.concept-scheme-response`                      | `api`        | `maps-to`    | many-to-many | medium   |
-| `ux.dataconfig.maps-to.api.requestbody`                 | `ux.dataconfig.use-update-taxonomy`                                                    | `api.requestbody.taxonomy-update-request`                   | `api`        | `maps-to`    | many-to-many | medium   |
-| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-update-taxonomy`                                                    | `api.response.taxonomy-response`                            | `api`        | `maps-to`    | many-to-many | medium   |
-| `ux.view.depends-on.technology.systemsoftware`          | `ux.view.app-shell-view`                                                               | `technology.systemsoftware.axios`                           | `technology` | `depends-on` | many-to-many | medium   |
-| `ux.view.depends-on.technology.systemsoftware`          | `ux.view.app-shell-view`                                                               | `technology.systemsoftware.heimdall-ui`                     | `technology` | `depends-on` | many-to-many | medium   |
-| `ux.view.depends-on.technology.systemsoftware`          | `ux.view.app-shell-view`                                                               | `technology.systemsoftware.open-telemetry-web-sdk`          | `technology` | `depends-on` | many-to-many | medium   |
-| `ux.view.depends-on.technology.systemsoftware`          | `ux.view.app-shell-view`                                                               | `technology.systemsoftware.react`                           | `technology` | `depends-on` | many-to-many | medium   |
-| `ux.view.depends-on.technology.systemsoftware`          | `ux.view.app-shell-view`                                                               | `technology.systemsoftware.tan-stack-query`                 | `technology` | `depends-on` | many-to-many | medium   |
-| `ux.view.depends-on.technology.systemsoftware`          | `ux.view.app-shell-view`                                                               | `technology.systemsoftware.tan-stack-router`                | `technology` | `depends-on` | many-to-many | medium   |
-| `ux.view.depends-on.technology.systemsoftware`          | `ux.view.app-shell-view`                                                               | `technology.systemsoftware.zustand`                         | `technology` | `depends-on` | many-to-many | medium   |
-| `ux.view.realizes.product.feature`                      | `ux.view.app-shell-view`                                                               | `product.feature.chat-panel`                                | `product`    | `realizes`   | many-to-many | medium   |
-| `ux.view.realizes.product.feature`                      | `ux.view.app-shell-view`                                                               | `product.feature.system-health-and-background-tasks`        | `product`    | `realizes`   | many-to-many | medium   |
-| `ux.view.realizes.product.feature`                      | `ux.view.batch-detail-view`                                                            | `product.feature.runs-page`                                 | `product`    | `realizes`   | many-to-many | medium   |
-| `ux.view.realizes.product.feature`                      | `ux.view.benchmark-gold-view`                                                          | `product.feature.gold-mode`                                 | `product`    | `realizes`   | many-to-many | medium   |
-| `ux.view.realizes.product.feature`                      | `ux.view.cascade-delete-dialog`                                                        | `product.feature.schema-and-data-pages`                     | `product`    | `realizes`   | many-to-many | medium   |
-| `ux.view.realizes.product.feature`                      | `ux.view.claims-view`                                                                  | `product.feature.claims-page`                               | `product`    | `realizes`   | many-to-many | medium   |
-| `ux.view.realizes.product.feature`                      | `ux.view.class-detail-view`                                                            | `product.feature.pending-changes-on-entity-pages`           | `product`    | `realizes`   | many-to-many | medium   |
-| `ux.view.realizes.product.feature`                      | `ux.view.class-detail-view`                                                            | `product.feature.schema-and-data-pages`                     | `product`    | `realizes`   | many-to-many | medium   |
-| `ux.view.depends-on.technology.systemsoftware`          | `ux.view.class-drawer`                                                                 | `technology.systemsoftware.tan-stack-form`                  | `technology` | `depends-on` | many-to-many | medium   |
-| `ux.view.realizes.product.feature`                      | `ux.view.class-drawer`                                                                 | `product.feature.inline-suggesters-in-drawers`              | `product`    | `realizes`   | many-to-many | medium   |
-| `ux.view.realizes.product.feature`                      | `ux.view.class-drawer`                                                                 | `product.feature.schema-and-data-pages`                     | `product`    | `realizes`   | many-to-many | medium   |
-| `ux.view.realizes.product.feature`                      | `ux.view.classes-view`                                                                 | `product.feature.dataset-selector`                          | `product`    | `realizes`   | many-to-many | medium   |
-| `ux.view.realizes.product.feature`                      | `ux.view.classes-view`                                                                 | `product.feature.schema-and-data-pages`                     | `product`    | `realizes`   | many-to-many | medium   |
-| `ux.view.depends-on.technology.systemsoftware`          | `ux.view.command-palette`                                                              | `technology.systemsoftware.heimdall-ui`                     | `technology` | `depends-on` | many-to-many | medium   |
-| `ux.view.realizes.product.feature`                      | `ux.view.concept-scheme-detail-view`                                                   | `product.feature.schema-and-data-pages`                     | `product`    | `realizes`   | many-to-many | medium   |
-| `ux.view.realizes.product.feature`                      | `ux.view.concept-schemes-index-view`                                                   | `product.feature.schema-and-data-pages`                     | `product`    | `realizes`   | many-to-many | medium   |
-| `ux.view.realizes.product.feature`                      | `ux.view.concept-schemes-view`                                                         | `product.feature.schema-and-data-pages`                     | `product`    | `realizes`   | many-to-many | medium   |
-| `ux.view.realizes.product.feature`                      | `ux.view.create-dataset-modal`                                                         | `product.feature.schema-and-data-pages`                     | `product`    | `realizes`   | many-to-many | medium   |
-| `ux.view.realizes.product.feature`                      | `ux.view.create-drawer`                                                                | `product.feature.inline-suggesters-in-drawers`              | `product`    | `realizes`   | many-to-many | medium   |
-| `ux.view.realizes.product.feature`                      | `ux.view.create-drawer`                                                                | `product.feature.schema-and-data-pages`                     | `product`    | `realizes`   | many-to-many | medium   |
-| `ux.view.realizes.product.feature`                      | `ux.view.dashboard-view`                                                               | `product.feature.dataset-selector`                          | `product`    | `realizes`   | many-to-many | medium   |
-| `ux.view.realizes.product.feature`                      | `ux.view.dashboard-view`                                                               | `product.feature.demo-dataset-loader`                       | `product`    | `realizes`   | many-to-many | medium   |
-| `ux.view.realizes.product.feature`                      | `ux.view.dashboard-view`                                                               | `product.feature.system-health-and-background-tasks`        | `product`    | `realizes`   | many-to-many | medium   |
-| `ux.view.realizes.product.feature`                      | `ux.view.datasets-view`                                                                | `product.feature.dataset-selector`                          | `product`    | `realizes`   | many-to-many | medium   |
-| `ux.view.realizes.product.feature`                      | `ux.view.datasets-view`                                                                | `product.feature.schema-and-data-pages`                     | `product`    | `realizes`   | many-to-many | medium   |
-| `ux.view.realizes.product.feature`                      | `ux.view.delete-dataset-dialog`                                                        | `product.feature.schema-and-data-pages`                     | `product`    | `realizes`   | many-to-many | medium   |
-| `ux.view.realizes.product.feature`                      | `ux.view.dr-spec-drift-dialog`                                                         | `product.feature.check-drift`                               | `product`    | `realizes`   | many-to-many | medium   |
-| `ux.view.realizes.product.feature`                      | `ux.view.extract-source-view`                                                          | `product.feature.sources-page-and-extract-flow`             | `product`    | `realizes`   | many-to-many | medium   |
-| `ux.view.realizes.product.feature`                      | `ux.view.extraction-review-view`                                                       | `product.feature.extraction-review-bench`                   | `product`    | `realizes`   | many-to-many | medium   |
-| `ux.view.realizes.product.feature`                      | `ux.view.graph-view`                                                                   | `product.feature.dataset-selector`                          | `product`    | `realizes`   | many-to-many | medium   |
-| `ux.view.realizes.product.feature`                      | `ux.view.graph-view`                                                                   | `product.feature.graph-view`                                | `product`    | `realizes`   | many-to-many | medium   |
-| `ux.view.depends-on.technology.systemsoftware`          | `ux.view.grounding-workflow-drawer`                                                    | `technology.systemsoftware.tan-stack-form`                  | `technology` | `depends-on` | many-to-many | medium   |
-| `ux.view.realizes.product.feature`                      | `ux.view.grounding-workflow-drawer`                                                    | `product.feature.reference-sources-and-grounding-workflows` | `product`    | `realizes`   | many-to-many | medium   |
-| `ux.view.realizes.product.feature`                      | `ux.view.grounding-workflows-view`                                                     | `product.feature.reference-sources-and-grounding-workflows` | `product`    | `realizes`   | many-to-many | medium   |
-| `ux.view.realizes.product.feature`                      | `ux.view.individual-detail-view`                                                       | `product.feature.dataset-selector`                          | `product`    | `realizes`   | many-to-many | medium   |
-| `ux.view.realizes.product.feature`                      | `ux.view.individual-detail-view`                                                       | `product.feature.schema-and-data-pages`                     | `product`    | `realizes`   | many-to-many | medium   |
-| `ux.view.realizes.product.feature`                      | `ux.view.individual-detail-view`                                                       | `product.feature.source-citations-on-entity-pages`          | `product`    | `realizes`   | many-to-many | medium   |
-| `ux.view.depends-on.technology.systemsoftware`          | `ux.view.individual-drawer`                                                            | `technology.systemsoftware.tan-stack-form`                  | `technology` | `depends-on` | many-to-many | medium   |
-| `ux.view.realizes.product.feature`                      | `ux.view.individual-drawer`                                                            | `product.feature.schema-and-data-pages`                     | `product`    | `realizes`   | many-to-many | medium   |
-| `ux.view.depends-on.technology.systemsoftware`          | `ux.view.individuals-view`                                                             | `technology.systemsoftware.tan-stack-table`                 | `technology` | `depends-on` | many-to-many | medium   |
-| `ux.view.realizes.product.feature`                      | `ux.view.individuals-view`                                                             | `product.feature.dataset-selector`                          | `product`    | `realizes`   | many-to-many | medium   |
-| `ux.view.realizes.product.feature`                      | `ux.view.individuals-view`                                                             | `product.feature.schema-and-data-pages`                     | `product`    | `realizes`   | many-to-many | medium   |
-| `ux.view.realizes.product.feature`                      | `ux.view.pipeline-runs-view`                                                           | `product.feature.runs-page`                                 | `product`    | `realizes`   | many-to-many | medium   |
-| `ux.view.realizes.product.feature`                      | `ux.view.pipelines-view`                                                               | `product.feature.pipeline-run-wizard`                       | `product`    | `realizes`   | many-to-many | medium   |
-| `ux.view.realizes.product.feature`                      | `ux.view.properties-view`                                                              | `product.feature.schema-and-data-pages`                     | `product`    | `realizes`   | many-to-many | medium   |
-| `ux.view.depends-on.technology.systemsoftware`          | `ux.view.property-drawer`                                                              | `technology.systemsoftware.tan-stack-form`                  | `technology` | `depends-on` | many-to-many | medium   |
-| `ux.view.realizes.product.feature`                      | `ux.view.property-drawer`                                                              | `product.feature.inline-suggesters-in-drawers`              | `product`    | `realizes`   | many-to-many | medium   |
-| `ux.view.realizes.product.feature`                      | `ux.view.property-drawer`                                                              | `product.feature.pending-changes-on-entity-pages`           | `product`    | `realizes`   | many-to-many | medium   |
-| `ux.view.realizes.product.feature`                      | `ux.view.property-drawer`                                                              | `product.feature.schema-and-data-pages`                     | `product`    | `realizes`   | many-to-many | medium   |
-| `ux.view.realizes.product.feature`                      | `ux.view.proposal-compare-view`                                                        | `product.feature.compare-two-pipelines`                     | `product`    | `realizes`   | many-to-many | medium   |
-| `ux.view.realizes.product.feature`                      | `ux.view.proposal-detail-view`                                                         | `product.feature.proposal-queue-and-detail`                 | `product`    | `realizes`   | many-to-many | medium   |
-| `ux.view.realizes.product.feature`                      | `ux.view.proposal-review-view`                                                         | `product.feature.gold-mode`                                 | `product`    | `realizes`   | many-to-many | medium   |
-| `ux.view.realizes.product.feature`                      | `ux.view.proposal-review-view`                                                         | `product.feature.proposal-review-page`                      | `product`    | `realizes`   | many-to-many | medium   |
-| `ux.view.serves.business.businessrole`                  | `ux.view.proposal-review-view`                                                         | `business.businessrole.reviewer`                            | `business`   | `serves`     | many-to-many | medium   |
-| `ux.view.realizes.product.feature`                      | `ux.view.proposals-view`                                                               | `product.feature.proposal-queue-and-detail`                 | `product`    | `realizes`   | many-to-many | medium   |
-| `ux.view.serves.business.businessrole`                  | `ux.view.proposals-view`                                                               | `business.businessrole.reviewer`                            | `business`   | `serves`     | many-to-many | medium   |
-| `ux.view.realizes.product.feature`                      | `ux.view.reference-source-drawer`                                                      | `product.feature.reference-sources-and-grounding-workflows` | `product`    | `realizes`   | many-to-many | medium   |
-| `ux.view.realizes.product.feature`                      | `ux.view.reference-sources-view`                                                       | `product.feature.reference-sources-and-grounding-workflows` | `product`    | `realizes`   | many-to-many | medium   |
-| `ux.view.depends-on.technology.systemsoftware`          | `ux.view.relationship-drawer`                                                          | `technology.systemsoftware.tan-stack-form`                  | `technology` | `depends-on` | many-to-many | medium   |
-| `ux.view.realizes.product.feature`                      | `ux.view.relationship-drawer`                                                          | `product.feature.schema-and-data-pages`                     | `product`    | `realizes`   | many-to-many | medium   |
-| `ux.view.realizes.product.feature`                      | `ux.view.relationship-drawer`                                                          | `product.feature.source-citations-on-entity-pages`          | `product`    | `realizes`   | many-to-many | medium   |
-| `ux.view.realizes.product.feature`                      | `ux.view.relationships-view`                                                           | `product.feature.dataset-selector`                          | `product`    | `realizes`   | many-to-many | medium   |
-| `ux.view.realizes.product.feature`                      | `ux.view.relationships-view`                                                           | `product.feature.schema-and-data-pages`                     | `product`    | `realizes`   | many-to-many | medium   |
-| `ux.view.realizes.product.feature`                      | `ux.view.run-detail-drawer`                                                            | `product.feature.runs-page`                                 | `product`    | `realizes`   | many-to-many | medium   |
-| `ux.view.realizes.product.feature`                      | `ux.view.run-wizard-view`                                                              | `product.feature.pipeline-run-wizard`                       | `product`    | `realizes`   | many-to-many | medium   |
-| `ux.view.depends-on.technology.systemsoftware`          | `ux.view.scheme-drawer`                                                                | `technology.systemsoftware.tan-stack-form`                  | `technology` | `depends-on` | many-to-many | medium   |
-| `ux.view.realizes.product.feature`                      | `ux.view.scheme-drawer`                                                                | `product.feature.inline-suggesters-in-drawers`              | `product`    | `realizes`   | many-to-many | medium   |
-| `ux.view.realizes.product.feature`                      | `ux.view.scheme-drawer`                                                                | `product.feature.schema-and-data-pages`                     | `product`    | `realizes`   | many-to-many | medium   |
-| `ux.view.realizes.product.feature`                      | `ux.view.settings-view`                                                                | `product.feature.configuration-settings`                    | `product`    | `realizes`   | many-to-many | medium   |
-| `ux.view.realizes.product.feature`                      | `ux.view.settings-view`                                                                | `product.feature.mcp-integration-settings`                  | `product`    | `realizes`   | many-to-many | medium   |
-| `ux.view.requires.security.role`                        | `ux.view.settings-view`                                                                | `security.role.local-operator`                              | `security`   | `requires`   | many-to-many | medium   |
-| `ux.view.realizes.product.feature`                      | `ux.view.sources-view`                                                                 | `product.feature.sources-page-and-extract-flow`             | `product`    | `realizes`   | many-to-many | medium   |
-| `ux.view.realizes.product.feature`                      | `ux.view.taxonomies-view`                                                              | `product.feature.dataset-selector`                          | `product`    | `realizes`   | many-to-many | medium   |
-| `ux.view.realizes.product.feature`                      | `ux.view.taxonomies-view`                                                              | `product.feature.schema-and-data-pages`                     | `product`    | `realizes`   | many-to-many | medium   |
-| `ux.view.realizes.product.feature`                      | `ux.view.taxonomy-detail-view`                                                         | `product.feature.check-drift`                               | `product`    | `realizes`   | many-to-many | medium   |
-| `ux.view.realizes.product.feature`                      | `ux.view.taxonomy-detail-view`                                                         | `product.feature.export-bundle`                             | `product`    | `realizes`   | many-to-many | medium   |
-| `ux.view.realizes.product.feature`                      | `ux.view.taxonomy-detail-view`                                                         | `product.feature.pending-changes-on-entity-pages`           | `product`    | `realizes`   | many-to-many | medium   |
-| `ux.view.realizes.product.feature`                      | `ux.view.taxonomy-detail-view`                                                         | `product.feature.schema-and-data-pages`                     | `product`    | `realizes`   | many-to-many | medium   |
-| `ux.view.depends-on.technology.systemsoftware`          | `ux.view.taxonomy-drawer`                                                              | `technology.systemsoftware.tan-stack-form`                  | `technology` | `depends-on` | many-to-many | medium   |
-| `ux.view.realizes.product.feature`                      | `ux.view.taxonomy-drawer`                                                              | `product.feature.inline-suggesters-in-drawers`              | `product`    | `realizes`   | many-to-many | medium   |
-| `ux.view.realizes.product.feature`                      | `ux.view.taxonomy-drawer`                                                              | `product.feature.schema-and-data-pages`                     | `product`    | `realizes`   | many-to-many | medium   |
-| `ux.view.realizes.product.feature`                      | `ux.view.taxonomy-publish-dialog`                                                      | `product.feature.schema-and-data-pages`                     | `product`    | `realizes`   | many-to-many | medium   |
-| `ux.view.realizes.product.feature`                      | `ux.view.versioning-view`                                                              | `product.feature.change-history-and-sync`                   | `product`    | `realizes`   | many-to-many | medium   |
+| Relationship ID                                         | Source Node                                                                            | Dest Node                                                                    | Dest Layer   | Predicate    | Cardinality  | Strength |
+| ------------------------------------------------------- | -------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- | ------------ | ------------ | ------------ | -------- |
+| `apm.span.monitors.ux.view`                             | `apm.span.api-request-span`                                                            | `ux.view.pipelines-view`                                                     | `ux`         | `monitors`   | many-to-many | medium   |
+| `apm.span.monitors.ux.view`                             | `apm.span.browser-http-client-span`                                                    | `ux.view.app-shell-view`                                                     | `ux`         | `monitors`   | many-to-many | medium   |
+| `apm.span.monitors.ux.view`                             | `apm.span.browser-navigation-span`                                                     | `ux.view.app-shell-view`                                                     | `ux`         | `monitors`   | many-to-many | medium   |
+| `apm.span.monitors.ux.view`                             | `apm.span.database-query-span`                                                         | `ux.view.datasets-view`                                                      | `ux`         | `monitors`   | many-to-many | medium   |
+| `navigation.route.maps-to.ux.view`                      | `navigation.route.app-shell-route`                                                     | `ux.view.app-shell-view`                                                     | `ux`         | `maps-to`    | many-to-many | medium   |
+| `navigation.route.maps-to.ux.view`                      | `navigation.route.batch-detail-route`                                                  | `ux.view.batch-detail-view`                                                  | `ux`         | `maps-to`    | many-to-many | medium   |
+| `navigation.route.maps-to.ux.view`                      | `navigation.route.benchmark-gold-route`                                                | `ux.view.benchmark-gold-view`                                                | `ux`         | `maps-to`    | many-to-many | medium   |
+| `navigation.route.maps-to.ux.view`                      | `navigation.route.claims-route`                                                        | `ux.view.claims-view`                                                        | `ux`         | `maps-to`    | many-to-many | medium   |
+| `navigation.route.maps-to.ux.view`                      | `navigation.route.class-detail-route`                                                  | `ux.view.class-detail-view`                                                  | `ux`         | `maps-to`    | many-to-many | medium   |
+| `navigation.route.maps-to.ux.view`                      | `navigation.route.classes-route`                                                       | `ux.view.classes-view`                                                       | `ux`         | `maps-to`    | many-to-many | medium   |
+| `navigation.route.maps-to.ux.view`                      | `navigation.route.concept-scheme-detail-route`                                         | `ux.view.concept-scheme-detail-view`                                         | `ux`         | `maps-to`    | many-to-many | medium   |
+| `navigation.route.maps-to.ux.view`                      | `navigation.route.concept-schemes-index-route`                                         | `ux.view.concept-schemes-index-view`                                         | `ux`         | `maps-to`    | many-to-many | medium   |
+| `navigation.route.maps-to.ux.view`                      | `navigation.route.concept-schemes-route`                                               | `ux.view.concept-schemes-view`                                               | `ux`         | `maps-to`    | many-to-many | medium   |
+| `navigation.route.maps-to.ux.view`                      | `navigation.route.contact-sheet-route`                                                 | `ux.view.contact-sheet-view`                                                 | `ux`         | `maps-to`    | many-to-many | medium   |
+| `navigation.route.maps-to.ux.view`                      | `navigation.route.dashboard-route`                                                     | `ux.view.dashboard-view`                                                     | `ux`         | `maps-to`    | many-to-many | medium   |
+| `navigation.route.maps-to.ux.view`                      | `navigation.route.datasets-route`                                                      | `ux.view.datasets-view`                                                      | `ux`         | `maps-to`    | many-to-many | medium   |
+| `navigation.route.maps-to.ux.view`                      | `navigation.route.extract-source-route`                                                | `ux.view.extract-source-view`                                                | `ux`         | `maps-to`    | many-to-many | medium   |
+| `navigation.route.maps-to.ux.view`                      | `navigation.route.extraction-review-route`                                             | `ux.view.extraction-review-view`                                             | `ux`         | `maps-to`    | many-to-many | medium   |
+| `navigation.route.maps-to.ux.view`                      | `navigation.route.graph-route`                                                         | `ux.view.graph-view`                                                         | `ux`         | `maps-to`    | many-to-many | medium   |
+| `navigation.route.maps-to.ux.view`                      | `navigation.route.grounding-workflows-route`                                           | `ux.view.grounding-workflows-view`                                           | `ux`         | `maps-to`    | many-to-many | medium   |
+| `navigation.route.maps-to.ux.view`                      | `navigation.route.individual-detail-route`                                             | `ux.view.individual-detail-view`                                             | `ux`         | `maps-to`    | many-to-many | medium   |
+| `navigation.route.maps-to.ux.view`                      | `navigation.route.individuals-route`                                                   | `ux.view.individuals-view`                                                   | `ux`         | `maps-to`    | many-to-many | medium   |
+| `navigation.route.maps-to.ux.view`                      | `navigation.route.pipeline-runs-route`                                                 | `ux.view.pipeline-runs-view`                                                 | `ux`         | `maps-to`    | many-to-many | medium   |
+| `navigation.route.maps-to.ux.view`                      | `navigation.route.pipelines-route`                                                     | `ux.view.pipelines-view`                                                     | `ux`         | `maps-to`    | many-to-many | medium   |
+| `navigation.route.maps-to.ux.view`                      | `navigation.route.properties-route`                                                    | `ux.view.properties-view`                                                    | `ux`         | `maps-to`    | many-to-many | medium   |
+| `navigation.route.maps-to.ux.view`                      | `navigation.route.proposal-compare-route`                                              | `ux.view.proposal-compare-view`                                              | `ux`         | `maps-to`    | many-to-many | medium   |
+| `navigation.route.maps-to.ux.view`                      | `navigation.route.proposal-detail-route`                                               | `ux.view.proposal-detail-view`                                               | `ux`         | `maps-to`    | many-to-many | medium   |
+| `navigation.route.maps-to.ux.view`                      | `navigation.route.proposals-route`                                                     | `ux.view.proposals-view`                                                     | `ux`         | `maps-to`    | many-to-many | medium   |
+| `navigation.route.maps-to.ux.view`                      | `navigation.route.reference-sources-route`                                             | `ux.view.reference-sources-view`                                             | `ux`         | `maps-to`    | many-to-many | medium   |
+| `navigation.route.maps-to.ux.view`                      | `navigation.route.relationships-route`                                                 | `ux.view.relationships-view`                                                 | `ux`         | `maps-to`    | many-to-many | medium   |
+| `navigation.route.maps-to.ux.view`                      | `navigation.route.run-wizard-route`                                                    | `ux.view.run-wizard-view`                                                    | `ux`         | `maps-to`    | many-to-many | medium   |
+| `navigation.route.maps-to.ux.view`                      | `navigation.route.settings-route`                                                      | `ux.view.settings-view`                                                      | `ux`         | `maps-to`    | many-to-many | medium   |
+| `navigation.route.maps-to.ux.view`                      | `navigation.route.sources-route`                                                       | `ux.view.sources-view`                                                       | `ux`         | `maps-to`    | many-to-many | medium   |
+| `navigation.route.maps-to.ux.view`                      | `navigation.route.taxonomies-route`                                                    | `ux.view.taxonomies-view`                                                    | `ux`         | `maps-to`    | many-to-many | medium   |
+| `navigation.route.maps-to.ux.view`                      | `navigation.route.taxonomy-detail-route`                                               | `ux.view.taxonomy-detail-view`                                               | `ux`         | `maps-to`    | many-to-many | medium   |
+| `navigation.route.maps-to.ux.view`                      | `navigation.route.versioning-route`                                                    | `ux.view.versioning-view`                                                    | `ux`         | `maps-to`    | many-to-many | medium   |
+| `navigation.route.maps-to.ux.view`                      | `navigation.route.welcome-route`                                                       | `ux.view.welcome-view`                                                       | `ux`         | `maps-to`    | many-to-many | medium   |
+| `testing.testcasesketch.tests.ux.actioncomponent`       | `testing.testcasesketch.bulk-is-hidden-on-gold-checks`                                 | `ux.actioncomponent.bulk-select`                                             | `ux`         | `tests`      | many-to-many | medium   |
+| `testing.testcasesketch.tests.ux.subview`               | `testing.testcasesketch.bulk-is-hidden-on-gold-checks`                                 | `ux.subview.review-elements-pane`                                            | `ux`         | `tests`      | many-to-many | medium   |
+| `testing.testcasesketch.tests.ux.actioncomponent`       | `testing.testcasesketch.end-search-finds-a-pending-element-and-reverse-swaps-the-ends` | `ux.actioncomponent.reverse-relationship-button`                             | `ux`         | `tests`      | many-to-many | medium   |
+| `testing.testcasesketch.tests.ux.subview`               | `testing.testcasesketch.end-search-finds-a-pending-element-and-reverse-swaps-the-ends` | `ux.subview.review-inspector`                                                | `ux`         | `tests`      | many-to-many | medium   |
+| `testing.testcasesketch.tests.ux.view`                  | `testing.testcasesketch.esc-closes-the-wide-diff-and-returns-focus`                    | `ux.view.wide-diff-overlay`                                                  | `ux`         | `tests`      | many-to-many | medium   |
+| `testing.testcasesketch.tests.ux.librarycomponent`      | `testing.testcasesketch.folded-list-keeps-jk-and-ax-working`                           | `ux.librarycomponent.pane-rail`                                              | `ux`         | `tests`      | many-to-many | medium   |
+| `testing.testcasesketch.tests.ux.actioncomponent`       | `testing.testcasesketch.landed-proposal-offers-the-reversal`                           | `ux.actioncomponent.revert-control`                                          | `ux`         | `tests`      | many-to-many | medium   |
+| `testing.testcasesketch.tests.ux.actioncomponent`       | `testing.testcasesketch.not-an-element-opens-the-reason-step`                          | `ux.actioncomponent.not-an-element-button`                                   | `ux`         | `tests`      | many-to-many | medium   |
+| `testing.testcasesketch.tests.ux.subview`               | `testing.testcasesketch.not-an-element-opens-the-reason-step`                          | `ux.subview.review-inspector`                                                | `ux`         | `tests`      | many-to-many | medium   |
+| `testing.testcoveragemodel.covers.ux.uxapplication`     | `testing.testcoveragemodel.context-studio-ux-test-coverage-model`                      | `ux.uxapplication.context-studio-spa`                                        | `ux`         | `covers`     | many-to-many | medium   |
+| `testing.testcoveragetarget.covers.ux.view`             | `testing.testcoveragetarget.admin-health`                                              | `ux.view.settings-view`                                                      | `ux`         | `covers`     | many-to-many | medium   |
+| `testing.testcoveragetarget.covers.ux.view`             | `testing.testcoveragetarget.extraction-pipeline`                                       | `ux.view.pipelines-view`                                                     | `ux`         | `covers`     | many-to-many | medium   |
+| `testing.testcoveragetarget.covers.ux.view`             | `testing.testcoveragetarget.graph-analysis`                                            | `ux.view.graph-view`                                                         | `ux`         | `covers`     | many-to-many | medium   |
+| `testing.testcoveragetarget.covers.ux.view`             | `testing.testcoveragetarget.llm-pipeline-execution`                                    | `ux.view.pipeline-runs-view`                                                 | `ux`         | `covers`     | many-to-many | medium   |
+| `testing.testcoveragetarget.covers.ux.subview`          | `testing.testcoveragetarget.one-review-page`                                           | `ux.subview.review-elements-pane`                                            | `ux`         | `covers`     | many-to-many | medium   |
+| `testing.testcoveragetarget.covers.ux.subview`          | `testing.testcoveragetarget.one-review-page`                                           | `ux.subview.review-inspector`                                                | `ux`         | `covers`     | many-to-many | medium   |
+| `testing.testcoveragetarget.covers.ux.view`             | `testing.testcoveragetarget.one-review-page`                                           | `ux.view.proposal-detail-view`                                               | `ux`         | `covers`     | many-to-many | medium   |
+| `testing.testcoveragetarget.covers.ux.librarycomponent` | `testing.testcoveragetarget.pane-rails`                                                | `ux.librarycomponent.pane-rail`                                              | `ux`         | `covers`     | many-to-many | medium   |
+| `testing.testcoveragetarget.covers.ux.view`             | `testing.testcoveragetarget.pane-rails`                                                | `ux.view.proposal-detail-view`                                               | `ux`         | `covers`     | many-to-many | medium   |
+| `testing.testcoveragetarget.covers.ux.view`             | `testing.testcoveragetarget.playwright-e2e-tests`                                      | `ux.view.classes-view`                                                       | `ux`         | `covers`     | many-to-many | medium   |
+| `testing.testcoveragetarget.covers.ux.view`             | `testing.testcoveragetarget.playwright-e2e-tests`                                      | `ux.view.extraction-review-view`                                             | `ux`         | `covers`     | many-to-many | medium   |
+| `testing.testcoveragetarget.covers.ux.view`             | `testing.testcoveragetarget.playwright-e2e-tests`                                      | `ux.view.graph-view`                                                         | `ux`         | `covers`     | many-to-many | medium   |
+| `testing.testcoveragetarget.covers.ux.view`             | `testing.testcoveragetarget.playwright-e2e-tests`                                      | `ux.view.proposals-view`                                                     | `ux`         | `covers`     | many-to-many | medium   |
+| `testing.testcoveragetarget.covers.ux.view`             | `testing.testcoveragetarget.revert-and-reversal-ui`                                    | `ux.view.propose-reversal-dialog`                                            | `ux`         | `covers`     | many-to-many | medium   |
+| `testing.testcoveragetarget.covers.ux.view`             | `testing.testcoveragetarget.revert-and-reversal-ui`                                    | `ux.view.revert-proposal-dialog`                                             | `ux`         | `covers`     | many-to-many | medium   |
+| `testing.testcoveragetarget.covers.ux.librarycomponent` | `testing.testcoveragetarget.ux-component-tests`                                        | `ux.librarycomponent.app-ui-primitives`                                      | `ux`         | `covers`     | many-to-many | medium   |
+| `testing.testcoveragetarget.covers.ux.view`             | `testing.testcoveragetarget.ux-component-tests`                                        | `ux.view.proposal-detail-view`                                               | `ux`         | `covers`     | many-to-many | medium   |
+| `testing.testcoveragetarget.covers.ux.view`             | `testing.testcoveragetarget.ux-component-tests`                                        | `ux.view.run-detail-drawer`                                                  | `ux`         | `covers`     | many-to-many | medium   |
+| `testing.testcoveragetarget.covers.ux.view`             | `testing.testcoveragetarget.ux-route-tests`                                            | `ux.view.dashboard-view`                                                     | `ux`         | `covers`     | many-to-many | medium   |
+| `testing.testcoveragetarget.covers.ux.view`             | `testing.testcoveragetarget.ux-route-tests`                                            | `ux.view.individuals-view`                                                   | `ux`         | `covers`     | many-to-many | medium   |
+| `testing.testcoveragetarget.covers.ux.view`             | `testing.testcoveragetarget.versioning-workflow`                                       | `ux.view.datasets-view`                                                      | `ux`         | `covers`     | many-to-many | medium   |
+| `testing.testcoveragetarget.covers.ux.librarycomponent` | `testing.testcoveragetarget.wide-diff-overlay`                                         | `ux.librarycomponent.side-by-side-diff`                                      | `ux`         | `covers`     | many-to-many | medium   |
+| `testing.testcoveragetarget.covers.ux.view`             | `testing.testcoveragetarget.wide-diff-overlay`                                         | `ux.view.wide-diff-overlay`                                                  | `ux`         | `covers`     | many-to-many | medium   |
+| `ux.actioncomponent.satisfies.motivation.requirement`   | `ux.actioncomponent.bulk-select`                                                       | `motivation.requirement.bulk-decisions-on-every-proposal-except-gold-checks` | `motivation` | `satisfies`  | many-to-many | medium   |
+| `ux.actioncomponent.triggers.api.operation`             | `ux.actioncomponent.bulk-select`                                                       | `api.operation.apply-proposal`                                               | `api`        | `triggers`   | many-to-many | medium   |
+| `ux.actioncomponent.triggers.api.operation`             | `ux.actioncomponent.bulk-select`                                                       | `api.operation.reject-proposal`                                              | `api`        | `triggers`   | many-to-many | medium   |
+| `ux.actioncomponent.satisfies.motivation.requirement`   | `ux.actioncomponent.reject-reason-picker`                                              | `motivation.requirement.reason-codes-for-every-reject`                       | `motivation` | `satisfies`  | many-to-many | medium   |
+| `ux.actioncomponent.triggers.api.operation`             | `ux.actioncomponent.reject-reason-picker`                                              | `api.operation.reject-proposal`                                              | `api`        | `triggers`   | many-to-many | medium   |
+| `ux.actioncomponent.satisfies.motivation.requirement`   | `ux.actioncomponent.revert-control`                                                    | `motivation.requirement.landed-proposals-are-undone-by-a-reversal-proposal`  | `motivation` | `satisfies`  | many-to-many | medium   |
+| `ux.actioncomponent.triggers.api.operation`             | `ux.actioncomponent.revert-control`                                                    | `api.operation.propose-reversal`                                             | `api`        | `triggers`   | many-to-many | medium   |
+| `ux.actioncomponent.triggers.api.operation`             | `ux.actioncomponent.revert-control`                                                    | `api.operation.revert-proposal`                                              | `api`        | `triggers`   | many-to-many | medium   |
+| `ux.actioncomponent.satisfies.motivation.requirement`   | `ux.actioncomponent.wide-diff-button`                                                  | `motivation.requirement.wide-side-by-side-diff`                              | `motivation` | `satisfies`  | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.requestbody`                 | `ux.dataconfig.use-accept-rest`                                                        | `api.requestbody.accept-rest-request`                                        | `api`        | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-accept-rest`                                                        | `api.response.accept-rest-response`                                          | `api`        | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.requestbody`                 | `ux.dataconfig.use-add-class-to-individual`                                            | `api.requestbody.individual-class-request`                                   | `api`        | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-add-class-to-individual`                                            | `api.response.individual-response`                                           | `api`        | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.requestbody`                 | `ux.dataconfig.use-add-proposal-individual`                                            | `api.requestbody.add-individual-request`                                     | `api`        | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-add-proposal-individual`                                            | `api.response.change-proposal-response`                                      | `api`        | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.requestbody`                 | `ux.dataconfig.use-add-source`                                                         | `api.requestbody.add-source-request`                                         | `api`        | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-add-source`                                                         | `api.response.source-response`                                               | `api`        | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-all-change-proposals`                                               | `api.response.change-proposal-response`                                      | `api`        | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.requestbody`                 | `ux.dataconfig.use-apply-change-proposal`                                              | `api.requestbody.change-proposal-apply-request`                              | `api`        | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-apply-change-proposal`                                              | `api.response.change-proposal-response`                                      | `api`        | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-apply-reviewed-run`                                                 | `api.response.apply-run-response`                                            | `api`        | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.requestbody`                 | `ux.dataconfig.use-apply-run`                                                          | `api.requestbody.apply-run-request`                                          | `api`        | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-apply-run`                                                          | `api.response.apply-run-response`                                            | `api`        | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-attribute-definitions-by-ids`                                       | `api.response.attribute-definition-response`                                 | `api`        | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-build-graph`                                                        | `api.response.knowledge-graph-response`                                      | `api`        | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-cancel-extraction-run`                                              | `api.response.pipeline-run-response`                                         | `api`        | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-change-proposal`                                                    | `api.response.change-proposal-response`                                      | `api`        | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-change-proposals`                                                   | `api.response.change-proposal-response`                                      | `api`        | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-changes`                                                            | `api.response.change-history-response`                                       | `api`        | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-chat-session`                                                       | `api.response.chat-status-response`                                          | `api`        | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-chat-session`                                                       | `api.response.conversation-detail-response`                                  | `api`        | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-chat-session`                                                       | `api.response.conversation-response`                                         | `api`        | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-chat-status`                                                        | `api.response.chat-status-response`                                          | `api`        | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-claim`                                                              | `api.response.claim-response`                                                | `api`        | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-claims`                                                             | `api.response.claim-response`                                                | `api`        | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-class-attribute-definitions`                                        | `api.response.attribute-definition-response`                                 | `api`        | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-class-counts-by-scheme`                                             | `api.response.class-response`                                                | `api`        | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-class-counts`                                                       | `api.response.class-counts-response`                                         | `api`        | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-class`                                                              | `api.response.class-response`                                                | `api`        | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-class-search`                                                       | `api.response.class-response`                                                | `api`        | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-classes-by-ids`                                                     | `api.response.class-response`                                                | `api`        | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-classes`                                                            | `api.response.class-response`                                                | `api`        | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-clear-claim-verdict`                                                | `api.response.claim-response`                                                | `api`        | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-config`                                                             | `api.response.app-configuration-response`                                    | `api`        | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.requestbody`                 | `ux.dataconfig.use-create-class`                                                       | `api.requestbody.class-create-request`                                       | `api`        | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-create-class`                                                       | `api.response.class-response`                                                | `api`        | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.requestbody`                 | `ux.dataconfig.use-create-configuration`                                               | `api.requestbody.pipeline-configuration-create-request`                      | `api`        | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-create-configuration`                                               | `api.response.pipeline-configuration-response`                               | `api`        | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.requestbody`                 | `ux.dataconfig.use-create-dataset`                                                     | `api.requestbody.dataset-create-request`                                     | `api`        | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-create-dataset`                                                     | `api.response.dataset-response`                                              | `api`        | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.requestbody`                 | `ux.dataconfig.use-create-grounding-workflow`                                          | `api.requestbody.grounding-workflow-create`                                  | `api`        | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-create-grounding-workflow`                                          | `api.response.grounding-workflow-response`                                   | `api`        | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.requestbody`                 | `ux.dataconfig.use-create-individual`                                                  | `api.requestbody.individual-create-request`                                  | `api`        | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-create-individual`                                                  | `api.response.individual-response`                                           | `api`        | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.requestbody`                 | `ux.dataconfig.use-create-property`                                                    | `api.requestbody.property-definition-create-request`                         | `api`        | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-create-property`                                                    | `api.response.property-definition-response`                                  | `api`        | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.requestbody`                 | `ux.dataconfig.use-create-relationship`                                                | `api.requestbody.relationship-create-request`                                | `api`        | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-create-relationship`                                                | `api.response.relationship-response`                                         | `api`        | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.requestbody`                 | `ux.dataconfig.use-create-scheme`                                                      | `api.requestbody.concept-scheme-create-request`                              | `api`        | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-create-scheme`                                                      | `api.response.concept-scheme-response`                                       | `api`        | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.requestbody`                 | `ux.dataconfig.use-create-taxonomy`                                                    | `api.requestbody.taxonomy-create-request`                                    | `api`        | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-create-taxonomy`                                                    | `api.response.taxonomy-response`                                             | `api`        | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-datasets`                                                           | `api.response.dataset-response`                                              | `api`        | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.requestbody`                 | `ux.dataconfig.use-decide-pair`                                                        | `api.requestbody.pair-decision-request`                                      | `api`        | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-decide-pair`                                                        | `api.response.pair-decision-response`                                        | `api`        | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-delete-dataset`                                                     | `api.response.dataset-deletion-response`                                     | `api`        | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-demo-datasets`                                                      | `api.response.demo-dataset-descriptor-response`                              | `api`        | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.requestbody`                 | `ux.dataconfig.use-dr-spec-drift`                                                      | `api.requestbody.dr-spec-drift-request`                                      | `api`        | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-dr-spec-drift`                                                      | `api.response.drift-response`                                                | `api`        | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-edge-attributes`                                                    | `api.response.attribute-definition-response`                                 | `api`        | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.requestbody`                 | `ux.dataconfig.use-enqueue-batch-runs`                                                 | `api.requestbody.enqueue-batch-runs-request`                                 | `api`        | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-enqueue-batch-runs`                                                 | `api.response.enqueue-batch-runs-response`                                   | `api`        | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-entities-by-id`                                                     | `api.response.class-response`                                                | `api`        | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-entities-by-id`                                                     | `api.response.concept-scheme-response`                                       | `api`        | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-entities-by-id`                                                     | `api.response.individual-response`                                           | `api`        | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-entities-by-id`                                                     | `api.response.property-definition-response`                                  | `api`        | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-entities-by-id`                                                     | `api.response.taxonomy-response`                                             | `api`        | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-entity-counts`                                                      | `api.response.class-response`                                                | `api`        | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-entity-counts`                                                      | `api.response.concept-scheme-response`                                       | `api`        | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-entity-counts`                                                      | `api.response.individual-response`                                           | `api`        | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-entity-counts`                                                      | `api.response.property-definition-response`                                  | `api`        | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-entity-counts`                                                      | `api.response.relationship-response`                                         | `api`        | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-entity-counts`                                                      | `api.response.taxonomy-response`                                             | `api`        | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-entity-sources`                                                     | `api.response.entity-source-response`                                        | `api`        | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-entity-type-query`                                                  | `api.response.class-response`                                                | `api`        | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-entity-type-query`                                                  | `api.response.concept-scheme-response`                                       | `api`        | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-entity-type-query`                                                  | `api.response.individual-response`                                           | `api`        | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-entity-type-query`                                                  | `api.response.property-definition-response`                                  | `api`        | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-entity-type-query`                                                  | `api.response.taxonomy-response`                                             | `api`        | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-export-proposal-decisions`                                          | `api.response.dr-decision-response`                                          | `api`        | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.requestbody`                 | `ux.dataconfig.use-extract-source`                                                     | `api.requestbody.source-extract-request`                                     | `api`        | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-extract-source`                                                     | `api.response.source-extract-response`                                       | `api`        | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-extraction-examples`                                                | `api.response.extraction-example-response`                                   | `api`        | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-extraction-review-runs`                                             | `api.response.pipeline-run-response`                                         | `api`        | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-extraction-run`                                                     | `api.response.pipeline-run-response`                                         | `api`        | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-graph-metrics`                                                      | `api.response.graph-metrics-response`                                        | `api`        | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-graph-view`                                                         | `api.response.graph-view-response`                                           | `api`        | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-grounding-workflow`                                                 | `api.response.grounding-workflow-response`                                   | `api`        | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-grounding-workflow-runs`                                            | `api.response.workflow-run-response`                                         | `api`        | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-grounding-workflows`                                                | `api.response.grounding-workflow-response`                                   | `api`        | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-health`                                                             | `api.response.system-health-response`                                        | `api`        | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-individual-extraction-candidates`                                   | `api.response.candidate-item`                                                | `api`        | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-individual-inherited-properties`                                    | `api.response.data-property-value-response`                                  | `api`        | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-individual`                                                         | `api.response.individual-response`                                           | `api`        | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-individual-search`                                                  | `api.response.individual-response`                                           | `api`        | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-individuals-by-ids`                                                 | `api.response.individual-response`                                           | `api`        | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-individuals-in-classes`                                             | `api.response.individual-response`                                           | `api`        | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-individuals`                                                        | `api.response.individual-response`                                           | `api`        | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-inspector-model`                                                    | `api.response.change-proposal-response`                                      | `api`        | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-load-demo-dataset`                                                  | `api.response.demo-dataset-load-response`                                    | `api`        | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-mcp-connection`                                                     | `api.response.mcp-connection-response`                                       | `api`        | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.requestbody`                 | `ux.dataconfig.use-move-class`                                                         | `api.requestbody.class-move-request`                                         | `api`        | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-move-class`                                                         | `api.response.class-response`                                                | `api`        | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.requestbody`                 | `ux.dataconfig.use-move-scheme`                                                        | `api.requestbody.concept-scheme-update-request`                              | `api`        | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-move-scheme`                                                        | `api.response.concept-scheme-response`                                       | `api`        | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-pipeline-candidates`                                                | `api.response.candidate-item`                                                | `api`        | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-pipeline-configurations`                                            | `api.response.pipeline-configuration-response`                               | `api`        | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-pipeline-implementations`                                           | `api.response.implementation-response`                                       | `api`        | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-pipeline-run-change-events`                                         | `api.response.versioning-change-event-response`                              | `api`        | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-pipeline-run`                                                       | `api.response.pipeline-run-response`                                         | `api`        | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-pipeline-runs`                                                      | `api.response.pipeline-run-response`                                         | `api`        | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-pipeline-types`                                                     | `api.response.pipeline-type-response`                                        | `api`        | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-predicates-by-ids`                                                  | `api.response.predicate-response`                                            | `api`        | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-properties-by-ids`                                                  | `api.response.property-definition-response`                                  | `api`        | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-properties`                                                         | `api.response.property-definition-response`                                  | `api`        | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-proposal-comparison`                                                | `api.response.proposal-comparison-response`                                  | `api`        | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-proposal-decisions`                                                 | `api.response.gold-decision-response`                                        | `api`        | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-propose-reversal`                                                   | `api.response.change-proposal-response`                                      | `api`        | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-publish-diff-stats`                                                 | `api.response.publish-diff-stats`                                            | `api`        | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.requestbody`                 | `ux.dataconfig.use-publish-taxonomy`                                                   | `api.requestbody.taxonomy-publish-request`                                   | `api`        | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-publish-taxonomy`                                                   | `api.response.taxonomy-response`                                             | `api`        | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-pull-sync`                                                          | `api.response.sync-result-response`                                          | `api`        | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-push-sync`                                                          | `api.response.sync-result-response`                                          | `api`        | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-recognition-preview`                                                | `api.response.recognition-preview-response`                                  | `api`        | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-reference-status`                                                   | `api.response.reference-status-response-schema`                              | `api`        | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-registered-models`                                                  | `api.response.pipeline-configuration-response`                               | `api`        | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.requestbody`                 | `ux.dataconfig.use-reject-change-proposal`                                             | `api.requestbody.change-proposal-reject-request`                             | `api`        | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-reject-change-proposal`                                             | `api.response.change-proposal-response`                                      | `api`        | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-relationships-by-ids`                                               | `api.response.relationship-response`                                         | `api`        | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-relationships`                                                      | `api.response.relationship-response`                                         | `api`        | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-relationships-touching`                                             | `api.response.relationship-response`                                         | `api`        | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-remove-source`                                                      | `api.response.source-response`                                               | `api`        | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.requestbody`                 | `ux.dataconfig.use-reopen-proposal-operations`                                         | `api.requestbody.change-proposal-reopen-request`                             | `api`        | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-reopen-proposal-operations`                                         | `api.response.change-proposal-response`                                      | `api`        | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.requestbody`                 | `ux.dataconfig.use-reorder-individual-classes`                                         | `api.requestbody.individual-class-list-request`                              | `api`        | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-reorder-individual-classes`                                         | `api.response.individual-response`                                           | `api`        | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-revert-change-proposal`                                             | `api.response.change-proposal-revert-response`                               | `api`        | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-revert-preview`                                                     | `api.response.revert-preview-response`                                       | `api`        | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-revert-run`                                                         | `api.response.revert-run-response`                                           | `api`        | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-run-grounding-workflow`                                             | `api.response.workflow-run-response`                                         | `api`        | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.requestbody`                 | `ux.dataconfig.use-run-pipeline`                                                       | `api.requestbody.pipeline-run-request`                                       | `api`        | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-run-pipeline`                                                       | `api.response.pipeline-run-response`                                         | `api`        | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-run-wizard`                                                         | `api.response.pipeline-run-response`                                         | `api`        | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-schema-extraction-candidates`                                       | `api.response.candidate-item`                                                | `api`        | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-scheme-counts-for-taxonomies`                                       | `api.response.scheme-counts-response`                                        | `api`        | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-scheme-counts`                                                      | `api.response.scheme-counts-response`                                        | `api`        | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-scheme`                                                             | `api.response.concept-scheme-response`                                       | `api`        | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-schemes-by-ids`                                                     | `api.response.concept-scheme-response`                                       | `api`        | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-schemes`                                                            | `api.response.concept-scheme-response`                                       | `api`        | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.requestbody`                 | `ux.dataconfig.use-set-claim-verdict`                                                  | `api.requestbody.claim-verdict-request`                                      | `api`        | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-set-claim-verdict`                                                  | `api.response.claim-response`                                                | `api`        | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.requestbody`                 | `ux.dataconfig.use-set-property-relevance`                                             | `api.requestbody.property-definition-update-request`                         | `api`        | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-set-property-relevance`                                             | `api.response.property-definition-response`                                  | `api`        | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-shortest-path`                                                      | `api.response.path-result-response`                                          | `api`        | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-source`                                                             | `api.response.source-response`                                               | `api`        | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-source-text`                                                        | `api.response.source-text-response`                                          | `api`        | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-sources-by-ids`                                                     | `api.response.source-response`                                               | `api`        | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-sources`                                                            | `api.response.source-response`                                               | `api`        | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.requestbody`                 | `ux.dataconfig.use-sparql-query`                                                       | `api.requestbody.sparqlrequest`                                              | `api`        | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-sparql-query`                                                       | `api.response.sparqlresponse`                                                | `api`        | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-stats-trends`                                                       | `api.response.stats-trends-response`                                         | `api`        | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-sync-status`                                                        | `api.response.sync-status-response`                                          | `api`        | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-taxonomies-by-ids`                                                  | `api.response.taxonomy-response`                                             | `api`        | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-taxonomies`                                                         | `api.response.taxonomy-response`                                             | `api`        | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-taxonomy-classes`                                                   | `api.response.class-response`                                                | `api`        | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-taxonomy`                                                           | `api.response.taxonomy-response`                                             | `api`        | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-taxonomy-predicates`                                                | `api.response.predicate-response`                                            | `api`        | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.requestbody`                 | `ux.dataconfig.use-update-class`                                                       | `api.requestbody.class-update-request`                                       | `api`        | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-update-class`                                                       | `api.response.class-response`                                                | `api`        | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.requestbody`                 | `ux.dataconfig.use-update-config`                                                      | `api.requestbody.config-section-update-request`                              | `api`        | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-update-config`                                                      | `api.response.app-configuration-response`                                    | `api`        | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.requestbody`                 | `ux.dataconfig.use-update-configuration`                                               | `api.requestbody.pipeline-configuration-update-request`                      | `api`        | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-update-configuration`                                               | `api.response.pipeline-configuration-response`                               | `api`        | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.requestbody`                 | `ux.dataconfig.use-update-grounding-workflow`                                          | `api.requestbody.grounding-workflow-update`                                  | `api`        | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-update-grounding-workflow`                                          | `api.response.grounding-workflow-response`                                   | `api`        | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.requestbody`                 | `ux.dataconfig.use-update-individual`                                                  | `api.requestbody.individual-update-request`                                  | `api`        | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-update-individual`                                                  | `api.response.individual-response`                                           | `api`        | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.requestbody`                 | `ux.dataconfig.use-update-property`                                                    | `api.requestbody.property-definition-update-request`                         | `api`        | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-update-property`                                                    | `api.response.property-definition-response`                                  | `api`        | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.requestbody`                 | `ux.dataconfig.use-update-scheme`                                                      | `api.requestbody.concept-scheme-update-request`                              | `api`        | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-update-scheme`                                                      | `api.response.concept-scheme-response`                                       | `api`        | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.requestbody`                 | `ux.dataconfig.use-update-taxonomy`                                                    | `api.requestbody.taxonomy-update-request`                                    | `api`        | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-update-taxonomy`                                                    | `api.response.taxonomy-response`                                             | `api`        | `maps-to`    | many-to-many | medium   |
+| `ux.librarycomponent.satisfies.motivation.requirement`  | `ux.librarycomponent.pane-rail`                                                        | `motivation.requirement.focus-by-folding-panes-to-rails`                     | `motivation` | `satisfies`  | many-to-many | medium   |
+| `ux.librarycomponent.satisfies.motivation.requirement`  | `ux.librarycomponent.side-by-side-diff`                                                | `motivation.requirement.wide-side-by-side-diff`                              | `motivation` | `satisfies`  | many-to-many | medium   |
+| `ux.view.depends-on.technology.systemsoftware`          | `ux.view.app-shell-view`                                                               | `technology.systemsoftware.axios`                                            | `technology` | `depends-on` | many-to-many | medium   |
+| `ux.view.depends-on.technology.systemsoftware`          | `ux.view.app-shell-view`                                                               | `technology.systemsoftware.heimdall-ui`                                      | `technology` | `depends-on` | many-to-many | medium   |
+| `ux.view.depends-on.technology.systemsoftware`          | `ux.view.app-shell-view`                                                               | `technology.systemsoftware.open-telemetry-web-sdk`                           | `technology` | `depends-on` | many-to-many | medium   |
+| `ux.view.depends-on.technology.systemsoftware`          | `ux.view.app-shell-view`                                                               | `technology.systemsoftware.react`                                            | `technology` | `depends-on` | many-to-many | medium   |
+| `ux.view.depends-on.technology.systemsoftware`          | `ux.view.app-shell-view`                                                               | `technology.systemsoftware.tan-stack-query`                                  | `technology` | `depends-on` | many-to-many | medium   |
+| `ux.view.depends-on.technology.systemsoftware`          | `ux.view.app-shell-view`                                                               | `technology.systemsoftware.tan-stack-router`                                 | `technology` | `depends-on` | many-to-many | medium   |
+| `ux.view.depends-on.technology.systemsoftware`          | `ux.view.app-shell-view`                                                               | `technology.systemsoftware.zustand`                                          | `technology` | `depends-on` | many-to-many | medium   |
+| `ux.view.realizes.product.feature`                      | `ux.view.app-shell-view`                                                               | `product.feature.chat-panel`                                                 | `product`    | `realizes`   | many-to-many | medium   |
+| `ux.view.realizes.product.feature`                      | `ux.view.app-shell-view`                                                               | `product.feature.system-health-and-background-tasks`                         | `product`    | `realizes`   | many-to-many | medium   |
+| `ux.view.realizes.product.feature`                      | `ux.view.batch-detail-view`                                                            | `product.feature.runs-page`                                                  | `product`    | `realizes`   | many-to-many | medium   |
+| `ux.view.realizes.product.feature`                      | `ux.view.benchmark-gold-view`                                                          | `product.feature.gold-mode`                                                  | `product`    | `realizes`   | many-to-many | medium   |
+| `ux.view.realizes.product.feature`                      | `ux.view.cascade-delete-dialog`                                                        | `product.feature.schema-and-data-pages`                                      | `product`    | `realizes`   | many-to-many | medium   |
+| `ux.view.realizes.product.feature`                      | `ux.view.claims-view`                                                                  | `product.feature.claims-page`                                                | `product`    | `realizes`   | many-to-many | medium   |
+| `ux.view.realizes.product.feature`                      | `ux.view.class-detail-view`                                                            | `product.feature.pending-changes-on-entity-pages`                            | `product`    | `realizes`   | many-to-many | medium   |
+| `ux.view.realizes.product.feature`                      | `ux.view.class-detail-view`                                                            | `product.feature.schema-and-data-pages`                                      | `product`    | `realizes`   | many-to-many | medium   |
+| `ux.view.depends-on.technology.systemsoftware`          | `ux.view.class-drawer`                                                                 | `technology.systemsoftware.tan-stack-form`                                   | `technology` | `depends-on` | many-to-many | medium   |
+| `ux.view.realizes.product.feature`                      | `ux.view.class-drawer`                                                                 | `product.feature.inline-suggesters-in-drawers`                               | `product`    | `realizes`   | many-to-many | medium   |
+| `ux.view.realizes.product.feature`                      | `ux.view.class-drawer`                                                                 | `product.feature.schema-and-data-pages`                                      | `product`    | `realizes`   | many-to-many | medium   |
+| `ux.view.realizes.product.feature`                      | `ux.view.classes-view`                                                                 | `product.feature.dataset-selector`                                           | `product`    | `realizes`   | many-to-many | medium   |
+| `ux.view.realizes.product.feature`                      | `ux.view.classes-view`                                                                 | `product.feature.schema-and-data-pages`                                      | `product`    | `realizes`   | many-to-many | medium   |
+| `ux.view.depends-on.technology.systemsoftware`          | `ux.view.command-palette`                                                              | `technology.systemsoftware.heimdall-ui`                                      | `technology` | `depends-on` | many-to-many | medium   |
+| `ux.view.realizes.product.feature`                      | `ux.view.concept-scheme-detail-view`                                                   | `product.feature.schema-and-data-pages`                                      | `product`    | `realizes`   | many-to-many | medium   |
+| `ux.view.realizes.product.feature`                      | `ux.view.concept-schemes-index-view`                                                   | `product.feature.schema-and-data-pages`                                      | `product`    | `realizes`   | many-to-many | medium   |
+| `ux.view.realizes.product.feature`                      | `ux.view.concept-schemes-view`                                                         | `product.feature.schema-and-data-pages`                                      | `product`    | `realizes`   | many-to-many | medium   |
+| `ux.view.realizes.product.feature`                      | `ux.view.create-dataset-modal`                                                         | `product.feature.schema-and-data-pages`                                      | `product`    | `realizes`   | many-to-many | medium   |
+| `ux.view.realizes.product.feature`                      | `ux.view.create-drawer`                                                                | `product.feature.inline-suggesters-in-drawers`                               | `product`    | `realizes`   | many-to-many | medium   |
+| `ux.view.realizes.product.feature`                      | `ux.view.create-drawer`                                                                | `product.feature.schema-and-data-pages`                                      | `product`    | `realizes`   | many-to-many | medium   |
+| `ux.view.realizes.product.feature`                      | `ux.view.dashboard-view`                                                               | `product.feature.dataset-selector`                                           | `product`    | `realizes`   | many-to-many | medium   |
+| `ux.view.realizes.product.feature`                      | `ux.view.dashboard-view`                                                               | `product.feature.demo-dataset-loader`                                        | `product`    | `realizes`   | many-to-many | medium   |
+| `ux.view.realizes.product.feature`                      | `ux.view.dashboard-view`                                                               | `product.feature.system-health-and-background-tasks`                         | `product`    | `realizes`   | many-to-many | medium   |
+| `ux.view.realizes.product.feature`                      | `ux.view.datasets-view`                                                                | `product.feature.dataset-selector`                                           | `product`    | `realizes`   | many-to-many | medium   |
+| `ux.view.realizes.product.feature`                      | `ux.view.datasets-view`                                                                | `product.feature.schema-and-data-pages`                                      | `product`    | `realizes`   | many-to-many | medium   |
+| `ux.view.realizes.product.feature`                      | `ux.view.delete-dataset-dialog`                                                        | `product.feature.schema-and-data-pages`                                      | `product`    | `realizes`   | many-to-many | medium   |
+| `ux.view.realizes.product.feature`                      | `ux.view.dr-spec-drift-dialog`                                                         | `product.feature.check-drift`                                                | `product`    | `realizes`   | many-to-many | medium   |
+| `ux.view.realizes.product.feature`                      | `ux.view.extract-source-view`                                                          | `product.feature.sources-page-and-extract-flow`                              | `product`    | `realizes`   | many-to-many | medium   |
+| `ux.view.realizes.product.feature`                      | `ux.view.extraction-review-view`                                                       | `product.feature.extraction-review-bench`                                    | `product`    | `realizes`   | many-to-many | medium   |
+| `ux.view.realizes.product.feature`                      | `ux.view.graph-view`                                                                   | `product.feature.dataset-selector`                                           | `product`    | `realizes`   | many-to-many | medium   |
+| `ux.view.realizes.product.feature`                      | `ux.view.graph-view`                                                                   | `product.feature.graph-view`                                                 | `product`    | `realizes`   | many-to-many | medium   |
+| `ux.view.depends-on.technology.systemsoftware`          | `ux.view.grounding-workflow-drawer`                                                    | `technology.systemsoftware.tan-stack-form`                                   | `technology` | `depends-on` | many-to-many | medium   |
+| `ux.view.realizes.product.feature`                      | `ux.view.grounding-workflow-drawer`                                                    | `product.feature.reference-sources-and-grounding-workflows`                  | `product`    | `realizes`   | many-to-many | medium   |
+| `ux.view.realizes.product.feature`                      | `ux.view.grounding-workflows-view`                                                     | `product.feature.reference-sources-and-grounding-workflows`                  | `product`    | `realizes`   | many-to-many | medium   |
+| `ux.view.realizes.product.feature`                      | `ux.view.individual-detail-view`                                                       | `product.feature.dataset-selector`                                           | `product`    | `realizes`   | many-to-many | medium   |
+| `ux.view.realizes.product.feature`                      | `ux.view.individual-detail-view`                                                       | `product.feature.schema-and-data-pages`                                      | `product`    | `realizes`   | many-to-many | medium   |
+| `ux.view.realizes.product.feature`                      | `ux.view.individual-detail-view`                                                       | `product.feature.source-citations-on-entity-pages`                           | `product`    | `realizes`   | many-to-many | medium   |
+| `ux.view.depends-on.technology.systemsoftware`          | `ux.view.individual-drawer`                                                            | `technology.systemsoftware.tan-stack-form`                                   | `technology` | `depends-on` | many-to-many | medium   |
+| `ux.view.realizes.product.feature`                      | `ux.view.individual-drawer`                                                            | `product.feature.schema-and-data-pages`                                      | `product`    | `realizes`   | many-to-many | medium   |
+| `ux.view.depends-on.technology.systemsoftware`          | `ux.view.individuals-view`                                                             | `technology.systemsoftware.tan-stack-table`                                  | `technology` | `depends-on` | many-to-many | medium   |
+| `ux.view.realizes.product.feature`                      | `ux.view.individuals-view`                                                             | `product.feature.dataset-selector`                                           | `product`    | `realizes`   | many-to-many | medium   |
+| `ux.view.realizes.product.feature`                      | `ux.view.individuals-view`                                                             | `product.feature.schema-and-data-pages`                                      | `product`    | `realizes`   | many-to-many | medium   |
+| `ux.view.realizes.product.feature`                      | `ux.view.pipeline-runs-view`                                                           | `product.feature.runs-page`                                                  | `product`    | `realizes`   | many-to-many | medium   |
+| `ux.view.realizes.product.feature`                      | `ux.view.pipelines-view`                                                               | `product.feature.pipeline-run-wizard`                                        | `product`    | `realizes`   | many-to-many | medium   |
+| `ux.view.realizes.product.feature`                      | `ux.view.properties-view`                                                              | `product.feature.schema-and-data-pages`                                      | `product`    | `realizes`   | many-to-many | medium   |
+| `ux.view.depends-on.technology.systemsoftware`          | `ux.view.property-drawer`                                                              | `technology.systemsoftware.tan-stack-form`                                   | `technology` | `depends-on` | many-to-many | medium   |
+| `ux.view.realizes.product.feature`                      | `ux.view.property-drawer`                                                              | `product.feature.inline-suggesters-in-drawers`                               | `product`    | `realizes`   | many-to-many | medium   |
+| `ux.view.realizes.product.feature`                      | `ux.view.property-drawer`                                                              | `product.feature.pending-changes-on-entity-pages`                            | `product`    | `realizes`   | many-to-many | medium   |
+| `ux.view.realizes.product.feature`                      | `ux.view.property-drawer`                                                              | `product.feature.schema-and-data-pages`                                      | `product`    | `realizes`   | many-to-many | medium   |
+| `ux.view.realizes.product.feature`                      | `ux.view.proposal-compare-view`                                                        | `product.feature.compare-two-pipelines`                                      | `product`    | `realizes`   | many-to-many | medium   |
+| `ux.view.realizes.product.feature`                      | `ux.view.proposal-detail-view`                                                         | `product.feature.gold-mode`                                                  | `product`    | `realizes`   | many-to-many | medium   |
+| `ux.view.realizes.product.feature`                      | `ux.view.proposal-detail-view`                                                         | `product.feature.proposal-queue-and-detail`                                  | `product`    | `realizes`   | many-to-many | medium   |
+| `ux.view.realizes.product.feature`                      | `ux.view.proposal-detail-view`                                                         | `product.feature.proposal-review-page`                                       | `product`    | `realizes`   | many-to-many | medium   |
+| `ux.view.realizes.product.feature`                      | `ux.view.proposal-detail-view`                                                         | `product.feature.reversal-proposals`                                         | `product`    | `realizes`   | many-to-many | medium   |
+| `ux.view.satisfies.motivation.requirement`              | `ux.view.proposal-detail-view`                                                         | `motivation.requirement.bulk-decisions-on-every-proposal-except-gold-checks` | `motivation` | `satisfies`  | many-to-many | medium   |
+| `ux.view.satisfies.motivation.requirement`              | `ux.view.proposal-detail-view`                                                         | `motivation.requirement.focus-by-folding-panes-to-rails`                     | `motivation` | `satisfies`  | many-to-many | medium   |
+| `ux.view.satisfies.motivation.requirement`              | `ux.view.proposal-detail-view`                                                         | `motivation.requirement.reason-codes-for-every-reject`                       | `motivation` | `satisfies`  | many-to-many | medium   |
+| `ux.view.satisfies.motivation.requirement`              | `ux.view.proposal-detail-view`                                                         | `motivation.requirement.reversal-is-decided-like-any-proposal`               | `motivation` | `satisfies`  | many-to-many | medium   |
+| `ux.view.satisfies.motivation.requirement`              | `ux.view.proposal-detail-view`                                                         | `motivation.requirement.reversed-proposal-status`                            | `motivation` | `satisfies`  | many-to-many | medium   |
+| `ux.view.serves.business.businessrole`                  | `ux.view.proposal-detail-view`                                                         | `business.businessrole.reviewer`                                             | `business`   | `serves`     | many-to-many | medium   |
+| `ux.view.supports.motivation.goal`                      | `ux.view.proposal-detail-view`                                                         | `motivation.goal.one-review-surface`                                         | `motivation` | `supports`   | many-to-many | medium   |
+| `ux.view.realizes.product.feature`                      | `ux.view.proposals-view`                                                               | `product.feature.proposal-queue-and-detail`                                  | `product`    | `realizes`   | many-to-many | medium   |
+| `ux.view.satisfies.motivation.requirement`              | `ux.view.proposals-view`                                                               | `motivation.requirement.reversed-proposal-status`                            | `motivation` | `satisfies`  | many-to-many | medium   |
+| `ux.view.serves.business.businessrole`                  | `ux.view.proposals-view`                                                               | `business.businessrole.reviewer`                                             | `business`   | `serves`     | many-to-many | medium   |
+| `ux.view.realizes.product.feature`                      | `ux.view.propose-reversal-dialog`                                                      | `product.feature.reversal-proposals`                                         | `product`    | `realizes`   | many-to-many | medium   |
+| `ux.view.satisfies.motivation.requirement`              | `ux.view.propose-reversal-dialog`                                                      | `motivation.requirement.landed-proposals-are-undone-by-a-reversal-proposal`  | `motivation` | `satisfies`  | many-to-many | medium   |
+| `ux.view.serves.business.businessrole`                  | `ux.view.propose-reversal-dialog`                                                      | `business.businessrole.reviewer`                                             | `business`   | `serves`     | many-to-many | medium   |
+| `ux.view.realizes.product.feature`                      | `ux.view.reference-source-drawer`                                                      | `product.feature.reference-sources-and-grounding-workflows`                  | `product`    | `realizes`   | many-to-many | medium   |
+| `ux.view.realizes.product.feature`                      | `ux.view.reference-sources-view`                                                       | `product.feature.reference-sources-and-grounding-workflows`                  | `product`    | `realizes`   | many-to-many | medium   |
+| `ux.view.depends-on.technology.systemsoftware`          | `ux.view.relationship-drawer`                                                          | `technology.systemsoftware.tan-stack-form`                                   | `technology` | `depends-on` | many-to-many | medium   |
+| `ux.view.realizes.product.feature`                      | `ux.view.relationship-drawer`                                                          | `product.feature.schema-and-data-pages`                                      | `product`    | `realizes`   | many-to-many | medium   |
+| `ux.view.realizes.product.feature`                      | `ux.view.relationship-drawer`                                                          | `product.feature.source-citations-on-entity-pages`                           | `product`    | `realizes`   | many-to-many | medium   |
+| `ux.view.realizes.product.feature`                      | `ux.view.relationships-view`                                                           | `product.feature.dataset-selector`                                           | `product`    | `realizes`   | many-to-many | medium   |
+| `ux.view.realizes.product.feature`                      | `ux.view.relationships-view`                                                           | `product.feature.schema-and-data-pages`                                      | `product`    | `realizes`   | many-to-many | medium   |
+| `ux.view.realizes.product.feature`                      | `ux.view.revert-proposal-dialog`                                                       | `product.feature.proposal-queue-and-detail`                                  | `product`    | `realizes`   | many-to-many | medium   |
+| `ux.view.satisfies.motivation.requirement`              | `ux.view.revert-proposal-dialog`                                                       | `motivation.requirement.in-place-revert-warns-of-overwritten-edits`          | `motivation` | `satisfies`  | many-to-many | medium   |
+| `ux.view.serves.business.businessrole`                  | `ux.view.revert-proposal-dialog`                                                       | `business.businessrole.reviewer`                                             | `business`   | `serves`     | many-to-many | medium   |
+| `ux.view.realizes.product.feature`                      | `ux.view.run-detail-drawer`                                                            | `product.feature.runs-page`                                                  | `product`    | `realizes`   | many-to-many | medium   |
+| `ux.view.realizes.product.feature`                      | `ux.view.run-wizard-view`                                                              | `product.feature.pipeline-run-wizard`                                        | `product`    | `realizes`   | many-to-many | medium   |
+| `ux.view.depends-on.technology.systemsoftware`          | `ux.view.scheme-drawer`                                                                | `technology.systemsoftware.tan-stack-form`                                   | `technology` | `depends-on` | many-to-many | medium   |
+| `ux.view.realizes.product.feature`                      | `ux.view.scheme-drawer`                                                                | `product.feature.inline-suggesters-in-drawers`                               | `product`    | `realizes`   | many-to-many | medium   |
+| `ux.view.realizes.product.feature`                      | `ux.view.scheme-drawer`                                                                | `product.feature.schema-and-data-pages`                                      | `product`    | `realizes`   | many-to-many | medium   |
+| `ux.view.realizes.product.feature`                      | `ux.view.settings-view`                                                                | `product.feature.configuration-settings`                                     | `product`    | `realizes`   | many-to-many | medium   |
+| `ux.view.realizes.product.feature`                      | `ux.view.settings-view`                                                                | `product.feature.mcp-integration-settings`                                   | `product`    | `realizes`   | many-to-many | medium   |
+| `ux.view.requires.security.role`                        | `ux.view.settings-view`                                                                | `security.role.local-operator`                                               | `security`   | `requires`   | many-to-many | medium   |
+| `ux.view.realizes.product.feature`                      | `ux.view.sources-view`                                                                 | `product.feature.sources-page-and-extract-flow`                              | `product`    | `realizes`   | many-to-many | medium   |
+| `ux.view.realizes.product.feature`                      | `ux.view.taxonomies-view`                                                              | `product.feature.dataset-selector`                                           | `product`    | `realizes`   | many-to-many | medium   |
+| `ux.view.realizes.product.feature`                      | `ux.view.taxonomies-view`                                                              | `product.feature.schema-and-data-pages`                                      | `product`    | `realizes`   | many-to-many | medium   |
+| `ux.view.realizes.product.feature`                      | `ux.view.taxonomy-detail-view`                                                         | `product.feature.check-drift`                                                | `product`    | `realizes`   | many-to-many | medium   |
+| `ux.view.realizes.product.feature`                      | `ux.view.taxonomy-detail-view`                                                         | `product.feature.export-bundle`                                              | `product`    | `realizes`   | many-to-many | medium   |
+| `ux.view.realizes.product.feature`                      | `ux.view.taxonomy-detail-view`                                                         | `product.feature.pending-changes-on-entity-pages`                            | `product`    | `realizes`   | many-to-many | medium   |
+| `ux.view.realizes.product.feature`                      | `ux.view.taxonomy-detail-view`                                                         | `product.feature.schema-and-data-pages`                                      | `product`    | `realizes`   | many-to-many | medium   |
+| `ux.view.depends-on.technology.systemsoftware`          | `ux.view.taxonomy-drawer`                                                              | `technology.systemsoftware.tan-stack-form`                                   | `technology` | `depends-on` | many-to-many | medium   |
+| `ux.view.realizes.product.feature`                      | `ux.view.taxonomy-drawer`                                                              | `product.feature.inline-suggesters-in-drawers`                               | `product`    | `realizes`   | many-to-many | medium   |
+| `ux.view.realizes.product.feature`                      | `ux.view.taxonomy-drawer`                                                              | `product.feature.schema-and-data-pages`                                      | `product`    | `realizes`   | many-to-many | medium   |
+| `ux.view.realizes.product.feature`                      | `ux.view.taxonomy-publish-dialog`                                                      | `product.feature.schema-and-data-pages`                                      | `product`    | `realizes`   | many-to-many | medium   |
+| `ux.view.realizes.product.feature`                      | `ux.view.versioning-view`                                                              | `product.feature.change-history-and-sync`                                    | `product`    | `realizes`   | many-to-many | medium   |
+| `ux.view.depends-on.technology.systemsoftware`          | `ux.view.wide-diff-overlay`                                                            | `technology.systemsoftware.heimdall-ui`                                      | `technology` | `depends-on` | many-to-many | medium   |
+| `ux.view.realizes.product.feature`                      | `ux.view.wide-diff-overlay`                                                            | `product.feature.proposal-review-page`                                       | `product`    | `realizes`   | many-to-many | medium   |
+| `ux.view.satisfies.motivation.requirement`              | `ux.view.wide-diff-overlay`                                                            | `motivation.requirement.wide-side-by-side-diff`                              | `motivation` | `satisfies`  | many-to-many | medium   |
+| `ux.view.serves.business.businessrole`                  | `ux.view.wide-diff-overlay`                                                            | `business.businessrole.reviewer`                                             | `business`   | `serves`     | many-to-many | medium   |
 
 ## Element Reference
+
+### Bulk Select {#bulk-select}
+
+**ID**: `ux.actioncomponent.bulk-select`
+
+**Type**: `actioncomponent`
+
+Select ▾ (all ready · at threshold · all awaiting) and the bulk bar: Accept N ready, Reject all (with one reason code). On every proposal except gold checks.
+
+#### Attributes
+
+| Name  | Value  |
+| ----- | ------ |
+| label | Select |
+| type  | menu   |
+
+#### Relationships
+
+| Type        | Related Element                                                              | Predicate   | Direction |
+| ----------- | ---------------------------------------------------------------------------- | ----------- | --------- |
+| inter-layer | `testing.testcasesketch.bulk-is-hidden-on-gold-checks`                       | `tests`     | inbound   |
+| inter-layer | `motivation.requirement.bulk-decisions-on-every-proposal-except-gold-checks` | `satisfies` | outbound  |
+| inter-layer | `api.operation.apply-proposal`                                               | `triggers`  | outbound  |
+| inter-layer | `api.operation.reject-proposal`                                              | `triggers`  | outbound  |
+| intra-layer | `ux.dataconfig.use-apply-change-proposal`                                    | `binds-to`  | outbound  |
+| intra-layer | `ux.dataconfig.use-reject-change-proposal`                                   | `binds-to`  | outbound  |
+| intra-layer | `ux.view.proposal-detail-view`                                               | `composes`  | inbound   |
 
 ### Not An Element Button {#not-an-element-button}
 
@@ -655,7 +742,31 @@ The inspector's "Not an element" / "Not a relationship" button (key X). It opens
 | Type        | Related Element                                               | Predicate  | Direction |
 | ----------- | ------------------------------------------------------------- | ---------- | --------- |
 | inter-layer | `testing.testcasesketch.not-an-element-opens-the-reason-step` | `tests`    | inbound   |
-| intra-layer | `ux.view.proposal-review-view`                                | `composes` | inbound   |
+| intra-layer | `ux.view.proposal-detail-view`                                | `composes` | inbound   |
+
+### Reject Reason Picker {#reject-reason-picker}
+
+**ID**: `ux.actioncomponent.reject-reason-picker`
+
+**Type**: `actioncomponent`
+
+'Or reject it, because': the reason-code buttons filtered by operation kind (outdated leads when stale) plus an optional note, in the inspector; the same picker in the bulk reject dialog.
+
+#### Attributes
+
+| Name  | Value         |
+| ----- | ------------- |
+| label | Reject reason |
+| type  | button        |
+
+#### Relationships
+
+| Type        | Related Element                                        | Predicate   | Direction |
+| ----------- | ------------------------------------------------------ | ----------- | --------- |
+| inter-layer | `motivation.requirement.reason-codes-for-every-reject` | `satisfies` | outbound  |
+| inter-layer | `api.operation.reject-proposal`                        | `triggers`  | outbound  |
+| intra-layer | `ux.dataconfig.use-reject-change-proposal`             | `binds-to`  | outbound  |
+| intra-layer | `ux.view.proposal-detail-view`                         | `composes`  | inbound   |
 
 ### Reverse Relationship Button {#reverse-relationship-button}
 
@@ -679,7 +790,149 @@ Or correct it · Reverse: swaps a relationship's source and target in the draft;
 | Type        | Related Element                                                                        | Predicate  | Direction |
 | ----------- | -------------------------------------------------------------------------------------- | ---------- | --------- |
 | inter-layer | `testing.testcasesketch.end-search-finds-a-pending-element-and-reverse-swaps-the-ends` | `tests`    | inbound   |
-| intra-layer | `ux.view.proposal-review-view`                                                         | `composes` | inbound   |
+| intra-layer | `ux.view.proposal-detail-view`                                                         | `composes` | inbound   |
+
+### Revert Control {#revert-control}
+
+**ID**: `ux.actioncomponent.revert-control`
+
+**Type**: `actioncomponent`
+
+Header control: 'Revert proposal' while unlanded (its dialog's confirm calls the in-place revert), 'Propose the reversal…' once landed (its dialog's confirm creates the reversal proposal); hidden while a reversal is open. Reads the landing state from the proposal.
+
+#### Attributes
+
+| Name  | Value                                   |
+| ----- | --------------------------------------- |
+| label | Revert proposal / Propose the reversal… |
+| style | danger                                  |
+| type  | button                                  |
+
+#### Relationships
+
+| Type        | Related Element                                                             | Predicate      | Direction |
+| ----------- | --------------------------------------------------------------------------- | -------------- | --------- |
+| inter-layer | `testing.testcasesketch.landed-proposal-offers-the-reversal`                | `tests`        | inbound   |
+| inter-layer | `motivation.requirement.landed-proposals-are-undone-by-a-reversal-proposal` | `satisfies`    | outbound  |
+| inter-layer | `api.operation.propose-reversal`                                            | `triggers`     | outbound  |
+| inter-layer | `api.operation.revert-proposal`                                             | `triggers`     | outbound  |
+| intra-layer | `ux.dataconfig.use-change-proposal`                                         | `binds-to`     | outbound  |
+| intra-layer | `ux.view.propose-reversal-dialog`                                           | `navigates-to` | outbound  |
+| intra-layer | `ux.view.revert-proposal-dialog`                                            | `navigates-to` | outbound  |
+| intra-layer | `ux.view.proposal-detail-view`                                              | `composes`     | inbound   |
+
+### Wide Diff Button {#wide-diff-button}
+
+**ID**: `ux.actioncomponent.wide-diff-button`
+
+**Type**: `actioncomponent`
+
+⤤ Wide on a long-text diff row, or W in the inspector: opens the wide diff overlay on that field.
+
+#### Attributes
+
+| Name  | Value       |
+| ----- | ----------- |
+| icon  | maximize-2  |
+| label | Wide        |
+| type  | icon-button |
+
+#### Relationships
+
+| Type        | Related Element                                 | Predicate      | Direction |
+| ----------- | ----------------------------------------------- | -------------- | --------- |
+| inter-layer | `motivation.requirement.wide-side-by-side-diff` | `satisfies`    | outbound  |
+| intra-layer | `ux.dataconfig.use-inspector-model`             | `binds-to`     | outbound  |
+| intra-layer | `ux.view.wide-diff-overlay`                     | `navigates-to` | outbound  |
+| intra-layer | `ux.view.proposal-detail-view`                  | `composes`     | inbound   |
+
+### List Rail {#list-rail}
+
+**ID**: `ux.componentinstance.list-rail`
+
+**Type**: `componentinstance`
+
+The list folded (\]): rows in list order with the position (5 / 37). Only when the proposal has source text.
+
+#### Attributes
+
+| Name | Value                         |
+| ---- | ----------------------------- |
+| ref  | ux.librarycomponent.pane-rail |
+
+#### Relationships
+
+| Type        | Related Element                      | Predicate  | Direction |
+| ----------- | ------------------------------------ | ---------- | --------- |
+| intra-layer | `ux.dataconfig.pane-rail-preference` | `binds-to` | outbound  |
+| intra-layer | `ux.librarycomponent.pane-rail`      | `realizes` | outbound  |
+| intra-layer | `ux.view.proposal-detail-view`       | `composes` | inbound   |
+
+### Source Rail {#source-rail}
+
+**ID**: `ux.componentinstance.source-rail`
+
+**Type**: `componentinstance`
+
+The source pane folded (\[): highlights at their positions in the text in verdict colours.
+
+#### Attributes
+
+| Name | Value                         |
+| ---- | ----------------------------- |
+| ref  | ux.librarycomponent.pane-rail |
+
+#### Relationships
+
+| Type        | Related Element                      | Predicate  | Direction |
+| ----------- | ------------------------------------ | ---------- | --------- |
+| intra-layer | `ux.dataconfig.pane-rail-preference` | `binds-to` | outbound  |
+| intra-layer | `ux.librarycomponent.pane-rail`      | `realizes` | outbound  |
+| intra-layer | `ux.view.proposal-detail-view`       | `composes` | inbound   |
+
+### Wide Field Diff {#wide-field-diff}
+
+**ID**: `ux.componentinstance.wide-field-diff`
+
+**Type**: `componentinstance`
+
+The side-by-side diff of the selected field in the wide diff overlay.
+
+#### Attributes
+
+| Name | Value                                 |
+| ---- | ------------------------------------- |
+| ref  | ux.librarycomponent.side-by-side-diff |
+
+#### Relationships
+
+| Type        | Related Element                         | Predicate  | Direction |
+| ----------- | --------------------------------------- | ---------- | --------- |
+| intra-layer | `ux.librarycomponent.side-by-side-diff` | `realizes` | outbound  |
+| intra-layer | `ux.view.wide-diff-overlay`             | `composes` | inbound   |
+
+### Pane Rail Preference {#pane-rail-preference}
+
+**ID**: `ux.dataconfig.pane-rail-preference`
+
+**Type**: `dataconfig`
+
+Which left pane is folded, remembered per viewer in local storage.
+
+#### Attributes
+
+| Name   | Value                         |
+| ------ | ----------------------------- |
+| source | local-storage                 |
+| target | ux.librarycomponent.pane-rail |
+
+#### Relationships
+
+| Type        | Related Element                    | Predicate  | Direction |
+| ----------- | ---------------------------------- | ---------- | --------- |
+| intra-layer | `ux.componentinstance.list-rail`   | `binds-to` | inbound   |
+| intra-layer | `ux.componentinstance.source-rail` | `binds-to` | inbound   |
+| intra-layer | `ux.view.proposal-detail-view`     | `binds-to` | inbound   |
 
 ### useAcceptRest {#useacceptrest}
 
@@ -748,7 +1001,7 @@ POST /api/proposals/\{proposal_id\}/operations.
 | ----------- | ---------------------------------------- | ---------- | --------- |
 | inter-layer | `api.requestbody.add-individual-request` | `maps-to`  | outbound  |
 | inter-layer | `api.response.change-proposal-response`  | `maps-to`  | outbound  |
-| intra-layer | `ux.view.proposal-review-view`           | `binds-to` | inbound   |
+| intra-layer | `ux.view.proposal-detail-view`           | `binds-to` | inbound   |
 
 ### useAddSource {#useaddsource}
 
@@ -816,8 +1069,8 @@ POST /api/proposals/\{proposal_id\}/apply.
 | ----------- | ----------------------------------------------- | ---------- | --------- |
 | inter-layer | `api.requestbody.change-proposal-apply-request` | `maps-to`  | outbound  |
 | inter-layer | `api.response.change-proposal-response`         | `maps-to`  | outbound  |
+| intra-layer | `ux.actioncomponent.bulk-select`                | `binds-to` | inbound   |
 | intra-layer | `ux.view.proposal-detail-view`                  | `binds-to` | inbound   |
-| intra-layer | `ux.view.proposal-review-view`                  | `binds-to` | inbound   |
 
 ### useApplyReviewedRun {#useapplyreviewedrun}
 
@@ -890,11 +1143,10 @@ GET /api/attribute-definitions/\{attribute_definition_id\}.
 | Type        | Related Element                              | Predicate  | Direction |
 | ----------- | -------------------------------------------- | ---------- | --------- |
 | inter-layer | `api.response.attribute-definition-response` | `maps-to`  | outbound  |
-| intra-layer | `ux.subview.operation-inspector`             | `binds-to` | inbound   |
+| intra-layer | `ux.subview.review-inspector`                | `binds-to` | inbound   |
 | intra-layer | `ux.view.class-detail-view`                  | `binds-to` | inbound   |
 | intra-layer | `ux.view.property-drawer`                    | `binds-to` | inbound   |
 | intra-layer | `ux.view.proposal-detail-view`               | `binds-to` | inbound   |
-| intra-layer | `ux.view.proposal-review-view`               | `binds-to` | inbound   |
 | intra-layer | `ux.view.taxonomy-detail-view`               | `binds-to` | inbound   |
 
 ### useBuildGraph {#usebuildgraph}
@@ -961,11 +1213,12 @@ GET /api/proposals/\{proposal_id\}.
 | Type        | Related Element                         | Predicate  | Direction |
 | ----------- | --------------------------------------- | ---------- | --------- |
 | inter-layer | `api.response.change-proposal-response` | `maps-to`  | outbound  |
+| intra-layer | `ux.actioncomponent.revert-control`     | `binds-to` | inbound   |
 | intra-layer | `ux.subview.chat-panel`                 | `binds-to` | inbound   |
 | intra-layer | `ux.subview.extract-run-panel`          | `binds-to` | inbound   |
+| intra-layer | `ux.subview.review-elements-pane`       | `binds-to` | inbound   |
 | intra-layer | `ux.view.proposal-compare-view`         | `binds-to` | inbound   |
 | intra-layer | `ux.view.proposal-detail-view`          | `binds-to` | inbound   |
-| intra-layer | `ux.view.proposal-review-view`          | `binds-to` | inbound   |
 
 ### useChangeProposals {#usechangeproposals}
 
@@ -991,7 +1244,6 @@ GET /api/proposals.
 | intra-layer | `ux.view.class-detail-view`             | `binds-to` | inbound   |
 | intra-layer | `ux.view.property-drawer`               | `binds-to` | inbound   |
 | intra-layer | `ux.view.proposal-detail-view`          | `binds-to` | inbound   |
-| intra-layer | `ux.view.proposal-review-view`          | `binds-to` | inbound   |
 | intra-layer | `ux.view.proposals-view`                | `binds-to` | inbound   |
 | intra-layer | `ux.view.taxonomy-detail-view`          | `binds-to` | inbound   |
 
@@ -1284,7 +1536,7 @@ GET /api/classes.
 | inter-layer | `api.response.class-response`      | `maps-to`  | outbound  |
 | intra-layer | `ux.subview.claim-inspector`       | `binds-to` | inbound   |
 | intra-layer | `ux.subview.entity-navigator`      | `binds-to` | inbound   |
-| intra-layer | `ux.subview.operation-inspector`   | `binds-to` | inbound   |
+| intra-layer | `ux.subview.review-inspector`      | `binds-to` | inbound   |
 | intra-layer | `ux.view.claims-view`              | `binds-to` | inbound   |
 | intra-layer | `ux.view.class-detail-view`        | `binds-to` | inbound   |
 | intra-layer | `ux.view.class-drawer`             | `binds-to` | inbound   |
@@ -1296,7 +1548,6 @@ GET /api/classes.
 | intra-layer | `ux.view.individuals-view`         | `binds-to` | inbound   |
 | intra-layer | `ux.view.property-drawer`          | `binds-to` | inbound   |
 | intra-layer | `ux.view.proposal-detail-view`     | `binds-to` | inbound   |
-| intra-layer | `ux.view.proposal-review-view`     | `binds-to` | inbound   |
 | intra-layer | `ux.view.relationships-view`       | `binds-to` | inbound   |
 | intra-layer | `ux.view.taxonomy-detail-view`     | `binds-to` | inbound   |
 
@@ -1583,7 +1834,6 @@ GET /api/datasets.
 | intra-layer | `ux.subview.entity-navigator`             | `binds-to` | inbound   |
 | intra-layer | `ux.subview.individual-candidate-review`  | `binds-to` | inbound   |
 | intra-layer | `ux.subview.individual-extraction-wizard` | `binds-to` | inbound   |
-| intra-layer | `ux.subview.operation-inspector`          | `binds-to` | inbound   |
 | intra-layer | `ux.subview.review-inspector`             | `binds-to` | inbound   |
 | intra-layer | `ux.subview.schema-candidate-review`      | `binds-to` | inbound   |
 | intra-layer | `ux.view.class-detail-view`               | `binds-to` | inbound   |
@@ -1597,7 +1847,6 @@ GET /api/datasets.
 | intra-layer | `ux.view.individual-detail-view`          | `binds-to` | inbound   |
 | intra-layer | `ux.view.individuals-view`                | `binds-to` | inbound   |
 | intra-layer | `ux.view.proposal-detail-view`            | `binds-to` | inbound   |
-| intra-layer | `ux.view.proposal-review-view`            | `binds-to` | inbound   |
 | intra-layer | `ux.view.relationships-view`              | `binds-to` | inbound   |
 | intra-layer | `ux.view.sources-view`                    | `binds-to` | inbound   |
 | intra-layer | `ux.view.taxonomy-detail-view`            | `binds-to` | inbound   |
@@ -2092,7 +2341,6 @@ GET /api/proposals/\{proposal_id\}/decisions.
 | ----------- | ----------------------------------- | ---------- | --------- |
 | inter-layer | `api.response.dr-decision-response` | `maps-to`  | outbound  |
 | intra-layer | `ux.view.proposal-detail-view`      | `binds-to` | inbound   |
-| intra-layer | `ux.view.proposal-review-view`      | `binds-to` | inbound   |
 
 ### useExtractSource {#useextractsource}
 
@@ -2440,7 +2688,7 @@ GET /api/individuals.
 | intra-layer | `ux.view.dashboard-view`           | `binds-to` | inbound   |
 | intra-layer | `ux.view.individual-detail-view`   | `binds-to` | inbound   |
 | intra-layer | `ux.view.individuals-view`         | `binds-to` | inbound   |
-| intra-layer | `ux.view.proposal-review-view`     | `binds-to` | inbound   |
+| intra-layer | `ux.view.proposal-detail-view`     | `binds-to` | inbound   |
 
 ### useIndividualsByIds {#useindividualsbyids}
 
@@ -2462,11 +2710,10 @@ GET /api/individuals.
 | Type        | Related Element                    | Predicate  | Direction |
 | ----------- | ---------------------------------- | ---------- | --------- |
 | inter-layer | `api.response.individual-response` | `maps-to`  | outbound  |
-| intra-layer | `ux.subview.operation-inspector`   | `binds-to` | inbound   |
+| intra-layer | `ux.subview.review-inspector`      | `binds-to` | inbound   |
 | intra-layer | `ux.view.class-detail-view`        | `binds-to` | inbound   |
 | intra-layer | `ux.view.property-drawer`          | `binds-to` | inbound   |
 | intra-layer | `ux.view.proposal-detail-view`     | `binds-to` | inbound   |
-| intra-layer | `ux.view.proposal-review-view`     | `binds-to` | inbound   |
 | intra-layer | `ux.view.taxonomy-detail-view`     | `binds-to` | inbound   |
 
 ### useIndividualsInClasses {#useindividualsinclasses}
@@ -2490,6 +2737,32 @@ GET /api/individuals.
 | ----------- | ---------------------------------- | ---------- | --------- |
 | inter-layer | `api.response.individual-response` | `maps-to`  | outbound  |
 | intra-layer | `ux.view.individual-drawer`        | `binds-to` | inbound   |
+
+### useInspectorModel {#useinspectormodel}
+
+**ID**: `ux.dataconfig.use-inspector-model`
+
+**Type**: `dataconfig`
+
+Derives the inspector's data for any operation of a proposal (pills, evidence, the change, why, decided record, verbs, applicable reason codes) from the proposal and the entities it names.
+
+#### Attributes
+
+| Name   | Value                                 |
+| ------ | ------------------------------------- |
+| source | state                                 |
+| target | api.response.change-proposal-response |
+
+#### Relationships
+
+| Type        | Related Element                         | Predicate  | Direction |
+| ----------- | --------------------------------------- | ---------- | --------- |
+| inter-layer | `api.response.change-proposal-response` | `maps-to`  | outbound  |
+| intra-layer | `ux.actioncomponent.wide-diff-button`   | `binds-to` | inbound   |
+| intra-layer | `ux.subview.review-elements-pane`       | `binds-to` | inbound   |
+| intra-layer | `ux.subview.review-inspector`           | `binds-to` | inbound   |
+| intra-layer | `ux.view.proposal-detail-view`          | `binds-to` | inbound   |
+| intra-layer | `ux.view.wide-diff-overlay`             | `binds-to` | inbound   |
 
 ### useLoadDemoDataset {#useloaddemodataset}
 
@@ -2812,11 +3085,10 @@ GET /api/predicates.
 | Type        | Related Element                   | Predicate  | Direction |
 | ----------- | --------------------------------- | ---------- | --------- |
 | inter-layer | `api.response.predicate-response` | `maps-to`  | outbound  |
-| intra-layer | `ux.subview.operation-inspector`  | `binds-to` | inbound   |
+| intra-layer | `ux.subview.review-inspector`     | `binds-to` | inbound   |
 | intra-layer | `ux.view.class-detail-view`       | `binds-to` | inbound   |
 | intra-layer | `ux.view.property-drawer`         | `binds-to` | inbound   |
 | intra-layer | `ux.view.proposal-detail-view`    | `binds-to` | inbound   |
-| intra-layer | `ux.view.proposal-review-view`    | `binds-to` | inbound   |
 | intra-layer | `ux.view.taxonomy-detail-view`    | `binds-to` | inbound   |
 
 ### useProperties {#useproperties}
@@ -2844,7 +3116,6 @@ GET /api/properties.
 | intra-layer | `ux.view.properties-view`                   | `binds-to` | inbound   |
 | intra-layer | `ux.view.proposal-compare-view`             | `binds-to` | inbound   |
 | intra-layer | `ux.view.proposal-detail-view`              | `binds-to` | inbound   |
-| intra-layer | `ux.view.proposal-review-view`              | `binds-to` | inbound   |
 | intra-layer | `ux.view.relationship-drawer`               | `binds-to` | inbound   |
 
 ### usePropertiesByIds {#usepropertiesbyids}
@@ -2868,7 +3139,7 @@ GET /api/properties.
 | ----------- | ------------------------------------------- | ---------- | --------- |
 | inter-layer | `api.response.property-definition-response` | `maps-to`  | outbound  |
 | intra-layer | `ux.subview.claim-inspector`                | `binds-to` | inbound   |
-| intra-layer | `ux.subview.operation-inspector`            | `binds-to` | inbound   |
+| intra-layer | `ux.subview.review-inspector`               | `binds-to` | inbound   |
 | intra-layer | `ux.view.claims-view`                       | `binds-to` | inbound   |
 | intra-layer | `ux.view.class-detail-view`                 | `binds-to` | inbound   |
 | intra-layer | `ux.view.class-drawer`                      | `binds-to` | inbound   |
@@ -2876,7 +3147,6 @@ GET /api/properties.
 | intra-layer | `ux.view.individual-drawer`                 | `binds-to` | inbound   |
 | intra-layer | `ux.view.property-drawer`                   | `binds-to` | inbound   |
 | intra-layer | `ux.view.proposal-detail-view`              | `binds-to` | inbound   |
-| intra-layer | `ux.view.proposal-review-view`              | `binds-to` | inbound   |
 | intra-layer | `ux.view.relationship-drawer`               | `binds-to` | inbound   |
 | intra-layer | `ux.view.relationships-view`                | `binds-to` | inbound   |
 | intra-layer | `ux.view.taxonomy-detail-view`              | `binds-to` | inbound   |
@@ -2924,6 +3194,28 @@ GET /api/taxonomies/\{taxonomy_id\}/gold.
 | ----------- | ------------------------------------- | ---------- | --------- |
 | inter-layer | `api.response.gold-decision-response` | `maps-to`  | outbound  |
 | intra-layer | `ux.view.proposal-detail-view`        | `binds-to` | inbound   |
+
+### useProposeReversal {#useproposereversal}
+
+**ID**: `ux.dataconfig.use-propose-reversal`
+
+**Type**: `dataconfig`
+
+POST /api/proposals/\{proposal_id\}/reversal.
+
+#### Attributes
+
+| Name   | Value                          |
+| ------ | ------------------------------ |
+| source | api                            |
+| target | api.operation.propose-reversal |
+
+#### Relationships
+
+| Type        | Related Element                         | Predicate  | Direction |
+| ----------- | --------------------------------------- | ---------- | --------- |
+| inter-layer | `api.response.change-proposal-response` | `maps-to`  | outbound  |
+| intra-layer | `ux.view.propose-reversal-dialog`       | `binds-to` | inbound   |
 
 ### usePublishDiffStats {#usepublishdiffstats}
 
@@ -3105,8 +3397,9 @@ POST /api/proposals/\{proposal_id\}/reject.
 | ----------- | ------------------------------------------------ | ---------- | --------- |
 | inter-layer | `api.requestbody.change-proposal-reject-request` | `maps-to`  | outbound  |
 | inter-layer | `api.response.change-proposal-response`          | `maps-to`  | outbound  |
+| intra-layer | `ux.actioncomponent.bulk-select`                 | `binds-to` | inbound   |
+| intra-layer | `ux.actioncomponent.reject-reason-picker`        | `binds-to` | inbound   |
 | intra-layer | `ux.view.proposal-detail-view`                   | `binds-to` | inbound   |
-| intra-layer | `ux.view.proposal-review-view`                   | `binds-to` | inbound   |
 
 ### useRelationships {#userelationships}
 
@@ -3153,11 +3446,10 @@ GET /api/relationships/\{relationship_id\}.
 | Type        | Related Element                      | Predicate  | Direction |
 | ----------- | ------------------------------------ | ---------- | --------- |
 | inter-layer | `api.response.relationship-response` | `maps-to`  | outbound  |
-| intra-layer | `ux.subview.operation-inspector`     | `binds-to` | inbound   |
+| intra-layer | `ux.subview.review-inspector`        | `binds-to` | inbound   |
 | intra-layer | `ux.view.class-detail-view`          | `binds-to` | inbound   |
 | intra-layer | `ux.view.property-drawer`            | `binds-to` | inbound   |
 | intra-layer | `ux.view.proposal-detail-view`       | `binds-to` | inbound   |
-| intra-layer | `ux.view.proposal-review-view`       | `binds-to` | inbound   |
 | intra-layer | `ux.view.taxonomy-detail-view`       | `binds-to` | inbound   |
 
 ### useRelationshipsTouching {#userelationshipstouching}
@@ -3247,7 +3539,6 @@ POST /api/proposals/\{proposal_id\}/reopen.
 | inter-layer | `api.requestbody.change-proposal-reopen-request` | `maps-to`  | outbound  |
 | inter-layer | `api.response.change-proposal-response`          | `maps-to`  | outbound  |
 | intra-layer | `ux.view.proposal-detail-view`                   | `binds-to` | inbound   |
-| intra-layer | `ux.view.proposal-review-view`                   | `binds-to` | inbound   |
 
 ### useReorderIndividualClasses {#usereorderindividualclasses}
 
@@ -3293,7 +3584,29 @@ POST /api/proposals/\{proposal_id\}/revert.
 | ----------- | ---------------------------------------------- | ---------- | --------- |
 | inter-layer | `api.response.change-proposal-revert-response` | `maps-to`  | outbound  |
 | intra-layer | `ux.view.proposal-detail-view`                 | `binds-to` | inbound   |
-| intra-layer | `ux.view.proposal-review-view`                 | `binds-to` | inbound   |
+| intra-layer | `ux.view.revert-proposal-dialog`               | `binds-to` | inbound   |
+
+### useRevertPreview {#userevertpreview}
+
+**ID**: `ux.dataconfig.use-revert-preview`
+
+**Type**: `dataconfig`
+
+GET /api/proposals/\{proposal_id\}/revert/preview.
+
+#### Attributes
+
+| Name   | Value                        |
+| ------ | ---------------------------- |
+| source | api                          |
+| target | api.operation.preview-revert |
+
+#### Relationships
+
+| Type        | Related Element                        | Predicate  | Direction |
+| ----------- | -------------------------------------- | ---------- | --------- |
+| inter-layer | `api.response.revert-preview-response` | `maps-to`  | outbound  |
+| intra-layer | `ux.view.revert-proposal-dialog`       | `binds-to` | inbound   |
 
 ### useRevertRun {#userevertrun}
 
@@ -3518,7 +3831,7 @@ GET /api/schemes.
 | intra-layer | `ux.view.create-drawer`                | `binds-to` | inbound   |
 | intra-layer | `ux.view.dashboard-view`               | `binds-to` | inbound   |
 | intra-layer | `ux.view.proposal-compare-view`        | `binds-to` | inbound   |
-| intra-layer | `ux.view.proposal-review-view`         | `binds-to` | inbound   |
+| intra-layer | `ux.view.proposal-detail-view`         | `binds-to` | inbound   |
 | intra-layer | `ux.view.taxonomy-detail-view`         | `binds-to` | inbound   |
 | intra-layer | `ux.view.taxonomy-drawer`              | `binds-to` | inbound   |
 
@@ -3543,12 +3856,11 @@ GET /api/schemes/\{scheme_id\}.
 | ----------- | -------------------------------------- | ---------- | --------- |
 | inter-layer | `api.response.concept-scheme-response` | `maps-to`  | outbound  |
 | intra-layer | `ux.subview.claim-inspector`           | `binds-to` | inbound   |
-| intra-layer | `ux.subview.operation-inspector`       | `binds-to` | inbound   |
+| intra-layer | `ux.subview.review-inspector`          | `binds-to` | inbound   |
 | intra-layer | `ux.view.claims-view`                  | `binds-to` | inbound   |
 | intra-layer | `ux.view.class-detail-view`            | `binds-to` | inbound   |
 | intra-layer | `ux.view.property-drawer`              | `binds-to` | inbound   |
 | intra-layer | `ux.view.proposal-detail-view`         | `binds-to` | inbound   |
-| intra-layer | `ux.view.proposal-review-view`         | `binds-to` | inbound   |
 | intra-layer | `ux.view.taxonomy-detail-view`         | `binds-to` | inbound   |
 
 ### useSetClaimVerdict {#usesetclaimverdict}
@@ -3636,15 +3948,13 @@ GET /api/sources/\{source_id\}.
 
 #### Relationships
 
-| Type        | Related Element                  | Predicate  | Direction |
-| ----------- | -------------------------------- | ---------- | --------- |
-| inter-layer | `api.response.source-response`   | `maps-to`  | outbound  |
-| intra-layer | `ux.subview.operation-inspector` | `binds-to` | inbound   |
-| intra-layer | `ux.subview.review-inspector`    | `binds-to` | inbound   |
-| intra-layer | `ux.view.extract-source-view`    | `binds-to` | inbound   |
-| intra-layer | `ux.view.proposal-compare-view`  | `binds-to` | inbound   |
-| intra-layer | `ux.view.proposal-detail-view`   | `binds-to` | inbound   |
-| intra-layer | `ux.view.proposal-review-view`   | `binds-to` | inbound   |
+| Type        | Related Element                 | Predicate  | Direction |
+| ----------- | ------------------------------- | ---------- | --------- |
+| inter-layer | `api.response.source-response`  | `maps-to`  | outbound  |
+| intra-layer | `ux.subview.review-inspector`   | `binds-to` | inbound   |
+| intra-layer | `ux.view.extract-source-view`   | `binds-to` | inbound   |
+| intra-layer | `ux.view.proposal-compare-view` | `binds-to` | inbound   |
+| intra-layer | `ux.view.proposal-detail-view`  | `binds-to` | inbound   |
 
 ### useSourceText {#usesourcetext}
 
@@ -3666,10 +3976,8 @@ GET /api/sources/\{source_id\}/text.
 | Type        | Related Element                     | Predicate  | Direction |
 | ----------- | ----------------------------------- | ---------- | --------- |
 | inter-layer | `api.response.source-text-response` | `maps-to`  | outbound  |
-| intra-layer | `ux.subview.operation-inspector`    | `binds-to` | inbound   |
 | intra-layer | `ux.subview.review-inspector`       | `binds-to` | inbound   |
 | intra-layer | `ux.view.proposal-detail-view`      | `binds-to` | inbound   |
-| intra-layer | `ux.view.proposal-review-view`      | `binds-to` | inbound   |
 
 ### useSources {#usesources}
 
@@ -3840,11 +4148,10 @@ GET /api/taxonomies/\{taxonomy_id\}.
 | Type        | Related Element                  | Predicate  | Direction |
 | ----------- | -------------------------------- | ---------- | --------- |
 | inter-layer | `api.response.taxonomy-response` | `maps-to`  | outbound  |
-| intra-layer | `ux.subview.operation-inspector` | `binds-to` | inbound   |
+| intra-layer | `ux.subview.review-inspector`    | `binds-to` | inbound   |
 | intra-layer | `ux.view.class-detail-view`      | `binds-to` | inbound   |
 | intra-layer | `ux.view.property-drawer`        | `binds-to` | inbound   |
 | intra-layer | `ux.view.proposal-detail-view`   | `binds-to` | inbound   |
-| intra-layer | `ux.view.proposal-review-view`   | `binds-to` | inbound   |
 | intra-layer | `ux.view.taxonomy-detail-view`   | `binds-to` | inbound   |
 
 ### useTaxonomy {#usetaxonomy}
@@ -3897,7 +4204,6 @@ GET /api/taxonomies/\{taxonomy_id\}/classes.
 | inter-layer | `api.response.class-response`   | `maps-to`  | outbound  |
 | intra-layer | `ux.view.proposal-compare-view` | `binds-to` | inbound   |
 | intra-layer | `ux.view.proposal-detail-view`  | `binds-to` | inbound   |
-| intra-layer | `ux.view.proposal-review-view`  | `binds-to` | inbound   |
 
 ### useTaxonomyPredicates {#usetaxonomypredicates}
 
@@ -3921,7 +4227,6 @@ GET /api/taxonomies/\{taxonomy_id\}/predicates.
 | inter-layer | `api.response.predicate-response` | `maps-to`  | outbound  |
 | intra-layer | `ux.view.proposal-compare-view`   | `binds-to` | inbound   |
 | intra-layer | `ux.view.proposal-detail-view`    | `binds-to` | inbound   |
-| intra-layer | `ux.view.proposal-review-view`    | `binds-to` | inbound   |
 
 ### useUpdateClass {#useupdateclass}
 
@@ -4263,6 +4568,56 @@ Inspector panel shown beside a table for the selected row, with a row action men
 | Type        | Related Element                         | Predicate  | Direction |
 | ----------- | --------------------------------------- | ---------- | --------- |
 | intra-layer | `ux.librarycomponent.app-ui-primitives` | `composes` | inbound   |
+
+### Pane Rail {#pane-rail}
+
+**ID**: `ux.librarycomponent.pane-rail`
+
+**Type**: `librarycomponent`
+
+New Heimdall component: a 40 px folded pane with, top to bottom, the expand button, a map of the pane's items (marks at their positions, with hover cards), an amber selection notch, the pane's name written up the rail and its key. Clicking the rail or a mark expands it.
+
+#### Attributes
+
+| Name     | Value     |
+| -------- | --------- |
+| category | pane-rail |
+| type     | layout    |
+
+#### Relationships
+
+| Type        | Related Element                                              | Predicate    | Direction |
+| ----------- | ------------------------------------------------------------ | ------------ | --------- |
+| inter-layer | `testing.testcasesketch.folded-list-keeps-jk-and-ax-working` | `tests`      | inbound   |
+| inter-layer | `testing.testcoveragetarget.pane-rails`                      | `covers`     | inbound   |
+| inter-layer | `motivation.requirement.focus-by-folding-panes-to-rails`     | `satisfies`  | outbound  |
+| intra-layer | `ux.componentinstance.list-rail`                             | `realizes`   | inbound   |
+| intra-layer | `ux.componentinstance.source-rail`                           | `realizes`   | inbound   |
+| intra-layer | `ux.uxlibrary.heimdall-ui-library`                           | `aggregates` | inbound   |
+
+### Side By Side Diff {#side-by-side-diff}
+
+**ID**: `ux.librarycomponent.side-by-side-diff`
+
+**Type**: `librarycomponent`
+
+Heimdall SideBySideDiff, extended where the wide diff needs it: sentences paired across the two sides and unchanged runs folded.
+
+#### Attributes
+
+| Name     | Value   |
+| -------- | ------- |
+| category | diff    |
+| type     | display |
+
+#### Relationships
+
+| Type        | Related Element                                 | Predicate    | Direction |
+| ----------- | ----------------------------------------------- | ------------ | --------- |
+| inter-layer | `testing.testcoveragetarget.wide-diff-overlay`  | `covers`     | inbound   |
+| inter-layer | `motivation.requirement.wide-side-by-side-diff` | `satisfies`  | outbound  |
+| intra-layer | `ux.componentinstance.wide-field-diff`          | `realizes`   | inbound   |
+| intra-layer | `ux.uxlibrary.heimdall-ui-library`              | `aggregates` | inbound   |
 
 ### Toast {#toast}
 
@@ -4659,31 +5014,6 @@ Graph metrics, centrality and communities.
 | intra-layer | `ux.dataconfig.use-graph-metrics` | `binds-to` | outbound  |
 | intra-layer | `ux.view.graph-view`              | `composes` | inbound   |
 
-### Operation Inspector {#operation-inspector}
-
-**ID**: `ux.subview.operation-inspector`
-
-**Type**: `subview`
-
-Inspector for one proposal operation: diff, decision and in-use resolution.
-
-#### Relationships
-
-| Type        | Related Element                                  | Predicate  | Direction |
-| ----------- | ------------------------------------------------ | ---------- | --------- |
-| intra-layer | `ux.dataconfig.use-attribute-definitions-by-ids` | `binds-to` | outbound  |
-| intra-layer | `ux.dataconfig.use-classes-by-ids`               | `binds-to` | outbound  |
-| intra-layer | `ux.dataconfig.use-datasets`                     | `binds-to` | outbound  |
-| intra-layer | `ux.dataconfig.use-individuals-by-ids`           | `binds-to` | outbound  |
-| intra-layer | `ux.dataconfig.use-predicates-by-ids`            | `binds-to` | outbound  |
-| intra-layer | `ux.dataconfig.use-properties-by-ids`            | `binds-to` | outbound  |
-| intra-layer | `ux.dataconfig.use-relationships-by-ids`         | `binds-to` | outbound  |
-| intra-layer | `ux.dataconfig.use-schemes-by-ids`               | `binds-to` | outbound  |
-| intra-layer | `ux.dataconfig.use-source`                       | `binds-to` | outbound  |
-| intra-layer | `ux.dataconfig.use-source-text`                  | `binds-to` | outbound  |
-| intra-layer | `ux.dataconfig.use-taxonomies-by-ids`            | `binds-to` | outbound  |
-| intra-layer | `ux.view.proposal-detail-view`                   | `composes` | inbound   |
-
 ### Path Finder {#path-finder}
 
 **ID**: `ux.subview.path-finder`
@@ -4700,13 +5030,37 @@ Shortest/all paths between two entities.
 | intra-layer | `ux.dataconfig.use-shortest-path` | `binds-to` | outbound  |
 | intra-layer | `ux.view.graph-view`              | `composes` | inbound   |
 
+### Review Elements Pane {#review-elements-pane}
+
+**ID**: `ux.subview.review-elements-pane`
+
+**Type**: `subview`
+
+The one operation list of the review surface (ReviewElementsPane, rebuilt): groupings by change kind, layer or sequence, inline conflict cards, op and scope filters, inline update diffs, Select ▾ and the bulk bar (hidden on gold checks), J/K and ?selected= selection. Replaces OperationColumns, the Heimdall Table and TieredOperations on proposal detail.
+
+#### Attributes
+
+| Name  | Value      |
+| ----- | ---------- |
+| title | Operations |
+
+#### Relationships
+
+| Type        | Related Element                                        | Predicate  | Direction |
+| ----------- | ------------------------------------------------------ | ---------- | --------- |
+| inter-layer | `testing.testcasesketch.bulk-is-hidden-on-gold-checks` | `tests`    | inbound   |
+| inter-layer | `testing.testcoveragetarget.one-review-page`           | `covers`   | inbound   |
+| intra-layer | `ux.dataconfig.use-change-proposal`                    | `binds-to` | outbound  |
+| intra-layer | `ux.dataconfig.use-inspector-model`                    | `binds-to` | outbound  |
+| intra-layer | `ux.view.proposal-detail-view`                         | `composes` | inbound   |
+
 ### Review Inspector {#review-inspector}
 
 **ID**: `ux.subview.review-inspector`
 
 **Type**: `subview`
 
-Inspector for one reviewed element: class, relationship, decision and reason code.
+Inspector for one operation of any kind (the #1631 inspector, extended): pills and evidence (quotes with captions when sourceless), 'The change' as was/now rows with a word diff for long text, Why, the decided record, stale and failed verbs with callouts, DR relationship types (class-ended triple, reflection quick picks, 'Or correct it'), replacement and in-use blocks, and reason-code buttons filtered by operation kind. Replaces OperationInspector, OperationDecision, OperationDecided, DecisionBars, the ReflectionAnswers and DrTripleEditor UIs, and the source passage sections.
 
 #### Relationships
 
@@ -4714,10 +5068,20 @@ Inspector for one reviewed element: class, relationship, decision and reason cod
 | ----------- | -------------------------------------------------------------------------------------- | ---------- | --------- |
 | inter-layer | `testing.testcasesketch.end-search-finds-a-pending-element-and-reverse-swaps-the-ends` | `tests`    | inbound   |
 | inter-layer | `testing.testcasesketch.not-an-element-opens-the-reason-step`                          | `tests`    | inbound   |
+| inter-layer | `testing.testcoveragetarget.one-review-page`                                           | `covers`   | inbound   |
+| intra-layer | `ux.dataconfig.use-attribute-definitions-by-ids`                                       | `binds-to` | outbound  |
+| intra-layer | `ux.dataconfig.use-classes-by-ids`                                                     | `binds-to` | outbound  |
 | intra-layer | `ux.dataconfig.use-datasets`                                                           | `binds-to` | outbound  |
+| intra-layer | `ux.dataconfig.use-individuals-by-ids`                                                 | `binds-to` | outbound  |
+| intra-layer | `ux.dataconfig.use-inspector-model`                                                    | `binds-to` | outbound  |
+| intra-layer | `ux.dataconfig.use-predicates-by-ids`                                                  | `binds-to` | outbound  |
+| intra-layer | `ux.dataconfig.use-properties-by-ids`                                                  | `binds-to` | outbound  |
+| intra-layer | `ux.dataconfig.use-relationships-by-ids`                                               | `binds-to` | outbound  |
+| intra-layer | `ux.dataconfig.use-schemes-by-ids`                                                     | `binds-to` | outbound  |
 | intra-layer | `ux.dataconfig.use-source`                                                             | `binds-to` | outbound  |
 | intra-layer | `ux.dataconfig.use-source-text`                                                        | `binds-to` | outbound  |
-| intra-layer | `ux.view.proposal-review-view`                                                         | `composes` | inbound   |
+| intra-layer | `ux.dataconfig.use-taxonomies-by-ids`                                                  | `binds-to` | outbound  |
+| intra-layer | `ux.view.proposal-detail-view`                                                         | `composes` | inbound   |
 
 ### Schema Candidate Review {#schema-candidate-review}
 
@@ -4876,9 +5240,11 @@ React single-page application for knowledge graph management — the shared fron
 
 #### Relationships
 
-| Type        | Related Element                     | Predicate | Direction |
-| ----------- | ----------------------------------- | --------- | --------- |
-| intra-layer | `ux.uxspec.ontology-editor-ux-spec` | `uses`    | inbound   |
+| Type        | Related Element                         | Predicate    | Direction |
+| ----------- | --------------------------------------- | ------------ | --------- |
+| intra-layer | `ux.librarycomponent.pane-rail`         | `aggregates` | outbound  |
+| intra-layer | `ux.librarycomponent.side-by-side-diff` | `aggregates` | outbound  |
+| intra-layer | `ux.uxspec.ontology-editor-ux-spec`     | `uses`       | inbound   |
 
 ### Ontology Editor UX Spec {#ontology-editor-ux-spec}
 
@@ -5860,7 +6226,7 @@ Two pipelines' proposals for one source, decided once for both.
 
 **Type**: `view`
 
-One proposal's operations with decide, apply, reject, reopen and revert.
+The one review surface for a proposal (ProposalDetailPage): header and status strip (apply, revert in place or propose the reversal, landed and reversal chips, review timer, export, compare, apply results and revert conflicts), a source pane only when an operation cites a passage (highlights, pills, add from text), the operation list and the review inspector. Either left pane folds to a rail; long changes open in the wide diff overlay; gold checks open here in gold mode without bulk.
 
 #### Attributes
 
@@ -5871,88 +6237,62 @@ One proposal's operations with decide, apply, reject, reopen and revert.
 
 #### Relationships
 
-| Type        | Related Element                                  | Predicate  | Direction |
-| ----------- | ------------------------------------------------ | ---------- | --------- |
-| inter-layer | `navigation.route.proposal-detail-route`         | `maps-to`  | inbound   |
-| inter-layer | `testing.testcoveragetarget.ux-component-tests`  | `covers`   | inbound   |
-| inter-layer | `product.feature.proposal-queue-and-detail`      | `realizes` | outbound  |
-| intra-layer | `ux.dataconfig.use-apply-change-proposal`        | `binds-to` | outbound  |
-| intra-layer | `ux.dataconfig.use-attribute-definitions-by-ids` | `binds-to` | outbound  |
-| intra-layer | `ux.dataconfig.use-change-proposal`              | `binds-to` | outbound  |
-| intra-layer | `ux.dataconfig.use-change-proposals`             | `binds-to` | outbound  |
-| intra-layer | `ux.dataconfig.use-classes-by-ids`               | `binds-to` | outbound  |
-| intra-layer | `ux.dataconfig.use-datasets`                     | `binds-to` | outbound  |
-| intra-layer | `ux.dataconfig.use-export-proposal-decisions`    | `binds-to` | outbound  |
-| intra-layer | `ux.dataconfig.use-individuals-by-ids`           | `binds-to` | outbound  |
-| intra-layer | `ux.dataconfig.use-predicates-by-ids`            | `binds-to` | outbound  |
-| intra-layer | `ux.dataconfig.use-properties`                   | `binds-to` | outbound  |
-| intra-layer | `ux.dataconfig.use-properties-by-ids`            | `binds-to` | outbound  |
-| intra-layer | `ux.dataconfig.use-proposal-decisions`           | `binds-to` | outbound  |
-| intra-layer | `ux.dataconfig.use-reject-change-proposal`       | `binds-to` | outbound  |
-| intra-layer | `ux.dataconfig.use-relationships-by-ids`         | `binds-to` | outbound  |
-| intra-layer | `ux.dataconfig.use-reopen-proposal-operations`   | `binds-to` | outbound  |
-| intra-layer | `ux.dataconfig.use-revert-change-proposal`       | `binds-to` | outbound  |
-| intra-layer | `ux.dataconfig.use-schemes-by-ids`               | `binds-to` | outbound  |
-| intra-layer | `ux.dataconfig.use-source`                       | `binds-to` | outbound  |
-| intra-layer | `ux.dataconfig.use-source-text`                  | `binds-to` | outbound  |
-| intra-layer | `ux.dataconfig.use-taxonomies-by-ids`            | `binds-to` | outbound  |
-| intra-layer | `ux.dataconfig.use-taxonomy`                     | `binds-to` | outbound  |
-| intra-layer | `ux.dataconfig.use-taxonomy-classes`             | `binds-to` | outbound  |
-| intra-layer | `ux.dataconfig.use-taxonomy-predicates`          | `binds-to` | outbound  |
-| intra-layer | `ux.subview.in-use-resolver`                     | `composes` | outbound  |
-| intra-layer | `ux.subview.operation-inspector`                 | `composes` | outbound  |
-
-### Proposal Review View {#proposal-review-view}
-
-**ID**: `ux.view.proposal-review-view`
-
-**Type**: `view`
-
-Review an extraction proposal against its source text, with highlights and reason codes.
-
-#### Attributes
-
-| Name     | Value |
-| -------- | ----- |
-| routable | true  |
-| type     | page  |
-
-#### Relationships
-
-| Type        | Related Element                                  | Predicate  | Direction |
-| ----------- | ------------------------------------------------ | ---------- | --------- |
-| inter-layer | `navigation.route.proposal-review-route`         | `maps-to`  | inbound   |
-| inter-layer | `testing.testcoveragetarget.ux-component-tests`  | `covers`   | inbound   |
-| inter-layer | `product.feature.gold-mode`                      | `realizes` | outbound  |
-| inter-layer | `product.feature.proposal-review-page`           | `realizes` | outbound  |
-| inter-layer | `business.businessrole.reviewer`                 | `serves`   | outbound  |
-| intra-layer | `ux.dataconfig.use-add-proposal-individual`      | `binds-to` | outbound  |
-| intra-layer | `ux.dataconfig.use-apply-change-proposal`        | `binds-to` | outbound  |
-| intra-layer | `ux.dataconfig.use-attribute-definitions-by-ids` | `binds-to` | outbound  |
-| intra-layer | `ux.dataconfig.use-change-proposal`              | `binds-to` | outbound  |
-| intra-layer | `ux.dataconfig.use-change-proposals`             | `binds-to` | outbound  |
-| intra-layer | `ux.dataconfig.use-classes-by-ids`               | `binds-to` | outbound  |
-| intra-layer | `ux.dataconfig.use-datasets`                     | `binds-to` | outbound  |
-| intra-layer | `ux.dataconfig.use-export-proposal-decisions`    | `binds-to` | outbound  |
-| intra-layer | `ux.dataconfig.use-individuals`                  | `binds-to` | outbound  |
-| intra-layer | `ux.dataconfig.use-individuals-by-ids`           | `binds-to` | outbound  |
-| intra-layer | `ux.dataconfig.use-predicates-by-ids`            | `binds-to` | outbound  |
-| intra-layer | `ux.dataconfig.use-properties`                   | `binds-to` | outbound  |
-| intra-layer | `ux.dataconfig.use-properties-by-ids`            | `binds-to` | outbound  |
-| intra-layer | `ux.dataconfig.use-reject-change-proposal`       | `binds-to` | outbound  |
-| intra-layer | `ux.dataconfig.use-relationships-by-ids`         | `binds-to` | outbound  |
-| intra-layer | `ux.dataconfig.use-reopen-proposal-operations`   | `binds-to` | outbound  |
-| intra-layer | `ux.dataconfig.use-revert-change-proposal`       | `binds-to` | outbound  |
-| intra-layer | `ux.dataconfig.use-schemes`                      | `binds-to` | outbound  |
-| intra-layer | `ux.dataconfig.use-schemes-by-ids`               | `binds-to` | outbound  |
-| intra-layer | `ux.dataconfig.use-source`                       | `binds-to` | outbound  |
-| intra-layer | `ux.dataconfig.use-source-text`                  | `binds-to` | outbound  |
-| intra-layer | `ux.dataconfig.use-taxonomies-by-ids`            | `binds-to` | outbound  |
-| intra-layer | `ux.dataconfig.use-taxonomy-classes`             | `binds-to` | outbound  |
-| intra-layer | `ux.dataconfig.use-taxonomy-predicates`          | `binds-to` | outbound  |
-| intra-layer | `ux.actioncomponent.not-an-element-button`       | `composes` | outbound  |
-| intra-layer | `ux.actioncomponent.reverse-relationship-button` | `composes` | outbound  |
-| intra-layer | `ux.subview.review-inspector`                    | `composes` | outbound  |
+| Type        | Related Element                                                              | Predicate   | Direction |
+| ----------- | ---------------------------------------------------------------------------- | ----------- | --------- |
+| inter-layer | `navigation.route.proposal-detail-route`                                     | `maps-to`   | inbound   |
+| inter-layer | `testing.testcoveragetarget.one-review-page`                                 | `covers`    | inbound   |
+| inter-layer | `testing.testcoveragetarget.pane-rails`                                      | `covers`    | inbound   |
+| inter-layer | `testing.testcoveragetarget.ux-component-tests`                              | `covers`    | inbound   |
+| inter-layer | `product.feature.gold-mode`                                                  | `realizes`  | outbound  |
+| inter-layer | `product.feature.proposal-queue-and-detail`                                  | `realizes`  | outbound  |
+| inter-layer | `product.feature.proposal-review-page`                                       | `realizes`  | outbound  |
+| inter-layer | `product.feature.reversal-proposals`                                         | `realizes`  | outbound  |
+| inter-layer | `motivation.requirement.bulk-decisions-on-every-proposal-except-gold-checks` | `satisfies` | outbound  |
+| inter-layer | `motivation.requirement.focus-by-folding-panes-to-rails`                     | `satisfies` | outbound  |
+| inter-layer | `motivation.requirement.reason-codes-for-every-reject`                       | `satisfies` | outbound  |
+| inter-layer | `motivation.requirement.reversal-is-decided-like-any-proposal`               | `satisfies` | outbound  |
+| inter-layer | `motivation.requirement.reversed-proposal-status`                            | `satisfies` | outbound  |
+| inter-layer | `business.businessrole.reviewer`                                             | `serves`    | outbound  |
+| inter-layer | `motivation.goal.one-review-surface`                                         | `supports`  | outbound  |
+| intra-layer | `ux.dataconfig.pane-rail-preference`                                         | `binds-to`  | outbound  |
+| intra-layer | `ux.dataconfig.use-add-proposal-individual`                                  | `binds-to`  | outbound  |
+| intra-layer | `ux.dataconfig.use-apply-change-proposal`                                    | `binds-to`  | outbound  |
+| intra-layer | `ux.dataconfig.use-attribute-definitions-by-ids`                             | `binds-to`  | outbound  |
+| intra-layer | `ux.dataconfig.use-change-proposal`                                          | `binds-to`  | outbound  |
+| intra-layer | `ux.dataconfig.use-change-proposals`                                         | `binds-to`  | outbound  |
+| intra-layer | `ux.dataconfig.use-classes-by-ids`                                           | `binds-to`  | outbound  |
+| intra-layer | `ux.dataconfig.use-datasets`                                                 | `binds-to`  | outbound  |
+| intra-layer | `ux.dataconfig.use-export-proposal-decisions`                                | `binds-to`  | outbound  |
+| intra-layer | `ux.dataconfig.use-individuals`                                              | `binds-to`  | outbound  |
+| intra-layer | `ux.dataconfig.use-individuals-by-ids`                                       | `binds-to`  | outbound  |
+| intra-layer | `ux.dataconfig.use-inspector-model`                                          | `binds-to`  | outbound  |
+| intra-layer | `ux.dataconfig.use-predicates-by-ids`                                        | `binds-to`  | outbound  |
+| intra-layer | `ux.dataconfig.use-properties`                                               | `binds-to`  | outbound  |
+| intra-layer | `ux.dataconfig.use-properties-by-ids`                                        | `binds-to`  | outbound  |
+| intra-layer | `ux.dataconfig.use-proposal-decisions`                                       | `binds-to`  | outbound  |
+| intra-layer | `ux.dataconfig.use-reject-change-proposal`                                   | `binds-to`  | outbound  |
+| intra-layer | `ux.dataconfig.use-relationships-by-ids`                                     | `binds-to`  | outbound  |
+| intra-layer | `ux.dataconfig.use-reopen-proposal-operations`                               | `binds-to`  | outbound  |
+| intra-layer | `ux.dataconfig.use-revert-change-proposal`                                   | `binds-to`  | outbound  |
+| intra-layer | `ux.dataconfig.use-schemes`                                                  | `binds-to`  | outbound  |
+| intra-layer | `ux.dataconfig.use-schemes-by-ids`                                           | `binds-to`  | outbound  |
+| intra-layer | `ux.dataconfig.use-source`                                                   | `binds-to`  | outbound  |
+| intra-layer | `ux.dataconfig.use-source-text`                                              | `binds-to`  | outbound  |
+| intra-layer | `ux.dataconfig.use-taxonomies-by-ids`                                        | `binds-to`  | outbound  |
+| intra-layer | `ux.dataconfig.use-taxonomy`                                                 | `binds-to`  | outbound  |
+| intra-layer | `ux.dataconfig.use-taxonomy-classes`                                         | `binds-to`  | outbound  |
+| intra-layer | `ux.dataconfig.use-taxonomy-predicates`                                      | `binds-to`  | outbound  |
+| intra-layer | `ux.actioncomponent.bulk-select`                                             | `composes`  | outbound  |
+| intra-layer | `ux.actioncomponent.not-an-element-button`                                   | `composes`  | outbound  |
+| intra-layer | `ux.actioncomponent.reject-reason-picker`                                    | `composes`  | outbound  |
+| intra-layer | `ux.actioncomponent.reverse-relationship-button`                             | `composes`  | outbound  |
+| intra-layer | `ux.actioncomponent.revert-control`                                          | `composes`  | outbound  |
+| intra-layer | `ux.actioncomponent.wide-diff-button`                                        | `composes`  | outbound  |
+| intra-layer | `ux.componentinstance.list-rail`                                             | `composes`  | outbound  |
+| intra-layer | `ux.componentinstance.source-rail`                                           | `composes`  | outbound  |
+| intra-layer | `ux.subview.in-use-resolver`                                                 | `composes`  | outbound  |
+| intra-layer | `ux.subview.review-elements-pane`                                            | `composes`  | outbound  |
+| intra-layer | `ux.subview.review-inspector`                                                | `composes`  | outbound  |
 
 ### Proposals View {#proposals-view}
 
@@ -5971,14 +6311,42 @@ The review queue: proposals filtered by status and taxonomy, with each one's pen
 
 #### Relationships
 
-| Type        | Related Element                                   | Predicate  | Direction |
-| ----------- | ------------------------------------------------- | ---------- | --------- |
-| inter-layer | `navigation.route.proposals-route`                | `maps-to`  | inbound   |
-| inter-layer | `testing.testcoveragetarget.playwright-e2e-tests` | `covers`   | inbound   |
-| inter-layer | `product.feature.proposal-queue-and-detail`       | `realizes` | outbound  |
-| inter-layer | `business.businessrole.reviewer`                  | `serves`   | outbound  |
-| intra-layer | `ux.dataconfig.use-change-proposals`              | `binds-to` | outbound  |
-| intra-layer | `ux.dataconfig.use-taxonomies`                    | `binds-to` | outbound  |
+| Type        | Related Element                                   | Predicate   | Direction |
+| ----------- | ------------------------------------------------- | ----------- | --------- |
+| inter-layer | `navigation.route.proposals-route`                | `maps-to`   | inbound   |
+| inter-layer | `testing.testcoveragetarget.playwright-e2e-tests` | `covers`    | inbound   |
+| inter-layer | `product.feature.proposal-queue-and-detail`       | `realizes`  | outbound  |
+| inter-layer | `motivation.requirement.reversed-proposal-status` | `satisfies` | outbound  |
+| inter-layer | `business.businessrole.reviewer`                  | `serves`    | outbound  |
+| intra-layer | `ux.dataconfig.use-change-proposals`              | `binds-to`  | outbound  |
+| intra-layer | `ux.dataconfig.use-taxonomies`                    | `binds-to`  | outbound  |
+
+### Propose Reversal Dialog {#propose-reversal-dialog}
+
+**ID**: `ux.view.propose-reversal-dialog`
+
+**Type**: `view`
+
+For a landed proposal: explains why it cannot be undone in place and what the reversal proposal will contain, then creates it and opens it.
+
+#### Attributes
+
+| Name     | Value                |
+| -------- | -------------------- |
+| routable | false                |
+| title    | Propose the reversal |
+| type     | dialog               |
+
+#### Relationships
+
+| Type        | Related Element                                                             | Predicate      | Direction |
+| ----------- | --------------------------------------------------------------------------- | -------------- | --------- |
+| inter-layer | `testing.testcoveragetarget.revert-and-reversal-ui`                         | `covers`       | inbound   |
+| inter-layer | `product.feature.reversal-proposals`                                        | `realizes`     | outbound  |
+| inter-layer | `motivation.requirement.landed-proposals-are-undone-by-a-reversal-proposal` | `satisfies`    | outbound  |
+| inter-layer | `business.businessrole.reviewer`                                            | `serves`       | outbound  |
+| intra-layer | `ux.actioncomponent.revert-control`                                         | `navigates-to` | inbound   |
+| intra-layer | `ux.dataconfig.use-propose-reversal`                                        | `binds-to`     | outbound  |
 
 ### Reference Source Drawer {#reference-source-drawer}
 
@@ -6083,6 +6451,34 @@ Browse and manage typed relationships between entities
 | intra-layer | `ux.dataconfig.use-properties-by-ids`   | `binds-to` | outbound  |
 | intra-layer | `ux.dataconfig.use-relationships`       | `binds-to` | outbound  |
 | intra-layer | `ux.dataconfig.use-taxonomies`          | `binds-to` | outbound  |
+
+### Revert Proposal Dialog {#revert-proposal-dialog}
+
+**ID**: `ux.view.revert-proposal-dialog`
+
+**Type**: `view`
+
+Confirm an in-place revert of an unlanded proposal: names the fields edited since the apply that the revert will overwrite, and the revert conflicts.
+
+#### Attributes
+
+| Name     | Value           |
+| -------- | --------------- |
+| routable | false           |
+| title    | Revert proposal |
+| type     | dialog          |
+
+#### Relationships
+
+| Type        | Related Element                                                     | Predicate      | Direction |
+| ----------- | ------------------------------------------------------------------- | -------------- | --------- |
+| inter-layer | `testing.testcoveragetarget.revert-and-reversal-ui`                 | `covers`       | inbound   |
+| inter-layer | `product.feature.proposal-queue-and-detail`                         | `realizes`     | outbound  |
+| inter-layer | `motivation.requirement.in-place-revert-warns-of-overwritten-edits` | `satisfies`    | outbound  |
+| inter-layer | `business.businessrole.reviewer`                                    | `serves`       | outbound  |
+| intra-layer | `ux.actioncomponent.revert-control`                                 | `navigates-to` | inbound   |
+| intra-layer | `ux.dataconfig.use-revert-change-proposal`                          | `binds-to`     | outbound  |
+| intra-layer | `ux.dataconfig.use-revert-preview`                                  | `binds-to`     | outbound  |
 
 ### Run Detail Drawer {#run-detail-drawer}
 
@@ -6396,6 +6792,36 @@ First-run welcome page.
 | inter-layer | `navigation.route.welcome-route` | `maps-to`  | inbound   |
 | intra-layer | `ux.dataconfig.use-config`       | `binds-to` | outbound  |
 
+### Wide Diff Overlay {#wide-diff-overlay}
+
+**ID**: `ux.view.wide-diff-overlay`
+
+**Type**: `view`
+
+Wide side-by-side diff over the source and list panes (the inspector stays beside it): changed fields as tabs, ↑↓/‹› between fields, J/K to the next operation with a long change, Esc/✕/Back close and return focus to the row; &diff=&lt;field&gt; in the URL.
+
+#### Attributes
+
+| Name     | Value     |
+| -------- | --------- |
+| routable | false     |
+| title    | Wide diff |
+| type     | overlay   |
+
+#### Relationships
+
+| Type        | Related Element                                                     | Predicate      | Direction |
+| ----------- | ------------------------------------------------------------------- | -------------- | --------- |
+| inter-layer | `testing.testcasesketch.esc-closes-the-wide-diff-and-returns-focus` | `tests`        | inbound   |
+| inter-layer | `testing.testcoveragetarget.wide-diff-overlay`                      | `covers`       | inbound   |
+| inter-layer | `technology.systemsoftware.heimdall-ui`                             | `depends-on`   | outbound  |
+| inter-layer | `product.feature.proposal-review-page`                              | `realizes`     | outbound  |
+| inter-layer | `motivation.requirement.wide-side-by-side-diff`                     | `satisfies`    | outbound  |
+| inter-layer | `business.businessrole.reviewer`                                    | `serves`       | outbound  |
+| intra-layer | `ux.actioncomponent.wide-diff-button`                               | `navigates-to` | inbound   |
+| intra-layer | `ux.dataconfig.use-inspector-model`                                 | `binds-to`     | outbound  |
+| intra-layer | `ux.componentinstance.wide-field-diff`                              | `composes`     | outbound  |
+
 ---
 
-Generated: 2026-11-24T17:51:04.666Z | Model Version: 0.1.0
+Generated: 2026-11-24T21:17:13.774Z | Model Version: 0.1.0

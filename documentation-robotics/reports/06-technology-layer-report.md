@@ -18,8 +18,8 @@ Infrastructure, platforms, systems, and technology components.
 | ------------------------- | ----- |
 | Elements                  | 41    |
 | Intra-Layer Relationships | 24    |
-| Inter-Layer Relationships | 59    |
-| Inbound Relationships     | 19    |
+| Inter-Layer Relationships | 60    |
+| Inbound Relationships     | 20    |
 | Outbound Relationships    | 40    |
 
 **Cross-Layer References**:
@@ -164,6 +164,7 @@ flowchart TB
 | `ux.view.depends-on.technology.systemsoftware`                      | `ux.view.relationship-drawer`                                         | `technology.systemsoftware.tan-stack-form`                                | `technology`  | `depends-on` | many-to-many | medium   |
 | `ux.view.depends-on.technology.systemsoftware`                      | `ux.view.scheme-drawer`                                               | `technology.systemsoftware.tan-stack-form`                                | `technology`  | `depends-on` | many-to-many | medium   |
 | `ux.view.depends-on.technology.systemsoftware`                      | `ux.view.taxonomy-drawer`                                             | `technology.systemsoftware.tan-stack-form`                                | `technology`  | `depends-on` | many-to-many | medium   |
+| `ux.view.depends-on.technology.systemsoftware`                      | `ux.view.wide-diff-overlay`                                           | `technology.systemsoftware.heimdall-ui`                                   | `technology`  | `depends-on` | many-to-many | medium   |
 
 ## Element Reference
 
@@ -376,10 +377,11 @@ Git CLI, launched by the DR spec reader to read the spec checkout's source revis
 
 #### Relationships
 
-| Type        | Related Element           | Predicate    | Direction |
-| ----------- | ------------------------- | ------------ | --------- |
-| inter-layer | `ux.view.app-shell-view`  | `depends-on` | inbound   |
-| inter-layer | `ux.view.command-palette` | `depends-on` | inbound   |
+| Type        | Related Element             | Predicate    | Direction |
+| ----------- | --------------------------- | ------------ | --------- |
+| inter-layer | `ux.view.app-shell-view`    | `depends-on` | inbound   |
+| inter-layer | `ux.view.command-palette`   | `depends-on` | inbound   |
+| inter-layer | `ux.view.wide-diff-overlay` | `depends-on` | inbound   |
 
 ### httpx {#httpx}
 
@@ -1046,4 +1048,4 @@ Technology interaction in which the sync adapter serializes the local knowledge 
 
 ---
 
-Generated: 2026-11-24T18:01:31.681Z | Model Version: 0.1.0
+Generated: 2026-11-24T21:17:13.774Z | Model Version: 0.1.0
