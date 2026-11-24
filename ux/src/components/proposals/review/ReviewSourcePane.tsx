@@ -198,6 +198,7 @@ export function ReviewSourcePane({
       className="review-pane review-pane--source"
       role="region"
       aria-label="Source text"
+      id="review-source-pane"
       title="Source"
       headerAction={
         <span className="review-pane__actions">
@@ -219,6 +220,8 @@ export function ReviewSourcePane({
               className="review-fold"
               aria-label="Fold the source"
               aria-keyshortcuts="["
+              aria-expanded={true}
+              aria-controls="review-source-pane"
               title="Fold the source ([)"
               onClick={onFold}
               data-testid="review-fold-source"

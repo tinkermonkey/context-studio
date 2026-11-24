@@ -84,12 +84,13 @@ export function ReviewElementsPane({
 }: ReviewElementsPaneProps) {
   const listRef = useRef<HTMLDivElement>(null);
 
-  // Keep the selected row in view as J / K, a decision or a link move the selection.
+  // Keep the selected row in view as J / K, a decision or a link move the selection,
+  // and bring it back into view when the folded list unfolds.
   useEffect(() => {
-    if (!selectedId) return;
+    if (!selectedId || hidden) return;
     const row = listRef.current?.querySelector(`[data-row-id="${CSS.escape(selectedId)}"]`);
     row?.scrollIntoView?.({ block: "nearest" });
-  }, [selectedId, sections]);
+  }, [selectedId, sections, hidden]);
 
   const renderRow = (operation: ProposedOperation) => {
     const row = rowOf(operation);
@@ -160,25 +161,26 @@ export function ReviewElementsPane({
       id={id}
       hidden={hidden}
       headerAction={
-        onFold ? (
-          <span className="review-pane__actions">
-            {header}
+        // One wrapper whether or not the pane folds, so the filters don't remount when it can.
+        <span className="review-pane__actions">
+          {header}
+          {onFold && (
             <Button
               variant="ghost"
               size="sm"
               className="review-fold"
               aria-label="Fold the list"
               aria-keyshortcuts="]"
+              aria-expanded={true}
+              aria-controls={id}
               title="Fold the list (])"
               onClick={onFold}
               data-testid="review-fold-list"
             >
               ‹
             </Button>
-          </span>
-        ) : (
-          header
-        )
+          )}
+        </span>
       }
       data-testid={testId}
     >

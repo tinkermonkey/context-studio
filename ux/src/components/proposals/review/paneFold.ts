@@ -28,19 +28,12 @@ function writePaneFold(fold: PaneFold) {
   }
 }
 
-/** The fold, remembered; `toggle` folds a pane (unfolding the other) or unfolds it. */
+/** The fold, remembered: setting a pane folds it (unfolding the other); undefined unfolds. */
 export function usePaneFold() {
   const [fold, setFoldState] = useState<PaneFold>(readPaneFold);
   const setFold = useCallback((next: PaneFold) => {
     setFoldState(next);
     writePaneFold(next);
   }, []);
-  const toggle = useCallback((pane: Exclude<PaneFold, undefined>) => {
-    setFoldState((current) => {
-      const next = current === pane ? undefined : pane;
-      writePaneFold(next);
-      return next;
-    });
-  }, []);
-  return { fold, setFold, toggle };
+  return { fold, setFold };
 }

@@ -27,6 +27,19 @@ import {
 } from "./reviewModel";
 import type { InspectorModel } from "./useInspectorModel";
 
+/** A source rail mark's id: the highlight's operation and its offset in the text. */
+export function railMarkId(operationId: string, start: number): string {
+  return `${operationId}@${start}`;
+}
+
+/** A source rail mark's operation and offset; a list mark's id is the operation's alone. */
+export function railMarkTarget(id: string): { operationId: string; start?: number } {
+  const at = id.lastIndexOf("@");
+  if (at < 0) return { operationId: id };
+  const start = Number(id.slice(at + 1));
+  return Number.isFinite(start) ? { operationId: id.slice(0, at), start } : { operationId: id };
+}
+
 /** An extraction of individuals: client_metadata.pipeline, or its origin's pipeline_type. */
 const INDIVIDUAL_EXTRACTION = "individual_extraction";
 import type { useReviewClock } from "./useReviewClock";
@@ -174,7 +187,8 @@ export function useSourcePane({
       const verdict = operation ? verdictOf(operation) : "awaiting";
       return [
         {
-          id: span.key,
+          // The highlight itself (an element can have several): its operation and offset.
+          id: railMarkId(span.key, span.start),
           position: span.start / textLength,
           tone: VERDICT_CHIP[verdict] as PaneRailMark["tone"],
           label: `${VERDICT_LEGEND[verdict]}: ${span.quote}`,
@@ -222,7 +236,7 @@ export function useSourcePane({
       focus={focus}
       textRef={textRef}
       onDismissPopover={() => closeAdding({ refocus: false })}
-      onFold={onFold}
+      onFold={sourceText ? onFold : undefined}
       onSelectText={canAdd ? openAdding : undefined}
       addBlocked={addBlocked}
       popoverAnchor={adding?.anchor}
@@ -257,6 +271,10 @@ export function useSourcePane({
     closeAdding,
     showPassage,
     showSpan,
+    /** Forget the passage last shown, so the text opens on the selection when it unfolds. */
+    forgetFocus: () => setFocus(undefined),
+    /** The text loaded: only then does the pane fold (a rail of a missing text maps nothing). */
+    hasText: !!sourceText,
     /** The folded pane's map: its highlights, and where the selection is in the text. */
     rail: {
       marks: railMarks,

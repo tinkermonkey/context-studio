@@ -1225,6 +1225,12 @@ vi.mock("@tinkermonkey/heimdall-ui", () => ({
           ref,
           className: ["pane-rail", `pane-rail--${side}`, className].filter(Boolean).join(" "),
           "data-selected-position": selectedPosition,
+          // As the real rail: a click anywhere a mark doesn't handle expands the pane.
+          onClick: (event: any) => {
+            const mark = event.target.closest?.("[data-mark-id]");
+            if (mark && onMarkClick) onMarkClick(mark.dataset.markId);
+            else onExpand();
+          },
           ...props,
         },
         React.createElement(
@@ -1233,8 +1239,8 @@ vi.mock("@tinkermonkey/heimdall-ui", () => ({
             type: "button",
             className: "pane-rail__expand",
             "aria-label": expandLabel ?? `Expand ${label}`,
+            "aria-expanded": false,
             "aria-keyshortcuts": shortcut,
-            onClick: onExpand,
           },
           "›",
         ),
@@ -1255,7 +1261,7 @@ vi.mock("@tinkermonkey/heimdall-ui", () => ({
                 type: "button",
                 className: `pane-rail__mark pane-rail__mark--${mark.tone ?? "neutral"}`,
                 "aria-label": mark.label,
-                onClick: () => (onMarkClick ? onMarkClick(mark.id) : onExpand()),
+                "data-mark-id": mark.id,
                 onMouseEnter: (event: any) => onMarkHover?.(mark.id, event.currentTarget),
                 onMouseLeave: () => onMarkLeave?.(mark.id),
               }),

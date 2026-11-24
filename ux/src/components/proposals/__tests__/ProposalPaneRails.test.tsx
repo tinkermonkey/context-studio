@@ -5,7 +5,7 @@
  * folded, J / K and A / X keep working.
  */
 import { useState } from "react";
-import { describe, it, expect, beforeAll, beforeEach, afterEach, afterAll } from "vitest";
+import { describe, it, expect, beforeAll, beforeEach, afterEach, afterAll, vi } from "vitest";
 import { PANE_FOLD_KEY } from "../review/paneFold";
 import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
@@ -169,6 +169,12 @@ async function openPage(initial?: string) {
   return user;
 }
 
+/** The source's highlight of `quote`. */
+const markOf = (quote: string) =>
+  [...screen.getByTestId("review-source-text").querySelectorAll("mark")].find(
+    (m) => m.textContent === quote,
+  )!;
+
 describe("folding a pane to a rail", () => {
   it("folds the source with [ and back, the rail mapping its highlights", async () => {
     const user = await openPage("op-router");
@@ -269,6 +275,140 @@ describe("folding a pane to a rail", () => {
     window.localStorage.setItem(PANE_FOLD_KEY, "list");
     await openPage("op-router");
     expect(await screen.findByTestId("review-list-rail")).toBeInTheDocument();
+  });
+
+  it("opens the highlight clicked on the source rail, expanding the source", async () => {
+    const user = await openPage("op-router");
+    await screen.findByTestId("review-source-text");
+    await user.keyboard("[[");
+    await user.click(
+      within(screen.getByTestId("review-source-rail")).getByRole("button", {
+        name: "Awaiting: Gateway",
+      }),
+    );
+    expect(current).toBe("op-gateway");
+    expect(screen.queryByTestId("review-source-rail")).not.toBeInTheDocument();
+    // The source opens on that highlight, flashed.
+    await waitFor(() => expect(markOf("Gateway")).toHaveClass("review-mark--flash"));
+  });
+
+  it("restores a folded source", async () => {
+    window.localStorage.setItem(PANE_FOLD_KEY, "source");
+    await openPage("op-router");
+    expect(await screen.findByTestId("review-source-rail")).toBeInTheDocument();
+  });
+
+  it("ignores a stored value it doesn't know, and works when storage throws", async () => {
+    window.localStorage.setItem(PANE_FOLD_KEY, "sideways");
+    const user = await openPage("op-router");
+    await screen.findByTestId("review-source-text");
+    expect(screen.queryByTestId("review-source-rail")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("review-list-rail")).not.toBeInTheDocument();
+    const getItem = vi.spyOn(Storage.prototype, "getItem").mockImplementation(() => {
+      throw new Error("blocked");
+    });
+    const setItem = vi.spyOn(Storage.prototype, "setItem").mockImplementation(() => {
+      throw new Error("blocked");
+    });
+    try {
+      // Folding still works for this page; it just isn't remembered.
+      await user.keyboard("]");
+      expect(screen.getByTestId("review-list-rail")).toBeInTheDocument();
+    } finally {
+      getItem.mockRestore();
+      setItem.mockRestore();
+    }
+  });
+
+  it("unfolds the list on its selection, after J / K moved it while folded", async () => {
+    // jsdom has no scrollIntoView: record which rows the list brings into view.
+    const scrolled: string[] = [];
+    const original = Element.prototype.scrollIntoView;
+    Element.prototype.scrollIntoView = function (this: Element) {
+      const id = this.getAttribute("data-row-id");
+      if (id) scrolled.push(id);
+    };
+    try {
+      const user = await openPage("op-router");
+      await screen.findByTestId("review-source-text");
+      await user.keyboard("]");
+      scrolled.length = 0;
+      await user.keyboard("jj");
+      expect(current).toBe("op-cache");
+      // Hidden, the list scrolls nowhere; unfolded, it brings the selection into view.
+      expect(scrolled).toEqual([]);
+      await user.keyboard("]");
+      expect(scrolled).toContain("op-cache");
+      expect(screen.getByTestId("review-row-op-cache")).toHaveAttribute("aria-selected", "true");
+    } finally {
+      Element.prototype.scrollIntoView = original;
+    }
+  });
+
+  it("unfolds the source on its selection, not on a passage shown before", async () => {
+    const user = await openPage("op-router");
+    await screen.findByTestId("review-source-text");
+    // Show in source on Router, then move on to Gateway.
+    await user.click(screen.getByTestId("review-evidence-1"));
+    await waitFor(() => expect(markOf("Router")).toHaveClass("review-mark--flash"));
+    await user.keyboard("j");
+    expect(current).toBe("op-gateway");
+    await user.keyboard("[[");
+    await user.keyboard("[[");
+    expect(screen.getByTestId("review-source-text")).toBeInTheDocument();
+    // Router's old passage isn't shown again.
+    expect(markOf("Router")).not.toHaveClass("review-mark--flash");
+  });
+
+  it("keeps A / X working while the source is folded", async () => {
+    const user = await openPage("op-gateway");
+    await screen.findByTestId("review-source-text");
+    await user.keyboard("[[");
+    await user.keyboard("x");
+    await waitFor(() =>
+      expect(screen.getByTestId("review-reasons-prompt")).not.toBeEmptyDOMElement(),
+    );
+    await user.keyboard("a");
+    await waitFor(() => expect(applies).toHaveLength(1));
+    expect(applies[0].operation_ids).toEqual(["op-gateway"]);
+    expect(screen.getByTestId("review-source-rail")).toBeInTheDocument();
+  });
+
+  it("moves focus to the rail's expand button on a fold, and to the pane's ‹ on an unfold", async () => {
+    const user = await openPage("op-router");
+    await screen.findByTestId("review-source-text");
+    await user.keyboard("[[");
+    await waitFor(() =>
+      expect(
+        within(screen.getByTestId("review-source-rail")).getByRole("button", {
+          name: "Expand the source",
+        }),
+      ).toHaveFocus(),
+    );
+    await user.keyboard("[[");
+    await waitFor(() => expect(screen.getByTestId("review-fold-source")).toHaveFocus());
+    expect(screen.getByTestId("review-fold-source")).toHaveAttribute("aria-expanded", "true");
+    expect(screen.getByTestId("review-fold-source")).toHaveAttribute(
+      "aria-controls",
+      "review-source-pane",
+    );
+  });
+
+  it("doesn't fold when the source's text can't be shown", async () => {
+    window.localStorage.setItem(PANE_FOLD_KEY, "list");
+    server.use(
+      http.get("*/api/sources/:id", () =>
+        HttpResponse.json({ detail: "Source not found" }, { status: 404 }),
+      ),
+    );
+    const user = userEvent.setup();
+    render(<Harness initial="op-router" />);
+    expect(await screen.findByText("The source couldn't be loaded.")).toBeInTheDocument();
+    expect(screen.queryByTestId("review-list-rail")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("review-fold-list")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("review-fold-source")).not.toBeInTheDocument();
+    await user.keyboard("]");
+    expect(screen.queryByTestId("review-list-rail")).not.toBeInTheDocument();
   });
 
   it("doesn't fold without a source: the list is the only way through", async () => {

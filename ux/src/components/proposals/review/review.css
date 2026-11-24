@@ -1237,8 +1237,8 @@
   }
 
   /* A left pane folded to its 40px rail (#1665), beside the other one. */
-  .proposal-main--fold-source,
-  .proposal-main--fold-list {
+  .proposal-main.proposal-main--fold-source,
+  .proposal-main.proposal-main--fold-list {
     display: flex;
     flex-direction: row;
     gap: 16px;
@@ -1252,6 +1252,8 @@
 
   .proposal-main > .pane-rail {
     flex: 0 0 40px;
+    /* Stretched to the pane beside it (Heimdall's 100% has no height to resolve here). */
+    height: auto;
     min-height: 320px;
     border: 1px solid rgb(var(--canvas-border));
     border-radius: 8px;
@@ -1263,12 +1265,12 @@
   }
 
   @media (min-width: 1280px) {
-    .proposal-review--source > .proposal-main--fold-source {
+    .proposal-review--source > .proposal-main.proposal-main--fold-source {
       display: grid;
       grid-template-columns: 40px minmax(0, 1fr);
     }
 
-    .proposal-review--source > .proposal-main--fold-list {
+    .proposal-review--source > .proposal-main.proposal-main--fold-list {
       display: grid;
       grid-template-columns: minmax(0, 1fr) 40px;
     }

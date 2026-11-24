@@ -92,12 +92,12 @@ import {
   verdictLabel,
   verdictOf,
 } from "./review/reviewModel";
-import { usePaneFold } from "./review/paneFold";
+import { usePaneFold, type PaneFold } from "./review/paneFold";
 import { ReviewElapsed } from "./review/ReviewElapsed";
 import { usePanesHeight } from "./review/usePanesHeight";
 import { useReviewClock } from "./review/useReviewClock";
 import { useReviewKeys, ignoresKeys } from "./review/useReviewKeys";
-import { useSourcePane } from "./review/useSourcePane";
+import { railMarkTarget, useSourcePane } from "./review/useSourcePane";
 import { sourcePassagesOf } from "./sourceModel";
 import { HOLDOUT_NOTE, SPLIT_CHIP, goldCheckOf } from "./review/goldModel";
 import { ReviewInspector } from "./review/ReviewInspector";
@@ -144,6 +144,18 @@ function revertMessage(summary: RevertSummary): string {
     `${open} The proposal becomes reverted and read-only, and its decisions can no longer be exported.`
   );
 }
+
+/** Where focus goes after a fold (the rail's expand button) and an unfold (the pane's ‹). */
+const FOLD_FOCUS = {
+  expand: {
+    source: '[data-testid="review-source-rail"] .pane-rail__expand',
+    list: '[data-testid="review-list-rail"] .pane-rail__expand',
+  },
+  fold: {
+    source: '[data-testid="review-fold-source"]',
+    list: '[data-testid="review-fold-list"]',
+  },
+} as const;
 
 interface ProposalDetailPageProps {
   id: string;
@@ -447,22 +459,53 @@ export function ProposalDetailPage({
     select: (operationId) => onSelectOperation(operationId),
     model: inspector,
     clock,
-    onFold: () => paneFold.setFold("source"),
+    onFold: () => changeFold("source"),
   });
-  // Without a source there is nothing to fold: the list is the only way through.
-  const fold = sourcePane.shown ? paneFold.fold : undefined;
-  // [ folds or unfolds the source, ] the list (one rail at a time).
+  // Only a source with its text loaded folds: without one, the list is the only way through
+  // (and a rail of a source that couldn't load would map nothing).
+  const canFold = sourcePane.shown && sourcePane.hasText;
+  const fold = canFold ? paneFold.fold : undefined;
+  // The rail mark whose hover card is open: closed when the fold changes, so none sticks.
+  const railCardId = useRef<string | undefined>(undefined);
+  // Whether focus was on the page or a rail when the fold changed: it then moves to the
+  // control that undoes the change (see the effect below); elsewhere, it stays put.
+  const refocusOnFold = useRef(false);
+  const changeFold = (next: PaneFold) => {
+    if (railCardId.current) inspector.overlay.hide(railCardId.current);
+    railCardId.current = undefined;
+    // Folding the source forgets the passage last shown, so it reopens on the selection.
+    if (next === "source") sourcePane.forgetFocus();
+    const active = document.activeElement;
+    refocusOnFold.current =
+      !active || active === document.body || !!active.closest(".pane-rail, .review-fold");
+    paneFold.setFold(next);
+  };
+  // After a fold, focus is on the rail's expand button; after an unfold, on the pane's ‹.
+  const lastFold = useRef(fold);
+  useEffect(() => {
+    const was = lastFold.current;
+    lastFold.current = fold;
+    if (was === fold || !refocusOnFold.current) return;
+    refocusOnFold.current = false;
+    const target = fold ? FOLD_FOCUS.expand[fold] : was ? FOLD_FOCUS.fold[was] : undefined;
+    if (!target) return;
+    requestAnimationFrame(() =>
+      document.querySelector<HTMLElement>(target)?.focus({ preventScroll: true }),
+    );
+  }, [fold]);
+  // [ folds or unfolds the source, ] the list (one rail at a time). Held down, once; with
+  // Option or AltGr too, where a layout types [ or ] with it.
   const onFoldKey = useRef<(event: KeyboardEvent) => void>(() => {});
   onFoldKey.current = (event) => {
-    if (!sourcePane.shown || sourcePane.adding || wideOpen) return;
-    if (event.defaultPrevented || event.metaKey || event.ctrlKey || event.altKey) return;
+    if (!canFold || sourcePane.adding || wideOpen) return;
+    if (event.defaultPrevented || event.repeat || event.metaKey || event.ctrlKey) return;
     if (ignoresKeys(event.target)) return;
     if (event.key === "[") {
       event.preventDefault();
-      paneFold.toggle("source");
+      changeFold(fold === "source" ? undefined : "source");
     } else if (event.key === "]") {
       event.preventDefault();
-      paneFold.toggle("list");
+      changeFold(fold === "list" ? undefined : "list");
     }
   };
   useEffect(() => {
@@ -505,29 +548,41 @@ export function ProposalDetailPage({
     );
   };
   const railHover = {
-    onMarkHover: (operationId: string, anchor: HTMLElement) =>
+    onMarkHover: (markId: string, anchor: HTMLElement) => {
+      railCardId.current = `rail-${markId}`;
       inspector.overlay.show(
-        `rail-${operationId}`,
-        railCard(operationId),
+        `rail-${markId}`,
+        railCard(railMarkTarget(markId).operationId),
         anchor,
         "review-rail-card",
-      ),
-    onMarkLeave: (operationId: string) => inspector.overlay.hide(`rail-${operationId}`),
+      );
+    },
+    onMarkLeave: (markId: string) => {
+      inspector.overlay.hide(`rail-${markId}`);
+      if (railCardId.current === `rail-${markId}`) railCardId.current = undefined;
+    },
   };
   // The list rail's map: every row in list order, in its status's tone.
-  const listRailMarks: PaneRailMark[] = shownOrder.flatMap((operationId, index) => {
-    const operation = operations.find((o) => o.id === operationId);
-    if (!operation) return [];
-    const status = rowStatus(operation, reverted);
-    return [
-      {
-        id: operationId,
-        position: index / Math.max(1, shownOrder.length - 1),
-        tone: status.variant as PaneRailMark["tone"],
-        label: `${status.label}: ${plainTitle(operation)}`,
-      },
-    ];
-  });
+  const operationById = useMemo(() => new Map(operations.map((o) => [o.id, o])), [operations]);
+  const listRailMarks = useMemo(
+    (): PaneRailMark[] =>
+      shownOrder.flatMap((operationId, index) => {
+        const operation = operationById.get(operationId);
+        if (!operation) return [];
+        const status = rowStatus(operation, reverted);
+        return [
+          {
+            id: operationId,
+            position: index / Math.max(1, shownOrder.length - 1),
+            tone: status.variant as PaneRailMark["tone"],
+            label: `${status.label}: ${plainTitle(operation)}`,
+          },
+        ];
+      }),
+    // plainTitle reads the names and the context, which change with these.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [shownOrder, operationById, reverted, inspector.names, context],
+  );
   const selectedIndex = selectedId ? shownOrder.indexOf(selectedId) : -1;
   const panes = usePanesHeight(!!proposal && sourcePane.shown);
   // While the add form is open, keys are its own; Escape closes it wherever focus went.
@@ -902,12 +957,13 @@ export function ProposalDetailPage({
                   mapLabel="Highlights in the source"
                   marks={sourcePane.rail.marks}
                   selectedPosition={sourcePane.rail.selectedPosition}
-                  onExpand={() => paneFold.setFold(undefined)}
-                  onMarkClick={(operationId) => {
-                    inspector.overlay.hide(`rail-${operationId}`);
-                    paneFold.setFold(undefined);
+                  onExpand={() => changeFold(undefined)}
+                  onMarkClick={(markId) => {
+                    // The highlight clicked, not the item's first one.
+                    const { operationId, start } = railMarkTarget(markId);
+                    changeFold(undefined);
                     onSelectOperation(operationId);
-                    sourcePane.showSpan(operationId);
+                    sourcePane.showSpan(operationId, start);
                   }}
                   {...railHover}
                   data-testid="review-source-rail"
@@ -948,10 +1004,9 @@ export function ProposalDetailPage({
                 positionLabel={
                   selectedIndex >= 0 ? `${selectedIndex + 1} / ${shownOrder.length}` : undefined
                 }
-                onExpand={() => paneFold.setFold(undefined)}
+                onExpand={() => changeFold(undefined)}
                 onMarkClick={(operationId) => {
-                  inspector.overlay.hide(`rail-${operationId}`);
-                  paneFold.setFold(undefined);
+                  changeFold(undefined);
                   onSelectOperation(operationId);
                 }}
                 {...railHover}
@@ -961,7 +1016,7 @@ export function ProposalDetailPage({
             <ReviewElementsPane
               id="proposal-operations"
               hidden={fold === "list"}
-              onFold={sourcePane.shown ? () => paneFold.setFold("list") : undefined}
+              onFold={canFold ? () => changeFold("list") : undefined}
               title="Operations"
               listLabel="Operations to review"
               data-testid="proposal-operations"
@@ -1119,7 +1174,7 @@ export function ProposalDetailPage({
                 sourcePane.shown
                   ? (quote) => {
                       // Show in source unfolds a folded source first.
-                      if (fold === "source") paneFold.setFold(undefined);
+                      if (fold === "source") changeFold(undefined);
                       sourcePane.showPassage(selectedOperation.id, quote);
                     }
                   : undefined
