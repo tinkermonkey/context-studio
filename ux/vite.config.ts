@@ -23,7 +23,10 @@ function apiProxyTarget(mode: string): string {
 
 export default defineConfig(({ mode }) => ({
   server: {
-    host: true,
+    // No `host`: Vite's default (localhost) keeps the dev server, `vite preview`
+    // and their /api proxy reachable from this machine only. `host: true` would
+    // let any machine on the network call the unauthenticated REST API through
+    // the proxy (#1655). vite.config.test.ts pins this.
     port: 3100,
     proxy: {
       "/api": {

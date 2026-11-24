@@ -1,0 +1,257 @@
+- type: add
+  elementId: security.countermeasure.vite-dev-server-loopback-binding
+  layerName: security
+  after:
+    id: 96138932-a5c4-405f-80e2-b4722ace168d
+    path: security.countermeasure.vite-dev-server-loopback-binding
+    spec_node_id: security.countermeasure
+    type: countermeasure
+    layer_id: security
+    name: Vite Dev Server Loopback Binding
+    description: vite.config.ts sets no server.host, so Vite's default (localhost)
+      applies to npm run dev, vite preview, the QA instances and the E2E stack.
+      A vitest test pins the default.
+    attributes:
+      type: technical
+      effectiveness: high
+      implemented: true
+      description: Dev server listens on loopback only
+    source_reference:
+      provenance: manual
+      locations:
+        - file: ux/vite.config.ts
+    metadata:
+      created_at: 2026-11-24T12:25:42.371Z
+      updated_at: 2026-11-24T12:25:42.371Z
+      version: 1
+  timestamp: 2026-11-24T12:25:42.390Z
+  sequenceNumber: 0
+- type: relationship-add
+  elementId: security.countermeasure.vite-dev-server-loopback-binding::mitigates::security.threat.lan-exposure-via-the-vite-dev-server
+  layerName: security
+  after:
+    source: security.countermeasure.vite-dev-server-loopback-binding
+    target: security.threat.lan-exposure-via-the-vite-dev-server
+    predicate: mitigates
+    layer: security
+    category: structural
+  timestamp: 2026-11-24T12:25:42.390Z
+  sequenceNumber: 1
+- type: relationship-add
+  elementId: security.countermeasure.vite-dev-server-loopback-binding::protects::security.secureresource.vite-dev-server
+  layerName: security
+  after:
+    source: security.countermeasure.vite-dev-server-loopback-binding
+    target: security.secureresource.vite-dev-server
+    predicate: protects
+    layer: security
+    category: structural
+  timestamp: 2026-11-24T12:25:42.390Z
+  sequenceNumber: 2
+- type: relationship-add
+  elementId: security.countermeasure.vite-dev-server-loopback-binding::satisfies::motivation.requirement.dev-server-not-reachable-from-the-lan
+  layerName: security
+  after:
+    source: security.countermeasure.vite-dev-server-loopback-binding
+    target: motivation.requirement.dev-server-not-reachable-from-the-lan
+    predicate: satisfies
+    layer: security
+    targetLayer: motivation
+    category: structural
+  timestamp: 2026-11-24T12:25:42.390Z
+  sequenceNumber: 3
+- type: relationship-add
+  elementId: technology.systemsoftware.vite::realizes::security.countermeasure.vite-dev-server-loopback-binding
+  layerName: technology
+  after:
+    source: technology.systemsoftware.vite
+    target: security.countermeasure.vite-dev-server-loopback-binding
+    predicate: realizes
+    layer: technology
+    targetLayer: security
+    category: structural
+  timestamp: 2026-11-24T12:25:42.390Z
+  sequenceNumber: 4
+- type: update
+  elementId: security.threat.lan-exposure-via-the-vite-dev-server
+  layerName: security
+  before:
+    id: 27eab9a2-e886-4205-8dc9-ad793fe8fcf0
+    path: security.threat.lan-exposure-via-the-vite-dev-server
+    spec_node_id: security.threat
+    type: threat
+    layer_id: security
+    name: LAN Exposure via the Vite Dev Server
+    description: "npm run dev listens on all interfaces and proxies /api, including
+      the endpoint that returns the MCP token, so another machine on the network
+      can read and change the workspace. Not accepted: to fix under #1655."
+    attributes: &a1
+      threatens: api
+      likelihood: moderate
+      impact: high
+      criticality: high
+      description: Dev server exposes the API and MCP token to the LAN (#1655)
+    source_reference: &a2
+      provenance: manual
+      locations:
+        - file: README.md
+    accepted_gaps: &a3
+      - direction: incoming
+        predicate: mitigates
+        other_spec_node_id: security.countermeasure
+        reason: "Unmitigated today; the fix is tracked as requirement
+          dev-server-not-reachable-from-the-lan and GitHub issue #1655. Add the
+          countermeasure when that lands."
+        decided_by: agent
+        decided_at: 2026-11-19T16:36:27.928Z
+        changeset: changeset-1795099306929-dmd727eav
+    metadata: &a4
+      created_at: 2026-11-19T16:18:36.733Z
+      updated_at: 2026-11-19T16:18:36.733Z
+      version: 1
+  after:
+    id: 27eab9a2-e886-4205-8dc9-ad793fe8fcf0
+    path: security.threat.lan-exposure-via-the-vite-dev-server
+    spec_node_id: security.threat
+    type: threat
+    layer_id: security
+    name: LAN Exposure via the Vite Dev Server
+    description: "Mitigated (#1655). The dev server used to listen on all interfaces
+      (server.host: true) and proxy /api, so another machine on the network
+      could read and change the workspace. It now binds to loopback only; LAN
+      access would need an explicit edit of vite.config.ts or a --host flag."
+    attributes: *a1
+    source_reference: *a2
+    accepted_gaps: *a3
+    metadata: *a4
+  timestamp: 2026-11-24T12:25:46.595Z
+  sequenceNumber: 5
+- type: update
+  elementId: security.secureresource.vite-dev-server
+  layerName: security
+  before:
+    id: 90cf6d11-cb48-423c-8d57-2a3a20bd8b6e
+    path: security.secureresource.vite-dev-server
+    spec_node_id: security.secureresource
+    type: secureresource
+    layer_id: security
+    name: Vite Dev Server
+    description: npm run dev serves the UI and proxies /api to the back end; it
+      listens on all interfaces.
+    attributes: &a5
+      resource: ux dev server (port 3100) proxying /api
+      type: ui
+    source_reference: &a6
+      provenance: manual
+      locations:
+        - file: README.md
+    metadata: &a7
+      created_at: 2026-11-19T16:18:36.733Z
+      updated_at: 2026-11-19T16:18:36.733Z
+      version: 1
+  after:
+    id: 90cf6d11-cb48-423c-8d57-2a3a20bd8b6e
+    path: security.secureresource.vite-dev-server
+    spec_node_id: security.secureresource
+    type: secureresource
+    layer_id: security
+    name: Vite Dev Server
+    description: npm run dev serves the UI and proxies /api to the back end; it
+      listens on loopback only (Vite's default).
+    attributes: *a5
+    source_reference: *a6
+    metadata: *a7
+  timestamp: 2026-11-24T12:25:46.862Z
+  sequenceNumber: 6
+- type: update
+  elementId: motivation.requirement.dev-server-not-reachable-from-the-lan
+  layerName: motivation
+  before:
+    id: 04d3b841-aff4-4cf2-986e-a37754cf48e5
+    path: motivation.requirement.dev-server-not-reachable-from-the-lan
+    spec_node_id: motivation.requirement
+    type: requirement
+    layer_id: motivation
+    name: Dev Server Not Reachable from the LAN
+    description: "The Vite dev server must not expose /api (including the endpoint
+      that returns the MCP token) to other machines on the network. Open: GitHub
+      issue #1655."
+    attributes: &a8
+      requirementType: non-functional
+      priority: high
+      documentation: "To fix: tinkermonkey/context-studio#1655 (LAN exposure via the
+        Vite dev server)."
+    source_reference: &a9
+      provenance: manual
+      locations:
+        - file: README.md
+    metadata: &a10
+      created_at: 2026-11-19T16:14:23.186Z
+      updated_at: 2026-11-19T16:14:23.186Z
+      version: 1
+  after:
+    id: 04d3b841-aff4-4cf2-986e-a37754cf48e5
+    path: motivation.requirement.dev-server-not-reachable-from-the-lan
+    spec_node_id: motivation.requirement
+    type: requirement
+    layer_id: motivation
+    name: Dev Server Not Reachable from the LAN
+    description: The Vite dev server must not expose /api (including the endpoint
+      that returns the MCP token) to other machines on the network. Met by
+      binding to loopback (#1655).
+    attributes: *a8
+    source_reference: *a9
+    metadata: *a10
+  timestamp: 2026-11-24T12:25:47.111Z
+  sequenceNumber: 7
+- type: add
+  elementId: testing.testcasesketch.vite-config-does-not-open-the-dev-server-or-preview-to-the-network-mode-s
+  layerName: testing
+  after:
+    id: 7dd1e7df-7403-4106-969d-46ebd1a51451
+    path: testing.testcasesketch.vite-config-does-not-open-the-dev-server-or-preview-to-the-network-mode-s
+    spec_node_id: testing.testcasesketch
+    type: testcasesketch
+    layer_id: testing
+    name: vite.config > does not open the dev server or preview to the network (mode
+      %s)
+    description: vite.config.ts resolves with no server.host or preview.host (so
+      Vite's localhost default applies) in the development, e2e and production
+      modes.
+    attributes:
+      status: automated
+      implementationFormat: automated
+    source_reference:
+      provenance: manual
+      locations:
+        - file: ux/vite.config.test.ts
+    metadata:
+      created_at: 2026-11-24T12:28:29.186Z
+      updated_at: 2026-11-24T12:28:29.186Z
+      version: 1
+  timestamp: 2026-11-24T12:28:29.195Z
+  sequenceNumber: 8
+- type: relationship-add
+  elementId: testing.testcasesketch.vite-config-does-not-open-the-dev-server-or-preview-to-the-network-mode-s::tests::security.countermeasure.vite-dev-server-loopback-binding
+  layerName: testing
+  after:
+    source: testing.testcasesketch.vite-config-does-not-open-the-dev-server-or-preview-to-the-network-mode-s
+    target: security.countermeasure.vite-dev-server-loopback-binding
+    predicate: tests
+    layer: testing
+    targetLayer: security
+    category: structural
+  timestamp: 2026-11-24T12:28:29.195Z
+  sequenceNumber: 9
+- type: relationship-add
+  elementId: testing.testcasesketch.vite-config-does-not-open-the-dev-server-or-preview-to-the-network-mode-s::satisfies::motivation.requirement.dev-server-not-reachable-from-the-lan
+  layerName: testing
+  after:
+    source: testing.testcasesketch.vite-config-does-not-open-the-dev-server-or-preview-to-the-network-mode-s
+    target: motivation.requirement.dev-server-not-reachable-from-the-lan
+    predicate: satisfies
+    layer: testing
+    targetLayer: motivation
+    category: structural
+  timestamp: 2026-11-24T12:28:29.195Z
+  sequenceNumber: 10
