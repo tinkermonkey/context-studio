@@ -116,6 +116,7 @@ class TestAutoApply:
                 ref=f"i{seq}",
                 fields={"class_ids": [house["place"]], "title": title},
                 evidence=evidence,
+                probability=0.9,
             )
 
         def link(seq, source, target):
@@ -129,6 +130,7 @@ class TestAutoApply:
                     "property_definition_id": near.id,
                 },
                 evidence=[passage(30, 40, "the wall")],
+                probability=0.9,
             )
 
         drafts = [
@@ -165,6 +167,7 @@ class TestAutoApply:
             K.CLASS,
             ref="c1",
             fields={"concept_scheme_id": house["scheme"], "title": "Fixture"},
+            probability=0.9,
         )
 
         stored = service.propose(
@@ -180,7 +183,11 @@ class TestAutoApply:
     def test_without_a_source_the_same_operations_apply(self, service, policies, house):
         policies.save(ApprovalPolicy(house["taxonomy"], (AutoApplyRule(op=T.CREATE),)))
         draft = OperationDraft(
-            1, T.CREATE, K.INDIVIDUAL, fields={"class_ids": [house["place"]], "title": "Shed"}
+            1,
+            T.CREATE,
+            K.INDIVIDUAL,
+            fields={"class_ids": [house["place"]], "title": "Shed"},
+            probability=0.9,
         )
 
         stored = service.propose(house["taxonomy"], "By hand", [draft], ProposalSource.MCP)

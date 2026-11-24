@@ -28,7 +28,8 @@ matching rule naming that class or an ancestor of it, or by a matching rule
 with no class at all. A relationship needs both its ends covered.
 
 An operation also needs at least the policy's min_probability; one without a
-probability counts as 0. Operations of a bundle import (source "bundle") are
+probability never meets it, whatever the minimum (0 included), so it never
+auto-applies (#1628). Operations of a bundle import (source "bundle") are
 exempt: a bundle is the project's own released source of truth, not a
 judgement, so it carries no probability and isn't held to a confidence floor.
 Every other rule, and every hard rule, still applies to them. The exemption
@@ -167,7 +168,7 @@ class ApprovalPolicy:
         taxonomy_id: The taxonomy it governs
         auto_apply: Rules; an operation matching any of them may auto-apply
         min_probability: An operation also needs at least this probability
-            (one without a probability passes only a minimum of 0); a bundle
+            (one without a probability never passes, #1628); a bundle
             import's operations are exempt
     """
 
@@ -187,8 +188,9 @@ class ApprovalPolicy:
     ) -> bool:
         """
         Whether this operation may auto-apply: never a breaking one, a delete, a
-        taxonomy create or a change to a taxonomy's vision; otherwise when it is
-        probable enough (a bundle import's always is) and matching rules cover it.
+        taxonomy create or a change to a taxonomy's vision; otherwise when it
+        states a probability that is high enough (a bundle import's needs none)
+        and matching rules cover it.
 
         Args:
             operation: The operation
@@ -206,8 +208,8 @@ class ApprovalPolicy:
             # always decides on a change to it, however editorial.
             return False
         if source is not ProposalSource.BUNDLE:
-            probability = operation.probability if operation.probability is not None else 0.0
-            if probability < self.min_probability:
+            # No probability never meets the probability rule, even a minimum of 0
+            if operation.probability is None or operation.probability < self.min_probability:
                 return False
         matching = [rule for rule in self.auto_apply if rule.matches(operation)]
         if any(rule.class_key is None for rule in matching):

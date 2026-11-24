@@ -1659,6 +1659,13 @@ class ChangeProposalRun(BatchRun):
         nullable=True,
         doc="The dataset its individual and relationship operations are in (None: no data ops)",
     )
+    review_only = Column(
+        Boolean,
+        nullable=False,
+        default=False,
+        server_default=text("0"),
+        doc="Set at create time: the approval policy never applies any of it (#1628)",
+    )
 
     __mapper_args__: Dict[str, Any] = {
         "polymorphic_identity": "proposal",

@@ -112,8 +112,10 @@ class FakeProposalService:
         dry_run=False,
         source_revision=None,
         dataset_id=None,
+        review_only=False,
     ):
         self.calls.append(("propose", taxonomy_id, title, list(operations), source, rationale))
+        self.review_only = review_only
         self.dry_runs.append(dry_run)
         self.revisions.append(source_revision)
         if self.error is not None:

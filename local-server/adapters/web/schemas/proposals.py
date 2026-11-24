@@ -177,6 +177,11 @@ class ChangeProposalCreateRequest(BaseModel):
         "keys an extraction run records (run_id, pipeline, pages, extraction_id, "
         "extraction_started_at, partial) can't be set here",
     )
+    review_only: bool = Field(
+        False,
+        description="Keep the taxonomy's approval policy off it: a person decides every "
+        "operation, none auto-applies (e.g. a benchmark gold check)",
+    )
 
     @field_validator("client_metadata")
     @classmethod
@@ -800,6 +805,10 @@ class ChangeProposalResponse(BaseModel):
         ...,
         description="Its operations in seq order; empty in a list's summary form (fields=summary)",
     )
+    review_only: bool = Field(
+        False,
+        description="Set at create time: the approval policy never applies any of it",
+    )
     counts: list[OperationCountResponse] = Field(
         ...,
         description="Its operations counted by op, kind, status and scope (in the summary form "
@@ -863,6 +872,7 @@ class ChangeProposalResponse(BaseModel):
             client_metadata=proposal.client_metadata,
             origin=ProposalOriginResponse.from_domain(proposal.origin),
             dataset_id=proposal.dataset_id,
+            review_only=proposal.review_only,
             counts=[
                 OperationCountResponse.from_domain(c) for c in count_operations(proposal.operations)
             ],
@@ -912,6 +922,7 @@ def proposal_summary(
         client_metadata=proposal.client_metadata,
         origin=ProposalOriginResponse.from_domain(proposal.origin),
         dataset_id=proposal.dataset_id,
+        review_only=proposal.review_only,
         operations=[],
         counts=[OperationCountResponse.from_domain(c) for c in counts],
     )

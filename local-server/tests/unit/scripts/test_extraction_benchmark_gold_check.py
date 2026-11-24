@@ -779,6 +779,7 @@ class _FakeApi:
     def __init__(self, status):
         self.status = status
         self.posted = []
+        self.bodies = []
 
     def get(self, path, **query):
         if path == "/api/datasets":
@@ -789,6 +790,7 @@ class _FakeApi:
 
     def post(self, path, body, **query):
         self.posted.append((path, query))
+        self.bodies.append((path, body))
         if path == "/api/datasets":
             return {"id": "dataset-1", **body}
         operations = [
@@ -819,6 +821,8 @@ class TestCheckDocument:
 
         assert proposal["id"] == "proposal-1"
         assert [q for p, q in api.posted if p == "/api/proposals"] == [{"dry_run": "true"}, {}]
+        # #1628: no approval policy may apply a gold check
+        assert all(b["review_only"] is True for p, b in api.bodies if p == "/api/proposals")
 
     def test_an_operation_the_approval_policy_applied_stops_it(self):
         with pytest.raises(SystemExit, match="approval policy") as raised:

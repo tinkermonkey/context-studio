@@ -240,7 +240,8 @@ class TestProposeAlternatives:
 
     def test_a_create_with_near_matches_never_auto_applies(self, graph):
         policy = ApprovalPolicy(graph["taxonomy"], (AutoApplyRule(op=T.CREATE),))
-        additive = {"scope": ChangeScope.ADDITIVE}
+        # A stated probability: one without never auto-applies (#1628)
+        additive = {"scope": ChangeScope.ADDITIVE, "probability": 0.9}
         plain = ProposedOperation(
             1, T.CREATE, K.INDIVIDUAL, ref="a", fields={"title": "A"}, **additive
         )

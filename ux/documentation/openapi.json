@@ -11558,6 +11558,12 @@
             ],
             "title": "Client Metadata",
             "description": "Kept on the proposal for the proposing client (JSON values). A source_id names the source it was extracted from (a source of the taxonomy), and an origin the pipeline that made it ({pipeline_type, implementation_id, configuration_ref, configuration_version, digest}); either is checked when given (422 otherwise). The keys an extraction run records (run_id, pipeline, pages, extraction_id, extraction_started_at, partial) can't be set here"
+          },
+          "review_only": {
+            "type": "boolean",
+            "title": "Review Only",
+            "description": "Keep the taxonomy's approval policy off it: a person decides every operation, none auto-applies (e.g. a benchmark gold check)",
+            "default": false
           }
         },
         "type": "object",
@@ -11777,6 +11783,12 @@
             "type": "array",
             "title": "Operations",
             "description": "Its operations in seq order; empty in a list's summary form (fields=summary)"
+          },
+          "review_only": {
+            "type": "boolean",
+            "title": "Review Only",
+            "description": "Set at create time: the approval policy never applies any of it",
+            "default": false
           },
           "counts": {
             "items": {

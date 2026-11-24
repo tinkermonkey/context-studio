@@ -38,6 +38,7 @@ export function createChangeProposal(overrides?: Partial<ChangeProposal>): Chang
     created_at: "2026-10-28T12:00:00Z",
     status: "open",
     dry_run: false,
+    review_only: false,
     operations: [createProposedOperation()],
     counts: [],
     ...overrides,
