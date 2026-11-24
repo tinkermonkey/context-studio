@@ -154,9 +154,11 @@ class SubmitReflectionPlanTool(ToolBase):
         except ProposalValidationError as exc:
             return _not_stored(
                 [
-                    {"seq": e.seq, "code": e.code, "message": e.message}
-                    if e.seq is not None
-                    else {"code": e.code, "message": e.message}
+                    (
+                        {"seq": e.seq, "code": e.code, "message": e.message}
+                        if e.seq is not None
+                        else {"code": e.code, "message": e.message}
+                    )
                     for e in exc.errors
                 ]
             )
@@ -248,7 +250,10 @@ class GetSpecChangesTool(_ProposalReadTool):
         f"Get a proposal's applied changes to DR's spec as {SPEC_CHANGES_FORMAT}, the same"
         " JSON scripts/export_dr_spec_changes.py writes, for DR's cs-decisions-to-spec.ts to"
         " write into spec/schemas: changes (relationship types), node_changes (node types),"
-        " attribute_changes, predicate_changes, skipped (operations not exported, and why)"
+        " attribute_changes, predicate_changes, skipped (operations not exported, and why;"
+        " one with blocks_landing true is a change DR's spec needs that is missing until"
+        " fixed, e.g. an entity without its DR reference: give it one and export again."
+        " A proposal with a blocking skip isn't fully landable)"
         " and records (DR change-record actions), with the source_revision the proposal was"
         " drafted against and landed once you marked it landed. Works for any proposal on"
         " the DR spec, reflection plan or not; only applied operations export, so read it"

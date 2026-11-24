@@ -540,6 +540,7 @@ def test_a_type_on_dr_spec_classes_without_a_dr_reference_is_skipped(parts):
         skipped["why"]
     )
     assert "give the type one and export again" in skipped["why"]
+    assert skipped["blocks_landing"] is True  # the proposal isn't fully landable yet
 
 
 def test_a_reference_added_after_the_create_repairs_the_export(parts):
@@ -557,6 +558,11 @@ def test_a_reference_added_after_the_create_repairs_the_export(parts):
         "api.response.uses.api.operation",
     ]
     assert document["skipped"] == []
+    # records key the repaired create by the same resolved reference as changes
+    assert [(r["action"], r["from"], r["to"]) for r in document["records"]] == [
+        ("create", NEW, NEW),
+        ("create", "api.response.uses.api.operation", "api.response.uses.api.operation"),
+    ]
 
 
 def test_an_update_stripping_the_dr_reference_is_refused(parts):

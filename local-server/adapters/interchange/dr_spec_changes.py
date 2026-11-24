@@ -55,7 +55,9 @@ MCP or in the app, exports as one `cs-dr-spec-changes/1` document:
                                       # changed, semantics only the changed flags
         "decided_at", "decided_by"
      }],
-     "skipped": [{"seq", "op_id", "why"}  # an operation not exported
+     "skipped": [{"seq", "op_id", "why",   # an operation not exported
+                  "blocks_landing"?}       # true: a change DR's spec needs is
+                                           # missing until fixed (#1623)
                  | {"seq": null, "op_id": null, "retire_predicate", "why",
                     "relationship_ids"}],  # a retirement types still use
      "records": [{                    # the schema change records, as DR's change-record actions
@@ -88,8 +90,13 @@ and must agree with the type's DR relationship id. A relationship type
 between DR spec classes without a DR reference can't land in DR's spec: a
 create whose operation gave none takes the reference the type has now (so
 adding it later repairs the export), and one that still has none is listed
-in `skipped` with why, while the rest of the proposal exports (#1623). An
-attribute create on a DR node type is read the same way.
+in `skipped` with why and `blocks_landing: true`, while the rest of the
+proposal exports (#1623). An attribute create on a DR node type is read the
+same way. A skip with blocks_landing is a change DR's spec needs that this
+export leaves out until it is fixed (give the entity its DR reference, then
+export again): the proposal isn't fully landable while one remains. Other
+skips are by design (not a DR type, not applied, nothing DR keeps changed).
+`records` key a created type by the same resolved reference as `changes`.
 
 `records` are the proposal's schema change records
 (`domain.versioning.change_records`) keyed by DR relationship id, in the
@@ -269,7 +276,10 @@ def spec_changes_for(
             change = found if isinstance(found, dict) else None
             why = found if isinstance(found, str) else None if change else what
         if change is None:
-            skipped.append({"seq": operation.seq, "op_id": operation.id, "why": why})
+            entry = {"seq": operation.seq, "op_id": operation.id, "why": why}
+            if isinstance(why, BlockingSkip):
+                entry["blocks_landing"] = True
+            skipped.append(entry)
         else:
             change.update(decided_fields((decisions or {}).get(operation.id)))
             found_in.append(change)  # type: ignore[union-attr]
@@ -313,11 +323,17 @@ def dr_change_actions(
     decisions: Mapping[str, ProposalDecision] | None = None,
 ) -> list[dict[str, Any]]:
     """The schema change records on DR relationship types, as DR's change-record actions."""
-    records = schema_change_records(
-        proposal,
-        decisions,
-        key=lambda fields: dr_relationship_id(fields.get("external_references") or []),
-    )
+
+    def key(fields: Mapping[str, Any]) -> str | None:
+        # As `changes` reads a create: what it recorded, else the type as it is now (#1623)
+        found = dr_relationship_id(fields.get("external_references") or [])
+        if found is None and isinstance(fields.get("id"), str):
+            current = repo.get_property_definition(fields["id"])
+            if current is not None:
+                found = dr_relationship_id([r.to_dict() for r in current.external_references])
+        return found
+
+    records = schema_change_records(proposal, decisions, key=key)
     return [action for record in records for action in _dr_actions(record)]
 
 
@@ -791,7 +807,7 @@ def _attribute_change(
         return None
     name = dr_relationship_id(references)
     if name is None:
-        return (
+        return BlockingSkip(
             f"it {operation.op.value}s an attribute of the DR node type {node_id} without a DR "
             f"reference (source {DR_SOURCE!r}, identifier the DR attribute name), so it can't "
             "land in DR's spec: give the attribute one and export again"
@@ -1284,6 +1300,10 @@ def _refuse_if_dr_spec(repo: OntologyRepository, label: str, what: str, *class_i
             )
 
 
+class BlockingSkip(str):
+    """Why an operation is skipped when DR's spec still needs its change: blocks_landing (#1623)."""
+
+
 def _unreferenced_on_dr_spec(repo: OntologyRepository, what: str, *class_ids: Any) -> str | None:
     """
     Why a type with no DR reference is skipped when it is on DR spec classes
@@ -1293,7 +1313,7 @@ def _unreferenced_on_dr_spec(repo: OntologyRepository, what: str, *class_ids: An
     for class_id in class_ids:
         cls = repo.get_class(class_id) if isinstance(class_id, str) else None
         if cls is not None and dr_relationship_id(cls.external_references) is not None:
-            return (
+            return BlockingSkip(
                 f"it {what} on DR spec classes without a DR reference (source {DR_SOURCE!r}), "
                 "so it can't land in DR's spec: give the type one and export again"
             )

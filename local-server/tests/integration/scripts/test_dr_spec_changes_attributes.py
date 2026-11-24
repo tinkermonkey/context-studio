@@ -215,6 +215,7 @@ def test_a_create_without_a_dr_reference_on_a_dr_node_type_is_skipped(parts):
     assert document["attribute_changes"] == []
     (skipped,) = document["skipped"]
     assert skipped["seq"] == 1 and "without a DR reference" in skipped["why"]
+    assert skipped["blocks_landing"] is True
 
     # Giving the attribute its reference afterwards repairs the export
     created = repo.get_attribute_definition(proposal.operations[0].result_entity_id)
