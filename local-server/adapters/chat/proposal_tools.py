@@ -313,7 +313,11 @@ OPERATION_SCHEMA: dict[str, Any] = {
             "type": "number",
             "minimum": 0,
             "maximum": 1,
-            "description": "Your confidence in this change, 0 to 1",
+            "description": (
+                "Your confidence in this change, 0 to 1. An operation without one never"
+                " auto-applies under a taxonomy's approval policy, whatever its minimum"
+                " (0 included), pipelines' operations too; a person decides it"
+            ),
         },
         "replacement": {
             "type": "string",

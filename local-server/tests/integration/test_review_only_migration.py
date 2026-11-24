@@ -32,9 +32,23 @@ def test_upgrade_adds_review_only_false_by_default_and_downgrade_drops_it(tmp_pa
     config = _config(db)
     upgrade(config, PREVIOUS_REVISION)
     assert "review_only" not in _columns(db, "change_proposals")
+    with sqlite3.connect(db) as conn:  # a proposal stored before the column existed
+        conn.execute(
+            "INSERT INTO batch_runs (id, created_at, status, affected_entity_ids, run_type)"
+            " VALUES ('p-old', '2026-11-01 00:00:00', 'open', '[]', 'proposal')"
+        )
+        conn.execute(
+            "INSERT INTO change_proposals (id, taxonomy_id, title, source)"
+            " VALUES ('p-old', 'tax-1', 'Before', 'mcp')"
+        )
 
     upgrade(config, REVISION)
     assert _columns(db, "change_proposals")["review_only"] == ("BOOLEAN", 1, "0")
+    with sqlite3.connect(db) as conn:
+        (review_only,) = conn.execute(
+            "SELECT review_only FROM change_proposals WHERE id = 'p-old'"
+        ).fetchone()
+    assert review_only == 0  # existing proposals are not review-only
 
     downgrade(config, PREVIOUS_REVISION)
     assert "review_only" not in _columns(db, "change_proposals")

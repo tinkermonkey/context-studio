@@ -4883,7 +4883,7 @@ export interface components {
       auto_apply?: components["schemas"]["AutoApplyRuleSchema"][];
       /**
        * Min Probability
-       * @description An operation also needs at least this probability
+       * @description An operation also needs at least this probability. One that states no probability never auto-applies, whatever this minimum (0 included), from any source but a bundle import (pipelines included)
        * @default 0
        */
       min_probability: number;

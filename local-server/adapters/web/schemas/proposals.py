@@ -1210,7 +1210,12 @@ class ApprovalPolicyRequest(BaseModel):
         "deletes, taxonomy creates and anything outside this taxonomy never do",
     )
     min_probability: float = Field(
-        0.0, ge=0.0, le=1.0, description="An operation also needs at least this probability"
+        0.0,
+        ge=0.0,
+        le=1.0,
+        description="An operation also needs at least this probability. One that states no "
+        "probability never auto-applies, whatever this minimum (0 included), from any "
+        "source but a bundle import (pipelines included)",
     )
 
     def to_rules(self) -> dict[str, Any]:
