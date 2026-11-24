@@ -244,6 +244,38 @@ class RevertService:
             and not self._should_skip_revert(event, events)
         ]
 
+    def _identifier_holder(self, entity_type: str, snapshot: dict) -> Any:
+        """
+        The entity that holds the identifier a snapshot would give back, in the
+        namespace the identifier is unique in: a predicate's within its
+        taxonomy, an attribute's within its owner (a class or a relationship
+        type), a taxonomy's, scheme's, class's or relationship type's across the
+        workspace. None when it is free, or the kind has no identifier.
+        """
+        identifier = snapshot.get("identifier")
+        if not identifier:
+            return None
+        repo = self._ontology_repo
+        if entity_type == "predicate":
+            taxonomy_id = snapshot.get("taxonomy_id")
+            return (
+                repo.get_predicate_by_identifier(taxonomy_id, identifier) if taxonomy_id else None
+            )
+        if entity_type == "attribute_definition":
+            if not (snapshot.get("class_id") or snapshot.get("property_definition_id")):
+                return None
+            siblings = repo.list_attribute_definitions(
+                class_id=snapshot.get("class_id"),
+                property_definition_id=snapshot.get("property_definition_id"),
+                limit=None,
+            )
+            return next((a for a in siblings if a.identifier == identifier), None)
+        if entity_type in ("taxonomy", "concept_scheme", "class", "property_definition"):
+            return repo.get_property_definition_by_identifier(identifier) or repo.get_by_identifier(
+                identifier
+            )
+        return None
+
     def restore(self, entity_type: str, entity_id: str, snapshot: dict, batch_run_id: str) -> str:
         """
         Recreate a deleted entity with its old id from its snapshot, as part of
@@ -259,16 +291,12 @@ class RevertService:
         entity_type = self._normalize_entity_type(entity_type)
         if self._exists(entity_id, entity_type):
             raise ValueError(f"{entity_type} {entity_id} exists; its id is not free to restore")
-        identifier = snapshot.get("identifier")
-        if identifier:
-            holder = self._ontology_repo.get_property_definition_by_identifier(
-                identifier
-            ) or self._ontology_repo.get_by_identifier(identifier)
-            if holder is not None and holder.id != entity_id:
-                raise ValueError(
-                    f"The identifier '{identifier}' of {entity_type} {entity_id} is now used by"
-                    f" {holder.id}; it can't be restored"
-                )
+        holder = self._identifier_holder(entity_type, snapshot)
+        if holder is not None and holder.id != entity_id:
+            raise ValueError(
+                f"The identifier '{snapshot['identifier']}' of {entity_type} {entity_id} is now"
+                f" used by {holder.id}; it can't be restored"
+            )
         dataset_id = snapshot.get("dataset_id")
         if dataset_id and self._ontology_repo.get_dataset(dataset_id) is None:
             raise ValueError(f"The dataset {dataset_id} of {entity_type} {entity_id} was deleted")

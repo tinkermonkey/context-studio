@@ -20,6 +20,7 @@ import pytest
 
 from domain.ontology.entities import (
     AttributeDefinition,
+    Predicate,
     Class,
     ConceptScheme,
     Individual,
@@ -410,6 +411,119 @@ def test_preview_is_empty_after_the_run_was_reverted(ontology_repo, change_repo,
 def test_preview_needs_a_run_id(revert_svc):
     with pytest.raises(ValueError):
         revert_svc.preview("")
+
+
+# ============================================================================
+# Restore: an identifier is checked in the namespace it is unique in
+# ============================================================================
+
+
+def _snapshot(entity) -> dict:
+    return entity_snapshot(entity)
+
+
+def test_restoring_a_predicate_ignores_a_relationship_type_with_its_identifier(
+    ontology_repo, change_repo, revert_svc
+):
+    """Predicates are unique per taxonomy; a relationship type may share the verb."""
+    ontology_repo.save_property_definition(
+        PropertyDefinition(id="pd-1", identifier="part_of", title="Part of")
+    )
+    gone = Predicate(id="pr-1", taxonomy_id="tx-1", identifier="part_of", title="part_of")
+
+    assert revert_svc.restore("predicate", "pr-1", _snapshot(gone), "run-1") == "pr-1"
+    assert ontology_repo.get_predicate("pr-1") is not None
+
+
+def test_restoring_a_predicate_refuses_the_identifier_another_predicate_of_its_taxonomy_holds(
+    ontology_repo, change_repo, revert_svc
+):
+    ontology_repo.save_predicate(
+        Predicate(id="pr-2", taxonomy_id="tx-1", identifier="part_of", title="part_of")
+    )
+    gone = Predicate(id="pr-1", taxonomy_id="tx-1", identifier="part_of", title="part_of")
+
+    with pytest.raises(ValueError, match="'part_of'.*pr-2"):
+        revert_svc.restore("predicate", "pr-1", _snapshot(gone), "run-1")
+
+    assert ontology_repo.get_predicate("pr-1") is None
+
+
+def test_restoring_a_predicate_ignores_the_same_verb_in_another_taxonomy(
+    ontology_repo, change_repo, revert_svc
+):
+    ontology_repo.save_taxonomy(Taxonomy(id="tx-2", identifier="other_tax", title="Other"))
+    ontology_repo.save_predicate(
+        Predicate(id="pr-2", taxonomy_id="tx-2", identifier="part_of", title="part_of")
+    )
+    gone = Predicate(id="pr-1", taxonomy_id="tx-1", identifier="part_of", title="part_of")
+
+    revert_svc.restore("predicate", "pr-1", _snapshot(gone), "run-1")
+
+    assert ontology_repo.get_predicate("pr-1") is not None
+
+
+def _attribute(attribute_id: str, class_id: str, identifier: str = "colour") -> AttributeDefinition:
+    return AttributeDefinition(
+        id=attribute_id,
+        class_id=class_id,
+        identifier=identifier,
+        title="Colour",
+        datatype=DataType.STRING,
+    )
+
+
+def test_restoring_an_attribute_ignores_the_same_identifier_on_another_class(
+    ontology_repo, change_repo, revert_svc
+):
+    ontology_repo.save_class(
+        Class(id="cls-1", concept_scheme_id="scheme-1", taxonomy_id="tx-1", title="A")
+    )
+    ontology_repo.save_class(
+        Class(id="cls-2", concept_scheme_id="scheme-1", taxonomy_id="tx-1", title="B")
+    )
+    ontology_repo.save_attribute_definition(_attribute("at-2", "cls-2"))
+
+    revert_svc.restore("attribute_definition", "at-1", _snapshot(_attribute("at-1", "cls-1")), "r")
+
+    assert ontology_repo.get_attribute_definition("at-1") is not None
+
+
+def test_restoring_an_attribute_refuses_the_identifier_its_class_holds(
+    ontology_repo, change_repo, revert_svc
+):
+    ontology_repo.save_class(
+        Class(id="cls-1", concept_scheme_id="scheme-1", taxonomy_id="tx-1", title="A")
+    )
+    ontology_repo.save_attribute_definition(_attribute("at-2", "cls-1"))
+
+    with pytest.raises(ValueError, match="'colour'.*at-2"):
+        revert_svc.restore(
+            "attribute_definition", "at-1", _snapshot(_attribute("at-1", "cls-1")), "r"
+        )
+
+
+def test_restoring_a_class_refuses_an_identifier_held_workspace_wide(
+    ontology_repo, change_repo, revert_svc
+):
+    taken = Class(
+        id="cls-2",
+        concept_scheme_id="scheme-1",
+        taxonomy_id="tx-1",
+        title="B",
+        identifier="cls_shared",
+    )
+    ontology_repo.save_class(taken)
+    gone = Class(
+        id="cls-1",
+        concept_scheme_id="scheme-1",
+        taxonomy_id="tx-1",
+        title="A",
+        identifier="cls_shared",
+    )
+
+    with pytest.raises(ValueError, match="cls_shared.*cls-2"):
+        revert_svc.restore("class", "cls-1", _snapshot(gone), "run-1")
 
 
 # ============================================================================
