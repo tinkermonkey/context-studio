@@ -26,6 +26,7 @@ from adapters.llm.anthropic_provider import AnthropicProvider
 from adapters.llm.provider_router import LLMProviderRouter, _completion_error
 from domain.extraction.llm_calls import failure_fields
 from domain.pipelines.exceptions import (
+    LLMNotConfiguredError,
     LLMProviderError,
     LLMRateLimitError,
     LLMRequestRefusedError,
@@ -139,12 +140,44 @@ class TestLLMProviderRouter:
         assert second.kwargs["effort"] == "high"
         assert second.kwargs["max_tokens"] == 64000
 
-    def test_router_init_with_no_keys(self):
-        """Router raises ValueError when initialized with no API keys."""
-        with pytest.raises(ValueError) as exc_info:
-            LLMProviderRouter()
+    def test_router_init_with_no_keys_builds_a_router_with_no_providers(self):
+        """With no key the router is built, so the app starts and only model features are off."""
+        router = LLMProviderRouter()
 
-        assert "At least one LLM provider API key must be configured" in str(exc_info.value)
+        assert router.list_available_providers() == []
+        assert router.supports_model("claude-sonnet-5-5") is False
+        assert router.list_models() == []
+
+    @pytest.mark.parametrize("use_async", [False, True])
+    async def test_router_with_no_keys_refuses_completions_naming_the_config_fields(
+        self, use_async
+    ):
+        """Every completion says which settings to fill in, as a refusal no retry can change."""
+        router = LLMProviderRouter()
+
+        with pytest.raises(LLMRequestRefusedError) as exc_info:
+            if use_async:
+                await router.complete_async("sys", "user", "claude-sonnet-5-5")
+            else:
+                router.complete("sys", "user", "claude-sonnet-5-5")
+
+        assert isinstance(exc_info.value, LLMNotConfiguredError)
+        message = str(exc_info.value)
+        assert "llm.openai_api_key" in message
+        assert "llm.anthropic_api_key" in message
+        assert "llm.openrouter_api_key" in message
+
+    async def test_router_with_no_keys_refuses_chat_naming_the_config_fields(self):
+        router = LLMProviderRouter()
+
+        with pytest.raises(ValueError) as exc_info:
+            async for _ in router.stream_chat(
+                system="sys", messages=[], tools=[], model="claude-sonnet-5-5"
+            ):
+                pass
+
+        assert isinstance(exc_info.value, LLMNotConfiguredError)
+        assert "llm.anthropic_api_key" in str(exc_info.value)
 
     @patch("adapters.llm.provider_router.OpenAIProvider")
     def test_router_init_with_valid_openai_key(self, mock_openai_class):

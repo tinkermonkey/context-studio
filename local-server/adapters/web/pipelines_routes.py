@@ -109,9 +109,11 @@ from domain.pipelines.entities import (
     PipelineType,
 )
 from domain.pipelines.exceptions import (
+    LLM_NOT_CONFIGURED_MESSAGE,
     ApplySelectionError,
     ConfigurationDisabledError,
     ExtractionFailedError,
+    LLMNotConfiguredError,
     PipelineExecutionError,
     PipelineExternalServiceError,
     PipelineInputError,
@@ -574,6 +576,13 @@ def _handle_domain_error(exc: Exception) -> tuple[int, str]:
     elif isinstance(exc, PipelineInputError):
         _logger.warning(f"Pipeline input error: {exc}")
         return (http_status.HTTP_400_BAD_REQUEST, str(exc))
+    elif isinstance(exc, LLMNotConfiguredError) or (
+        isinstance(exc, ExtractionFailedError) and LLM_NOT_CONFIGURED_MESSAGE in str(exc)
+    ):
+        # No provider key: nothing to retry, and the message names the settings to fill in.
+        # A failed extraction carries it as the reason its calls failed.
+        _logger.warning(LLM_NOT_CONFIGURED_MESSAGE)
+        return (http_status.HTTP_503_SERVICE_UNAVAILABLE, LLM_NOT_CONFIGURED_MESSAGE)
     elif isinstance(exc, PipelineExternalServiceError):
         _logger.error(f"External service error: {exc}", exc_info=exc)
         return (

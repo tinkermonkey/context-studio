@@ -118,7 +118,11 @@ class AdminService:
         if service_metrics_error:
             issues.append(f"Error checking service metrics: {service_metrics_error}")
         elif not service_metrics.llm_providers_available:
-            issues.append("No LLM providers configured")
+            issues.append(
+                "No LLM provider key is configured; features that call a model are disabled."
+                " Set llm.openai_api_key, llm.anthropic_api_key or llm.openrouter_api_key in"
+                " config.json."
+            )
 
         # Check for background task errors or failures
         if task_summary_error:

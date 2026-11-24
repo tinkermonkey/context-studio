@@ -34,6 +34,8 @@ from domain.chat.entities import ChatMessage
 from domain.chat.ports import ChatModel
 from domain.chat.value_objects import ModelEvent, ToolSpec
 from domain.pipelines.exceptions import (
+    LLM_NOT_CONFIGURED_MESSAGE,
+    LLMNotConfiguredError,
     LLMProviderError,
     LLMRateLimitError,
     LLMRequestRefusedError,
@@ -181,7 +183,8 @@ class LLMProviderRouter:
             openrouter_api_key: OpenRouter API key (optional)
 
         Raises:
-            ValueError: If no API keys are provided or all configured providers fail to initialize
+            ValueError: If keys are provided but every configured provider fails to initialize.
+                With no keys at all the router is built with no providers.
         """
         self._providers: dict[str, LLMProvider] = {}
         # Streaming tool-calling chat models, keyed by the same provider names.
@@ -190,11 +193,13 @@ class LLMProviderRouter:
         self._rejected_providers: set[str] = set()
         init_errors: dict[str, Exception] = {}
 
-        if not openai_api_key and not anthropic_api_key and not openrouter_api_key:
-            raise ValueError(
-                "At least one LLM provider API key must be configured (openai_api_key,"
-                " anthropic_api_key, or openrouter_api_key)"
-            )
+        self._no_key_configured = (
+            not openai_api_key and not anthropic_api_key and not openrouter_api_key
+        )
+        if self._no_key_configured:
+            # Many workflows need no model: the app runs, and every call that
+            # needs one raises LLMNotConfiguredError
+            logger.warning(LLM_NOT_CONFIGURED_MESSAGE)
 
         if openai_api_key:
             try:
@@ -346,6 +351,8 @@ class LLMProviderRouter:
                 after streaming started, or the last fall-through error if every
                 supporting provider failed
         """
+        if self._no_key_configured:
+            raise LLMNotConfiguredError()
         last_error: Exception | None = None
         candidates = [
             (name, self._chat_models[name])
@@ -421,11 +428,14 @@ class LLMProviderRouter:
         The providers to try for a completion: those _providers_for lists.
 
         Raises:
-            LLMRequestRefusedError: If the model has no usable provider because
-                every provider that supports it rejected its API key, which
-                every later completion for the model will meet too
+            LLMRequestRefusedError: If no provider key is configured, or the model
+                has no usable provider because every provider that supports it
+                rejected its API key, which every later completion for the model
+                will meet too
             ValueError: If no configured provider supports the model
         """
+        if self._no_key_configured:
+            raise LLMNotConfiguredError()
         try:
             return self._providers_for(model)
         except ValueError as error:

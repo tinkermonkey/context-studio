@@ -16,8 +16,10 @@ from fastapi.testclient import TestClient
 
 from adapters.chat.context import OntologyWorkspaceContext
 from adapters.chat.tools import build_chat_tools
+from adapters.llm.provider_router import LLMProviderRouter
 from adapters.web.chat_routes import router
 from domain.chat.services import ChatService
+from domain.pipelines.exceptions import LLM_NOT_CONFIGURED_MESSAGE
 from domain.chat.value_objects import (
     ChatRole,
     ModelTurnEnded,
@@ -273,3 +275,16 @@ def test_model_failure_streams_error_event(client):
 
     assert [e["type"] for e in events] == ["message_start", "error"]
     assert "No provider available" in events[-1]["message"]
+
+
+def test_chat_with_no_llm_key_says_which_settings_to_fill_in(client):
+    """The app starts with no key; chat reports it unavailable and each turn says why."""
+    client.app.state.chat_service._model = LLMProviderRouter()
+
+    status = client.get("/api/chat/status").json()
+    conversation = client.post("/api/chat/conversations").json()
+    events = stream_events(client, conversation["id"], "hi")
+
+    assert status["available"] is False
+    assert [e["type"] for e in events] == ["message_start", "error"]
+    assert events[-1]["message"] == LLM_NOT_CONFIGURED_MESSAGE

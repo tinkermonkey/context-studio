@@ -41,20 +41,13 @@ class TestRunPipelineRouterIntegration:
 
         assert router is not None
 
-    def test_router_raises_when_no_api_keys_provided(self):
-        """LLMProviderRouter raises ValueError when no API keys are provided."""
-        with pytest.raises(ValueError):
-            LLMProviderRouter(
-                openrouter_api_key=None,
-                anthropic_api_key=None,
-                openai_api_key=None,
-            )
+    @pytest.mark.parametrize("key", [None, ""])
+    def test_router_has_no_providers_when_no_api_keys_provided(self, key):
+        """With no key the router is built with no providers; calls that need a model refuse."""
+        router = LLMProviderRouter(
+            openrouter_api_key=key,
+            anthropic_api_key=key,
+            openai_api_key=key,
+        )
 
-    def test_router_raises_when_all_api_keys_empty(self):
-        """LLMProviderRouter raises ValueError when all API keys are empty strings."""
-        with pytest.raises(ValueError):
-            LLMProviderRouter(
-                openrouter_api_key="",
-                anthropic_api_key="",
-                openai_api_key="",
-            )
+        assert router.list_available_providers() == []

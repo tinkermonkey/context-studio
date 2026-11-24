@@ -2,12 +2,13 @@
 Configuration settings for the Context Studio Local Server.
 """
 
+import copy
 import json
 import logging
 import os
 import secrets
 from enum import Enum
-from typing import Any, List, Optional
+from typing import Any, List, Optional, Sequence
 from urllib.parse import urlsplit
 
 from dotenv import load_dotenv
@@ -16,6 +17,7 @@ from pydantic import (
     ConfigDict,
     Field,
     ValidationError,
+    ValidationInfo,
     field_validator,
     model_validator,
 )
@@ -178,12 +180,50 @@ LLM_KEY_ENV_FALLBACKS = {
 }
 
 
+def _warn_unusable_llm_key(field_name: str, value: Any) -> None:
+    """Log that an LLM key in config.json is not a string and counts as not set."""
+    kind = "null" if value is None else f"a {type(value).__name__}, not a string"
+    _config_logger.warning(
+        f"llm.{field_name} in config.json is {kind}; treating it as not set"
+        f" (the {LLM_KEY_ENV_FALLBACKS[field_name]} environment variable applies,"
+        " if set). Features that call a model stay disabled until a key is set."
+    )
+
+
+def _drop_unusable_llm_keys(config_data: Any) -> None:
+    """
+    Warn once for each LLM key that is not a string and remove it, so it is not
+    warned about again on each validation pass.
+    """
+    llm = config_data.get("llm") if isinstance(config_data, dict) else None
+    if not isinstance(llm, dict):
+        return
+    for field_name in LLM_KEY_ENV_FALLBACKS:
+        if field_name in llm and not isinstance(llm[field_name], str):
+            _warn_unusable_llm_key(field_name, llm.pop(field_name))
+
+
 class LLMConfig(BaseModel):
     """LLM provider configuration section"""
 
     openai_api_key: str = Field(default="", description="OpenAI API key")
     anthropic_api_key: str = Field(default="", description="Anthropic API key")
     openrouter_api_key: str = Field(default="", description="OpenRouter API key")
+
+    @field_validator("openai_api_key", "anthropic_api_key", "openrouter_api_key", mode="before")
+    @classmethod
+    def unusable_key_is_not_set(cls, value: Any, info: ValidationInfo) -> Any:
+        """
+        Treat a null (or otherwise non-string) key as not set, with a warning.
+
+        null is the natural way to write "no key", and an unusable key must not
+        cost the rest of config.json. The environment fallback then applies, and
+        the features that call a model stay disabled until a key is set.
+        """
+        if isinstance(value, str):
+            return value
+        _warn_unusable_llm_key(str(info.field_name), value)
+        return ""
 
     @model_validator(mode="after")
     def apply_env_fallbacks(self) -> "LLMConfig":
@@ -482,6 +522,36 @@ class Settings(BaseModel):
     telemetry: TelemetryConfig = Field(default_factory=TelemetryConfig)
 
 
+def _settable_aside_path(loc: Sequence[Any], error_type: str) -> tuple:
+    """
+    The part of config.json to set aside for a validation error at `loc`.
+
+    The invalid value itself, except that a value inside a list sets the whole
+    list aside, and a missing key sets the object that lacks it aside.
+    """
+    path = tuple(loc)
+    for index, part in enumerate(path):
+        if isinstance(part, int):
+            path = path[:index]
+            break
+    if error_type == "missing":
+        path = path[:-1]
+    return path
+
+
+def _remove_path(data: Any, path: Sequence[Any]) -> bool:
+    """Delete the value at `path` in nested dicts; False when it is not there."""
+    node = data
+    for part in path[:-1]:
+        if not isinstance(node, dict) or part not in node:
+            return False
+        node = node[part]
+    if not isinstance(node, dict) or path[-1] not in node:
+        return False
+    del node[path[-1]]
+    return True
+
+
 class ConfigurationManager:
     """Manages configuration loading from config.json"""
 
@@ -498,7 +568,7 @@ class ConfigurationManager:
             try:
                 with open(self.config_file, "r") as f:
                     config_data = json.load(f)
-                self.settings = Settings(**config_data)
+                self.settings = self._validated_settings(config_data)
                 _config_logger.info(f"Successfully loaded configuration from {self.config_file}")
             except json.JSONDecodeError as e:
                 _config_logger.error(
@@ -508,6 +578,7 @@ class ConfigurationManager:
                 )
                 self.settings = Settings()
             except ValidationError as e:
+                # Only reached when an error names nothing that can be set aside
                 _config_logger.error(
                     "Configuration validation failed: Invalid values in"
                     f" {self.config_file}. Errors: {e.errors(include_input=False)}. Using default"
@@ -536,6 +607,44 @@ class ConfigurationManager:
             self.save()
 
         return self.settings
+
+    def _validated_settings(self, config_data: Any) -> Settings:
+        """
+        Build Settings from the file's content, setting aside what is invalid.
+
+        One bad value never discards the rest of the file. Each invalid value
+        is logged with its field name and left out, so the field takes its
+        default, and the rest loads. Where the invalid value sits inside a list
+        or a required key is missing, the whole list or the whole object that
+        lacks the key is set aside, since there is no way to keep part of it.
+
+        Raises:
+            ValidationError: If an error names nothing that can be set aside
+        """
+        data = copy.deepcopy(config_data)
+        _drop_unusable_llm_keys(data)
+        # Each pass sets aside at least one value, so this ends
+        while True:
+            try:
+                return Settings(**data)
+            except ValidationError as e:
+                set_aside = False
+                for error in e.errors(include_input=False):
+                    path = _settable_aside_path(error["loc"], error["type"])
+                    if path and _remove_path(data, path):
+                        field = ".".join(map(str, path))
+                        reason = (
+                            f"{'.'.join(map(str, error['loc']))} is missing"
+                            if error["type"] == "missing"
+                            else error["msg"]
+                        )
+                        _config_logger.error(
+                            f"{self.config_file}: {field} is invalid ({reason}); using its"
+                            " default. The rest of the file is loaded."
+                        )
+                        set_aside = True
+                if not set_aside:
+                    raise
 
     def save(self) -> bool:
         """Save current configuration to file"""
