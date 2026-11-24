@@ -75,6 +75,8 @@ describe("who decides", () => {
     expect(takesDecisions(createChangeProposal({ status: "open" }))).toBe(true);
     expect(takesDecisions(createChangeProposal({ status: "done" }))).toBe(true);
     expect(takesDecisions(createChangeProposal({ status: "reverted" }))).toBe(false);
+    // Withdrawn by its proposer or superseded (#1624): the server refuses decisions on it.
+    expect(takesDecisions(createChangeProposal({ status: "withdrawn" }))).toBe(false);
   });
 
   it("splits awaiting operations into fresh and stale, dropping decided ones", () => {

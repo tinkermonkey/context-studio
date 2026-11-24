@@ -1,10 +1,10 @@
 /**
- * Accept N ready while it runs and after: a busy banner, no second apply from
+ * Bulk accept (Select ▾, then Accept selected) while it runs and after: a busy banner, no second apply from
  * a double click, a toast that says what applied and what still needs a
  * decision (never as a failure), and a timed-out apply that refetches.
  */
 import { describe, it, expect, beforeAll, beforeEach, afterEach, afterAll, vi } from "vitest";
-import { screen, waitFor } from "@testing-library/react";
+import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { http, HttpResponse } from "msw";
 import { setupServer } from "msw/node";
@@ -104,15 +104,29 @@ function renderPage() {
   );
 }
 
-describe("Accept N ready while the apply runs", () => {
+/** Select ▾, then a pick ("ready" or "awaiting"); returns the bulk bar's Accept selected. */
+async function select(
+  user: ReturnType<typeof userEvent.setup>,
+  pick: "ready" | "awaiting",
+  label?: string,
+) {
+  await user.click(await screen.findByTestId("review-bulk-select"));
+  const item = within(screen.getByTestId("review-bulk-select-menu")).getByTestId(
+    `review-bulk-select-${pick}`,
+  );
+  if (label) expect(item).toHaveTextContent(label);
+  await user.click(item);
+  return screen.getByTestId("proposal-selection-accept");
+}
+
+describe("Accept selected (all ready) while the apply runs", () => {
   it("shows a busy banner, disables the bulk buttons, and sends one apply for a double click", async () => {
     let release!: () => void;
     hold = new Promise((resolve) => (release = resolve));
     const user = userEvent.setup();
     renderPage();
 
-    const accept = await screen.findByTestId("proposal-accept-all");
-    expect(accept).toHaveTextContent("Accept 2 ready");
+    const accept = await select(user, "ready", "All ready · 2");
     await user.dblClick(accept);
 
     const busy = await screen.findByTestId("proposal-busy");
@@ -121,7 +135,8 @@ describe("Accept N ready while the apply runs", () => {
     expect(screen.getByTestId("proposal-summary")).toHaveAttribute("aria-busy", "true");
     expect(accept).toHaveAttribute("aria-busy", "true");
     expect(accept).toBeDisabled();
-    expect(screen.getByTestId("proposal-reject-all")).toBeDisabled();
+    expect(screen.getByTestId("proposal-selection-reject")).toBeDisabled();
+    expect(screen.getByTestId("review-bulk-select")).toBeDisabled();
     // Nothing is reported before the apply returns.
     expect(screen.queryByTestId("toast-info")).not.toBeInTheDocument();
 
@@ -132,12 +147,13 @@ describe("Accept N ready while the apply runs", () => {
   });
 });
 
-describe("Accept N ready afterwards", () => {
+describe("Accept selected afterwards", () => {
   it("says what applied and what still needs a decision, never as an error", async () => {
     const user = userEvent.setup();
     renderPage();
 
-    await user.click(await screen.findByTestId("proposal-accept-all"));
+    // All awaiting checks the blocked delete too: Accept selected skips it and says so.
+    await user.click(await select(user, "awaiting", "All awaiting · 3"));
 
     expect(await screen.findByTestId("toast-success")).toHaveTextContent(
       "Applied 2 | 1 still needs a decision (in use: choose move or drop in the inspector).",
@@ -158,7 +174,7 @@ describe("Accept N ready afterwards", () => {
     );
     const user = userEvent.setup();
     renderPage();
-    const accept = await screen.findByTestId("proposal-accept-all");
+    const accept = await select(user, "ready");
     const before = gets;
     await user.click(accept);
 
@@ -168,7 +184,7 @@ describe("Accept N ready afterwards", () => {
     expect(screen.queryByTestId("toast-error")).not.toBeInTheDocument();
     expect(screen.queryByTestId("toast-success")).not.toBeInTheDocument();
     await waitFor(() => expect(gets).toBeGreaterThan(before));
-    expect(screen.getByTestId("proposal-accept-all")).toBeEnabled();
+    expect(screen.getByTestId("review-bulk-select")).toBeEnabled();
   });
 
   it("reports any other apply failure as an error", async () => {
@@ -177,7 +193,7 @@ describe("Accept N ready afterwards", () => {
     );
     const user = userEvent.setup();
     renderPage();
-    await user.click(await screen.findByTestId("proposal-accept-all"));
+    await user.click(await select(user, "ready"));
 
     expect(await screen.findByTestId("toast-error")).toHaveTextContent(
       "Apply failed | Internal error",

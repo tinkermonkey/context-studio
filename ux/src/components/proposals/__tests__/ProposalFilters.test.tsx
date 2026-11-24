@@ -1,6 +1,6 @@
 /**
  * The operation filters (#1460): a rejected operation lists as decided, in the
- * flat table and the change-kind grouping, and the op and scope filters narrow
+ * sequence list and the change-kind grouping, and the op and scope filters narrow
  * whichever primary filter is chosen, with counts, unchecking rows they hide.
  */
 import { describe, it, expect, beforeAll, beforeEach, afterEach, afterAll, vi } from "vitest";
@@ -49,19 +49,22 @@ function renderPage(selectedOperationId?: string) {
   );
 }
 
-function table() {
-  return screen.getByTestId("proposal-operations-table");
+function list() {
+  return screen.getByTestId("proposal-operations-list");
 }
 
-/** The row keys the table shows, in order (flat table or every grouped table and card). */
+/** The operation ids the list shows, top to bottom (rows and conflict-card members). */
 function shownIds(): string[] {
-  const rows = [...table().querySelectorAll("tr[data-row-key]")].map(
-    (r) => r.getAttribute("data-row-key")!,
+  return [...list().querySelectorAll("[data-row-id], [data-testid^='conflict-op-']")].map(
+    (e) =>
+      e.getAttribute("data-row-id") ?? e.getAttribute("data-testid")!.slice("conflict-op-".length),
   );
-  const cards = [...table().querySelectorAll("[data-testid^='conflict-op-']")].map((e) =>
-    e.getAttribute("data-testid")!.slice("conflict-op-".length),
-  );
-  return [...rows, ...cards];
+}
+
+/** Opens Select ▾ and returns its menu. */
+async function openSelect() {
+  await userEvent.click(screen.getByTestId("review-bulk-select"));
+  return screen.getByTestId("review-bulk-select-menu");
 }
 
 async function pick(groupName: string, label: RegExp) {
@@ -81,20 +84,20 @@ function options(groupName: string): string[] {
 }
 
 describe("a rejected operation lists as decided", () => {
-  it("shows under Decided and All in the flat table", async () => {
+  it("shows under Decided and All in the sequence list", async () => {
     const user = userEvent.setup();
     renderPage("op-rename");
 
     await user.click(await screen.findByTestId("review-not"));
     await user.click(screen.getByTestId("review-reason-other"));
     await waitFor(() =>
-      expect(within(table()).queryByTestId("operation-diff-op-rename")).not.toBeInTheDocument(),
+      expect(within(list()).queryByTestId("operation-diff-op-rename")).not.toBeInTheDocument(),
     );
-    expect(table()).toHaveAttribute("data-filter", "needs");
+    expect(list()).toHaveAttribute("data-filter", "needs");
 
     await primary(/^Decided · 2$/);
     expect(shownIds()).toEqual(["op-rename", "op-create"]);
-    expect(within(table()).getByTestId("operation-diff-op-rename")).toBeInTheDocument();
+    expect(within(list()).getByTestId("operation-diff-op-rename")).toBeInTheDocument();
 
     await primary(/^All · 4$/);
     expect(shownIds()).toEqual(["op-rename", "op-delete", "op-create", "op-class"]);
@@ -104,7 +107,7 @@ describe("a rejected operation lists as decided", () => {
     proposal = reflectionProposal();
     const user = userEvent.setup();
     renderPage("m-dup");
-    await screen.findByTestId("tiered-operations");
+    await screen.findByTestId("review-group-conflicts");
 
     await user.click(await screen.findByTestId("review-not"));
     await user.click(screen.getByTestId("review-reason-other"));
@@ -138,7 +141,7 @@ describe("op and scope filters", () => {
     renderPage();
     await screen.findByTestId("proposal-op-filter");
 
-    expect(table()).toHaveAttribute("data-filter", "needs");
+    expect(list()).toHaveAttribute("data-filter", "needs");
     expect(options("Show operations by op")).toEqual([
       "Any op",
       "create · 0",
@@ -254,14 +257,14 @@ describe("op and scope filters", () => {
   it("narrow the change-kind grouping too", async () => {
     proposal = reflectionProposal();
     renderPage();
-    await screen.findByTestId("tiered-operations");
+    await screen.findByTestId("review-group-conflicts");
     const deletes = proposal.operations
       .filter((o) => o.op === "delete" && !o.id.startsWith("c-"))
       .map((o) => o.id);
 
     await byOp(/^delete/);
-    const rows = [...table().querySelectorAll("tr[data-row-key]")].map((r) =>
-      r.getAttribute("data-row-key"),
+    const rows = [...list().querySelectorAll("[data-row-id]")].map((r) =>
+      r.getAttribute("data-row-id"),
     );
     expect(rows.sort()).toEqual([...deletes].sort());
     // A conflict card shows all its members while the filter shows any of them (c-delete).
@@ -269,7 +272,7 @@ describe("op and scope filters", () => {
 
     await byOp(/^update/);
     expect(screen.getByTestId("conflict-card-c-rename")).toBeInTheDocument();
-    expect(table().querySelector("tr[data-row-key='m-dup']")).toBeNull();
+    expect(screen.queryByTestId("review-row-m-dup")).not.toBeInTheDocument();
   });
 
   it("uncheck the rows they hide", async () => {
@@ -291,17 +294,20 @@ describe("op and scope filters", () => {
   it("limit the threshold's Select N to the rows they show", async () => {
     const user = userEvent.setup();
     renderPage();
-    await screen.findByTestId("proposal-threshold-bar");
+    await screen.findByTestId("proposal-op-filter");
     // At p >= 0.60: op-rename (0.82, breaking) and op-class (0.90, editorial).
-    expect(screen.getByTestId("proposal-threshold-count")).toHaveTextContent(
-      "2 of 3 awaiting at or above",
+    let menu = await openSelect();
+    expect(within(menu).getByTestId("review-bulk-select-threshold")).toHaveTextContent(
+      "At or above p 0.60 · 2",
     );
+    await user.click(screen.getByTestId("review-bulk-select"));
 
     await byScope(/^editorial/);
-    expect(screen.getByTestId("proposal-threshold-count")).toHaveTextContent(
-      "1 of 1 awaiting at or above",
+    menu = await openSelect();
+    expect(within(menu).getByTestId("review-bulk-select-threshold")).toHaveTextContent(
+      "At or above p 0.60 · 1",
     );
-    await user.click(screen.getByTestId("proposal-threshold-select"));
+    await user.click(within(menu).getByTestId("review-bulk-select-threshold"));
     expect(screen.getByTestId("operation-check-op-class")).toBeChecked();
 
     // The breaking row the filter hid was never checked.
@@ -329,7 +335,7 @@ describe("op and scope filters", () => {
   it("say so in the change-kind grouping when they leave nothing", async () => {
     proposal = reflectionProposal();
     renderPage();
-    await screen.findByTestId("tiered-operations");
+    await screen.findByTestId("review-group-conflicts");
     await primary(/^Decided/);
     await byOp(/^delete/);
     expect(screen.getByText("No operations match these filters.")).toBeInTheDocument();

@@ -122,27 +122,29 @@ describe("ProposalDetailPage", () => {
     await user.click(await screen.findByRole("radio", { name: "All · 4" }));
     await screen.findByTestId("operation-diff-op-rename");
 
-    const table = screen.getByTestId("proposal-operations-table");
-    expect(within(table).getByText("Plan kind")).toBeInTheDocument();
-    const renameRow = screen.getByTestId("operation-diff-op-rename").closest("tr") as HTMLElement;
-    expect(within(renameRow).getByText("update")).toHaveClass("chip--cyan");
-    expect(within(renameRow).getByText("rename-predicate")).toHaveClass("op-plan-kind");
-    expect(within(renameRow).getByText("0.82")).toHaveClass("op-probability");
-    expect(
-      within(screen.getByTestId("operation-status-op-rename")).getByText("needs decision"),
-    ).toHaveClass("chip--amber");
-    expect(screen.getByTestId("operation-status-op-rename")).toHaveAttribute(
-      "data-status",
-      "pending",
+    const renameRow = screen.getByTestId("review-row-op-rename");
+    expect(within(renameRow).getByTestId("review-row-op-op-rename")).toHaveTextContent(
+      "seq 1 · update",
     );
+    expect(renameRow.querySelector(".review-row__p")).toHaveTextContent("0.82");
+    expect(within(renameRow).getByText("needs decision")).toHaveClass("chip--amber");
+    expect(renameRow).toHaveAttribute("data-verdict", "needs_decision");
     expect(screen.queryByTestId("operation-stale-op-rename")).not.toBeInTheDocument();
     expect(screen.getByTestId("operation-stale-op-delete")).toHaveClass("chip--rose");
-    expect(
-      within(screen.getByTestId("operation-status-op-create")).getByText("applied"),
-    ).toHaveClass("chip--emerald");
+    expect(within(screen.getByTestId("review-row-op-create")).getByText("applied")).toHaveClass(
+      "chip--emerald",
+    );
+
+    // The plan kind: the Change kind grouping's sections.
+    await user.click(
+      within(screen.getByTestId("proposal-group-by")).getByRole("radio", { name: "Change kind" }),
+    );
+    const renames = screen.getByTestId("review-group-kind-rename-predicate");
+    expect(renames).toHaveAttribute("aria-label", "rename-predicate · mechanical");
+    expect(renames).toContainElement(screen.getByTestId("review-row-op-rename"));
   });
 
-  it("leaves out the plan kind column when no operation has one", async () => {
+  it("leaves out the Change kind grouping when no operation has a plan kind", async () => {
     server.use(
       http.get("*/api/proposals/:id", () =>
         HttpResponse.json({ ...openProposal, operations: [createOperation] }),
@@ -150,13 +152,14 @@ describe("ProposalDetailPage", () => {
     );
     renderPage();
     await screen.findByTestId("operation-diff-op-create");
-    expect(screen.queryByText("Plan kind")).not.toBeInTheDocument();
+    expect(screen.queryByRole("radio", { name: "Change kind" })).not.toBeInTheDocument();
+    expect(screen.queryByTestId("review-group-kind-other")).not.toBeInTheDocument();
   });
 
-  it("selects an operation on row click, and clears it on a second click", async () => {
+  it("selects an operation on row click", async () => {
     const user = userEvent.setup();
     const { onSelectOperation, rerender } = renderPage();
-    await user.click(await screen.findByTestId("operation-diff-op-rename"));
+    await user.click(await screen.findByTestId("review-row-op-rename"));
     expect(onSelectOperation).toHaveBeenLastCalledWith("op-rename");
 
     rerender(
@@ -166,18 +169,19 @@ describe("ProposalDetailPage", () => {
         onSelectOperation={onSelectOperation}
       />,
     );
-    const row = screen.getByTestId("operation-diff-op-rename").closest("tr") as HTMLElement;
-    expect(row).toHaveClass("table__row--selected");
-    await user.click(row);
-    expect(onSelectOperation).toHaveBeenLastCalledWith(undefined);
+    const row = screen.getByTestId("review-row-op-rename");
+    expect(row).toHaveClass("review-row--selected");
+    expect(row).toHaveAttribute("aria-selected", "true");
   });
 
-  it("shows the selected operation in the inspector beside the table", async () => {
-    const { container } = renderPage("op-rename");
+  it("shows the selected operation in the inspector beside the list", async () => {
+    renderPage("op-rename");
 
     const inspector = await screen.findByTestId("review-inspector");
-    expect(container.querySelector('[data-testid="schema-page-layout"]')).toBeInTheDocument();
-    expect(screen.getByTestId("schema-inspector-container")).toContainElement(inspector);
+    expect(screen.getByTestId("proposal-review")).toContainElement(inspector);
+    expect(screen.getByTestId("proposal-review")).toContainElement(
+      screen.getByTestId("proposal-operations-list"),
+    );
     // The review inspector reads a relationship type as its triple (#1662).
     expect(screen.getByTestId("review-inspector-eyebrow")).toHaveTextContent(
       "update · property · seq 1",
@@ -290,7 +294,7 @@ describe("ProposalDetailPage", () => {
     renderPage("op-class");
     await screen.findByTestId("review-inspector");
     expect(scrollIntoView).toHaveBeenCalledTimes(1);
-    expect(scrollIntoView.mock.contexts[0]).toHaveAttribute("data-row-key", "op-class");
+    expect(scrollIntoView.mock.contexts[0]).toHaveAttribute("data-row-id", "op-class");
   });
 
   it("has no decision controls for an operation already decided", async () => {
@@ -312,7 +316,7 @@ describe("ProposalDetailPage", () => {
     const inspector = await screen.findByTestId("review-inspector");
     expect(within(inspector).queryByTestId("operation-decision")).not.toBeInTheDocument();
     expect(screen.queryByTestId("proposal-actions")).not.toBeInTheDocument();
-    expect(screen.queryByTestId("proposal-threshold-bar")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("review-bulk-select")).not.toBeInTheDocument();
     expect(screen.queryByTestId("operation-check-op-rename")).not.toBeInTheDocument();
     expect(
       screen.queryByRole("button", { name: /accept|reject|revert|apply/i }),

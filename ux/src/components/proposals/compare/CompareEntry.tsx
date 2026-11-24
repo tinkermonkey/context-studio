@@ -3,20 +3,30 @@ import { Button } from "@tinkermonkey/heimdall-ui";
 import { useChangeProposals } from "@/api/hooks/proposals";
 import type { ChangeProposal } from "@/api/services/proposals";
 import { originLabel } from "../ProposalOrigin";
+import { proposalSourceId } from "../review/addFromText";
 import { comparableProposals } from "./compareModel";
 import "./compare.css";
 
-/** One page of a taxonomy's open pipeline proposals covers the candidates. */
+/** One page of the open extractions of one source covers the candidates. */
 const CANDIDATES_LIMIT = 500;
 
-/** The open proposals `proposal` can be compared with (other pipelines, same source and dataset). */
+/**
+ * The open proposals `proposal` can be compared with (other pipelines, same
+ * source and dataset). The server narrows them to the source, dataset and
+ * pipeline type, in the summary form (#1626): no operations are loaded.
+ */
 export function useComparableProposals(proposal: ChangeProposal | undefined): ChangeProposal[] {
-  const open = proposal?.status === "open" && !!proposal.origin;
+  const sourceId = proposalSourceId(proposal);
+  const open = proposal?.status === "open" && !!proposal.origin && !!sourceId;
   const { data } = useChangeProposals(
     {
       taxonomy_id: proposal?.taxonomy_id,
       source: "pipeline",
       status: "open",
+      source_id: sourceId,
+      dataset_id: proposal?.dataset_id ?? undefined,
+      pipeline_type: proposal?.origin?.pipeline_type,
+      fields: "summary",
       limit: CANDIDATES_LIMIT,
     },
     { enabled: open },

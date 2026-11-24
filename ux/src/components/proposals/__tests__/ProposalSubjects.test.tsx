@@ -220,10 +220,14 @@ describe("other kinds named by id", () => {
 
   it("reads a relationship create as its triple, a $ref end by its create's title", async () => {
     renderPage("op-rel");
-    const cell = await screen.findByTestId("operation-diff-op-rel");
+    // Its row reads from → to, with the predicate under it.
+    const row = await screen.findByTestId("review-row-op-rel");
     await waitFor(() =>
-      expect(cell).toHaveTextContent("relationship LLM Provider Router realizes Gateway"),
+      expect(row.querySelector(".review-row__title")).toHaveTextContent(
+        "LLM Provider Router → Gateway",
+      ),
     );
+    expect(row.querySelector(".review-row__class")).toHaveTextContent("realizes");
     // The review inspector's title is the relationship as a sentence of pills (#1660).
     await waitFor(async () =>
       expect(await inspectorTitle()).toHaveAttribute(

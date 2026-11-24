@@ -142,11 +142,6 @@ export interface ReviewInspectorProps {
    * "Not an element" button does. The value the inspector mounts with opens nothing.
    */
   rejectPrompt?: number;
-  /**
-   * The page decides by key (A, X, 1-3, J / K): the inspector shows the key hints
-   * and aria-keyshortcuts. Off where the page has no keys yet (proposal detail).
-   */
-  keyboard?: boolean;
   onCorrect: () => void;
   onPickClass: (classId: string) => void;
   /** Accept a relationship with another predicate, source or target. */
@@ -452,7 +447,6 @@ export function ReviewInspector({
   deciding,
   busy,
   rejectPrompt = 0,
-  keyboard = true,
   onCorrect,
   onPickClass,
   onAcceptEdited,
@@ -496,7 +490,8 @@ export function ReviewInspector({
   const verdict = verdictOf(operation);
   const awaiting = verdict === "awaiting";
   // Key hints show only where the keys work, on an operation awaiting its decision.
-  const keyed = keyboard && awaiting;
+  // The page decides by key (A, X, 1-3, J / K): the inspector shows the hints and aria-keyshortcuts.
+  const keyed = awaiting;
   const classId = shownClassId(operation);
   // An individual with more than one class: the rest beside the first.
   const shownClassIds = shownFields(operation).class_ids;

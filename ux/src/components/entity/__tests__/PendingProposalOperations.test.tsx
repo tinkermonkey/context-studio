@@ -57,7 +57,7 @@ describe("PendingProposalOperations", () => {
     render(<PendingProposalOperations kind="property" entityId="prop-1" />);
 
     const link = await screen.findByTestId("pending-operation-link-op-rename");
-    expect(link).toHaveAttribute("href", "/app/proposals/proposal-1?op=op-rename");
+    expect(link).toHaveAttribute("href", "/app/proposals/proposal-1?selected=op-rename");
     expect(link).toHaveClass("entity-link");
     expect(linkIds()).toEqual(["op-rename", "op-delete"]);
     const row = link.closest("tr") as HTMLElement;
@@ -68,7 +68,7 @@ describe("PendingProposalOperations", () => {
     expect(navigate).toHaveBeenCalledWith({
       to: "/app/proposals/$proposalId",
       params: { proposalId: "proposal-1" },
-      search: { op: "op-rename" },
+      search: { selected: "op-rename" },
     });
   });
 

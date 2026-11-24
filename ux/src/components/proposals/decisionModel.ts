@@ -49,7 +49,8 @@ export function datasetImpactText(impact: DatasetImpact): string {
 
 /** A proposal takes decisions until it is reverted. */
 export function takesDecisions(proposal: ChangeProposal): boolean {
-  return proposal.status !== "reverted";
+  // A withdrawn proposal (#1624), superseded or taken back by its proposer, takes none either.
+  return proposal.status !== "reverted" && proposal.status !== "withdrawn";
 }
 
 /** Awaiting operations among `ids`, split into those that apply and those needing Apply anyway. */
@@ -476,7 +477,7 @@ export function progressPills(progress: DecisionProgress): ProgressPill[] {
 export type OperationFilter = "needs" | "decided" | "all";
 
 /**
- * True when a deep link (?op=) names an operation that was already decided
+ * True when a deep link (?selected=) names an operation that was already decided
  * when the page loaded: the table opens on "All", so its row is there. Work it
  * out once, at load; deciding the linked operation later must not switch the filter.
  */

@@ -330,13 +330,22 @@ describe("a failed resolution", () => {
   });
 });
 
+/** Opens Select ▾ and returns its menu. */
+async function openSelect(user: ReturnType<typeof userEvent.setup>) {
+  await user.click(await screen.findByTestId("review-bulk-select"));
+  return screen.getByTestId("review-bulk-select-menu");
+}
+
 describe("bulk decisions skip blocked deletes", () => {
   it("a delete whose relationships the proposal deletes too is not blocked", async () => {
     blocked().blockers = null;
     const user = userEvent.setup();
     renderPage();
 
-    await user.click(await screen.findByTestId("proposal-accept-all"));
+    const menu = await openSelect(user);
+    expect(within(menu).getByTestId("review-bulk-select-ready")).toHaveTextContent("All ready · 3");
+    await user.click(within(menu).getByTestId("review-bulk-select-ready"));
+    await user.click(screen.getByTestId("proposal-selection-accept"));
 
     await waitFor(() => expect(applied).toHaveLength(1));
     expect(applied[0].operation_ids).toEqual(["op-rename", "op-delete", "op-class"]);
@@ -347,12 +356,15 @@ describe("bulk decisions skip blocked deletes", () => {
     const user = userEvent.setup();
     renderPage();
 
-    const acceptAll = await screen.findByTestId("proposal-accept-all");
-    expect(acceptAll).toHaveAttribute(
-      "title",
-      "Blocked deletes are left for a resolution in the inspector",
+    const menu = await openSelect(user);
+    // All ready leaves it out; All awaiting checks it, and the bulk bar says Accept skips it.
+    expect(within(menu).getByTestId("review-bulk-select-ready")).toHaveTextContent("All ready · 2");
+    await user.click(within(menu).getByTestId("review-bulk-select-awaiting"));
+    expect(screen.getByTestId("operation-check-op-delete")).toBeChecked();
+    expect(screen.getByTestId("proposal-selection-note")).toHaveTextContent(
+      "1 blocked (in use): Accept selected skips it; resolve it in the inspector.",
     );
-    await user.click(acceptAll);
+    await user.click(screen.getByTestId("proposal-selection-accept"));
 
     await waitFor(() => expect(applied).toHaveLength(1));
     expect(applied[0].operation_ids).toEqual(["op-rename", "op-class"]);
@@ -372,12 +384,18 @@ describe("bulk decisions skip blocked deletes", () => {
   });
 
   it("the threshold never selects it", async () => {
+    const user = userEvent.setup();
     renderPage();
 
     // op-rename (0.819) and op-class (0.9) qualify; the blocked delete (0.9) does not.
-    expect(await screen.findByTestId("proposal-threshold-count")).toHaveTextContent(
-      "2 of 3 awaiting at or above",
+    const menu = await openSelect(user);
+    expect(within(menu).getByTestId("review-bulk-select-threshold")).toHaveTextContent(
+      "At or above p 0.60 · 2",
     );
+    await user.click(within(menu).getByTestId("review-bulk-select-threshold"));
+    expect(screen.getByTestId("operation-check-op-rename")).toBeChecked();
+    expect(screen.getByTestId("operation-check-op-class")).toBeChecked();
+    expect(screen.getByTestId("operation-check-op-delete")).not.toBeChecked();
   });
 });
 

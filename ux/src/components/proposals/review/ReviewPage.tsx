@@ -7,7 +7,14 @@ import {
   useState,
   type CSSProperties,
 } from "react";
-import { Button, Chip, ConfirmDialog, PageHeader, ProgressBar } from "@tinkermonkey/heimdall-ui";
+import {
+  Button,
+  Chip,
+  ConfirmDialog,
+  PageHeader,
+  ProgressBar,
+  SegmentedControl,
+} from "@tinkermonkey/heimdall-ui";
 import { SMALL_SET_LIMIT } from "@/api/config";
 import { ApiError } from "@/api/client/interceptors";
 import { useAddProposalIndividual, useChangeProposal } from "@/api/hooks/proposals";
@@ -26,6 +33,7 @@ import { ProposalOriginChip } from "../ProposalOrigin";
 import { useOperationContext } from "../useOperationContext";
 import { useProposalActions } from "../useProposalActions";
 import { ReviewElementsPane, type ElementRow } from "./ReviewElementsPane";
+import { rowStatus } from "./reviewList";
 import { ReviewInspector } from "./ReviewInspector";
 import { ReviewPillsProvider, plainClick, type OperationLink } from "./ReviewPills";
 import { CompareEntry } from "../compare/CompareEntry";
@@ -40,9 +48,6 @@ import {
   type SelectedPassage,
 } from "./addFromText";
 import {
-  END_REJECTED_REASON,
-  endRejectedNote,
-  endsToDecide,
   filterGroups,
   formatDuration,
   groupForReview,
@@ -54,15 +59,13 @@ import {
   reviewProgress,
   reviewSourceId,
   reviewSpans,
-  seqList,
   shownClassId,
-  step,
-  verdictLabel,
   verdictOf,
   type ElementFilter,
   type Layer,
 } from "./reviewModel";
 import { useReviewClock } from "./useReviewClock";
+import { useReviewKeys } from "./useReviewKeys";
 import { useInspectorModel } from "./useInspectorModel";
 import { HOLDOUT_NOTE, SPLIT_CHIP, type Tier } from "./goldModel";
 import "../proposals.css";
@@ -79,18 +82,6 @@ function ReviewElapsed({ pageMs }: { pageMs: () => number }) {
     <span className="review-progress__time" data-testid="review-time">
       {formatDuration(pageMs())} on this review
     </span>
-  );
-}
-
-/** Keys typed into a field, or pressed in a dialog, are not review commands. */
-function ignoresKeys(target: EventTarget | null): boolean {
-  if (!(target instanceof HTMLElement)) return false;
-  return (
-    target.isContentEditable ||
-    target.tagName === "INPUT" ||
-    target.tagName === "TEXTAREA" ||
-    target.tagName === "SELECT" ||
-    !!target.closest('[role="dialog"]')
   );
 }
 
@@ -302,22 +293,26 @@ export function ReviewPage({
       if (next) setSelectedId(next);
     },
   });
-  const { pickable, names, gold, recentClasses, rememberClass, suggestions, existingOf } = model;
+  const { pickable, names, gold, recentClasses, rememberClass } = model;
 
-  const rowOf = (operation: ProposedOperation): ElementRow => ({
-    title: isRelationship(operation)
-      ? `${names.relationshipParts(operation).from} → ${names.relationshipParts(operation).to}`
-      : names.titleOf(operation),
-    detail: isRelationship(operation)
+  const rowOf = (operation: ProposedOperation): ElementRow => {
+    const detail = isRelationship(operation)
       ? names.relationshipParts(operation).predicate
-      : names.classLabel(shownClassId(operation)),
-    probability:
-      operation.probability === null || operation.probability === undefined
-        ? ""
-        : formatProbability(operation.probability),
-    verdict: verdictOf(operation),
-    verdictLabel: verdictLabel(operation),
-  });
+      : names.classLabel(shownClassId(operation));
+    return {
+      title: isRelationship(operation)
+        ? `${names.relationshipParts(operation).from} → ${names.relationshipParts(operation).to}`
+        : names.titleOf(operation),
+      detail,
+      detailTitle: detail,
+      probability:
+        operation.probability === null || operation.probability === undefined
+          ? ""
+          : formatProbability(operation.probability),
+      ...rowStatus(operation),
+      amended: !!operation.amended_at,
+    };
+  };
 
   // A passage asked for from the inspector's evidence: shown and flashed in the source.
   const [focus, setFocus] = useState<{ start: number; nonce: number }>();
@@ -325,8 +320,6 @@ export function ReviewPage({
     const span = spans.find((s) => s.key === operationId && s.quote === quote);
     if (span?.start != null) setFocus({ start: span.start, nonce: Date.now() });
   };
-
-  const deciding = model.deciding;
 
   // Adding an element the extraction missed, from text selected in the source.
   const addIndividual = useAddProposalIndividual();
@@ -385,56 +378,23 @@ export function ReviewPage({
   const [rejectPrompt, setRejectPrompt] = useState(0);
 
   // Keys: A correct, 1-3 a suggested class, X the reasons, J / K next and previous.
-  const onKey = useRef<(event: KeyboardEvent) => void>(() => {});
-  onKey.current = (event) => {
-    // While the add form is open, keys are its own; Escape closes it wherever focus went.
-    if (adding) {
-      if (event.key === "Escape" && !event.defaultPrevented) closeAdding();
-      return;
-    }
-    if (event.defaultPrevented || event.metaKey || event.ctrlKey || event.altKey) return;
-    if (actions.forceRequest || ignoresKeys(event.target)) return;
-    const key = event.key.toLowerCase();
-    if (key === "j" || key === "k") {
-      const next = step(shownOrder, selectedId, key === "j" ? 1 : -1);
-      if (next) setSelectedId(next);
-      event.preventDefault();
-      return;
-    }
-    // Holding a key down decides once.
-    if (event.repeat || !selected || !deciding || !isAwaiting(selected)) return;
-    // A relationship with an end rejected can only be rejected: X does it, A says so.
-    const endRejected = isRelationship(selected) ? endsToDecide(selected, operations).rejected : [];
-    if (key === "a" && endRejected.length > 0) {
-      event.preventDefault();
-      toast(
-        "info",
-        "This relationship can't be accepted",
-        `${seqList(endRejected)} ${endRejected.length === 1 ? "was" : "were"} rejected: press X to reject it too, or give it another end.`,
-      );
-    } else if (key === "a") {
-      event.preventDefault();
-      void model.decide(selected, { kind: "correct" });
-    } else if (key === "x" && endRejected.length > 0) {
-      event.preventDefault();
-      void model.decide(selected, {
-        kind: "reject",
-        reasonCode: END_REJECTED_REASON,
-        note: endRejectedNote(endRejected.map((e) => e.seq)),
-      });
-    } else if (key === "x") {
-      event.preventDefault();
-      // The reason step, as the "Not an element" button opens it.
-      setRejectPrompt((n) => n + 1);
-    } else if (["1", "2", "3"].includes(key) && isElement(selected) && !existingOf(selected)) {
-      const suggestion = suggestions[Number(key) - 1];
-      if (!suggestion) return;
-      event.preventDefault();
-      void model.decide(selected, { kind: "class", classId: suggestion.id });
-    }
+  // While the add form is open, keys are its own; Escape closes it wherever focus went.
+  useReviewKeys({
+    order: shownOrder,
+    selectedId,
+    select: setSelectedId,
+    selected,
+    operations,
+    model,
+    paused: !!adding || !!actions.forceRequest,
+    onReasons: () => setRejectPrompt((n) => n + 1),
+  });
+  const onAddingKey = useRef<(event: KeyboardEvent) => void>(() => {});
+  onAddingKey.current = (event) => {
+    if (adding && event.key === "Escape" && !event.defaultPrevented) closeAdding();
   };
   useEffect(() => {
-    const listener = (event: KeyboardEvent) => onKey.current(event);
+    const listener = (event: KeyboardEvent) => onAddingKey.current(event);
     window.addEventListener("keydown", listener);
     return () => window.removeEventListener("keydown", listener);
   }, []);
@@ -616,11 +576,27 @@ export function ReviewPage({
             }
           />
           <ReviewElementsPane
-            groups={shownGroups}
-            filter={filter}
-            onFilter={setFilter}
-            awaiting={awaitingCount}
-            total={progress.total}
+            sections={shownGroups.map((g) => ({
+              key: g.key,
+              label: g.label,
+              items: g.operations.map((operation) => ({ type: "row" as const, operation })),
+            }))}
+            header={
+              <div data-testid="review-filter">
+                <SegmentedControl
+                  value={filter}
+                  onChange={(value) => setFilter(value as ElementFilter)}
+                  aria-label="Show elements"
+                  options={[
+                    { value: "awaiting", label: `Awaiting · ${awaitingCount}` },
+                    { value: "all", label: `All · ${progress.total}` },
+                  ]}
+                />
+              </div>
+            }
+            emptyMessage={
+              filter === "awaiting" ? "Nothing awaits a decision." : "Nothing to review."
+            }
             rowOf={rowOf}
             selectedId={selectedId}
             link={link}

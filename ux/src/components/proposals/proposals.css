@@ -142,43 +142,17 @@
     filter: brightness(1.08);
   }
 
-  .proposal-table-filter {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 12px 20px;
+  .proposal-summary__link {
+    display: inline-flex;
+    gap: 6px;
     align-items: center;
+    font-size: 13px;
   }
 
   .proposal-group-by {
     display: inline-flex;
     gap: 8px;
     align-items: center;
-  }
-
-  /* The change keeps a readable width: beside the inspector on a narrow canvas
-     the table scrolls sideways in its frame rather than breaking words. */
-  .op-change-cell {
-    min-width: 200px;
-  }
-
-  /* A decided operation's change: still readable, but out of the way, in
-     neutral tones (no rose strike, no amber change). */
-  .op-change-cell--decided {
-    opacity: 0.72;
-  }
-
-  .op-change-cell--decided .op-diff,
-  .op-change-cell--decided :is(a, .op-diff__class, .op-diff__after) {
-    color: rgb(var(--canvas-fg-3));
-  }
-
-  .op-change-cell--decided .op-diff__removed {
-    text-decoration-color: rgb(var(--canvas-fg-4));
-  }
-
-  .op-change-cell--decided :is(.op-diff__changed, .op-diff__predicate.op-diff__changed) {
-    color: rgb(var(--canvas-fg-2));
-    font-weight: 500;
   }
 
   /* A long replacement identifier: ellipsis inside the panel, full id in the title. */
@@ -193,12 +167,6 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-  }
-
-  .op-decided__who {
-    font-family: var(--font-mono);
-    font-size: 12px;
-    color: rgb(var(--canvas-fg-2));
   }
 
   .op-decided__note {
@@ -226,19 +194,7 @@
     color: rgb(var(--canvas-fg-1));
   }
 
-  .op-plan-kind {
-    font-family: var(--font-mono);
-    font-size: 11.5px;
-    color: rgb(var(--canvas-fg-2));
-    white-space: nowrap;
-  }
-
   .op-status,
-  .op-replacement-chips {
-    display: flex;
-    gap: 4px;
-    flex-wrap: wrap;
-  }
 
   /* An operation's change, in a table cell. */
   .op-diff {
@@ -362,12 +318,6 @@
     color: rgb(var(--canvas-fg-2));
   }
 
-  /* Muted: a probability below the threshold. */
-  .op-probability--below {
-    color: rgb(var(--canvas-fg-4));
-    font-weight: 400;
-  }
-
   /* Threshold bar and the selection bar. */
   .proposal-bar {
     display: flex;
@@ -415,12 +365,6 @@
   .proposal-bar__text {
     font-size: 12.5px;
     color: rgb(var(--canvas-fg-2));
-  }
-
-  .proposal-bar__note {
-    margin-left: auto;
-    font-size: 12px;
-    color: rgb(var(--canvas-fg-3));
   }
 
   .proposal-bar__actions {
@@ -647,93 +591,9 @@
     color: rgb(var(--canvas-fg-2));
   }
 
-  /* ============= Tiered apply: a change plan grouped by kind ============= */
-  .tiered {
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-    padding: 14px 16px 16px;
-  }
-
-  .tiered-section {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-  }
-
-  .tiered-section__head {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px 16px;
-    align-items: center;
-    padding-bottom: 6px;
-    border-bottom: 1px solid rgb(var(--canvas-border));
-  }
-
-  .tiered-section__title {
-    margin: 0;
-    font-size: 13.5px;
-    font-weight: 600;
-    color: rgb(var(--canvas-fg-1));
-  }
-
+  /* ============= Conflict cards, in the review list's change-kind view ============= */
   .tiered-section__note {
     margin: 0;
-    font-size: 12px;
-    color: rgb(var(--canvas-fg-3));
-  }
-
-  .tiered-threshold {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-    align-items: center;
-    margin-left: auto;
-  }
-
-  .tiered-threshold .proposal-bar__slider {
-    width: 160px;
-  }
-
-  .tiered-group {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-  }
-
-  .tiered-group__head {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px 12px;
-    align-items: center;
-  }
-
-  .tiered-group__meta,
-  .tiered-group__selected {
-    font-family: var(--font-mono);
-    font-size: 12px;
-    color: rgb(var(--canvas-fg-2));
-  }
-
-  .tiered-group__selected {
-    margin-left: auto;
-    color: rgb(var(--canvas-fg-1));
-  }
-
-  .op-threshold-mark {
-    display: inline-flex;
-    color: var(--accent-amber);
-  }
-
-  .judgment-change__current {
-    color: rgb(var(--canvas-fg-3));
-  }
-
-  .judgment-change__plan {
-    color: rgb(var(--canvas-fg-1));
-  }
-
-  .judgment-change__alternative {
     font-size: 12px;
     color: rgb(var(--canvas-fg-3));
   }
@@ -954,59 +814,6 @@
     color: rgb(var(--canvas-fg-2));
     white-space: pre-wrap;
     overflow-wrap: anywhere;
-  }
-
-  /* Inspector: the source passage an extraction operation came from. */
-  .op-passage__where {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 4px 8px;
-    align-items: baseline;
-    justify-content: space-between;
-  }
-
-  .op-passage__location {
-    font-family: var(--font-mono);
-    font-size: 11.5px;
-    color: rgb(var(--canvas-fg-3));
-  }
-
-  .op-passage__source {
-    min-width: 0;
-    font-size: 12px;
-    font-weight: 600;
-    color: rgb(var(--canvas-fg-1));
-    overflow-wrap: anywhere;
-  }
-
-  .op-passage__text {
-    margin: 0;
-    padding: 10px 12px;
-    border: 1px solid rgb(var(--canvas-border));
-    border-radius: 6px;
-    background: rgb(var(--canvas-bg-2));
-    font-size: 13px;
-    line-height: 1.55;
-    color: rgb(var(--canvas-fg-2));
-    white-space: pre-wrap;
-    overflow-wrap: anywhere;
-  }
-
-  .op-passage__text[data-placed="false"] {
-    color: rgb(var(--canvas-fg-1));
-  }
-
-  .op-passage__mark {
-    padding: 0 1px;
-    border-radius: 2px;
-    background: rgb(var(--status-amber) / 0.32);
-    color: rgb(var(--canvas-fg-1));
-  }
-
-  .op-passage__more {
-    margin: 0;
-    font-size: 12px;
-    color: rgb(var(--canvas-fg-3));
   }
 
   /* Decision: a near match, "Already in dataset …?" */

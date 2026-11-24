@@ -64,57 +64,65 @@ function renderPage(selectedOperationId?: string) {
   );
 }
 
-async function tiered() {
-  return screen.findByTestId("tiered-operations");
+/** The review list, once the proposal has loaded. */
+async function list() {
+  return screen.findByTestId("proposal-operations-list");
+}
+
+/** Opens Select ▾ and returns its menu. */
+async function openSelect() {
+  await userEvent.click(screen.getByTestId("review-bulk-select"));
+  return screen.getByTestId("review-bulk-select-menu");
 }
 
 describe("Group by change kind", () => {
   it("defaults to change kind for reflection operations, with mechanical, judgment and conflicts", async () => {
     renderPage();
-    await tiered();
+    expect(await list()).toHaveAttribute("data-group-by", "kind");
 
-    const table = screen.getByTestId("proposal-operations-table");
-    expect(table).toHaveAttribute("data-group-by", "kind");
-    const mechanical = screen.getByTestId("tiered-mechanical");
-    expect(within(mechanical).getByText("Mechanical · accept by threshold")).toBeInTheDocument();
     for (const kind of ["remove-duplicate", "rename-predicate", "reverse"]) {
-      expect(within(mechanical).getByTestId(`tiered-group-${kind}`)).toBeInTheDocument();
+      expect(screen.getByTestId(`review-group-kind-${kind}`)).toBe(
+        screen.getByRole("group", { name: `${kind} · mechanical` }),
+      );
     }
     expect(
-      within(screen.getByTestId("tiered-group-reverse")).getByText("2 · p 0.50–0.95"),
+      within(screen.getByTestId("review-group-kind-reverse")).getByText("2 · p 0.50–0.95"),
     ).toBeInTheDocument();
     expect(
-      within(screen.getByTestId("tiered-group-remove-duplicate")).getByText("1 · p 0.90"),
+      within(screen.getByTestId("review-group-kind-remove-duplicate")).getByText("1 · p 0.90"),
     ).toBeInTheDocument();
 
-    const judgment = screen.getByTestId("tiered-judgment");
-    expect(within(judgment).getByTestId("tiered-group-retarget")).toBeInTheDocument();
-    expect(within(judgment).getByTestId("tiered-group-compound")).toBeInTheDocument();
-    // a judgment row: the current triple struck through, the plan's pick and the best alternative
-    const change = screen.getByTestId("judgment-change-j-retarget");
-    expect(change.querySelector("s")).toHaveTextContent("task located_in room");
-    expect(change).toHaveTextContent("plan project located_in room");
-    expect(screen.getByTestId("judgment-alt-j-retarget")).toHaveTextContent(
-      "best source task (current) · p 0.15",
-    );
+    const judgment = ["retarget", "compound"].map((kind) => {
+      const section = screen.getByTestId(`review-group-kind-${kind}`);
+      expect(section).toBe(screen.getByRole("group", { name: `${kind} · judgment` }));
+      return section;
+    });
+    // a judgment row shows its change inline (alternatives are in the inspector)
+    const row = within(judgment[0]).getByTestId("review-row-j-retarget");
+    expect(within(row).getByTestId("operation-diff-j-retarget")).toBeInTheDocument();
 
-    const conflicts = screen.getByTestId("tiered-conflicts");
+    const conflicts = screen.getByTestId("review-group-conflicts");
     const card = within(conflicts).getByTestId("conflict-card-c-rename");
     expect(within(card).getByTestId("conflict-op-c-rename")).toBeInTheDocument();
     expect(within(card).getByTestId("conflict-op-c-delete")).toBeInTheDocument();
     expect(card).toHaveAttribute("role", "group");
     // conflict rows are only in the conflict card
-    expect(within(judgment).queryByTestId("operation-diff-c-rename")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("review-row-c-rename")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("review-row-c-delete")).not.toBeInTheDocument();
+    for (const section of judgment) {
+      expect(within(section).queryByTestId("operation-diff-c-rename")).not.toBeInTheDocument();
+    }
   });
 
   it("switches to the flat sequence table and back", async () => {
     renderPage();
-    await tiered();
+    await list();
     const group = screen.getByRole("group", { name: "Group operations by" });
 
     await userEvent.click(within(group).getByText("Sequence"));
-    expect(screen.queryByTestId("tiered-operations")).not.toBeInTheDocument();
-    expect(screen.getByTestId("proposal-operations-table")).toHaveAttribute(
+    expect(screen.queryByTestId("review-group-conflicts")).not.toBeInTheDocument();
+    expect(screen.getByTestId("review-group-sequence")).toBeInTheDocument();
+    expect(screen.getByTestId("proposal-operations-list")).toHaveAttribute(
       "data-group-by",
       "sequence",
     );
@@ -124,16 +132,14 @@ describe("Group by change kind", () => {
     expect(screen.queryByTestId("operation-check-c-rename")).not.toBeInTheDocument();
 
     await userEvent.click(within(group).getByText("Change kind"));
-    expect(await tiered()).toBeInTheDocument();
+    expect(screen.getByTestId("proposal-operations-list")).toHaveAttribute("data-group-by", "kind");
+    expect(screen.getByTestId("review-group-conflicts")).toBeInTheDocument();
   });
 
   it("keeps the sequence view for operations without reflection data", async () => {
     proposal.operations = proposal.operations.map((o) => ({ ...o, reflection: null }));
     renderPage();
-    expect(await screen.findByTestId("proposal-operations-table")).toHaveAttribute(
-      "data-group-by",
-      "sequence",
-    );
+    expect(await list()).toHaveAttribute("data-group-by", "sequence");
     // plan kinds from the rationale still offer the change kind grouping
     expect(screen.getByTestId("proposal-group-by")).toBeInTheDocument();
   });
@@ -142,33 +148,44 @@ describe("Group by change kind", () => {
 describe("Threshold over mechanical kinds", () => {
   it("selects only mechanical, non-stale, non-blocked operations at or above p", async () => {
     renderPage();
-    await tiered();
+    await list();
+    expect(
+      screen.getByTestId("review-row-m-reverse").querySelector(".review-row__p"),
+    ).toHaveTextContent("0.50");
 
     // default 0.60: m-dup (0.9) and m-rename (0.7); m-stale and m-blocked never; m-reverse is below
-    expect(screen.getByTestId("tiered-accept-threshold")).toHaveTextContent("Accept 2 at or above");
-    expect(screen.getByTestId("operation-threshold-mark-m-dup")).toHaveAttribute("role", "img");
-    expect(screen.getByTestId("operation-threshold-mark-m-rename")).toBeInTheDocument();
-    for (const id of ["m-reverse", "m-stale", "m-blocked", "j-retarget", "j-compound"]) {
-      expect(screen.queryByTestId(`operation-threshold-mark-${id}`)).not.toBeInTheDocument();
+    let menu = await openSelect();
+    expect(within(menu).getByTestId("proposal-threshold-value")).toHaveTextContent("0.60");
+    expect(within(menu).getByTestId("review-bulk-select-threshold")).toHaveTextContent(
+      "At or above p 0.60 · 2",
+    );
+
+    fireEvent.change(within(menu).getByTestId("proposal-threshold-slider"), {
+      target: { value: "0.5" },
+    });
+    expect(within(menu).getByTestId("proposal-threshold-value")).toHaveTextContent("0.50");
+    expect(within(menu).getByTestId("review-bulk-select-threshold")).toHaveTextContent(
+      "At or above p 0.50 · 3",
+    );
+    await userEvent.click(within(menu).getByTestId("review-bulk-select-threshold"));
+    expect(screen.queryByTestId("review-bulk-select-menu")).not.toBeInTheDocument();
+
+    for (const id of ["m-dup", "m-rename", "m-reverse"]) {
+      expect(screen.getByTestId(`operation-check-${id}`)).toBeChecked();
     }
-    expect(screen.getByTestId("tiered-group-selected-rename-predicate")).toHaveTextContent(
-      "1 of 2 selected",
-    );
-    expect(screen.getByTestId("tiered-group-selected-reverse")).toHaveTextContent(
-      "0 of 2 selected",
-    );
-    expect(screen.getByTestId("operation-probability-m-reverse")).toHaveClass(
-      "op-probability--below",
-    );
+    for (const id of ["m-stale", "m-blocked"]) {
+      expect(screen.getByTestId(`operation-check-${id}`)).not.toBeChecked();
+    }
+    for (const id of ["j-retarget", "j-compound"]) {
+      expect(screen.queryByTestId(`operation-check-${id}`)).not.toBeInTheDocument();
+    }
+    expect(screen.getByTestId("proposal-selection-count")).toHaveTextContent("3 selected");
+    // the threshold stays where it was set
+    menu = await openSelect();
+    expect(within(menu).getByTestId("proposal-threshold-value")).toHaveTextContent("0.50");
+    await userEvent.click(screen.getByTestId("review-bulk-select"));
 
-    fireEvent.change(screen.getByTestId("tiered-threshold-slider"), { target: { value: "0.5" } });
-    expect(screen.getByTestId("tiered-threshold-value")).toHaveTextContent("0.50");
-    expect(screen.getByTestId("tiered-accept-threshold")).toHaveTextContent("Accept 3 at or above");
-    expect(screen.getByTestId("tiered-group-selected-reverse")).toHaveTextContent(
-      "1 of 2 selected",
-    );
-
-    await userEvent.click(screen.getByTestId("tiered-accept-threshold"));
+    await userEvent.click(screen.getByTestId("proposal-selection-accept"));
     await waitFor(() => expect(applied).toHaveLength(1));
     expect(applied[0]).toMatchObject({
       operation_ids: ["m-dup", "m-rename", "m-reverse"],
@@ -181,16 +198,16 @@ describe("Threshold over mechanical kinds", () => {
 
   it("never counts judgment or conflict rows in Accept N ready", async () => {
     renderPage();
-    await tiered();
+    await list();
     // m-dup, m-rename, m-reverse: the stale and blocked ones and every judgment/conflict row are left
-    const accept = screen.getByTestId("proposal-accept-all");
-    expect(accept).toHaveTextContent("Accept 3 ready");
-    expect(accept).toHaveAttribute(
-      "title",
-      expect.stringContaining("Judgment and conflict changes are decided one by one"),
-    );
+    const menu = await openSelect();
+    expect(within(menu).getByTestId("review-bulk-select-ready")).toHaveTextContent("All ready · 3");
+    expect(
+      within(menu).getByText(/Judgment and conflict changes are decided one by one/),
+    ).toBeInTheDocument();
 
-    await userEvent.click(accept);
+    await userEvent.click(within(menu).getByTestId("review-bulk-select-ready"));
+    await userEvent.click(screen.getByTestId("proposal-selection-accept"));
     await waitFor(() => expect(applied).toHaveLength(1));
     expect(applied[0].operation_ids).toEqual(["m-dup", "m-rename", "m-reverse"]);
   });
@@ -199,7 +216,7 @@ describe("Threshold over mechanical kinds", () => {
 describe("Conflicts", () => {
   it("Keep seq N applies it and rejects the other with the conflict note", async () => {
     renderPage();
-    await tiered();
+    await list();
 
     await userEvent.click(screen.getByTestId("conflict-keep-c-rename"));
 
@@ -219,7 +236,7 @@ describe("Conflicts", () => {
       }),
     );
     renderPage();
-    await tiered();
+    await list();
 
     await userEvent.click(screen.getByTestId("conflict-keep-c-delete"));
 
@@ -229,7 +246,7 @@ describe("Conflicts", () => {
 
   it("Reject both rejects every awaiting operation of the cluster", async () => {
     renderPage();
-    await tiered();
+    await list();
 
     await userEvent.click(screen.getByTestId("conflict-reject-all-c-rename"));
 
@@ -243,7 +260,7 @@ describe("Conflicts", () => {
 
   it("Keep both changes nothing and leaves each to decide", async () => {
     renderPage();
-    await tiered();
+    await list();
 
     await userEvent.click(screen.getByTestId("conflict-keep-all-c-rename"));
 
@@ -258,7 +275,7 @@ describe("Conflicts", () => {
   it("selects a conflict operation for the inspector", async () => {
     const onSelect = vi.fn();
     render(<ProposalDetailPage id="proposal-1" onSelectOperation={onSelect} />);
-    await tiered();
+    await list();
     const op = screen.getByTestId("conflict-select-c-delete");
     expect(op).toHaveAttribute("aria-pressed", "false");
 
@@ -400,7 +417,7 @@ describe("Conflicts: dependents, bulk and a kept operation", () => {
       rationale: "Remove it. Plan kind remove-duplicate, p 0.90.",
     });
     renderPage();
-    await tiered();
+    await list();
     const card = screen.getByTestId("conflict-card-c-rename");
     expect(within(card).queryByTestId("conflict-op-x-dependent")).not.toBeInTheDocument();
 
@@ -425,14 +442,21 @@ describe("Conflicts: dependents, bulk and a kept operation", () => {
     };
     proposal.operations.push(linked);
     renderPage();
-    await tiered();
+    await list();
 
     expect(
       within(screen.getByTestId("conflict-card-c-rename")).getByTestId("conflict-op-m-linked"),
     ).toBeInTheDocument();
-    expect(screen.queryByTestId("operation-threshold-mark-m-linked")).not.toBeInTheDocument();
-    expect(screen.getByTestId("tiered-accept-threshold")).toHaveTextContent("Accept 2 at or above");
-    expect(screen.getByTestId("proposal-accept-all")).toHaveTextContent("Accept 3 ready");
+    expect(screen.queryByTestId("review-row-m-linked")).not.toBeInTheDocument();
+    const menu = await openSelect();
+    expect(within(menu).getByTestId("review-bulk-select-threshold")).toHaveTextContent(
+      "At or above p 0.60 · 2",
+    );
+    expect(within(menu).getByTestId("review-bulk-select-ready")).toHaveTextContent("All ready · 3");
+    expect(within(menu).getByTestId("review-bulk-select-awaiting")).toHaveTextContent(
+      "All awaiting · 5",
+    );
+    await userEvent.click(screen.getByTestId("review-bulk-select"));
 
     await userEvent.click(
       within(screen.getByRole("group", { name: "Group operations by" })).getByText("Sequence"),
@@ -444,7 +468,7 @@ describe("Conflicts: dependents, bulk and a kept operation", () => {
   it("once a member is applied, the rest can only be rejected as kept against it", async () => {
     proposal.operations.find((o) => o.id === "c-rename")!.status = "applied";
     renderPage();
-    await tiered();
+    await list();
     const card = screen.getByTestId("conflict-card-c-rename");
 
     expect(within(card).getByTestId("conflict-kept-c-rename")).toHaveTextContent(
@@ -465,7 +489,7 @@ describe("Conflicts: dependents, bulk and a kept operation", () => {
       ),
     );
     renderPage();
-    await tiered();
+    await list();
 
     await userEvent.click(screen.getByTestId("conflict-keep-c-rename"));
 
@@ -723,7 +747,7 @@ describe("Review round 2", () => {
     };
     proposal.operations.push(third);
     renderPage();
-    await tiered();
+    await list();
     expect(
       within(screen.getByTestId("conflict-card-c-rename")).getByTestId("conflict-op-c-third"),
     ).toBeInTheDocument();

@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll, afterEach, afterAll } from "vitest";
-import { fireEvent, screen, waitFor } from "@testing-library/react";
+import { fireEvent, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { http, HttpResponse } from "msw";
 import { setupServer } from "msw/node";
@@ -26,7 +26,8 @@ describe("ProposalPage", () => {
     const user = userEvent.setup();
     const { rerender } = render(<ProposalPage proposalId="proposal-1" />);
 
-    fireEvent.change(await screen.findByTestId("proposal-threshold-slider"), {
+    await user.click(await screen.findByTestId("review-bulk-select"));
+    fireEvent.change(screen.getByTestId("proposal-threshold-slider"), {
       target: { value: "0.85" },
     });
     expect(screen.getByTestId("proposal-threshold-value")).toHaveTextContent("0.85");
@@ -35,10 +36,9 @@ describe("ProposalPage", () => {
 
     rerender(<ProposalPage proposalId="proposal-3" />);
 
-    await waitFor(() =>
-      expect(screen.getByTestId("proposal-threshold-value")).toHaveTextContent("0.60"),
-    );
+    expect(await screen.findByTestId("operation-check-op-rename")).not.toBeChecked();
     expect(screen.queryByTestId("proposal-selection-bar")).not.toBeInTheDocument();
-    expect(screen.getByTestId("operation-check-op-rename")).not.toBeChecked();
+    await user.click(screen.getByTestId("review-bulk-select"));
+    expect(screen.getByTestId("proposal-threshold-value")).toHaveTextContent("0.60");
   });
 });

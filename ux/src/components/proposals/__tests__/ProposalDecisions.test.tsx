@@ -93,6 +93,26 @@ function useDrSpec() {
   );
 }
 
+type User = ReturnType<typeof userEvent.setup>;
+
+/** Select ▾, then one of its picks. */
+async function selectBulk(user: User, pick: "ready" | "threshold" | "awaiting") {
+  await user.click(await screen.findByTestId("review-bulk-select"));
+  await user.click(screen.getByTestId(`review-bulk-select-${pick}`));
+}
+
+/** Accept all ready: Select ▾ All ready, then Accept selected. */
+async function acceptAllReady(user: User) {
+  await selectBulk(user, "ready");
+  await user.click(screen.getByTestId("proposal-selection-accept"));
+}
+
+/** Reject all awaiting: Select ▾ All awaiting, then Reject selected. */
+async function rejectAllAwaiting(user: User) {
+  await selectBulk(user, "awaiting");
+  await user.click(screen.getByTestId("proposal-selection-reject"));
+}
+
 function renderPage(selectedOperationId?: string) {
   return render(
     <ProposalDetailPage
@@ -414,24 +434,26 @@ describe("stale operations", () => {
 });
 
 describe("the probability threshold", () => {
-  it("defaults to 0.60, mutes lower probabilities and selects the awaiting ones at or above", async () => {
+  it("defaults to 0.60 and selects the awaiting ones at or above", async () => {
     const user = userEvent.setup();
     renderPage();
 
-    const bar = await screen.findByTestId("proposal-threshold-bar");
-    expect(within(bar).getByTestId("proposal-threshold-value")).toHaveTextContent("0.60");
+    await user.click(await screen.findByTestId("review-bulk-select"));
+    const menu = screen.getByTestId("review-bulk-select-menu");
+    expect(within(menu).getByTestId("proposal-threshold-value")).toHaveTextContent("0.60");
     // op-rename 0.82 and op-class 0.90; op-delete is stale (and 0.41).
-    expect(within(bar).getByTestId("proposal-threshold-count")).toHaveTextContent(
-      "2 of 3 awaiting at or above",
+    expect(within(menu).getByTestId("review-bulk-select-threshold")).toHaveTextContent(
+      "At or above p 0.60 · 2",
     );
-    expect(screen.getByTestId("operation-probability-op-delete")).toHaveClass(
-      "op-probability--below",
-    );
-    expect(screen.getByTestId("operation-probability-op-rename")).not.toHaveClass(
-      "op-probability--below",
-    );
+    expect(
+      screen.getByTestId("review-row-op-delete").querySelector(".review-row__p"),
+    ).toHaveTextContent("0.41");
+    expect(
+      screen.getByTestId("review-row-op-rename").querySelector(".review-row__p"),
+    ).toHaveTextContent("0.82");
 
-    await user.click(within(bar).getByRole("button", { name: "Select 2" }));
+    await user.click(within(menu).getByTestId("review-bulk-select-threshold"));
+    expect(screen.queryByTestId("review-bulk-select-menu")).not.toBeInTheDocument();
     expect(screen.getByTestId("operation-check-op-rename")).toBeChecked();
     expect(screen.getByTestId("operation-check-op-class")).toBeChecked();
     expect(screen.getByTestId("operation-check-op-delete")).not.toBeChecked();
@@ -443,22 +465,27 @@ describe("the probability threshold", () => {
   it("never selects a stale operation, however low the threshold", async () => {
     const user = userEvent.setup();
     renderPage();
-    const slider = (await screen.findByTestId("proposal-threshold-slider")) as HTMLInputElement;
+    await user.click(await screen.findByTestId("review-bulk-select"));
+    const slider = screen.getByTestId("proposal-threshold-slider") as HTMLInputElement;
     // Range inputs take their value from a change event, not typing.
     fireEvent.change(slider, { target: { value: "0" } });
     expect(await screen.findByTestId("proposal-threshold-value")).toHaveTextContent("0.00");
-    await user.click(screen.getByRole("button", { name: "Select 2" }));
+    const pick = screen.getByTestId("review-bulk-select-threshold");
+    expect(pick).toHaveTextContent("At or above p 0.00 · 2");
+    await user.click(pick);
     expect(screen.getByTestId("operation-check-op-delete")).not.toBeChecked();
-    expect(screen.getByTestId("operation-probability-op-delete")).not.toHaveClass(
-      "op-probability--below",
-    );
+    expect(screen.getByTestId("proposal-selection-count")).toHaveTextContent("2 selected");
   });
 
   it("is hidden when no operation has a probability", async () => {
+    const user = userEvent.setup();
     proposal.operations = proposal.operations.map((o) => ({ ...o, probability: null }));
     renderPage();
     await screen.findByTestId("operation-diff-op-rename");
-    expect(screen.queryByTestId("proposal-threshold-bar")).not.toBeInTheDocument();
+    await user.click(screen.getByTestId("review-bulk-select"));
+    expect(screen.getByTestId("review-bulk-select-menu")).toBeInTheDocument();
+    expect(screen.queryByTestId("review-bulk-select-threshold")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("proposal-threshold-slider")).not.toBeInTheDocument();
   });
 });
 
@@ -552,7 +579,7 @@ describe("accept all and the results", () => {
     failures = { "op-class": "target_changed: description changed since proposed" };
     renderPage();
 
-    await user.click(await screen.findByTestId("proposal-accept-all"));
+    await acceptAllReady(user);
     await waitFor(() => expect(applied).toHaveLength(1));
     expect(applied[0]).toEqual({
       operation_ids: ["op-rename", "op-class"],
@@ -599,7 +626,7 @@ describe("accept all and the results", () => {
     const user = userEvent.setup();
     failures = { "op-class": "target_changed: description changed since proposed" };
     renderPage();
-    await user.click(await screen.findByTestId("proposal-accept-all"));
+    await acceptAllReady(user);
     await user.click(await screen.findByTestId("apply-reject-op-class"));
 
     await waitFor(() => expect(rejected).toHaveLength(1));
@@ -609,11 +636,12 @@ describe("accept all and the results", () => {
     });
   });
 
-  it("confirms Reject all awaiting before rejecting every pending and failed operation", async () => {
+  it("confirms rejecting all awaiting before rejecting every pending and failed operation", async () => {
     const user = userEvent.setup();
     renderPage();
-    await user.click(await screen.findByTestId("proposal-reject-all"));
+    await rejectAllAwaiting(user);
     const dialog = await screen.findByRole("dialog");
+    expect(dialog).toHaveTextContent("Reject 3 selected?");
     expect(dialog).toHaveTextContent("A rejected operation can't be applied later.");
     await user.click(within(dialog).getByRole("button", { name: "Reject 3" }));
     await waitFor(() => expect(rejected).toHaveLength(1));
@@ -624,10 +652,10 @@ describe("accept all and the results", () => {
     });
   });
 
-  it("stores the Reject all reason with every rejected operation", async () => {
+  it("stores the reject-all-awaiting reason with every rejected operation", async () => {
     const user = userEvent.setup();
     renderPage();
-    await user.click(await screen.findByTestId("proposal-reject-all"));
+    await rejectAllAwaiting(user);
     const dialog = await screen.findByRole("dialog");
     await user.type(
       within(dialog).getByRole("textbox", { name: /Note/ }),
@@ -645,7 +673,7 @@ describe("accept all and the results", () => {
   it("offers the codes that fit updates and deletes, Out of date first for a stale one, and sends the one picked for every operation", async () => {
     const user = userEvent.setup();
     renderPage();
-    await user.click(await screen.findByTestId("proposal-reject-all"));
+    await rejectAllAwaiting(user);
     const dialog = await screen.findByRole("dialog");
     const picker = within(dialog).getByTestId("reject-reason-picker");
     expect(picker).toHaveAttribute("role", "radiogroup");
@@ -693,7 +721,7 @@ describe("revert", () => {
       expect(screen.getByTestId("proposal-status")).toHaveTextContent("reverted"),
     );
     expect(screen.queryByTestId("proposal-actions")).not.toBeInTheDocument();
-    expect(screen.queryByTestId("proposal-threshold-bar")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("review-bulk-select")).not.toBeInTheDocument();
     expect(screen.queryByTestId("operation-check-op-rename")).not.toBeInTheDocument();
   });
 
@@ -815,7 +843,7 @@ describe("export decisions", () => {
       ),
     );
     renderPage();
-    await screen.findByTestId("proposal-accept-all");
+    await screen.findByTestId("review-bulk-select");
     await waitFor(() =>
       expect(screen.getByTestId("proposal-page")).toHaveTextContent("PROPOSAL · house"),
     );

@@ -114,7 +114,7 @@ function renderPage(selectedOperationId?: string) {
 }
 
 describe("the no passage marker", () => {
-  it("flags each awaiting operation without a passage in the table, amber", async () => {
+  it("flags each awaiting operation without a passage in the list, amber", async () => {
     renderPage();
     const chip = await screen.findByTestId("operation-no-passage-op-pacemaker");
     expect(chip).toHaveTextContent("no passage");
@@ -152,17 +152,40 @@ describe("the no passage marker", () => {
 });
 
 describe("bulk accept", () => {
-  it("holds them and what names them out of Accept N ready, and says how many", async () => {
+  it("holds them and what names them out of All ready, and says how many", async () => {
     const user = userEvent.setup();
     renderPage();
-    const acceptAll = await screen.findByTestId("proposal-accept-all");
-    expect(acceptAll).toHaveTextContent("Accept 1 ready");
-    expect(acceptAll).toHaveAttribute(
-      "title",
-      expect.stringContaining("Operations without a passage are held back"),
+    await screen.findByTestId("review-group-scheme-1");
+    await user.click(screen.getByTestId("review-bulk-select"));
+    const ready = screen.getByTestId("review-bulk-select-ready");
+    expect(ready).toHaveTextContent("All ready · 1");
+    // The menu says All ready holds them back.
+    expect(screen.getByTestId("review-bulk-select-note")).toHaveTextContent(
+      "Operations without a passage are held back to accept one by one.",
+    );
+    await user.click(ready);
+    expect(screen.getByTestId("operation-check-op-wall")).toBeChecked();
+    expect(screen.getByTestId("operation-check-op-pacemaker")).not.toBeChecked();
+    await user.click(screen.getByTestId("proposal-selection-accept"));
+
+    await waitFor(() => expect(applies).toHaveLength(1));
+    expect(applies[0].operation_ids).toEqual(["op-wall"]);
+    expect(await screen.findByTestId("toast-success")).toHaveTextContent("Applied 1");
+    expect(screen.queryByTestId("toast-error")).not.toBeInTheDocument();
+  });
+
+  it("holds them back from All awaiting too, and the bar and toast say how many", async () => {
+    const user = userEvent.setup();
+    renderPage();
+    await screen.findByTestId("review-group-scheme-1");
+    await user.click(screen.getByTestId("review-bulk-select"));
+    await user.click(screen.getByTestId("review-bulk-select-awaiting"));
+    expect(screen.getByTestId("proposal-selection-count")).toHaveTextContent("4 selected");
+    expect(screen.getByTestId("proposal-selection-note")).toHaveTextContent(
+      "3 without a passage: Accept selected holds them back; accept each on its own.",
     );
 
-    await user.click(acceptAll);
+    await user.click(screen.getByTestId("proposal-selection-accept"));
 
     await waitFor(() => expect(applies).toHaveLength(1));
     expect(applies[0].operation_ids).toEqual(["op-wall"]);
@@ -175,7 +198,8 @@ describe("bulk accept", () => {
   it("holds a checked one back on Accept selected, and the toast says so", async () => {
     const user = userEvent.setup();
     renderPage();
-    await user.click(await screen.findByTestId("operation-check-op-pacemaker"));
+    await screen.findByTestId("review-group-scheme-1");
+    await user.click(screen.getByTestId("operation-check-op-pacemaker"));
     await user.click(screen.getByTestId("operation-check-op-wall"));
     expect(screen.getByTestId("proposal-selection-note")).toHaveTextContent(
       "1 without a passage: Accept selected holds it back; accept it on its own.",
@@ -193,7 +217,8 @@ describe("bulk accept", () => {
   it("disables Accept selected when only held operations are checked, and says why", async () => {
     const user = userEvent.setup();
     renderPage();
-    await user.click(await screen.findByTestId("operation-check-op-anchor"));
+    await screen.findByTestId("review-group-scheme-1");
+    await user.click(screen.getByTestId("operation-check-op-anchor"));
     expect(screen.getByTestId("proposal-selection-accept")).toBeDisabled();
     expect(screen.getByTestId("proposal-selection-note")).toHaveTextContent("1 without a passage");
   });
