@@ -840,6 +840,14 @@ class ProposalLinkResponse(BaseModel):
     status: Optional[ProposalStatus] = Field(None, description="The other proposal's status")
     created_at: datetime
     note: Optional[str] = None
+    operations_applied: Optional[int] = Field(
+        None,
+        description="On a reversed_by link: how many of the reversal's operations were applied, "
+        "that is how many changes it undid",
+    )
+    operations_total: Optional[int] = Field(
+        None, description="On a reversed_by link: how many operations the reversal has"
+    )
 
 
 class ChangeProposalResponse(BaseModel):

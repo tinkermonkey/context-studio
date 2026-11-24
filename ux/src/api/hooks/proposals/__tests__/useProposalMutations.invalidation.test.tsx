@@ -11,6 +11,7 @@ import {
   useAddProposalIndividual,
   useApplyChangeProposal,
   useCreateChangeProposal,
+  useProposeReversal,
   useRejectChangeProposal,
   useRevertChangeProposal,
 } from "../useProposalMutations";
@@ -219,6 +220,24 @@ describe("change proposal mutation invalidation", () => {
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
     expect(queryClient.getQueryData(QUERY_KEYS.changeProposal("proposal-1"))).toEqual(after);
+    for (const queryKey of PROPOSAL_QUERIES) {
+      expect(invalidated(queryKey), JSON.stringify(queryKey)).toBe(true);
+    }
+    for (const queryKey of [...ONTOLOGY_QUERIES, ...UNRELATED_QUERIES]) {
+      expect(invalidated(queryKey), JSON.stringify(queryKey)).toBe(false);
+    }
+  });
+  it("proposing a reversal stores it and marks only the proposals stale", async () => {
+    const reversal = createChangeProposal({ id: "reversal-1", status: "open" });
+    vi.spyOn(proposalsService, "proposeReversal").mockResolvedValue(reversal);
+    const { wrapper, invalidated, queryClient } = setup();
+    const { result } = renderHook(() => useProposeReversal(), { wrapper });
+
+    result.current.mutate("proposal-1");
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(proposalsService.proposeReversal).toHaveBeenCalledWith("proposal-1");
+    expect(queryClient.getQueryData(QUERY_KEYS.changeProposal("reversal-1"))).toEqual(reversal);
     for (const queryKey of PROPOSAL_QUERIES) {
       expect(invalidated(queryKey), JSON.stringify(queryKey)).toBe(true);
     }

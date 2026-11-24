@@ -40,6 +40,7 @@ const STATUS_OPTIONS: Array<{ value: ProposalStatusFilter; label: string }> = [
   { value: "done", label: "Done" },
   { value: "unlanded", label: "Unlanded" },
   { value: "reverted", label: "Reverted" },
+  { value: "reversed", label: "Reversed" },
   { value: "all", label: "All" },
 ];
 

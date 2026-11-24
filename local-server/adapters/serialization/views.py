@@ -30,7 +30,11 @@ from domain.ontology.entities import (
 )
 from domain.versioning.exceptions import ChangeProposalNotFoundError
 from domain.versioning.proposal_service import ProposalService
-from domain.versioning.proposals import ChangeProposal
+from domain.versioning.proposals import (
+    ChangeProposal,
+    OperationStatus,
+    ProposalLinkKind,
+)
 
 # The REST response each kind is serialized with.
 _REST_RESPONSES: dict[type, type[BaseModel]] = {
@@ -86,6 +90,9 @@ def proposal_links(service: ProposalService, proposal_id: str) -> list[ProposalL
             other = service.get(other_id)
         except ChangeProposalNotFoundError:
             other = None
+        # Seen from the original, its reversal's outcome: how many of the changes it planned
+        # were applied ("38 of 41 changes reversed")
+        counted = other is not None and link.kind is ProposalLinkKind.REVERSES and not outgoing
         links.append(
             ProposalLinkResponse(
                 kind=link.kind.value if outgoing else _INVERSE_KIND[link.kind.value],
@@ -94,6 +101,12 @@ def proposal_links(service: ProposalService, proposal_id: str) -> list[ProposalL
                 status=other.status if other else None,
                 created_at=link.created_at,
                 note=link.note,
+                operations_applied=(
+                    sum(o.status is OperationStatus.APPLIED for o in other.operations)
+                    if counted
+                    else None
+                ),
+                operations_total=len(other.operations) if counted else None,
             )
         )
     return links

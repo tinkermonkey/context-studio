@@ -230,6 +230,61 @@ class RevertService:
         _logger.info(f"Reverted {reverted_count} events for batch run {batch_run_id}")
         return result
 
+    def reversible_events(self, batch_run_id: str) -> list:
+        """
+        The run's change events that a revert would still undo, newest first:
+        the ones recording its output, revert events and events already
+        reverted are left out.
+        """
+        events = list(self._change_repo.get_changes(batch_run_id=batch_run_id, limit=None).events)
+        return [
+            event
+            for event in events
+            if self._normalize_entity_type(event.entity_type) not in self._RECORD_ONLY_TYPES
+            and not self._should_skip_revert(event, events)
+        ]
+
+    def restore(self, entity_type: str, entity_id: str, snapshot: dict, batch_run_id: str) -> str:
+        """
+        Recreate a deleted entity with its old id from its snapshot, as part of
+        a run (a reversal proposal's restore, #1667): the change is recorded
+        under the run, so reverting that run deletes the entity again.
+
+        Returns:
+            The entity id
+
+        Raises:
+            ValueError: If the id is taken, or the snapshot can't rebuild the entity
+        """
+        entity_type = self._normalize_entity_type(entity_type)
+        if self._exists(entity_id, entity_type):
+            raise ValueError(f"{entity_type} {entity_id} exists; its id is not free to restore")
+        identifier = snapshot.get("identifier")
+        if identifier:
+            holder = self._ontology_repo.get_property_definition_by_identifier(
+                identifier
+            ) or self._ontology_repo.get_by_identifier(identifier)
+            if holder is not None and holder.id != entity_id:
+                raise ValueError(
+                    f"The identifier '{identifier}' of {entity_type} {entity_id} is now used by"
+                    f" {holder.id}; it can't be restored"
+                )
+        dataset_id = snapshot.get("dataset_id")
+        if dataset_id and self._ontology_repo.get_dataset(dataset_id) is None:
+            raise ValueError(f"The dataset {dataset_id} of {entity_type} {entity_id} was deleted")
+        self._inverse_delete(entity_id, entity_type, snapshot)
+        self._change_repo.record_change(
+            entity_id=entity_id,
+            entity_type=entity_type,
+            operation=ChangeOperation.CREATE,
+            new_state={"id": entity_id, "restored": True},
+            change_reason="Restored by a reversal proposal",
+            batch_run_id=batch_run_id,
+        )
+        self._sync_indexes(entity_id, entity_type)
+        self._invalidate_graphs([])
+        return entity_id
+
     def preview(self, batch_run_id: str) -> list[OverwrittenEdit]:
         """
         The edits made since the run applied that reverting it in place would overwrite.
@@ -251,13 +306,7 @@ class RevertService:
         """
         if not batch_run_id:
             raise ValueError("batch_run_id is required for revert")
-        events = list(self._change_repo.get_changes(batch_run_id=batch_run_id, limit=None).events)
-        pending = [
-            event
-            for event in events
-            if self._normalize_entity_type(event.entity_type) not in self._RECORD_ONLY_TYPES
-            and not self._should_skip_revert(event, events)
-        ]
+        pending = self.reversible_events(batch_run_id)
         created = {
             event.entity_id for event in pending if event.operation == ChangeOperation.CREATE
         }
@@ -904,9 +953,7 @@ class RevertService:
         """
         first_class = self._ontology_repo.get_class(individual.class_ids[0])
         if first_class is not None:  # else saving it refuses the missing class
-            individual.dataset_id = resolve_dataset_id(
-                self._ontology_repo, first_class.taxonomy_id
-            )
+            individual.dataset_id = resolve_dataset_id(self._ontology_repo, first_class.taxonomy_id)
         return individual
 
     def _restore_entity_state(self, entity, state: dict) -> None:

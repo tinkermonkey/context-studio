@@ -113,6 +113,7 @@ export const PROPOSAL_STATUS_VARIANT: Record<ChangeProposal["status"], ChipVaria
   done: "emerald",
   reverted: "neutral",
   withdrawn: "neutral",
+  reversed: "neutral",
 };
 
 export const OP_VARIANT: Record<ProposedOperation["op"], ChipVariant> = {

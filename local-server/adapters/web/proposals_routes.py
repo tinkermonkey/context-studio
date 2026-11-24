@@ -795,6 +795,43 @@ async def revert_proposal(
         raise _http_error(exc) from exc
 
 
+@router.post(
+    "/proposals/{proposal_id}/reversal",
+    response_model=ChangeProposalResponse,
+    status_code=status.HTTP_201_CREATED,
+    responses={
+        **_NOT_FOUND,
+        409: {
+            "description": (
+                "It has not landed (revert it in place instead), is already reversed, has an "
+                "open reversal, has changes a proposal can't undo, or has nothing left to undo"
+            )
+        },
+    },
+)
+async def propose_reversal(
+    proposal_id: str,
+    service: ProposalService = Depends(get_proposal_service),
+) -> ChangeProposalResponse:
+    """
+    Propose the reversal of a landed proposal: a new proposal, built from its
+    run's change events, that undoes them (a create is deleted, an update set
+    back, a move moved back, a delete restored with the entity's old id).
+
+    A landed proposal can't be reverted in place, because its client's source
+    would bring the change back. The reversal is decided like any proposal; the
+    approval policy never applies it. Once it lands, the original is reversed.
+    """
+
+    def run() -> ChangeProposalResponse:
+        return proposal_response(service, service.propose_reversal(proposal_id))
+
+    try:
+        return await run_sync_in_executor(run)
+    except Exception as exc:
+        raise _http_error(exc) from exc
+
+
 @router.get(
     "/proposals/{proposal_id}/revert/preview",
     response_model=RevertPreviewResponse,
