@@ -133,6 +133,10 @@ describe("Review against source", () => {
     expect(screen.queryByTestId("proposal-accept-all")).not.toBeInTheDocument();
     expect(screen.queryByTestId("proposal-reject-all")).not.toBeInTheDocument();
     expect(screen.queryByTestId("operation-decision")).not.toBeInTheDocument();
+    // Its create opens the review inspector, read-only here (#1658).
+    expect(await screen.findByTestId("review-inspector")).toBeInTheDocument();
+    expect(screen.queryByTestId("review-decide")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("review-reasons")).not.toBeInTheDocument();
     expect(screen.queryByTestId("proposal-threshold-bar")).not.toBeInTheDocument();
     expect(screen.queryByRole("checkbox")).not.toBeInTheDocument();
     await userEvent.click(screen.getByTestId("proposal-gold-review"));
@@ -152,7 +156,8 @@ describe("Review against source", () => {
     expect(
       await screen.findByTestId("proposal-accept-all", {}, { timeout: 10000 }),
     ).toBeInTheDocument();
-    expect(await screen.findByTestId("operation-decision")).toBeInTheDocument();
+    // Its extraction creates open the review inspector (#1658).
+    expect(await screen.findByTestId("review-decide")).toBeInTheDocument();
     expect(screen.queryByTestId("proposal-gold-callout")).not.toBeInTheDocument();
   });
 

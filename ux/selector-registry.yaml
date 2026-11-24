@@ -3222,7 +3222,7 @@ selectors:
     description: "An element row, a link (<a role=option href=?selected=<id>>, aria-selected), by operation id: title, class or predicate, probability, status chip; .review-row--selected when selected; a plain click selects it (a history entry)"
   - selector: review-inspector
     component: src/components/proposals/review/ReviewInspector.tsx
-    description: 'Inspector (region "Selected element") for the selected element or relationship'
+    description: 'Inspector (region "Selected element") for the selected element or relationship, on the Review page and, for an extraction''s creates, on proposal detail (split-2 drawer, no key hints there)'
   - selector: review-inspector-eyebrow
     component: src/components/proposals/review/ReviewInspector.tsx
     description: '"INDIVIDUAL · p 0.97" or "RELATIONSHIP · p 0.90"'
@@ -3240,10 +3240,10 @@ selectors:
     description: "Alert with the reason the last apply failed"
   - selector: review-evidence
     component: src/components/proposals/review/ReviewInspector.tsx
-    description: "EVIDENCE (· N for an element; a relationship's has Show in source): each passage a button (review-evidence-{n}), the first amber, the rest neutral (.review-evidence--more); a click scrolls the source to it and flashes it"
+    description: "EVIDENCE (· N for an element; a relationship's has Show in source): each passage a button (review-evidence-{n}), the first amber, the rest neutral (.review-evidence--more); a click scrolls the source to it and flashes it. With no source pane (proposal detail) each passage is a plain blockquote (.review-evidence--plain) and there is no Show in source"
   - selector: review-evidence-*
     component: src/components/proposals/review/ReviewInspector.tsx
-    description: "One evidence passage (a button, 1-based): scrolls the source to it and flashes it"
+    description: "One evidence passage (1-based): a button that scrolls the source to it and flashes it, or a plain blockquote where there is no source pane"
   - selector: review-definition
     component: src/components/proposals/review/ReviewInspector.tsx
     description: '"WHAT <class> MEANS" with the class description'

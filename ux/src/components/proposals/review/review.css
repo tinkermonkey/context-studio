@@ -577,6 +577,19 @@
     border-color: var(--rv-amber-strong);
   }
 
+  /* Without a source pane to show it in, a quote is read, not clicked. */
+  .review-evidence--plain {
+    cursor: auto;
+  }
+
+  .review-evidence--plain:hover {
+    border-color: var(--rv-amber-border);
+  }
+
+  .review-evidence--more.review-evidence--plain:hover {
+    border-color: rgb(var(--canvas-border));
+  }
+
   .review-evidence:focus-visible {
     outline: 2px solid rgb(var(--accent-primary));
     outline-offset: 1px;

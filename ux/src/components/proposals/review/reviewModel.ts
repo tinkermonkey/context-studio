@@ -164,6 +164,22 @@ export function extractedFromSource(proposal: ChangeProposal | undefined): boole
   );
 }
 
+/**
+ * Whether proposal detail opens `operation` in the review inspector: an
+ * individual or relationship create of an extraction from a source. Other
+ * operations keep OperationInspector until the inspector learns them (#1660, #1662).
+ */
+export function opensReviewInspector(
+  proposal: ChangeProposal | undefined,
+  operation: ProposedOperation,
+): boolean {
+  return (
+    operation.op === "create" &&
+    (isElement(operation) || isRelationship(operation)) &&
+    extractedFromSource(proposal)
+  );
+}
+
 /** The source most of the elements' passages are in. */
 export function reviewSourceId(operations: ProposedOperation[]): string | undefined {
   const counts = new Map<string, number>();

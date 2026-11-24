@@ -19,6 +19,7 @@ import {
   groupForReview,
   layerMatesFirst,
   nextAwaiting,
+  opensReviewInspector,
   orderOf,
   reasonLabel,
   relationshipsOf,
@@ -134,6 +135,25 @@ describe("the source", () => {
       evidence: [passage("feedback")],
     });
     expect(extractedFromSource(createChangeProposal({ operations: [classOp] }))).toBe(false);
+  });
+
+  it("opens an extraction's creates in the review inspector, and nothing else yet (#1658)", () => {
+    const create = element("a", { evidence: [passage("feedback")] });
+    const relationship = createProposedOperation({
+      op: "create",
+      kind: "relationship",
+      target_id: null,
+      fields: { source_id: "$a", target_id: "$b", property_definition_id: "p" },
+    });
+    const update = createProposedOperation({ op: "update", kind: "individual" });
+    const extraction = createChangeProposal({ operations: [create, relationship, update] });
+    expect(opensReviewInspector(extraction, create)).toBe(true);
+    expect(opensReviewInspector(extraction, relationship)).toBe(true);
+    expect(opensReviewInspector(extraction, update)).toBe(false);
+    // A proposal that cites no passage (MCP, bundle, client plan) keeps the older inspector.
+    const plan = createChangeProposal({ operations: [element("c"), relationship] });
+    expect(opensReviewInspector(plan, plan.operations[0])).toBe(false);
+    expect(opensReviewInspector(plan, relationship)).toBe(false);
   });
 
   it("keys each element's passages in the source's text, leaving out misplaced ones", () => {
