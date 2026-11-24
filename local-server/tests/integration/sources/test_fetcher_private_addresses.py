@@ -23,7 +23,7 @@ from adapters.sources.network_guard import (
 )
 from domain.extraction.exceptions import SourceFailedError
 
-BLOCKED_DETAIL = "Only public web addresses can be fetched"
+BLOCKED_DETAIL = "must resolve to a public web address"
 LOOPBACK_HOSTS = {"127.0.0.1", "::1"}
 _original_connect = socket.socket.connect
 
@@ -41,7 +41,6 @@ def block_network():
     """Overrides the integration conftest: these tests run listeners on loopback only."""
     with patch.object(socket.socket, "connect", _loopback_only_connect):
         yield
-
 
 
 class Listener:
@@ -67,7 +66,9 @@ class Listener:
 
         self._server = ThreadingHTTPServer(("127.0.0.1", 0), Handler)
         self.port = self._server.server_address[1]
-        threading.Thread(target=self._server.serve_forever, kwargs={"poll_interval": 0.01}, daemon=True).start()
+        threading.Thread(
+            target=self._server.serve_forever, kwargs={"poll_interval": 0.01}, daemon=True
+        ).start()
 
     @property
     def origin(self) -> str:
@@ -125,6 +126,9 @@ def test_a_direct_loopback_url_is_refused_without_a_request(make_listener):
         "http://[fe80::1]/",
         "http://[::ffff:7f00:1]/",  # IPv4-mapped loopback
         "http://[64:ff9b::a00:1]/",  # NAT64 around 10.0.0.1
+        "http://[::7f00:1]/",  # IPv4-compatible loopback
+        "http://[::ffff:0:7f00:1]/",  # IPv4-translated loopback
+        "http://[fec0::1]/",  # site-local
         "http://2130706433/",  # 127.0.0.1 as one number
         "http://0x7f.1/",  # 127.0.0.1 in hex
         "https://127.1/",
@@ -194,10 +198,16 @@ def test_a_name_with_one_private_answer_among_public_ones_is_refused(resolves_to
     assert BLOCKED_DETAIL in error.detail
 
 
-def test_a_name_that_does_not_resolve_is_a_failed_fetch_not_a_blocked_one(resolves_to):
-    error = refused(HttpPageFetcher(timeout_seconds=2), "http://no-such-host.invalid/")
+def test_a_name_that_does_not_resolve_gets_the_answer_a_private_name_gets(resolves_to):
+    """Two answers would tell a caller whether an internal name resolves to a private address."""
+    resolves_to["intranet.example.com"] = ["10.0.0.7"]
+    fetcher = HttpPageFetcher(timeout_seconds=2)
 
-    assert error.detail == "Could not fetch the page"
+    private = refused(fetcher, "http://intranet.example.com/")
+    missing = refused(fetcher, "http://no-such-host.invalid/")
+
+    assert private.detail == missing.detail
+    assert BLOCKED_DETAIL in missing.detail
 
 
 class RecordingBackend(httpcore.NetworkBackend):
@@ -299,6 +309,62 @@ def test_a_redirect_does_not_inherit_the_proxy_exception_for_other_paths_on_it(m
     assert proxy.paths == ["/wikipedia/wiki/Ribosome"]
 
 
+@pytest.mark.parametrize(
+    "url, requested",
+    [
+        # Dot segments are removed before the URL is matched, so it stays on the Wikipedia route
+        (f"{WIKIPEDIA}/../conceptnet/c/en/dog?x=1", "/wikipedia/conceptnet/c/en/dog?x=1"),
+        (f"{WIKIPEDIA}/wiki/../../admin", "/wikipedia/admin"),
+        (f"{WIKIPEDIA}/wiki/./Ribosome", "/wikipedia/wiki/Ribosome"),
+        (
+            f"{WIKIPEDIA.upper().replace('HTTPS', 'https')}/wiki/Ribosome",
+            "/wikipedia/wiki/Ribosome",
+        ),
+    ],
+)
+def test_a_url_cannot_climb_out_of_the_proxys_wikipedia_route(make_listener, url, requested):
+    proxy = make_listener(lambda path: (200, {"Content-Type": "text/plain"}, b"page"))
+
+    through_proxy(proxy).fetch(url, 10_000)
+
+    assert proxy.paths == [requested]
+
+
+@pytest.mark.parametrize(
+    "path",
+    [
+        "/%2e%2e/conceptnet/c/en/dog",
+        "/%2E%2E/conceptnet/c/en/dog",
+        "/wiki/..%2fconceptnet/c/en/dog",
+        "/wiki/%2e%2e%2f%2e%2e%2fadmin",
+        "/%252e%252e/conceptnet/c/en/dog",
+        "/wiki/..%5cconceptnet",
+    ],
+)
+def test_an_encoded_way_out_of_the_route_gets_no_proxy_exception(make_listener, path):
+    """A server may decode these after the request is made; the loopback exception isn't worth the risk."""
+    proxy = make_listener()
+
+    error = refused(through_proxy(proxy), f"{WIKIPEDIA}{path}")
+
+    assert BLOCKED_DETAIL in error.detail
+    assert proxy.paths == []
+
+
+def test_a_redirect_that_climbs_out_of_the_route_stays_on_it(make_listener):
+    proxy = make_listener(
+        lambda path: (
+            (302, {"Location": f"{WIKIPEDIA}/../conceptnet/c/en/dog"}, b"")
+            if path == "/wikipedia/wiki/Ribosome"
+            else (200, {"Content-Type": "text/plain"}, b"page")
+        )
+    )
+
+    through_proxy(proxy).fetch(f"{WIKIPEDIA}/wiki/Ribosome", 10_000)
+
+    assert proxy.paths == ["/wikipedia/wiki/Ribosome", "/wikipedia/conceptnet/c/en/dog"]
+
+
 def test_redirects_stop_after_the_limit(make_listener):
     loop = make_listener(lambda path: (302, {"Location": "/again"}, b""))
     fetcher = HttpPageFetcher(timeout_seconds=2, max_redirects=3, allow_private_urls=True)
@@ -387,6 +453,12 @@ def test_a_failed_connection_says_nothing_about_why():
         ("::ffff:10.0.0.1", False),
         ("::ffff:93.184.216.34", True),
         ("64:ff9b::7f00:1", False),
+        ("::7f00:1", False),  # IPv4-compatible 127.0.0.1
+        ("::a00:1", False),  # IPv4-compatible 10.0.0.1
+        ("::ffff:0:7f00:1", False),  # IPv4-translated 127.0.0.1
+        ("::ffff:0:a00:1", False),  # IPv4-translated 10.0.0.1
+        ("fec0::1", False),  # deprecated site-local
+        ("feff::1", False),
         ("2002:a00:1::", False),
     ],
 )

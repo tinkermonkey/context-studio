@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from email.message import Message
+from urllib.parse import unquote, urlsplit
 
 import httpx
 
@@ -18,6 +19,13 @@ from domain.extraction.sources import FetchedPage, SourceFailure, check_url
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
+
+# One answer for a refused address and for a name that doesn't resolve: two answers would
+# tell whoever supplied the URL whether an internal name resolves to a private address
+NOT_PUBLIC_DETAIL = (
+    "Could not fetch the page: the address must resolve to a public web address "
+    "(sources.allow_private_urls in config.json allows others)"
+)
 
 
 class HttpPageFetcher:
@@ -60,14 +68,14 @@ class HttpPageFetcher:
 
     def fetch(self, url: str, max_bytes: int) -> FetchedPage:
         try:
-            current = check_url(url)
+            # Normalized first (dot segments removed, host lower-cased), so that what is
+            # matched against a proxied site and what is requested are the same URL
+            current = str(httpx.URL(check_url(url)))
             for _ in range(self._max_redirects + 1):
-                routed = self._route(current)
+                routed, proxy_origin = self._route(current)
                 # A new client for every hop: the connection's address check depends on
                 # whether this hop is the proxy's, and nothing carries over from a redirect.
-                with self._client(
-                    proxy_origin=_origin(routed) if routed != current else None
-                ) as client:
+                with self._client(proxy_origin) as client:
                     with client.stream("GET", routed) as response:
                         if response.has_redirect_location:
                             location = response.headers["location"]
@@ -77,10 +85,7 @@ class HttpPageFetcher:
             raise _fetch_failed(f"Followed more than {self._max_redirects} redirects")
         except BlockedAddressError as exc:
             logger.warning("Refused a source fetch to a non-public address (%s)", exc)
-            raise _fetch_failed(
-                "Only public web addresses can be fetched "
-                "(sources.allow_private_urls in config.json allows others)"
-            ) from exc
+            raise _fetch_failed(NOT_PUBLIC_DETAIL) from exc
         except httpx.TimeoutException as exc:
             raise _fetch_failed(f"Timed out after {self._timeout:g} seconds") from exc
         # InvalidURL (a typo'd host, a tab in the URL) and StreamError aren't HTTPErrors
@@ -126,12 +131,21 @@ class HttpPageFetcher:
             file_name=_disposition_file_name(response.headers.get("content-disposition")),
         )
 
-    def _route(self, url: str) -> str:
-        """The URL to request: through the proxy when its site is proxied."""
+    def _route(self, url: str) -> tuple[str, tuple[str, int] | None]:
+        """
+        Where to request a (normalized) URL, and which address may be connected to
+        although it is not public.
+
+        A proxied site's pages go to the reference proxy on loopback, and only a URL that
+        stays under that site's path on the proxy is allowed there: the proxy also serves
+        other reference APIs (and an upstream on a private network), which a URL must not
+        reach by climbing out of the site's path.
+        """
         for site, via in self._proxied.items():
             if _on_site(url, site):
-                return via + url[len(site) :]
-        return url
+                routed = via + url[len(site) :]
+                return routed, _origin(routed) if _stays_under(routed, via) else None
+        return url, None
 
     def _unroute(self, url: str) -> str:
         """A fetched page's URL as its site's own, not the proxy's."""
@@ -145,6 +159,21 @@ def _origin(url: str) -> tuple[str, int]:
     """The (host, port) a request to the URL connects to, as httpcore passes them on."""
     parsed = httpx.URL(url)
     return parsed.host.lower(), parsed.port or (443 if parsed.scheme == "https" else 80)
+
+
+def _stays_under(url: str, base: str) -> bool:
+    """
+    Whether a URL's path is the base's path or below it, with no way out of it.
+
+    Dot segments are removed when a URL is normalized; this also refuses the encoded
+    forms (%2e%2e, %2f), which a server may decode after the request is made.
+    """
+    path = urlsplit(url).path
+    base_path = urlsplit(base).path
+    decoded = unquote(unquote(path))
+    if "\\" in decoded or any(part in (".", "..") for part in decoded.split("/")):
+        return False
+    return path == base_path or path.startswith(base_path + "/")
 
 
 def _on_site(url: str, base: str) -> bool:

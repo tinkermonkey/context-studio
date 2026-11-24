@@ -16,6 +16,9 @@ import httpcore
 import httpx
 
 _NAT64_PREFIX = ipaddress.ip_network("64:ff9b::/96")
+_IPV4_COMPATIBLE_PREFIX = ipaddress.ip_network("::/96")  # deprecated ::a.b.c.d
+_IPV4_TRANSLATED_PREFIX = ipaddress.ip_network("::ffff:0:0:0/96")  # SIIT
+_SITE_LOCAL_PREFIX = ipaddress.ip_network("fec0::/10")  # deprecated private range
 
 
 class BlockedAddressError(Exception):
@@ -29,9 +32,12 @@ def is_public_address(address: ipaddress.IPv4Address | ipaddress.IPv6Address) ->
     Refuses loopback, private (RFC 1918 and ULA), link-local (169.254.0.0/16,
     which holds cloud metadata services), unspecified, shared (100.64.0.0/10),
     reserved and multicast addresses, and IPv6 forms that carry such an IPv4
-    address (IPv4-mapped, NAT64, 6to4, Teredo).
+    address (IPv4-mapped, IPv4-compatible, IPv4-translated, NAT64, 6to4, Teredo) and the
+    deprecated site-local range.
     """
     if isinstance(address, ipaddress.IPv6Address):
+        if address in _SITE_LOCAL_PREFIX:
+            return False
         embedded = _embedded_ipv4(address)
         if embedded is not None:
             return is_public_address(embedded)
@@ -42,7 +48,9 @@ def _embedded_ipv4(address: ipaddress.IPv6Address) -> ipaddress.IPv4Address | No
     """The IPv4 address an IPv6 address wraps, if it wraps one."""
     if address.ipv4_mapped is not None:
         return address.ipv4_mapped
-    if address in _NAT64_PREFIX:
+    if address in _NAT64_PREFIX or address in _IPV4_TRANSLATED_PREFIX:
+        return ipaddress.IPv4Address(int(address) & 0xFFFFFFFF)
+    if address in _IPV4_COMPATIBLE_PREFIX and int(address) > 1:  # not :: and ::1
         return ipaddress.IPv4Address(int(address) & 0xFFFFFFFF)
     if address.sixtofour is not None:
         return address.sixtofour
@@ -118,8 +126,9 @@ def _resolve(host: str, port: int) -> list[ipaddress.IPv4Address | ipaddress.IPv
     """The addresses a host name (or address literal) resolves to, in the resolver's order."""
     try:
         infos = socket.getaddrinfo(host, port, type=socket.SOCK_STREAM)
-    except socket.gaierror as exc:  # no such host: a failed connection, not a blocked one
-        raise httpcore.ConnectError(f"The host name did not resolve ({exc})") from exc
+    except socket.gaierror as exc:
+        # Refused like a private address, so the answer doesn't say which one it was
+        raise BlockedAddressError(host) from exc
     addresses = []
     for info in infos:
         address = ipaddress.ip_address(info[4][0])
