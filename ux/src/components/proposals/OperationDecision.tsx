@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Button, Field, FormCallout, InspectorPanel, TextArea } from "@tinkermonkey/heimdall-ui";
-import type { ChangeProposal, ProposedOperation } from "@/api/services/proposals";
+import type { ChangeProposal, ProposedOperation, RejectionReason } from "@/api/services/proposals";
 import type { components } from "@/api/types";
 import { DrTripleEditor } from "./DrTripleEditor";
 import { InUseResolver } from "./InUseResolver";
@@ -13,6 +13,7 @@ import {
 } from "./decisionModel";
 import type { TripleSource } from "./proposalModel";
 import { NearMatchChoice } from "./SourcePassage";
+import { RejectReasonPicker } from "./RejectReasonPicker";
 import {
   chosenAlternative,
   defaultNearMatchChoice,
@@ -80,6 +81,10 @@ export function OperationDecision({
   const failed = operation.status === "failed";
   const blockers = blockersOf(operation);
   const noteId = `operation-reject-note-${operation.id}`;
+  // What a reject most likely means: keep the type, the target moved on, or none of the above.
+  const [reasonCode, setReasonCode] = useState<RejectionReason>(
+    blockers ? "keep_current" : operation.stale ? "outdated" : "other",
+  );
   // While the reviewer's answers differ from the plan's, every action applies them: the
   // operation never falls back to the plan (or a blocked delete to its delete).
   const picksChanged = !!picks?.changed;
@@ -288,13 +293,21 @@ export function OperationDecision({
                 variant="danger"
                 size="sm"
                 disabled={actions.busy}
-                onClick={() => actions.rejectOperations([operation.id], note)}
+                onClick={() => actions.rejectOperations([operation.id], note, { reasonCode })}
                 data-testid="operation-reject"
               >
                 {blockers ? "Keep the type (reject)" : "Reject"}
               </Button>
             </div>
-            <Field label="Reason" hint="optional, stored with a reject" htmlFor={noteId}>
+            <Field label="Because" hint="stored with a reject">
+              <RejectReasonPicker
+                operations={[operation]}
+                value={reasonCode}
+                onChange={setReasonCode}
+                testIdPrefix="operation-reject-reason"
+              />
+            </Field>
+            <Field label="Note" hint="optional, stored with a reject" htmlFor={noteId}>
               <TextArea
                 id={noteId}
                 rows={2}

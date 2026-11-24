@@ -16,7 +16,7 @@ import { useChangeProposal, useProposalDecisions } from "@/api/hooks/proposals";
 import { useTaxonomy } from "@/api/hooks/ontology/useTaxonomies";
 import { useTaxonomyPredicates } from "@/api/hooks/ontology/usePredicates";
 import { ApiError } from "@/api/client/interceptors";
-import type { ProposedOperation } from "@/api/services/proposals";
+import type { ProposedOperation, RejectionReason } from "@/api/services/proposals";
 import { SchemaPageLayout } from "@/components/schema/SchemaPageLayout";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
@@ -28,6 +28,7 @@ import { OperationDecided } from "./OperationDecided";
 import { OperationDecision } from "./OperationDecision";
 import { operationColumns } from "./OperationColumns";
 import { OperationInspector, operationTitle } from "./OperationInspector";
+import { RejectReasonPicker } from "./RejectReasonPicker";
 import { RevertConflict } from "./RevertConflict";
 import { TieredOperations } from "./TieredOperations";
 import {
@@ -151,6 +152,8 @@ export function ProposalDetailPage({
   // The operations a confirmed reject covers: all awaiting, or the checked ones.
   const [rejecting, setRejecting] = useState<{ ids: string[]; checked: boolean } | null>(null);
   const [rejectNote, setRejectNote] = useState("");
+  // One code for every operation a reject covers; "other" fits any operation.
+  const [rejectCode, setRejectCode] = useState<RejectionReason>("other");
   const [confirmRevert, setConfirmRevert] = useState(false);
   // Undefined until the reviewer picks one: then it follows defaultOperationFilter.
   const [chosenFilter, setFilter] = useState<OperationFilter>();
@@ -471,6 +474,7 @@ export function ProposalDetailPage({
                     disabled={actions.busy}
                     onClick={() => {
                       setRejectNote("");
+                      setRejectCode("other");
                       setRejecting({ ids: awaitingIds, checked: false });
                     }}
                     data-testid="proposal-reject-all"
@@ -607,6 +611,7 @@ export function ProposalDetailPage({
           onClear={() => setChecked([])}
           onReject={() => {
             setRejectNote("");
+            setRejectCode("other");
             setRejecting({ ids: checkedList, checked: true });
           }}
           onAccept={async () => {
@@ -805,7 +810,9 @@ export function ProposalDetailPage({
         onConfirm={async () => {
           if (!rejecting) return;
           setRejecting(null);
-          const done = await actions.rejectOperations(rejecting.ids, rejectNote);
+          const done = await actions.rejectOperations(rejecting.ids, rejectNote, {
+            reasonCode: rejectCode,
+          });
           if (done && rejecting.checked) setChecked([]);
         }}
         title={
@@ -819,8 +826,15 @@ export function ProposalDetailPage({
               A rejected operation can&apos;t be applied later. Operations already applied stay
               applied.
             </p>
+            <Field label="Because" hint="one reason for every operation">
+              <RejectReasonPicker
+                operations={operations.filter((o) => rejecting?.ids.includes(o.id))}
+                value={rejectCode}
+                onChange={setRejectCode}
+              />
+            </Field>
             <Field
-              label="Reason"
+              label="Note"
               hint="optional, stored with each reject"
               htmlFor="proposal-reject-note"
             >

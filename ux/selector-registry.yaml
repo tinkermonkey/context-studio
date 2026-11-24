@@ -3282,7 +3282,7 @@ selectors:
     description: "OR NOT AN ELEMENT, BECAUSE: reason buttons (role=group); X focuses the first"
   - selector: review-reason-*
     component: src/components/proposals/review/ReviewInspector.tsx
-    description: "A reason button by code (not_in_text, too_generic, mentioned_only, out_of_scope, duplicate, other); rejects with reason_code, note and review_ms"
+    description: "A reason button by code, the codes that fit the operation (creates: not_in_text, too_generic, mentioned_only, out_of_scope, duplicate, other; updates, moves, deletes and type changes: out_of_scope, incorrect, keep_current, outdated, other; outdated first when stale); rejects with reason_code, note and review_ms"
   - selector: review-note
     component: src/components/proposals/review/ReviewInspector.tsx
     description: "Optional note TextArea sent with a reject"
@@ -3980,6 +3980,18 @@ selectors:
   - selector: property-edge-attributes
     component: src/components/ontology/PropertyDrawer.tsx
     description: "Relationship-type drawer: the edge attributes its relationships may carry (identifier, datatype, allowed values, required, default)"
+  - selector: reject-reason-picker
+    component: src/components/proposals/RejectReasonPicker.tsx
+    description: "Reject all / Reject selected confirm dialog: one reason code for every operation it rejects (role=radiogroup; the codes that fit all of them, Other by default)"
+  - selector: operation-reject-reason-picker
+    component: src/components/proposals/RejectReasonPicker.tsx
+    description: "Operation inspector: the reason code for rejecting this operation (role=radiogroup; keep_current for a blocked delete, outdated when stale, else other)"
+  - selector: operation-reject-reason-*
+    component: src/components/proposals/RejectReasonPicker.tsx
+    description: "A reason code in the operation inspector's reject picker (role=radio, aria-checked), by code"
+  - selector: reject-reason-*
+    component: src/components/proposals/RejectReasonPicker.tsx
+    description: "A reason code in the bulk reject dialog's picker (role=radio, aria-checked), by code"
   - selector: proposal-reject-note
     component: src/components/proposals/ProposalDetailPage.tsx
     description: "Reject all / Reject selected confirm dialog: optional reason stored with every operation it rejects"

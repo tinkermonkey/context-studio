@@ -32,7 +32,7 @@ import type { ReviewSchema } from "./reviewSchema";
 import type { GoldDraft, Tier } from "./goldModel";
 import {
   END_REJECTED_REASON,
-  REJECTION_REASONS,
+  reasonsFor,
   VERDICT_CHIP,
   endRejectedNote,
   endsToDecide,
@@ -585,7 +585,7 @@ export function ReviewInspector({
         aria-keyshortcuts={awaiting && !endRejected ? "X" : undefined}
         data-testid="review-reasons"
       >
-        {REJECTION_REASONS.map((reason) => (
+        {reasonsFor([operation]).map((reason) => (
           <button
             key={reason.code}
             type="button"

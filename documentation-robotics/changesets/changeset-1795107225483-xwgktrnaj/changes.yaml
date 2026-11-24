@@ -67,7 +67,12 @@
         decided_by: agent
         decided_at: 2026-11-19T17:02:51.359Z
         changeset: changeset-1795107225483-xwgktrnaj
-  timestamp: 2026-11-19T17:02:51.388Z
+    source_reference:
+      provenance: manual
+      locations:
+        - file: local-server/domain/versioning/proposals.py
+          symbol: RejectionReason
+  timestamp: 2026-11-24T12:33:22.434Z
   sequenceNumber: 1
 - type: add
   elementId: motivation.requirement.in-place-revert-warns-of-overwritten-edits
@@ -2750,7 +2755,12 @@
       created_at: 2026-11-19T17:00:51.603Z
       updated_at: 2026-11-19T17:00:51.603Z
       version: 1
-  timestamp: 2026-11-19T17:00:51.633Z
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: ux/src/components/proposals/RejectReasonPicker.tsx
+          symbol: RejectReasonPicker
+  timestamp: 2026-11-24T12:33:22.271Z
   sequenceNumber: 166
 - type: add
   elementId: ux.actioncomponent.bulk-select
@@ -4018,7 +4028,12 @@
       created_at: 2026-11-19T17:01:49.996Z
       updated_at: 2026-11-19T17:01:49.996Z
       version: 1
-  timestamp: 2026-11-19T17:01:50.028Z
+    source_reference:
+      provenance: manual
+      locations:
+        - file: local-server/tests/integration/routes/test_proposals_routes.py
+          symbol: test_an_update_is_rejected_with_the_new_reason_codes
+  timestamp: 2026-11-24T12:33:22.434Z
   sequenceNumber: 257
 - type: add
   elementId: testing.testcoveragetarget.revert-preview
@@ -4261,7 +4276,12 @@
       created_at: 2026-11-19T17:01:49.996Z
       updated_at: 2026-11-19T17:01:49.996Z
       version: 1
-  timestamp: 2026-11-19T17:01:50.028Z
+    source_reference:
+      provenance: manual
+      locations:
+        - file: local-server/tests/integration/routes/test_proposals_routes.py
+          symbol: test_an_update_is_rejected_with_the_new_reason_codes
+  timestamp: 2026-11-24T12:33:22.434Z
   sequenceNumber: 268
 - type: add
   elementId: testing.testcasesketch.bulk-is-hidden-on-gold-checks

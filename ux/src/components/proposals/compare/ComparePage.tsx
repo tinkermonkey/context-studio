@@ -36,7 +36,7 @@ import {
   ReviewPillsProvider,
   type ReviewPillsValue,
 } from "../review/ReviewPills";
-import { REJECTION_REASONS } from "../review/reviewModel";
+import { reasonsFor } from "../review/reviewModel";
 import { useReviewClock } from "../review/useReviewClock";
 import { useReviewSchema } from "../review/useReviewSchema";
 import {
@@ -165,7 +165,7 @@ function DecisionCell({
           aria-label="Not an element, because"
           data-testid={`compare-reasons-${pair.pair_id}`}
         >
-          {REJECTION_REASONS.map((reason) => (
+          {reasonsFor([]).map((reason) => (
             <button
               key={reason.code}
               type="button"
