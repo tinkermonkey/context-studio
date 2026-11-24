@@ -16,6 +16,7 @@ import { plainEvidenceOf } from "../sourceModel";
 import { showsAsTextDiff, wordDiff, type WordSegment } from "../textDiff";
 import type { OperationContext } from "../useOperationContext";
 import { ClassPill } from "./ReviewPills";
+import { longChangeFields } from "./wideDiff";
 import type { ReviewSchema } from "./reviewSchema";
 
 /** Fields that name classes: read as class pills (with their hovers) when the schema knows them. */
@@ -196,12 +197,15 @@ function ChangeRowView({
   operations,
   context,
   schema,
+  onWide,
 }: {
   row: ChangeRow;
   operation: ProposedOperation;
   operations: ProposedOperation[];
   context: OperationContext;
   schema: ReviewSchema;
+  /** A long text change: opens it in the wide diff. */
+  onWide?: () => void;
 }) {
   const label = fieldLabel(row.field);
   const value = (v: unknown) => (
@@ -274,7 +278,21 @@ function ChangeRowView({
       data-op={operation.op}
       data-testid={`review-diff-row-${row.field}`}
     >
-      <dt className="review-diff__field">{label}</dt>
+      <dt className="review-diff__field">
+        {label}
+        {onWide && (
+          <button
+            type="button"
+            className="review-link review-diff__wide"
+            aria-label={`Open ${label} wide, side by side`}
+            title="Side by side (W)"
+            onClick={onWide}
+            data-testid={`review-wide-${row.field}`}
+          >
+            ⤢ Wide
+          </button>
+        )}
+      </dt>
       <dd className="review-diff__values">{body}</dd>
     </div>
   );
@@ -290,12 +308,16 @@ export function ChangeBlock({
   operations,
   context,
   schema,
+  onWide,
 }: {
   operation: ProposedOperation;
   operations: ProposedOperation[];
   context: OperationContext;
   schema: ReviewSchema;
+  /** Open a long text change in the wide diff; without it, no Wide control shows. */
+  onWide?: (field: string) => void;
 }) {
+  const wide = onWide ? longChangeFields(operation) : [];
   const rows = changeRows(operation).filter((row) => operation.op !== "update" || row.changed);
   const unchanged = operation.op === "update" ? changeRows(operation).length - rows.length : 0;
   return (
@@ -310,6 +332,7 @@ export function ChangeBlock({
               operations={operations}
               context={context}
               schema={schema}
+              onWide={wide.includes(row.field) ? () => onWide?.(row.field) : undefined}
             />
           ))}
         </dl>

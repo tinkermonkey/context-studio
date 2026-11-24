@@ -1511,4 +1511,106 @@
     margin: 4px 0 0;
     padding-left: 16px;
   }
+
+  /* ============= The wide diff (#1661) ============= */
+  .review-diff__field {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  .review-diff__wide {
+    font-family: var(--font-sans, inherit);
+    font-size: 11px;
+  }
+
+  /* Proposal detail's list column: the wide diff covers it, the inspector stays beside it. */
+  .proposal-main {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .wide-diff {
+    position: absolute;
+    inset: 0;
+    z-index: 6;
+    min-height: 420px;
+    background: rgb(var(--canvas-bg) / 0.92);
+  }
+
+  .wide-diff__panel {
+    position: sticky;
+    top: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 14px 16px;
+    border: 1px solid rgb(var(--canvas-border-strong));
+    border-radius: 10px;
+    background: rgb(var(--canvas-bg));
+    box-shadow: 0 12px 32px rgb(0 0 0 / 0.18);
+  }
+
+  .wide-diff__head {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .wide-diff__title {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+    flex: 1;
+  }
+
+  .wide-diff__name {
+    font-size: 15px;
+    font-weight: 600;
+    color: rgb(var(--canvas-fg-1));
+    overflow-wrap: anywhere;
+  }
+
+  .wide-diff__tabs {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .wide-diff__tablist {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    flex: 1;
+  }
+
+  .wide-diff__tab {
+    padding: 3px 10px;
+    border: 1px solid rgb(var(--canvas-border));
+    border-radius: 6px;
+    background: transparent;
+    color: rgb(var(--canvas-fg-2));
+    font-family: var(--font-mono);
+    font-size: 12px;
+    cursor: pointer;
+  }
+
+  .wide-diff__tab--selected {
+    border-color: var(--rv-amber-strong);
+    background: var(--rv-amber-bg);
+    color: rgb(var(--canvas-fg-1));
+  }
+
+  .wide-diff__tab:focus-visible {
+    outline: 2px solid rgb(var(--accent-primary));
+    outline-offset: 1px;
+  }
+
+  .wide-diff__body {
+    min-width: 0;
+  }
 }
