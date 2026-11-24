@@ -3276,7 +3276,13 @@ selectors:
     description: 'EntityPicker over the taxonomy''s non-derived classes ("Search all N classes")'
   - selector: review-reasons
     component: src/components/proposals/review/ReviewInspector.tsx
-    description: "OR NOT AN ELEMENT, BECAUSE: reason buttons (role=group); X focuses the first"
+    description: "OR NOT AN ELEMENT, BECAUSE: reason buttons (role=group); Not an element and X focus the first"
+  - selector: review-reasons-block
+    component: src/components/proposals/review/ReviewInspector.tsx
+    description: "The reason step's block (section, aria-label \"Not an element\" / \"Not a relationship\"): the reasons, the note and its message; .review-block--prompt once Not an element or X opened it"
+  - selector: review-reasons-prompt
+    component: src/components/proposals/review/ReviewInspector.tsx
+    description: "The reason step's prompt (role=status) once Not an element or X opened it: \"Pick a reason to reject it.\", or in gold mode with no note \"Write why in the note, then pick a reason to reject it.\""
   - selector: review-reason-*
     component: src/components/proposals/review/ReviewInspector.tsx
     description: "A reason button by code (not_in_text, too_generic, mentioned_only, out_of_scope, duplicate, other); rejects with reason_code, note and review_ms"
@@ -3297,7 +3303,7 @@ selectors:
     description: "review-change-decision: Change the decision / Keep this decision (secondary, aria-expanded, aria-controls review-change) on a decided operation, review-change-note its hint; review-change-{predicate,source,target}: a correction row's Change / Cancel (aria-expanded)"
   - selector: review-decide
     component: src/components/proposals/review/ReviewInspector.tsx
-    description: "DECIDE: Correct (primary), Not an element / Not a relationship (review-not, secondary: focuses the reasons), the key hint; with the ends callouts and a near match's choice"
+    description: "DECIDE: Correct (primary), Not an element / Not a relationship (review-not, secondary: opens the reason step), the key hint; with the ends callouts and a near match's choice"
   - selector: review-decided-note
     component: src/components/proposals/review/ReviewInspector.tsx
     description: "A rejected operation's note"
@@ -3318,7 +3324,7 @@ selectors:
     description: "A relationship's EVIDENCE: Show in source, scrolls the source to its first passage"
   - selector: review-not
     component: src/components/proposals/review/ReviewInspector.tsx
-    description: "Not an element / Not a relationship (secondary, key X): focuses the first reason"
+    description: "Not an element / Not a relationship (secondary, key X): opens the reason step: highlights it with a prompt, scrolls it into view and focuses the first reason, or in gold mode with no note the note; nothing is sent until a reason is picked"
   - selector: review-title-predicate
     component: src/components/proposals/review/ReviewRelationship.tsx
     description: "The predicate pill in a relationship's title sentence"

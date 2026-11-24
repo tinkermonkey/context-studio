@@ -1021,6 +1021,19 @@
     cursor: not-allowed;
   }
 
+  /* "Not an element" (or X) was pressed: the reason step, highlighted, with its prompt. */
+  .review-block--prompt {
+    background: var(--rv-rose-bg);
+    box-shadow: inset 3px 0 0 rgb(var(--status-rose));
+    scroll-margin: 12px;
+  }
+
+  .review-prompt {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--rv-rose-fg);
+  }
+
   /* ---- or a better class: the suggestions as class tags ---- */
   .review-suggestions {
     display: flex;

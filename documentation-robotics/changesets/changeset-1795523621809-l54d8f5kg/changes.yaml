@@ -1,0 +1,84 @@
+- type: add
+  elementId: ux.actioncomponent.not-an-element-button
+  layerName: ux
+  after:
+    id: 84275f84-4063-4778-a4bc-1372303bb08d
+    path: ux.actioncomponent.not-an-element-button
+    spec_node_id: ux.actioncomponent
+    type: actioncomponent
+    layer_id: ux
+    name: Not An Element Button
+    description: "The inspector's \"Not an element\" / \"Not a relationship\" button
+      (key X). It opens the reason step: scrolls the reasons into view,
+      highlights them with \"Pick a reason to reject it\" and focuses the first
+      reason, or in gold mode with no note yet, the note field. The rejection is
+      recorded when a reason is picked."
+    attributes:
+      type: button
+      label: Not an element
+      style: secondary
+      channel: web
+    metadata:
+      created_at: 2026-11-24T12:33:48.266Z
+      updated_at: 2026-11-24T12:33:48.266Z
+      version: 1
+  timestamp: 2026-11-24T12:33:48.276Z
+  sequenceNumber: 0
+- type: add
+  elementId: testing.testcasesketch.not-an-element-opens-the-reason-step
+  layerName: testing
+  after:
+    id: 3772c2a1-cd31-42d8-a7ac-61bf6e24ed5a
+    path: testing.testcasesketch.not-an-element-opens-the-reason-step
+    spec_node_id: testing.testcasesketch
+    type: testcasesketch
+    layer_id: testing
+    name: Not An Element Opens The Reason Step
+    description: Pressing Not an element (or X) on an awaiting element highlights
+      the reasons with a prompt and focuses the first reason; in gold mode with
+      an empty note it focuses the note and shows the Write why message. Nothing
+      is sent until a reason is picked.
+    attributes:
+      status: automated
+      implementationFormat: automated
+    metadata:
+      created_at: 2026-11-24T12:33:48.269Z
+      updated_at: 2026-11-24T12:33:48.269Z
+      version: 1
+  timestamp: 2026-11-24T12:33:48.276Z
+  sequenceNumber: 1
+- type: relationship-add
+  elementId: ux.view.proposal-review-view::composes::ux.actioncomponent.not-an-element-button
+  layerName: ux
+  after:
+    source: ux.view.proposal-review-view
+    target: ux.actioncomponent.not-an-element-button
+    predicate: composes
+    layer: ux
+    category: structural
+  timestamp: 2026-11-24T12:33:48.276Z
+  sequenceNumber: 2
+- type: relationship-add
+  elementId: testing.testcasesketch.not-an-element-opens-the-reason-step::tests::ux.actioncomponent.not-an-element-button
+  layerName: testing
+  after:
+    source: testing.testcasesketch.not-an-element-opens-the-reason-step
+    target: ux.actioncomponent.not-an-element-button
+    predicate: tests
+    layer: testing
+    targetLayer: ux
+    category: structural
+  timestamp: 2026-11-24T12:33:48.276Z
+  sequenceNumber: 3
+- type: relationship-add
+  elementId: testing.testcasesketch.not-an-element-opens-the-reason-step::tests::ux.subview.review-inspector
+  layerName: testing
+  after:
+    source: testing.testcasesketch.not-an-element-opens-the-reason-step
+    target: ux.subview.review-inspector
+    predicate: tests
+    layer: testing
+    targetLayer: ux
+    category: structural
+  timestamp: 2026-11-24T12:33:48.276Z
+  sequenceNumber: 4

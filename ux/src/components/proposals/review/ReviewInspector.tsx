@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode, type RefObject } from "react";
+import { useEffect, useRef, useState, type ReactNode, type RefObject } from "react";
 import { Button, Chip, FormCallout, Panel, TextArea } from "@tinkermonkey/heimdall-ui";
 import type { ProposedOperation, RejectionReason } from "@/api/services/proposals";
 import type { components } from "@/api/types";
@@ -95,8 +95,11 @@ interface ReviewInspectorProps {
   /** The proposal takes decisions (it isn't reverted). */
   deciding: boolean;
   busy: boolean;
-  /** The reason buttons, for X to focus. */
-  reasonsRef: RefObject<HTMLDivElement | null>;
+  /**
+   * Bumped by the page on key X: each new value opens the reason step, as the
+   * "Not an element" button does. The value the inspector mounts with opens nothing.
+   */
+  rejectPrompt?: number;
   onCorrect: () => void;
   onPickClass: (classId: string) => void;
   /** Accept a relationship with another predicate, source or target. */
@@ -133,16 +136,19 @@ function Eyebrow({ children, id }: { children: ReactNode; id?: string }) {
 function Block({
   label,
   className,
+  blockRef,
   children,
   "data-testid": testId,
 }: {
   label: string;
   className?: string;
+  blockRef?: RefObject<HTMLElement | null>;
   children: ReactNode;
   "data-testid"?: string;
 }) {
   return (
     <section
+      ref={blockRef}
       className={["review-block", className].filter(Boolean).join(" ")}
       aria-label={label}
       data-testid={testId}
@@ -307,7 +313,7 @@ export function ReviewInspector({
   onForgetClass,
   deciding,
   busy,
-  reasonsRef,
+  rejectPrompt = 0,
   onCorrect,
   onPickClass,
   onAcceptEdited,
@@ -319,11 +325,15 @@ export function ReviewInspector({
 }: ReviewInspectorProps) {
   const [note, setNote] = useState("");
   const [changing, setChanging] = useState(false);
-  // A new decision closes the change controls.
-  useEffect(
-    () => setChanging(false),
-    [operation.status, operation.applied_fields, operation.reason_code],
-  );
+  // "Not an element" (or X) was pressed: the reasons are highlighted with a prompt.
+  const [prompting, setPrompting] = useState(false);
+  const reasonsRef = useRef<HTMLDivElement>(null);
+  const reasonsBlockRef = useRef<HTMLElement>(null);
+  // A new decision closes the change controls and the prompt.
+  useEffect(() => {
+    setChanging(false);
+    setPrompting(false);
+  }, [operation.status, operation.applied_fields, operation.reason_code]);
   // In gold mode rejecting an element needs a note: it becomes the excluded entry's reason.
   const noteMissing = !!gold && isElement(operation) && !note.trim();
   const draft = gold?.draft;
@@ -362,9 +372,24 @@ export function ReviewInspector({
   const endRejected = ends.rejected.length > 0;
   const rejectForEnd = () =>
     onReject(END_REJECTED_REASON, note.trim() || endRejectedNote(ends.rejected.map((e) => e.seq)));
-  /** Focus the first reason (the "Not …" button and key X). */
-  const focusReasons = () =>
-    reasonsRef.current?.querySelector<HTMLButtonElement>("button:not(:disabled)")?.focus();
+  /**
+   * Open the reason step (the "Not …" button and key X): highlight the reasons with a
+   * prompt, bring them into view and focus the first reason, or, while gold mode still
+   * needs a note, the note. The rejection is recorded when a reason is picked.
+   */
+  const openReasons = () => {
+    setPrompting(true);
+    reasonsBlockRef.current?.scrollIntoView?.({ block: "nearest" });
+    const reason = reasonsRef.current?.querySelector<HTMLButtonElement>("button:not(:disabled)");
+    (reason ?? document.getElementById("review-note"))?.focus();
+  };
+  // Key X: the page bumps rejectPrompt.
+  const seenPrompt = useRef(rejectPrompt);
+  useEffect(() => {
+    if (rejectPrompt === seenPrompt.current) return;
+    seenPrompt.current = rejectPrompt;
+    if (canDecide) openReasons();
+  });
 
   const evidence = quotes.length > 0 && (
     <Block label="Evidence" data-testid="review-evidence">
@@ -453,7 +478,7 @@ export function ReviewInspector({
           variant="secondary"
           size="sm"
           disabled={busy}
-          onClick={focusReasons}
+          onClick={openReasons}
           aria-keyshortcuts={awaiting && !endRejected ? "X" : undefined}
           data-testid="review-not"
         >
@@ -575,8 +600,20 @@ export function ReviewInspector({
   );
 
   const reasons = canDecide && (
-    <Block label={`Not ${kind}`}>
+    <Block
+      label={`Not ${kind}`}
+      className={prompting ? "review-block--prompt" : undefined}
+      blockRef={reasonsBlockRef}
+      data-testid="review-reasons-block"
+    >
       <Eyebrow>{`OR NOT ${kind.toUpperCase()}, BECAUSE`}</Eyebrow>
+      {prompting && (
+        <span className="review-prompt" role="status" data-testid="review-reasons-prompt">
+          {noteMissing
+            ? "Write why in the note, then pick a reason to reject it."
+            : "Pick a reason to reject it."}
+        </span>
+      )}
       <div
         ref={reasonsRef}
         className="review-reasons"
