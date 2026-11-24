@@ -101,11 +101,13 @@ from domain.versioning.proposals import (
     CopyResult,
     InUseResolution,
     Landing,
+    OperationCount,
     OperationDraft,
     OperationKind,
     OperationRef,
     OperationStatus,
     OperationType,
+    ProposalFilter,
     ProposalOrigin,
     ProposalSource,
     ProposalStatus,
@@ -3462,9 +3464,7 @@ class ProposalService:
                 {
                     o.result_entity_id
                     for o in reopened
-                    if o.status is OperationStatus.APPLIED
-                    and o.result_entity_id
-                    and not o.matched
+                    if o.status is OperationStatus.APPLIED and o.result_entity_id and not o.matched
                 }
             )
 
@@ -3733,22 +3733,31 @@ class ProposalService:
         offset: int = 0,
         landed: bool | None = None,
         implementation_id: str | None = None,
+        dataset_id: str | None = None,
+        source_id: str | None = None,
+        pipeline_type: str | None = None,
+        with_operations: bool = True,
     ) -> list[ChangeProposal]:
         """
-        Proposals, newest first, optionally filtered. landed False with status
-        done lists the decided proposals their client hasn't landed yet;
-        implementation_id lists those whose origin names that pipeline
-        implementation (e.g. "gold_check").
+        Proposals, newest first, optionally filtered (see ProposalFilter).
+        landed False lists the proposals with something their client hasn't
+        landed yet: never one with no applied operation, a re-import or a
+        dataset proposal (#1634). implementation_id and pipeline_type list
+        those whose origin names that pipeline implementation (e.g.
+        "gold_check") or type. with_operations False leaves the operations out
+        (read operation_tallies for their counts).
         """
-        return self._proposals.list_proposals(
-            taxonomy_id,
-            status,
-            source,
-            limit,
-            offset,
+        filters = ProposalFilter(
+            taxonomy_id=taxonomy_id,
+            status=status,
+            source=source,
             landed=landed,
             implementation_id=implementation_id,
+            dataset_id=dataset_id,
+            source_id=source_id,
+            pipeline_type=pipeline_type,
         )
+        return self._proposals.list_proposals(filters, limit, offset, with_operations)
 
     def count_proposals(
         self,
@@ -3757,11 +3766,27 @@ class ProposalService:
         source: ProposalSource | None = None,
         landed: bool | None = None,
         implementation_id: str | None = None,
+        dataset_id: str | None = None,
+        source_id: str | None = None,
+        pipeline_type: str | None = None,
     ) -> int:
-        """How many proposals match the filters."""
+        """How many proposals match the filters (as list_proposals reads them)."""
         return self._proposals.count_proposals(
-            taxonomy_id, status, source, landed=landed, implementation_id=implementation_id
+            ProposalFilter(
+                taxonomy_id=taxonomy_id,
+                status=status,
+                source=source,
+                landed=landed,
+                implementation_id=implementation_id,
+                dataset_id=dataset_id,
+                source_id=source_id,
+                pipeline_type=pipeline_type,
+            )
         )
+
+    def operation_tallies(self, proposal_ids: Sequence[str]) -> dict[str, list[OperationCount]]:
+        """Each proposal's operations counted by op, kind, status and scope, without loading them."""
+        return self._proposals.operation_tallies(proposal_ids)
 
     def stale_operation_ids(self, proposal: ChangeProposal) -> set[str]:
         """

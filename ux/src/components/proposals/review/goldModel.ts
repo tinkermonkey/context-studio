@@ -8,7 +8,7 @@
 import type { ChangeProposal, ProposedOperation, ReviewAnnotation } from "@/api/services/proposals";
 import type { components } from "@/api/types";
 import { DR_SOURCE } from "../decisionModel";
-import { isAwaiting, type ChipVariant } from "../proposalModel";
+import type { ChipVariant } from "../proposalModel";
 
 type ClassResponse = components["schemas"]["ClassResponse"];
 
@@ -209,21 +209,25 @@ export interface GoldRow {
   action: "Check gold" | "Continue" | "Open";
 }
 
-/** One gold check's row: what it holds and how far its check is. */
+/**
+ * One gold check's row: what it holds and how far its check is, from the
+ * proposal's counts (the list's summary form has no operations).
+ */
 export function goldRow(proposal: ChangeProposal, gold: GoldCheck): GoldRow {
-  const reviewed = proposal.operations.filter(
-    (o) => (o.op === "create" && o.kind === "individual") || o.kind === "relationship",
+  const reviewed = proposal.counts.filter(
+    (c) => (c.op === "create" && c.kind === "individual") || c.kind === "relationship",
   );
-  const awaiting = reviewed.filter(isAwaiting).length;
-  const total = reviewed.length;
+  const sum = (counts: typeof reviewed) => counts.reduce((n, c) => n + c.count, 0);
+  const awaiting = sum(reviewed.filter((c) => c.status === "pending" || c.status === "failed"));
+  const total = sum(reviewed);
   const decided = total - awaiting;
   const status: GoldStatus = awaiting > 0 ? "model-made" : "checked";
   return {
     proposalId: proposal.id,
     document: gold.document,
     split: gold.split,
-    individuals: reviewed.filter((o) => o.kind === "individual").length,
-    relationships: reviewed.filter((o) => o.kind === "relationship").length,
+    individuals: sum(reviewed.filter((c) => c.kind === "individual")),
+    relationships: sum(reviewed.filter((c) => c.kind === "relationship")),
     decided,
     total,
     percent: total === 0 ? 0 : Math.round((decided / total) * 100),

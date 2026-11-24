@@ -110,12 +110,14 @@ def _counts(proposal: ChangeProposal) -> dict[str, int]:
 def _view(service: ProposalService, proposal: ChangeProposal, dry_run: bool = False) -> dict:
     """
     The proposal as REST returns it (the same serializer, so the two can't
-    drift), compacted: nulls and empty lists or objects are left out, and each
+    drift) less its counts, compacted: nulls and empty lists or objects are left out, and each
     in-use blocker lists at most MAX_BLOCKER_EDGES relationships and move
     targets (edges_total and replacements_total say how many there are), and
     dry_run appears only when true.
     """
     view = _compact(proposal_response(service, proposal, dry_run=dry_run).model_dump(mode="json"))
+    # The tools give their own counts, by status (_counts); the REST grouping would replace them.
+    view.pop("counts", None)
     if not view.get("dry_run"):
         view.pop("dry_run", None)
     for operation in view["operations"]:
@@ -855,8 +857,10 @@ class ListProposalsTool(_ProposalTool):
         " reverted) and source (pipeline: from extract_source and other runs; mcp, chat,"
         " bundle, user). Each has its id, title, source, operation counts by status and,"
         " once its client landed it in the taxonomy's source, landed (repo, commit,"
-        " spec_version, landed_at). landed false with status done lists the decided"
-        " proposals not yet landed. Done proposals with applied operations are the"
+        " spec_version, landed_at). landed false with status done lists what is still"
+        " to land: decided proposals with applied operations not yet landed, never a"
+        " re-import (source bundle) or a proposal about a dataset. Done proposals with"
+        " applied operations are the"
         " record of what changed in a taxonomy; read one with get_proposal."
     )
     input_schema = {
@@ -871,7 +875,11 @@ class ListProposalsTool(_ProposalTool):
             },
             "landed": {
                 "type": "boolean",
-                "description": "Only proposals landed (true) or not landed (false) in the source",
+                "description": (
+                    "Only proposals landed (true) in the source, or (false) with"
+                    " something to land that is not landed yet: never a re-import or a"
+                    " proposal about a dataset, whatever its status"
+                ),
             },
             "limit": {
                 "type": "integer",
@@ -1091,7 +1099,11 @@ def _drift_entry(entry: DriftEntry) -> dict[str, Any]:
     A drift entry for the tool. Unlike _compact, it keeps nulls inside fields,
     so a value one side lacks shows as null rather than vanishing.
     """
-    view: dict[str, Any] = {"kind": entry.kind, "source_id": entry.source_id, "change": entry.change}
+    view: dict[str, Any] = {
+        "kind": entry.kind,
+        "source_id": entry.source_id,
+        "change": entry.change,
+    }
     if entry.entity_id:
         view["entity_id"] = entry.entity_id
     if entry.fields:

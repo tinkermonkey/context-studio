@@ -13,6 +13,7 @@ import {
   renameOperation,
 } from "@/test/proposalFixtures";
 import { createTaxonomy } from "@/api/services/__tests__/fixtures/ontology.fixtures";
+import { countsOf } from "@/api/services/__tests__/fixtures/proposals.fixtures";
 import { ProposalsListPage } from "../ProposalsListPage";
 
 const navigate = vi.fn();
@@ -71,18 +72,34 @@ describe("ProposalsListPage", () => {
     expect(screen.getByTestId("proposals-table")).toHaveClass("schema-table-wrap");
   });
 
+  it("asks for the summary form, so no operations are downloaded (#1626)", async () => {
+    let requested: URL | undefined;
+    server.use(
+      http.get("*/api/proposals", ({ request }) => {
+        requested = new URL(request.url);
+        return HttpResponse.json({ items: [], total: 0, limit: 500, offset: 0 });
+      }),
+    );
+    render(<ProposalsListPage status="open" onFiltersChange={vi.fn()} />);
+
+    await vi.waitFor(() => expect(requested).toBeDefined());
+    expect(requested?.searchParams.get("fields")).toBe("summary");
+  });
+
   it("counts failed operations as still awaiting a decision", async () => {
     server.use(
       http.get("*/api/proposals", () =>
         HttpResponse.json({
           items: [
             {
+              // The list's summary form: counts, no operations
               ...openProposal,
-              operations: [
+              operations: [],
+              counts: countsOf([
                 renameOperation,
                 { ...deleteOperation, status: "failed", reason: "target_not_found: gone" },
                 createOperation,
-              ],
+              ]),
             },
           ],
           total: 1,

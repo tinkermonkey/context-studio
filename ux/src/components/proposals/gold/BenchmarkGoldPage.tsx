@@ -16,7 +16,7 @@ import {
 import "./gold.css";
 
 /** The proposals `extraction_benchmark.py check` makes. */
-const LIST_PARAMS = { implementation_id: GOLD_CHECK_IMPLEMENTATION };
+const LIST_PARAMS = { implementation_id: GOLD_CHECK_IMPLEMENTATION, fields: "summary" } as const;
 
 /** A shell command with a Copy button. */
 function CommandLine({

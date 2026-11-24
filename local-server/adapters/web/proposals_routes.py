@@ -9,7 +9,7 @@ service calls touch SQLite, so they run in the thread pool.
 """
 
 from datetime import datetime
-from typing import Any, Optional
+from typing import Any, Literal, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
 from fastapi.responses import JSONResponse, StreamingResponse
@@ -37,6 +37,7 @@ from adapters.web.schemas.proposals import (
     ReviewAnnotationRequest,
     RevertPreviewItem,
     RevertPreviewResponse,
+    proposal_summary,
 )
 from domain.ontology.exceptions import EntityNotFoundError
 from domain.ontology.value_objects import SourceRevision
@@ -50,9 +51,9 @@ from domain.versioning.exceptions import (
 )
 from domain.versioning.gold import DecisionFilter, DecisionKind
 from domain.versioning.proposal_service import ProposalService
-from domain.versioning.proposals import OperationDraft
 from domain.versioning.proposals import (
     InUseResolution,
+    OperationDraft,
     OperationKind,
     OperationType,
     ProposalSource,
@@ -145,8 +146,11 @@ async def list_proposals(
     landed: Optional[bool] = Query(
         None,
         description=(
-            "Only proposals the client has (true) or hasn't (false) landed in the"
-            " taxonomy's source; with status=done, false lists decided-but-unlanded"
+            "Only proposals the client has (true) or hasn't (false) landed in the taxonomy's"
+            " source. false lists only proposals with something to land: at least one applied"
+            " operation, not a re-import (source bundle) and not about a dataset, whatever"
+            " their status (so landed=false with dataset_id is always empty); with"
+            " status=done it lists what is still to land"
         ),
     ),
     implementation_id: Optional[str] = Query(
@@ -154,32 +158,54 @@ async def list_proposals(
         description="Only proposals a run of this pipeline implementation made (their "
         'origin\'s implementation_id), e.g. "gold_check" for benchmark gold checks',
     ),
+    dataset_id: Optional[str] = Query(
+        None, description="Only proposals whose operations are in this dataset"
+    ),
+    source_id: Optional[str] = Query(
+        None, description="Only proposals extracted from this source (client_metadata.source_id)"
+    ),
+    pipeline_type: Optional[str] = Query(
+        None,
+        description="Only proposals a run of this pipeline type made (their origin's "
+        'pipeline_type), e.g. "individual_extraction"',
+    ),
+    fields: Literal["full", "summary"] = Query(
+        "full",
+        description="summary: each proposal without its operations, with their counts only",
+    ),
     limit: int = Query(50, ge=1, le=500, description="Maximum number of results"),
     offset: int = Query(0, ge=0, description="Number of results to skip"),
     service: ProposalService = Depends(get_proposal_service),
 ) -> ListResponse[ChangeProposalResponse]:
-    """List proposals, newest first, each operation with its stale flag."""
+    """
+    List proposals, newest first. In full each operation has its stale flag; the
+    summary form leaves the operations out and keeps their counts.
+    """
+    filters = dict(
+        taxonomy_id=taxonomy_id,
+        status=proposal_status,
+        source=source,
+        landed=landed,
+        implementation_id=implementation_id,
+        dataset_id=dataset_id,
+        source_id=source_id,
+        pipeline_type=pipeline_type,
+    )
 
     def run() -> ListResponse[ChangeProposalResponse]:
+        summary = fields == "summary"
         proposals = service.list_proposals(
-            taxonomy_id,
-            proposal_status,
-            source,
-            limit,
-            offset,
-            landed=landed,
-            implementation_id=implementation_id,
+            **filters, limit=limit, offset=offset, with_operations=not summary
         )
-        return ListResponse(
+        if summary:
+            tallies = service.operation_tallies([p.id for p in proposals])
+            items = [proposal_summary(p, tallies.get(p.id, [])) for p in proposals]
+        else:
             # A list needs no type usage: only the review page's picks read it.
-            items=[proposal_response(service, p, with_usage=False) for p in proposals],
-            total=service.count_proposals(
-                taxonomy_id,
-                proposal_status,
-                source,
-                landed=landed,
-                implementation_id=implementation_id,
-            ),
+            items = [proposal_response(service, p, with_usage=False) for p in proposals]
+        return ListResponse(
+            items=items,
+            total=service.count_proposals(**filters),
             limit=limit,
             offset=offset,
         )

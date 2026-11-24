@@ -1,9 +1,10 @@
 /**
  * Read-only views of a change proposal, worked out in the browser from its
- * operations: the tally, the strictest scope, the op mix, a property
- * operation's triple and an operation's field / before / after change rows.
+ * operations or from its counts (a list's summary form has no operations):
+ * the tally, the strictest scope, the op mix, a property operation's triple
+ * and an operation's field / before / after change rows.
  */
-import type { ChangeProposal, ProposedOperation } from "@/api/services/proposals";
+import type { ChangeProposal, OperationCount, ProposedOperation } from "@/api/services/proposals";
 
 export type ChipVariant = "emerald" | "amber" | "rose" | "cyan" | "violet" | "neutral";
 export type OperationStatus = ProposedOperation["status"];
@@ -19,16 +20,26 @@ export interface OperationTally {
   awaiting: number;
 }
 
-export function tallyOperations(operations: ProposedOperation[]): OperationTally {
+/**
+ * The tally of operations, or of a proposal's `counts` (each entry stands for
+ * `count` operations).
+ */
+export function tallyOperations(
+  operations: (Pick<ProposedOperation, "status"> & { count?: number })[],
+): OperationTally {
   const tally: OperationTally = {
-    total: operations.length,
+    total: 0,
     pending: 0,
     applied: 0,
     rejected: 0,
     failed: 0,
     awaiting: 0,
   };
-  for (const operation of operations) tally[operation.status] += 1;
+  for (const operation of operations) {
+    const n = operation.count ?? 1;
+    tally[operation.status] += n;
+    tally.total += n;
+  }
   tally.awaiting = tally.pending + tally.failed;
   return tally;
 }
@@ -58,7 +69,9 @@ export function decidedPercent(tally: OperationTally): number {
 const SCOPE_ORDER: ChangeScope[] = ["editorial", "additive", "breaking"];
 
 /** The strictest scope among the operations: breaking > additive > editorial. */
-export function strictestScope(operations: ProposedOperation[]): ChangeScope | undefined {
+export function strictestScope(
+  operations: Pick<ProposedOperation, "scope">[] | OperationCount[],
+): ChangeScope | undefined {
   let strictest: ChangeScope | undefined;
   for (const { scope } of operations) {
     if (!strictest || SCOPE_ORDER.indexOf(scope) > SCOPE_ORDER.indexOf(strictest)) {

@@ -31,6 +31,7 @@ from domain.versioning.proposals import (
     OperationKind,
     OperationStatus,
     OperationType,
+    ProposalFilter,
     ProposalSource,
     ProposalStatus,
 )
@@ -158,7 +159,9 @@ def test_dry_run_stores_nothing(importer, repo, session_factory):
     assert result.dry_run and [o.op for o in result.proposal.operations] == [OperationType.UPDATE]
     assert _events(session_factory) == before
     assert repo.get_by_identifier("house").title == "House"
-    assert len(SQLiteChangeProposalRepository(session_factory).list_proposals()) == 1
+    assert (
+        len(SQLiteChangeProposalRepository(session_factory).list_proposals(ProposalFilter())) == 1
+    )
 
 
 # ------------------------------------------------------------------- route

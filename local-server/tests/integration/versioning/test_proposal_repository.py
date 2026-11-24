@@ -25,12 +25,16 @@ from adapters.persistence.sqlite.models import (
     ProposalOperation,
 )
 from adapters.persistence.sqlite.proposal_repo import SQLiteChangeProposalRepository
+from domain.ontology.value_objects import SourceRevision
 from domain.versioning.proposals import (
     ChangeProposal,
     ChangeScope,
+    Landing,
     OperationKind,
     OperationStatus,
+    OperationCount,
     OperationType,
+    ProposalFilter,
     ProposalSource,
     ProposalStatus,
     ProposedOperation,
@@ -134,14 +138,19 @@ def test_list_filters_and_orders_newest_first(repo):
     repo.create(_proposal("other", taxonomy_id="t2"))
     repo.set_status("old", ProposalStatus.DONE)
 
-    assert [p.id for p in repo.list_proposals(taxonomy_id="t1", source=ProposalSource.MCP)] == [
+    assert [
+        p.id
+        for p in repo.list_proposals(ProposalFilter(taxonomy_id="t1", source=ProposalSource.MCP))
+    ] == [
         "new",
         "old",
     ]
-    assert [p.id for p in repo.list_proposals(status=ProposalStatus.DONE)] == ["old"]
-    assert repo.count_proposals(taxonomy_id="t1") == 3
-    assert repo.count_proposals(source=ProposalSource.CHAT) == 1
-    assert len(repo.list_proposals(limit=2)) == 2
+    assert [p.id for p in repo.list_proposals(ProposalFilter(status=ProposalStatus.DONE))] == [
+        "old"
+    ]
+    assert repo.count_proposals(ProposalFilter(taxonomy_id="t1")) == 3
+    assert repo.count_proposals(ProposalFilter(source=ProposalSource.CHAT)) == 1
+    assert len(repo.list_proposals(ProposalFilter(), limit=2)) == 2
 
 
 def test_list_by_the_implementation_its_origin_names(repo):
@@ -166,21 +175,127 @@ def test_list_by_the_implementation_its_origin_names(repo):
         repo.create(made_by(proposal_id, implementation, NOW + timedelta(hours=hour)))
     repo.create(_proposal("none"))  # no origin at all
 
-    listed = repo.list_proposals(implementation_id="gold_check")
+    listed = repo.list_proposals(ProposalFilter(implementation_id="gold_check"))
     assert [p.id for p in listed] == ["g3", "g2", "g1"]
-    assert repo.count_proposals(implementation_id="gold_check") == 3
-    assert repo.count_proposals(implementation_id="single_call") == 1
-    assert repo.count_proposals(implementation_id="nope") == 0
-    page = repo.list_proposals(implementation_id="gold_check", limit=1, offset=1)
+    assert repo.count_proposals(ProposalFilter(implementation_id="gold_check")) == 3
+    assert repo.count_proposals(ProposalFilter(implementation_id="single_call")) == 1
+    assert repo.count_proposals(ProposalFilter(implementation_id="nope")) == 0
+    page = repo.list_proposals(ProposalFilter(implementation_id="gold_check"), limit=1, offset=1)
     assert [p.id for p in page] == ["g2"]
-    assert repo.count_proposals(implementation_id="gold_check", source=ProposalSource.MCP) == 0
+    assert (
+        repo.count_proposals(
+            ProposalFilter(implementation_id="gold_check", source=ProposalSource.MCP)
+        )
+        == 0
+    )
+
+
+def _decided(proposal_id, statuses, source=ProposalSource.MCP, dataset_id=None, hour=0):
+    """A done proposal whose operations ended as `statuses`, in seq order."""
+    proposal = _proposal(proposal_id, source=source, created_at=NOW + timedelta(hours=hour))
+    proposal.status = ProposalStatus.DONE
+    proposal.dataset_id = dataset_id
+    for operation, status in zip(proposal.operations, statuses):
+        operation.status = status
+    return proposal
+
+
+def test_unlanded_lists_only_what_a_client_can_land(repo):
+    """#1634: landed=false leaves out proposals with nothing to land, and total agrees."""
+    applied, rejected = OperationStatus.APPLIED, OperationStatus.REJECTED
+    repo.create(_decided("lands", [rejected, applied, rejected], hour=1))
+    repo.create(_decided("all-rejected", [rejected] * 3, hour=2))
+    repo.create(_decided("re-import", [applied] * 3, source=ProposalSource.BUNDLE, hour=3))
+    repo.create(_decided("into-a-dataset", [applied] * 3, dataset_id="ds-1", hour=4))
+    repo.create(_decided("landed", [applied] * 3, hour=5))
+    repo.set_landed("landed", Landing(revision=SourceRevision(commit="abc"), landed_at=NOW))
+    unlanded = ProposalFilter(status=ProposalStatus.DONE, landed=False)
+
+    assert [p.id for p in repo.list_proposals(unlanded)] == ["lands"]
+    assert repo.count_proposals(unlanded) == 1
+    assert [p.id for p in repo.list_proposals(ProposalFilter(landed=True))] == ["landed"]
+    assert repo.count_proposals(ProposalFilter(status=ProposalStatus.DONE)) == 5
+
+
+def test_list_by_dataset_source_and_pipeline_type(repo):
+    """#1626: the filters apply in the query, so total and paging count only matches."""
+
+    def made(proposal_id, hour, dataset_id=None, source_id=None, pipeline_type=None):
+        proposal = _proposal(proposal_id, source=ProposalSource.PIPELINE)
+        proposal.created_at = NOW + timedelta(hours=hour)
+        proposal.dataset_id = dataset_id
+        if source_id:
+            proposal.client_metadata["source_id"] = source_id
+        if pipeline_type:
+            proposal.client_metadata["origin"] = {
+                "pipeline_type": pipeline_type,
+                "implementation_id": "single_call",
+                "configuration_ref": "default",
+                "configuration_version": 1,
+                "digest": "0123456789ab",
+            }
+        return proposal
+
+    repo.create(made("a", 1, dataset_id="ds-1", source_id="src-1", pipeline_type="individual"))
+    repo.create(made("b", 2, dataset_id="ds-1", source_id="src-2", pipeline_type="schema"))
+    repo.create(made("c", 3, dataset_id="ds-2", source_id="src-1", pipeline_type="individual"))
+    repo.create(made("d", 4))
+
+    def ids(filters, **page):
+        return [p.id for p in repo.list_proposals(filters, **page)]
+
+    assert ids(ProposalFilter(dataset_id="ds-1")) == ["b", "a"]
+    assert ids(ProposalFilter(source_id="src-1")) == ["c", "a"]
+    assert ids(ProposalFilter(pipeline_type="individual")) == ["c", "a"]
+    assert ids(ProposalFilter(dataset_id="ds-1", source_id="src-1")) == ["a"]
+    assert ids(ProposalFilter(source_id="src-1"), limit=1, offset=1) == ["a"]
+    assert repo.count_proposals(ProposalFilter(pipeline_type="individual")) == 2
+    assert repo.count_proposals(ProposalFilter(dataset_id="nope")) == 0
+
+
+def test_a_summary_list_counts_operations_without_loading_them(repo):
+    """#1626: with_operations=False leaves them out; operation_tallies counts them."""
+    proposal = _proposal()
+    proposal.operations[0].status = OperationStatus.APPLIED
+    repo.create(proposal)
+    repo.create(_proposal("p2", created_at=NOW - timedelta(hours=1)))
+
+    listed, _ = repo.list_proposals(ProposalFilter(), with_operations=False)
+
+    assert listed.id == "p1" and listed.operations == []
+    tallies = repo.operation_tallies(["p1", "p2", "missing"])
+    assert sorted(tallies) == ["p1", "p2"]
+    assert sorted(tallies["p1"], key=lambda c: (c.kind.value, c.op.value)) == [
+        OperationCount(
+            OperationType.CREATE,
+            OperationKind.CLASS,
+            OperationStatus.APPLIED,
+            ChangeScope.ADDITIVE,
+            1,
+        ),
+        OperationCount(
+            OperationType.UPDATE,
+            OperationKind.CLASS,
+            OperationStatus.PENDING,
+            ChangeScope.EDITORIAL,
+            1,
+        ),
+        OperationCount(
+            OperationType.CREATE,
+            OperationKind.INDIVIDUAL,
+            OperationStatus.PENDING,
+            ChangeScope.ADDITIVE,
+            1,
+        ),
+    ]
+    assert repo.operation_tallies([]) == {}
 
 
 def test_ties_on_created_at_order_by_id_descending(repo):
     for proposal_id in ("a", "b", "c"):
         repo.create(_proposal(proposal_id))
 
-    assert [p.id for p in repo.list_proposals()] == ["c", "b", "a"]
+    assert [p.id for p in repo.list_proposals(ProposalFilter())] == ["c", "b", "a"]
 
 
 def test_created_at_with_an_offset_keeps_its_instant(repo):

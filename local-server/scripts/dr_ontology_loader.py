@@ -80,7 +80,7 @@ from domain.ontology.ports import OntologyRepository
 from domain.ontology.services import OntologyService
 from domain.ontology.value_objects import ExternalReference, SourceRevision
 from domain.versioning.ports import ChangeProposalRepository
-from domain.versioning.proposals import OperationStatus, ProposalStatus
+from domain.versioning.proposals import OperationStatus, ProposalFilter, ProposalStatus
 
 DR_TAXONOMY_TITLE = "Documentation Robotics"
 
@@ -715,7 +715,8 @@ def find_prune_blockers(
         for ref in repo.find_references(sorted(by_id))
         if ref.dependent_id not in by_id
     ]
-    for proposal in proposals.list_proposals(limit=proposals.count_proposals()):
+    every = ProposalFilter()
+    for proposal in proposals.list_proposals(every, limit=proposals.count_proposals(every)):
         if proposal.status is ProposalStatus.REVERTED:
             continue  # its applied operations are undone
         for operation in proposal.operations:

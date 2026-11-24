@@ -229,6 +229,24 @@ class TestLanding:
         ).json()
         assert [p["id"] for p in only_landed["items"]] == [landed["id"]]
 
+    def test_the_unlanded_filter_leaves_out_what_has_nothing_to_land(self, client, spec):
+        """#1634: a done proposal whose operations were all rejected has nothing to land."""
+        rejected = _propose(client, spec, title="Nope")
+        response = client.post(
+            f"/api/proposals/{rejected['id']}/reject",
+            json={"operation_ids": [o["id"] for o in rejected["operations"]], "reason": "no"},
+        )
+        assert response.json()["status"] == "done", response.text
+        unlanded = _decide(client, spec, title="Endpoint")
+
+        listed = client.get(
+            "/api/proposals",
+            params={"taxonomy_id": spec["taxonomy"], "status": "done", "landed": "false"},
+        ).json()
+
+        assert [p["id"] for p in listed["items"]] == [unlanded["id"]]
+        assert listed["total"] == 1
+
     def test_a_landed_proposal_cant_be_reverted_here(self, client, spec, ontology):
         proposal = _decide(client, spec)
         client.put(f"/api/proposals/{proposal['id']}/landed", json=LANDED)

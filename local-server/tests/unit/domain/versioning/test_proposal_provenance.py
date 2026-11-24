@@ -17,6 +17,7 @@ from domain.versioning.proposals import (
     ChangeScope,
     OperationDraft,
     OperationStatus,
+    ProposalFilter,
     ProposalSource,
     ProposedOperation,
 )
@@ -403,7 +404,7 @@ class TestUnstorablePassages:
         with pytest.raises(ProposalValidationError, match="invalid"):
             propose(service, graph, create_den_like(graph, [passage(0, 10**20)]))
 
-        assert proposals.list_proposals() == []
+        assert proposals.list_proposals(ProposalFilter()) == []
 
     def test_a_stored_huge_offset_fails_the_operation_before_it_creates_anything(
         self, service, graph, proposals, ontology, sources

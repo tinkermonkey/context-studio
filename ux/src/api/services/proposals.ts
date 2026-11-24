@@ -3,6 +3,8 @@ import type { components } from "@/api/types";
 
 export type ChangeProposal = components["schemas"]["ChangeProposalResponse"];
 export type ProposedOperation = components["schemas"]["ProposedOperationResponse"];
+/** How many of a proposal's operations share one op, kind, status and scope. */
+export type OperationCount = components["schemas"]["OperationCountResponse"];
 export type ChangeProposalCreateRequest = components["schemas"]["ChangeProposalCreateRequest"];
 export type ChangeProposalApplyRequest = components["schemas"]["ChangeProposalApplyRequest"];
 export type ChangeProposalRejectRequest = components["schemas"]["ChangeProposalRejectRequest"];
@@ -53,6 +55,14 @@ export interface ChangeProposalListParams {
   landed?: boolean;
   /** Only proposals a run of this pipeline implementation made (their origin's), e.g. "gold_check". */
   implementation_id?: string;
+  /** Only proposals whose operations are in this dataset. */
+  dataset_id?: string;
+  /** Only proposals extracted from this source. */
+  source_id?: string;
+  /** Only proposals a run of this pipeline type made (their origin's), e.g. "individual_extraction". */
+  pipeline_type?: string;
+  /** "summary": no operations, only each proposal's `counts`. */
+  fields?: "full" | "summary";
   limit?: number;
   offset?: number;
 }

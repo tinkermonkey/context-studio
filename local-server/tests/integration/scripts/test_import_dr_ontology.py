@@ -41,6 +41,7 @@ from domain.versioning.proposals import (
     OperationDraft,
     OperationKind,
     OperationType,
+    ProposalFilter,
     ProposalSource,
     ProposalStatus,
     ProposedOperation,
@@ -1006,7 +1007,7 @@ class TestImportScriptReimport:
         argv = ["import_dr_ontology.py", "--spec-dir", str(spec_dir), "--dry-run"]
         monkeypatch.setattr(sys, "argv", argv)
         assert import_script.main() == 0
-        assert proposals.count_proposals() == 0
+        assert proposals.count_proposals(ProposalFilter()) == 0
         assert "delete property  motivation.goal.realizes.business.businessservice" in (
             capsys.readouterr().out
         )
@@ -1014,7 +1015,7 @@ class TestImportScriptReimport:
         monkeypatch.setattr(sys, "argv", argv[:-1])
         assert import_script.main() == 0
 
-        (proposal,) = proposals.list_proposals()
+        (proposal,) = proposals.list_proposals(ProposalFilter())
         assert [(o.op, o.kind) for o in proposal.operations] == [
             (OperationType.DELETE, OperationKind.PROPERTY)
         ]

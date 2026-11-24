@@ -22,10 +22,11 @@ Scope follows the DR design charter's vocabulary. The system classifies it
 
 from __future__ import annotations
 
+from collections import Counter
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import Any, Mapping
+from typing import Any, Mapping, Sequence
 from uuid import uuid4
 
 from domain.ontology.entities import same_attribute_value
@@ -758,6 +759,79 @@ class CopyResult:
 
 
 @dataclass(frozen=True)
+class ProposalFilter:
+    """
+    Which proposals a list or count returns. Every filter set must hold.
+
+    Attributes:
+        taxonomy_id: Only proposals about this taxonomy
+        status: Only proposals with this status
+        source: Only proposals from this source
+        landed: True: only proposals their client landed in its source. False:
+            only proposals with something to land that their client hasn't
+            landed: at least one applied operation, not a re-import (source
+            bundle, which came from the source) and not about a dataset
+            (dataset_id set), whatever its status, as neither changes the
+            client's spec (#1634); so landed False with a dataset_id matches
+            nothing
+        implementation_id: Only proposals a run of this pipeline
+            implementation made (their origin's implementation_id)
+        dataset_id: Only proposals whose operations are in this dataset
+        source_id: Only proposals extracted from this source (their
+            client_metadata's source_id)
+        pipeline_type: Only proposals a run of this pipeline type made (their
+            origin's pipeline_type)
+    """
+
+    taxonomy_id: str | None = None
+    status: ProposalStatus | None = None
+    source: ProposalSource | None = None
+    landed: bool | None = None
+    implementation_id: str | None = None
+    dataset_id: str | None = None
+    source_id: str | None = None
+    pipeline_type: str | None = None
+
+    def matches(self, proposal: ChangeProposal) -> bool:
+        """Whether the proposal passes the filter (the rule the repository's query applies)."""
+        origin = (proposal.client_metadata or {}).get(ORIGIN) or {}
+        return (
+            (self.taxonomy_id is None or proposal.taxonomy_id == self.taxonomy_id)
+            and (self.status is None or proposal.status == self.status)
+            and (self.source is None or proposal.source == self.source)
+            and (self.landed is None or (proposal.landed is not None) == self.landed)
+            and (self.landed is not False or proposal.has_something_to_land)
+            and (
+                self.implementation_id is None
+                or origin.get("implementation_id") == self.implementation_id
+            )
+            and (self.dataset_id is None or proposal.dataset_id == self.dataset_id)
+            and (
+                self.source_id is None
+                or (proposal.client_metadata or {}).get(SOURCE_ID) == self.source_id
+            )
+            and (self.pipeline_type is None or origin.get("pipeline_type") == self.pipeline_type)
+        )
+
+
+@dataclass(frozen=True)
+class OperationCount:
+    """How many of a proposal's operations share one op, kind, status and scope."""
+
+    op: OperationType
+    kind: OperationKind
+    status: OperationStatus
+    scope: ChangeScope
+    count: int
+
+
+def count_operations(operations: Sequence[ProposedOperation]) -> list[OperationCount]:
+    """The operations counted by op, kind, status and scope, in first-seen order."""
+    counted = Counter((o.op, o.kind, o.status, o.scope) for o in operations)
+    return [OperationCount(*key, count=n) for key, n in counted.items()]
+
+
+@dataclass(frozen=True)
 class Landing:
     """
     Where and when the client landed a decided proposal in its source.
@@ -846,6 +920,19 @@ class ChangeProposal:
     def pending(self) -> list[ProposedOperation]:
         """Operations still awaiting a decision: pending or failed."""
         return [o for o in self.operations if not o.decided]
+
+    @property
+    def has_something_to_land(self) -> bool:
+        """
+        Whether a client could land it in its source: it applied at least one
+        operation, it isn't a re-import (source bundle: the source already has
+        it) and it isn't about a dataset (dataset_id: data, not the spec).
+        """
+        return (
+            self.source is not ProposalSource.BUNDLE
+            and self.dataset_id is None
+            and any(o.status is OperationStatus.APPLIED for o in self.operations)
+        )
 
     @property
     def extracted_from_source(self) -> bool:

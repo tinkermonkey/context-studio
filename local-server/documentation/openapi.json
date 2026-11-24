@@ -7317,7 +7317,7 @@
           "proposals"
         ],
         "summary": "List Proposals",
-        "description": "List proposals, newest first, each operation with its stale flag.",
+        "description": "List proposals, newest first. In full each operation has its stale flag; the\nsummary form leaves the operations out and keeps their counts.",
         "operationId": "list_proposals_api_proposals_get",
         "parameters": [
           {
@@ -7387,10 +7387,10 @@
                   "type": "null"
                 }
               ],
-              "description": "Only proposals the client has (true) or hasn't (false) landed in the taxonomy's source; with status=done, false lists decided-but-unlanded",
+              "description": "Only proposals the client has (true) or hasn't (false) landed in the taxonomy's source. false lists only proposals with something to land: at least one applied operation, not a re-import (source bundle) and not about a dataset, whatever their status (so landed=false with dataset_id is always empty); with status=done it lists what is still to land",
               "title": "Landed"
             },
-            "description": "Only proposals the client has (true) or hasn't (false) landed in the taxonomy's source; with status=done, false lists decided-but-unlanded"
+            "description": "Only proposals the client has (true) or hasn't (false) landed in the taxonomy's source. false lists only proposals with something to land: at least one applied operation, not a re-import (source bundle) and not about a dataset, whatever their status (so landed=false with dataset_id is always empty); with status=done it lists what is still to land"
           },
           {
             "name": "implementation_id",
@@ -7409,6 +7409,76 @@
               "title": "Implementation Id"
             },
             "description": "Only proposals a run of this pipeline implementation made (their origin's implementation_id), e.g. \"gold_check\" for benchmark gold checks"
+          },
+          {
+            "name": "dataset_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Only proposals whose operations are in this dataset",
+              "title": "Dataset Id"
+            },
+            "description": "Only proposals whose operations are in this dataset"
+          },
+          {
+            "name": "source_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Only proposals extracted from this source (client_metadata.source_id)",
+              "title": "Source Id"
+            },
+            "description": "Only proposals extracted from this source (client_metadata.source_id)"
+          },
+          {
+            "name": "pipeline_type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Only proposals a run of this pipeline type made (their origin's pipeline_type), e.g. \"individual_extraction\"",
+              "title": "Pipeline Type"
+            },
+            "description": "Only proposals a run of this pipeline type made (their origin's pipeline_type), e.g. \"individual_extraction\""
+          },
+          {
+            "name": "fields",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "full",
+                "summary"
+              ],
+              "type": "string",
+              "description": "summary: each proposal without its operations, with their counts only",
+              "default": "full",
+              "title": "Fields"
+            },
+            "description": "summary: each proposal without its operations, with their counts only"
           },
           {
             "name": "limit",
@@ -11705,7 +11775,16 @@
               "$ref": "#/components/schemas/ProposedOperationResponse"
             },
             "type": "array",
-            "title": "Operations"
+            "title": "Operations",
+            "description": "Its operations in seq order; empty in a list's summary form (fields=summary)"
+          },
+          "counts": {
+            "items": {
+              "$ref": "#/components/schemas/OperationCountResponse"
+            },
+            "type": "array",
+            "title": "Counts",
+            "description": "Its operations counted by op, kind, status and scope (in the summary form too, where operations is empty)"
           },
           "dataset_id": {
             "anyOf": [
@@ -11745,7 +11824,8 @@
           "source",
           "created_at",
           "status",
-          "operations"
+          "operations",
+          "counts"
         ],
         "title": "ChangeProposalResponse",
         "description": "A change proposal with its operations in seq order."
@@ -17528,6 +17608,36 @@
         ],
         "title": "NoteSource",
         "description": "Whose note a claim came from."
+      },
+      "OperationCountResponse": {
+        "properties": {
+          "op": {
+            "$ref": "#/components/schemas/OperationType"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/OperationKind"
+          },
+          "status": {
+            "$ref": "#/components/schemas/OperationStatus"
+          },
+          "scope": {
+            "$ref": "#/components/schemas/ChangeScope"
+          },
+          "count": {
+            "type": "integer",
+            "title": "Count"
+          }
+        },
+        "type": "object",
+        "required": [
+          "op",
+          "kind",
+          "status",
+          "scope",
+          "count"
+        ],
+        "title": "OperationCountResponse",
+        "description": "How many of a proposal's operations share one op, kind, status and scope."
       },
       "OperationErrorResponse": {
         "properties": {
