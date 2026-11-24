@@ -34,6 +34,7 @@ from domain.versioning.proposals import (
     ChangeProposal,
     OperationStatus,
     ProposalLinkKind,
+    ProposalStatus,
 )
 
 # The REST response each kind is serialized with.
@@ -92,7 +93,12 @@ def proposal_links(service: ProposalService, proposal_id: str) -> list[ProposalL
             other = None
         # Seen from the original, its reversal's outcome: how many of the changes it planned
         # were applied ("38 of 41 changes reversed")
-        counted = other is not None and link.kind is ProposalLinkKind.REVERSES and not outgoing
+        counted = (
+            other is not None
+            and link.kind is ProposalLinkKind.REVERSES
+            and not outgoing
+            and other.status is ProposalStatus.DONE
+        )
         links.append(
             ProposalLinkResponse(
                 kind=link.kind.value if outgoing else _INVERSE_KIND[link.kind.value],

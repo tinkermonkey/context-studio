@@ -2390,6 +2390,11 @@ class ProposalService:
         for operation_id, fields in edits.items():
             operation = by_id[operation_id]
             label = f"seq {operation.seq}"
+            if operation.restore:
+                raise ValueError(
+                    f"{label} restores a deleted entity as it was and can't be edited: apply it"
+                    " as it is, or reject it"
+                )
             individual_create = (
                 operation.kind is K.INDIVIDUAL and operation.op is OperationType.CREATE
             )
@@ -3743,12 +3748,26 @@ class ProposalService:
             original = self._get(proposal_id)
             if original.status is ProposalStatus.REVERSED:
                 raise ChangeProposalStateError(f"Change proposal {proposal_id} is already reversed")
+            if original.status in (ProposalStatus.REVERTED, ProposalStatus.WITHDRAWN):
+                raise ChangeProposalStateError(
+                    f"Change proposal {proposal_id} is {original.status.value}: what it applied"
+                    " is already undone"
+                )
             if original.landed is None or original.status is not ProposalStatus.DONE:
                 raise ChangeProposalStateError(
                     f"Change proposal {proposal_id} has not landed in its source; revert it in"
                     " place instead"
                 )
-            for link in self._proposals.links_of(proposal_id):
+            links = self._proposals.links_of(proposal_id)
+            if any(
+                link.kind is ProposalLinkKind.REVERSES and link.source_proposal_id == proposal_id
+                for link in links
+            ):
+                raise ChangeProposalStateError(
+                    f"Change proposal {proposal_id} is itself a reversal; propose the changes"
+                    " again instead of reversing it"
+                )
+            for link in links:
                 if (
                     link.kind is ProposalLinkKind.REVERSES
                     and link.target_proposal_id == proposal_id
@@ -4311,7 +4330,20 @@ class ProposalService:
             if proposal.landed is None:
                 return proposal
             self._proposals.set_landed(proposal_id, None)
+            self._unmark_reversed_by(proposal_id)
             return self._get(proposal_id)
+
+    def _unmark_reversed_by(self, reversal_id: str) -> None:
+        """
+        A reversal's landing was cleared: the proposal it reversed is done
+        again, as it was before the reversal landed (#1667).
+        """
+        for link in self._proposals.links_of(reversal_id):
+            if link.kind is not ProposalLinkKind.REVERSES or link.source_proposal_id != reversal_id:
+                continue
+            original = self._proposals.get(link.target_proposal_id)
+            if original is not None and original.status is ProposalStatus.REVERSED:
+                self._proposals.set_status(original.id, ProposalStatus.DONE)
 
     def _mirrored(self, taxonomy_id: str) -> bool:
         taxonomy = self._repo.get_taxonomy(taxonomy_id)

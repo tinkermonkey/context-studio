@@ -358,3 +358,100 @@ class TestDraftsCannotRestore:
 
         assert response.status_code == 422
         assert "A create has no target_id" in response.text
+
+
+class TestFollowUps:
+    """Review of #1741: the original's status, what is counted, refusals up front."""
+
+    def test_clearing_the_reversals_landing_makes_the_original_done_again(self, client, graph):
+        original = _landed(client, graph, _describe(graph["room"], "Where people sit"))
+        reversal = _reverse(client, original["id"]).json()
+        _apply_all(client, reversal)
+        _land(client, reversal["id"])
+        assert client.get(f"/api/proposals/{original['id']}").json()["status"] == "reversed"
+
+        cleared = client.delete(f"/api/proposals/{reversal['id']}/landed")
+
+        assert cleared.status_code == 200
+        assert client.get(f"/api/proposals/{original['id']}").json()["status"] == "done"
+
+    def test_a_reversal_cannot_itself_be_reversed(self, client, graph):
+        original = _landed(client, graph, _describe(graph["room"], "Where people sit"))
+        reversal = _reverse(client, original["id"]).json()
+        _apply_all(client, reversal)
+        _land(client, reversal["id"])
+
+        response = _reverse(client, reversal["id"])
+
+        assert response.status_code == 409
+        assert "is itself a reversal" in response.json()["detail"]
+        assert "propose the changes again" in response.json()["detail"]
+        assert client.get(f"/api/proposals/{original['id']}").json()["status"] == "reversed"
+
+    def test_a_reverted_original_says_it_is_already_undone_not_that_it_has_not_landed(
+        self, client, graph
+    ):
+        original = _landed(client, graph, _describe(graph["room"], "Where people sit"))
+        assert client.post(f"/api/proposals/{original['id']}/revert").status_code == 200
+
+        response = _reverse(client, original["id"])
+
+        assert response.status_code == 409
+        assert "is reverted: what it applied is already undone" in response.json()["detail"]
+
+    def test_changes_are_counted_only_while_the_reversal_stands(self, client, graph):
+        original = _landed(client, graph, _describe(graph["room"], "Where people sit"))
+        reversal = _reverse(client, original["id"]).json()
+        _apply_all(client, reversal)
+        [link] = client.get(f"/api/proposals/{original['id']}").json()["links"]
+        assert (link["operations_applied"], link["operations_total"]) == (1, 1)
+
+        assert client.post(f"/api/proposals/{reversal['id']}/revert").status_code == 200
+
+        [link] = client.get(f"/api/proposals/{original['id']}").json()["links"]
+        assert link["status"] == "reverted"
+        assert (link["operations_applied"], link["operations_total"]) == (None, None)
+
+    def test_a_restore_cannot_be_edited_and_nothing_is_applied(self, client, graph, ontology):
+        original = _landed(client, graph, _delete(graph["hall"]))
+        reversal = _reverse(client, original["id"]).json()
+        [restore] = reversal["operations"]
+
+        response = client.post(
+            f"/api/proposals/{reversal['id']}/apply",
+            json={"operation_ids": [restore["id"]], "edits": {restore["id"]: {"title": "Foyer"}}},
+        )
+
+        assert response.status_code == 422
+        assert "restores a deleted entity as it was and can't be edited" in response.text
+        assert ontology._repository.get_class(graph["hall"]) is None
+        [pending] = client.get(f"/api/proposals/{reversal['id']}").json()["operations"]
+        assert pending["status"] == "pending"
+
+    def test_a_restore_runs_no_client_rules_and_records_no_type_change(
+        self, client, graph, ontology
+    ):
+        """
+        A restore puts back what was there: it skips the dataset check and the
+        rules a proposer's operation is under, and a restored relationship type
+        records no type_change (the delete that removed it did).
+        """
+        prop = ontology.create_property_definition("uses", "Uses", taxonomy_id=graph["taxonomy"])
+        original = _landed(
+            client,
+            graph,
+            {"seq": 1, "op": "delete", "kind": "property", "target_id": prop.id},
+        )
+        reversal = _reverse(client, original["id"]).json()
+        [restore] = reversal["operations"]
+        assert restore["op"] == "create" and restore["target_id"] == prop.id
+
+        [applied] = _apply_all(client, reversal)["operations"]
+
+        assert applied["result_entity_id"] == prop.id
+        service = client.app.state.proposal_service
+        [stored] = service.get(reversal["id"]).operations
+        assert stored.type_change is None
+        [deleted] = service.get(original["id"]).operations
+        assert deleted.type_change is not None
+        assert ontology._repository.get_property_definition(prop.id) is not None

@@ -1180,8 +1180,8 @@ class MarkProposalLandedTool(_ProposalTool):
         " repository, the commit that holds the change, and the spec version. Call it"
         " from your landing step after writing the proposal's changes into your source;"
         " it changes nothing in the taxonomy. The same revision again changes nothing;"
-        " another revision replaces the landing. An open or reverted proposal can't be"
-        " marked landed. list_proposals with status done and landed false lists what is"
+        " another revision replaces the landing. An open, reverted, withdrawn or reversed"
+        " proposal can't be marked landed. list_proposals with status done and landed false lists what is"
         " still to land."
     )
     input_schema = {
