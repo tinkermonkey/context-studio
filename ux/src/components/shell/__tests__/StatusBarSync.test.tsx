@@ -2,7 +2,8 @@ import { describe, it, expect, beforeAll, afterEach, afterAll, vi } from "vitest
 import { screen, waitFor } from "@testing-library/react";
 import { http, HttpResponse } from "msw";
 import { setupServer } from "msw/node";
-import { render } from "@/test/test-utils";
+import { render, createTestQueryClient } from "@/test/test-utils";
+import { QUERY_KEYS } from "@/api/config";
 import { createSyncStatus } from "@/api/services/__tests__/fixtures/versioning.fixtures";
 import { StatusBarSync, describeSyncState } from "../StatusBarSync";
 
@@ -64,8 +65,12 @@ describe("StatusBarSync", () => {
   it("shows nothing when the sync status request fails", async () => {
     const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
     respondWith({ detail: "boom" }, 500);
-    render(<StatusBarSync />);
-    await new Promise((resolve) => setTimeout(resolve, 50));
+    const queryClient = createTestQueryClient();
+    render(<StatusBarSync />, { queryClient });
+    // The request has failed (not merely still in flight) before absence is asserted
+    await waitFor(() =>
+      expect(queryClient.getQueryState(QUERY_KEYS.syncStatus)?.status).toBe("error"),
+    );
     expect(screen.queryByTestId("statusbar-sync")).not.toBeInTheDocument();
     consoleError.mockRestore();
   });
