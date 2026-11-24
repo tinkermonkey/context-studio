@@ -72,18 +72,17 @@
     layer_id: technology
     name: Local Server Loopback Port
     description: "The back end's HTTP port, bound by the server itself on 127.0.0.1
-      and ::1 (both loopback names reach it, #1692; never a LAN address). A
-      stable preferred port from config.json (distinct from dev's 8000), else a
-      free port the OS picks; the bound port is announced to the shell on stdout
-      and written to the runtime discovery file. Carries the UI, /api and /mcp
-      at one origin."
+      and ::1 (both loopback names reach it, #1692; never a LAN address). Port
+      8765 preferred (decided on #1671; dev keeps 8000), else a free port the OS
+      picks; the bound port is announced to the shell on stdout and written to
+      the runtime discovery file. Carries the UI, /api and /mcp at one origin."
     attributes:
       protocol: http
     metadata:
       created_at: 2026-11-24T13:56:14.952Z
       updated_at: 2026-11-24T13:56:14.952Z
       version: 1
-  timestamp: 2026-11-24T13:56:14.983Z
+  timestamp: 2026-11-24T14:12:20.412Z
   sequenceNumber: 3
 - type: add
   elementId: technology.artifact.context-studio-app-bundle
@@ -95,10 +94,10 @@
     type: artifact
     layer_id: technology
     name: Context Studio App Bundle
-    description: "Context Studio.app in a DMG: the signed, notarized and stapled
-      desktop app. Contents/MacOS holds the shell; Contents/Resources holds the
-      Python runtime, the local server package, the UI build and the embedding
-      model."
+    description: "Context Studio.app (bundle id com.tinkermonkey.contextstudio) in a
+      DMG, published on GitHub Releases; no in-app updater (decided on #1671).
+      Contents/MacOS holds the shell; Contents/Resources holds the Python
+      runtime, the local server package, the UI build and the embedding model."
     attributes:
       artifactType: archive
       documentation: Built by the desktop release build. Every Mach-O inside it is
@@ -108,7 +107,7 @@
       created_at: 2026-11-24T13:56:14.954Z
       updated_at: 2026-11-24T13:56:14.954Z
       version: 1
-  timestamp: 2026-11-24T13:56:14.983Z
+  timestamp: 2026-11-24T14:12:20.309Z
   sequenceNumber: 4
 - type: add
   elementId: technology.artifact.desktop-shell-binary
@@ -224,16 +223,16 @@
     type: artifact
     layer_id: technology
     name: Embedding Model Files
-    description: "all-MiniLM-L12-v2 (about 130 MB), loaded from a path in the bundle
-      with the Hugging Face hub offline, so embeddings work with no network. The
-      alternative, for the owner: download it to app-data on first run."
+    description: "all-MiniLM-L12-v2 (about 130 MB), shipped in the bundle (decided
+      on #1671) and loaded with the Hugging Face hub offline, so embeddings work
+      with no network."
     attributes:
       artifactType: file
     metadata:
       created_at: 2026-11-24T13:56:14.956Z
       updated_at: 2026-11-24T13:56:14.956Z
       version: 1
-  timestamp: 2026-11-24T13:56:14.983Z
+  timestamp: 2026-11-24T14:12:20.253Z
   sequenceNumber: 10
 - type: add
   elementId: technology.artifact.desktop-config-file
@@ -246,17 +245,18 @@
     layer_id: technology
     name: Desktop Config File
     description: "config.json in the app-data folder (~/Library/Application
-      Support/<bundle id>/), written with defaults on first run: absolute paths
-      for local.db, operations.db and reference_api_cache.db in the same folder,
-      the preferred port, a generated MCP token. LLM keys stay here (file mode
-      0600) until a keychain store is built."
+      Support/com.tinkermonkey.contextstudio/), written with defaults on first
+      run: the databases (local.db, operations.db, reference_api_cache.db) in
+      the same folder, server.port 8765, a generated MCP token. LLM keys and the
+      MCP token stay here for the MVP (decided on #1671), with the file 0600 and
+      the folder 0700; a keychain store is later work."
     attributes:
       artifactType: configuration
     metadata:
       created_at: 2026-11-24T13:56:14.956Z
       updated_at: 2026-11-24T13:56:14.956Z
       version: 1
-  timestamp: 2026-11-24T13:56:14.983Z
+  timestamp: 2026-11-24T14:12:20.360Z
   sequenceNumber: 11
 - type: add
   elementId: technology.artifact.runtime-discovery-file
@@ -293,14 +293,16 @@
     description: "Builds the app on macOS: build /ux; install the runtime-only
       requirements into the standalone CPython; compile bytecode; place the
       server package and the embedding model; sign every .so, .dylib and
-      executable in Resources (about 670 today) with the Developer ID, hardened
-      runtime and timestamp; tauri build signs the shell and the app; notarytool
-      submit, staple; sign and notarize the DMG."
+      executable in Resources (about 670 today), then tauri build signs the
+      shell and the app and makes the DMG. With a Developer ID Application
+      certificate it signs with hardened runtime and a timestamp and notarizes
+      and staples; that certificate is still open on #1671, so until then the
+      build is ad-hoc signed and runs on the build machine only."
     metadata:
       created_at: 2026-11-24T13:56:14.957Z
       updated_at: 2026-11-24T13:56:14.957Z
       version: 1
-  timestamp: 2026-11-24T13:56:14.983Z
+  timestamp: 2026-11-24T14:12:20.463Z
   sequenceNumber: 13
 - type: add
   elementId: application.applicationprocess.local-server-lifecycle
@@ -798,12 +800,12 @@
     type: requirement
     layer_id: motivation
     name: Desktop Size and Start-up Budget
-    description: "Proposed on #1671, for the owner to set: the signed DMG at most
-      600 MB and the installed app at most 1.6 GB with torch; a window (splash)
+    description: "Decided on #1671 (owner, 2026-11-24): the signed DMG at most 600
+      MB and the installed app at most 1.6 GB with torch; a window (splash)
       within 1 s; the UI usable within 10 s on a warm start and 30 s on the
       first launch after install (Gatekeeper's first scan, migrations and the
-      first reindex included). A tighter size forces replacing torch with ONNX
-      Runtime for embeddings."
+      first reindex included). If measurement misses the size budget, embeddings
+      move from torch to ONNX Runtime."
     attributes:
       requirementType: non-functional
       priority: high
@@ -811,7 +813,7 @@
       created_at: 2026-11-24T13:56:24.128Z
       updated_at: 2026-11-24T13:56:24.128Z
       version: 1
-  timestamp: 2026-11-24T13:56:24.148Z
+  timestamp: 2026-11-24T14:12:20.100Z
   sequenceNumber: 56
 - type: add
   elementId: motivation.constraint.mac-os-on-apple-silicon-first
@@ -823,17 +825,18 @@
     type: constraint
     layer_id: motivation
     name: macOS on Apple Silicon First
-    description: "Proposed on #1671: the first packaged build targets macOS on Apple
-      Silicon (aarch64-apple-darwin) only. Intel Macs cannot run torch 2.3 or
-      later, which publishes no macOS x86_64 wheels; Windows and Linux are later
-      work with their own CI runners, signing and torch builds."
+    description: "Decided on #1671 (owner, 2026-11-24): the MVP's packaged build
+      targets macOS on Apple Silicon (aarch64-apple-darwin) only. Intel Macs
+      cannot run torch 2.3 or later, which publishes no macOS x86_64 wheels;
+      Windows and Linux are later work with their own CI runners, signing and
+      torch builds."
     attributes:
       constraintType: technical
     metadata:
       created_at: 2026-11-24T13:56:24.128Z
       updated_at: 2026-11-24T13:56:24.128Z
       version: 1
-  timestamp: 2026-11-24T13:56:24.148Z
+  timestamp: 2026-11-24T14:12:20.159Z
   sequenceNumber: 57
 - type: add
   elementId: application.applicationcomponent.local-server
