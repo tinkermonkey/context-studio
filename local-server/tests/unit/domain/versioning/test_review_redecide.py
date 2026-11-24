@@ -10,8 +10,8 @@ import pytest
 from domain.versioning.exceptions import ChangeProposalStateError
 from domain.versioning.gold import DecisionFilter, DecisionKind
 from domain.versioning.proposal_service import ProposalService
-from domain.versioning.proposals import OperationDraft
 from domain.versioning.proposals import (
+    OperationDraft,
     OperationStatus,
     ProposalSource,
     ProposalStatus,

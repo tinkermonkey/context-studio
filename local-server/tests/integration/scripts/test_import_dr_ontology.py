@@ -36,9 +36,9 @@ from adapters.persistence.sqlite.schema_vector_index import SqliteSchemaVectorIn
 from domain.ontology.services import OntologyService
 from domain.ontology.value_objects import ExternalReference
 from domain.versioning.proposal_service import ProposalService
-from domain.versioning.proposals import OperationDraft
 from domain.versioning.proposals import (
     ChangeProposal,
+    OperationDraft,
     OperationKind,
     OperationType,
     ProposalSource,

@@ -12,8 +12,12 @@ from domain.versioning.proposal_service import (
     REVERTED_REASON,
     ProposalService,
 )
-from domain.versioning.proposals import OperationDraft
-from domain.versioning.proposals import OperationStatus, ProposalSource, RejectionReason
+from domain.versioning.proposals import (
+    OperationDraft,
+    OperationStatus,
+    ProposalSource,
+    RejectionReason,
+)
 from tests.fakes.fake_entity_source_repository import FakeEntitySourceRepository
 from tests.unit.domain.versioning.test_proposal_service import (  # noqa: F401 - fixtures
     K,

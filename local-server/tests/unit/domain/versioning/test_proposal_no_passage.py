@@ -9,9 +9,9 @@ from datetime import datetime, timezone
 import pytest
 
 from domain.versioning.approval_policy import ApprovalPolicy, AutoApplyRule
-from domain.versioning.proposals import OperationDraft
 from domain.versioning.proposals import (
     ChangeProposal,
+    OperationDraft,
     OperationStatus,
     ProposalSource,
     ProposedOperation,

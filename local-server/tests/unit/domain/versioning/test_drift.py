@@ -6,8 +6,8 @@ from domain.ontology.services import OntologyService
 from domain.ontology.value_objects import SourceRevision
 from domain.versioning.drift import DriftEntry, DriftError, DriftImportService, DriftPlan
 from domain.versioning.proposal_service import ProposalService
-from domain.versioning.proposals import OperationDraft
 from domain.versioning.proposals import (
+    OperationDraft,
     OperationKind,
     OperationStatus,
     OperationType,

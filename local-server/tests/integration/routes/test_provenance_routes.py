@@ -30,8 +30,7 @@ from adapters.web.ontology_routes import router as ontology_router
 from adapters.web.proposals_routes import router as proposals_router
 from domain.ontology.services import OntologyService
 from domain.versioning.proposal_service import ProposalService
-from domain.versioning.proposals import OperationDraft
-from domain.versioning.proposals import ProposalSource
+from domain.versioning.proposals import OperationDraft, ProposalSource
 from domain.versioning.revert_service import RevertService
 from tests.fakes.fake_embedding_service import FakeEmbeddingService
 from tests.utils.change_recording import wire_change_recorder

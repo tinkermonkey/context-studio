@@ -38,9 +38,9 @@ from domain.interchange.services import get_current_batch_run_id, set_batch_run_
 from domain.ontology.entities import Relationship
 from domain.ontology.services import OntologyService
 from domain.versioning.proposal_service import ProposalService
-from domain.versioning.proposals import OperationDraft
 from domain.versioning.proposals import (
     InUseResolution,
+    OperationDraft,
     OperationStatus,
     ProposalSource,
     ProposalStatus,

@@ -52,9 +52,9 @@ from adapters.persistence.sqlite.proposal_repo import SQLiteChangeProposalReposi
 from adapters.web.proposals_routes import router as proposals_router
 from domain.ontology.services import OntologyService
 from domain.versioning.proposal_service import ProposalService
-from domain.versioning.proposals import OperationDraft
 from domain.versioning.proposals import (
     ChangeScope,
+    OperationDraft,
     OperationKind,
     OperationStatus,
     OperationType,

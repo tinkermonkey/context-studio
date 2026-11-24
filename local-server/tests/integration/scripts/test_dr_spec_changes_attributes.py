@@ -21,8 +21,7 @@ import pytest
 from adapters.chat.proposal_tools import build_proposal_tools
 from adapters.interchange.dr_spec import _attribute_records
 from adapters.interchange.dr_spec_changes import spec_changes_for
-from domain.versioning.proposals import OperationDraft
-from domain.versioning.proposals import OperationStatus, ProposalSource
+from domain.versioning.proposals import OperationDraft, OperationStatus, ProposalSource
 from scripts.dr_ontology_loader import DR_SOURCE, DR_TAXONOMY_IDENTIFIER
 from tests.integration.scripts import test_dr_reflection_plan as plan_tests
 from tests.integration.scripts.test_dr_reflection_plan import class_by_dr_id

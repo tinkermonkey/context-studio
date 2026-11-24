@@ -66,9 +66,9 @@ from domain.ontology.entities import PropertyDefinition
 from domain.ontology.ports import OntologyRepository
 from domain.ontology.value_objects import ExternalReference, SourceRevision
 from domain.versioning.proposal_service import ProposalService
-from domain.versioning.proposals import OperationDraft
 from domain.versioning.proposals import (
     ChangeProposal,
+    OperationDraft,
     OperationKind,
     OperationType,
     ProposalSource,

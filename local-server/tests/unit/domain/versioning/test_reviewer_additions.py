@@ -16,8 +16,8 @@ from domain.versioning.exceptions import (
 )
 from domain.versioning.gold import DecisionKind
 from domain.versioning.proposal_service import ProposalService
-from domain.versioning.proposals import OperationDraft
 from domain.versioning.proposals import (
+    OperationDraft,
     OperationStatus,
     ProposalSource,
     ProposalStatus,

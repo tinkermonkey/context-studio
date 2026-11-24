@@ -13,9 +13,9 @@ from domain.ontology.exceptions import DatasetMismatchError
 from domain.versioning.approval_policy import ApprovalPolicy, AutoApplyRule, auto_apply_ids
 from domain.versioning.exceptions import ProposalValidationError
 from domain.versioning.proposal_service import ProposalService
-from domain.versioning.proposals import OperationDraft
 from domain.versioning.proposals import (
     ChangeScope,
+    OperationDraft,
     OperationStatus,
     ProposalSource,
     ProposedOperation,
