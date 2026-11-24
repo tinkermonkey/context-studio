@@ -158,15 +158,15 @@ export function TypeDecision({
             {`It doesn't fit its relationship type: ${operation.domain_range_mismatch}. Applying it fails; reject it, or change the type's domain or range first.`}
           </FormCallout>
         )}
-        {failed &&
+        {/* The inspector's head says the apply failed and why; after a failed edit, this
+            says what can be done about it. */}
+        {editFailed &&
           !operation.stale &&
           !operation.domain_range_mismatch &&
           !resolver &&
           !picksChanged && (
-            <FormCallout variant="error" icon="alert" data-testid="operation-failed-callout">
-              {editFailed
-                ? "The edit wasn't applied (the reason is under Change). Edit it again, apply the proposal as it stands, or reject it."
-                : "The last apply failed (the reason is under Change). Apply it again, or reject it."}
+            <FormCallout variant="info" icon="info" data-testid="operation-failed-callout">
+              The edit wasn&apos;t applied. Edit it again, apply it as proposed, or reject it.
             </FormCallout>
           )}
 
@@ -198,8 +198,8 @@ export function TypeDecision({
         )}
         {picksRefused && picks && (
           <FormCallout variant="error" icon="alert" data-testid="operation-picks-callout">
-            The edit your picks make ({picks.triple}) was refused: the reason is under Change. Pick
-            other answers, the plan&apos;s answers back, or reject the operation.
+            The edit your picks make ({picks.triple}) was refused, for the reason above. Pick other
+            answers, the plan&apos;s answers back, or reject the operation.
           </FormCallout>
         )}
         {unappliable && picks && (

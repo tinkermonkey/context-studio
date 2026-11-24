@@ -3782,19 +3782,13 @@ selectors:
     description: "Inspector Decision section of an operation awaiting a decision"
   - selector: operation-failed-callout
     component: src/components/proposals/review/TypeDecision.tsx
-    description: "Error callout when the last apply of the operation failed"
+    description: "After a failed edit of a DR relationship type: what can be done (edit again, apply as proposed, reject); the failure and its reason are the inspector's review-failed"
   - selector: operation-accept
     component: src/components/proposals/review/TypeDecision.tsx
     description: "Accept (Apply anyway when stale, Apply again when failed)"
   - selector: operation-edit
     component: src/components/proposals/review/TypeDecision.tsx
     description: "\"Edit, then accept\" (update) or \"Replace instead\" (delete) for a DR relationship type"
-  - selector: operation-reject
-    component: src/components/proposals/review/TypeDecision.tsx
-    description: "Rejects the operation with the optional reason"
-  - selector: operation-reject-note
-    component: src/components/proposals/review/TypeDecision.tsx
-    description: "Optional reject reason, stored as the operation's reason"
   - selector: operation-edit-panel
     component: src/components/proposals/review/ReviewTripleEditor.tsx
     description: "Accept-with-edit editor for a DR relationship type's triple"

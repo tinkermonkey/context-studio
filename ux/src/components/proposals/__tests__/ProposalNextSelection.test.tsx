@@ -69,8 +69,7 @@ function selected() {
 
 /** The inspector's operation id line. */
 async function inspected(id: string) {
-  // A relationship type opens OperationInspector, anything else the review inspector (#1660).
-  const inspector = await screen.findByTestId(/^(operation|review)-inspector$/);
+  const inspector = await screen.findByTestId("review-inspector");
   await waitFor(() => expect(within(inspector).getByText(id)).toBeInTheDocument());
 }
 

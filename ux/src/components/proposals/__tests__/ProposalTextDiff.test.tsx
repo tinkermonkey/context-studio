@@ -76,7 +76,6 @@ describe("a changed definition in the inspector", () => {
   it("keeps a short value change inline", async () => {
     renderPage("op-rename");
     const row = await screen.findByTestId("review-diff-row-identifier");
-    expect(within(row).queryByTestId("operation-text-diff-identifier")).not.toBeInTheDocument();
     expect(within(row).queryByTestId("review-diff-text-identifier")).not.toBeInTheDocument();
     expect(row.querySelector(".review-diff__was")).toHaveTextContent("component_realizes_service");
     expect(row.querySelector(".review-diff__now")).toHaveTextContent("component_serves_service");
@@ -87,7 +86,7 @@ describe("a changed definition in the inspector", () => {
     create.fields = { ...create.fields, description: AFTER };
     renderPage("op-create");
     const row = await screen.findByTestId("review-diff-row-description");
-    expect(within(row).queryByTestId("operation-text-diff-description")).not.toBeInTheDocument();
+    expect(within(row).queryByTestId("review-diff-text-description")).not.toBeInTheDocument();
     expect(row).toHaveTextContent(AFTER);
   });
 });

@@ -161,12 +161,9 @@ function renderPage(selectedOperationId?: string) {
   );
 }
 
-/** The inspector's title: OperationInspector's for a relationship type, else the review inspector's. */
+/** The review inspector's title, for every operation kind. */
 async function inspectorTitle() {
-  const inspector = await screen.findByTestId(/^(operation|review)-inspector$/);
-  return inspector.querySelector(
-    '.inspector-panel__title, [data-testid="review-inspector-title"]',
-  )!;
+  return screen.findByTestId("review-inspector-title");
 }
 
 describe("an attribute update", () => {
