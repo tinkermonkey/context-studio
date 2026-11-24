@@ -1,5 +1,5 @@
 /**
- * The proposal's schema as the Review page reads it: classes by id with their
+ * The proposal's schema as the review page reads it: classes by id with their
  * labels and layers, and the relationship types (property definitions) between
  * them, inheritance-aware, for the hover overlays and the relationship editor.
  */

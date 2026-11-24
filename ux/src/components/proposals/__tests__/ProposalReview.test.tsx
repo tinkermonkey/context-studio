@@ -1,11 +1,13 @@
 /**
- * The Review page (#1611): an extraction proposal reviewed against its whole
- * source. The source's highlights carry each element's verdict, elements are
- * grouped by layer with an Awaiting / All filter, and the inspector decides
- * the selected one (Correct, a better class, or not an element with a reason)
- * by button or key, sending the time spent on it.
+ * Reviewing an extraction on proposal detail, the one review page (#1611, #1664):
+ * an extraction proposal reviewed against its whole source. The source's
+ * highlights carry each element's verdict, elements are grouped by layer with a
+ * Needs decision / Decided / All filter, and the inspector decides the selected
+ * one (Correct, a better class, or not an element with a reason) by button or
+ * key, sending the time spent on it.
  */
-import { unamended } from "@/test/proposalFixtures";
+import { useState } from "react";
+import { goldPage, unamended } from "@/test/proposalFixtures";
 import { describe, it, expect, beforeAll, beforeEach, afterEach, afterAll, vi } from "vitest";
 import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
@@ -32,7 +34,7 @@ import type {
 } from "@/api/services/proposals";
 import type { Source, SourceText } from "@/api/services/sources";
 import { useToasts } from "@/components/ui/Toast";
-import { ReviewPage } from "../ReviewPage";
+import { ProposalDetailPage } from "../ProposalDetailPage";
 
 const TEXT =
   "Edit Check offers feedback while editing. Reference check realizes Edit Check. " +
@@ -223,6 +225,8 @@ beforeEach(() => {
     HttpResponse.json({ items, total: items.length, limit: 500, offset: 0 });
   server.use(
     http.get("*/api/proposals/:id", () => HttpResponse.json(proposal)),
+    // Who decided each decided operation, shown in the inspector.
+    http.get("*/api/taxonomies/:id/gold", () => HttpResponse.json(goldPage(proposal.operations))),
     http.get("*/api/sources/:id/text", () => {
       const body: SourceText = {
         source_id: "src-1",
@@ -331,20 +335,58 @@ function ToastProbe() {
   );
 }
 
-const onFinish = vi.fn();
+/** The route's part: the selection, as ?selected= holds it. */
+function Harness({
+  initial,
+  onCompare,
+}: {
+  initial?: string;
+  onCompare?: (otherId: string) => void;
+}) {
+  const [selected, setSelected] = useState<string | undefined>(initial);
+  return (
+    <ProposalDetailPage
+      id="proposal-1"
+      selectedOperationId={selected}
+      onSelectOperation={setSelected}
+      onCompare={onCompare}
+    />
+  );
+}
 
-async function renderPage() {
+async function renderPage(options: { onCompare?: (otherId: string) => void } = {}) {
   const user = userEvent.setup();
   render(
     <>
-      <ReviewPage id="proposal-1" onFinish={onFinish} />
+      <Harness onCompare={options.onCompare} />
       <ToastProbe />
     </>,
   );
   await screen.findAllByTestId("review-mark", {}, { timeout: 10000 });
-  // The layers are known once the classes and schemes load.
-  await screen.findByTestId("review-group-scheme-p", {}, { timeout: 10000 });
+  await layersLoaded();
   return user;
+}
+
+/**
+ * The layers are known once the classes and schemes load: the rows leave the
+ * "Loading layers…" group for their layers' (the list shows only rows awaiting a
+ * decision, so which layers it shows depends on the test).
+ */
+async function layersLoaded() {
+  await waitFor(
+    () => {
+      expect(screen.queryByTestId("review-group-loading")).not.toBeInTheDocument();
+      expect(screen.getAllByTestId(/^review-group-scheme-/).length).toBeGreaterThan(0);
+    },
+    { timeout: 10000 },
+  );
+}
+
+/** List the decided rows too: the filter opens on Needs decision while anything awaits. */
+async function showAll(user: ReturnType<typeof userEvent.setup>) {
+  await user.click(
+    within(screen.getByTestId("proposal-operation-filter")).getByRole("radio", { name: /^All/ }),
+  );
 }
 
 const inspectorTitle = () => screen.getByTestId("review-inspector-title");
@@ -353,28 +395,21 @@ const markFor = (opId: string) =>
 
 describe("the review page", () => {
   it("shows the header, origin and progress", async () => {
-    const user = await renderPage();
-    expect(screen.getByTestId("review-page")).toHaveClass("review-page");
-    const header = screen.getByTestId("review-header");
-    expect(header).toHaveTextContent("PROPOSAL · SOURCE Edit check · DATASET bench-edit-check");
-    expect(within(header).getByRole("heading", { level: 1 })).toHaveTextContent(
-      "Review extraction: Edit check",
+    await renderPage();
+    expect(screen.getByTestId("proposal-page")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent("Extraction: Edit check");
+    const summary = screen.getByTestId("proposal-summary");
+    expect(within(summary).getByTestId("proposal-origin")).toHaveTextContent(
+      "single_call v2 · 3f2a9c",
     );
-    expect(screen.getByTestId("review-origin-line")).toHaveTextContent("Proposed by");
-    expect(screen.getByTestId("proposal-origin")).toHaveTextContent("single_call v2 · 3f2a9c");
-    expect(screen.getByTestId("review-progress")).toHaveAttribute(
-      "aria-label",
-      "Decision progress",
+    expect(screen.getByTestId("proposal-tally")).toHaveTextContent("4 of 5 need a decision");
+    expect(screen.getByTestId("proposal-decided-counts")).toHaveTextContent(
+      "1 applied · 0 rejected",
     );
-    expect(screen.getByTestId("review-progress-decided")).toHaveTextContent("1 / 5");
-    expect(screen.getByTestId("review-progress-counts")).toHaveTextContent(
-      "0 correct · 0 changed · 0 rejected · 1 added",
+    expect(within(summary).getByRole("progressbar")).toHaveAttribute("aria-valuenow", "20");
+    expect(within(summary).getByTestId("review-time")).toHaveTextContent(
+      /^\d+:\d\d on this review$/,
     );
-    expect(screen.getByRole("progressbar")).toHaveAttribute("aria-valuenow", "20");
-    expect(screen.getByTestId("review-time")).toHaveTextContent(/^\d+:\d\d on this review$/);
-
-    await user.click(screen.getByTestId("review-finish"));
-    expect(onFinish).toHaveBeenCalled();
   });
 
   it("highlights every element's passages with its verdict, the selected one outlined", async () => {
@@ -420,8 +455,9 @@ describe("the review page", () => {
   });
 
   it("groups the elements by layer, then the relationships", async () => {
-    await renderPage();
-    const list = screen.getByRole("listbox", { name: "Elements to review" });
+    const user = await renderPage();
+    await showAll(user);
+    const list = screen.getByRole("listbox", { name: "Operations to review" });
     const groups = within(list).getAllByRole("group");
     expect(groups.map((g) => g.getAttribute("aria-label"))).toEqual([
       "Product",
@@ -449,19 +485,19 @@ describe("the review page", () => {
     expect(screen.getByTestId("review-row-op-rel")).toHaveTextContent("realizes");
   });
 
-  it("filters to awaiting elements, keeping the selected one", async () => {
+  it("filters to the elements needing a decision, the inspector staying on the selected one", async () => {
     const user = await renderPage();
+    const filter = within(screen.getByTestId("proposal-operation-filter"));
+    await showAll(user);
     await user.click(screen.getByTestId("review-row-op-added"));
-    await user.click(
-      within(screen.getByTestId("review-filter")).getByRole("radio", { name: /Awaiting/ }),
-    );
-    // Decided, but selected: it stays.
-    expect(screen.getByTestId("review-row-op-added")).toBeInTheDocument();
+    await user.click(filter.getByRole("radio", { name: /^Needs decision/ }));
+    // Decided: it leaves the list (the filter goes by status, #1664), and the inspector
+    // stays on it until another row is picked.
+    expect(screen.queryByTestId("review-row-op-added")).not.toBeInTheDocument();
+    expect(screen.getByTestId("review-inspector-title")).toHaveTextContent("Feedback");
     await user.click(screen.getByTestId("review-row-op-edit"));
     expect(screen.queryByTestId("review-row-op-added")).not.toBeInTheDocument();
-    await user.click(
-      within(screen.getByTestId("review-filter")).getByRole("radio", { name: /All/ }),
-    );
+    await user.click(filter.getByRole("radio", { name: /^All/ }));
     expect(screen.getByTestId("review-row-op-added")).toBeInTheDocument();
   });
 
@@ -493,7 +529,7 @@ describe("the review page", () => {
     await waitFor(() => expect(card).toHaveTextContent("Reference checkrealizes →thisawaiting"));
     expect(card.tagName).toBe("A");
     expect(card).toHaveClass("review-relrow");
-    expect(card).toHaveAttribute("href", "?selected=op-rel");
+    expect(card).toHaveAttribute("href", "/app/proposals/proposal-1?selected=op-rel");
     expect(card).toHaveAttribute("data-direction", "in");
     expect(card).toHaveTextContent("product.feature");
     const kinds = [...card.querySelectorAll("[data-pill]")].map((p) => p.getAttribute("data-pill"));
@@ -515,7 +551,9 @@ describe("the review page", () => {
     expect(applies[0].review_ms!["op-edit"]).toBeGreaterThanOrEqual(0);
     await waitFor(() => expect(inspectorTitle()).toHaveTextContent("Reference check"));
     await waitFor(() => expect(markFor("op-edit")).toHaveClass("review-mark--correct"));
-    expect(screen.getByTestId("review-progress-counts")).toHaveTextContent("1 correct");
+    // Correct and changed read apart, in the source's highlights (the counts only say applied).
+    expect(markFor("op-edit")).not.toHaveClass("review-mark--changed");
+    expect(screen.getByTestId("proposal-decided-counts")).toHaveTextContent("2 applied");
   });
 
   it("accepts with a better class from the picker, then offers it on key 1", async () => {
@@ -531,7 +569,8 @@ describe("the review page", () => {
     expect(applies[0].edits).toEqual({ "op-edit": { class_ids: ["cls-feature"] } });
     expect(applies[0].review_ms).toEqual({ "op-edit": expect.any(Number) });
     await waitFor(() => expect(markFor("op-edit")).toHaveClass("review-mark--changed"));
-    expect(screen.getByTestId("review-progress-counts")).toHaveTextContent("1 changed");
+    expect(markFor("op-edit")).not.toHaveClass("review-mark--correct");
+    expect(screen.getByTestId("proposal-decided-counts")).toHaveTextContent("2 applied");
 
     // Next: Reference check, already a product.feature, so feature isn't suggested.
     await waitFor(() => expect(inspectorTitle()).toHaveTextContent("Reference check"));
@@ -586,6 +625,7 @@ describe("the review page", () => {
 
   it("rejects with a reason code and a note", async () => {
     const user = await renderPage();
+    await showAll(user);
     await user.click(screen.getByTestId("review-row-op-region"));
     const reasons = screen.getByRole("group", { name: "Not an element, because" });
     expect(
@@ -642,6 +682,7 @@ describe("the review page", () => {
 
   it("decides by key: J / K move, A accepts, X opens the reasons", async () => {
     const user = await renderPage();
+    await showAll(user);
     await user.keyboard("j");
     expect(inspectorTitle()).toHaveTextContent("Reference check");
     await user.keyboard("j");
@@ -723,6 +764,7 @@ describe("the review page", () => {
   it("rejects a relationship whose end was rejected in one click, noting why", async () => {
     proposal.operations.find((o) => o.id === "op-edit")!.status = "rejected";
     const user = await renderPage();
+    await showAll(user);
     await user.click(screen.getByTestId("review-row-op-rel"));
     await user.click(screen.getByTestId("review-reject-end"));
     await waitFor(() => expect(rejects).toHaveLength(1));
@@ -763,6 +805,7 @@ describe("the review page", () => {
   it("offers on a rejected element to reject the relationships still awaiting that use it", async () => {
     proposal.operations.find((o) => o.id === "op-edit")!.status = "rejected";
     const user = await renderPage();
+    await showAll(user);
     await user.click(screen.getByTestId("review-row-op-edit"));
     expect(screen.getByTestId("review-relationships-callout")).toHaveTextContent(
       "1 relationship uses it and still awaits a decision.",
@@ -781,6 +824,7 @@ describe("the review page", () => {
 
   it("offers nothing more when a rejected element's relationships are all decided", async () => {
     const user = await renderPage();
+    await showAll(user);
     // Sub-Saharan Africa is an end of no relationship.
     await user.click(screen.getByTestId("review-row-op-region"));
     await user.click(screen.getByTestId("review-reason-out_of_scope"));
@@ -857,9 +901,9 @@ describe("the review page", () => {
     proposal.operations.find((o) => o.id === "op-edit")!.stale = true;
     const user = await renderPage();
     await user.click(screen.getByTestId("review-correct"));
-    expect(await screen.findByTestId("review-force-message")).toBeInTheDocument();
+    expect(await screen.findByTestId("proposal-force-message")).toBeInTheDocument();
     fireEvent.keyDown(document.body, { key: "j" });
-    fireEvent.keyDown(screen.getByTestId("review-force-message"), { key: "k" });
+    fireEvent.keyDown(screen.getByTestId("proposal-force-message"), { key: "k" });
     expect(inspectorTitle()).toHaveTextContent("Edit Check");
     await user.click(screen.getByRole("button", { name: "Apply anyway" }));
     await waitFor(() => expect(applies).toHaveLength(1));
@@ -890,6 +934,7 @@ describe("the review page", () => {
 
   it("shows an added element's decision read-only", async () => {
     const user = await renderPage();
+    await showAll(user);
     await user.click(screen.getByTestId("review-row-op-added"));
     expect(screen.getByTestId("review-decided")).toHaveTextContent(
       "Added by you asproduct.feature",
@@ -909,7 +954,7 @@ describe("the review page", () => {
         HttpResponse.json({ ...source, removed_at: "2026-11-11T00:00:00Z" }),
       ),
     );
-    render(<ReviewPage id="proposal-1" onFinish={onFinish} />);
+    render(<Harness />);
     expect(
       await screen.findByText(/The source was removed/, {}, { timeout: 10000 }),
     ).toHaveAttribute("data-testid", "review-source-unavailable");
@@ -1038,6 +1083,7 @@ describe("adding an element from selected text", () => {
 
   it("adds the selection as an element, shown as added and opened in the inspector", async () => {
     const user = await renderPage();
+    await showAll(user);
     const { start, end } = selectText("feel safe");
     fireEvent.mouseUp(screen.getByTestId("review-source-selectable"));
     await user.clear(screen.getByTestId("review-add-title"));
@@ -1062,7 +1108,7 @@ describe("adding an element from selected text", () => {
     await waitFor(() => expect(inspectorTitle()).toHaveTextContent("Feeling safe"));
     expect(markFor("op-new")).toHaveClass("review-mark--added", "review-mark--selected");
     expect(screen.getByTestId("review-row-op-new")).toHaveTextContent("added");
-    expect(screen.getByTestId("review-progress-counts")).toHaveTextContent("2 added");
+    expect(screen.getByTestId("proposal-decided-counts")).toHaveTextContent("2 applied");
     expect(screen.getByTestId("review-decided")).toHaveTextContent(
       "Added by you asmotivation.goal",
     );
@@ -1210,7 +1256,7 @@ describe("adding an element from selected text", () => {
     fireEvent.mouseDown(screen.getByTestId("review-add-title"));
     fireEvent.mouseDown(screen.getByTestId("review-source-text"));
     expect(popover()).toBeInTheDocument();
-    fireEvent.mouseDown(screen.getByTestId("review-progress"));
+    fireEvent.mouseDown(screen.getByTestId("proposal-summary"));
     expect(popover()).not.toBeInTheDocument();
   });
 
@@ -1230,7 +1276,7 @@ describe("adding an element from selected text", () => {
   it("opens from Shift only for a selection in the source text, made outside fields", async () => {
     const user = await renderPage();
     // A selection outside the source text.
-    const header = screen.getByTestId("review-header");
+    const header = screen.getByTestId("proposal-summary");
     const range = document.createRange();
     range.selectNodeContents(header);
     window.getSelection()!.removeAllRanges();
@@ -1339,9 +1385,6 @@ describe("gold mode", () => {
   it("says it is a gold check, with its split", async () => {
     makeGoldCheck();
     await renderPage();
-    expect(
-      within(screen.getByTestId("review-header")).getByRole("heading", { level: 1 }),
-    ).toHaveTextContent("Gold check: edit_check");
     const split = screen.getByTestId("review-gold-split");
     expect(split).toHaveTextContent("dev");
     expect(split).toHaveClass("chip--cyan");
@@ -1510,6 +1553,7 @@ describe("gold mode", () => {
   it("rejects an individual, then its relationship from the inspector by key", async () => {
     makeGoldCheck();
     const user = await renderPage();
+    await showAll(user);
     await user.click(screen.getByTestId("review-row-op-edit"));
     await user.type(screen.getByTestId("review-note"), "a product, not a capability");
     await user.click(screen.getByTestId("review-reason-too_generic"));
@@ -1534,6 +1578,7 @@ describe("gold mode", () => {
   it("offers to reject the relationships using an individual once it is rejected", async () => {
     makeGoldCheck();
     const user = await renderPage();
+    await showAll(user);
     await user.click(screen.getByTestId("review-row-op-edit"));
     await user.type(screen.getByTestId("review-note"), "a product, not a capability");
     await user.click(screen.getByTestId("review-reason-too_generic"));
@@ -1640,7 +1685,7 @@ describe("while the classes load", () => {
         return HttpResponse.json(classes);
       }),
     );
-    render(<ReviewPage id="proposal-1" onFinish={onFinish} />);
+    render(<Harness />);
     const group = await screen.findByTestId("review-group-loading", {}, { timeout: 10000 });
     expect(group).toHaveAttribute("aria-label", "Loading layers…");
     expect(screen.getByTestId("review-row-op-edit")).toHaveTextContent("…");
@@ -1734,6 +1779,7 @@ describe("changing a decision while the review is open", () => {
   it("rejects an accepted element instead: reopens it, then rejects it, and stays on it", async () => {
     decideOp("op-edit", { status: "applied", result_entity_id: "res-edit" });
     const user = await renderPage();
+    await showAll(user);
     await user.click(screen.getByTestId("review-row-op-edit"));
     expect(screen.getByTestId("review-inspector-status")).toHaveTextContent("correct");
     expect(screen.queryByTestId("review-reasons")).not.toBeInTheDocument();
@@ -1761,6 +1807,7 @@ describe("changing a decision while the review is open", () => {
   it("accepts a rejected element instead, with another class", async () => {
     decideOp("op-region", { status: "rejected", reason_code: "out_of_scope" });
     const user = await renderPage();
+    await showAll(user);
     await user.click(screen.getByTestId("review-row-op-region"));
     await user.click(screen.getByTestId("review-change-decision"));
     const picker = within(screen.getByTestId("review-class-picker"));
@@ -1783,6 +1830,7 @@ describe("changing a decision while the review is open", () => {
       ),
     );
     const user = await renderPage();
+    await showAll(user);
     await user.click(screen.getByTestId("review-row-op-region"));
     await user.click(screen.getByTestId("review-change-decision"));
     await user.click(screen.getByTestId("review-correct"));
@@ -1818,12 +1866,10 @@ describe("selection in the URL", () => {
     const user = userEvent.setup();
     const onSelect = vi.fn();
     render(
-      <ReviewPage
+      <ProposalDetailPage
         id="proposal-1"
-        onFinish={onFinish}
-        selectedId="op-region"
-        onSelect={onSelect}
-        hrefOf={(opId) => `/review?selected=${opId}`}
+        selectedOperationId="op-region"
+        onSelectOperation={onSelect}
       />,
     );
     await screen.findByTestId("review-group-scheme-p", {}, { timeout: 10000 });
@@ -1832,7 +1878,7 @@ describe("selection in the URL", () => {
     const row = screen.getByTestId("review-row-op-ref");
     expect(row.tagName).toBe("A");
     expect(row).toHaveAttribute("role", "option");
-    expect(row).toHaveAttribute("href", "/review?selected=op-ref");
+    expect(row).toHaveAttribute("href", "/app/proposals/proposal-1?selected=op-ref");
     await user.click(row);
     expect(onSelect).toHaveBeenCalledWith("op-ref");
     onSelect.mockClear();
@@ -1848,12 +1894,10 @@ describe("selection in the URL", () => {
 
   it("falls back to the first awaiting element when the URL names none of the proposal's", async () => {
     render(
-      <ReviewPage
+      <ProposalDetailPage
         id="proposal-1"
-        onFinish={onFinish}
-        selectedId="op-gone"
-        onSelect={vi.fn()}
-        hrefOf={(opId) => `?selected=${opId}`}
+        selectedOperationId="op-gone"
+        onSelectOperation={vi.fn()}
       />,
     );
     await screen.findByTestId("review-group-scheme-p", {}, { timeout: 10000 });
@@ -1898,6 +1942,7 @@ describe("pills with hover overlays", () => {
       applied_fields: { title: "Edit Check", class_ids: ["cls-feature"] },
     });
     const user = await renderPage();
+    await showAll(user);
     await user.click(screen.getByTestId("review-row-op-edit"));
     expect(screen.getByTestId("review-decided-class")).toHaveClass("review-pill--class");
     await user.hover(screen.getByTestId("review-decided-class"));
@@ -1952,7 +1997,7 @@ describe("the relationship inspector", () => {
     expect(screen.getByTestId("review-end-source-individual")).toHaveTextContent("Reference check");
     expect(screen.getByTestId("review-end-source-individual")).toHaveAttribute(
       "href",
-      "?selected=op-ref",
+      "/app/proposals/proposal-1?selected=op-ref",
     );
     expect(screen.getByTestId("review-end-source-class")).toHaveTextContent("product.feature");
     expect(screen.getByTestId("review-end-source-status")).toHaveTextContent("correct");
@@ -1990,6 +2035,7 @@ describe("the relationship inspector", () => {
 
   it("accepts it with a better predicate the schema allows between its ends' classes", async () => {
     const user = await renderPage();
+    await showAll(user);
     await user.click(screen.getByTestId("review-row-op-rel"));
     expect(screen.getByTestId("review-accept-edited")).toBeDisabled();
     const change = screen.getByTestId("review-change-predicate");
@@ -2242,7 +2288,7 @@ describe("a relationship's ends on a fresh extraction (#1673)", () => {
 });
 
 describe("comparing with another pipeline", () => {
-  it("offers it in the header when another pipeline extracted the source", async () => {
+  it("offers it in the status strip when another pipeline extracted the source", async () => {
     const origin = (implementation_id: string) => ({
       pipeline_type: "individual_extraction",
       implementation_id,
@@ -2259,9 +2305,11 @@ describe("comparing with another pipeline", () => {
     );
     const onCompare = vi.fn();
     const user = userEvent.setup();
-    render(<ReviewPage id="proposal-1" onFinish={onFinish} onCompare={onCompare} />);
-    const button = await screen.findByTestId("review-compare", {}, { timeout: 10000 });
-    expect(within(screen.getByTestId("review-header")).getByTestId("review-compare")).toBe(button);
+    render(<Harness onCompare={onCompare} />);
+    const button = await screen.findByTestId("proposal-compare", {}, { timeout: 10000 });
+    expect(within(screen.getByTestId("proposal-summary")).getByTestId("proposal-compare")).toBe(
+      button,
+    );
     await user.click(button);
     expect(onCompare).toHaveBeenCalledWith("proposal-2");
   });
@@ -2272,7 +2320,7 @@ describe("comparing with another pipeline", () => {
         HttpResponse.json({ items: [proposal], total: 1, limit: 500, offset: 0 }),
       ),
     );
-    await renderPage();
-    expect(screen.queryByTestId("review-compare")).not.toBeInTheDocument();
+    await renderPage({ onCompare: vi.fn() });
+    expect(screen.queryByTestId("proposal-compare")).not.toBeInTheDocument();
   });
 });

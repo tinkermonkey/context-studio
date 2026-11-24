@@ -1,20 +1,5 @@
 @layer app {
   /* ============= Review an extraction against its source (#1611) ============= */
-  .review-header-actions {
-    display: inline-flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    align-items: center;
-  }
-
-  .review-page {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-    /* Canvas text, never the shell's: the page sits on the light (or dark) canvas. */
-    color: rgb(var(--canvas-fg-1));
-  }
-
   .review-eyebrow {
     font-family: var(--font-mono);
     font-size: 11px;
@@ -35,56 +20,14 @@
     font-size: 12.5px;
   }
 
-  .review-origin {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 8px;
-    color: rgb(var(--canvas-fg-2));
-  }
-
-  /* ---- progress strip ---- */
-  .review-progress {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 16px;
-    padding: 12px 14px;
-    border: 1px solid rgb(var(--canvas-border));
-    border-radius: 8px;
-    background: rgb(var(--canvas-bg-2));
-  }
-
-  .review-progress__decided {
-    font-family: var(--font-mono);
-    font-weight: 600;
-  }
-
-  .review-progress__bar {
-    flex: 1 1 240px;
-    min-width: 160px;
-  }
-
-  .review-progress__counts {
-    color: rgb(var(--canvas-fg-2));
-  }
-
+  /* The review timer in the proposal's status strip. */
   .review-progress__time {
     font-family: var(--font-mono);
     font-size: 12px;
     color: rgb(var(--canvas-fg-3));
   }
 
-  /* ---- three panes: Source | Elements | Inspector ----
-     Stacked below 1280px; from 1280px three columns that fill the window
-     below the progress strip (--review-panes-height, measured at run time),
-     each scrolling on its own. */
-  .review-panes {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-  }
-
+  /* ---- the panes: Source | Elements | Inspector (laid out by .proposal-review) ---- */
   .review-pane {
     min-width: 0;
   }
@@ -107,13 +50,6 @@
   }
 
   @media (min-width: 1280px) {
-    .review-panes {
-      display: grid;
-      grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr) minmax(320px, 400px);
-      align-items: stretch;
-      height: var(--review-panes-height, calc(100vh - 280px));
-    }
-
     .review-pane {
       display: flex;
       flex-direction: column;
@@ -338,11 +274,16 @@
     box-shadow: inset 2px 0 0 rgb(var(--accent-primary));
   }
 
+  /* The title takes the row; in a narrow list the status wraps under it. */
+  .review-row {
+    flex-wrap: wrap;
+  }
+
   .review-row__text {
     display: flex;
     flex-direction: column;
     gap: 2px;
-    flex: 1;
+    flex: 1 1 14rem;
     min-width: 0;
   }
 
@@ -376,9 +317,12 @@
 
   .review-row__meta {
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
+    justify-content: flex-end;
     gap: 8px;
     flex-shrink: 0;
+    margin-left: auto;
   }
 
   .review-row__p {
@@ -1260,6 +1204,35 @@
 
     .proposal-review .review-scroll {
       max-height: calc(100vh - 240px);
+    }
+  }
+
+  /* With a source (#1664): the source and the list share the main column (so the
+     wide diff covers both), the inspector beside them; from 1280px the panes fill
+     the window below the strip (--review-panes-height) and scroll on their own. */
+  @media (min-width: 1280px) {
+    .proposal-review--source {
+      grid-template-columns: minmax(0, 1fr) minmax(300px, 380px);
+      align-items: stretch;
+      height: var(--review-panes-height, calc(100vh - 280px));
+    }
+
+    .proposal-review--source > .proposal-main {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr);
+      min-height: 0;
+      height: 100%;
+    }
+
+    .proposal-review--source > .review-pane--inspector,
+    .proposal-review--source > .proposal-review__empty {
+      position: static;
+      max-height: none;
+      height: 100%;
+    }
+
+    .proposal-review--source .review-scroll {
+      max-height: none;
     }
   }
 

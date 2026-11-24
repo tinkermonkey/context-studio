@@ -46,13 +46,13 @@ function CommandLine({
 }
 
 interface BenchmarkGoldPageProps {
-  /** Open a gold check's proposal on the Review page. */
+  /** Open a gold check's proposal page, in gold mode. */
   onOpenReview: (proposalId: string) => void;
 }
 
 /**
  * The benchmark's gold files loaded for a person to check: each document's
- * split, size, how far its check is, and the Review page to check it on;
+ * split, size, how far its check is, and its proposal page to check it on;
  * then what a check writes back to gold.json and the commands that load a
  * check, write it back and re-score the saved takes.
  */
@@ -64,7 +64,7 @@ export function BenchmarkGoldPage({ onOpenReview }: BenchmarkGoldPageProps) {
     <PageHeader
       eyebrow="PIPELINES · BENCHMARK"
       title="Benchmark gold"
-      subtitle="The extractions every pipeline is scored against, drafted and reviewed by models until a person checks them. Checking one opens the Review page on the gold itself; written back, it re-scores every saved take at no cost."
+      subtitle="The extractions every pipeline is scored against, drafted and reviewed by models until a person checks them. Checking one opens its proposal page on the gold itself; written back, it re-scores every saved take at no cost."
       data-testid="gold-header"
     />
   );

@@ -14,7 +14,7 @@ import { VERDICT_CHIP, type Verdict } from "./reviewModel";
 import type { ReviewSchema } from "./reviewSchema";
 
 /**
- * The Review page's three kinds, the same everywhere on the page, each with a
+ * The review page's three kinds, the same everywhere on the page, each with a
  * hover card in the app's hover overlay (beside the inspector):
  *
  * - an individual: plain bold text with a dot and a dotted underline, not a

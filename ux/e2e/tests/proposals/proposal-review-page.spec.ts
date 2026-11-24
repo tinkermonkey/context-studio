@@ -15,8 +15,10 @@ import {
 } from "../../fixtures/test-helpers";
 
 /**
- * Proposal review page (/app/proposals/$proposalId/review): an extraction
- * reviewed against its whole source.
+ * Reviewing an extraction against its whole source, on its proposal page
+ * (/app/proposals/$proposalId): the source pane, the operations list and the
+ * inspector side by side (#1664; the separate /review page is retired and
+ * redirects here).
  * Plan: e2e/documentation/specs/proposal-review-page.md (GitHub #1611).
  *
  * No LLM call is made. The proposal is seeded through the public API with
@@ -287,48 +289,66 @@ async function markOf(page: Page, quote: string, operationId: string): Promise<L
 
 const row = (page: Page, operationId: string) => page.getByTestId(`review-row-${operationId}`);
 
-test.describe("Proposal review page", () => {
+/** A segment of the operations filter (Needs decision · N / Decided · N / All · N). */
+const filterOption = (page: Page, label: string) =>
+  page.getByTestId("proposal-operation-filter").getByRole("radio", { name: label });
+
+/**
+ * A class picker's options. Heimdall portals the picker's listbox to the body,
+ * outside the picker; its combobox names the listbox by aria-controls.
+ */
+async function pickerOptions(picker: Locator): Promise<Locator> {
+  const combobox = picker.getByRole("combobox");
+  await expect(combobox).toHaveAttribute("aria-controls", /.+/);
+  const listId = await combobox.getAttribute("aria-controls");
+  return picker.page().locator(`[id="${listId}"]`).getByRole("option");
+}
+
+/**
+ * Open the proposal page and wait for its rows to leave the "Loading layers…"
+ * group for the seeded layer's: that move remounts them.
+ */
+async function openProposal(page: Page, proposalId: string, schemeId: string): Promise<void> {
+  await page.goto(`/app/proposals/${proposalId}`);
+  await page.waitForLoadState("networkidle");
+  await expect(page.getByTestId("proposal-page")).toBeVisible();
+  await expect(page.getByTestId(`review-group-${schemeId}`)).toBeVisible();
+}
+
+test.describe("Proposal review against the source", () => {
   test.afterEach(async ({ page }) => {
     await clearTestData(page);
   });
 
-  test("opens from the proposal page and shows the source, elements and first awaiting element", async ({
+  test("the proposal page shows the source, operations and first awaiting element", async ({
     page,
   }) => {
     const seed = await seedReviewProposal(page);
     const { proposal, ops, scheme } = seed;
 
-    await page.goto(`/app/proposals/${proposal.id}`);
-    await page.waitForLoadState("networkidle");
-
-    // 1-3. Entry from the proposal page.
-    await expect(page.getByTestId("proposal-page")).toBeVisible();
+    // 1. The proposal page is the review page.
+    await openProposal(page, proposal.id, scheme.id);
     await expect(page.getByTestId("proposal-tally")).toHaveText("4 of 4 need a decision");
-    await page.getByTestId("proposal-review-against-source").click();
-    await expect(page).toHaveURL(new RegExp(`/app/proposals/${proposal.id}/review$`));
-    await expect(page.getByTestId("review-page")).toBeVisible();
 
-    // 4. Header and origin line (no pipeline run: falls back to source_detail).
-    const header = page.getByTestId("review-header");
-    await expect(header).toContainText(`Review extraction: ${SOURCE_TITLE}`);
-    await expect(header).toContainText(`SOURCE ${SOURCE_TITLE}`);
-    await expect(header).toContainText("DATASET e2e-review");
-    await expect(page.getByTestId("review-finish")).toBeVisible();
-    const origin = page.getByTestId("review-origin-line");
-    await expect(origin).toContainText("Proposed by");
-    await expect(origin).toContainText("e2e seed: individual_extraction");
-
-    // 5. Progress.
-    await expect(page.getByTestId("review-progress")).toBeVisible();
-    await expect(page.getByTestId("review-progress-decided")).toHaveText("0 / 4");
-    await expect(page.getByTestId("review-progress-counts")).toHaveText(
-      "0 correct · 0 changed · 0 rejected · 0 added",
+    // 2. Header: the proposal's title; no pipeline run, so no origin chip and
+    //    "Proposed … by" falls back to source_detail.
+    const proposalPage = page.getByTestId("proposal-page");
+    await expect(proposalPage).toContainText("E2E review extraction");
+    await expect(proposalPage).toContainText("by e2e seed: individual_extraction");
+    await expect(page.getByTestId("proposal-summary").getByTestId("proposal-origin")).toHaveCount(
+      0,
     );
+
+    // 3. Progress, in the status strip.
+    await expect(page.getByTestId("proposal-summary")).toBeVisible();
+    await expect(page.getByTestId("proposal-decided-counts")).toHaveText("0 applied · 0 rejected");
     await expect(page.getByTestId("review-time")).toHaveText(/^\d+:\d{2} on this review$/);
 
-    // 6. Source pane: legend, whole text, three awaiting highlights.
-    await expect(page.getByTestId("review-panes")).toBeVisible();
-    const legend = page.getByTestId("review-source").getByTestId("review-legend");
+    // 4. Source pane: title, legend, whole text, three awaiting highlights.
+    await expect(page.getByTestId("proposal-review")).toHaveClass(/\bproposal-review--source\b/);
+    const sourcePane = page.getByTestId("review-source");
+    await expect(sourcePane).toContainText(SOURCE_TITLE);
+    const legend = sourcePane.getByTestId("review-legend");
     for (const label of [
       "Awaiting",
       "Correct",
@@ -347,11 +367,14 @@ test.describe("Proposal review page", () => {
       await expect(mark).toHaveClass(/\breview-mark--awaiting\b/);
     }
 
-    // 7. Elements: one layer group in order, then the relationships group.
-    await expect(page.getByTestId("review-elements")).toBeVisible();
-    const filter = page.getByTestId("review-filter");
-    await expect(filter).toContainText("Awaiting · 4");
+    // 5. Operations: Needs decision by default; one layer group in order, then
+    //    the relationships group.
+    await expect(page.getByTestId("proposal-operations")).toBeVisible();
+    const filter = page.getByTestId("proposal-operation-filter");
+    await expect(filter).toContainText("Needs decision · 4");
+    await expect(filter).toContainText("Decided · 0");
     await expect(filter).toContainText("All · 4");
+    await expect(filterOption(page, "Needs decision · 4")).toHaveAttribute("aria-checked", "true");
     const list = page.getByTestId("review-element-list");
     const groups = list.getByRole("group");
     await expect(groups).toHaveCount(2);
@@ -371,13 +394,13 @@ test.describe("Proposal review page", () => {
     await expect(row(page, ops.serves)).toContainText("Mail Gateway");
     await expect(row(page, ops.serves)).toContainText("Customers");
 
-    // 8. The first awaiting element is selected.
+    // 6. The first awaiting element is selected.
     await expect(row(page, ops.billing)).toHaveAttribute("aria-selected", "true");
     await expect(row(page, ops.billing)).toHaveAttribute("data-verdict", "awaiting");
     await expect(billingMark).toHaveAttribute("aria-current", "true");
     await expect(billingMark).toHaveClass(/\breview-mark--selected\b/);
 
-    // 9. Inspector.
+    // 7. Inspector.
     await expect(page.getByTestId("review-inspector")).toBeVisible();
     await expect(page.getByTestId("review-inspector-eyebrow")).toContainText("Individual · p 0.92");
     await expect(page.getByTestId("review-inspector-title")).toHaveText("Billing Service");
@@ -394,7 +417,7 @@ test.describe("Proposal review page", () => {
     await expect(page.getByTestId("review-reasons")).toBeVisible();
     await expect(page.getByTestId("review-relationships")).toContainText("ITS RELATIONSHIPS · 0");
 
-    // 10. A highlight click opens its element.
+    // 8. A highlight click opens its element.
     await customersMark.click();
     await expect(row(page, ops.customers)).toHaveAttribute("aria-selected", "true");
     await expect(page.getByTestId("review-inspector-title")).toHaveText("Customers");
@@ -417,24 +440,23 @@ test.describe("Proposal review page", () => {
     page,
   }) => {
     const seed = await seedReviewProposal(page);
-    const { proposal, ops, appService, techNode, source } = seed;
+    const { proposal, ops, appService, techNode, source, scheme } = seed;
 
-    await page.goto(`/app/proposals/${proposal.id}/review`);
-    await page.waitForLoadState("networkidle");
-    await expect(page.getByTestId("review-page")).toBeVisible();
+    await openProposal(page, proposal.id, scheme.id);
     await expect(row(page, ops.billing)).toHaveAttribute("aria-selected", "true");
 
-    const decided = page.getByTestId("review-progress-decided");
-    const counts = page.getByTestId("review-progress-counts");
+    const tally = page.getByTestId("proposal-tally");
+    const counts = page.getByTestId("proposal-decided-counts");
     const title = page.getByTestId("review-inspector-title");
 
-    // 1. Correct (element 1).
+    // 1. Correct (element 1), under the default Needs decision: the decided row
+    //    leaves the list and the row below is selected.
     await page.getByTestId("review-correct").click();
-    await expect(row(page, ops.billing)).toHaveAttribute("data-verdict", "correct");
     const billingMark = await markOf(page, "Billing Service", ops.billing);
     await expect(billingMark).toHaveClass(/\breview-mark--correct\b/);
-    await expect(decided).toHaveText("1 / 4");
-    await expect(counts).toContainText("1 correct");
+    await expect(row(page, ops.billing)).toHaveCount(0);
+    await expect(tally).toHaveText("3 of 4 need a decision");
+    await expect(counts).toHaveText("1 applied · 0 rejected");
     await expect(row(page, ops.gateway)).toHaveAttribute("aria-selected", "true");
     await expect(title).toHaveText("Mail Gateway");
     const gatewayMark = await markOf(page, "Mail Gateway", ops.gateway);
@@ -460,22 +482,29 @@ test.describe("Proposal review page", () => {
       quote: "Billing Service",
     });
 
-    // 2. A better class (element 2), from the picker.
+    // Show all: the decided row is back with its verdict, the selection stays.
+    await filterOption(page, "All · 4").click();
+    await expect(filterOption(page, "All · 4")).toHaveAttribute("aria-checked", "true");
+    await expect(row(page, ops.billing)).toHaveAttribute("data-verdict", "correct");
+    await expect(row(page, ops.gateway)).toHaveAttribute("aria-selected", "true");
+
+    // 2. A better class (element 2), from the picker. Under All, a decision moves
+    //    the selection on to the next awaiting row.
     const relationships = page.getByTestId("review-relationships");
     await expect(relationships).toContainText("ITS RELATIONSHIPS · 1");
     await expect(relationships.getByTestId(`review-relationship-${ops.serves}`)).toBeVisible();
     const picker = page.getByTestId("review-class-picker");
     await expect(picker).toContainText("Search all 3 classes");
     await picker.getByRole("combobox").fill("Technology");
-    const options = picker.getByRole("option");
+    const options = await pickerOptions(picker);
     await expect(options).toHaveCount(1);
     await expect(options.first()).toHaveText("E2E Review Technology Node");
     await options.first().click();
 
     await expect(row(page, ops.gateway)).toHaveAttribute("data-verdict", "changed");
     await expect(gatewayMark).toHaveClass(/\breview-mark--changed\b/);
-    await expect(decided).toHaveText("2 / 4");
-    await expect(counts).toContainText("1 changed");
+    await expect(tally).toHaveText("2 of 4 need a decision");
+    await expect(counts).toHaveText("2 applied · 0 rejected");
     await expect(row(page, ops.customers)).toHaveAttribute("aria-selected", "true");
     await expect(title).toHaveText("Customers");
 
@@ -495,9 +524,9 @@ test.describe("Proposal review page", () => {
     await expect(row(page, ops.customers)).toHaveAttribute("data-verdict", "rejected");
     const customersMark = await markOf(page, "Customers", ops.customers);
     await expect(customersMark).toHaveClass(/\breview-mark--rejected\b/);
-    await expect(decided).toHaveText("3 / 4");
-    await expect(counts).toHaveText("1 correct · 1 changed · 1 rejected · 0 added");
-    await expect(page.getByTestId("review-filter")).toContainText("Awaiting · 1");
+    await expect(tally).toHaveText("1 of 4 need a decision");
+    await expect(counts).toHaveText("2 applied · 1 rejected");
+    await expect(page.getByTestId("proposal-operation-filter")).toContainText("Needs decision · 1");
     await expect(row(page, ops.serves)).toHaveAttribute("aria-selected", "true");
 
     const customersOp = await operationOf(page, proposal.id, ops.customers);
@@ -535,7 +564,7 @@ test.describe("Proposal review page", () => {
     const callout = page.getByTestId("review-ends-callout");
     await expect(callout).toBeVisible();
     await expect(callout).toContainText("#3 was rejected");
-    await expect(callout).toContainText("Reject it, or give it another end.");
+    await expect(callout).toContainText("Reject it too, or give it another end.");
     await expect(page.getByTestId("review-correct")).toHaveCount(0);
     await expect(page.getByTestId("review-reasons")).toBeVisible();
     await expect(page.getByTestId("review-reason-not_in_text")).toBeEnabled();
@@ -545,19 +574,26 @@ test.describe("Proposal review page", () => {
     const servesOp = await operationOf(page, proposal.id, ops.serves);
     expect(servesOp.status).toBe("pending");
 
-    // 5. Finish: back to the proposal page with the new tally.
-    await page.getByTestId("review-finish").click();
-    await expect(page).toHaveURL(new RegExp(`/app/proposals/${proposal.id}$`));
-    await expect(page.getByTestId("proposal-tally")).toHaveText("1 of 4 need a decision");
-    await expect(page.getByTestId("proposal-decided-counts")).toHaveText("2 applied · 1 rejected");
+    // 5. An old /review link lands on the proposal page with its selection kept:
+    //    a decided operation, so the list opens on All, with the tally from the server.
+    await page.goto(`/app/proposals/${proposal.id}/review?selected=${ops.customers}`);
+    await expect(page).toHaveURL(
+      new RegExp(`/app/proposals/${proposal.id}\\?selected=${ops.customers}$`),
+    );
+    await expect(page.getByTestId("proposal-page")).toBeVisible();
+    await expect(page.getByTestId(`review-group-${scheme.id}`)).toBeVisible();
+    await expect(row(page, ops.customers)).toHaveAttribute("aria-selected", "true");
+    await expect(row(page, ops.customers)).toHaveAttribute("data-verdict", "rejected");
+    await expect(filterOption(page, "All · 4")).toHaveAttribute("aria-checked", "true");
+    await expect(tally).toHaveText("1 of 4 need a decision");
+    await expect(counts).toHaveText("2 applied · 1 rejected");
   });
 
   test("adds a missed element from text selected in the source", async ({ page }) => {
     const seed = await seedReviewProposal(page);
-    const { proposal, techNode, taxonomy } = seed;
+    const { proposal, techNode, taxonomy, scheme } = seed;
 
-    await page.goto(`/app/proposals/${proposal.id}/review`);
-    await page.waitForLoadState("networkidle");
+    await openProposal(page, proposal.id, scheme.id);
     await expect(page.getByTestId("review-source-hint")).toHaveText(
       "Select any text to add an element the pipeline missed. Click a highlight to open it.",
     );
@@ -590,18 +626,19 @@ test.describe("Proposal review page", () => {
     await titleInput.fill("Invoices");
     const picker = dialog.getByTestId("review-add-class-picker");
     await picker.getByRole("combobox").fill("Technology");
-    await picker.getByRole("option", { name: "E2E Review Technology Node" }).click();
+    const options = await pickerOptions(picker);
+    await options.filter({ hasText: "E2E Review Technology Node" }).click();
     await expect(dialog.getByTestId("review-add-class-chosen")).toHaveText(
       "E2E Review Technology Node",
     );
     await dialog.getByRole("button", { name: "Add element" }).click();
 
-    // 3. Added: closed, highlighted, listed, counted and open in the inspector.
+    // 3. Added: closed, highlighted, counted and open in the inspector.
     await expect(dialog).toHaveCount(0);
     await expect(page.getByTestId("review-inspector-title")).toHaveText("Invoices");
     await expect(page.getByTestId("review-inspector-status")).toHaveText("added");
-    await expect(page.getByTestId("review-progress-counts")).toContainText("1 added");
-    await expect(page.getByTestId("review-progress-decided")).toHaveText("1 / 5");
+    await expect(page.getByTestId("proposal-tally")).toHaveText("4 of 5 need a decision");
+    await expect(page.getByTestId("proposal-decided-counts")).toHaveText("1 applied · 0 rejected");
 
     const after = await apiRequest<ChangeProposal>(page, `/api/proposals/${proposal.id}`);
     const added = after.operations.find((o) => o.added_by_reviewer);
@@ -610,7 +647,11 @@ test.describe("Proposal review page", () => {
     expect(added!.fields).toMatchObject({ title: "Invoices", class_ids: [techNode.id] });
     const mark = await markOf(page, "invoices", added!.id);
     await expect(mark).toHaveClass(/\breview-mark--added\b/);
+
+    // Listed under All (it is decided, so Needs decision leaves it out).
+    await filterOption(page, "All · 5").click();
     await expect(row(page, added!.id)).toHaveAttribute("data-verdict", "added");
+    await expect(row(page, added!.id)).toHaveAttribute("aria-selected", "true");
 
     const gold = await apiRequest<GoldPage>(
       page,
@@ -622,11 +663,9 @@ test.describe("Proposal review page", () => {
 
   test("gold mode: flips a tier and records it with the decision", async ({ page }) => {
     const seed = await seedReviewProposal(page, { goldCheck: true });
-    const { proposal, ops, taxonomy } = seed;
+    const { proposal, ops, taxonomy, scheme } = seed;
 
-    await page.goto(`/app/proposals/${proposal.id}/review`);
-    await page.waitForLoadState("networkidle");
-    await expect(page.getByTestId("review-header")).toContainText(`Gold check: ${GOLD_DOCUMENT}`);
+    await openProposal(page, proposal.id, scheme.id);
     await expect(page.getByTestId("review-gold-split")).toHaveText("dev");
     await expect(page.getByTestId("review-gold-aliases")).toHaveText("Also called Billing");
 
@@ -639,7 +678,10 @@ test.describe("Proposal review page", () => {
       "true",
     );
     await page.getByTestId("review-correct").click();
-    await expect(row(page, ops.billing)).toHaveAttribute("data-verdict", "correct");
+    // Decided: it leaves the Needs decision list; its highlight shows the verdict.
+    const billingMark = await markOf(page, "Billing Service", ops.billing);
+    await expect(billingMark).toHaveClass(/\breview-mark--correct\b/);
+    await expect(row(page, ops.billing)).toHaveCount(0);
 
     // Rejecting needs a note in gold mode.
     await expect(row(page, ops.gateway)).toHaveAttribute("aria-selected", "true");
@@ -664,9 +706,12 @@ test.describe("Proposal review page", () => {
     await expect(page.getByTestId(`gold-write-${proposal.id}`)).toContainText(
       `write-gold --document ${GOLD_DOCUMENT} --proposal ${proposal.id}`,
     );
-    const open = page.getByRole("button", { name: `Continue: ${GOLD_DOCUMENT}` });
+    // Partly checked, so its action is Continue (this check's row: earlier runs' stay listed).
+    const open = page.getByTestId(`gold-open-${proposal.id}`);
+    await expect(open).toHaveAccessibleName(`Continue: ${GOLD_DOCUMENT}`);
     await open.click();
-    await expect(page).toHaveURL(new RegExp(`/app/proposals/${proposal.id}/review$`));
-    await expect(page.getByTestId("review-header")).toContainText(`Gold check: ${GOLD_DOCUMENT}`);
+    await expect(page).toHaveURL(new RegExp(`/app/proposals/${proposal.id}(\\?|$)`));
+    await expect(page.getByTestId("proposal-page")).toBeVisible();
+    await expect(page.getByTestId("review-gold-split")).toHaveText("dev");
   });
 });

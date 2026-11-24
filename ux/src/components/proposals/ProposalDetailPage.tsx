@@ -1,10 +1,9 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import {
   Button,
   Chip,
   ConfirmDialog,
   Field,
-  FormCallout,
   Icon,
   PageHeader,
   ProgressBar,
@@ -83,9 +82,13 @@ import {
   rowStatus,
   type ListGroupBy,
 } from "./review/reviewList";
-import { extractedFromSource, isElement, isRelationship, shownClassId } from "./review/reviewModel";
+import { isElement, isRelationship, nextAwaiting, shownClassId } from "./review/reviewModel";
+import { ReviewElapsed } from "./review/ReviewElapsed";
+import { usePanesHeight } from "./review/usePanesHeight";
+import { useReviewClock } from "./review/useReviewClock";
 import { useReviewKeys, ignoresKeys } from "./review/useReviewKeys";
-import { goldCheckOf } from "./review/goldModel";
+import { useSourcePane } from "./review/useSourcePane";
+import { HOLDOUT_NOTE, SPLIT_CHIP, goldCheckOf } from "./review/goldModel";
 import { ReviewInspector } from "./review/ReviewInspector";
 import { ReviewPillsProvider, plainClick, type OperationLink } from "./review/ReviewPills";
 import { useInspectorModel } from "./review/useInspectorModel";
@@ -131,8 +134,6 @@ interface ProposalDetailPageProps {
   /** The operation shown in the inspector. */
   selectedOperationId?: string;
   onSelectOperation: (operationId: string | undefined) => void;
-  /** Open the review against the source; the button shows only for an extraction from one. */
-  onReviewAgainstSource?: () => void;
   /** Open the comparison with another open proposal for the same source. */
   onCompare?: (otherId: string) => void;
   /** The long text field open in the wide diff (&diff=), if any. */
@@ -156,7 +157,6 @@ export function ProposalDetailPage({
   id,
   selectedOperationId,
   onSelectOperation,
-  onReviewAgainstSource,
   onCompare,
   diffField,
   onDiff,
@@ -195,9 +195,10 @@ export function ProposalDetailPage({
   }
 
   const deciding = !!proposal && takesDecisions(proposal);
-  // A benchmark gold check is decided on the Review page, which records what gold needs.
+  // A benchmark gold check: decided here in gold mode (tier, also defensible, the note), never in bulk.
   const goldCheck = !!goldCheckOf(proposal);
-  const decidesHere = deciding && !goldCheck;
+  // Gold checks are decided here too (#1664): tier, also defensible and the note are the inspector's.
+  const decidesHere = deciding;
   const reverted = proposal?.status === "reverted";
   const progress = useMemo(() => decisionProgress(operations, threshold), [operations, threshold]);
   const filter = chosenFilter ?? defaultOperationFilter(progress, openOnAll.current);
@@ -246,15 +247,30 @@ export function ProposalDetailPage({
     chosenGroupBy && groupOptions.includes(chosenGroupBy)
       ? chosenGroupBy
       : defaultListGroupBy(operations);
-  const selectedOperation = operations.find((o) => o.id === selectedOperationId);
+  // The selection: the route's when it names an operation of this proposal, else the
+  // first row awaiting a decision (else the first row), without a history entry.
+  const [autoSelectedId, setAutoSelectedId] = useState<string>();
+  const routeSelects =
+    !!selectedOperationId && operations.some((o) => o.id === selectedOperationId);
+  const selectedId = routeSelects ? selectedOperationId : autoSelectedId;
+  const selectedOperation = operations.find((o) => o.id === selectedId);
+  // The selection the URL names: a click on it changes nothing (an auto-selected row's
+  // click still puts it in the URL).
+  const routeSelectedRef = useRef<string | undefined>(undefined);
+  routeSelectedRef.current = routeSelects ? selectedOperationId : undefined;
+  // Each decision records the active time spent on its operation.
+  const clock = useReviewClock();
+  useEffect(() => clock.startElement(selectedId), [clock, selectedId]);
 
   // The review inspector's data (classes, layers, names, the pills and their
-  // hovers): the same inspector as the Review page's, for every operation.
+  // hovers): one inspector for every operation.
   const inspectorLink = (operationId: string): OperationLink => ({
     href: `${linkPath("proposal", id)}?selected=${encodeURIComponent(operationId)}`,
     onClick: (event) => {
       if (!plainClick(event)) return;
       event.preventDefault();
+      // Selecting what is selected changes nothing.
+      if (operationId === routeSelectedRef.current) return;
       onSelectOperation(operationId);
     },
   });
@@ -264,6 +280,17 @@ export function ProposalDetailPage({
     selected: selectedOperation,
     link: inspectorLink,
     deciding: decidesHere,
+    clock,
+    onDecided: (decidedId, after) => {
+      // Under a filter that keeps it (All, Decided), a first decision moves on to the
+      // next row awaiting one; under Needs decision it drops out, and the row below takes
+      // its place (see lastShown).
+      if (filterRef.current === "needs") return;
+      const awaiting = new Set(after.filter(isAwaiting).map((o) => o.id));
+      awaiting.delete(decidedId);
+      const next = nextAwaiting(shownOrderRef.current, awaiting, decidedId);
+      if (next) onSelectOperation(next);
+    },
   });
 
   // The list's sections, and its rows top to bottom (J / K, and where the
@@ -274,6 +301,18 @@ export function ProposalDetailPage({
     [shownOperations, operations, groupBy, inspector.layerOf],
   );
   const shownOrder = useMemo(() => listOrder(sections), [sections]);
+  const filterRef = useRef(filter);
+  filterRef.current = filter;
+  const shownOrderRef = useRef(shownOrder);
+  shownOrderRef.current = shownOrder;
+  useEffect(() => {
+    if (routeSelects) return;
+    if (autoSelectedId && shownOrder.includes(autoSelectedId)) return;
+    const first =
+      shownOrder.find((opId) => operations.some((o) => o.id === opId && isAwaiting(o))) ??
+      shownOrder[0];
+    if (first !== autoSelectedId) setAutoSelectedId(first);
+  }, [routeSelects, autoSelectedId, shownOrder, operations]);
   // When a decision drops the selected operation out of the list, select the
   // one below it, so the reviewer can decide row after row. A filter or
   // grouping change, or a deep link to an operation not shown, moves nothing.
@@ -288,11 +327,10 @@ export function ProposalDetailPage({
     lastShown.current = { order: shownOrder, filter, facets, groupBy };
     const sameView =
       !!last && last.filter === filter && last.facets === facets && last.groupBy === groupBy;
-    if (!selectedOperationId || !last || !sameView) return;
-    if (!last.order.includes(selectedOperationId) || shownOrder.includes(selectedOperationId))
-      return;
-    onSelectOperation(nextSelection(last.order, shownOrder, selectedOperationId));
-  }, [shownOrder, filter, facets, groupBy, selectedOperationId, onSelectOperation]);
+    if (!selectedId || !last || !sameView) return;
+    if (!last.order.includes(selectedId) || shownOrder.includes(selectedId)) return;
+    onSelectOperation(nextSelection(last.order, shownOrder, selectedId));
+  }, [shownOrder, filter, facets, groupBy, selectedId, onSelectOperation]);
   // Judgment and conflict rows of a change plan are never bulk-decided.
   // So are the operations a conflict card shows, in any view.
   const conflicted = useMemo(() => conflictedIds(operations), [operations]);
@@ -308,7 +346,7 @@ export function ProposalDetailPage({
   const passageHeld = useMemo(() => noPassageHeldIds(operations), [operations]);
   const bulkReady = bulkOps.filter((o) => !o.stale && !isBlocked(o) && !passageHeld.has(o.id));
   // Bulk decisions on every proposal decided here (extractions included), never on a gold check.
-  const bulk = decidesHere && awaitingOps.length > 0;
+  const bulk = decidesHere && !goldCheck && awaitingOps.length > 0;
   // Select ▾ picks only from what the filters show, so it never checks hidden rows.
   const shownBulk = bulkOps.filter((o) => shownIds.has(o.id));
   const shownReady = bulkReady.filter((o) => shownIds.has(o.id));
@@ -381,18 +419,47 @@ export function ProposalDetailPage({
     return () => window.removeEventListener("keydown", listener);
   }, []);
 
+  // The source pane, when the proposal was extracted from a source (#1664).
+  const sourcePane = useSourcePane({
+    proposal,
+    operations,
+    selected: selectedOperation,
+    selectedId,
+    select: (operationId) => onSelectOperation(operationId),
+    model: inspector,
+    clock,
+  });
+  const panes = usePanesHeight(!!proposal && sourcePane.shown);
+  // While the add form is open, keys are its own; Escape closes it wherever focus went.
+  const onAddingKey = useRef<(event: KeyboardEvent) => void>(() => {});
+  onAddingKey.current = (event) => {
+    if (sourcePane.adding && event.key === "Escape" && !event.defaultPrevented) {
+      sourcePane.closeAdding();
+    }
+  };
+  useEffect(() => {
+    const listener = (event: KeyboardEvent) => onAddingKey.current(event);
+    window.addEventListener("keydown", listener);
+    return () => window.removeEventListener("keydown", listener);
+  }, []);
+
   // Keys: J / K next and previous, A accept, X the reasons, 1-3 a suggested class
   // (an element). Not while the wide diff (its own keys) or a confirmation is open.
   // A accepts as proposed only: a relationship type with picks, or a blocked delete,
   // is decided with the inspector's buttons.
   useReviewKeys({
     order: shownOrder,
-    selectedId: selectedOperationId,
+    selectedId,
     select: (operationId) => onSelectOperation(operationId),
     selected: selectedOperation,
     operations,
     model: inspector,
-    paused: wideOpen || !!actions.forceRequest || rejecting !== null || confirmRevert,
+    paused:
+      wideOpen ||
+      sourcePane.adding ||
+      !!actions.forceRequest ||
+      rejecting !== null ||
+      confirmRevert,
     onReasons: () => setRejectPrompt((n) => n + 1),
     acceptsByKey: (operation) =>
       !isBlocked(operation) && Object.keys(picksByOperation[operation.id] ?? {}).length === 0,
@@ -564,6 +631,16 @@ export function ProposalDetailPage({
           <Chip variant={PROPOSAL_STATUS_VARIANT[proposal.status]} data-testid="proposal-status">
             {proposal.status}
           </Chip>
+          {proposal.landed && (
+            <Chip variant="cyan" data-testid="proposal-landed">
+              landed
+            </Chip>
+          )}
+          {inspector.gold && (
+            <Chip variant={SPLIT_CHIP[inspector.gold.split]} data-testid="review-gold-split">
+              {inspector.gold.split}
+            </Chip>
+          )}
           <ProposalOriginChip origin={proposal.origin} />
           {(proposal.links ?? [])
             .filter((link) => link.kind === "supersedes" || link.kind === "superseded_by")
@@ -592,16 +669,7 @@ export function ProposalDetailPage({
           <span className="proposal-summary__mix" data-testid="proposal-op-mix">
             {opMixLabel(operations)} · {scopeMixLabel(operations)}
           </span>
-          {onReviewAgainstSource && extractedFromSource(proposal) && (
-            <Button
-              variant="secondary"
-              size="sm"
-              onClick={onReviewAgainstSource}
-              data-testid="proposal-review-against-source"
-            >
-              <Icon name="file" size={13} /> Review against source
-            </Button>
-          )}
+          {decidesHere && progress.awaiting > 0 && <ReviewElapsed pageMs={clock.pageMs} />}
           {onCompare && (
             <CompareEntry
               proposal={proposal}
@@ -679,21 +747,10 @@ export function ProposalDetailPage({
         />
       </div>
 
-      {goldCheck && deciding && (
-        <FormCallout variant="info" icon="info" data-testid="proposal-gold-callout">
-          Gold checks are decided on the Review page, where tier, also-defensible and the excluded
-          reason are recorded.{" "}
-          {onReviewAgainstSource && (
-            <Button
-              variant="link"
-              size="sm"
-              onClick={onReviewAgainstSource}
-              data-testid="proposal-gold-review"
-            >
-              Open the Review page
-            </Button>
-          )}
-        </FormCallout>
+      {inspector.gold?.split === "holdout" && (
+        <p className="review-gold-note" data-testid="review-gold-holdout">
+          {HOLDOUT_NOTE}
+        </p>
       )}
 
       {actions.revertConflict && (
@@ -714,14 +771,26 @@ export function ProposalDetailPage({
       )}
 
       <ReviewPillsProvider value={inspector.pills}>
-        <div className="proposal-review" data-testid="proposal-review">
+        <div
+          ref={panes.ref}
+          className={
+            sourcePane.shown ? "proposal-review proposal-review--source" : "proposal-review"
+          }
+          // With a source, the panes fill the window below them (measured at run time).
+          style={
+            sourcePane.shown && panes.height
+              ? ({ "--review-panes-height": `${panes.height}px` } as CSSProperties)
+              : undefined
+          }
+          data-testid="proposal-review"
+        >
           <div
-            id="proposal-operations"
             className="proposal-main"
             data-testid="proposal-operations-list"
             data-filter={filter}
             data-group-by={groupBy}
           >
+            {sourcePane.shown && sourcePane.pane}
             {wideOpen && selectedOperation && diffField && (
               <WideDiffOverlay
                 operation={selectedOperation}
@@ -740,12 +809,13 @@ export function ProposalDetailPage({
               />
             )}
             <ReviewElementsPane
+              id="proposal-operations"
               title="Operations"
               listLabel="Operations to review"
               data-testid="proposal-operations"
               sections={sections}
               rowOf={rowOf}
-              selectedId={selectedOperationId}
+              selectedId={selectedId}
               link={inspectorLink}
               emptyMessage={emptyMessage}
               header={
@@ -881,7 +951,7 @@ export function ProposalDetailPage({
                   reverted={reverted}
                   actions={actions}
                   shown={shownIds}
-                  selectedOperationId={selectedOperationId}
+                  selectedOperationId={selectedId}
                   onSelectOperation={onSelectOperation}
                 />
               )}
@@ -893,6 +963,11 @@ export function ProposalDetailPage({
               {...inspector.inspectorProps(selectedOperation)}
               reverted={reverted}
               rejectPrompt={rejectPrompt}
+              onShowPassage={
+                sourcePane.shown
+                  ? (quote) => sourcePane.showPassage(selectedOperation.id, quote)
+                  : undefined
+              }
               onWide={onDiff ? openWide : undefined}
               decidedBy={
                 reverted

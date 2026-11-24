@@ -19,7 +19,7 @@ export const ENTITY_SEARCH_LIMIT = 20;
 export const PREDICATE_CHOICES_LIMIT = 500;
 
 /**
- * The relationship types a page reads as the whole schema (the Review page's
+ * The relationship types a page reads as the whole schema (the review page's
  * class overlays and predicate choices): the server's largest page.
  */
 export const SCHEMA_PROPERTIES_LIMIT = 5000;

@@ -1,6 +1,8 @@
 /**
- * The proposal page opens the Review page (#1611) from "Review against
- * source", shown only for a proposal extracted from a source.
+ * One review page (#1664): proposal detail shows the source pane beside the
+ * list for a proposal whose elements came from a source, and only then; gold
+ * checks are decided here; the "Review against source" button and the gold
+ * callout are gone.
  */
 import { describe, it, expect, beforeAll, afterEach, afterAll, vi } from "vitest";
 import { screen } from "@testing-library/react";
@@ -42,29 +44,20 @@ function serve(proposal: ChangeProposal) {
   );
 }
 
-describe("Review against source", () => {
-  it("opens the review for a proposal extracted from a source", async () => {
+describe("one review page", () => {
+  it("shows the source pane beside the list for a proposal extracted from a source", async () => {
     serve(createChangeProposal({ source: "pipeline", operations: [extracted] }));
-    const onReview = vi.fn();
-    render(
-      <ProposalDetailPage
-        id="proposal-1"
-        onSelectOperation={vi.fn()}
-        onReviewAgainstSource={onReview}
-      />,
-    );
-    const button = await screen.findByTestId(
-      "proposal-review-against-source",
-      {},
-      { timeout: 10000 },
-    );
-    expect(button).toHaveRole("button");
-    expect(button).toHaveTextContent("Review against source");
-    await userEvent.click(button);
-    expect(onReview).toHaveBeenCalledTimes(1);
+    render(<ProposalDetailPage id="proposal-1" onSelectOperation={vi.fn()} />);
+    const pane = await screen.findByTestId("review-source", {}, { timeout: 10000 });
+    expect(screen.getByTestId("proposal-operations-list")).toContainElement(pane);
+    expect(screen.getByTestId("proposal-review")).toHaveClass("proposal-review--source");
+    // The source answers 404 here: the pane says so.
+    expect(await screen.findByText("The source couldn't be loaded.")).toBeInTheDocument();
+    // No button crosses to another page any more.
+    expect(screen.queryByTestId("proposal-review-against-source")).not.toBeInTheDocument();
   });
 
-  it("isn't offered for a schema extraction, whose class operations cite passages", async () => {
+  it("shows no source pane for a schema extraction, whose class operations cite passages", async () => {
     const classOp = createProposedOperation({
       op: "create",
       kind: "class",
@@ -73,32 +66,56 @@ describe("Review against source", () => {
       evidence: [{ source_id: "src-1", page: null, start: 0, end: 4, quote: "Room" }],
       scope: "additive",
     });
-    serve(createChangeProposal({ source: "pipeline", operations: [classOp] }));
-    render(
-      <ProposalDetailPage
-        id="proposal-1"
-        onSelectOperation={vi.fn()}
-        onReviewAgainstSource={vi.fn()}
-      />,
+    // It records its source, as every pipeline proposal does.
+    serve(
+      createChangeProposal({
+        source: "pipeline",
+        client_metadata: { source_id: "src-1", pipeline: "schema_extraction" },
+        operations: [classOp],
+      }),
     );
-    await screen.findByTestId("proposal-summary", {}, { timeout: 10000 });
-    expect(screen.queryByTestId("proposal-review-against-source")).not.toBeInTheDocument();
+    render(<ProposalDetailPage id="proposal-1" onSelectOperation={vi.fn()} />);
+    await screen.findByTestId("proposal-review", {}, { timeout: 10000 });
+    expect(screen.queryByTestId("review-source")).not.toBeInTheDocument();
+    expect(screen.getByTestId("proposal-review")).not.toHaveClass("proposal-review--source");
   });
 
-  it("isn't offered for a proposal no source backs", async () => {
+  it("shows the source pane when only relationships cite a passage", async () => {
+    const relationship = createProposedOperation({
+      id: "op-rel",
+      op: "create",
+      kind: "relationship",
+      target_id: null,
+      fields: { property_definition_id: "prop-1", source_id: "ind-1", target_id: "ind-2" },
+      evidence: [{ source_id: "src-1", page: null, start: 0, end: 10, quote: "Edit Check" }],
+      scope: "additive",
+    });
+    serve(createChangeProposal({ source: "pipeline", operations: [relationship] }));
+    render(<ProposalDetailPage id="proposal-1" onSelectOperation={vi.fn()} />);
+    expect(await screen.findByTestId("review-source", {}, { timeout: 10000 })).toBeInTheDocument();
+  });
+
+  it("shows the source pane for an extraction of individuals that found nothing yet", async () => {
+    // Nothing cites the source, but the reviewer can still add what the pipeline missed.
+    serve(
+      createChangeProposal({
+        source: "pipeline",
+        client_metadata: { source_id: "src-1", pipeline: "individual_extraction" },
+        operations: [],
+      }),
+    );
+    render(<ProposalDetailPage id="proposal-1" onSelectOperation={vi.fn()} />);
+    expect(await screen.findByTestId("review-source", {}, { timeout: 10000 })).toBeInTheDocument();
+  });
+
+  it("shows no source pane for a proposal no source backs", async () => {
     serve(createChangeProposal());
-    render(
-      <ProposalDetailPage
-        id="proposal-1"
-        onSelectOperation={vi.fn()}
-        onReviewAgainstSource={vi.fn()}
-      />,
-    );
-    await screen.findByTestId("proposal-summary", {}, { timeout: 10000 });
-    expect(screen.queryByTestId("proposal-review-against-source")).not.toBeInTheDocument();
+    render(<ProposalDetailPage id="proposal-1" onSelectOperation={vi.fn()} />);
+    await screen.findByTestId("proposal-review", {}, { timeout: 10000 });
+    expect(screen.queryByTestId("review-source")).not.toBeInTheDocument();
   });
 
-  it("decides a gold check only on the Review page", async () => {
+  it("decides a gold check here, in gold mode, without bulk", async () => {
     const origin = {
       pipeline_type: "individual_extraction",
       implementation_id: "gold_check",
@@ -112,46 +129,31 @@ describe("Review against source", () => {
         origin,
         client_metadata: {
           origin,
-          gold_check: { document: "edit_check", split: "dev", elements: {}, relationships: {} },
+          gold_check: { document: "edit_check", split: "holdout", elements: {}, relationships: {} },
         },
         operations: [{ ...extracted, probability: 0.9 }],
       }),
     );
-    const onReview = vi.fn();
     render(
-      <ProposalDetailPage
-        id="proposal-1"
-        selectedOperationId="op-1"
-        onSelectOperation={vi.fn()}
-        onReviewAgainstSource={onReview}
-      />,
+      <ProposalDetailPage id="proposal-1" selectedOperationId="op-1" onSelectOperation={vi.fn()} />,
     );
-    const callout = await screen.findByTestId("proposal-gold-callout", {}, { timeout: 10000 });
-    expect(callout).toHaveTextContent(
-      "Gold checks are decided on the Review page, where tier, also-defensible and the excluded reason are recorded.",
-    );
+    // Decided in the inspector, in gold mode: no callout sends the reviewer elsewhere.
+    expect(await screen.findByTestId("review-decide", {}, { timeout: 10000 })).toBeInTheDocument();
+    expect(screen.queryByTestId("proposal-gold-callout")).not.toBeInTheDocument();
+    // The status strip says which split it is from; a held-out check says why it matters.
+    expect(screen.getByTestId("review-gold-split")).toHaveTextContent("holdout");
+    expect(screen.getByTestId("review-gold-holdout")).toBeInTheDocument();
+    // Bulk decisions never apply to a gold check.
     expect(screen.queryByTestId("review-bulk-select")).not.toBeInTheDocument();
     expect(screen.queryByTestId("proposal-selection-bar")).not.toBeInTheDocument();
-    expect(screen.queryByTestId("operation-decision")).not.toBeInTheDocument();
-    // Its create opens the review inspector, read-only here (#1658).
-    expect(await screen.findByTestId("review-inspector")).toBeInTheDocument();
-    expect(screen.queryByTestId("review-decide")).not.toBeInTheDocument();
-    expect(screen.queryByTestId("review-reasons")).not.toBeInTheDocument();
     expect(screen.queryByTestId("proposal-threshold-slider")).not.toBeInTheDocument();
-    expect(screen.queryByRole("checkbox")).not.toBeInTheDocument();
-    await userEvent.click(screen.getByTestId("proposal-gold-review"));
-    expect(onReview).toHaveBeenCalledTimes(1);
+    expect(screen.queryByTestId(/^operation-check-/)).not.toBeInTheDocument();
   });
 
   it("decides other proposals on this page as before", async () => {
     serve(createChangeProposal({ source: "pipeline", operations: [extracted] }));
     render(
-      <ProposalDetailPage
-        id="proposal-1"
-        selectedOperationId="op-1"
-        onSelectOperation={vi.fn()}
-        onReviewAgainstSource={vi.fn()}
-      />,
+      <ProposalDetailPage id="proposal-1" selectedOperationId="op-1" onSelectOperation={vi.fn()} />,
     );
     expect(
       await screen.findByTestId("review-bulk-select", {}, { timeout: 10000 }),

@@ -247,7 +247,7 @@ export function ComparePage({ aId, bId, onFinish }: ComparePageProps) {
     schema,
     overlay,
     link: (operationId) => ({
-      href: `${linkPath("proposal", aId)}/review?selected=${encodeURIComponent(operationId)}`,
+      href: `${linkPath("proposal", aId)}?selected=${encodeURIComponent(operationId)}`,
       onClick: () => {},
     }),
   };

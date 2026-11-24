@@ -73,7 +73,7 @@ export interface InspectorModelOptions {
   deciding?: boolean;
   /** Review timing: each decision records the active time on its operation. */
   clock?: ReturnType<typeof useReviewClock>;
-  /** After a first decision on `decidedId`: the page moves on (the Review page's next awaiting). */
+  /** After a first decision on `decidedId`: the page moves on (to the next row awaiting one). */
   onDecided?: (decidedId: string, after: ProposedOperation[]) => void;
 }
 
@@ -81,7 +81,7 @@ export interface InspectorModelOptions {
  * What the review inspector needs for any operation of a proposal: classes and
  * the schema, names for pills, a relationship's ends and what they can change to,
  * gold mode, the classes picked recently, a near match's choice, and the decision
- * itself. The Review page and proposal detail share it, so both open the same
+ * itself. Proposal detail, the one review page, uses it, so every operation opens the same
  * inspector with the same pills and hovers.
  */
 export function useInspectorModel(

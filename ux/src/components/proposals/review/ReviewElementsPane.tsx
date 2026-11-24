@@ -51,6 +51,8 @@ interface ReviewElementsPaneProps {
   selection?: ListSelection;
   /** A conflict card, in the change-kind view. */
   renderConflict?: (cluster: ConflictCluster) => ReactNode;
+  /** The pane's id, for controls elsewhere that act on the list (aria-controls). */
+  id?: string;
   "data-testid"?: string;
 }
 
@@ -71,6 +73,7 @@ export function ReviewElementsPane({
   emptyMessage,
   selection,
   renderConflict,
+  id,
   "data-testid": testId = "review-elements",
 }: ReviewElementsPaneProps) {
   const listRef = useRef<HTMLDivElement>(null);
@@ -148,6 +151,7 @@ export function ReviewElementsPane({
       aria-label={title === "Elements" ? "Proposed elements" : title}
       title={title}
       noPadding
+      id={id}
       headerAction={header}
       data-testid={testId}
     >

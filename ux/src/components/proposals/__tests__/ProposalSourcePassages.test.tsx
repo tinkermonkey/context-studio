@@ -190,22 +190,25 @@ function renderPage(selectedOperationId?: string) {
 }
 
 describe("an extraction create opens the review inspector (#1658)", () => {
-  it("opens beside the list, with its class pill and its quotes as plain evidence", async () => {
+  it("opens beside the source and the list, its quotes showing their passage (#1664)", async () => {
     renderPage("op-fridge");
     const inspector = await screen.findByTestId("review-inspector", {}, { timeout: 10000 });
     expect(screen.getByTestId("proposal-review")).toContainElement(inspector);
     expect(screen.getByTestId("proposal-review")).toContainElement(
       screen.getByTestId("proposal-operations-list"),
     );
+    // The proposal cites its source: the page has the source pane, beside the list.
+    expect(screen.getByTestId("proposal-review")).toHaveClass("proposal-review--source");
+    expect(screen.getByTestId("proposal-operations-list")).toContainElement(
+      screen.getByTestId("review-source"),
+    );
     expect(screen.getByTestId("review-inspector-title")).toHaveTextContent("Whirlpool WRF555SDFZ");
     expect(screen.getByTestId("review-inspector-class")).toBeInTheDocument();
-    // No source pane here: the quotes are read, not buttons that show nothing.
+    // Its quotes are buttons that show the passage in the source.
     const first = screen.getByTestId("review-evidence-1");
-    expect(first.tagName).toBe("BLOCKQUOTE");
-    expect(first).toHaveClass("review-evidence", "review-evidence--plain");
+    expect(first.tagName).toBe("BUTTON");
     expect(first).toHaveTextContent("French door fridge");
     expect(screen.getByTestId("review-evidence-2")).toHaveTextContent("WRF555SDFZ");
-    expect(screen.queryByRole("button", { name: /Show in the source/ })).not.toBeInTheDocument();
     // The older inspector's sections are gone for it.
     expect(screen.queryByTestId("operation-source-passage")).not.toBeInTheDocument();
     expect(screen.queryByTestId("operation-decision")).not.toBeInTheDocument();

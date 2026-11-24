@@ -11,7 +11,7 @@ The gold extractions live in tests/integration/fixtures/pipelines/extraction_ben
                creates, each with its passages, applied.
     check      Load a gold extraction for a person to check: one unapplied proposal of
                its individuals and relationships, in a new dataset gold-check-<document>,
-               to review on its Review page.
+               to review on its proposal page (gold mode).
     write-gold Write the decisions taken on a gold check's proposal back to gold.json.
     score      Score a proposal an extraction run produced against the gold extraction.
     run        Extract a benchmark document with a pipeline configuration, in a fresh
@@ -923,7 +923,7 @@ def cmd_check(args: argparse.Namespace) -> int:
         f"{document_id}: gold check proposal {proposal['id']} with "
         f"{len(proposal['operations'])} operations in dataset 'gold-check-{document_id}'"
     )
-    print(f"Review it at /app/proposals/{proposal['id']}/review")
+    print(f"Review it at /app/proposals/{proposal['id']}")
     return 0
 
 

@@ -159,11 +159,11 @@ change that makes one stale fails until it is recorded again. See `experiments/R
 
 ## Checking the gold
 
-A person checks a gold file in the app's Review page, and the verdicts are written back to it:
+A person checks a gold file on its proposal page in the app (gold mode), and the verdicts are written back to it:
 
 ```bash
 python scripts/extraction_benchmark.py check --document edit_check
-# review the proposal it prints at /app/proposals/<id>/review
+# review the proposal it prints at /app/proposals/<id>
 python scripts/extraction_benchmark.py write-gold --document edit_check --proposal <id>
 python scripts/extraction_benchmark.py validate --document edit_check
 python scripts/benchmark_replay.py --all          # re-score the recorded runs, free
