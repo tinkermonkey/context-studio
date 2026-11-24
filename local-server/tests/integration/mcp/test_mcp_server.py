@@ -523,7 +523,13 @@ async def test_policy_applies_editorial_changes_at_once(dr_workspace, proposals)
     arguments = {
         "taxonomy_id": TAXONOMY_ID,
         "title": "Reword Operation",
-        "operations": [update_operation(1, OPERATION_ID, description="One endpoint and method")],
+        # A stated probability: an operation without one never auto-applies (#1628)
+        "operations": [
+            {
+                **update_operation(1, OPERATION_ID, description="One endpoint and method"),
+                "probability": 0.9,
+            }
+        ],
     }
     async with mcp_client(dr_workspace, write_tools) as client:
         result = await result_of(client, "tools/call", call_params("propose_changes", arguments))
