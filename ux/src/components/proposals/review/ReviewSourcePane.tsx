@@ -1,5 +1,5 @@
 import { useEffect, useRef, type ReactNode, type RefObject } from "react";
-import { Panel } from "@tinkermonkey/heimdall-ui";
+import { Button, Panel } from "@tinkermonkey/heimdall-ui";
 import { SourceText } from "@/components/pipeline/extraction-review/SourceText";
 import type { KeyedSpan } from "@/components/pipeline/extraction-review/reviewUtils";
 import { selectedPassage, type SelectedPassage } from "./addFromText";
@@ -38,6 +38,8 @@ interface ReviewSourcePaneProps {
   popoverAnchor?: PopoverAnchor;
   /** A mouse press outside the add form (and outside the source text) closes it. */
   onDismissPopover?: () => void;
+  /** Fold the pane to a rail (key [); without it the pane doesn't fold. */
+  onFold?: () => void;
   /**
    * A passage to bring into view and flash: where it starts in the text
    * (UTF-16), and a nonce so asking for the same passage again shows it again.
@@ -94,6 +96,7 @@ export function ReviewSourcePane({
   popover,
   popoverAnchor,
   onDismissPopover,
+  onFold,
   focus,
 }: ReviewSourcePaneProps) {
   const ownTextRef = useRef<HTMLDivElement>(null);
@@ -195,19 +198,38 @@ export function ReviewSourcePane({
       className="review-pane review-pane--source"
       role="region"
       aria-label="Source text"
+      id="review-source-pane"
       title="Source"
       headerAction={
-        <div className="review-legend" data-testid="review-legend">
-          {VERDICTS.map((verdict) => (
-            <span key={verdict} className="review-legend__item">
-              <span
-                aria-hidden="true"
-                className={`review-legend__swatch review-legend__swatch--${verdict}`}
-              />
-              {VERDICT_LEGEND[verdict]}
-            </span>
-          ))}
-        </div>
+        <span className="review-pane__actions">
+          <div className="review-legend" data-testid="review-legend">
+            {VERDICTS.map((verdict) => (
+              <span key={verdict} className="review-legend__item">
+                <span
+                  aria-hidden="true"
+                  className={`review-legend__swatch review-legend__swatch--${verdict}`}
+                />
+                {VERDICT_LEGEND[verdict]}
+              </span>
+            ))}
+          </div>
+          {onFold && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="review-fold"
+              aria-label="Fold the source"
+              aria-keyshortcuts="["
+              aria-expanded={true}
+              aria-controls="review-source-pane"
+              title="Fold the source ([)"
+              onClick={onFold}
+              data-testid="review-fold-source"
+            >
+              ‹
+            </Button>
+          )}
+        </span>
       }
       data-testid="review-source"
     >

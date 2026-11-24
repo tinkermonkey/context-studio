@@ -1197,6 +1197,82 @@ vi.mock("@tinkermonkey/heimdall-ui", () => ({
         meta && React.createElement("span", { className: "hierarchy-row__meta" }, meta),
       ),
   ),
+  // A folded pane's rail (#1665): the expand button, the marks as a vertical toolbar in
+  // position order (each a button calling onMarkClick, else onExpand), the position label.
+  PaneRail: React.forwardRef(
+    (
+      {
+        label,
+        onExpand,
+        marks = [],
+        selectedPosition,
+        positionLabel,
+        shortcut,
+        side = "left",
+        expandLabel,
+        mapLabel,
+        onMarkClick,
+        onMarkHover,
+        onMarkLeave,
+        className = "",
+        ...props
+      }: any,
+      ref: any,
+    ) =>
+      React.createElement(
+        "div",
+        {
+          ref,
+          className: ["pane-rail", `pane-rail--${side}`, className].filter(Boolean).join(" "),
+          "data-selected-position": selectedPosition,
+          // As the real rail: a click anywhere a mark doesn't handle expands the pane.
+          onClick: (event: any) => {
+            const mark = event.target.closest?.("[data-mark-id]");
+            if (mark && onMarkClick) onMarkClick(mark.dataset.markId);
+            else onExpand();
+          },
+          ...props,
+        },
+        React.createElement(
+          "button",
+          {
+            type: "button",
+            className: "pane-rail__expand",
+            "aria-label": expandLabel ?? `Expand ${label}`,
+            "aria-expanded": false,
+            "aria-keyshortcuts": shortcut,
+          },
+          "›",
+        ),
+        React.createElement(
+          "div",
+          {
+            className: "pane-rail__marks",
+            role: "toolbar",
+            "aria-orientation": "vertical",
+            "aria-label": mapLabel ?? `${label} map`,
+          },
+          [...marks]
+            .map((mark: any, index: number) => ({ mark, index }))
+            .sort((a: any, b: any) => a.mark.position - b.mark.position || a.index - b.index)
+            .map(({ mark, index }: any) =>
+              React.createElement("button", {
+                key: `${mark.id}-${index}`,
+                type: "button",
+                className: `pane-rail__mark pane-rail__mark--${mark.tone ?? "neutral"}`,
+                "aria-label": mark.label,
+                "data-mark-id": mark.id,
+                onMouseEnter: (event: any) => onMarkHover?.(mark.id, event.currentTarget),
+                onMouseLeave: () => onMarkLeave?.(mark.id),
+              }),
+            ),
+        ),
+        positionLabel &&
+          React.createElement("span", { className: "pane-rail__position" }, positionLabel),
+        React.createElement("span", { className: "pane-rail__label" }, label),
+        shortcut && React.createElement("kbd", { className: "pane-rail__key" }, shortcut),
+      ),
+  ),
   // A line diff: one row per line, its type as a class and data attribute.
   SideBySideDiff: ({ lines = [], className = "", ...props }: any) =>
     React.createElement(

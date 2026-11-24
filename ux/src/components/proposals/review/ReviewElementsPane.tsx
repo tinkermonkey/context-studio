@@ -1,5 +1,5 @@
 import { useEffect, useRef, type ReactNode } from "react";
-import { Chip, Panel, type ChipVariant } from "@tinkermonkey/heimdall-ui";
+import { Button, Chip, Panel, type ChipVariant } from "@tinkermonkey/heimdall-ui";
 import type { ProposedOperation } from "@/api/services/proposals";
 import type { ConflictCluster } from "../tieredModel";
 import type { OperationLink } from "./ReviewPills";
@@ -53,6 +53,10 @@ interface ReviewElementsPaneProps {
   renderConflict?: (cluster: ConflictCluster) => ReactNode;
   /** The pane's id, for controls elsewhere that act on the list (aria-controls). */
   id?: string;
+  /** Fold the pane to a rail (key ]); without it the pane doesn't fold. */
+  onFold?: () => void;
+  /** Folded to its rail: kept mounted (its scroll and state stay) but not shown. */
+  hidden?: boolean;
   "data-testid"?: string;
 }
 
@@ -74,16 +78,19 @@ export function ReviewElementsPane({
   selection,
   renderConflict,
   id,
+  onFold,
+  hidden,
   "data-testid": testId = "review-elements",
 }: ReviewElementsPaneProps) {
   const listRef = useRef<HTMLDivElement>(null);
 
-  // Keep the selected row in view as J / K, a decision or a link move the selection.
+  // Keep the selected row in view as J / K, a decision or a link move the selection,
+  // and bring it back into view when the folded list unfolds.
   useEffect(() => {
-    if (!selectedId) return;
+    if (!selectedId || hidden) return;
     const row = listRef.current?.querySelector(`[data-row-id="${CSS.escape(selectedId)}"]`);
     row?.scrollIntoView?.({ block: "nearest" });
-  }, [selectedId, sections]);
+  }, [selectedId, sections, hidden]);
 
   const renderRow = (operation: ProposedOperation) => {
     const row = rowOf(operation);
@@ -152,7 +159,29 @@ export function ReviewElementsPane({
       title={title}
       noPadding
       id={id}
-      headerAction={header}
+      hidden={hidden}
+      headerAction={
+        // One wrapper whether or not the pane folds, so the filters don't remount when it can.
+        <span className="review-pane__actions">
+          {header}
+          {onFold && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="review-fold"
+              aria-label="Fold the list"
+              aria-keyshortcuts="]"
+              aria-expanded={true}
+              aria-controls={id}
+              title="Fold the list (])"
+              onClick={onFold}
+              data-testid="review-fold-list"
+            >
+              ‹
+            </Button>
+          )}
+        </span>
+      }
       data-testid={testId}
     >
       {toolbar}

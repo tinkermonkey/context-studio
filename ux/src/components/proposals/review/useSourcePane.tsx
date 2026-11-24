@@ -1,4 +1,5 @@
 import { useMemo, useRef, useState } from "react";
+import type { PaneRailMark } from "@tinkermonkey/heimdall-ui";
 import { useAddProposalIndividual } from "@/api/hooks/proposals";
 import { useSource, useSourceText } from "@/api/hooks/sources/useSource";
 import type { ChangeProposal, ProposedOperation } from "@/api/services/proposals";
@@ -15,6 +16,8 @@ import {
 import type { Tier } from "./goldModel";
 import { ReviewSourcePane, type PopoverAnchor } from "./ReviewSourcePane";
 import {
+  VERDICT_CHIP,
+  VERDICT_LEGEND,
   extractedFromSource,
   isElement,
   isRelationship,
@@ -23,6 +26,19 @@ import {
   verdictOf,
 } from "./reviewModel";
 import type { InspectorModel } from "./useInspectorModel";
+
+/** A source rail mark's id: the highlight's operation and its offset in the text. */
+export function railMarkId(operationId: string, start: number): string {
+  return `${operationId}@${start}`;
+}
+
+/** A source rail mark's operation and offset; a list mark's id is the operation's alone. */
+export function railMarkTarget(id: string): { operationId: string; start?: number } {
+  const at = id.lastIndexOf("@");
+  if (at < 0) return { operationId: id };
+  const start = Number(id.slice(at + 1));
+  return Number.isFinite(start) ? { operationId: id.slice(0, at), start } : { operationId: id };
+}
 
 /** An extraction of individuals: client_metadata.pipeline, or its origin's pipeline_type. */
 const INDIVIDUAL_EXTRACTION = "individual_extraction";
@@ -39,6 +55,8 @@ interface SourcePaneOptions {
     "names" | "pickable" | "classesLoading" | "recentClasses" | "rememberClass" | "gold"
   >;
   clock: ReturnType<typeof useReviewClock>;
+  /** Fold the pane to a rail; without it the pane doesn't fold. */
+  onFold?: () => void;
 }
 
 /**
@@ -56,6 +74,7 @@ export function useSourcePane({
   select,
   model,
   clock,
+  onFold,
 }: SourcePaneOptions) {
   const { toast } = useToasts();
   const elements = useMemo(() => operations.filter(isElement), [operations]);
@@ -157,6 +176,35 @@ export function useSourcePane({
     }
   };
 
+  // The rail's map while the pane is folded: each highlight at its place in the text,
+  // in its verdict's tone (named in its label too, for forced colours).
+  const textLength = sourceText?.text.length ?? 0;
+  const railMarks = useMemo((): PaneRailMark[] => {
+    if (!textLength) return [];
+    return spans.flatMap((span) => {
+      if (span.start == null) return [];
+      const operation = operations.find((o) => o.id === span.key);
+      const verdict = operation ? verdictOf(operation) : "awaiting";
+      return [
+        {
+          // The highlight itself (an element can have several): its operation and offset.
+          id: railMarkId(span.key, span.start),
+          position: span.start / textLength,
+          tone: VERDICT_CHIP[verdict] as PaneRailMark["tone"],
+          label: `${VERDICT_LEGEND[verdict]}: ${span.quote}`,
+        },
+      ];
+    });
+  }, [spans, operations, textLength]);
+  const selectedSpan = spans.find((s) => s.key === selectedId);
+  /** Show a highlight of `operationId` (the first, or the one at `start`) in the text. */
+  const showSpan = (operationId: string, start?: number) => {
+    const span =
+      spans.find((s) => s.key === operationId && (start === undefined || s.start === start)) ??
+      spans.find((s) => s.key === operationId);
+    if (span?.start != null) setFocus({ start: span.start, nonce: Date.now() });
+  };
+
   const unavailable = !sourceId
     ? "No element cites a passage in a source."
     : sourceFailed
@@ -188,6 +236,7 @@ export function useSourcePane({
       focus={focus}
       textRef={textRef}
       onDismissPopover={() => closeAdding({ refocus: false })}
+      onFold={sourceText ? onFold : undefined}
       onSelectText={canAdd ? openAdding : undefined}
       addBlocked={addBlocked}
       popoverAnchor={adding?.anchor}
@@ -221,5 +270,16 @@ export function useSourcePane({
     adding: !!adding,
     closeAdding,
     showPassage,
+    showSpan,
+    /** Forget the passage last shown, so the text opens on the selection when it unfolds. */
+    forgetFocus: () => setFocus(undefined),
+    /** The text loaded: only then does the pane fold (a rail of a missing text maps nothing). */
+    hasText: !!sourceText,
+    /** The folded pane's map: its highlights, and where the selection is in the text. */
+    rail: {
+      marks: railMarks,
+      selectedPosition:
+        selectedSpan?.start != null && textLength ? selectedSpan.start / textLength : undefined,
+    },
   };
 }
