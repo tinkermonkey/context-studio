@@ -662,7 +662,7 @@ describe("revert", () => {
     renderPage();
     await user.click(await screen.findByTestId("proposal-revert"));
     expect(await screen.findByTestId("revert-preview-none")).toHaveTextContent(
-      "Nothing has been edited since it was applied.",
+      "No field this proposal updated has been edited since it was applied.",
     );
     await user.click(within(screen.getByRole("dialog")).getByRole("button", { name: "Cancel" }));
 

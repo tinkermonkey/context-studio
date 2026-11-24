@@ -10,6 +10,7 @@ Tests that:
 
 import os
 import sys
+from dataclasses import asdict
 
 sys.path.append(
     os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
@@ -28,7 +29,7 @@ from domain.ontology.entities import (
 )
 from domain.ontology.events import GraphInvalidated
 from domain.ontology.snapshots import entity_snapshot
-from domain.ontology.value_objects import DataType, ExternalReference
+from domain.ontology.value_objects import DataPropertyValue, DataType, ExternalReference
 from domain.versioning.exceptions import RevertConflictError, RevertRefusedError
 from domain.versioning.revert_service import RevertService
 from domain.versioning.value_objects import ChangeOperation
@@ -308,6 +309,64 @@ def test_preview_compares_with_the_newest_update_of_the_run(ontology_repo, chang
     _class_with_description(ontology_repo, "C")
     _record_description_update(change_repo, "A", "B")
     _record_description_update(change_repo, "B", "C")
+
+    assert revert_svc.preview("run-1") == []
+
+
+def test_preview_compares_structured_fields_as_the_change_event_recorded_them(
+    ontology_repo, change_repo, revert_svc
+):
+    """external_references are reference objects on the entity and dicts in the event."""
+    grounded = [
+        ExternalReference(source="wikidata", identifier="Q1", uri="u1"),
+        ExternalReference(source="dbpedia", identifier="D1", uri="u2", metadata={"k": "v"}),
+    ]
+    cls = Class(
+        id="cls-1",
+        concept_scheme_id="scheme-1",
+        taxonomy_id="tx-1",
+        title="Animal",
+        external_references=grounded,
+    )
+    ontology_repo.save_class(cls)
+    change_repo.record_change(
+        entity_id="cls-1",
+        entity_type="class",
+        operation=ChangeOperation.UPDATE,
+        previous_state={"external_references": []},
+        new_state={"external_references": [ref.to_dict() for ref in grounded]},
+        batch_run_id="run-1",
+    )
+
+    # As applied: the objects and the dicts are the same value.
+    assert revert_svc.preview("run-1") == []
+
+    cls.external_references = grounded[:1]
+    ontology_repo.save_class(cls)
+
+    [edit] = revert_svc.preview("run-1")
+    assert (edit.field, edit.entity_id) == ("external_references", "cls-1")
+    assert edit.applied_value == [ref.to_dict() for ref in grounded]
+    assert edit.current_value == [grounded[0].to_dict()]
+
+
+def test_preview_compares_attribute_values_as_the_change_event_recorded_them(
+    ontology_repo, change_repo, revert_svc
+):
+    """data_properties are value objects on the individual and dicts in the event."""
+    values = [DataPropertyValue(property_identifier="color", value="blue", datatype="xsd:string")]
+    individual = Individual(
+        id="ind-1", class_ids=["cls-1"], title="Sky", dataset_id="ds-1", data_properties=values
+    )
+    ontology_repo.save_individual(individual)
+    change_repo.record_change(
+        entity_id="ind-1",
+        entity_type="individual",
+        operation=ChangeOperation.UPDATE,
+        previous_state={"data_properties": []},
+        new_state={"data_properties": [asdict(v) for v in values]},
+        batch_run_id="run-1",
+    )
 
     assert revert_svc.preview("run-1") == []
 

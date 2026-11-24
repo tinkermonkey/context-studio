@@ -992,7 +992,7 @@ class RevertPreviewResponse(BaseModel):
 
     overwritten: list[RevertPreviewItem] = Field(
         default_factory=list,
-        description="One per entity and field edited since the apply; empty when none was",
+        description="One per entity and field the proposal updated that was edited since the apply; empty when none was. Entities it created are not checked",
     )
 
 

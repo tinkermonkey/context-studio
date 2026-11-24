@@ -57,7 +57,7 @@ function RevertPreview({ proposalId }: { proposalId: string }) {
   if (overwritten.length === 0) {
     return (
       <p className="revert-preview__note" data-testid="revert-preview-none">
-        Nothing has been edited since it was applied.
+        No field this proposal updated has been edited since it was applied.
       </p>
     );
   }

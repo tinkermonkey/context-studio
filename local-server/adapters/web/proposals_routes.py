@@ -683,7 +683,8 @@ async def preview_revert(
 
     These are fields edited after the proposal applied them: their current value
     differs from the one the proposal's newest update set. Read-only; empty when
-    nothing was edited since (or nothing was applied).
+    no field it updated was edited since (or nothing was applied). Entities the
+    proposal created are not checked: the revert deletes them whole.
     """
 
     def run() -> RevertPreviewResponse:

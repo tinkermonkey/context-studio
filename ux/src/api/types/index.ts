@@ -4052,7 +4052,8 @@ export interface paths {
      *
      *     These are fields edited after the proposal applied them: their current value
      *     differs from the one the proposal's newest update set. Read-only; empty when
-     *     nothing was edited since (or nothing was applied).
+     *     no field it updated was edited since (or nothing was applied). Entities the
+     *     proposal created are not checked: the revert deletes them whole.
      */
     get: operations["preview_revert_api_proposals__proposal_id__revert_preview_get"];
     put?: never;
@@ -10837,7 +10838,7 @@ export interface components {
     RevertPreviewResponse: {
       /**
        * Overwritten
-       * @description One per entity and field edited since the apply; empty when none was
+       * @description One per entity and field the proposal updated that was edited since the apply; empty when none was. Entities it created are not checked
        */
       overwritten?: components["schemas"]["RevertPreviewItem"][];
     };
