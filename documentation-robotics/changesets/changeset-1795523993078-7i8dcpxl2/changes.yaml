@@ -119,7 +119,12 @@
       created_at: 2026-11-24T12:39:53.758Z
       updated_at: 2026-11-24T12:39:53.758Z
       version: 1
-  timestamp: 2026-11-24T12:39:53.784Z
+    source_reference:
+      provenance: manual
+      locations:
+        - file: local-server/adapters/persistence/sqlite/models.py
+          symbol: ProposalLinkRecord
+  timestamp: 2026-11-24T14:45:40.015Z
   sequenceNumber: 4
 - type: add
   elementId: data-store.validationrule.uq-proposal-links-source-kind-target
@@ -223,7 +228,12 @@
       created_at: 2026-11-24T12:39:53.764Z
       updated_at: 2026-11-24T12:39:53.764Z
       version: 1
-  timestamp: 2026-11-24T12:39:53.784Z
+    source_reference:
+      provenance: manual
+      locations:
+        - file: local-server/adapters/persistence/sqlite/models.py
+          symbol: ProposalOperation.amended_at
+  timestamp: 2026-11-24T14:45:40.015Z
   sequenceNumber: 9
 - type: add
   elementId: data-store.field.amendments
@@ -245,7 +255,12 @@
       created_at: 2026-11-24T12:39:53.766Z
       updated_at: 2026-11-24T12:39:53.766Z
       version: 1
-  timestamp: 2026-11-24T12:39:53.784Z
+    source_reference:
+      provenance: manual
+      locations:
+        - file: local-server/adapters/persistence/sqlite/models.py
+          symbol: ProposalOperation.amendments
+  timestamp: 2026-11-24T14:45:40.015Z
   sequenceNumber: 10
 - type: add
   elementId: data-model.objectschema.proposal-link
@@ -271,7 +286,12 @@
       created_at: 2026-11-24T12:39:53.766Z
       updated_at: 2026-11-24T12:39:53.766Z
       version: 1
-  timestamp: 2026-11-24T12:39:53.784Z
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/domain/versioning/proposals.py
+          symbol: ProposalLink
+  timestamp: 2026-11-24T14:45:39.938Z
   sequenceNumber: 11
 - type: add
   elementId: data-model.objectschema.operation-amendment
@@ -294,7 +314,12 @@
       created_at: 2026-11-24T12:39:53.767Z
       updated_at: 2026-11-24T12:39:53.767Z
       version: 1
-  timestamp: 2026-11-24T12:39:53.784Z
+    source_reference:
+      provenance: manual
+      locations:
+        - file: local-server/domain/versioning/proposals.py
+          symbol: ProposedOperation.amendments
+  timestamp: 2026-11-24T14:45:40.015Z
   sequenceNumber: 12
 - type: add
   elementId: application.applicationfunction.proposal-amendment
@@ -315,7 +340,12 @@
       created_at: 2026-11-24T12:39:53.767Z
       updated_at: 2026-11-24T12:39:53.767Z
       version: 1
-  timestamp: 2026-11-24T12:39:53.784Z
+    source_reference:
+      provenance: manual
+      locations:
+        - file: local-server/domain/versioning/proposal_service.py
+          symbol: ProposalService.amend
+  timestamp: 2026-11-24T14:45:40.015Z
   sequenceNumber: 13
 - type: add
   elementId: application.applicationfunction.proposal-withdrawal
@@ -336,7 +366,12 @@
       created_at: 2026-11-24T12:39:53.767Z
       updated_at: 2026-11-24T12:39:53.767Z
       version: 1
-  timestamp: 2026-11-24T14:06:12.831Z
+    source_reference:
+      provenance: manual
+      locations:
+        - file: local-server/domain/versioning/proposal_service.py
+          symbol: ProposalService.withdraw
+  timestamp: 2026-11-24T14:45:40.015Z
   sequenceNumber: 14
 - type: add
   elementId: application.applicationfunction.proposal-linking
@@ -355,7 +390,12 @@
       created_at: 2026-11-24T12:39:53.767Z
       updated_at: 2026-11-24T12:39:53.767Z
       version: 1
-  timestamp: 2026-11-24T12:39:53.784Z
+    source_reference:
+      provenance: manual
+      locations:
+        - file: local-server/domain/versioning/proposal_service.py
+          symbol: ProposalService.links_of
+  timestamp: 2026-11-24T14:45:40.015Z
   sequenceNumber: 15
 - type: add
   elementId: api.operation.amend-proposal
@@ -380,7 +420,12 @@
       created_at: 2026-11-24T12:39:53.767Z
       updated_at: 2026-11-24T12:39:53.767Z
       version: 1
-  timestamp: 2026-11-24T12:39:53.784Z
+    source_reference:
+      provenance: manual
+      locations:
+        - file: local-server/adapters/web/proposals_routes.py
+          symbol: amend_proposal
+  timestamp: 2026-11-24T14:45:40.015Z
   sequenceNumber: 16
 - type: add
   elementId: api.operation.withdraw-proposal
@@ -406,7 +451,12 @@
       created_at: 2026-11-24T12:39:53.769Z
       updated_at: 2026-11-24T12:39:53.769Z
       version: 1
-  timestamp: 2026-11-24T14:06:12.897Z
+    source_reference:
+      provenance: manual
+      locations:
+        - file: local-server/adapters/web/proposals_routes.py
+          symbol: withdraw_proposal
+  timestamp: 2026-11-24T14:45:40.015Z
   sequenceNumber: 17
 - type: add
   elementId: api.requestbody.proposal-amend-request
@@ -425,7 +475,12 @@
       created_at: 2026-11-24T12:39:53.769Z
       updated_at: 2026-11-24T12:39:53.769Z
       version: 1
-  timestamp: 2026-11-24T12:39:53.784Z
+    source_reference:
+      provenance: manual
+      locations:
+        - file: local-server/adapters/web/schemas/proposals.py
+          symbol: ChangeProposalAmendRequest
+  timestamp: 2026-11-24T14:45:40.015Z
   sequenceNumber: 18
 - type: add
   elementId: api.requestbody.proposal-withdraw-request
@@ -442,7 +497,12 @@
       created_at: 2026-11-24T12:39:53.770Z
       updated_at: 2026-11-24T12:39:53.770Z
       version: 1
-  timestamp: 2026-11-24T12:39:53.784Z
+    source_reference:
+      provenance: manual
+      locations:
+        - file: local-server/adapters/web/schemas/proposals.py
+          symbol: ChangeProposalWithdrawRequest
+  timestamp: 2026-11-24T14:45:40.015Z
   sequenceNumber: 19
 - type: add
   elementId: api.response.proposal-link-response
@@ -463,7 +523,12 @@
       created_at: 2026-11-24T12:39:53.770Z
       updated_at: 2026-11-24T12:39:53.770Z
       version: 1
-  timestamp: 2026-11-24T12:39:53.784Z
+    source_reference:
+      provenance: manual
+      locations:
+        - file: local-server/adapters/web/schemas/proposals.py
+          symbol: ProposalLinkResponse
+  timestamp: 2026-11-24T14:45:40.015Z
   sequenceNumber: 20
 - type: relationship-add
   elementId: motivation.requirement.proposals-link-to-each-other-through-one-link-model::realizes::motivation.principle.agents-propose-and-people-decide
@@ -939,7 +1004,11 @@
       created_at: 2026-11-24T12:40:02.838Z
       updated_at: 2026-11-24T12:40:02.838Z
       version: 1
-  timestamp: 2026-11-24T14:06:13.257Z
+    source_reference:
+      provenance: manual
+      locations:
+        - file: local-server/tests/integration/routes/test_proposal_amend_withdraw_routes.py
+  timestamp: 2026-11-24T14:45:40.015Z
   sequenceNumber: 59
 - type: relationship-add
   elementId: testing.testcoveragetarget.proposal-amend-withdraw-and-links::covers::api.operation.amend-proposal
