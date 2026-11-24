@@ -4022,3 +4022,54 @@ api.operation.mcp-endpoint:
     created_at: 2026-11-19T14:46:21.106Z
     updated_at: 2026-11-19T14:46:21.106Z
     version: 1
+api.operation.amend-proposal:
+  id: 175ae104-71b8-4f16-ab61-174b7a8afafe
+  path: api.operation.amend-proposal
+  spec_node_id: api.operation
+  type: operation
+  layer_id: api
+  name: Amend Proposal
+  description: Replace, add or remove pending operations of an open proposal
+    (dry_run validates only). 409 when the proposal is not open or a named
+    operation is decided.
+  attributes:
+    operationId: amend_proposal_api_proposals__proposal_id__amend_post
+    summary: Amend Proposal
+    tags: proposals
+    http_method: POST
+    http_path: /api/proposals/{proposal_id}/amend
+  source_reference:
+    provenance: manual
+    locations:
+      - file: local-server/adapters/web/proposals_routes.py
+        symbol: amend_proposal
+  metadata:
+    created_at: 2026-11-24T12:39:53.767Z
+    updated_at: 2026-11-24T12:39:53.767Z
+    version: 1
+api.operation.withdraw-proposal:
+  id: 1b58500c-579f-4e99-a0c8-9f331735b6ae
+  path: api.operation.withdraw-proposal
+  spec_node_id: api.operation
+  type: operation
+  layer_id: api
+  name: Withdraw Proposal
+  description: "Withdraw an open proposal: roll back what it applied, mark the
+    rest withdrawn, optionally naming the proposal that supersedes it. 409 when
+    it is not open, or when the rollback conflicts with later changes (the
+    blockers, as revert gives them)."
+  attributes:
+    operationId: withdraw_proposal_api_proposals__proposal_id__withdraw_post
+    summary: Withdraw Proposal
+    tags: proposals
+    http_method: POST
+    http_path: /api/proposals/{proposal_id}/withdraw
+  source_reference:
+    provenance: manual
+    locations:
+      - file: local-server/adapters/web/proposals_routes.py
+        symbol: withdraw_proposal
+  metadata:
+    created_at: 2026-11-24T12:39:53.769Z
+    updated_at: 2026-11-24T12:39:53.769Z
+    version: 1

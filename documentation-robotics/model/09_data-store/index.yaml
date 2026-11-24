@@ -1,0 +1,18 @@
+data-store.index.ix-proposal-links-target-proposal-id:
+  id: e15edbd6-ff02-46de-bc57-74f9339bb238
+  path: data-store.index.ix-proposal-links-target-proposal-id
+  spec_node_id: data-store.index
+  type: index
+  layer_id: data-store
+  name: ix_proposal_links_target_proposal_id
+  description: "Finds the links into a proposal: what supersedes or reverses it
+    (superseded_by, reversed_by), and the open reversal that blocks a second
+    one."
+  attributes:
+    fields: target_proposal_id
+    method: BTREE
+    unique: false
+  metadata:
+    created_at: 2026-11-24T12:39:53.762Z
+    updated_at: 2026-11-24T12:39:53.762Z
+    version: 1

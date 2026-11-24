@@ -16,11 +16,11 @@ Application components, services, and interactions.
 
 | Metric                    | Count |
 | ------------------------- | ----- |
-| Elements                  | 194   |
-| Intra-Layer Relationships | 422   |
-| Inter-Layer Relationships | 423   |
-| Inbound Relationships     | 232   |
-| Outbound Relationships    | 191   |
+| Elements                  | 197   |
+| Intra-Layer Relationships | 429   |
+| Inter-Layer Relationships | 434   |
+| Inbound Relationships     | 234   |
+| Outbound Relationships    | 200   |
 
 **Cross-Layer References**:
 
@@ -126,6 +126,9 @@ Application components, services, and interactions.
 | `application.applicationfunction.individual-pre-review`                     | `applicationfunction`      | 7             |
 | `application.applicationfunction.llm-provider-routing`                      | `applicationfunction`      | 1             |
 | `application.applicationfunction.network-metrics-function`                  | `applicationfunction`      | 2             |
+| `application.applicationfunction.proposal-amendment`                        | `applicationfunction`      | 2             |
+| `application.applicationfunction.proposal-linking`                          | `applicationfunction`      | 3             |
+| `application.applicationfunction.proposal-withdrawal`                       | `applicationfunction`      | 3             |
 | `application.applicationfunction.schema-connection-refinement-apply`        | `applicationfunction`      | 2             |
 | `application.applicationfunction.schema-definition-refinement-apply`        | `applicationfunction`      | 2             |
 | `application.applicationfunction.schema-extraction-apply`                   | `applicationfunction`      | 2             |
@@ -211,7 +214,7 @@ Application components, services, and interactions.
 | `application.applicationservice.pipeline-selection-service`                 | `applicationservice`       | 23            |
 | `application.applicationservice.proposal-apply-rules`                       | `applicationservice`       | 3             |
 | `application.applicationservice.proposal-comparison-service`                | `applicationservice`       | 2             |
-| `application.applicationservice.proposal-service`                           | `applicationservice`       | 26            |
+| `application.applicationservice.proposal-service`                           | `applicationservice`       | 32            |
 | `application.applicationservice.reference-source`                           | `applicationservice`       | 6             |
 | `application.applicationservice.revert-service`                             | `applicationservice`       | 5             |
 | `application.applicationservice.schema-recognition-preview-service`         | `applicationservice`       | 3             |
@@ -268,6 +271,7 @@ flowchart TB
 | `api.operation.references.application.applicationservice`            | `api.operation.add-parent-class-to-individual`                              | `application.applicationservice.ontology-service`                                            | `application` | `references` | many-to-many | medium   |
 | `api.operation.references.application.applicationservice`            | `api.operation.add-proposal-operations`                                     | `application.applicationservice.proposal-service`                                            | `application` | `references` | many-to-many | medium   |
 | `api.operation.references.application.applicationservice`            | `api.operation.add-source`                                                  | `application.applicationservice.source-service`                                              | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice`            | `api.operation.amend-proposal`                                              | `application.applicationservice.proposal-service`                                            | `application` | `references` | many-to-many | medium   |
 | `api.operation.references.application.applicationservice`            | `api.operation.analyze-text`                                                | `application.applicationservice.extraction-service`                                          | `application` | `references` | many-to-many | medium   |
 | `api.operation.references.application.applicationservice`            | `api.operation.apply-pipeline-run`                                          | `application.applicationservice.proposal-service`                                            | `application` | `references` | many-to-many | medium   |
 | `api.operation.references.application.applicationservice`            | `api.operation.apply-proposal`                                              | `application.applicationservice.proposal-service`                                            | `application` | `references` | many-to-many | medium   |
@@ -435,6 +439,7 @@ flowchart TB
 | `api.operation.references.application.applicationservice`            | `api.operation.update-pipeline-configuration`                               | `application.applicationservice.pipeline-registry`                                           | `application` | `references` | many-to-many | medium   |
 | `api.operation.references.application.applicationservice`            | `api.operation.update-property-definition`                                  | `application.applicationservice.ontology-service`                                            | `application` | `references` | many-to-many | medium   |
 | `api.operation.references.application.applicationservice`            | `api.operation.update-taxonomy`                                             | `application.applicationservice.ontology-service`                                            | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice`            | `api.operation.withdraw-proposal`                                           | `application.applicationservice.proposal-service`                                            | `application` | `references` | many-to-many | medium   |
 | `apm.span.monitors.application.applicationcomponent`                 | `apm.span.embedding-encode-span`                                            | `application.applicationcomponent.sentence-transformer-embedding-adapter`                    | `application` | `monitors`   | many-to-many | medium   |
 | `apm.span.monitors.application.applicationcomponent`                 | `apm.span.llm-completion-span`                                              | `application.applicationcomponent.anthropic-llm-provider`                                    | `application` | `monitors`   | many-to-many | medium   |
 | `apm.span.monitors.application.applicationcomponent`                 | `apm.span.llm-completion-span`                                              | `application.applicationcomponent.open-ai-llm-provider`                                      | `application` | `monitors`   | many-to-many | medium   |
@@ -542,6 +547,12 @@ flowchart TB
 | `application.applicationfunction.satisfies.motivation.requirement`   | `application.applicationfunction.individual-extraction-apply`               | `motivation.requirement.individuals-belong-to-one-dataset`                                   | `motivation`  | `satisfies`  | many-to-many | medium   |
 | `application.applicationfunction.accesses.data-model.objectschema`   | `application.applicationfunction.individual-pre-review`                     | `data-model.objectschema.pipeline-configuration-entity`                                      | `data-model`  | `accesses`   | many-to-many | medium   |
 | `application.applicationfunction.accesses.data-model.objectschema`   | `application.applicationfunction.individual-pre-review`                     | `data-model.objectschema.pre-review-verdict`                                                 | `data-model`  | `accesses`   | many-to-many | medium   |
+| `application.applicationfunction.accesses.data-model.objectschema`   | `application.applicationfunction.proposal-amendment`                        | `data-model.objectschema.operation-amendment`                                                | `data-model`  | `accesses`   | many-to-many | medium   |
+| `application.applicationfunction.satisfies.motivation.requirement`   | `application.applicationfunction.proposal-amendment`                        | `motivation.requirement.a-proposer-amends-its-open-proposal-in-place`                        | `motivation`  | `satisfies`  | many-to-many | medium   |
+| `application.applicationfunction.satisfies.motivation.requirement`   | `application.applicationfunction.proposal-amendment`                        | `motivation.requirement.an-amended-operation-shows-what-it-replaced`                         | `motivation`  | `satisfies`  | many-to-many | medium   |
+| `application.applicationfunction.accesses.data-model.objectschema`   | `application.applicationfunction.proposal-linking`                          | `data-model.objectschema.proposal-link`                                                      | `data-model`  | `accesses`   | many-to-many | medium   |
+| `application.applicationfunction.satisfies.motivation.requirement`   | `application.applicationfunction.proposal-linking`                          | `motivation.requirement.proposals-link-to-each-other-through-one-link-model`                 | `motivation`  | `satisfies`  | many-to-many | medium   |
+| `application.applicationfunction.satisfies.motivation.requirement`   | `application.applicationfunction.proposal-withdrawal`                       | `motivation.requirement.a-proposer-withdraws-its-open-proposal`                              | `motivation`  | `satisfies`  | many-to-many | medium   |
 | `application.applicationfunction.realizes.business.businessfunction` | `application.applicationfunction.schema-connection-refinement-apply`        | `business.businessfunction.schema-refinement`                                                | `business`    | `realizes`   | many-to-many | medium   |
 | `application.applicationfunction.realizes.business.businessfunction` | `application.applicationfunction.schema-definition-refinement-apply`        | `business.businessfunction.schema-refinement`                                                | `business`    | `realizes`   | many-to-many | medium   |
 | `application.applicationfunction.realizes.business.businessfunction` | `application.applicationfunction.schema-extraction-apply`                   | `business.businessfunction.schema-refinement`                                                | `business`    | `realizes`   | many-to-many | medium   |
@@ -610,8 +621,11 @@ flowchart TB
 | `application.applicationservice.realizes.product.feature`            | `application.applicationservice.proposal-comparison-service`                | `product.feature.compare-two-pipelines`                                                      | `product`     | `realizes`   | many-to-many | medium   |
 | `application.applicationservice.realizes.business.businessservice`   | `application.applicationservice.proposal-service`                           | `business.businessservice.proposal-adjudication-service`                                     | `business`    | `realizes`   | many-to-many | medium   |
 | `application.applicationservice.realizes.product.softwarecapability` | `application.applicationservice.proposal-service`                           | `product.softwarecapability.proposal-review-and-apply`                                       | `product`     | `realizes`   | many-to-many | medium   |
+| `application.applicationservice.satisfies.motivation.requirement`    | `application.applicationservice.proposal-service`                           | `motivation.requirement.a-proposer-amends-its-open-proposal-in-place`                        | `motivation`  | `satisfies`  | many-to-many | medium   |
+| `application.applicationservice.satisfies.motivation.requirement`    | `application.applicationservice.proposal-service`                           | `motivation.requirement.a-proposer-withdraws-its-open-proposal`                              | `motivation`  | `satisfies`  | many-to-many | medium   |
 | `application.applicationservice.satisfies.motivation.requirement`    | `application.applicationservice.proposal-service`                           | `motivation.requirement.a-review-only-proposal-is-never-auto-applied`                        | `motivation`  | `satisfies`  | many-to-many | medium   |
 | `application.applicationservice.satisfies.motivation.requirement`    | `application.applicationservice.proposal-service`                           | `motivation.requirement.mirrored-taxonomies-accept-schema-changes-only-from-their-client`    | `motivation`  | `satisfies`  | many-to-many | medium   |
+| `application.applicationservice.satisfies.motivation.requirement`    | `application.applicationservice.proposal-service`                           | `motivation.requirement.proposals-link-to-each-other-through-one-link-model`                 | `motivation`  | `satisfies`  | many-to-many | medium   |
 | `application.applicationservice.realizes.product.softwarecapability` | `application.applicationservice.reference-source`                           | `product.softwarecapability.reference-grounding`                                             | `product`     | `realizes`   | many-to-many | medium   |
 | `application.applicationservice.realizes.business.businessservice`   | `application.applicationservice.revert-service`                             | `business.businessservice.proposal-adjudication-service`                                     | `business`    | `realizes`   | many-to-many | medium   |
 | `application.applicationservice.realizes.product.softwarecapability` | `application.applicationservice.revert-service`                             | `product.softwarecapability.proposal-review-and-apply`                                       | `product`     | `realizes`   | many-to-many | medium   |
@@ -2847,6 +2861,59 @@ Application function that computes graph network metrics (centrality, density, c
 | intra-layer | `application.applicationcomponent.network-x-graph-engine-adapter` | `assigned-to` | inbound   |
 | intra-layer | `application.applicationservice.graph-analysis-service`           | `realizes`    | outbound  |
 
+### Proposal amendment {#proposal-amendment}
+
+**ID**: `application.applicationfunction.proposal-amendment`
+
+**Type**: `applicationfunction`
+
+ProposalService.amend: replaces, adds and removes pending operations of an open proposal by seq in one call, validating and scoping them as propose does (dry_run too), keeping each replaced version in amendments; then the approval policy runs over what changed, as on propose.
+
+#### Relationships
+
+| Type        | Related Element                                                       | Predicate   | Direction |
+| ----------- | --------------------------------------------------------------------- | ----------- | --------- |
+| inter-layer | `data-model.objectschema.operation-amendment`                         | `accesses`  | outbound  |
+| inter-layer | `motivation.requirement.a-proposer-amends-its-open-proposal-in-place` | `satisfies` | outbound  |
+| inter-layer | `motivation.requirement.an-amended-operation-shows-what-it-replaced`  | `satisfies` | outbound  |
+| intra-layer | `application.applicationservice.proposal-service`                     | `realizes`  | outbound  |
+| intra-layer | `application.applicationservice.proposal-service`                     | `serves`    | inbound   |
+
+### Proposal linking {#proposal-linking}
+
+**ID**: `application.applicationfunction.proposal-linking`
+
+**Type**: `applicationfunction`
+
+Records and reads proposal links (supersedes, reverses) for a proposal, both directions; #1667's reversal planning records its reverses link here.
+
+#### Relationships
+
+| Type        | Related Element                                                              | Predicate    | Direction |
+| ----------- | ---------------------------------------------------------------------------- | ------------ | --------- |
+| inter-layer | `data-model.objectschema.proposal-link`                                      | `accesses`   | outbound  |
+| inter-layer | `motivation.requirement.proposals-link-to-each-other-through-one-link-model` | `satisfies`  | outbound  |
+| intra-layer | `application.applicationservice.proposal-service`                            | `realizes`   | outbound  |
+| intra-layer | `application.applicationfunction.proposal-withdrawal`                        | `depends-on` | inbound   |
+| intra-layer | `application.applicationservice.proposal-service`                            | `serves`     | inbound   |
+
+### Proposal withdrawal {#proposal-withdrawal}
+
+**ID**: `application.applicationfunction.proposal-withdrawal`
+
+**Type**: `applicationfunction`
+
+ProposalService.withdraw: on an open proposal, rolls back what it applied (the revert path: RevertService, decisions superseded), marks its undecided operations withdrawn, sets the proposal withdrawn, and records a supersedes link from the proposal named as its replacement, if any. Refused when the rollback conflicts, with the blockers.
+
+#### Relationships
+
+| Type        | Related Element                                                 | Predicate    | Direction |
+| ----------- | --------------------------------------------------------------- | ------------ | --------- |
+| inter-layer | `motivation.requirement.a-proposer-withdraws-its-open-proposal` | `satisfies`  | outbound  |
+| intra-layer | `application.applicationfunction.proposal-linking`              | `depends-on` | outbound  |
+| intra-layer | `application.applicationservice.proposal-service`               | `realizes`   | outbound  |
+| intra-layer | `application.applicationservice.proposal-service`               | `serves`     | inbound   |
+
 ### Schema Connection Refinement Apply {#schema-connection-refinement-apply}
 
 **ID**: `application.applicationfunction.schema-connection-refinement-apply`
@@ -4990,6 +5057,7 @@ Change proposals: create, decide, apply, reject, reopen, land and read operation
 | Type        | Related Element                                                                           | Predicate    | Direction |
 | ----------- | ----------------------------------------------------------------------------------------- | ------------ | --------- |
 | inter-layer | `api.operation.add-proposal-operations`                                                   | `references` | inbound   |
+| inter-layer | `api.operation.amend-proposal`                                                            | `references` | inbound   |
 | inter-layer | `api.operation.apply-pipeline-run`                                                        | `references` | inbound   |
 | inter-layer | `api.operation.apply-proposal`                                                            | `references` | inbound   |
 | inter-layer | `api.operation.clear-proposal-landed`                                                     | `references` | inbound   |
@@ -5002,10 +5070,14 @@ Change proposals: create, decide, apply, reject, reopen, land and read operation
 | inter-layer | `api.operation.mark-proposal-landed`                                                      | `references` | inbound   |
 | inter-layer | `api.operation.reject-proposal`                                                           | `references` | inbound   |
 | inter-layer | `api.operation.reopen-operations`                                                         | `references` | inbound   |
+| inter-layer | `api.operation.withdraw-proposal`                                                         | `references` | inbound   |
 | inter-layer | `business.businessservice.proposal-adjudication-service`                                  | `realizes`   | outbound  |
 | inter-layer | `product.softwarecapability.proposal-review-and-apply`                                    | `realizes`   | outbound  |
+| inter-layer | `motivation.requirement.a-proposer-amends-its-open-proposal-in-place`                     | `satisfies`  | outbound  |
+| inter-layer | `motivation.requirement.a-proposer-withdraws-its-open-proposal`                           | `satisfies`  | outbound  |
 | inter-layer | `motivation.requirement.a-review-only-proposal-is-never-auto-applied`                     | `satisfies`  | outbound  |
 | inter-layer | `motivation.requirement.mirrored-taxonomies-accept-schema-changes-only-from-their-client` | `satisfies`  | outbound  |
+| inter-layer | `motivation.requirement.proposals-link-to-each-other-through-one-link-model`              | `satisfies`  | outbound  |
 | inter-layer | `testing.testcoveragetarget.domain-unit-tests`                                            | `covers`     | inbound   |
 | inter-layer | `testing.testcoveragetarget.versioning-integration-tests`                                 | `covers`     | inbound   |
 | intra-layer | `application.applicationcomponent.dr-decisions-exporter`                                  | `realizes`   | inbound   |
@@ -5016,6 +5088,9 @@ Change proposals: create, decide, apply, reject, reopen, land and read operation
 | intra-layer | `application.applicationcomponent.sqlite-change-proposal-repository`                      | `realizes`   | inbound   |
 | intra-layer | `application.applicationfunction.in-use-inspection`                                       | `realizes`   | inbound   |
 | intra-layer | `application.applicationfunction.individual-extraction-apply`                             | `realizes`   | inbound   |
+| intra-layer | `application.applicationfunction.proposal-amendment`                                      | `realizes`   | inbound   |
+| intra-layer | `application.applicationfunction.proposal-linking`                                        | `realizes`   | inbound   |
+| intra-layer | `application.applicationfunction.proposal-withdrawal`                                     | `realizes`   | inbound   |
 | intra-layer | `application.applicationfunction.schema-connection-refinement-apply`                      | `realizes`   | inbound   |
 | intra-layer | `application.applicationfunction.schema-definition-refinement-apply`                      | `realizes`   | inbound   |
 | intra-layer | `application.applicationfunction.schema-extraction-apply`                                 | `realizes`   | inbound   |
@@ -5031,6 +5106,9 @@ Change proposals: create, decide, apply, reject, reopen, land and read operation
 | intra-layer | `application.applicationservice.transaction-scope`                                        | `depends-on` | outbound  |
 | intra-layer | `application.applicationcomponent.dr-reflection-plan-importer`                            | `serves`     | outbound  |
 | intra-layer | `application.applicationfunction.definition-enrichment`                                   | `serves`     | outbound  |
+| intra-layer | `application.applicationfunction.proposal-amendment`                                      | `serves`     | outbound  |
+| intra-layer | `application.applicationfunction.proposal-linking`                                        | `serves`     | outbound  |
+| intra-layer | `application.applicationfunction.proposal-withdrawal`                                     | `serves`     | outbound  |
 | intra-layer | `application.applicationprocess.claim-triage-pipeline`                                    | `serves`     | outbound  |
 | intra-layer | `application.applicationprocess.notes-to-claims-pipeline`                                 | `serves`     | outbound  |
 | intra-layer | `application.applicationprocess.schema-relationship-reflection-pipeline`                  | `serves`     | outbound  |
@@ -5441,4 +5519,4 @@ Hexagonal port: describes the workspace and the viewed page to the chat model.
 
 ---
 
-Generated: 2026-11-24T18:23:42.953Z | Model Version: 0.1.0
+Generated: 2026-11-24T18:43:49.876Z | Model Version: 0.1.0

@@ -111,3 +111,33 @@ business.businessevent.proposal-reverted:
     created_at: 2026-11-19T16:16:28.348Z
     updated_at: 2026-11-19T16:16:28.348Z
     version: 1
+business.businessevent.proposal-withdrawn:
+  id: 083598a9-9fb8-44c5-923e-4ecd2dbca2fe
+  path: business.businessevent.proposal-withdrawn
+  spec_node_id: business.businessevent
+  type: businessevent
+  layer_id: business
+  name: Proposal Withdrawn
+  description: The proposer withdrew an open proposal, possibly naming the
+    proposal that supersedes it.
+  attributes:
+    type: external
+  metadata:
+    created_at: 2026-11-24T12:40:02.838Z
+    updated_at: 2026-11-24T12:40:02.838Z
+    version: 1
+business.businessevent.proposal-amended:
+  id: b0221a5f-4731-41d7-8b25-5949edfa8927
+  path: business.businessevent.proposal-amended
+  spec_node_id: business.businessevent
+  type: businessevent
+  layer_id: business
+  name: Proposal Amended
+  description: The proposer changed, added or removed pending operations of its
+    open proposal.
+  attributes:
+    type: external
+  metadata:
+    created_at: 2026-11-24T12:40:02.838Z
+    updated_at: 2026-11-24T12:40:02.838Z
+    version: 1

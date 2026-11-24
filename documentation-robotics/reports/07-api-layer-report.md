@@ -16,11 +16,11 @@ REST APIs, operations, endpoints, and API integrations.
 
 | Metric                    | Count |
 | ------------------------- | ----- |
-| Elements                  | 478   |
-| Intra-Layer Relationships | 374   |
-| Inter-Layer Relationships | 541   |
-| Inbound Relationships     | 209   |
-| Outbound Relationships    | 332   |
+| Elements                  | 485   |
+| Intra-Layer Relationships | 378   |
+| Inter-Layer Relationships | 550   |
+| Inbound Relationships     | 212   |
+| Outbound Relationships    | 338   |
 
 **Cross-Layer References**:
 
@@ -39,6 +39,7 @@ REST APIs, operations, endpoints, and API integrations.
 | `api.operation.add-parent-class-to-individual`                 | `operation`       | 2             |
 | `api.operation.add-proposal-operations`                        | `operation`       | 2             |
 | `api.operation.add-source`                                     | `operation`       | 2             |
+| `api.operation.amend-proposal`                                 | `operation`       | 2             |
 | `api.operation.analyze-text`                                   | `operation`       | 2             |
 | `api.operation.apply-pipeline-run`                             | `operation`       | 2             |
 | `api.operation.apply-proposal`                                 | `operation`       | 2             |
@@ -207,6 +208,7 @@ REST APIs, operations, endpoints, and API integrations.
 | `api.operation.update-pipeline-configuration`                  | `operation`       | 2             |
 | `api.operation.update-property-definition`                     | `operation`       | 2             |
 | `api.operation.update-taxonomy`                                | `operation`       | 2             |
+| `api.operation.withdraw-proposal`                              | `operation`       | 2             |
 | `api.ratelimit.external-reference-api-rate-limit`              | `ratelimit`       | 0             |
 | `api.requestbody.accept-rest-request`                          | `requestbody`     | 1             |
 | `api.requestbody.add-individual-request`                       | `requestbody`     | 1             |
@@ -250,6 +252,8 @@ REST APIs, operations, endpoints, and API integrations.
 | `api.requestbody.pipeline-run-request`                         | `requestbody`     | 1             |
 | `api.requestbody.property-definition-create-request`           | `requestbody`     | 1             |
 | `api.requestbody.property-definition-update-request`           | `requestbody`     | 1             |
+| `api.requestbody.proposal-amend-request`                       | `requestbody`     | 1             |
+| `api.requestbody.proposal-withdraw-request`                    | `requestbody`     | 1             |
 | `api.requestbody.recognition-preview-request`                  | `requestbody`     | 1             |
 | `api.requestbody.reference-relations-request`                  | `requestbody`     | 1             |
 | `api.requestbody.reference-search-request`                     | `requestbody`     | 1             |
@@ -320,6 +324,7 @@ REST APIs, operations, endpoints, and API integrations.
 | `api.response.predicate-response`                              | `response`        | 2             |
 | `api.response.property-definition-response`                    | `response`        | 4             |
 | `api.response.proposal-comparison-response`                    | `response`        | 1             |
+| `api.response.proposal-link-response`                          | `response`        | 0             |
 | `api.response.publish-diff-stats`                              | `response`        | 1             |
 | `api.response.recognition-preview-response`                    | `response`        | 1             |
 | `api.response.reference-relations-response-schema`             | `response`        | 1             |
@@ -350,6 +355,7 @@ REST APIs, operations, endpoints, and API integrations.
 | `api.responses.add-parent-class-to-individual-responses`       | `responses`       | 2             |
 | `api.responses.add-proposal-operations-responses`              | `responses`       | 2             |
 | `api.responses.add-source-responses`                           | `responses`       | 2             |
+| `api.responses.amend-proposal-responses`                       | `responses`       | 1             |
 | `api.responses.analyze-text-responses`                         | `responses`       | 2             |
 | `api.responses.apply-pipeline-run-responses`                   | `responses`       | 2             |
 | `api.responses.apply-proposal-responses`                       | `responses`       | 2             |
@@ -510,6 +516,7 @@ REST APIs, operations, endpoints, and API integrations.
 | `api.responses.update-pipeline-configuration-responses`        | `responses`       | 2             |
 | `api.responses.update-property-definition-responses`           | `responses`       | 2             |
 | `api.responses.update-taxonomy-responses`                      | `responses`       | 2             |
+| `api.responses.withdraw-proposal-responses`                    | `responses`       | 1             |
 | `api.securityscheme.mcp-bearer-token`                          | `securityscheme`  | 1             |
 
 ## Inter-Layer Dependencies
@@ -554,6 +561,9 @@ flowchart TB
 | `api.operation.exposes.product.feature`                   | `api.operation.add-source`                                         | `product.feature.sources-page-and-extract-flow`                                         | `product`     | `exposes`    | many-to-many | medium   |
 | `api.operation.references.application.applicationservice` | `api.operation.add-source`                                         | `application.applicationservice.source-service`                                         | `application` | `references` | many-to-many | medium   |
 | `api.operation.references.security.threat`                | `api.operation.add-source`                                         | `security.threat.server-side-request-forgery-via-url-sources`                           | `security`    | `references` | many-to-many | medium   |
+| `api.operation.exposes.product.feature`                   | `api.operation.amend-proposal`                                     | `product.feature.proposal-queue-and-detail`                                             | `product`     | `exposes`    | many-to-many | medium   |
+| `api.operation.references.application.applicationservice` | `api.operation.amend-proposal`                                     | `application.applicationservice.proposal-service`                                       | `application` | `references` | many-to-many | medium   |
+| `api.operation.satisfies.motivation.requirement`          | `api.operation.amend-proposal`                                     | `motivation.requirement.a-proposer-amends-its-open-proposal-in-place`                   | `motivation`  | `satisfies`  | many-to-many | medium   |
 | `api.operation.references.application.applicationservice` | `api.operation.analyze-text`                                       | `application.applicationservice.extraction-service`                                     | `application` | `references` | many-to-many | medium   |
 | `api.operation.references.application.applicationservice` | `api.operation.apply-pipeline-run`                                 | `application.applicationservice.proposal-service`                                       | `application` | `references` | many-to-many | medium   |
 | `api.operation.exposes.product.feature`                   | `api.operation.apply-proposal`                                     | `product.feature.proposal-queue-and-detail`                                             | `product`     | `exposes`    | many-to-many | medium   |
@@ -873,6 +883,9 @@ flowchart TB
 | `api.operation.exposes.product.feature`                   | `api.operation.update-property-definition`                         | `product.feature.schema-and-data-pages`                                                 | `product`     | `exposes`    | many-to-many | medium   |
 | `api.operation.references.application.applicationservice` | `api.operation.update-property-definition`                         | `application.applicationservice.ontology-service`                                       | `application` | `references` | many-to-many | medium   |
 | `api.operation.references.application.applicationservice` | `api.operation.update-taxonomy`                                    | `application.applicationservice.ontology-service`                                       | `application` | `references` | many-to-many | medium   |
+| `api.operation.exposes.product.feature`                   | `api.operation.withdraw-proposal`                                  | `product.feature.proposal-queue-and-detail`                                             | `product`     | `exposes`    | many-to-many | medium   |
+| `api.operation.references.application.applicationservice` | `api.operation.withdraw-proposal`                                  | `application.applicationservice.proposal-service`                                       | `application` | `references` | many-to-many | medium   |
+| `api.operation.satisfies.motivation.requirement`          | `api.operation.withdraw-proposal`                                  | `motivation.requirement.a-proposer-withdraws-its-open-proposal`                         | `motivation`  | `satisfies`  | many-to-many | medium   |
 | `api.ratelimit.satisfies.motivation.constraint`           | `api.ratelimit.external-reference-api-rate-limit`                  | `motivation.constraint.external-reference-source-rate-limits`                           | `motivation`  | `satisfies`  | many-to-many | medium   |
 | `api.securityscheme.references.security.secureresource`   | `api.securityscheme.mcp-bearer-token`                              | `security.secureresource.mcp-endpoint`                                                  | `security`    | `references` | many-to-many | medium   |
 | `api.securityscheme.satisfies.motivation.requirement`     | `api.securityscheme.mcp-bearer-token`                              | `motivation.requirement.mcp-requires-a-bearer-token-on-loopback`                        | `motivation`  | `satisfies`  | many-to-many | medium   |
@@ -896,6 +909,7 @@ flowchart TB
 | `data-model.objectschema.maps-to.api.requestbody`         | `data-model.objectschema.property-definition-entity`               | `api.requestbody.property-definition-create-request`                                    | `api`         | `maps-to`    | many-to-many | medium   |
 | `data-model.objectschema.maps-to.api.requestbody`         | `data-model.objectschema.property-definition`                      | `api.requestbody.property-definition-create-request`                                    | `api`         | `maps-to`    | many-to-many | medium   |
 | `data-model.objectschema.maps-to.api.response`            | `data-model.objectschema.property-definition`                      | `api.response.property-definition-response`                                             | `api`         | `maps-to`    | many-to-many | medium   |
+| `data-model.objectschema.maps-to.api.response`            | `data-model.objectschema.proposal-link`                            | `api.response.proposal-link-response`                                                   | `api`         | `maps-to`    | many-to-many | medium   |
 | `data-model.objectschema.maps-to.api.response`            | `data-model.objectschema.relationship-entity`                      | `api.response.relationship-response`                                                    | `api`         | `maps-to`    | many-to-many | medium   |
 | `data-model.objectschema.maps-to.api.response`            | `data-model.objectschema.resolution-record`                        | `api.response.resolution-record-response`                                               | `api`         | `maps-to`    | many-to-many | medium   |
 | `data-model.objectschema.maps-to.api.response`            | `data-model.objectschema.subgraph`                                 | `api.response.subgraph-data-response`                                                   | `api`         | `maps-to`    | many-to-many | medium   |
@@ -904,6 +918,8 @@ flowchart TB
 | `data-model.objectschema.maps-to.api.response`            | `data-model.objectschema.taxonomy-entity`                          | `api.response.taxonomy-response`                                                        | `api`         | `maps-to`    | many-to-many | medium   |
 | `data-model.objectschema.maps-to.api.response`            | `data-model.objectschema.triple-extraction-result`                 | `api.response.triples-response`                                                         | `api`         | `maps-to`    | many-to-many | medium   |
 | `testing.testcasesketch.tests.api.operation`              | `testing.testcasesketch.an-edited-end-names-an-element-by-its-ref` | `api.operation.apply-proposal`                                                          | `api`         | `tests`      | many-to-many | medium   |
+| `testing.testcoveragetarget.covers.api.operation`         | `testing.testcoveragetarget.proposal-amend-withdraw-and-links`     | `api.operation.amend-proposal`                                                          | `api`         | `covers`     | many-to-many | medium   |
+| `testing.testcoveragetarget.covers.api.operation`         | `testing.testcoveragetarget.proposal-amend-withdraw-and-links`     | `api.operation.withdraw-proposal`                                                       | `api`         | `covers`     | many-to-many | medium   |
 | `ux.dataconfig.maps-to.api.requestbody`                   | `ux.dataconfig.use-accept-rest`                                    | `api.requestbody.accept-rest-request`                                                   | `api`         | `maps-to`    | many-to-many | medium   |
 | `ux.dataconfig.maps-to.api.response`                      | `ux.dataconfig.use-accept-rest`                                    | `api.response.accept-rest-response`                                                     | `api`         | `maps-to`    | many-to-many | medium   |
 | `ux.dataconfig.maps-to.api.requestbody`                   | `ux.dataconfig.use-add-class-to-individual`                        | `api.requestbody.individual-class-request`                                              | `api`         | `maps-to`    | many-to-many | medium   |
@@ -1241,6 +1257,35 @@ Add a source: a multipart file (PDF, Markdown, HTML or plain text), or JSON URL/
 | inter-layer | `security.threat.server-side-request-forgery-via-url-sources` | `references` | outbound  |
 | intra-layer | `api.requestbody.add-source-request`                          | `composes`   | outbound  |
 | intra-layer | `api.responses.add-source-responses`                          | `composes`   | outbound  |
+
+### Amend Proposal {#amend-proposal}
+
+**ID**: `api.operation.amend-proposal`
+
+**Type**: `operation`
+
+Replace, add or remove pending operations of an open proposal (dry_run validates only). 409 when the proposal is not open or a named operation is decided.
+
+#### Attributes
+
+| Name        | Value                                                 |
+| ----------- | ----------------------------------------------------- |
+| http_method | POST                                                  |
+| http_path   | /api/proposals/\{proposal_id\}/amend                  |
+| operationId | amend_proposal_api_proposals__proposal_id__amend_post |
+| summary     | Amend Proposal                                        |
+| tags        | proposals                                             |
+
+#### Relationships
+
+| Type        | Related Element                                                       | Predicate    | Direction |
+| ----------- | --------------------------------------------------------------------- | ------------ | --------- |
+| inter-layer | `product.feature.proposal-queue-and-detail`                           | `exposes`    | outbound  |
+| inter-layer | `application.applicationservice.proposal-service`                     | `references` | outbound  |
+| inter-layer | `motivation.requirement.a-proposer-amends-its-open-proposal-in-place` | `satisfies`  | outbound  |
+| inter-layer | `testing.testcoveragetarget.proposal-amend-withdraw-and-links`        | `covers`     | inbound   |
+| intra-layer | `api.requestbody.proposal-amend-request`                              | `composes`   | outbound  |
+| intra-layer | `api.responses.amend-proposal-responses`                              | `composes`   | outbound  |
 
 ### Analyze Text {#analyze-text}
 
@@ -5617,6 +5662,35 @@ PUT /api/taxonomies/\{taxonomy_id\} — update an existing taxonomy
 | intra-layer | `api.requestbody.taxonomy-update-request`         | `composes`   | outbound  |
 | intra-layer | `api.responses.update-taxonomy-responses`         | `composes`   | outbound  |
 
+### Withdraw Proposal {#withdraw-proposal}
+
+**ID**: `api.operation.withdraw-proposal`
+
+**Type**: `operation`
+
+Withdraw an open proposal: roll back what it applied, mark the rest withdrawn, optionally naming the proposal that supersedes it. 409 when it is not open, or when the rollback conflicts with later changes (the blockers, as revert gives them).
+
+#### Attributes
+
+| Name        | Value                                                       |
+| ----------- | ----------------------------------------------------------- |
+| http_method | POST                                                        |
+| http_path   | /api/proposals/\{proposal_id\}/withdraw                     |
+| operationId | withdraw_proposal_api_proposals__proposal_id__withdraw_post |
+| summary     | Withdraw Proposal                                           |
+| tags        | proposals                                                   |
+
+#### Relationships
+
+| Type        | Related Element                                                 | Predicate    | Direction |
+| ----------- | --------------------------------------------------------------- | ------------ | --------- |
+| inter-layer | `product.feature.proposal-queue-and-detail`                     | `exposes`    | outbound  |
+| inter-layer | `application.applicationservice.proposal-service`               | `references` | outbound  |
+| inter-layer | `motivation.requirement.a-proposer-withdraws-its-open-proposal` | `satisfies`  | outbound  |
+| inter-layer | `testing.testcoveragetarget.proposal-amend-withdraw-and-links`  | `covers`     | inbound   |
+| intra-layer | `api.requestbody.proposal-withdraw-request`                     | `composes`   | outbound  |
+| intra-layer | `api.responses.withdraw-proposal-responses`                     | `composes`   | outbound  |
+
 ### External Reference API Rate Limit {#external-reference-api-rate-limit}
 
 **ID**: `api.ratelimit.external-reference-api-rate-limit`
@@ -6274,6 +6348,34 @@ Request body to update an existing property definition's label or metadata
 | inter-layer | `ux.dataconfig.use-update-property`        | `maps-to`  | inbound   |
 | intra-layer | `api.operation.update-property-definition` | `composes` | inbound   |
 
+### Proposal Amend Request {#proposal-amend-request}
+
+**ID**: `api.requestbody.proposal-amend-request`
+
+**Type**: `requestbody`
+
+\{replace: \[\{seq, fields, rationale?, probability?, evidence?\}\], add: \[operation drafts as in propose\], remove: \[seq\], rationale?\}: at least one of replace, add, remove.
+
+#### Relationships
+
+| Type        | Related Element                | Predicate  | Direction |
+| ----------- | ------------------------------ | ---------- | --------- |
+| intra-layer | `api.operation.amend-proposal` | `composes` | inbound   |
+
+### Proposal Withdraw Request {#proposal-withdraw-request}
+
+**ID**: `api.requestbody.proposal-withdraw-request`
+
+**Type**: `requestbody`
+
+\{superseded_by?: proposal id, note?\}.
+
+#### Relationships
+
+| Type        | Related Element                   | Predicate  | Direction |
+| ----------- | --------------------------------- | ---------- | --------- |
+| intra-layer | `api.operation.withdraw-proposal` | `composes` | inbound   |
+
 ### RecognitionPreviewRequest {#recognitionpreviewrequest}
 
 **ID**: `api.requestbody.recognition-preview-request`
@@ -6695,7 +6797,7 @@ Response containing paginated change history for an entity with ordered change e
 
 **Type**: `response`
 
-A change proposal with its operations in seq order and counts: how many operations share each op, kind, status and scope. In a list's summary form, operations is empty and counts still holds. It also carries review_only (true: the approval policy never applies it).
+A change proposal with its operations in seq order and counts: how many operations share each op, kind, status and scope. In a list's summary form, operations is empty and counts still holds. It also carries review_only (true: the approval policy never applies it) and its links to other proposals seen from it (supersedes, superseded_by, reverses, reversed_by). Each operation carries amended_at and amendments.
 
 #### Attributes
 
@@ -7734,6 +7836,26 @@ Response containing a property definition with ID, label, domain/range constrain
 | inter-layer | `ux.dataconfig.use-proposal-comparison`     | `maps-to`  | inbound   |
 | intra-layer | `api.responses.compare-proposals-responses` | `composes` | inbound   |
 
+### Proposal Link Response {#proposal-link-response}
+
+**ID**: `api.response.proposal-link-response`
+
+**Type**: `response`
+
+One link on ChangeProposalResponse.links, seen from the proposal: kind supersedes \| superseded_by \| reverses \| reversed_by, the other proposal's id, title and status, created_at.
+
+#### Attributes
+
+| Name        | Value                                     |
+| ----------- | ----------------------------------------- |
+| description | A link between this proposal and another. |
+
+#### Relationships
+
+| Type        | Related Element                         | Predicate | Direction |
+| ----------- | --------------------------------------- | --------- | --------- |
+| inter-layer | `data-model.objectschema.proposal-link` | `maps-to` | inbound   |
+
 ### PublishDiffStats {#publishdiffstats}
 
 **ID**: `api.response.publish-diff-stats`
@@ -8342,6 +8464,20 @@ Responses map of the add-parent-class-to-individual operation.
 | ----------- | ------------------------------ | ---------- | --------- |
 | intra-layer | `api.operation.add-source`     | `composes` | inbound   |
 | intra-layer | `api.response.source-response` | `composes` | outbound  |
+
+### Amend Proposal Responses {#amend-proposal-responses}
+
+**ID**: `api.responses.amend-proposal-responses`
+
+**Type**: `responses`
+
+200 the amended proposal (a dry run: validated only); 404 unknown proposal; 409 not open, or a named operation is decided; 422 an invalid operation.
+
+#### Relationships
+
+| Type        | Related Element                | Predicate  | Direction |
+| ----------- | ------------------------------ | ---------- | --------- |
+| intra-layer | `api.operation.amend-proposal` | `composes` | inbound   |
 
 ### analyze-text-responses {#analyze-text-responses}
 
@@ -10579,6 +10715,20 @@ Responses map of the update-taxonomy operation.
 | intra-layer | `api.operation.update-taxonomy`  | `composes` | inbound   |
 | intra-layer | `api.response.taxonomy-response` | `composes` | outbound  |
 
+### Withdraw Proposal Responses {#withdraw-proposal-responses}
+
+**ID**: `api.responses.withdraw-proposal-responses`
+
+**Type**: `responses`
+
+200 the withdrawn proposal; 404 unknown proposal or superseded_by; 409 not open, or the rollback conflicts (ChangeProposalRevertConflictResponse blockers).
+
+#### Relationships
+
+| Type        | Related Element                   | Predicate  | Direction |
+| ----------- | --------------------------------- | ---------- | --------- |
+| intra-layer | `api.operation.withdraw-proposal` | `composes` | inbound   |
+
 ### MCP Bearer Token {#mcp-bearer-token}
 
 **ID**: `api.securityscheme.mcp-bearer-token`
@@ -10604,4 +10754,4 @@ Bearer token required on the /mcp endpoint (Authorization: Bearer &lt;auth_token
 
 ---
 
-Generated: 2026-11-24T18:01:11.522Z | Model Version: 0.1.0
+Generated: 2026-11-24T18:43:49.876Z | Model Version: 0.1.0

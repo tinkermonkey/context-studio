@@ -3,7 +3,7 @@ schema: documentation-robotics-v1
 cli_version: 0.7.1
 spec_version: 0.13.0
 created: 2026-03-23T12:18:08.630Z
-updated: 2026-11-24T18:23:42.950Z
+updated: 2026-11-24T18:43:49.867Z
 project:
   name: Context Studio
   description: Local-first knowledge graph application for RAG and communication
@@ -23,7 +23,7 @@ layers:
       meaning: 1
       outcome: 4
       principle: 7
-      requirement: 21
+      requirement: 25
       stakeholder: 6
       value: 4
   business:
@@ -34,7 +34,7 @@ layers:
     elements:
       businessactor: 3
       businesscollaboration: 1
-      businessevent: 6
+      businessevent: 8
       businessfunction: 2
       businessobject: 6
       businessprocess: 6
@@ -75,7 +75,7 @@ layers:
       applicationcollaboration: 1
       applicationcomponent: 78
       applicationevent: 4
-      applicationfunction: 18
+      applicationfunction: 21
       applicationinteraction: 3
       applicationinterface: 2
       applicationprocess: 16
@@ -100,11 +100,11 @@ layers:
     elements:
       info: 1
       openapidocument: 1
-      operation: 172
+      operation: 174
       ratelimit: 1
-      requestbody: 52
-      response: 86
-      responses: 164
+      requestbody: 54
+      response: 87
+      responses: 166
       securityscheme: 1
   data-model:
     order: 8
@@ -113,7 +113,7 @@ layers:
     enabled: true
     elements:
       arrayschema: 1
-      objectschema: 49
+      objectschema: 51
       stringschema: 2
   data-store:
     order: 9
@@ -122,11 +122,12 @@ layers:
     enabled: true
     elements:
       accesspattern: 2
-      collection: 37
+      collection: 38
       database: 4
-      field: 1
+      field: 3
       retentionpolicy: 1
-      validationrule: 10
+      validationrule: 13
+      index: 1
   ux:
     order: 10
     name: Ux
@@ -176,7 +177,7 @@ layers:
       outcomecategory: 2
       testcasesketch: 8
       testcoveragemodel: 2
-      testcoveragetarget: 21
+      testcoveragetarget: 22
 changeset_history:
   - name: restore-upgrade-drops
     committed_at: 2026-11-17T18:49:10.641Z
@@ -237,6 +238,9 @@ changeset_history:
     action: committed
   - name: drop-spec-0-14-only-relationships
     committed_at: 2026-11-24T18:23:42.950Z
+    action: committed
+  - name: proposal-links
+    committed_at: 2026-11-24T18:43:49.867Z
     action: committed
 reconciled:
   changeset: rebuild-model-from-code

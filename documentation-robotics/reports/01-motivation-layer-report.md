@@ -16,10 +16,10 @@ Goals, requirements, drivers, and strategic outcomes of the architecture.
 
 | Metric                    | Count |
 | ------------------------- | ----- |
-| Elements                  | 64    |
-| Intra-Layer Relationships | 77    |
-| Inter-Layer Relationships | 149   |
-| Inbound Relationships     | 149   |
+| Elements                  | 68    |
+| Intra-Layer Relationships | 82    |
+| Inter-Layer Relationships | 164   |
+| Inbound Relationships     | 164   |
 | Outbound Relationships    | 0     |
 
 **Cross-Layer References**:
@@ -58,15 +58,18 @@ Goals, requirements, drivers, and strategic outcomes of the architecture.
 | `motivation.outcome.client-changes-land-without-hand-edited-specs`                           | `outcome`     | 5             |
 | `motivation.outcome.curated-domain-ontology`                                                 | `outcome`     | 3             |
 | `motivation.outcome.extraction-proposals-worth-a-reviewers-time`                             | `outcome`     | 6             |
-| `motivation.principle.agents-propose-and-people-decide`                                      | `principle`   | 6             |
+| `motivation.principle.agents-propose-and-people-decide`                                      | `principle`   | 9             |
 | `motivation.principle.clients-drive-proposals`                                               | `principle`   | 2             |
 | `motivation.principle.hexagonal-domain-purity`                                               | `principle`   | 3             |
 | `motivation.principle.intent-travels-with-every-call`                                        | `principle`   | 1             |
 | `motivation.principle.keep-several-implementations-and-garden-them`                          | `principle`   | 3             |
 | `motivation.principle.one-tool-registry-for-every-face`                                      | `principle`   | 1             |
 | `motivation.principle.the-repo-releases-and-context-studio-refines`                          | `principle`   | 1             |
+| `motivation.requirement.a-proposer-amends-its-open-proposal-in-place`                        | `requirement` | 2             |
+| `motivation.requirement.a-proposer-withdraws-its-open-proposal`                              | `requirement` | 2             |
 | `motivation.requirement.a-review-only-proposal-is-never-auto-applied`                        | `requirement` | 1             |
 | `motivation.requirement.agent-file-sources-limited-to-allowed-roots`                         | `requirement` | 1             |
+| `motivation.requirement.an-amended-operation-shows-what-it-replaced`                         | `requirement` | 1             |
 | `motivation.requirement.an-operation-without-a-probability-never-meets-the-probability-rule` | `requirement` | 1             |
 | `motivation.requirement.breaking-changes-never-auto-apply`                                   | `requirement` | 1             |
 | `motivation.requirement.contexts-depend-on-each-other-only-through-public-contracts`         | `requirement` | 1             |
@@ -80,6 +83,7 @@ Goals, requirements, drivers, and strategic outcomes of the architecture.
 | `motivation.requirement.one-unexportable-operation-never-blocks-a-dr-spec-export`            | `requirement` | 1             |
 | `motivation.requirement.one-way-to-select-a-pipeline`                                        | `requirement` | 1             |
 | `motivation.requirement.pre-review-is-adopted-only-by-a-rule-set-in-advance`                 | `requirement` | 2             |
+| `motivation.requirement.proposals-link-to-each-other-through-one-link-model`                 | `requirement` | 2             |
 | `motivation.requirement.proposals-record-their-pipeline-and-version`                         | `requirement` | 1             |
 | `motivation.requirement.relationships-limited-to-allowed-types`                              | `requirement` | 1             |
 | `motivation.requirement.secrets-stay-in-the-configuration-file`                              | `requirement` | 2             |
@@ -131,16 +135,22 @@ flowchart TB
 
 | Relationship ID                                                    | Source Node                                                                                        | Dest Node                                                                                    | Dest Layer   | Predicate    | Cardinality  | Strength |
 | ------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- | ------------ | ------------ | ------------ | -------- |
+| `api.operation.satisfies.motivation.requirement`                   | `api.operation.amend-proposal`                                                                     | `motivation.requirement.a-proposer-amends-its-open-proposal-in-place`                        | `motivation` | `satisfies`  | many-to-many | medium   |
 | `api.operation.satisfies.motivation.requirement`                   | `api.operation.get-individual-sources`                                                             | `motivation.requirement.extracted-facts-cite-their-source`                                   | `motivation` | `satisfies`  | many-to-many | medium   |
 | `api.operation.satisfies.motivation.requirement`                   | `api.operation.list-proposals`                                                                     | `motivation.requirement.the-proposals-list-filters-in-the-query-and-has-a-summary-form`      | `motivation` | `satisfies`  | many-to-many | medium   |
 | `api.operation.satisfies.motivation.requirement`                   | `api.operation.list-proposals`                                                                     | `motivation.requirement.unlanded-lists-only-proposals-with-something-to-land`                | `motivation` | `satisfies`  | many-to-many | medium   |
 | `api.operation.satisfies.motivation.requirement`                   | `api.operation.revert-proposal`                                                                    | `motivation.requirement.every-applied-proposal-is-revertible`                                | `motivation` | `satisfies`  | many-to-many | medium   |
 | `api.operation.satisfies.motivation.requirement`                   | `api.operation.set-approval-policy`                                                                | `motivation.requirement.breaking-changes-never-auto-apply`                                   | `motivation` | `satisfies`  | many-to-many | medium   |
+| `api.operation.satisfies.motivation.requirement`                   | `api.operation.withdraw-proposal`                                                                  | `motivation.requirement.a-proposer-withdraws-its-open-proposal`                              | `motivation` | `satisfies`  | many-to-many | medium   |
 | `api.ratelimit.satisfies.motivation.constraint`                    | `api.ratelimit.external-reference-api-rate-limit`                                                  | `motivation.constraint.external-reference-source-rate-limits`                                | `motivation` | `satisfies`  | many-to-many | medium   |
 | `api.securityscheme.satisfies.motivation.requirement`              | `api.securityscheme.mcp-bearer-token`                                                              | `motivation.requirement.mcp-requires-a-bearer-token-on-loopback`                             | `motivation` | `satisfies`  | many-to-many | medium   |
 | `application.applicationfunction.satisfies.motivation.requirement` | `application.applicationfunction.domain-import-check`                                              | `motivation.requirement.contexts-depend-on-each-other-only-through-public-contracts`         | `motivation` | `satisfies`  | many-to-many | medium   |
 | `application.applicationfunction.satisfies.motivation.requirement` | `application.applicationfunction.in-use-inspection`                                                | `motivation.requirement.breaking-changes-never-auto-apply`                                   | `motivation` | `satisfies`  | many-to-many | medium   |
 | `application.applicationfunction.satisfies.motivation.requirement` | `application.applicationfunction.individual-extraction-apply`                                      | `motivation.requirement.individuals-belong-to-one-dataset`                                   | `motivation` | `satisfies`  | many-to-many | medium   |
+| `application.applicationfunction.satisfies.motivation.requirement` | `application.applicationfunction.proposal-amendment`                                               | `motivation.requirement.a-proposer-amends-its-open-proposal-in-place`                        | `motivation` | `satisfies`  | many-to-many | medium   |
+| `application.applicationfunction.satisfies.motivation.requirement` | `application.applicationfunction.proposal-amendment`                                               | `motivation.requirement.an-amended-operation-shows-what-it-replaced`                         | `motivation` | `satisfies`  | many-to-many | medium   |
+| `application.applicationfunction.satisfies.motivation.requirement` | `application.applicationfunction.proposal-linking`                                                 | `motivation.requirement.proposals-link-to-each-other-through-one-link-model`                 | `motivation` | `satisfies`  | many-to-many | medium   |
+| `application.applicationfunction.satisfies.motivation.requirement` | `application.applicationfunction.proposal-withdrawal`                                              | `motivation.requirement.a-proposer-withdraws-its-open-proposal`                              | `motivation` | `satisfies`  | many-to-many | medium   |
 | `application.applicationfunction.satisfies.motivation.requirement` | `application.applicationfunction.spec-changes-for-a-proposal`                                      | `motivation.requirement.one-unexportable-operation-never-blocks-a-dr-spec-export`            | `motivation` | `satisfies`  | many-to-many | medium   |
 | `application.applicationservice.satisfies.motivation.requirement`  | `application.applicationservice.approval-policy-service`                                           | `motivation.requirement.an-operation-without-a-probability-never-meets-the-probability-rule` | `motivation` | `satisfies`  | many-to-many | medium   |
 | `application.applicationservice.satisfies.motivation.requirement`  | `application.applicationservice.approval-policy-service`                                           | `motivation.requirement.breaking-changes-never-auto-apply`                                   | `motivation` | `satisfies`  | many-to-many | medium   |
@@ -155,8 +165,11 @@ flowchart TB
 | `application.applicationservice.satisfies.motivation.requirement`  | `application.applicationservice.pipeline-selection-service`                                        | `motivation.requirement.one-way-to-select-a-pipeline`                                        | `motivation` | `satisfies`  | many-to-many | medium   |
 | `application.applicationservice.satisfies.motivation.requirement`  | `application.applicationservice.proposal-apply-rules`                                              | `motivation.requirement.mirrored-taxonomies-accept-schema-changes-only-from-their-client`    | `motivation` | `satisfies`  | many-to-many | medium   |
 | `application.applicationservice.satisfies.motivation.requirement`  | `application.applicationservice.proposal-apply-rules`                                              | `motivation.requirement.relationships-limited-to-allowed-types`                              | `motivation` | `satisfies`  | many-to-many | medium   |
+| `application.applicationservice.satisfies.motivation.requirement`  | `application.applicationservice.proposal-service`                                                  | `motivation.requirement.a-proposer-amends-its-open-proposal-in-place`                        | `motivation` | `satisfies`  | many-to-many | medium   |
+| `application.applicationservice.satisfies.motivation.requirement`  | `application.applicationservice.proposal-service`                                                  | `motivation.requirement.a-proposer-withdraws-its-open-proposal`                              | `motivation` | `satisfies`  | many-to-many | medium   |
 | `application.applicationservice.satisfies.motivation.requirement`  | `application.applicationservice.proposal-service`                                                  | `motivation.requirement.a-review-only-proposal-is-never-auto-applied`                        | `motivation` | `satisfies`  | many-to-many | medium   |
 | `application.applicationservice.satisfies.motivation.requirement`  | `application.applicationservice.proposal-service`                                                  | `motivation.requirement.mirrored-taxonomies-accept-schema-changes-only-from-their-client`    | `motivation` | `satisfies`  | many-to-many | medium   |
+| `application.applicationservice.satisfies.motivation.requirement`  | `application.applicationservice.proposal-service`                                                  | `motivation.requirement.proposals-link-to-each-other-through-one-link-model`                 | `motivation` | `satisfies`  | many-to-many | medium   |
 | `application.applicationservice.satisfies.motivation.requirement`  | `application.applicationservice.revert-service`                                                    | `motivation.requirement.every-applied-proposal-is-revertible`                                | `motivation` | `satisfies`  | many-to-many | medium   |
 | `application.applicationservice.satisfies.motivation.requirement`  | `application.applicationservice.source-extraction-service`                                         | `motivation.requirement.extracted-facts-cite-their-source`                                   | `motivation` | `satisfies`  | many-to-many | medium   |
 | `application.applicationservice.satisfies.motivation.requirement`  | `application.applicationservice.source-extraction-service`                                         | `motivation.requirement.proposals-record-their-pipeline-and-version`                         | `motivation` | `satisfies`  | many-to-many | medium   |
@@ -185,13 +198,16 @@ flowchart TB
 | `business.businessservice.realizes.motivation.goal`                | `business.businessservice.source-extraction-service`                                               | `motivation.goal.trustworthy-extraction-into-datasets`                                       | `motivation` | `realizes`   | many-to-many | medium   |
 | `business.businessservice.satisfies.motivation.requirement`        | `business.businessservice.source-extraction-service`                                               | `motivation.requirement.extracted-facts-cite-their-source`                                   | `motivation` | `satisfies`  | many-to-many | medium   |
 | `business.businessservice.satisfies.motivation.requirement`        | `business.businessservice.source-extraction-service`                                               | `motivation.requirement.relationships-limited-to-allowed-types`                              | `motivation` | `satisfies`  | many-to-many | medium   |
+| `data-model.objectschema.satisfies.motivation.requirement`         | `data-model.objectschema.operation-amendment`                                                      | `motivation.requirement.an-amended-operation-shows-what-it-replaced`                         | `motivation` | `satisfies`  | many-to-many | medium   |
 | `data-model.objectschema.satisfies.motivation.requirement`         | `data-model.objectschema.operation-draft`                                                          | `motivation.requirement.contexts-depend-on-each-other-only-through-public-contracts`         | `motivation` | `satisfies`  | many-to-many | medium   |
 | `data-model.objectschema.satisfies.motivation.requirement`         | `data-model.objectschema.predicate-entity`                                                         | `motivation.requirement.relationships-limited-to-allowed-types`                              | `motivation` | `satisfies`  | many-to-many | medium   |
+| `data-model.objectschema.satisfies.motivation.requirement`         | `data-model.objectschema.proposal-link`                                                            | `motivation.requirement.proposals-link-to-each-other-through-one-link-model`                 | `motivation` | `satisfies`  | many-to-many | medium   |
 | `data-store.collection.satisfies.motivation.requirement`           | `data-store.collection.approval-policies`                                                          | `motivation.requirement.breaking-changes-never-auto-apply`                                   | `motivation` | `satisfies`  | many-to-many | medium   |
 | `data-store.collection.satisfies.motivation.requirement`           | `data-store.collection.change-events`                                                              | `motivation.requirement.every-applied-proposal-is-revertible`                                | `motivation` | `satisfies`  | many-to-many | medium   |
 | `data-store.collection.satisfies.motivation.requirement`           | `data-store.collection.datasets`                                                                   | `motivation.requirement.individuals-belong-to-one-dataset`                                   | `motivation` | `satisfies`  | many-to-many | medium   |
 | `data-store.collection.satisfies.motivation.requirement`           | `data-store.collection.entity-sources`                                                             | `motivation.requirement.extracted-facts-cite-their-source`                                   | `motivation` | `satisfies`  | many-to-many | medium   |
 | `data-store.collection.satisfies.motivation.requirement`           | `data-store.collection.predicates`                                                                 | `motivation.requirement.relationships-limited-to-allowed-types`                              | `motivation` | `satisfies`  | many-to-many | medium   |
+| `data-store.collection.satisfies.motivation.requirement`           | `data-store.collection.proposal-links`                                                             | `motivation.requirement.proposals-link-to-each-other-through-one-link-model`                 | `motivation` | `satisfies`  | many-to-many | medium   |
 | `data-store.collection.satisfies.motivation.requirement`           | `data-store.collection.proposals-table`                                                            | `motivation.requirement.proposals-record-their-pipeline-and-version`                         | `motivation` | `satisfies`  | many-to-many | medium   |
 | `data-store.database.satisfies.motivation.constraint`              | `data-store.database.localdb`                                                                      | `motivation.constraint.sqlite-only-persistence`                                              | `motivation` | `satisfies`  | many-to-many | medium   |
 | `data-store.database.satisfies.motivation.constraint`              | `data-store.database.operationsdb`                                                                 | `motivation.constraint.sqlite-only-persistence`                                              | `motivation` | `satisfies`  | many-to-many | medium   |
@@ -213,7 +229,10 @@ flowchart TB
 | `product.feature.satisfies.motivation.requirement`                 | `product.feature.mcp-integration-settings`                                                         | `motivation.requirement.mcp-requires-a-bearer-token-on-loopback`                             | `motivation` | `satisfies`  | many-to-many | medium   |
 | `product.feature.delivers.motivation.value`                        | `product.feature.owl-skos-and-graph-ml-import-and-export`                                          | `motivation.value.knowledge-reusability`                                                     | `motivation` | `delivers`   | many-to-many | medium   |
 | `product.feature.satisfies.motivation.requirement`                 | `product.feature.pipeline-run-wizard`                                                              | `motivation.requirement.one-way-to-select-a-pipeline`                                        | `motivation` | `satisfies`  | many-to-many | medium   |
+| `product.feature.satisfies.motivation.requirement`                 | `product.feature.proposal-queue-and-detail`                                                        | `motivation.requirement.a-proposer-amends-its-open-proposal-in-place`                        | `motivation` | `satisfies`  | many-to-many | medium   |
+| `product.feature.satisfies.motivation.requirement`                 | `product.feature.proposal-queue-and-detail`                                                        | `motivation.requirement.a-proposer-withdraws-its-open-proposal`                              | `motivation` | `satisfies`  | many-to-many | medium   |
 | `product.feature.satisfies.motivation.requirement`                 | `product.feature.proposal-queue-and-detail`                                                        | `motivation.requirement.every-applied-proposal-is-revertible`                                | `motivation` | `satisfies`  | many-to-many | medium   |
+| `product.feature.satisfies.motivation.requirement`                 | `product.feature.proposal-queue-and-detail`                                                        | `motivation.requirement.proposals-link-to-each-other-through-one-link-model`                 | `motivation` | `satisfies`  | many-to-many | medium   |
 | `product.feature.delivers.motivation.value`                        | `product.feature.proposal-review-page`                                                             | `motivation.value.reviewer-time-goes-to-judgment-calls`                                      | `motivation` | `delivers`   | many-to-many | medium   |
 | `product.feature.satisfies.motivation.requirement`                 | `product.feature.schema-and-data-pages`                                                            | `motivation.requirement.individuals-belong-to-one-dataset`                                   | `motivation` | `satisfies`  | many-to-many | medium   |
 | `product.feature.satisfies.motivation.requirement`                 | `product.feature.schema-and-data-pages`                                                            | `motivation.requirement.relationships-limited-to-allowed-types`                              | `motivation` | `satisfies`  | many-to-many | medium   |
@@ -928,10 +947,13 @@ Every agent, chat or pipeline write lands as a proposal with source, rationale, 
 | ----------- | -------------------------------------------------------------------------------------------- | ----------------- | --------- |
 | intra-layer | `motivation.meaning.knowledge-as-infrastructure`                                             | `associated-with` | inbound   |
 | intra-layer | `motivation.goal.ontology-workbench-for-client-projects`                                     | `influence`       | outbound  |
+| intra-layer | `motivation.requirement.a-proposer-amends-its-open-proposal-in-place`                        | `realizes`        | inbound   |
+| intra-layer | `motivation.requirement.a-proposer-withdraws-its-open-proposal`                              | `realizes`        | inbound   |
 | intra-layer | `motivation.requirement.a-review-only-proposal-is-never-auto-applied`                        | `realizes`        | inbound   |
 | intra-layer | `motivation.requirement.an-operation-without-a-probability-never-meets-the-probability-rule` | `realizes`        | inbound   |
 | intra-layer | `motivation.requirement.breaking-changes-never-auto-apply`                                   | `realizes`        | inbound   |
 | intra-layer | `motivation.requirement.every-applied-proposal-is-revertible`                                | `realizes`        | inbound   |
+| intra-layer | `motivation.requirement.proposals-link-to-each-other-through-one-link-model`                 | `realizes`        | inbound   |
 
 ### Clients Drive Proposals {#clients-drive-proposals}
 
@@ -1058,6 +1080,58 @@ Client specs ship from their own repos, gated by their own evals; CS keeps claim
 | ----------- | -------------------------------------------------------- | ----------- | --------- |
 | intra-layer | `motivation.goal.ontology-workbench-for-client-projects` | `influence` | outbound  |
 
+### A proposer amends its open proposal in place {#a-proposer-amends-its-open-proposal-in-place}
+
+**ID**: `motivation.requirement.a-proposer-amends-its-open-proposal-in-place`
+
+**Type**: `requirement`
+
+#1624: on a proposal that is still open, one call replaces a pending operation's fields (by seq), adds operations, or removes pending operations, with the same validation, scope check and dry_run as propose_changes. Applied and rejected operations never change. A one-sentence change to one of nine operations takes one call and leaves one proposal.
+
+#### Attributes
+
+| Name            | Value      |
+| --------------- | ---------- |
+| priority        | high       |
+| requirementType | functional |
+
+#### Relationships
+
+| Type        | Related Element                                                      | Predicate    | Direction |
+| ----------- | -------------------------------------------------------------------- | ------------ | --------- |
+| inter-layer | `api.operation.amend-proposal`                                       | `satisfies`  | inbound   |
+| inter-layer | `application.applicationfunction.proposal-amendment`                 | `satisfies`  | inbound   |
+| inter-layer | `application.applicationservice.proposal-service`                    | `satisfies`  | inbound   |
+| inter-layer | `product.feature.proposal-queue-and-detail`                          | `satisfies`  | inbound   |
+| intra-layer | `motivation.requirement.an-amended-operation-shows-what-it-replaced` | `aggregates` | outbound  |
+| intra-layer | `motivation.principle.agents-propose-and-people-decide`              | `realizes`   | outbound  |
+
+### A proposer withdraws its open proposal {#a-proposer-withdraws-its-open-proposal}
+
+**ID**: `motivation.requirement.a-proposer-withdraws-its-open-proposal`
+
+**Type**: `requirement`
+
+#1624: a proposer withdraws an open proposal it no longer stands behind, optionally naming the proposal that supersedes it (a supersedes link). Withdrawing undoes it whole (owner, 2026-11-24): what it applied is rolled back as a revert does, its undecided operations become withdrawn (not a reviewer's decision, so not gold), and the proposal ends withdrawn, never half-applied. If the rollback conflicts with later changes, the withdraw is refused (409) naming what blocks it, as revert is. propose_changes can name the proposals a new one supersedes, which withdraws them in the same call.
+
+#### Attributes
+
+| Name            | Value      |
+| --------------- | ---------- |
+| priority        | high       |
+| requirementType | functional |
+
+#### Relationships
+
+| Type        | Related Element                                                              | Predicate    | Direction |
+| ----------- | ---------------------------------------------------------------------------- | ------------ | --------- |
+| inter-layer | `api.operation.withdraw-proposal`                                            | `satisfies`  | inbound   |
+| inter-layer | `application.applicationfunction.proposal-withdrawal`                        | `satisfies`  | inbound   |
+| inter-layer | `application.applicationservice.proposal-service`                            | `satisfies`  | inbound   |
+| inter-layer | `product.feature.proposal-queue-and-detail`                                  | `satisfies`  | inbound   |
+| intra-layer | `motivation.principle.agents-propose-and-people-decide`                      | `realizes`   | outbound  |
+| intra-layer | `motivation.requirement.proposals-link-to-each-other-through-one-link-model` | `aggregates` | inbound   |
+
 ### A review-only proposal is never auto-applied {#a-review-only-proposal-is-never-auto-applied}
 
 **ID**: `motivation.requirement.a-review-only-proposal-is-never-auto-applied`
@@ -1102,6 +1176,29 @@ An agent may add a local file as a source only from under the configured absolut
 | ----------- | ----------------------------------------------- | ----------- | --------- |
 | inter-layer | `security.countermeasure.source-path-allowlist` | `satisfies` | inbound   |
 | intra-layer | `motivation.goal.safe-local-first-workspace`    | `realizes`  | outbound  |
+
+### An amended operation shows what it replaced {#an-amended-operation-shows-what-it-replaced}
+
+**ID**: `motivation.requirement.an-amended-operation-shows-what-it-replaced`
+
+**Type**: `requirement`
+
+#1624: an operation amended after it was proposed says when (amended_at) and keeps each earlier version of its fields (amendments), so a reviewer who already read it knows to read it again and can see what changed. get_proposal and the review page show it.
+
+#### Attributes
+
+| Name            | Value      |
+| --------------- | ---------- |
+| priority        | medium     |
+| requirementType | functional |
+
+#### Relationships
+
+| Type        | Related Element                                                       | Predicate    | Direction |
+| ----------- | --------------------------------------------------------------------- | ------------ | --------- |
+| inter-layer | `application.applicationfunction.proposal-amendment`                  | `satisfies`  | inbound   |
+| inter-layer | `data-model.objectschema.operation-amendment`                         | `satisfies`  | inbound   |
+| intra-layer | `motivation.requirement.a-proposer-amends-its-open-proposal-in-place` | `aggregates` | inbound   |
 
 ### An operation without a probability never meets the probability rule {#an-operation-without-a-probability-never-meets-the-probability-rule}
 
@@ -1439,6 +1536,33 @@ The pre-review stage stays off by default until a decision rule written on its e
 | inter-layer | `testing.testcasesketch.seeded-errors-are-built-and-scored-offline`  | `satisfies` | inbound   |
 | intra-layer | `motivation.assessment.benchmark-gold-is-thin-and-mostly-model-made` | `influence` | inbound   |
 | intra-layer | `motivation.outcome.extraction-proposals-worth-a-reviewers-time`     | `realizes`  | outbound  |
+
+### Proposals link to each other through one link model {#proposals-link-to-each-other-through-one-link-model}
+
+**ID**: `motivation.requirement.proposals-link-to-each-other-through-one-link-model`
+
+**Type**: `requirement`
+
+#1624 decision (2026-11-20): one proposal-to-proposal link model covers supersede (a withdrawn proposal and the one that replaces it) and #1667's reversal (a reversal proposal and the landed proposal it undoes). A link is (source proposal, kind, target proposal); kinds: supersedes, reverses. It replaces the separate change_proposals.reverses_id the one-review-surface plan staged. A proposal shows its links both ways: supersedes / superseded_by, reverses / reversed_by.
+
+#### Attributes
+
+| Name            | Value      |
+| --------------- | ---------- |
+| priority        | high       |
+| requirementType | functional |
+
+#### Relationships
+
+| Type        | Related Element                                                 | Predicate    | Direction |
+| ----------- | --------------------------------------------------------------- | ------------ | --------- |
+| inter-layer | `application.applicationfunction.proposal-linking`              | `satisfies`  | inbound   |
+| inter-layer | `application.applicationservice.proposal-service`               | `satisfies`  | inbound   |
+| inter-layer | `data-model.objectschema.proposal-link`                         | `satisfies`  | inbound   |
+| inter-layer | `data-store.collection.proposal-links`                          | `satisfies`  | inbound   |
+| inter-layer | `product.feature.proposal-queue-and-detail`                     | `satisfies`  | inbound   |
+| intra-layer | `motivation.requirement.a-proposer-withdraws-its-open-proposal` | `aggregates` | outbound  |
+| intra-layer | `motivation.principle.agents-propose-and-people-decide`         | `realizes`   | outbound  |
 
 ### Proposals Record Their Pipeline and Version {#proposals-record-their-pipeline-and-version}
 
@@ -1822,4 +1946,4 @@ Mechanical changes clear in bulk by threshold, so the reviewer's time goes to th
 
 ---
 
-Generated: 2026-11-24T18:01:31.681Z | Model Version: 0.1.0
+Generated: 2026-11-24T18:43:49.876Z | Model Version: 0.1.0

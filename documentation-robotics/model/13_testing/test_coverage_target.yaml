@@ -436,3 +436,25 @@ testing.testcoveragetarget.adapter-integration-tests:
     created_at: 2026-11-19T15:04:45.527Z
     updated_at: 2026-11-19T15:04:45.527Z
     version: 1
+testing.testcoveragetarget.proposal-amend-withdraw-and-links:
+  id: 42be87dc-1192-4817-82ea-849ebcbc1f46
+  path: testing.testcoveragetarget.proposal-amend-withdraw-and-links
+  spec_node_id: testing.testcoveragetarget
+  type: testcoveragetarget
+  layer_id: testing
+  name: Proposal amend withdraw and links
+  description: Amend (replace, add, remove; dry run; decided operations refused;
+    amendments kept), withdraw (nothing applied; partly applied rolls back and
+    ends withdrawn; a conflicting rollback is refused with blockers; with and
+    without superseded_by), propose with supersedes, link reads both ways, MCP
+    tools amend_proposal and withdraw_proposal and their REST parity.
+  attributes:
+    targetType: api-endpoint
+  source_reference:
+    provenance: manual
+    locations:
+      - file: local-server/tests/integration/routes/test_proposal_amend_withdraw_routes.py
+  metadata:
+    created_at: 2026-11-24T12:40:02.838Z
+    updated_at: 2026-11-24T12:40:02.838Z
+    version: 1
