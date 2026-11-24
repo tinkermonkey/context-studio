@@ -551,6 +551,8 @@ describe("the review page", () => {
     expect(applies[0].review_ms!["op-edit"]).toBeGreaterThanOrEqual(0);
     await waitFor(() => expect(inspectorTitle()).toHaveTextContent("Reference check"));
     await waitFor(() => expect(markFor("op-edit")).toHaveClass("review-mark--correct"));
+    // Correct and changed read apart, in the source's highlights (the counts only say applied).
+    expect(markFor("op-edit")).not.toHaveClass("review-mark--changed");
     expect(screen.getByTestId("proposal-decided-counts")).toHaveTextContent("2 applied");
   });
 
@@ -567,6 +569,7 @@ describe("the review page", () => {
     expect(applies[0].edits).toEqual({ "op-edit": { class_ids: ["cls-feature"] } });
     expect(applies[0].review_ms).toEqual({ "op-edit": expect.any(Number) });
     await waitFor(() => expect(markFor("op-edit")).toHaveClass("review-mark--changed"));
+    expect(markFor("op-edit")).not.toHaveClass("review-mark--correct");
     expect(screen.getByTestId("proposal-decided-counts")).toHaveTextContent("2 applied");
 
     // Next: Reference check, already a product.feature, so feature isn't suggested.

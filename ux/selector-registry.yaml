@@ -3111,13 +3111,11 @@ selectors:
     component: src/components/proposals/review/TypeDecision.tsx
     description: "Warn callout when the operation is stale: in the Decision section (what changed, Apply anyway), or under Change when it takes no decision"
 
-  # Review an extraction against its source (/app/proposals/$proposalId/review, #1611)
+  # Reviewing a proposal on its page (/app/proposals/$proposalId): the source pane, the list
+  # and the review inspector (#1611; one review page since #1664)
   - selector: review-time
     component: src/components/proposals/review/ReviewElapsed.tsx
     description: "The review timer in the proposal's status strip (active time on this review), while it takes decisions and something awaits one"
-  - selector: review-force-message
-    component: src/components/proposals/review/ReviewPage.tsx
-    description: "Apply anyway ConfirmDialog message for a stale operation"
   - selector: review-source
     component: src/components/proposals/review/ReviewSourcePane.tsx
     description: 'Source pane (region "Source text"): the legend and the whole source text'

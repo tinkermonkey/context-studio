@@ -1,6 +1,6 @@
 /**
  * The Gold page (#1614): the benchmark's gold checks with their split, size,
- * checked progress and status, opening each on the Review page, and the
+ * checked progress and status, opening each on its proposal page (in gold mode), and the
  * commands that load, write back and re-score them.
  */
 import { describe, it, expect, beforeAll, afterEach, afterAll, vi } from "vitest";

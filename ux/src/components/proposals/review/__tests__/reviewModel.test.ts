@@ -6,7 +6,6 @@ import {
 import { createClass } from "@/api/services/__tests__/fixtures/ontology.fixtures";
 import type { ProposedOperation } from "@/api/services/proposals";
 import {
-  RELATIONSHIPS_GROUP,
   REJECTION_REASONS,
   reasonsFor,
   VERDICT_CHIP,
@@ -14,18 +13,14 @@ import {
   classLabel,
   endsToDecide,
   extractedFromSource,
-  filterGroups,
   formatDuration,
-  groupForReview,
   layerMatesFirst,
   nextAwaiting,
-  orderOf,
   reasonLabel,
   relationshipsOf,
   RECENT_CLASSES,
   forgetPick,
   rememberPick,
-  reviewProgress,
   reviewSourceId,
   reviewSpans,
   seqList,
@@ -86,26 +81,6 @@ describe("verdicts", () => {
       withdrawn: "neutral",
       added: "cyan",
     });
-  });
-
-  it("counts the progress by verdict", () => {
-    const progress = reviewProgress([
-      element("a"),
-      element("b", { status: "applied" }),
-      element("c", { status: "applied", applied_fields: { class_ids: ["class-z"] } }),
-      element("d", { status: "rejected" }),
-      element("e", { status: "applied", added_by_reviewer: true }),
-    ]);
-    expect(progress).toEqual({
-      decided: 4,
-      total: 5,
-      percent: 80,
-      correct: 1,
-      changed: 1,
-      rejected: 1,
-      added: 1,
-    });
-    expect(reviewProgress([]).percent).toBe(0);
   });
 });
 
@@ -188,28 +163,6 @@ describe("groups and selection", () => {
     target_id: null,
     fields: { source_id: "$a", target_id: "ind-9", property_definition_id: "prop-1" },
   });
-  const layers: Record<string, { key: string; label: string }> = {
-    a: { key: "product", label: "Product" },
-    b: { key: "motivation", label: "Motivation" },
-    c: { key: "product", label: "Product" },
-  };
-  const groups = groupForReview([a, b, c], [rel], (o) => layers[o.id]);
-
-  it("groups elements by layer in first-seen order, then the relationships", () => {
-    expect(groups.map((g) => [g.key, g.operations.map((o) => o.id)])).toEqual([
-      ["product", ["a", "c"]],
-      ["motivation", ["b"]],
-      [RELATIONSHIPS_GROUP, ["rel"]],
-    ]);
-    expect(orderOf(groups)).toEqual(["a", "c", "b", "rel"]);
-  });
-
-  it("filters to awaiting elements, keeping the selected one", () => {
-    expect(orderOf(filterGroups(groups, "awaiting", undefined))).toEqual(["a", "c", "rel"]);
-    expect(orderOf(filterGroups(groups, "awaiting", "b"))).toEqual(["a", "c", "b", "rel"]);
-    expect(filterGroups(groups, "all", undefined)).toBe(groups);
-  });
-
   it("steps through the order, staying at either end", () => {
     const order = ["a", "c", "b"];
     expect(step(order, "a", 1)).toBe("c");

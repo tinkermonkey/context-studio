@@ -66,11 +66,46 @@ describe("one review page", () => {
       evidence: [{ source_id: "src-1", page: null, start: 0, end: 4, quote: "Room" }],
       scope: "additive",
     });
-    serve(createChangeProposal({ source: "pipeline", operations: [classOp] }));
+    // It records its source, as every pipeline proposal does.
+    serve(
+      createChangeProposal({
+        source: "pipeline",
+        client_metadata: { source_id: "src-1", pipeline: "schema_extraction" },
+        operations: [classOp],
+      }),
+    );
     render(<ProposalDetailPage id="proposal-1" onSelectOperation={vi.fn()} />);
     await screen.findByTestId("proposal-review", {}, { timeout: 10000 });
     expect(screen.queryByTestId("review-source")).not.toBeInTheDocument();
     expect(screen.getByTestId("proposal-review")).not.toHaveClass("proposal-review--source");
+  });
+
+  it("shows the source pane when only relationships cite a passage", async () => {
+    const relationship = createProposedOperation({
+      id: "op-rel",
+      op: "create",
+      kind: "relationship",
+      target_id: null,
+      fields: { property_definition_id: "prop-1", source_id: "ind-1", target_id: "ind-2" },
+      evidence: [{ source_id: "src-1", page: null, start: 0, end: 10, quote: "Edit Check" }],
+      scope: "additive",
+    });
+    serve(createChangeProposal({ source: "pipeline", operations: [relationship] }));
+    render(<ProposalDetailPage id="proposal-1" onSelectOperation={vi.fn()} />);
+    expect(await screen.findByTestId("review-source", {}, { timeout: 10000 })).toBeInTheDocument();
+  });
+
+  it("shows the source pane for an extraction of individuals that found nothing yet", async () => {
+    // Nothing cites the source, but the reviewer can still add what the pipeline missed.
+    serve(
+      createChangeProposal({
+        source: "pipeline",
+        client_metadata: { source_id: "src-1", pipeline: "individual_extraction" },
+        operations: [],
+      }),
+    );
+    render(<ProposalDetailPage id="proposal-1" onSelectOperation={vi.fn()} />);
+    expect(await screen.findByTestId("review-source", {}, { timeout: 10000 })).toBeInTheDocument();
   });
 
   it("shows no source pane for a proposal no source backs", async () => {

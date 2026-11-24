@@ -165,7 +165,7 @@ The default approval policy has no auto-apply rules, so all four operations stay
 - **Reference-integrity**: a relationship create whose `$ref` end was rejected cannot apply. The UI blocks it (TC2 step 4) and the API shows it still `pending`.
 - **Orphaned relationships**: the serves relationship would be orphaned by rejecting `customers`. The ends callout covers this. It is not applied.
 - **Cascade deletes**: not exercised (no deletes from this page).
-- **Concurrency (version mismatch)**: the stale-operation "Apply anyway" path (`review-force-message`) is out of scope. Seeding a stale operation needs a second writer between proposal and decision. Covered by component tests.
+- **Concurrency (version mismatch)**: the stale-operation "Apply anyway" path (`proposal-force-message`) is out of scope. Seeding a stale operation needs a second writer between proposal and decision. Covered by component tests.
 - **Out of scope by request ("few tests")**: keyboard decisions (A, 1-3, X, J / K), near-match choices (`review-class-locked`), bulk selection, and the source-unavailable states. All are covered by `ProposalReview.test.tsx`. The spec also has two tests beyond this plan: adding a missed element from selected text, and gold mode (tier, note required, the Benchmark gold page opening the check on its proposal page).
 
 ### Anti-Pattern Validations

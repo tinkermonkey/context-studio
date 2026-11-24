@@ -785,7 +785,6 @@ export function ProposalDetailPage({
           data-testid="proposal-review"
         >
           <div
-            id="proposal-operations"
             className="proposal-main"
             data-testid="proposal-operations-list"
             data-filter={filter}
@@ -810,6 +809,7 @@ export function ProposalDetailPage({
               />
             )}
             <ReviewElementsPane
+              id="proposal-operations"
               title="Operations"
               listLabel="Operations to review"
               data-testid="proposal-operations"

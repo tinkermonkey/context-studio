@@ -14,8 +14,18 @@ import {
 } from "./addFromText";
 import type { Tier } from "./goldModel";
 import { ReviewSourcePane, type PopoverAnchor } from "./ReviewSourcePane";
-import { isElement, isRelationship, reviewSourceId, reviewSpans, verdictOf } from "./reviewModel";
+import {
+  extractedFromSource,
+  isElement,
+  isRelationship,
+  reviewSourceId,
+  reviewSpans,
+  verdictOf,
+} from "./reviewModel";
 import type { InspectorModel } from "./useInspectorModel";
+
+/** An extraction of individuals: client_metadata.pipeline, or its origin's pipeline_type. */
+const INDIVIDUAL_EXTRACTION = "individual_extraction";
 import type { useReviewClock } from "./useReviewClock";
 
 interface SourcePaneOptions {
@@ -51,8 +61,20 @@ export function useSourcePane({
   const elements = useMemo(() => operations.filter(isElement), [operations]);
   // The source the proposal records it was extracted from, else the one its passages cite.
   const recordedSourceId = proposalSourceId(proposal);
-  const citedSourceId = useMemo(() => reviewSourceId(elements), [elements]);
-  const sourceId = recordedSourceId ?? citedSourceId;
+  // The source the elements' and relationships' passages cite most.
+  const citedSourceId = useMemo(
+    () => reviewSourceId(operations.filter((o) => isElement(o) || isRelationship(o))),
+    [operations],
+  );
+  // A pane only where there is something to review against the text: elements or
+  // relationships that cite it, or an extraction of individuals from it (whose add
+  // form works even before anything is found). A schema extraction, which records
+  // its source too, gets none.
+  const individualExtraction =
+    proposal?.client_metadata?.pipeline === INDIVIDUAL_EXTRACTION ||
+    proposal?.origin?.pipeline_type === INDIVIDUAL_EXTRACTION;
+  const shown = extractedFromSource(proposal) || (!!recordedSourceId && individualExtraction);
+  const sourceId = shown ? (recordedSourceId ?? citedSourceId) : undefined;
   const { data: source, isError: sourceFailed } = useSource(sourceId);
   const readable = !!source && source.status === "ready" && !source.removed_at;
   const { data: sourceText, isError: textFailed } = useSourceText(sourceId, null, {
@@ -193,7 +215,7 @@ export function useSourcePane({
 
   return {
     /** A source pane only for a proposal extracted from a source, or whose elements cite one. */
-    shown: !!sourceId,
+    shown,
     source,
     pane,
     adding: !!adding,

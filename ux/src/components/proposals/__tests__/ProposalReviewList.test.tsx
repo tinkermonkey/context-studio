@@ -187,6 +187,10 @@ describe("the review list", () => {
       "data-group-by",
       "layer",
     );
+    // What the progress pills control: the list itself, not the source beside it.
+    const list = document.getElementById("proposal-operations");
+    expect(list).toBe(screen.getByTestId("proposal-operations"));
+    expect(list).not.toContainElement(screen.getByTestId("review-source"));
   });
 
   it("marks an operation its proposer amended (#1624)", async () => {
@@ -347,6 +351,25 @@ describe("keys", () => {
     await user.keyboard("a");
     await waitFor(() => expect(applies).toHaveLength(1));
     expect(applies[0].operation_ids).toEqual(["op-gateway"]);
+  });
+});
+
+describe("review timing on every proposal (#1664)", () => {
+  it("times a change plan without a source too, and sends the time with its decision", async () => {
+    proposal = extraction({
+      source: "mcp",
+      origin: null,
+      client_metadata: {},
+      operations: structuredClone([rename]),
+    });
+    const user = userEvent.setup();
+    render(<Harness initial="op-rename-class" />);
+    await screen.findByTestId("review-inspector", {}, { timeout: 10000 });
+    expect(screen.queryByTestId("review-source")).not.toBeInTheDocument();
+    expect(screen.getByTestId("review-time")).toHaveTextContent(/on this review$/);
+    await user.click(screen.getByTestId("review-correct"));
+    await waitFor(() => expect(applies).toHaveLength(1));
+    expect(applies[0].review_ms).toEqual({ "op-rename-class": expect.any(Number) });
   });
 });
 

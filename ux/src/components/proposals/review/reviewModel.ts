@@ -129,33 +129,7 @@ export function verdictLabel(operation: ProposedOperation): string {
   return VERDICT_LABEL[verdict];
 }
 
-// ==================== Progress ====================
-
-export interface ReviewProgress {
-  decided: number;
-  total: number;
-  percent: number;
-  correct: number;
-  changed: number;
-  rejected: number;
-  added: number;
-}
-
-/** How far the review is: decided of total, and how each was decided. */
-export function reviewProgress(operations: ProposedOperation[]): ReviewProgress {
-  const count = (verdict: Verdict) => operations.filter((o) => verdictOf(o) === verdict).length;
-  const total = operations.length;
-  const decided = total - count("awaiting");
-  return {
-    decided,
-    total,
-    percent: total === 0 ? 0 : Math.round((decided / total) * 100),
-    correct: count("correct"),
-    changed: count("changed"),
-    rejected: count("rejected"),
-    added: count("added"),
-  };
-}
+// ==================== Timing ====================
 
 /** "4:07", or "62:10" past the hour: minutes and seconds. */
 export function formatDuration(ms: number): string {
@@ -219,58 +193,7 @@ export interface Layer {
   label: string;
 }
 
-export interface ElementGroup extends Layer {
-  operations: ProposedOperation[];
-}
-
 export const RELATIONSHIPS_GROUP = "relationships";
-
-/**
- * Elements grouped by layer, in the order the layers first appear, then the
- * relationship operations in a last "Relationships" group.
- */
-export function groupForReview(
-  elements: ProposedOperation[],
-  relationships: ProposedOperation[],
-  layerOf: (operation: ProposedOperation) => Layer,
-): ElementGroup[] {
-  const groups: ElementGroup[] = [];
-  for (const operation of elements) {
-    const layer = layerOf(operation);
-    let group = groups.find((g) => g.key === layer.key);
-    if (!group) {
-      group = { ...layer, operations: [] };
-      groups.push(group);
-    }
-    group.operations.push(operation);
-  }
-  if (relationships.length > 0) {
-    groups.push({ key: RELATIONSHIPS_GROUP, label: "Relationships", operations: relationships });
-  }
-  return groups;
-}
-
-export type ElementFilter = "awaiting" | "all";
-
-/** The groups the filter shows: Awaiting keeps the selected element, decided or not. */
-export function filterGroups(
-  groups: ElementGroup[],
-  filter: ElementFilter,
-  selectedId: string | undefined,
-): ElementGroup[] {
-  if (filter === "all") return groups;
-  return groups
-    .map((g) => ({
-      ...g,
-      operations: g.operations.filter((o) => isAwaiting(o) || o.id === selectedId),
-    }))
-    .filter((g) => g.operations.length > 0);
-}
-
-/** The operation ids top to bottom. */
-export function orderOf(groups: ElementGroup[]): string[] {
-  return groups.flatMap((g) => g.operations.map((o) => o.id));
-}
 
 /** The next (delta 1) or previous (-1) id in `order`, staying put at either end. */
 export function step(order: string[], currentId: string | undefined, delta: 1 | -1) {
