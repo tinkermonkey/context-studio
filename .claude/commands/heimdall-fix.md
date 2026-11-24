@@ -21,13 +21,16 @@ The max iterations is `$ARGUMENTS` (default: 5).
 
 ## Prerequisites — servers must be running
 
-The capture script starts servers automatically if they are not already running. Do NOT start them manually. The script checks:
+**In a git worktree**, the app under test is the QA instance: start it with `./dev.sh --worktree --from-workspace` (it picks free ports and prints the UI and API URLs, also kept in `.qa-instance/state`) and stop it with `./dev.sh --worktree --stop` when done. The capture script reads the ports from `.qa-instance/state`, refuses to run without it, and never starts servers on the default ports. Use the printed UI and API URLs wherever this command says "app dev server" or "backend".
+
+**In the main checkout**, the capture script starts servers automatically if they are not already running. Do NOT start them manually. The script checks:
 
 - App dev server: `http://localhost:3100`
 - Backend: `http://localhost:8000`
-- Prototype file server: `http://localhost:3200` (serves `ux/design/Context Studio.html`)
 
-If the backend is not running at port 8000, the implementation pages will show error states. Note it in the plan — fix agents should not attempt to fix backend issues.
+In both cases the prototype file server (`http://localhost:3200`, serves `ux/design/Context Studio.html`) is started by the script if it is not running.
+
+If the backend is not running, the implementation pages will show error states. Note it in the plan — fix agents should not attempt to fix backend issues.
 
 ---
 

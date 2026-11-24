@@ -12,8 +12,10 @@ The user will tell you which page or component to check. If they don't, ask.
 
 ## 0. Prerequisites
 
-1. Confirm the Vite dev server is running (`lsof -i :3100` or check `/tmp/vite-dev.log`). Start it if not: `cd ux && npm run dev &> /tmp/vite-dev.log &`, then wait ~5s.
-2. Confirm the backend is running: `lsof -i :8000`. The visual checks that require live data need it.
+1. Find the UI and API URLs of the instance to test:
+   - **In a git worktree** (`git rev-parse --git-common-dir` differs from `git rev-parse --git-dir`): read them from `.qa-instance/state` (`FRONTEND_PORT` and `BACKEND_PORT`), or from the output of `./dev.sh --worktree --from-workspace`, which starts the instance, picks free ports and prints `UI` and `API` URLs. Start it if `.qa-instance/state` is missing. Never start `npm run dev` on the default ports from a worktree, and never test against the ports of the main checkout's servers. Stop it with `./dev.sh --worktree --stop` when done.
+   - **In the main checkout**: the UI is `http://localhost:3100` and the API `http://localhost:8000` (`lsof -i :3100`, `lsof -i :8000`). Start the dev server if it is not running: `cd ux && npm run dev &> /tmp/vite-dev.log &`, then wait ~5s.
+2. Confirm both URLs answer (the API needs to be up for the checks that need live data). Use these URLs everywhere below that the page under test is opened.
 3. Navigate to the page under test in the browser and select a workspace if the workspace picker appears.
 4. Save all screenshots to `/screenshots/` at the repo root (gitignored).
 
