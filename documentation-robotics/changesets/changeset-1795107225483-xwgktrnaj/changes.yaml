@@ -127,7 +127,7 @@
       created_at: 2026-11-19T16:59:05.121Z
       updated_at: 2026-11-19T16:59:05.121Z
       version: 1
-  timestamp: 2026-11-24T15:40:56.787Z
+  timestamp: 2026-11-24T16:41:41.920Z
   sequenceNumber: 3
 - type: add
   elementId: motivation.requirement.reversal-restores-deleted-entities-with-their-ids
@@ -3961,7 +3961,7 @@
       created_at: 2026-11-19T17:01:49.996Z
       updated_at: 2026-11-19T17:01:49.996Z
       version: 1
-  timestamp: 2026-11-24T15:40:56.638Z
+  timestamp: 2026-11-24T16:41:41.754Z
   sequenceNumber: 259
 - type: add
   elementId: testing.testcoveragetarget.one-review-page
@@ -5388,8 +5388,8 @@
     attributes: *a52
     source_reference: *a53
     metadata: *a54
-  timestamp: 2026-11-24T12:40:45.320Z
-  sequenceNumber: 383
+  timestamp: 2026-11-24T16:41:40.752Z
+  sequenceNumber: 396
 - type: update
   elementId: data-model.objectschema.proposal
   layerName: data-model
@@ -5430,8 +5430,8 @@
     attributes: *a55
     source_reference: *a56
     metadata: *a57
-  timestamp: 2026-11-24T12:40:45.614Z
-  sequenceNumber: 384
+  timestamp: 2026-11-24T16:41:40.955Z
+  sequenceNumber: 397
 - type: update
   elementId: data-store.collection.proposals-table
   layerName: data-store
@@ -5469,8 +5469,8 @@
     attributes: *a58
     source_reference: *a59
     metadata: *a60
-  timestamp: 2026-11-24T12:40:45.914Z
-  sequenceNumber: 385
+  timestamp: 2026-11-24T16:41:41.192Z
+  sequenceNumber: 398
 - type: update
   elementId: api.response.change-proposal-response
   layerName: api
@@ -5509,173 +5509,5 @@
     attributes: *a61
     source_reference: *a62
     metadata: *a63
-  timestamp: 2026-11-24T12:40:46.129Z
-  sequenceNumber: 386
-- type: update
-  elementId: data-model.objectschema.proposal-entity
-  layerName: data-model
-  before:
-    id: 2ff8aa70-673e-4390-97c0-5ebca5cea559
-    path: data-model.objectschema.proposal-entity
-    spec_node_id: data-model.objectschema
-    type: objectschema
-    layer_id: data-model
-    name: Proposal Entity
-    description: "Domain entity: a change proposal to one taxonomy, with its ordered
-      proposed operations, origin, status (open, done, reverted, reversed) and
-      landing; a reversal is linked to the proposal it reverses by a proposal
-      link of kind reverses (#1624's link model, plan proposal-links), so the
-      original knows its reversal (reversed_by) and how many of its changes were
-      reversed."
-    attributes: &a64
-      type: object
-    source_reference: &a65
-      provenance: extracted
-      locations:
-        - file: local-server/domain/versioning/proposals.py
-          symbol: ChangeProposal
-    metadata: &a66
-      created_at: 2026-05-09T10:25:00.196Z
-      updated_at: 2026-05-09T10:25:00.196Z
-      version: 1
-  after:
-    id: 2ff8aa70-673e-4390-97c0-5ebca5cea559
-    path: data-model.objectschema.proposal-entity
-    spec_node_id: data-model.objectschema
-    type: objectschema
-    layer_id: data-model
-    name: Proposal Entity
-    description: "Domain entity: a change proposal to one taxonomy, with its ordered
-      proposed operations, origin, status (open, done, reverted, reversed) and
-      landing; a reversal is linked to the proposal it reverses by a proposal
-      link of kind reverses (#1624's link model, plan proposal-links), so the
-      original knows its reversal (reversed_by) and how many of its changes were
-      reversed."
-    attributes: *a64
-    source_reference: *a65
-    metadata: *a66
-  timestamp: 2026-11-24T15:40:55.613Z
-  sequenceNumber: 387
-- type: update
-  elementId: data-model.objectschema.proposal
-  layerName: data-model
-  before:
-    id: 6aa7f2cd-9171-4746-8412-26d03f1e7523
-    path: data-model.objectschema.proposal
-    spec_node_id: data-model.objectschema
-    type: objectschema
-    layer_id: data-model
-    name: Proposal
-    description: "ORM model for change proposals (change_proposals, a batch_runs
-      subtype): taxonomy, origin, status (open, done, reverted, reversed in
-      batch_runs.status) and landing. A reversal's link to the proposal it
-      reverses is a proposal_links row of kind reverses (#1624), not a column
-      here."
-    attributes: &a67
-      type: object
-    source_reference: &a68
-      provenance: extracted
-      locations:
-        - file: local-server/adapters/persistence/sqlite/models.py
-          symbol: ChangeProposalRun
-    metadata: &a69
-      created_at: 2026-05-08T09:47:20.656Z
-      updated_at: 2026-05-08T09:47:20.656Z
-      version: 1
-  after:
-    id: 6aa7f2cd-9171-4746-8412-26d03f1e7523
-    path: data-model.objectschema.proposal
-    spec_node_id: data-model.objectschema
-    type: objectschema
-    layer_id: data-model
-    name: Proposal
-    description: "ORM model for change proposals (change_proposals, a batch_runs
-      subtype): taxonomy, origin, status (open, done, reverted, reversed in
-      batch_runs.status) and landing. A reversal's link to the proposal it
-      reverses is a proposal_links row of kind reverses (#1624), not a column
-      here."
-    attributes: *a67
-    source_reference: *a68
-    metadata: *a69
-  timestamp: 2026-11-24T15:40:55.818Z
-  sequenceNumber: 388
-- type: update
-  elementId: data-store.collection.proposals-table
-  layerName: data-store
-  before:
-    id: 8cad338c-9de8-4360-9f05-5f413b54f244
-    path: data-store.collection.proposals-table
-    spec_node_id: data-store.collection
-    type: collection
-    layer_id: data-store
-    name: change_proposals
-    description: "Change proposals (a batch_runs subtype): taxonomy, origin, status
-      and landing of each proposal. Links between proposals, a reversal's to the
-      proposal it reverses among them, are in proposal_links (#1624)."
-    attributes: &a70
-      collectionType: TABLE
-    source_reference: &a71
-      provenance: extracted
-      locations:
-        - file: local-server/adapters/persistence/sqlite/models.py
-          symbol: ChangeProposalRun
-    metadata: &a72
-      created_at: 2026-05-08T12:52:59.920Z
-      updated_at: 2026-05-08T12:52:59.920Z
-      version: 1
-  after:
-    id: 8cad338c-9de8-4360-9f05-5f413b54f244
-    path: data-store.collection.proposals-table
-    spec_node_id: data-store.collection
-    type: collection
-    layer_id: data-store
-    name: change_proposals
-    description: "Change proposals (a batch_runs subtype): taxonomy, origin, status
-      and landing of each proposal. Links between proposals, a reversal's to the
-      proposal it reverses among them, are in proposal_links (#1624)."
-    attributes: *a70
-    source_reference: *a71
-    metadata: *a72
-  timestamp: 2026-11-24T15:40:56.115Z
-  sequenceNumber: 389
-- type: update
-  elementId: api.response.change-proposal-response
-  layerName: api
-  before:
-    id: 2f4dc526-a1c7-40c9-8173-5cc609b51427
-    path: api.response.change-proposal-response
-    spec_node_id: api.response
-    type: response
-    layer_id: api
-    name: ChangeProposalResponse
-    description: "A change proposal with its operations, status (open, done,
-      reverted, reversed), landing, its links (reverses / reversed_by among
-      them, from #1624's link model) and, for a reversed original, how many of
-      its changes were reversed."
-    attributes: &a73
-      description: ChangeProposalResponse
-    source_reference: &a74
-      provenance: extracted
-      locations:
-        - file: local-server/adapters/web/schemas/proposals.py
-          symbol: ChangeProposalResponse
-    metadata: &a75
-      created_at: 2026-11-19T15:15:02.501Z
-      updated_at: 2026-11-19T15:15:02.501Z
-      version: 1
-  after:
-    id: 2f4dc526-a1c7-40c9-8173-5cc609b51427
-    path: api.response.change-proposal-response
-    spec_node_id: api.response
-    type: response
-    layer_id: api
-    name: ChangeProposalResponse
-    description: "A change proposal with its operations, status (open, done,
-      reverted, reversed), landing, its links (reverses / reversed_by among
-      them, from #1624's link model) and, for a reversed original, how many of
-      its changes were reversed."
-    attributes: *a73
-    source_reference: *a74
-    metadata: *a75
-  timestamp: 2026-11-24T15:40:56.285Z
-  sequenceNumber: 390
+  timestamp: 2026-11-24T16:41:41.358Z
+  sequenceNumber: 399
