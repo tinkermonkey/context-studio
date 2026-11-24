@@ -384,6 +384,20 @@ class TestWithdrawSupersededBy:
         assert service.get(old.id).status is ProposalStatus.OPEN
 
 
+class TestNoSupersedeCycle:
+    def test_a_withdrawn_proposal_cant_supersede_the_one_that_superseded_it(self, service, graph):
+        """A <-> B: once A is withdrawn as superseded by B, B can't be withdrawn for A."""
+        a = propose(service, graph, *nine_rewordings(graph))
+        b = propose(service, graph, *nine_rewordings(graph)[:1])
+        service.withdraw(a.id, superseded_by=b.id)
+
+        with pytest.raises(ChangeProposalStateError, match="withdrawn"):
+            service.withdraw(b.id, superseded_by=a.id)
+
+        assert service.get(b.id).status is ProposalStatus.OPEN
+        assert [link.source_proposal_id for link in service.links_of(a.id)] == [b.id]
+
+
 class TestSupersedeOnPropose:
     def test_a_failed_withdraw_stores_nothing(self, proposals, ontology, repo, graph):
         """Review of #1728: withdraw first; if it fails, no new proposal exists."""

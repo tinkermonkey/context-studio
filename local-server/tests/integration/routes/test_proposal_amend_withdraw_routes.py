@@ -16,6 +16,7 @@ import pytest  # noqa: E402
 from adapters.chat.proposal_tools import (  # noqa: E402
     AmendProposalTool,
     GetProposalTool,
+    ProposeChangesTool,
     WithdrawProposalTool,
 )
 from domain.ontology.exceptions import EntityNotFoundError  # noqa: E402
@@ -267,6 +268,25 @@ class TestReviewOf1728:
         assert amended.is_error and "only proposals you made" in amended.content
         assert withdrawn.is_error and "only proposals you made" in withdrawn.content
         assert client.get(f"/api/proposals/{by_a_person['id']}").json()["status"] == "open"
+
+    def test_mcp_supersedes_only_its_own_proposals(self, client, house):
+        by_a_person = _propose(client, house, _describe(1, house["attic"], "Dusty"), source="user")
+        service = client.app.state.proposal_service
+
+        outcome = ProposeChangesTool(service, ProposalSource.MCP).run(
+            {
+                "taxonomy_id": house["taxonomy"],
+                "title": "Take two",
+                "operations": [_describe(1, house["attic"], "Damp")],
+                "supersedes": [by_a_person["id"]],
+            }
+        )
+
+        payload = json.loads(outcome.content)
+        assert payload["stored"] is False
+        assert payload["errors"][0]["code"] == "not_yours"
+        assert client.get(f"/api/proposals/{by_a_person['id']}").json()["status"] == "open"
+        assert client.get("/api/proposals").json()["total"] == 1
 
     def test_mcp_amend_merges_fields_and_leaves_one_proposal(self, client, house):
         proposal = _propose(
