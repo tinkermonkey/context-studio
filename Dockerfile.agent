@@ -51,8 +51,12 @@ RUN apt-get update && \
 # Python 3.14, the version the project runs on (local-server/.python-version, mypy, black, CI).
 # The base image's Python is 3.11, so uv installs 3.14 into a virtualenv that comes first
 # on PATH: python, python3 and pip below, and in the container, are the 3.14 ones.
-COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
-RUN uv venv --seed --python 3.14 /opt/python314 && chmod -R a+rX /opt/python314
+# The interpreter lives under UV_PYTHON_INSTALL_DIR, not in root's home (uv's default), so the
+# orchestrator user can run it; the venv's python is a symlink into that directory.
+ENV UV_PYTHON_INSTALL_DIR=/opt/uv-python
+COPY --from=ghcr.io/astral-sh/uv:0.13.7 /uv /usr/local/bin/uv
+RUN uv venv --seed --managed-python --python 3.14 /opt/python314 && \
+    chmod -R a+rX /opt/uv-python /opt/python314
 ENV PATH=/opt/python314/bin:$PATH
 ENV VIRTUAL_ENV=/opt/python314
 
