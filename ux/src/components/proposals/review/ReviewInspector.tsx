@@ -142,11 +142,6 @@ export interface ReviewInspectorProps {
    * "Not an element" button does. The value the inspector mounts with opens nothing.
    */
   rejectPrompt?: number;
-  /**
-   * The page decides by key (A, X, 1-3, J / K): the inspector shows the key hints
-   * and aria-keyshortcuts. Off where the page has no keys yet (proposal detail).
-   */
-  keyboard?: boolean;
   onCorrect: () => void;
   onPickClass: (classId: string) => void;
   /** Accept a relationship with another predicate, source or target. */
@@ -279,7 +274,9 @@ function Decided({
   const reason = reasonLabel(operation.reason_code);
   const shown = shownClassId(operation);
   let body;
-  if (verdict === "rejected") {
+  if (verdict === "withdrawn") {
+    body = <span>Withdrawn by its proposer: it is no longer part of this review.</span>;
+  } else if (verdict === "rejected") {
     body = (
       <span>{`Not ${element ? "an element" : "a relationship"}${reason ? `: ${reason}` : ""}.`}</span>
     );
@@ -452,7 +449,6 @@ export function ReviewInspector({
   deciding,
   busy,
   rejectPrompt = 0,
-  keyboard = true,
   onCorrect,
   onPickClass,
   onAcceptEdited,
@@ -491,12 +487,14 @@ export function ReviewInspector({
       })()
     : undefined;
   const kind = element ? "an element" : "a relationship";
-  // Only an individual or relationship create can be reopened to decide it again.
-  const reopens = !change;
+  // Only an individual or relationship create can be reopened to decide it again,
+  // and never one its proposer withdrew (#1624): it was never decided.
+  const reopens = !change && operation.status !== "withdrawn";
   const verdict = verdictOf(operation);
   const awaiting = verdict === "awaiting";
   // Key hints show only where the keys work, on an operation awaiting its decision.
-  const keyed = keyboard && awaiting;
+  // The page decides by key (A, X, 1-3, J / K): the inspector shows the hints and aria-keyshortcuts.
+  const keyed = awaiting;
   const classId = shownClassId(operation);
   // An individual with more than one class: the rest beside the first.
   const shownClassIds = shownFields(operation).class_ids;

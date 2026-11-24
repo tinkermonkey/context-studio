@@ -1,7 +1,8 @@
-import { useMemo, useRef, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { SMALL_SET_LIMIT } from "@/api/config";
 import { useTaxonomyClasses } from "@/api/hooks/ontology/useClasses";
 import { useIndividuals, useIndividualsByIds } from "@/api/hooks/ontology/useIndividuals";
+import { useSchemes } from "@/api/hooks/ontology/useSchemes";
 import type { ChangeProposal, ProposedOperation, RejectionReason } from "@/api/services/proposals";
 import { useToasts } from "@/components/ui/Toast";
 import { staleCause, takesDecisions } from "../decisionModel";
@@ -31,6 +32,7 @@ import {
   isElement,
   extractedFromSource,
   isRelationship,
+  proposedClassId,
   relationshipsOf,
   rememberPick,
   shownClassId,
@@ -39,6 +41,7 @@ import {
   suggestedClasses,
   verdictLabel,
   verdictOf,
+  type Layer,
 } from "./reviewModel";
 import {
   EMPTY_DRAFT,
@@ -107,6 +110,28 @@ export function useInspectorModel(
   const classById = useMemo(() => new Map((classes ?? []).map((c) => [c.id, c])), [classes]);
   const pickable = useMemo(() => (classes ?? []).filter((c) => !c.derived), [classes]);
   const classesLoading = !classes && !classesFailed;
+
+  // An element's layer: the concept scheme of the class it was proposed with.
+  const { data: schemes, isError: schemesFailed } = useSchemes(
+    taxonomyId,
+    { limit: SMALL_SET_LIMIT },
+    { enabled: !!taxonomyId },
+  );
+  const schemeById = useMemo(
+    () => new Map((schemes?.items ?? []).map((s) => [s.id, s])),
+    [schemes],
+  );
+  const layersLoading = classesLoading || (!schemes && !schemesFailed);
+  const layerOf = useCallback(
+    (operation: ProposedOperation): Layer => {
+      if (layersLoading) return { key: "loading", label: "Loading layers…" };
+      const scheme = schemeById.get(
+        classById.get(proposedClassId(operation) ?? "")?.concept_scheme_id ?? "",
+      );
+      return scheme ? { key: scheme.id, label: scheme.title } : { key: "other", label: "Other" };
+    },
+    [classById, schemeById, layersLoading],
+  );
 
   // The schema: every relationship type, with the taxonomy's predicate catalog.
   const schema = useReviewSchema(taxonomyId);
@@ -472,6 +497,7 @@ export function useInspectorModel(
 
   return {
     classById,
+    layerOf,
     pickable,
     classesLoading,
     schema,

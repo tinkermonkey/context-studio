@@ -9,7 +9,6 @@ import {
   PageHeader,
   ProgressBar,
   SegmentedControl,
-  Table,
   TextArea,
 } from "@tinkermonkey/heimdall-ui";
 import { useChangeProposal, useProposalDecisions } from "@/api/hooks/proposals";
@@ -17,19 +16,15 @@ import { useTaxonomy } from "@/api/hooks/ontology/useTaxonomies";
 import { useTaxonomyPredicates } from "@/api/hooks/ontology/usePredicates";
 import { ApiError } from "@/api/client/interceptors";
 import type { ProposedOperation, RejectionReason } from "@/api/services/proposals";
-import { SchemaPageLayout } from "@/components/schema/SchemaPageLayout";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
 import { usePageBreadcrumbs } from "@/hooks/usePageBreadcrumbs";
 import { linkPath } from "@/lib/entityPaths";
 import { ApplyResults } from "./ApplyResults";
-import { SelectionBar, ThresholdBar } from "./DecisionBars";
-import { operationColumns } from "./OperationColumns";
-import { operationTitle } from "./OperationDiff";
+import { OperationDiff, operationTitle } from "./OperationDiff";
 import { RejectReasonPicker } from "./RejectReasonPicker";
 import { RevertConflict } from "./RevertConflict";
 import { RevertProposalDialog } from "./RevertProposalDialog";
-import { TieredOperations } from "./TieredOperations";
 import {
   DEFAULT_THRESHOLD,
   decidedByLabel,
@@ -58,27 +53,38 @@ import {
 import {
   PROPOSAL_STATUS_VARIANT,
   formatAgo,
+  formatProbability,
   isAwaiting,
   opMixLabel,
-  planKind,
   refsByOperation,
 } from "./proposalModel";
 import {
   conflictedIds,
-  defaultGroupBy,
   isBulkEligible,
-  offersGroupBy,
   optionDefinition,
   pickOutcome,
   takesPicks,
-  tieredOrder,
-  type GroupBy,
   type Picks,
   type ReflectionOption,
 } from "./tieredModel";
 import { nearMatchHeldIds, nearMatchHeldNote, noPassageHeldIds } from "./sourceModel";
+import { ProposalLink } from "./ProposalLink";
 import { ProposalOriginChip } from "./ProposalOrigin";
-import { extractedFromSource } from "./review/reviewModel";
+import { ConflictCard } from "./review/ConflictCard";
+import { BulkBar, BulkSelect, type BulkPick } from "./review/ReviewBulk";
+import { ReviewElementsPane, type ElementRow } from "./review/ReviewElementsPane";
+import { RowFlags } from "./review/RowFlags";
+import {
+  GROUP_BY_LABELS,
+  defaultListGroupBy,
+  groupByOptions,
+  listOrder,
+  listSections,
+  rowStatus,
+  type ListGroupBy,
+} from "./review/reviewList";
+import { extractedFromSource, isElement, isRelationship, shownClassId } from "./review/reviewModel";
+import { useReviewKeys, ignoresKeys } from "./review/useReviewKeys";
 import { goldCheckOf } from "./review/goldModel";
 import { ReviewInspector } from "./review/ReviewInspector";
 import { ReviewPillsProvider, plainClick, type OperationLink } from "./review/ReviewPills";
@@ -138,22 +144,13 @@ interface ProposalDetailPageProps {
   onDiff?: (field: string | undefined, operationId?: string) => void;
 }
 
-/** Keys typed into a field, or pressed in a dialog, are not page commands. */
-function ignoresKeys(target: EventTarget | null): boolean {
-  if (!(target instanceof HTMLElement)) return false;
-  return (
-    target.isContentEditable ||
-    ["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName) ||
-    !!target.closest('[role="dialog"]')
-  );
-}
-
 /**
- * One proposal: its tally and op mix, the operations with their changes, and
- * the selected operation in the inspector. Until it is reverted, the reviewer
- * decides here: accept or reject operations one at a time, by selection, by
- * probability threshold or all at once, edit a DR triple before accepting it,
- * and revert what the proposal applied.
+ * One proposal: its tally and op mix, the review list of its operations
+ * (grouped by layer, change kind or sequence, conflicts as cards), and the
+ * selected operation in the inspector. Until it is reverted, the reviewer
+ * decides here: one at a time in the inspector or by key (A, X, J / K), or in
+ * bulk (Select ▾ and the bulk bar, on every proposal but a gold check); edit a
+ * DR triple before accepting it; and revert what the proposal applied.
  */
 export function ProposalDetailPage({
   id,
@@ -174,8 +171,8 @@ export function ProposalDetailPage({
   const predicateDefinitions = useMemo(() => predicateDescriptions(predicates), [predicates]);
   const [threshold, setThreshold] = useState(DEFAULT_THRESHOLD);
   const [checkedIds, setChecked] = useState<string[]>([]);
-  // The operations a confirmed reject covers: all awaiting, or the checked ones.
-  const [rejecting, setRejecting] = useState<{ ids: string[]; checked: boolean } | null>(null);
+  // The checked operations a confirmed reject covers.
+  const [rejecting, setRejecting] = useState<{ ids: string[] } | null>(null);
   const [rejectNote, setRejectNote] = useState("");
   // One code for every operation a reject covers; "other" fits any operation.
   const [rejectCode, setRejectCode] = useState<RejectionReason>("other");
@@ -184,11 +181,13 @@ export function ProposalDetailPage({
   const [chosenFilter, setFilter] = useState<OperationFilter>();
   // The op and scope narrowing whichever primary filter is chosen.
   const [facets, setFacets] = useState<Facets>(ANY_FACETS);
-  // Undefined until the reviewer picks one: then it follows defaultGroupBy.
-  const [chosenGroupBy, setGroupBy] = useState<GroupBy>();
+  // Undefined until the reviewer picks one: then it follows defaultListGroupBy.
+  const [chosenGroupBy, setGroupBy] = useState<ListGroupBy>();
+  // Bumped by X: the inspector opens its reason step.
+  const [rejectPrompt, setRejectPrompt] = useState(0);
   // Reflection answers the reviewer picked over the plan's, by operation.
   const [picksByOperation, setPicksByOperation] = useState<Record<string, Picks>>({});
-  // Whether the page opened (?op=) on an already decided operation: worked out
+  // Whether the page opened (?selected=) on an already decided operation: worked out
   // once, when the proposal loads, so deciding the linked operation keeps the filter.
   const openOnAll = useRef<boolean | undefined>(undefined);
   if (openOnAll.current === undefined && proposal) {
@@ -242,20 +241,39 @@ export function ProposalDetailPage({
     setFacets(next);
     uncheckHidden(filter, next);
   };
-  const groupBy = offersGroupBy(operations)
-    ? (chosenGroupBy ?? defaultGroupBy(operations))
-    : "sequence";
-  const byKind = groupBy === "kind";
-  // The ids the filters show, top to bottom, as the table or the grouping lists
-  // them. A conflict card can also list members the filter doesn't show: those
-  // are left out, so selection never moves onto one.
-  const shownOrder = useMemo(
-    () =>
-      byKind
-        ? tieredOrder(shownOperations, operations).filter((id) => shownIds.has(id))
-        : shownOperations.map((o) => o.id),
-    [byKind, shownOperations, operations, shownIds],
+  const groupOptions = useMemo(() => groupByOptions(operations), [operations]);
+  const groupBy =
+    chosenGroupBy && groupOptions.includes(chosenGroupBy)
+      ? chosenGroupBy
+      : defaultListGroupBy(operations);
+  const selectedOperation = operations.find((o) => o.id === selectedOperationId);
+
+  // The review inspector's data (classes, layers, names, the pills and their
+  // hovers): the same inspector as the Review page's, for every operation.
+  const inspectorLink = (operationId: string): OperationLink => ({
+    href: `${linkPath("proposal", id)}?selected=${encodeURIComponent(operationId)}`,
+    onClick: (event) => {
+      if (!plainClick(event)) return;
+      event.preventDefault();
+      onSelectOperation(operationId);
+    },
+  });
+  const inspector = useInspectorModel(proposal, {
+    actions,
+    context,
+    selected: selectedOperation,
+    link: inspectorLink,
+    deciding: decidesHere,
+  });
+
+  // The list's sections, and its rows top to bottom (J / K, and where the
+  // selection goes). A conflict card can also hold members the filter doesn't
+  // show: those are left out, so selection never moves onto one.
+  const sections = useMemo(
+    () => listSections(shownOperations, operations, groupBy, inspector.layerOf),
+    [shownOperations, operations, groupBy, inspector.layerOf],
   );
+  const shownOrder = useMemo(() => listOrder(sections), [sections]);
   // When a decision drops the selected operation out of the list, select the
   // one below it, so the reviewer can decide row after row. A filter or
   // grouping change, or a deep link to an operation not shown, moves nothing.
@@ -263,7 +281,7 @@ export function ProposalDetailPage({
     order: string[];
     filter: OperationFilter;
     facets: Facets;
-    groupBy: GroupBy;
+    groupBy: ListGroupBy;
   }>(undefined);
   useEffect(() => {
     const last = lastShown.current;
@@ -276,7 +294,7 @@ export function ProposalDetailPage({
     onSelectOperation(nextSelection(last.order, shownOrder, selectedOperationId));
   }, [shownOrder, filter, facets, groupBy, selectedOperationId, onSelectOperation]);
   // Judgment and conflict rows of a change plan are never bulk-decided.
-  // So are the operations a conflict card shows, in either view.
+  // So are the operations a conflict card shows, in any view.
   const conflicted = useMemo(() => conflictedIds(operations), [operations]);
   // Near matches, and what names them by "$ref", wait for the reviewer's choice:
   // a bulk accept would create a new individual for each instead.
@@ -285,64 +303,50 @@ export function ProposalDetailPage({
     () => awaitingOps.filter((o) => isBulkEligible(o, conflicted) && !nearHeld.has(o.id)),
     [awaitingOps, conflicted, nearHeld],
   );
-  // Operations without a passage (and what names them) go along to Accept N ready,
-  // which holds them back and says how many: each is accepted on its own.
+  // Operations without a passage (and what names them) are held back by Accept
+  // selected, which says how many: each is accepted on its own.
   const passageHeld = useMemo(() => noPassageHeldIds(operations), [operations]);
   const bulkReady = bulkOps.filter((o) => !o.stale && !isBlocked(o) && !passageHeld.has(o.id));
-  const showThreshold =
-    !byKind && decidesHere && awaitingOps.length > 0 && hasProbabilities(operations);
-  // The threshold picks only from what the filters show, so it never checks hidden rows.
-  const shownAwaiting = awaitingOps.filter((o) => shownIds.has(o.id)).length;
-  const matching = showThreshold
-    ? atOrAboveThreshold(
-        bulkOps.filter((o) => shownIds.has(o.id)),
-        threshold,
-      )
-    : [];
-  const showPlanKind = operations.some((o) => planKind(o) !== undefined);
-  const selectable = decidesHere && awaitingOps.length > 0;
-  const columns = useMemo(
-    () =>
-      operationColumns(context, {
-        showPlanKind,
-        threshold: showThreshold ? threshold : undefined,
-        selection: selectable
-          ? {
-              checked,
-              toggle: (opId) =>
-                setChecked((ids) =>
-                  ids.includes(opId) ? ids.filter((i) => i !== opId) : [...ids, opId],
-                ),
-              eligible: (row) => isBulkEligible(row, conflicted),
-            }
-          : undefined,
-        reverted,
-      }),
-    [context, showPlanKind, showThreshold, threshold, selectable, checked, reverted, conflicted],
-  );
-
-  // The review inspector's data, for the operations it opens (extraction creates):
-  // the same inspector, pills and hovers as the Review page.
-  const inspectorLink = (operationId: string): OperationLink => ({
-    href: `${linkPath("proposal", id)}?op=${encodeURIComponent(operationId)}`,
-    onClick: (event) => {
-      if (!plainClick(event)) return;
-      event.preventDefault();
-      onSelectOperation(operationId);
-    },
-  });
-  const inspector = useInspectorModel(proposal, {
-    actions,
-    context,
-    selected: operations.find((o) => o.id === selectedOperationId),
-    link: inspectorLink,
-    deciding: decidesHere,
-  });
+  // Bulk decisions on every proposal decided here (extractions included), never on a gold check.
+  const bulk = decidesHere && awaitingOps.length > 0;
+  // Select ▾ picks only from what the filters show, so it never checks hidden rows.
+  const shownBulk = bulkOps.filter((o) => shownIds.has(o.id));
+  const shownReady = bulkReady.filter((o) => shownIds.has(o.id));
+  const matching = hasProbabilities(operations)
+    ? atOrAboveThreshold(shownReady, threshold)
+    : undefined;
+  // What All ready leaves out among the rows shown, and why (the menu says so).
+  const shownAwaiting = awaitingOps.filter((o) => shownIds.has(o.id));
+  const shownHeld = shownAwaiting.filter((o) => nearHeld.has(o.id));
+  const readyLeftOut =
+    [
+      shownBulk.some((o) => o.stale && !isBlocked(o)) &&
+        "Stale operations are left for Apply anyway",
+      shownBulk.some((o) => isBlocked(o)) &&
+        "Blocked deletes are left for a resolution in the inspector",
+      shownAwaiting.length - shownBulk.length > shownHeld.length &&
+        "Judgment and conflict changes are decided one by one",
+      nearMatchHeldNote(shownHeld)?.replace(/\.$/, ""),
+      shownBulk.some((o) => passageHeld.has(o.id)) &&
+        "Operations without a passage are held back to accept one by one",
+    ]
+      .filter(Boolean)
+      .join(". ") || undefined;
+  const pickBulk = (pick: BulkPick) =>
+    setChecked(
+      (pick === "ready"
+        ? shownReady
+        : pick === "threshold"
+          ? (matching ?? [])
+          : pick === "awaiting"
+            ? shownBulk
+            : []
+      ).map((o) => o.id),
+    );
 
   // The wide diff (#1661): a long text change of the selected operation, read side by side
   // over the list. W opens its first long change; Esc, ✕ or Back close it, and focus
   // goes back to the Wide control of the row it was opened from.
-  const selectedOperation = operations.find((o) => o.id === selectedOperationId);
   const wideFields = selectedOperation ? longChangeFields(selectedOperation) : [];
   const wideOpen = !!onDiff && !!diffField && wideFields.includes(diffField);
   const wideFrom = useRef<string | undefined>(undefined);
@@ -377,16 +381,22 @@ export function ProposalDetailPage({
     return () => window.removeEventListener("keydown", listener);
   }, []);
 
-  // A deep link (?op=) scrolls its row into view once the operations load.
-  const tableRef = useRef<HTMLDivElement>(null);
-  const deepLinkedOperation = useRef(selectedOperationId);
-  useEffect(() => {
-    const target = deepLinkedOperation.current;
-    if (!target || operations.length === 0) return;
-    deepLinkedOperation.current = undefined;
-    const row = tableRef.current?.querySelector(`tr[data-row-key="${CSS.escape(target)}"]`);
-    row?.scrollIntoView?.({ block: "center" });
-  }, [operations]);
+  // Keys: J / K next and previous, A accept, X the reasons, 1-3 a suggested class
+  // (an element). Not while the wide diff (its own keys) or a confirmation is open.
+  // A accepts as proposed only: a relationship type with picks, or a blocked delete,
+  // is decided with the inspector's buttons.
+  useReviewKeys({
+    order: shownOrder,
+    selectedId: selectedOperationId,
+    select: (operationId) => onSelectOperation(operationId),
+    selected: selectedOperation,
+    operations,
+    model: inspector,
+    paused: wideOpen || !!actions.forceRequest || rejecting !== null || confirmRevert,
+    onReasons: () => setRejectPrompt((n) => n + 1),
+    acceptsByKey: (operation) =>
+      !isBlocked(operation) && Object.keys(picksByOperation[operation.id] ?? {}).length === 0,
+  });
 
   usePageBreadcrumbs(
     linkPath("proposal", id),
@@ -446,6 +456,71 @@ export function ProposalDetailPage({
       context.currentProperty(operation.target_id) as Record<string, unknown> | undefined,
       context.targetGone(operation),
     );
+  // A row: an element by its title and class, a relationship by its ends and
+  // predicate, anything else by what it changes, inline.
+  const rowOf = (operation: ProposedOperation): ElementRow => {
+    const status = rowStatus(operation, reverted);
+    const base = {
+      probability:
+        operation.probability === null || operation.probability === undefined
+          ? ""
+          : formatProbability(operation.probability),
+      ...status,
+      amended: !!operation.amended_at,
+      flags: <RowFlags operation={operation} context={context} />,
+    };
+    if (isElement(operation)) {
+      const detail = inspector.names.classLabel(shownClassId(operation));
+      return { title: inspector.names.titleOf(operation), detail, detailTitle: detail, ...base };
+    }
+    if (isRelationship(operation) && operation.op === "create") {
+      const parts = inspector.names.relationshipParts(operation);
+      return {
+        title: `${parts.from} → ${parts.to}`,
+        detail: parts.predicate,
+        detailTitle: parts.predicate,
+        ...base,
+      };
+    }
+    return {
+      title: (
+        <>
+          <span className="review-row__seq" data-testid={`review-row-op-${operation.id}`}>
+            seq {operation.seq} · {operation.op}
+          </span>{" "}
+          {operationTitle(operation, context)}
+        </>
+      ),
+      change: <OperationDiff operation={operation} context={context} />,
+      ...base,
+    };
+  };
+  // A DR relationship type's decision: its picks, triple and in-use resolution.
+  const typeOf = (operation: ProposedOperation) => {
+    if (operation.kind !== "property") return undefined;
+    const picks = picksByOperation[operation.id] ?? {};
+    return {
+      decision: {
+        proposal,
+        taxonomy,
+        current: context.currentProperty(operation.target_id),
+        staleCause: operation.stale ? causeOf(operation) : undefined,
+        actions,
+        picks: operation.reflection ? pickOutcome(operation.reflection, picks) : undefined,
+      },
+      current: context.currentProperty(operation.target_id),
+      picks,
+      onPick:
+        decidesHere && takesPicks(operation)
+          ? (question: string, option: string) =>
+              setPicksByOperation((all) => ({
+                ...all,
+                [operation.id]: { ...all[operation.id], [question]: option },
+              }))
+          : undefined,
+      definitionOf: definitionOf(operation),
+    };
+  };
   const checkedList = [...checked];
   // Held back first (near matches, then operations without a passage), as Accept selected does.
   const isHeld = (o: ProposedOperation) => nearHeld.has(o.id) || passageHeld.has(o.id);
@@ -460,11 +535,6 @@ export function ProposalDetailPage({
   const checkedNoPassage = operations.filter(
     (o) => checked.has(o.id) && passageHeld.has(o.id) && !nearHeld.has(o.id),
   );
-  const heldAwaiting = awaitingOps.filter((o) => nearHeld.has(o.id));
-  const awaitingIds = awaitingOps.map((o) => o.id);
-  const bulkIds = bulkOps.map((o) => o.id);
-  const neverBulk = awaitingOps.length - bulkOps.length;
-  const blockedAwaiting = progress.needChoice;
   const force = actions.forceRequest;
   const forceStale = force
     ? operations.filter((o) => force.operationIds.includes(o.id) && o.stale)
@@ -495,6 +565,22 @@ export function ProposalDetailPage({
             {proposal.status}
           </Chip>
           <ProposalOriginChip origin={proposal.origin} />
+          {(proposal.links ?? [])
+            .filter((link) => link.kind === "supersedes" || link.kind === "superseded_by")
+            .map((link) => (
+              <span
+                key={`${link.kind}-${link.proposal_id}`}
+                className="proposal-summary__link"
+                data-testid={`proposal-supersede-${link.kind}`}
+              >
+                <Chip variant={link.kind === "superseded_by" ? "neutral" : "cyan"}>
+                  {link.kind === "superseded_by" ? "superseded by" : "supersedes"}
+                </Chip>
+                <ProposalLink proposalId={link.proposal_id}>
+                  {link.title || link.proposal_id.slice(0, 8)}
+                </ProposalLink>
+              </span>
+            ))}
           <div className="proposal-summary__progress">
             <span className="proposal-summary__tally" data-testid="proposal-tally">
               {decisionHeadline(progress)}
@@ -546,50 +632,6 @@ export function ProposalDetailPage({
                 >
                   <Icon name="reload" size={13} /> Revert proposal
                 </Button>
-              )}
-              {decidesHere && awaitingOps.length > 0 && (
-                <>
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    disabled={actions.busy}
-                    onClick={() => {
-                      setRejectNote("");
-                      setRejectCode("other");
-                      setRejecting({ ids: awaitingIds, checked: false });
-                    }}
-                    data-testid="proposal-reject-all"
-                  >
-                    Reject all awaiting
-                  </Button>
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    disabled={actions.busy || bulkReady.length === 0}
-                    title={
-                      awaitingOps.length > bulkReady.length
-                        ? [
-                            awaitingOps.some((o) => o.stale && !isBlocked(o)) &&
-                              "Stale operations are left for Apply anyway",
-                            blockedAwaiting > 0 &&
-                              "Blocked deletes are left for a resolution in the inspector",
-                            neverBulk > heldAwaiting.length &&
-                              "Judgment and conflict changes are decided one by one",
-                            nearMatchHeldNote(heldAwaiting)?.replace(/\.$/, ""),
-                            bulkOps.some((o) => passageHeld.has(o.id)) &&
-                              "Operations without a passage are held back to accept one by one",
-                          ]
-                            .filter(Boolean)
-                            .join(". ")
-                        : undefined
-                    }
-                    onClick={() => actions.acceptFresh(bulkIds)}
-                    aria-busy={actions.pending?.action === "apply" ? true : undefined}
-                    data-testid="proposal-accept-all"
-                  >
-                    Accept {bulkReady.length} ready
-                  </Button>
-                </>
               )}
             </span>
           )}
@@ -671,86 +713,15 @@ export function ProposalDetailPage({
         />
       )}
 
-      {showThreshold && (
-        <ThresholdBar
-          threshold={threshold}
-          onThresholdChange={setThreshold}
-          matching={matching.length}
-          awaiting={shownAwaiting}
-          onSelect={() => setChecked(matching.map((o) => o.id))}
-        />
-      )}
-
-      {!byKind && selectable && checked.size > 0 && (
-        <SelectionBar
-          selected={checked.size}
-          stale={checkedStale}
-          blocked={checkedBlocked}
-          nearMatches={checkedNear}
-          noPassage={checkedNoPassage}
-          busy={actions.busy}
-          onClear={() => setChecked([])}
-          onReject={() => {
-            setRejectNote("");
-            setRejectCode("other");
-            setRejecting({ ids: checkedList, checked: true });
-          }}
-          onAccept={async () => {
-            await actions.acceptFresh(checkedList);
-            setChecked([]);
-          }}
-        />
-      )}
-
       <ReviewPillsProvider value={inspector.pills}>
-        <SchemaPageLayout
-          data={operations}
-          selectedId={selectedOperationId}
-          renderInspectorContent={(operation) => {
-            const picks = picksByOperation[operation.id] ?? {};
-            const picking = decidesHere && takesPicks(operation);
-            const decision = decisions?.find((d) => d.operation_id === operation.id);
-            return (
-              <ReviewInspector
-                key={operation.id}
-                {...inspector.inspectorProps(operation)}
-                keyboard={false}
-                reverted={reverted}
-                onWide={onDiff ? openWide : undefined}
-                decidedBy={
-                  reverted ? undefined : decidedByLabel(decision?.decided_by, decision?.decided_at)
-                }
-                type={
-                  operation.kind === "property"
-                    ? {
-                        decision: {
-                          proposal,
-                          taxonomy,
-                          current: context.currentProperty(operation.target_id),
-                          staleCause: operation.stale ? causeOf(operation) : undefined,
-                          actions,
-                          picks: operation.reflection
-                            ? pickOutcome(operation.reflection, picks)
-                            : undefined,
-                        },
-                        current: context.currentProperty(operation.target_id),
-                        picks,
-                        onPick: picking
-                          ? (question: string, option: string) =>
-                              setPicksByOperation((all) => ({
-                                ...all,
-                                [operation.id]: { ...all[operation.id], [question]: option },
-                              }))
-                          : undefined,
-                        definitionOf: definitionOf(operation),
-                      }
-                    : undefined
-                }
-              />
-            );
-          }}
-        >
-          <div className="proposal-main">
+        <div className="proposal-review" data-testid="proposal-review">
+          <div
+            id="proposal-operations"
+            className="proposal-main"
+            data-testid="proposal-operations-list"
+            data-filter={filter}
+            data-group-by={groupBy}
+          >
             {wideOpen && selectedOperation && diffField && (
               <WideDiffOverlay
                 operation={selectedOperation}
@@ -768,110 +739,180 @@ export function ProposalDetailPage({
                 onClose={() => onDiff?.(undefined)}
               />
             )}
-            <div className="proposal-table-filter" data-testid="proposal-operation-filter">
-              {offersGroupBy(operations) && (
-                <span className="proposal-group-by" data-testid="proposal-group-by">
-                  <span className="proposal-bar__label">Group by</span>
+            <ReviewElementsPane
+              title="Operations"
+              listLabel="Operations to review"
+              data-testid="proposal-operations"
+              sections={sections}
+              rowOf={rowOf}
+              selectedId={selectedOperationId}
+              link={inspectorLink}
+              emptyMessage={emptyMessage}
+              header={
+                <div data-testid="proposal-operation-filter">
                   <SegmentedControl
-                    value={groupBy}
-                    onChange={(value) => setGroupBy(value as GroupBy)}
-                    aria-label="Group operations by"
+                    value={filter}
+                    onChange={(value) => chooseFilter(value as OperationFilter)}
+                    aria-label="Show operations"
                     options={[
-                      { value: "kind", label: "Change kind" },
-                      { value: "sequence", label: "Sequence" },
-                    ]}
-                  />
-                </span>
-              )}
-              <SegmentedControl
-                value={filter}
-                onChange={(value) => chooseFilter(value as OperationFilter)}
-                aria-label="Show operations"
-                options={[
-                  { value: "needs", label: `Needs decision · ${progress.awaiting}` },
-                  { value: "decided", label: `Decided · ${progress.total - progress.awaiting}` },
-                  { value: "all", label: `All · ${progress.total}` },
-                ]}
-              />
-              {counts.ops.length > 1 && (
-                <div data-testid="proposal-op-filter">
-                  <SegmentedControl
-                    value={facets.op}
-                    onChange={(value) => chooseFacets({ ...facets, op: value as Facets["op"] })}
-                    aria-label="Show operations by op"
-                    options={[
-                      { value: "any", label: "Any op" },
-                      ...counts.ops.map(({ value, count }) => ({
-                        value,
-                        label: `${value} · ${count}`,
-                      })),
+                      { value: "needs", label: `Needs decision · ${progress.awaiting}` },
+                      {
+                        value: "decided",
+                        label: `Decided · ${progress.total - progress.awaiting}`,
+                      },
+                      { value: "all", label: `All · ${operations.length}` },
                     ]}
                   />
                 </div>
-              )}
-              {counts.scopes.length > 1 && (
-                <div data-testid="proposal-scope-filter">
-                  <SegmentedControl
-                    value={facets.scope}
-                    onChange={(value) =>
-                      chooseFacets({ ...facets, scope: value as Facets["scope"] })
+              }
+              toolbar={
+                <>
+                  <div className="review-list-tools" data-testid="proposal-list-tools">
+                    {groupOptions.length > 1 && (
+                      <span className="proposal-group-by" data-testid="proposal-group-by">
+                        <span className="proposal-bar__label">Group by</span>
+                        <SegmentedControl
+                          value={groupBy}
+                          onChange={(value) => setGroupBy(value as ListGroupBy)}
+                          aria-label="Group operations by"
+                          options={groupOptions.map((value) => ({
+                            value,
+                            label: GROUP_BY_LABELS[value],
+                          }))}
+                        />
+                      </span>
+                    )}
+                    {counts.ops.length > 1 && (
+                      <div data-testid="proposal-op-filter">
+                        <SegmentedControl
+                          value={facets.op}
+                          onChange={(value) =>
+                            chooseFacets({ ...facets, op: value as Facets["op"] })
+                          }
+                          aria-label="Show operations by op"
+                          options={[
+                            { value: "any", label: "Any op" },
+                            ...counts.ops.map(({ value, count }) => ({
+                              value,
+                              label: `${value} · ${count}`,
+                            })),
+                          ]}
+                        />
+                      </div>
+                    )}
+                    {counts.scopes.length > 1 && (
+                      <div data-testid="proposal-scope-filter">
+                        <SegmentedControl
+                          value={facets.scope}
+                          onChange={(value) =>
+                            chooseFacets({ ...facets, scope: value as Facets["scope"] })
+                          }
+                          aria-label="Show operations by scope"
+                          options={[
+                            { value: "any", label: "Any scope" },
+                            ...counts.scopes.map(({ value, count }) => ({
+                              value,
+                              label: `${value} · ${count}`,
+                            })),
+                          ]}
+                        />
+                      </div>
+                    )}
+                    {bulk && (
+                      <BulkSelect
+                        ready={shownReady.length}
+                        awaiting={shownBulk.length}
+                        atThreshold={matching?.length}
+                        threshold={threshold}
+                        onThreshold={setThreshold}
+                        onPick={pickBulk}
+                        disabled={actions.busy}
+                        leftOut={readyLeftOut && `${readyLeftOut}.`}
+                      />
+                    )}
+                  </div>
+                  {bulk && checked.size > 0 && (
+                    <BulkBar
+                      selected={checked.size}
+                      stale={checkedStale}
+                      blocked={checkedBlocked}
+                      nearMatches={checkedNear}
+                      noPassage={checkedNoPassage}
+                      busy={actions.busy}
+                      applying={actions.pending?.action === "apply"}
+                      onClear={() => setChecked([])}
+                      onReject={() => {
+                        setRejectNote("");
+                        setRejectCode("other");
+                        setRejecting({ ids: checkedList });
+                      }}
+                      onAccept={async () => {
+                        await actions.acceptFresh(checkedList);
+                        setChecked([]);
+                      }}
+                    />
+                  )}
+                  {reverted && (
+                    <p className="proposals-footnote review-list-note">
+                      This proposal was reverted: what it applied is undone, and it takes no more
+                      decisions.
+                    </p>
+                  )}
+                </>
+              }
+              selection={
+                bulk
+                  ? {
+                      checked,
+                      toggle: (opId) =>
+                        setChecked((ids) =>
+                          ids.includes(opId) ? ids.filter((i) => i !== opId) : [...ids, opId],
+                        ),
+                      eligible: (operation) =>
+                        isAwaiting(operation) && isBulkEligible(operation, conflicted),
                     }
-                    aria-label="Show operations by scope"
-                    options={[
-                      { value: "any", label: "Any scope" },
-                      ...counts.scopes.map(({ value, count }) => ({
-                        value,
-                        label: `${value} · ${count}`,
-                      })),
-                    ]}
-                  />
-                </div>
-              )}
-            </div>
-            {/* Above the table, so the table frame is the last thing in the list
-            column and its sticky header never scrolls under the topbar. */}
-            <p className="proposals-footnote">
-              {proposal.status === "reverted"
-                ? "This proposal was reverted: what it applied is undone, and it takes no more decisions."
-                : `Amber marks the part of a triple or the field an update changes.${showThreshold || byKind ? " Probabilities below the threshold are muted." : ""} Select an operation to see its change, rationale and evidence.`}
-            </p>
-            <div
-              ref={tableRef}
-              id="proposal-operations"
-              className="schema-table-wrap"
-              data-testid="proposal-operations-table"
-              data-filter={filter}
-              data-group-by={groupBy}
-            >
-              {byKind ? (
-                <TieredOperations
-                  operations={shownOperations}
-                  allOperations={operations}
+                  : undefined
+              }
+              renderConflict={(cluster) => (
+                <ConflictCard
+                  cluster={cluster}
                   context={context}
                   deciding={decidesHere}
                   reverted={reverted}
-                  threshold={threshold}
-                  onThresholdChange={setThreshold}
                   actions={actions}
+                  shown={shownIds}
                   selectedOperationId={selectedOperationId}
                   onSelectOperation={onSelectOperation}
-                  emptyMessage={emptyMessage}
-                />
-              ) : (
-                <Table<ProposedOperation>
-                  rowKey="id"
-                  columns={columns}
-                  data={shownOperations}
-                  selectedRows={selectedOperationId ? [selectedOperationId] : []}
-                  onRowClick={(row) =>
-                    onSelectOperation(row.id === selectedOperationId ? undefined : row.id)
-                  }
-                  emptyState={<span className="entity-note">{emptyMessage}</span>}
                 />
               )}
-            </div>
+            />
           </div>
-        </SchemaPageLayout>
+          {selectedOperation ? (
+            <ReviewInspector
+              key={selectedOperation.id}
+              {...inspector.inspectorProps(selectedOperation)}
+              reverted={reverted}
+              rejectPrompt={rejectPrompt}
+              onWide={onDiff ? openWide : undefined}
+              decidedBy={
+                reverted
+                  ? undefined
+                  : decidedByLabel(
+                      decisions?.find((d) => d.operation_id === selectedOperation.id)?.decided_by,
+                      decisions?.find((d) => d.operation_id === selectedOperation.id)?.decided_at,
+                    )
+              }
+              type={typeOf(selectedOperation)}
+            />
+          ) : (
+            <p
+              className="review-pane review-pane--inspector review-muted proposal-review__empty"
+              data-testid="proposal-inspector-empty"
+            >
+              Select an operation to see its change, why it was proposed, and its evidence.
+            </p>
+          )}
+        </div>
         {inspector.overlay.overlay}
       </ReviewPillsProvider>
 
@@ -916,13 +957,9 @@ export function ProposalDetailPage({
           const done = await actions.rejectOperations(rejecting.ids, rejectNote, {
             reasonCode: rejectCode,
           });
-          if (done && rejecting.checked) setChecked([]);
+          if (done) setChecked([]);
         }}
-        title={
-          rejecting?.checked
-            ? `Reject ${rejecting.ids.length} selected?`
-            : `Reject all ${rejecting?.ids.length ?? 0} awaiting?`
-        }
+        title={`Reject ${rejecting?.ids.length ?? 0} selected?`}
         message={
           <div className="stack">
             <p>

@@ -1,7 +1,7 @@
 /**
  * Colour means you have something to decide: an awaiting operation's flags are
  * amber or rose, a decided one's are neutral records; the banner counts what
- * still needs a decision (failed blocked deletes included) and filters the table.
+ * still needs a decision (failed blocked deletes included) and filters the list.
  */
 import { describe, it, expect, beforeAll, beforeEach, afterEach, afterAll, vi } from "vitest";
 import { screen, waitFor, within } from "@testing-library/react";
@@ -85,6 +85,15 @@ beforeEach(() => {
 afterEach(() => server.resetHandlers());
 afterAll(() => server.close());
 
+/** A row's state chip in the review list. */
+function stateChip(id: string): HTMLElement {
+  const chip = screen
+    .getByTestId(`review-row-${id}`)
+    .querySelector<HTMLElement>(":scope > .review-row__meta > .chip");
+  expect(chip).not.toBeNull();
+  return chip as HTMLElement;
+}
+
 function renderPage(selectedOperationId?: string) {
   return render(
     <ProposalDetailPage
@@ -145,21 +154,20 @@ describe("a proposal with everything decided", () => {
     expect(summary).not.toHaveClass("proposal-summary--open");
     expect(screen.queryByTestId("proposal-progress-pills")).not.toBeInTheDocument();
     expect(within(summary).getByRole("progressbar")).toHaveAttribute("aria-valuenow", "100");
-    expect(screen.queryByTestId("proposal-accept-all")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("review-bulk-select")).not.toBeInTheDocument();
 
     expect(screen.getByRole("radio", { name: "All · 4" })).toHaveAttribute("aria-checked", "true");
-    expect(screen.getByTestId("proposal-operations-table")).toHaveAttribute("data-filter", "all");
+    expect(screen.getByTestId("proposal-operations-list")).toHaveAttribute("data-filter", "all");
   });
 
   it("shows each decision state and turns its flags neutral", async () => {
     decideAll();
     renderPage();
 
-    const status = await screen.findByTestId("operation-status-op-delete");
-    expect(status).toHaveAttribute("data-status", "applied");
-    expect(status).toHaveAttribute("data-state", "applied");
-    expect(screen.getByTestId("operation-state-op-delete")).toHaveTextContent("applied");
-    expect(screen.getByTestId("operation-state-op-delete")).toHaveClass("chip--emerald");
+    await screen.findByTestId("operation-status-op-delete");
+    expect(screen.getByTestId("review-row-op-delete")).toHaveAttribute("data-verdict", "applied");
+    expect(stateChip("op-delete")).toHaveTextContent("applied");
+    expect(stateChip("op-delete")).toHaveClass("chip--emerald");
     expect(screen.getByTestId("operation-stale-op-delete")).toHaveClass("chip--neutral");
     const pair = screen.getByTestId("operation-replacement-chip-op-delete");
     expect(within(pair).getByText("reversed pair")).toHaveClass("chip--neutral");
@@ -168,23 +176,28 @@ describe("a proposal with everything decided", () => {
     expect(resolvedChip).toHaveTextContent("moved 2 relationships");
     expect(resolvedChip).toHaveClass("chip--neutral");
 
-    expect(screen.getByTestId("operation-state-op-class")).toHaveTextContent("applied with edits");
-    expect(screen.getByTestId("operation-state-op-class")).toHaveClass("chip--emerald");
+    expect(stateChip("op-class")).toHaveTextContent("applied with edits");
+    expect(stateChip("op-class")).toHaveClass("chip--emerald");
+    expect(screen.getByTestId("review-row-op-class")).toHaveAttribute(
+      "data-verdict",
+      "applied_with_edits",
+    );
     expect(screen.queryByText("edited")).not.toBeInTheDocument();
-    expect(screen.getByTestId("operation-state-op-rename")).toHaveTextContent("rejected");
-    expect(screen.getByTestId("operation-state-op-rename")).toHaveClass("chip--neutral");
+    expect(stateChip("op-rename")).toHaveTextContent("rejected");
+    expect(stateChip("op-rename")).toHaveClass("chip--neutral");
+    expect(screen.getByTestId("review-row-op-rename")).toHaveAttribute("data-verdict", "rejected");
 
-    const cell = screen.getByTestId("operation-diff-op-delete").closest(".op-change-cell");
-    expect(cell).toHaveClass("op-change-cell--decided");
     expect(screen.queryByTestId("operation-check-op-delete")).not.toBeInTheDocument();
   });
 
   it("records the decision in the inspector: who, when, what it did", async () => {
     decideAll();
-    const { container } = renderPage("op-delete");
+    renderPage("op-delete");
 
     const decided = await screen.findByTestId("review-decided");
-    expect(container.querySelector('[data-testid="schema-page-layout"]')).toBeInTheDocument();
+    expect(screen.getByTestId("proposal-review")).toContainElement(
+      screen.getByTestId("review-inspector"),
+    );
     expect(decided).toHaveAttribute("data-state", "applied");
     // The state is the head's chip (#1662).
     expect(screen.getByTestId("review-inspector-status")).toHaveClass("chip--emerald");
@@ -216,14 +229,6 @@ describe("a proposal with everything decided", () => {
     );
   });
 
-  it("turns decided rows' op chips neutral", async () => {
-    decideAll();
-    renderPage();
-
-    expect(await screen.findByTestId("operation-op-op-delete")).toHaveClass("chip--neutral");
-    expect(screen.getByTestId("operation-op-op-class")).toHaveClass("chip--neutral");
-  });
-
   it("reads a reverted proposal's applied operations as reverted, without who or when", async () => {
     decideAll();
     proposal.status = "reverted";
@@ -234,9 +239,10 @@ describe("a proposal with everything decided", () => {
     expect(screen.getByTestId("review-inspector-status")).toHaveClass("chip--neutral");
     expect(screen.getByTestId("review-inspector-status")).toHaveTextContent("reverted");
     expect(decided).toHaveTextContent("The proposal was reverted, so this is undone.");
-    expect(screen.getByTestId("operation-state-op-delete")).toHaveTextContent("reverted");
-    expect(screen.getByTestId("operation-state-op-delete")).toHaveClass("chip--neutral");
-    expect(screen.getByTestId("operation-state-op-rename")).toHaveTextContent("rejected");
+    expect(stateChip("op-delete")).toHaveTextContent("reverted");
+    expect(stateChip("op-delete")).toHaveClass("chip--neutral");
+    expect(screen.getByTestId("review-row-op-delete")).toHaveAttribute("data-verdict", "reverted");
+    expect(stateChip("op-rename")).toHaveTextContent("rejected");
     expect(within(decided).queryByTestId("review-decided-by")).not.toBeInTheDocument();
     expect(goldQueries).toHaveLength(0);
     expect(screen.getByTestId("proposal-summary")).toHaveAttribute("class", "proposal-summary");
@@ -277,28 +283,32 @@ describe("a proposal with decisions outstanding", () => {
       "25",
     );
     // The rename and the failed class update are ready; the blocked delete waits for a choice.
-    expect(screen.getByTestId("proposal-accept-all")).toHaveTextContent("Accept 2 ready");
+    await userEvent.setup().click(screen.getByTestId("review-bulk-select"));
+    expect(screen.getByTestId("review-bulk-select-ready")).toHaveTextContent("All ready · 2");
   });
 
   it("marks the blocked delete as needing a choice, in amber", async () => {
     failSome();
     renderPage();
 
-    const state = await screen.findByTestId("operation-state-op-delete");
+    await screen.findByTestId("review-row-op-delete");
+    const state = stateChip("op-delete");
     expect(state).toHaveTextContent("needs a choice");
     expect(state).toHaveClass("chip--amber");
-    expect(screen.getByTestId("operation-status-op-delete")).toHaveAttribute(
-      "data-status",
-      "failed",
+    expect(screen.getByTestId("review-row-op-delete")).toHaveAttribute(
+      "data-verdict",
+      "needs_choice",
     );
     const inUse = screen.getByTestId("operation-blocked-op-delete");
     expect(inUse).toHaveTextContent("2 in use: move or drop");
     expect(inUse).toHaveClass("chip--amber");
-    expect(screen.getByTestId("operation-state-op-class")).toHaveTextContent("failed");
-    expect(screen.getByTestId("operation-state-op-class")).toHaveClass("chip--rose");
-    expect(screen.getByTestId("operation-state-op-rename")).toHaveTextContent("needs decision");
-    const cell = screen.getByTestId("operation-diff-op-rename").closest(".op-change-cell");
-    expect(cell).not.toHaveClass("op-change-cell--decided");
+    expect(stateChip("op-class")).toHaveTextContent("failed");
+    expect(stateChip("op-class")).toHaveClass("chip--rose");
+    expect(stateChip("op-rename")).toHaveTextContent("needs decision");
+    expect(screen.getByTestId("review-row-op-rename")).toHaveAttribute(
+      "data-verdict",
+      "needs_decision",
+    );
   });
 
   it("opens on Needs decision, with checkboxes on awaiting rows only", async () => {
@@ -318,7 +328,7 @@ describe("a proposal with decisions outstanding", () => {
     expect(screen.queryByTestId("operation-check-op-create")).not.toBeInTheDocument();
   });
 
-  it("a pill filters the table to what needs a decision", async () => {
+  it("a pill filters the list to what needs a decision", async () => {
     failSome();
     const user = userEvent.setup();
     renderPage();
@@ -343,14 +353,15 @@ describe("a proposal with decisions outstanding", () => {
   it("keeps the inspector when the selected row is filtered out", async () => {
     failSome();
     const user = userEvent.setup();
-    const { container } = renderPage("op-rename");
+    renderPage("op-rename");
 
     expect(await screen.findByTestId("operation-decision")).toBeInTheDocument();
     await user.click(screen.getByRole("radio", { name: "Decided · 1" }));
-    expect(screen.queryByTestId("operation-diff-op-rename")).not.toBeInTheDocument();
-    expect(screen.getByTestId("review-inspector")).toBeInTheDocument();
+    expect(screen.queryByTestId("review-row-op-rename")).not.toBeInTheDocument();
+    expect(screen.getByTestId("proposal-review")).toContainElement(
+      screen.getByTestId("review-inspector"),
+    );
     expect(screen.getByTestId("operation-decision")).toBeInTheDocument();
-    expect(container.querySelector('[data-testid="schema-page-layout"]')).toBeInTheDocument();
   });
 
   it("a deep link to a decided operation opens on All, so its row shows", async () => {
@@ -365,15 +376,18 @@ describe("a proposal with decisions outstanding", () => {
   });
 });
 
-describe("deciding from the banner and the table", () => {
-  it("Accept N ready sends exactly the N ready operations", async () => {
+describe("deciding from the banner and the list", () => {
+  it("All ready, then Accept selected, sends exactly the N ready operations", async () => {
     failSome();
     const user = userEvent.setup();
     renderPage();
 
-    const accept = await screen.findByTestId("proposal-accept-all");
-    expect(accept).toHaveTextContent("Accept 2 ready");
-    await user.click(accept);
+    await user.click(await screen.findByTestId("review-bulk-select"));
+    const ready = screen.getByTestId("review-bulk-select-ready");
+    expect(ready).toHaveTextContent("All ready · 2");
+    await user.click(ready);
+    expect(screen.getByTestId("proposal-selection-count")).toHaveTextContent("2 selected");
+    await user.click(screen.getByTestId("proposal-selection-accept"));
     await waitFor(() => expect(applied).toHaveLength(1));
     expect(applied[0].operation_ids).toHaveLength(2);
     expect([...applied[0].operation_ids].sort()).toEqual(["op-class", "op-rename"]);
@@ -394,11 +408,11 @@ describe("deciding from the banner and the table", () => {
         "true",
       ),
     );
-    const table = screen.getByTestId("proposal-operations-table");
-    expect(table).toHaveAttribute("data-filter", "needs");
-    // The decided row left the table (the apply results above it still show its diff).
-    expect(within(table).queryByTestId("operation-diff-op-rename")).not.toBeInTheDocument();
-    expect(within(table).getByTestId("operation-diff-op-class")).toBeInTheDocument();
+    const list = screen.getByTestId("proposal-operations-list");
+    expect(list).toHaveAttribute("data-filter", "needs");
+    // The decided row left the list (the apply results above it still show its diff).
+    expect(within(list).queryByTestId("review-row-op-rename")).not.toBeInTheDocument();
+    expect(within(list).getByTestId("operation-diff-op-class")).toBeInTheDocument();
   });
 
   it("a filter that hides checked rows unchecks them", async () => {

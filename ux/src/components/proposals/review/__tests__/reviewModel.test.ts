@@ -83,6 +83,7 @@ describe("verdicts", () => {
       correct: "emerald",
       changed: "violet",
       rejected: "rose",
+      withdrawn: "neutral",
       added: "cyan",
     });
   });

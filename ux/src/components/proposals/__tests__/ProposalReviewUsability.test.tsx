@@ -264,7 +264,8 @@ describe("conflict cards", () => {
     proposal.operations.find((o) => o.id === "c-rename")!.status = "applied";
     renderPage();
     const card = await screen.findByTestId("conflict-card-c-rename");
-    expect(screen.getByTestId("proposal-operations-table")).toHaveAttribute("data-filter", "needs");
+    expect(screen.getByTestId("proposal-operations-list")).toHaveAttribute("data-filter", "needs");
+    expect(screen.getByTestId("review-group-conflicts")).toContainElement(card);
     // One member applied, the other still awaiting: the card stays, with the awaiting one.
     expect(within(card).queryByTestId("conflict-op-c-rename")).not.toBeInTheDocument();
     expect(within(card).getByTestId("conflict-op-c-delete")).toBeInTheDocument();

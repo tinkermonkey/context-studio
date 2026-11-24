@@ -58,6 +58,11 @@ describe("CompareEntry", () => {
     expect(query()?.get("status")).toBe("open");
     expect(query()?.get("source")).toBe("pipeline");
     expect(query()?.get("taxonomy_id")).toBe("tax-1");
+    // Narrowed by the server to this source, dataset and pipeline type, without operations (#1626).
+    expect(query()?.get("source_id")).toBe("src-1");
+    expect(query()?.get("dataset_id")).toBe("ds-1");
+    expect(query()?.get("pipeline_type")).toBe("individual_extraction");
+    expect(query()?.get("fields")).toBe("summary");
     await userEvent.click(button);
     expect(onCompare).toHaveBeenCalledWith("p2");
   });

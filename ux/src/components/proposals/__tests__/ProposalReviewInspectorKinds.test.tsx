@@ -170,9 +170,9 @@ function renderPage(selectedOperationId: string) {
 
 describe("an update in the review inspector", () => {
   it("reads its change as was → now rows, long text as one word diff", async () => {
-    const { container } = renderPage("op-update");
+    renderPage("op-update");
     const inspector = await screen.findByTestId("review-inspector", {}, { timeout: 10000 });
-    expect(container.querySelector('[data-testid="schema-page-layout"]')).toHaveClass("split-2");
+    expect(screen.getByTestId("proposal-review")).toContainElement(inspector);
     expect(inspector).toHaveAttribute("aria-label", "Selected operation");
     expect(screen.getByTestId("review-inspector-eyebrow")).toHaveTextContent(
       "update · class · seq 1",

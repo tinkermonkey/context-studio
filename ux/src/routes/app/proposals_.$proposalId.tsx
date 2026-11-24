@@ -1,12 +1,20 @@
 import { useRef } from "react";
-import { createFileRoute, useNavigate, useRouter } from "@tanstack/react-router";
+import { createFileRoute, redirect, useNavigate, useRouter } from "@tanstack/react-router";
 import { ProposalDetailPage } from "@/components/proposals/ProposalDetailPage";
 
 interface ProposalSearch {
   /** The operation shown in the inspector. */
-  op?: string;
+  selected?: string;
   /** The long text field open in the wide diff (#1661). */
   diff?: string;
+  /** The old name for `selected` (before #1663): a link with it redirects. */
+  op?: string;
+}
+
+/** Where an old link (?op=) goes: the same operation as ?selected=; undefined for a current one. */
+export function redirectFromOp(search: ProposalSearch): ProposalSearch | undefined {
+  if (!search.op) return undefined;
+  return { selected: search.selected ?? search.op, ...(search.diff ? { diff: search.diff } : {}) };
 }
 
 /**
@@ -20,11 +28,11 @@ interface ProposalSearch {
  */
 export function ProposalPage({
   proposalId,
-  op,
+  selected,
   diff,
 }: {
   proposalId: string;
-  op?: string;
+  selected?: string;
   diff?: string;
 }) {
   const navigate = useNavigate();
@@ -36,30 +44,30 @@ export function ProposalPage({
     <ProposalDetailPage
       key={proposalId}
       id={proposalId}
-      selectedOperationId={op}
+      selectedOperationId={selected}
       diffField={diff}
       onDiff={(field, operationId) => {
         if (field === undefined) {
           const openedOn = diffOpenedOn.current;
           diffOpenedOn.current = undefined;
-          if (openedOn !== undefined && openedOn === op) {
+          if (openedOn !== undefined && openedOn === selected) {
             router.history.back();
           } else {
             navigate({
               to: "/app/proposals/$proposalId",
               params: { proposalId },
-              search: op ? { op } : {},
+              search: selected ? { selected } : {},
               replace: true,
             });
           }
           return;
         }
         const opening = !diff;
-        if (opening) diffOpenedOn.current = operationId ?? op ?? "";
+        if (opening) diffOpenedOn.current = operationId ?? selected ?? "";
         navigate({
           to: "/app/proposals/$proposalId",
           params: { proposalId },
-          search: { op: operationId ?? op, diff: field },
+          search: { selected: operationId ?? selected, diff: field },
           replace: !opening,
         });
       }}
@@ -77,7 +85,7 @@ export function ProposalPage({
         navigate({
           to: "/app/proposals/$proposalId",
           params: { proposalId },
-          search: operationId ? { op: operationId } : {},
+          search: operationId ? { selected: operationId } : {},
           replace: true,
         });
       }}
@@ -87,14 +95,27 @@ export function ProposalPage({
 
 function ProposalRoute() {
   const { proposalId } = Route.useParams();
-  const { op, diff } = Route.useSearch();
-  return <ProposalPage proposalId={proposalId} op={op} diff={diff} />;
+  const { selected, diff } = Route.useSearch();
+  return <ProposalPage proposalId={proposalId} selected={selected} diff={diff} />;
 }
 
 export const Route = createFileRoute("/app/proposals_/$proposalId")({
   component: ProposalRoute,
   validateSearch: (search: Record<string, unknown>): ProposalSearch => ({
-    op: typeof search.op === "string" ? search.op : undefined,
+    selected: typeof search.selected === "string" ? search.selected : undefined,
     diff: typeof search.diff === "string" ? search.diff : undefined,
+    op: typeof search.op === "string" ? search.op : undefined,
   }),
+  // An old link (?op=) becomes ?selected=, in place of the entry it came in on.
+  beforeLoad: ({ params, search }) => {
+    const target = redirectFromOp(search);
+    if (target) {
+      throw redirect({
+        to: "/app/proposals/$proposalId",
+        params,
+        search: target,
+        replace: true,
+      });
+    }
+  },
 });

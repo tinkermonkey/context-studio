@@ -266,6 +266,12 @@
     border-bottom: 2px solid rgb(var(--status-violet));
   }
 
+  /* Withdrawn by its proposer (#1624): muted, struck through. */
+  .review-mark--withdrawn {
+    background: rgb(var(--canvas-fg-3) / 0.12);
+    text-decoration: line-through;
+  }
+
   .review-mark--rejected,
   .review-legend__swatch--rejected {
     background: rgb(var(--status-rose) / 0.12);
@@ -1226,6 +1232,186 @@
     flex-direction: column;
     gap: 4px;
     color: rgb(var(--canvas-fg-1));
+  }
+
+  /* ---- the review list on proposal detail (#1663) ----
+     The list and the inspector side by side from 1100px; the list's tools
+     (group by, op and scope, Select ▾) and the bulk bar above its rows. */
+  .proposal-review {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  @media (min-width: 1100px) {
+    .proposal-review {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(340px, 420px);
+      align-items: start;
+    }
+
+    .proposal-review > .review-pane--inspector,
+    .proposal-review__empty {
+      position: sticky;
+      top: var(--inspector-gutter);
+      max-height: var(--split-pane-max-height);
+      overflow-y: auto;
+    }
+
+    .proposal-review .review-scroll {
+      max-height: calc(100vh - 240px);
+    }
+  }
+
+  .proposal-review__empty {
+    margin: 0;
+    padding: 16px;
+    border: 1px dashed rgb(var(--canvas-border));
+    border-radius: 8px;
+  }
+
+  .review-list-tools {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 12px;
+    padding: 8px 12px;
+    border-bottom: 1px solid rgb(var(--canvas-border));
+  }
+
+  .review-list-tools .review-bulk-select {
+    margin-left: auto;
+  }
+
+  .review-list-note {
+    margin: 0;
+    padding: 8px 12px;
+  }
+
+  .review-bulk-bar {
+    margin: 0;
+    border-radius: 0;
+    border-width: 0 0 1px;
+  }
+
+  .review-bulk-select {
+    position: relative;
+  }
+
+  .review-bulk-menu {
+    position: absolute;
+    right: 0;
+    top: calc(100% + 4px);
+    z-index: 20;
+    display: flex;
+    flex-direction: column;
+    min-width: 260px;
+    padding: 6px;
+    border: 1px solid rgb(var(--canvas-border-strong));
+    border-radius: 8px;
+    background: rgb(var(--canvas-card));
+    box-shadow: 0 8px 24px rgb(0 0 0 / 0.18);
+  }
+
+  .review-bulk-menu__item {
+    padding: 7px 10px;
+    border: 0;
+    border-radius: 6px;
+    background: transparent;
+    color: rgb(var(--canvas-fg-1));
+    font: inherit;
+    font-size: 13px;
+    text-align: left;
+    cursor: pointer;
+  }
+
+  .review-bulk-menu__item:hover:not(:disabled),
+  .review-bulk-menu__item:focus-visible {
+    background: rgb(var(--accent-primary) / 0.12);
+    outline: none;
+  }
+
+  .review-bulk-menu__item:disabled {
+    color: rgb(var(--canvas-fg-4));
+    cursor: not-allowed;
+  }
+
+  .review-bulk-menu__threshold {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    gap: 4px 8px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid rgb(var(--canvas-border));
+    margin-bottom: 4px;
+  }
+
+  .review-bulk-menu__threshold > .review-bulk-menu__item {
+    grid-column: 1 / -1;
+  }
+
+  .review-bulk-menu__label {
+    padding-left: 10px;
+    font-size: 12px;
+    color: rgb(var(--canvas-fg-3));
+  }
+
+  .review-bulk-menu__note {
+    margin: 4px 10px 2px;
+    font-size: 11.5px;
+    line-height: 1.45;
+    color: rgb(var(--canvas-fg-3));
+  }
+
+  /* A row with a bulk checkbox: the box, then the row. */
+  .review-row-line {
+    display: flex;
+    align-items: stretch;
+    border-bottom: 1px solid rgb(var(--canvas-border));
+  }
+
+  .review-row-line > .review-row {
+    border-bottom: 0;
+  }
+
+  .review-row__check {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 32px;
+    padding-left: 8px;
+  }
+
+  .review-row__seq {
+    font-family: var(--font-mono);
+    font-size: 11.5px;
+    font-weight: 500;
+    color: rgb(var(--canvas-fg-3));
+  }
+
+  .review-row__change {
+    min-width: 0;
+    font-size: 12.5px;
+  }
+
+  .review-row__amended {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: rgb(var(--status-violet));
+  }
+
+  .review-group__note {
+    margin-left: 8px;
+    font-family: var(--font-sans, inherit);
+    font-size: 11px;
+    letter-spacing: 0;
+    text-transform: none;
+    color: rgb(var(--canvas-fg-3));
+  }
+
+  .review-conflict {
+    padding: 10px 12px;
+    border-bottom: 1px solid rgb(var(--canvas-border));
   }
 
   /* ---- rows are links (a row opens in a new tab with a modifier) ---- */

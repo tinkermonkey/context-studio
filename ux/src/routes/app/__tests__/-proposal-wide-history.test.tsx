@@ -20,9 +20,9 @@ import {
 import type { ChangeProposal } from "@/api/services/proposals";
 import { ProposalPage } from "../proposals_.$proposalId";
 
-type Search = { op?: string; diff?: string };
+type Search = { selected?: string; diff?: string };
 
-/** Entries of ?op=&diff=, the current one, and who listens. */
+/** Entries of ?selected=&diff=, the current one, and who listens. */
 const history = vi.hoisted(() => {
   const state = {
     entries: [] as Search[],
@@ -126,7 +126,7 @@ afterAll(() => server.close());
 /** The route: the page for the current entry. */
 function Route() {
   const search = useSyncExternalStore(history.subscribe, history.current);
-  return <ProposalPage proposalId="proposal-1" op={search.op} diff={search.diff} />;
+  return <ProposalPage proposalId="proposal-1" selected={search.selected} diff={search.diff} />;
 }
 
 async function openRoute(first: Search) {
@@ -139,39 +139,44 @@ async function openRoute(first: Search) {
 
 describe("the wide diff's history", () => {
   it("opens with a new entry, closes with Esc back over it, and Back then leaves the page state", async () => {
-    const user = await openRoute({ op: "op-a" });
+    const user = await openRoute({ selected: "op-a" });
     await user.click(screen.getByTestId("review-wide-description"));
-    expect(history.state.entries).toEqual([{ op: "op-a" }, { op: "op-a", diff: "description" }]);
+    expect(history.state.entries).toEqual([
+      { selected: "op-a" },
+      { selected: "op-a", diff: "description" },
+    ]);
     await user.keyboard("{Escape}");
     await waitFor(() => expect(screen.queryByTestId("review-wide-diff")).not.toBeInTheDocument());
-    expect(history.current()).toEqual({ op: "op-a" });
+    expect(history.current()).toEqual({ selected: "op-a" });
     expect(history.state.index).toBe(0);
   });
 
   it("keeps the operation J stepped to when Esc closes it, and Back returns to the one before", async () => {
-    const user = await openRoute({ op: "op-a" });
+    const user = await openRoute({ selected: "op-a" });
     await user.click(screen.getByTestId("review-wide-description"));
     await user.keyboard("j");
-    await waitFor(() => expect(history.current()).toEqual({ op: "op-b", diff: "description" }));
+    await waitFor(() =>
+      expect(history.current()).toEqual({ selected: "op-b", diff: "description" }),
+    );
     // J replaced the wide diff's entry: one entry was added in all.
     expect(history.state.entries).toHaveLength(2);
     await user.keyboard("{Escape}");
     await waitFor(() => expect(screen.queryByTestId("review-wide-diff")).not.toBeInTheDocument());
     // The reviewer stays on op-b: the entry is replaced, not gone back over.
-    expect(history.current()).toEqual({ op: "op-b" });
+    expect(history.current()).toEqual({ selected: "op-b" });
     expect(screen.getByTestId("review-inspector")).toHaveTextContent("seq 2");
     // Back now returns to where the wide diff was opened from.
     act(() => history.back());
-    expect(history.current()).toEqual({ op: "op-a" });
+    expect(history.current()).toEqual({ selected: "op-a" });
     await waitFor(() => expect(screen.getByTestId("review-inspector")).toHaveTextContent("seq 1"));
   });
 
   it("closes with Back like any entry", async () => {
-    const user = await openRoute({ op: "op-a" });
+    const user = await openRoute({ selected: "op-a" });
     await user.click(screen.getByTestId("review-wide-description"));
     expect(screen.getByTestId("review-wide-diff")).toBeInTheDocument();
     act(() => history.back());
     await waitFor(() => expect(screen.queryByTestId("review-wide-diff")).not.toBeInTheDocument());
-    expect(history.current()).toEqual({ op: "op-a" });
+    expect(history.current()).toEqual({ selected: "op-a" });
   });
 });

@@ -14,7 +14,7 @@ interface ProposalLinkProps {
 /** The href of a proposal's review page, optionally with one operation selected. */
 export function proposalHref(proposalId: string, operationId?: string): string {
   const path = linkPath("proposal", proposalId);
-  return operationId ? `${path}?op=${encodeURIComponent(operationId)}` : path;
+  return operationId ? `${path}?selected=${encodeURIComponent(operationId)}` : path;
 }
 
 /**
@@ -39,7 +39,7 @@ export function ProposalLink({
     navigate({
       to: "/app/proposals/$proposalId",
       params: { proposalId },
-      search: operationId ? { op: operationId } : {},
+      search: operationId ? { selected: operationId } : {},
     });
   };
 

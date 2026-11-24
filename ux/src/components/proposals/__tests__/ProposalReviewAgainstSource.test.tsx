@@ -130,14 +130,14 @@ describe("Review against source", () => {
     expect(callout).toHaveTextContent(
       "Gold checks are decided on the Review page, where tier, also-defensible and the excluded reason are recorded.",
     );
-    expect(screen.queryByTestId("proposal-accept-all")).not.toBeInTheDocument();
-    expect(screen.queryByTestId("proposal-reject-all")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("review-bulk-select")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("proposal-selection-bar")).not.toBeInTheDocument();
     expect(screen.queryByTestId("operation-decision")).not.toBeInTheDocument();
     // Its create opens the review inspector, read-only here (#1658).
     expect(await screen.findByTestId("review-inspector")).toBeInTheDocument();
     expect(screen.queryByTestId("review-decide")).not.toBeInTheDocument();
     expect(screen.queryByTestId("review-reasons")).not.toBeInTheDocument();
-    expect(screen.queryByTestId("proposal-threshold-bar")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("proposal-threshold-slider")).not.toBeInTheDocument();
     expect(screen.queryByRole("checkbox")).not.toBeInTheDocument();
     await userEvent.click(screen.getByTestId("proposal-gold-review"));
     expect(onReview).toHaveBeenCalledTimes(1);
@@ -154,7 +154,7 @@ describe("Review against source", () => {
       />,
     );
     expect(
-      await screen.findByTestId("proposal-accept-all", {}, { timeout: 10000 }),
+      await screen.findByTestId("review-bulk-select", {}, { timeout: 10000 }),
     ).toBeInTheDocument();
     // Its extraction creates open the review inspector (#1658).
     expect(await screen.findByTestId("review-decide")).toBeInTheDocument();

@@ -78,7 +78,7 @@ afterAll(() => server.close());
 
 let current: { op?: string; diff?: string };
 
-/** The route's part: the selection and the open field, as ?op= and &diff= hold them. */
+/** The route's part: the selection and the open field, as ?selected= and &diff= hold them. */
 function Harness({ initial }: { initial: string }) {
   const [state, setState] = useState<{ op?: string; diff?: string }>({ op: initial });
   current = state;

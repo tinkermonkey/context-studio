@@ -50,7 +50,7 @@ afterAll(() => server.close());
 /** The harness's selection as last rendered. */
 let current: string | undefined;
 
-/** The page with its selection kept in state, as the route keeps it in ?op=. */
+/** The page with its selection kept in state, as the route keeps it in ?selected=. */
 function Harness({ initial }: { initial?: string }) {
   const [selected, setSelected] = useState(initial);
   current = selected;
@@ -74,7 +74,7 @@ async function inspected(id: string) {
 }
 
 function selectedRow() {
-  return document.querySelector("tr.table__row--selected")?.getAttribute("data-row-key");
+  return document.querySelector(".review-row--selected")?.getAttribute("data-row-id");
 }
 
 // openProposal under Needs decision: op-rename (seq 1), op-delete (seq 2, stale), op-class (seq 4).
@@ -88,7 +88,7 @@ describe("after a decision under Needs decision", () => {
     await waitFor(() => expect(selected()).toBe("op-delete"));
     await inspected("op-delete");
     expect(selectedRow()).toBe("op-delete");
-    expect(screen.getByTestId("proposal-operations-table")).toHaveAttribute("data-filter", "needs");
+    expect(screen.getByTestId("proposal-operations-list")).toHaveAttribute("data-filter", "needs");
   });
 
   it("selects the next row after an accept too", async () => {
@@ -146,14 +146,14 @@ describe("after a decision under Needs decision", () => {
     // Mechanical: m-dup; rename-predicate m-rename, m-blocked; reverse m-reverse, m-stale.
     // Judgment: j-retarget, j-compound. Conflicts: c-rename, c-delete.
     render(<Harness initial="m-blocked" />);
-    await screen.findByTestId("tiered-operations");
+    await screen.findByTestId("review-group-conflicts");
     await userEvent.click(await screen.findByTestId("review-not"));
     await userEvent.click(screen.getByTestId("review-reason-other"));
     await waitFor(() => expect(selected()).toBe("m-reverse"));
     await inspected("m-reverse");
 
     // The last mechanical row moves on into the judgment section.
-    await userEvent.click(document.querySelector<HTMLElement>("tr[data-row-key='m-stale']")!);
+    await userEvent.click(screen.getByTestId("review-row-m-stale"));
     await waitFor(() => expect(selected()).toBe("m-stale"));
     await userEvent.click(await screen.findByTestId("review-not"));
     await userEvent.click(screen.getByTestId("review-reason-other"));
@@ -168,7 +168,7 @@ describe("moving past decided conflict members", () => {
     proposal.operations.find((o) => o.id === "c-rename")!.status = "rejected";
     // The last judgment row; the conflict card below lists c-rename (rejected), then c-delete.
     render(<Harness initial="j-compound" />);
-    await screen.findByTestId("tiered-operations");
+    await screen.findByTestId("review-group-conflicts");
     await userEvent.click(await screen.findByTestId("review-not"));
     await userEvent.click(screen.getByTestId("review-reason-other"));
 
@@ -187,7 +187,7 @@ describe("selection that stays put", () => {
     await userEvent.click(screen.getByTestId("review-reason-other"));
 
     await waitFor(() =>
-      expect(screen.getByTestId("proposal-operations-table")).toHaveAttribute("data-filter", "all"),
+      expect(screen.getByTestId("proposal-operations-list")).toHaveAttribute("data-filter", "all"),
     );
     expect(selected()).toBe("op-rename");
     await inspected("op-rename");
@@ -197,7 +197,7 @@ describe("selection that stays put", () => {
     proposal.operations[0].status = "applied";
     render(<Harness initial="op-rename" />);
     // A deep link to a decided operation opens on All.
-    expect(await screen.findByTestId("proposal-operations-table")).toHaveAttribute(
+    expect(await screen.findByTestId("proposal-operations-list")).toHaveAttribute(
       "data-filter",
       "all",
     );

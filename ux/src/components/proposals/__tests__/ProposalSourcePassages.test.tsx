@@ -190,11 +190,13 @@ function renderPage(selectedOperationId?: string) {
 }
 
 describe("an extraction create opens the review inspector (#1658)", () => {
-  it("opens beside the table, with its class pill and its quotes as plain evidence", async () => {
-    const { container } = renderPage("op-fridge");
+  it("opens beside the list, with its class pill and its quotes as plain evidence", async () => {
+    renderPage("op-fridge");
     const inspector = await screen.findByTestId("review-inspector", {}, { timeout: 10000 });
-    expect(container.querySelector('[data-testid="schema-page-layout"]')).toHaveClass("split-2");
-    expect(screen.getByTestId("schema-inspector-container")).toContainElement(inspector);
+    expect(screen.getByTestId("proposal-review")).toContainElement(inspector);
+    expect(screen.getByTestId("proposal-review")).toContainElement(
+      screen.getByTestId("proposal-operations-list"),
+    );
     expect(screen.getByTestId("review-inspector-title")).toHaveTextContent("Whirlpool WRF555SDFZ");
     expect(screen.getByTestId("review-inspector-class")).toBeInTheDocument();
     // No source pane here: the quotes are read, not buttons that show nothing.
@@ -207,10 +209,10 @@ describe("an extraction create opens the review inspector (#1658)", () => {
     // The older inspector's sections are gone for it.
     expect(screen.queryByTestId("operation-source-passage")).not.toBeInTheDocument();
     expect(screen.queryByTestId("operation-decision")).not.toBeInTheDocument();
-    // This page has no review keys yet: no key hints, no aria-keyshortcuts.
-    expect(screen.getByTestId("review-correct")).not.toHaveAttribute("aria-keyshortcuts");
-    expect(screen.getByTestId("review-not")).not.toHaveAttribute("aria-keyshortcuts");
-    expect(inspector.querySelector(".review-keys")).toBeNull();
+    // The review keys work on this page (#1663): the inspector shows their hints.
+    expect(screen.getByTestId("review-correct")).toHaveAttribute("aria-keyshortcuts", "A");
+    expect(screen.getByTestId("review-not")).toHaveAttribute("aria-keyshortcuts", "X");
+    expect(inspector.querySelector(".review-keys")).not.toBeNull();
   });
 });
 
@@ -253,7 +255,7 @@ describe("a near match", () => {
     expect(applies[0].chosen_alternatives).toBeUndefined();
   });
 
-  it("is flagged in the table, and a matched one reads as using the existing individual", async () => {
+  it("is flagged in the list, and a matched one reads as using the existing individual", async () => {
     renderPage("op-used");
     expect(await screen.findByTestId("operation-near-match-chip-op-fridge")).toHaveTextContent(
       "near match",
@@ -331,31 +333,42 @@ describe("the decision banner and bulk accepts", () => {
     );
   });
 
-  it("leaves near matches and what names them out of Accept N ready, and says so", async () => {
+  it("leaves near matches and what names them out of All ready, and says so", async () => {
     const user = userEvent.setup();
     renderPage();
-    const acceptAll = await screen.findByTestId("proposal-accept-all");
-    expect(acceptAll).toHaveTextContent("Accept 2 ready");
-    expect(acceptAll).toHaveAttribute(
-      "title",
-      expect.stringContaining("1 near match is left for you to decide, with 1 operation"),
+    await screen.findByTestId("review-group-scheme-1");
+    await user.click(screen.getByTestId("review-bulk-select"));
+    const menu = screen.getByTestId("review-bulk-select-menu");
+    const ready = within(menu).getByTestId("review-bulk-select-ready");
+    expect(ready).toHaveTextContent("All ready · 2");
+    // The menu says what All ready leaves out, and how many.
+    expect(within(menu).getByTestId("review-bulk-select-note")).toHaveTextContent(
+      "1 near match is left for you to decide, with 1 operation that names one.",
     );
-    await user.click(acceptAll);
+    await user.click(ready);
+    expect(screen.getByTestId("operation-check-op-fridge")).not.toBeChecked();
+    expect(screen.getByTestId("operation-check-op-uses")).not.toBeChecked();
+    await user.click(screen.getByTestId("proposal-selection-accept"));
     await waitFor(() => expect(applies).toHaveLength(1));
     expect(applies[0].operation_ids.sort()).toEqual(["op-filter", "op-plain"]);
     expect(applies[0].chosen_alternatives).toBeUndefined();
   });
 
-  it("leaves them out of the threshold's Select N", async () => {
+  it("leaves them out of the threshold's pick", async () => {
+    const user = userEvent.setup();
     renderPage();
+    await user.click(await screen.findByTestId("review-bulk-select"));
     // At 0.60: op-plain only. op-fridge (0.94) and op-uses (0.90) wait on the near match.
-    expect(await screen.findByTestId("proposal-threshold-select")).toHaveTextContent("Select 1");
+    expect(screen.getByTestId("review-bulk-select-threshold")).toHaveTextContent(
+      "At or above p 0.60 · 1",
+    );
   });
 
   it("skips a checked near match on Accept selected, and the toast says it was left", async () => {
     const user = userEvent.setup();
     renderPage();
-    await user.click(await screen.findByTestId("operation-check-op-fridge"));
+    await screen.findByTestId("review-group-scheme-1");
+    await user.click(screen.getByTestId("operation-check-op-fridge"));
     await user.click(screen.getByTestId("operation-check-op-plain"));
     expect(screen.getByTestId("proposal-selection-note")).toHaveTextContent(
       "1 near match is left for you to decide.",

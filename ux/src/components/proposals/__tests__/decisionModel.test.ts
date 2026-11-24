@@ -9,6 +9,9 @@ import {
   blockersOf,
   checkDrTriple,
   decisionPreview,
+  decisionProgress,
+  decisionState,
+  filterOperations,
   drEditFields,
   predicateCatalog,
   predicateDescriptions,
@@ -75,6 +78,8 @@ describe("who decides", () => {
     expect(takesDecisions(createChangeProposal({ status: "open" }))).toBe(true);
     expect(takesDecisions(createChangeProposal({ status: "done" }))).toBe(true);
     expect(takesDecisions(createChangeProposal({ status: "reverted" }))).toBe(false);
+    // Withdrawn by its proposer or superseded (#1624): the server refuses decisions on it.
+    expect(takesDecisions(createChangeProposal({ status: "withdrawn" }))).toBe(false);
   });
 
   it("splits awaiting operations into fresh and stale, dropping decided ones", () => {
@@ -528,5 +533,31 @@ describe("predicateDescriptions", () => {
   });
   it("is empty until the predicates load", () => {
     expect(predicateDescriptions(undefined).size).toBe(0);
+  });
+});
+
+describe("a withdrawn operation (#1624)", () => {
+  const ops = [
+    op({ id: "a", status: "pending" }),
+    op({ id: "b", status: "applied" }),
+    op({ id: "c", status: "withdrawn" }),
+  ];
+
+  it("reads as withdrawn, not rejected", () => {
+    expect(decisionState(ops[2])).toEqual({
+      state: "withdrawn",
+      label: "withdrawn",
+      variant: "neutral",
+    });
+  });
+
+  it("is neither decided nor counted", () => {
+    const progress = decisionProgress(ops);
+    expect(progress.total).toBe(2);
+    expect(progress.awaiting).toBe(1);
+    expect(progress.percent).toBe(50);
+    expect(filterOperations(ops, "decided").map((o) => o.id)).toEqual(["b"]);
+    expect(filterOperations(ops, "needs").map((o) => o.id)).toEqual(["a"]);
+    expect(filterOperations(ops, "all").map((o) => o.id)).toEqual(["a", "b", "c"]);
   });
 });
