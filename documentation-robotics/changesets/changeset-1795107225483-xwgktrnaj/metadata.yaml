@@ -6,16 +6,16 @@ description: "Merge proposal detail and the Review page into one review surface
   a revert preview, and reversal proposals for landed changes (restore by id, a
   new reversed status)."
 created: 2026-11-19T16:53:45.487Z
-modified: 2026-11-24T16:41:41.993Z
+modified: 2026-11-24T18:55:56.458Z
 status: staged
 baseSnapshot: sha256:47cbf69a029fe1c405c7234a6260ff5326c53c044a37424fe686965c3c0497d6
 origin:
   kind: plan
 stats:
   additions: 289
-  modifications: 23
+  modifications: 25
   deletions: 44
-lastSequence: 401
+lastSequence: 415
 unstaged:
   - sequence: 255
     removedAt: 256
@@ -1129,4 +1129,356 @@ unstaged:
           updated_at: 2026-11-19T16:59:05.121Z
           version: 1
       timestamp: 2026-11-19T16:59:05.135Z
+    rewritten: true
+  - sequence: 63
+    removedAt: 402
+    change:
+      type: add
+      elementId: api.operation.propose-reversal
+      layerName: api
+      after:
+        id: 9b3bcf28-e0cf-4fa1-8630-14eaf3a24c4d
+        path: api.operation.propose-reversal
+        spec_node_id: api.operation
+        type: operation
+        layer_id: api
+        name: Propose Reversal
+        description: "Propose the reversal of a landed proposal: a new proposal built
+          from its run's change events that restores deleted entities with their
+          ids. 409 while an open reversal of it exists or when it is not
+          landed."
+        attributes:
+          operationId: propose_reversal_api_proposals__proposal_id__reversal_post
+          summary: Propose Reversal
+          tags: proposals
+          http_method: POST
+          http_path: /api/proposals/{proposal_id}/reversal
+        metadata:
+          created_at: 2026-11-19T16:59:46.682Z
+          updated_at: 2026-11-19T16:59:46.682Z
+          version: 1
+        accepted_gaps:
+          - direction: outgoing
+            predicate: composes
+            other_spec_node_id: api.requestbody
+            reason: "POST /reversal takes no body: the proposal id in the path is the only
+              input."
+            decided_by: agent
+            decided_at: 2026-11-19T17:02:33.068Z
+            changeset: changeset-1795107225483-xwgktrnaj
+          - direction: incoming
+            predicate: monitors
+            other_spec_node_id: apm.span
+            reason: Every API request is traced by the generic FastAPI request span
+              (apm.span.api-request-span); the model wires no span per operation
+              and this one needs no custom span.
+            decided_by: agent
+            decided_at: 2026-11-19T17:03:14.500Z
+            changeset: changeset-1795107225483-xwgktrnaj
+      timestamp: 2026-11-19T17:03:14.529Z
+    rewritten: true
+  - sequence: 57
+    removedAt: 403
+    change:
+      type: add
+      elementId: application.applicationfunction.reversal-planning
+      layerName: application
+      after:
+        id: 7160f59e-05dd-410b-bba5-1d66c8ade2fc
+        path: application.applicationfunction.reversal-planning
+        spec_node_id: application.applicationfunction
+        type: applicationfunction
+        layer_id: application
+        name: Reversal Planning
+        description: "Plans the reversal of a landed proposal from its run's change
+          events, newest first: create to delete, update to update with fields =
+          previous_state (base = current values, so staleness is detected), move
+          fields to move, delete to a restore create that keeps the snapshot's
+          id, relationship side effects to delete plus create; wires $refs
+          between the planned operations (domain/versioning/reversal.py)."
+        attributes:
+          documentation: PR 10. Owned by ProposalService.propose_reversal; refuses while
+            an open reversal of the same proposal exists.
+        metadata:
+          created_at: 2026-11-19T16:59:46.680Z
+          updated_at: 2026-11-19T16:59:46.680Z
+          version: 1
+        accepted_gaps:
+          - direction: outgoing
+            predicate: realizes
+            other_spec_node_id: business.businessfunction
+            reason: Adjudication is modelled as a business process and service, not a
+              business function; the planner reaches the business through
+              ProposalService.
+            decided_by: agent
+            decided_at: 2026-11-19T17:02:32.491Z
+            changeset: changeset-1795107225483-xwgktrnaj
+      timestamp: 2026-11-19T17:02:32.517Z
+    rewritten: true
+  - sequence: 3
+    removedAt: 404
+    change:
+      type: add
+      elementId: motivation.requirement.landed-proposals-are-undone-by-a-reversal-proposal
+      layerName: motivation
+      after:
+        id: d25f8abc-9bfa-4675-9ef7-1c71d845edd4
+        path: motivation.requirement.landed-proposals-are-undone-by-a-reversal-proposal
+        spec_node_id: motivation.requirement
+        type: requirement
+        layer_id: motivation
+        name: Landed Proposals Are Undone by a Reversal Proposal
+        description: "A landed proposal cannot be reverted in place; the Revert control
+          offers 'Propose the reversal…', which explains why and creates a new
+          proposal from the run's change events. Only one open reversal per
+          proposal; the two proposals link each other (reverses / reversed_by)
+          through #1624's proposal-link model."
+        attributes:
+          requirementType: functional
+          priority: high
+          documentation: Owner decisions 2 and 4.
+        metadata:
+          created_at: 2026-11-19T16:59:05.121Z
+          updated_at: 2026-11-19T16:59:05.121Z
+          version: 1
+      timestamp: 2026-11-24T16:41:41.920Z
+    rewritten: true
+  - sequence: 4
+    removedAt: 405
+    change:
+      type: add
+      elementId: motivation.requirement.reversal-restores-deleted-entities-with-their-ids
+      layerName: motivation
+      after:
+        id: a30e98b3-1ad2-4296-b7c4-88dbcc170e40
+        path: motivation.requirement.reversal-restores-deleted-entities-with-their-ids
+        spec_node_id: motivation.requirement
+        type: requirement
+        layer_id: motivation
+        name: Reversal Restores Deleted Entities with Their Ids
+        description: A reversal recreates an entity the original deleted with its old
+          id, via a restore create that names the snapshot's id and checks it is
+          free.
+        attributes:
+          requirementType: functional
+          priority: high
+          documentation: Owner decision 9.
+        metadata:
+          created_at: 2026-11-19T16:59:05.121Z
+          updated_at: 2026-11-19T16:59:05.121Z
+          version: 1
+      timestamp: 2026-11-19T16:59:05.135Z
+    rewritten: true
+  - sequence: 5
+    removedAt: 406
+    change:
+      type: add
+      elementId: motivation.requirement.reversal-is-decided-like-any-proposal
+      layerName: motivation
+      after:
+        id: 47ec680f-beba-417a-81d0-ef857ba3694f
+        path: motivation.requirement.reversal-is-decided-like-any-proposal
+        spec_node_id: motivation.requirement
+        type: requirement
+        layer_id: motivation
+        name: Reversal Is Decided Like Any Proposal
+        description: "A reversal proposal is reviewed, applied and landed like any other
+          proposal: operation by operation or all at once, with reason codes and
+          timing."
+        attributes:
+          requirementType: functional
+          priority: medium
+          documentation: Owner decision 10.
+        metadata:
+          created_at: 2026-11-19T16:59:05.121Z
+          updated_at: 2026-11-19T16:59:05.121Z
+          version: 1
+      timestamp: 2026-11-19T16:59:05.135Z
+    rewritten: true
+  - sequence: 6
+    removedAt: 407
+    change:
+      type: add
+      elementId: motivation.requirement.reversed-proposal-status
+      layerName: motivation
+      after:
+        id: 7677944c-5458-42fa-9dff-d9895f8119a4
+        path: motivation.requirement.reversed-proposal-status
+        spec_node_id: motivation.requirement
+        type: requirement
+        layer_id: motivation
+        name: Reversed Proposal Status
+        description: A proposal moves from done to reversed once its reversal lands,
+          including a partial reversal; its status strip says how much was
+          reversed ('38 of 41 changes reversed'). The status appears in the
+          backend enum, list filters and chips.
+        attributes:
+          requirementType: functional
+          priority: medium
+          documentation: "Owner decision 11. No migration: batch_runs.status is String(20)."
+        metadata:
+          created_at: 2026-11-19T16:59:05.121Z
+          updated_at: 2026-11-19T16:59:05.121Z
+          version: 1
+        accepted_gaps:
+          - direction: outgoing
+            predicate: realizes
+            other_spec_node_id: motivation.principle
+            reason: A status value is bookkeeping for the reversal requirement it is
+              aggregated under; no principle is realized by it directly.
+            decided_by: agent
+            decided_at: 2026-11-19T17:02:31.984Z
+            changeset: changeset-1795107225483-xwgktrnaj
+      timestamp: 2026-11-19T17:02:32.017Z
+    rewritten: true
+  - sequence: 10
+    removedAt: 408
+    change:
+      type: add
+      elementId: business.businessevent.proposal-reversed
+      layerName: business
+      after:
+        id: 9bc75ea2-4540-4051-b92f-fc5e81266460
+        path: business.businessevent.proposal-reversed
+        spec_node_id: business.businessevent
+        type: businessevent
+        layer_id: business
+        name: Proposal Reversed
+        description: The reversal of a landed proposal lands; the original is marked
+          reversed with how many of its changes were reversed.
+        attributes:
+          type: internal
+        metadata:
+          created_at: 2026-11-19T16:59:05.121Z
+          updated_at: 2026-11-19T16:59:05.121Z
+          version: 1
+      timestamp: 2026-11-19T16:59:05.135Z
+    rewritten: true
+  - sequence: 11
+    removedAt: 409
+    change:
+      type: add
+      elementId: product.feature.reversal-proposals
+      layerName: product
+      after:
+        id: ebe4a2fb-8dbd-49a8-bc4b-a60dac529cd3
+        path: product.feature.reversal-proposals
+        spec_node_id: product.feature
+        type: feature
+        layer_id: product
+        name: Reversal Proposals
+        description: "Undo a landed proposal by proposing its reversal: a new proposal
+          built from the run's change events (restoring deleted entities with
+          their ids), decided one by one or all at once, linked both ways to the
+          original, which becomes reversed ('N of M changes reversed')."
+        attributes:
+          priority: high
+          status: planned
+          size: l
+        metadata:
+          created_at: 2026-11-19T16:59:05.121Z
+          updated_at: 2026-11-19T16:59:05.121Z
+          version: 1
+      timestamp: 2026-11-19T16:59:05.135Z
+    rewritten: true
+  - sequence: 259
+    removedAt: 410
+    change:
+      type: add
+      elementId: testing.testcoveragetarget.proposal-reversal
+      layerName: testing
+      after:
+        id: a1cf1d62-91ea-494a-b079-c26bf3143e03
+        path: testing.testcoveragetarget.proposal-reversal
+        spec_node_id: testing.testcoveragetarget
+        type: testcoveragetarget
+        layer_id: testing
+        name: Proposal Reversal
+        description: "Reversal planning and the reversal endpoint: event-to-operation
+          mapping (create, update, move, delete as restore create, relationship
+          side effects), $ref wiring, refusals (not landed, open reversal
+          exists, id now taken), the reverses link both ways (proposal_links,
+          #1624), and the original moving to reversed when the reversal lands,
+          also in part."
+        attributes:
+          targetType: application-component
+          priority: critical
+        metadata:
+          created_at: 2026-11-19T17:01:49.996Z
+          updated_at: 2026-11-19T17:01:49.996Z
+          version: 1
+      timestamp: 2026-11-24T16:41:41.754Z
+    rewritten: true
+  - sequence: 264
+    removedAt: 411
+    change:
+      type: add
+      elementId: testing.testcasesketch.reversal-restores-a-deleted-entity-with-its-id
+      layerName: testing
+      after:
+        id: 3bc62883-e88e-4e98-8902-c7116ecf7ad1
+        path: testing.testcasesketch.reversal-restores-a-deleted-entity-with-its-id
+        spec_node_id: testing.testcasesketch
+        type: testcasesketch
+        layer_id: testing
+        name: Reversal Restores a Deleted Entity with Its Id
+        description: Land a proposal that deletes a class; propose and apply its
+          reversal; the class exists again with its old id and its snapshot's
+          fields.
+        attributes:
+          status: draft
+          implementationFormat: automated
+        metadata:
+          created_at: 2026-11-19T17:01:49.996Z
+          updated_at: 2026-11-19T17:01:49.996Z
+          version: 1
+      timestamp: 2026-11-19T17:01:50.028Z
+    rewritten: true
+  - sequence: 265
+    removedAt: 412
+    change:
+      type: add
+      elementId: testing.testcasesketch.a-second-open-reversal-is-refused
+      layerName: testing
+      after:
+        id: 44ef5428-bca2-4d71-a9e4-9daf68a86fcc
+        path: testing.testcasesketch.a-second-open-reversal-is-refused
+        spec_node_id: testing.testcasesketch
+        type: testcasesketch
+        layer_id: testing
+        name: A Second Open Reversal Is Refused
+        description: With a reversal of a landed proposal still open, POST /reversal
+          again returns 409 and creates nothing.
+        attributes:
+          status: draft
+          implementationFormat: automated
+        metadata:
+          created_at: 2026-11-19T17:01:49.996Z
+          updated_at: 2026-11-19T17:01:49.996Z
+          version: 1
+      timestamp: 2026-11-19T17:01:50.028Z
+    rewritten: true
+  - sequence: 266
+    removedAt: 413
+    change:
+      type: add
+      elementId: testing.testcasesketch.partial-reversal-marks-the-original-reversed
+      layerName: testing
+      after:
+        id: 000ef249-9986-46e3-bda7-d629617da94a
+        path: testing.testcasesketch.partial-reversal-marks-the-original-reversed
+        spec_node_id: testing.testcasesketch
+        type: testcasesketch
+        layer_id: testing
+        name: Partial Reversal Marks the Original Reversed
+        description: Accept 38 of a 41-operation reversal and land it; the original's
+          status is reversed and its response reports 38 of 41 changes reversed.
+        attributes:
+          status: draft
+          implementationFormat: automated
+        metadata:
+          created_at: 2026-11-19T17:01:49.996Z
+          updated_at: 2026-11-19T17:01:49.996Z
+          version: 1
+      timestamp: 2026-11-19T17:01:50.028Z
     rewritten: true

@@ -127,7 +127,12 @@
       created_at: 2026-11-19T16:59:05.121Z
       updated_at: 2026-11-19T16:59:05.121Z
       version: 1
-  timestamp: 2026-11-24T16:41:41.920Z
+    source_reference:
+      provenance: manual
+      locations:
+        - file: local-server/domain/versioning/proposal_service.py
+          symbol: ProposalService.propose_reversal
+  timestamp: 2026-11-24T18:55:46.020Z
   sequenceNumber: 3
 - type: add
   elementId: motivation.requirement.reversal-restores-deleted-entities-with-their-ids
@@ -150,7 +155,12 @@
       created_at: 2026-11-19T16:59:05.121Z
       updated_at: 2026-11-19T16:59:05.121Z
       version: 1
-  timestamp: 2026-11-19T16:59:05.135Z
+    source_reference:
+      provenance: manual
+      locations:
+        - file: local-server/domain/versioning/revert_service.py
+          symbol: RevertService.restore
+  timestamp: 2026-11-24T18:55:46.020Z
   sequenceNumber: 4
 - type: add
   elementId: motivation.requirement.reversal-is-decided-like-any-proposal
@@ -173,7 +183,12 @@
       created_at: 2026-11-19T16:59:05.121Z
       updated_at: 2026-11-19T16:59:05.121Z
       version: 1
-  timestamp: 2026-11-19T16:59:05.135Z
+    source_reference:
+      provenance: manual
+      locations:
+        - file: local-server/domain/versioning/proposal_service.py
+          symbol: ProposalService.propose_reversal
+  timestamp: 2026-11-24T18:55:46.020Z
   sequenceNumber: 5
 - type: add
   elementId: motivation.requirement.reversed-proposal-status
@@ -206,7 +221,12 @@
         decided_by: agent
         decided_at: 2026-11-19T17:02:31.984Z
         changeset: changeset-1795107225483-xwgktrnaj
-  timestamp: 2026-11-19T17:02:32.017Z
+    source_reference:
+      provenance: manual
+      locations:
+        - file: local-server/domain/versioning/proposal_service.py
+          symbol: ProposalService._mark_reversed_by
+  timestamp: 2026-11-24T18:55:46.020Z
   sequenceNumber: 6
 - type: add
   elementId: motivation.requirement.bulk-decisions-on-every-proposal-except-gold-checks
@@ -298,7 +318,12 @@
       created_at: 2026-11-19T16:59:05.121Z
       updated_at: 2026-11-19T16:59:05.121Z
       version: 1
-  timestamp: 2026-11-19T16:59:05.135Z
+    source_reference:
+      provenance: manual
+      locations:
+        - file: local-server/domain/versioning/proposal_service.py
+          symbol: ProposalService._mark_reversed_by
+  timestamp: 2026-11-24T18:55:46.020Z
   sequenceNumber: 10
 - type: add
   elementId: product.feature.reversal-proposals
@@ -322,7 +347,12 @@
       created_at: 2026-11-19T16:59:05.121Z
       updated_at: 2026-11-19T16:59:05.121Z
       version: 1
-  timestamp: 2026-11-19T16:59:05.135Z
+    source_reference:
+      provenance: manual
+      locations:
+        - file: local-server/domain/versioning/reversal.py
+          symbol: plan_reversal
+  timestamp: 2026-11-24T18:55:46.020Z
   sequenceNumber: 11
 - type: relationship-add
   elementId: motivation.goal.ontology-workbench-for-client-projects::aggregates::motivation.goal.one-review-surface
@@ -980,7 +1010,12 @@
         decided_by: agent
         decided_at: 2026-11-19T17:02:32.491Z
         changeset: changeset-1795107225483-xwgktrnaj
-  timestamp: 2026-11-19T17:02:32.517Z
+    source_reference:
+      provenance: manual
+      locations:
+        - file: local-server/domain/versioning/reversal.py
+          symbol: plan_reversal
+  timestamp: 2026-11-24T18:55:46.020Z
   sequenceNumber: 57
 - type: add
   elementId: application.applicationfunction.revert-preview
@@ -1084,7 +1119,12 @@
         decided_by: agent
         decided_at: 2026-11-19T17:03:14.500Z
         changeset: changeset-1795107225483-xwgktrnaj
-  timestamp: 2026-11-19T17:03:14.529Z
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/proposals_routes.py
+          symbol: propose_reversal
+  timestamp: 2026-11-24T18:55:45.886Z
   sequenceNumber: 63
 - type: add
   elementId: api.responses.propose-reversal-responses
@@ -3961,7 +4001,12 @@
       created_at: 2026-11-19T17:01:49.996Z
       updated_at: 2026-11-19T17:01:49.996Z
       version: 1
-  timestamp: 2026-11-24T16:41:41.754Z
+    source_reference:
+      provenance: manual
+      locations:
+        - file: local-server/tests/integration/routes/test_proposal_reversal_routes.py
+          symbol: TestPlanning
+  timestamp: 2026-11-24T18:55:46.020Z
   sequenceNumber: 259
 - type: add
   elementId: testing.testcoveragetarget.one-review-page
@@ -4072,7 +4117,12 @@
       created_at: 2026-11-19T17:01:49.996Z
       updated_at: 2026-11-19T17:01:49.996Z
       version: 1
-  timestamp: 2026-11-19T17:01:50.028Z
+    source_reference:
+      provenance: manual
+      locations:
+        - file: local-server/tests/integration/routes/test_proposal_reversal_routes.py
+          symbol: test_it_applies_like_any_proposal_and_restores_the_old_id
+  timestamp: 2026-11-24T18:55:46.020Z
   sequenceNumber: 264
 - type: add
   elementId: testing.testcasesketch.a-second-open-reversal-is-refused
@@ -4093,7 +4143,12 @@
       created_at: 2026-11-19T17:01:49.996Z
       updated_at: 2026-11-19T17:01:49.996Z
       version: 1
-  timestamp: 2026-11-19T17:01:50.028Z
+    source_reference:
+      provenance: manual
+      locations:
+        - file: local-server/tests/integration/routes/test_proposal_reversal_routes.py
+          symbol: test_a_second_open_reversal_is_refused_and_creates_nothing
+  timestamp: 2026-11-24T18:55:46.020Z
   sequenceNumber: 265
 - type: add
   elementId: testing.testcasesketch.partial-reversal-marks-the-original-reversed
@@ -4114,7 +4169,12 @@
       created_at: 2026-11-19T17:01:49.996Z
       updated_at: 2026-11-19T17:01:49.996Z
       version: 1
-  timestamp: 2026-11-19T17:01:50.028Z
+    source_reference:
+      provenance: manual
+      locations:
+        - file: local-server/tests/integration/routes/test_proposal_reversal_routes.py
+          symbol: test_a_partial_reversal_marks_it_reversed_and_counts_what_was_undone
+  timestamp: 2026-11-24T18:55:46.020Z
   sequenceNumber: 266
 - type: add
   elementId: testing.testcasesketch.revert-preview-lists-a-later-edit
@@ -5511,3 +5571,90 @@
     metadata: *a63
   timestamp: 2026-11-24T16:41:41.358Z
   sequenceNumber: 399
+- type: update
+  elementId: data-model.objectschema.proposal-entity
+  layerName: data-model
+  before:
+    id: 2ff8aa70-673e-4390-97c0-5ebca5cea559
+    path: data-model.objectschema.proposal-entity
+    spec_node_id: data-model.objectschema
+    type: objectschema
+    layer_id: data-model
+    name: Proposal Entity
+    description: "Domain entity: a change proposal to one taxonomy, with its ordered
+      proposed operations, origin, status (open, done, reverted, reversed) and
+      landing; a reversal is linked to the proposal it reverses by a proposal
+      link of kind reverses (#1624's link model, plan proposal-links), so the
+      original knows its reversal (reversed_by) and how many of its changes were
+      reversed."
+    attributes: &a64
+      type: object
+    source_reference: &a65
+      provenance: extracted
+      locations:
+        - file: local-server/domain/versioning/proposals.py
+          symbol: ChangeProposal
+    metadata: &a66
+      created_at: 2026-05-09T10:25:00.196Z
+      updated_at: 2026-05-09T10:25:00.196Z
+      version: 1
+  after:
+    id: 2ff8aa70-673e-4390-97c0-5ebca5cea559
+    path: data-model.objectschema.proposal-entity
+    spec_node_id: data-model.objectschema
+    type: objectschema
+    layer_id: data-model
+    name: Proposal Entity
+    description: "Domain entity: a change proposal to one taxonomy, with its ordered
+      proposed operations, origin, status (open, done, reverted, withdrawn,
+      reversed) and landing; a reversal is linked to the proposal it reverses by
+      a proposal link of kind reverses (#1624's link model), so the original
+      knows its reversal (reversed_by) and how many of the reversal's changes
+      were applied."
+    attributes: *a64
+    source_reference: *a65
+    metadata: *a66
+  timestamp: 2026-11-24T18:55:56.179Z
+  sequenceNumber: 414
+- type: update
+  elementId: api.response.change-proposal-response
+  layerName: api
+  before:
+    id: 2f4dc526-a1c7-40c9-8173-5cc609b51427
+    path: api.response.change-proposal-response
+    spec_node_id: api.response
+    type: response
+    layer_id: api
+    name: ChangeProposalResponse
+    description: "A change proposal with its operations, status (open, done,
+      reverted, reversed), landing, its links (reverses / reversed_by among
+      them, from #1624's link model) and, for a reversed original, how many of
+      its changes were reversed."
+    attributes: &a67
+      description: ChangeProposalResponse
+    source_reference: &a68
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/schemas/proposals.py
+          symbol: ChangeProposalResponse
+    metadata: &a69
+      created_at: 2026-11-19T15:15:02.501Z
+      updated_at: 2026-11-19T15:15:02.501Z
+      version: 1
+  after:
+    id: 2f4dc526-a1c7-40c9-8173-5cc609b51427
+    path: api.response.change-proposal-response
+    spec_node_id: api.response
+    type: response
+    layer_id: api
+    name: ChangeProposalResponse
+    description: "A change proposal with its operations, status (open, done,
+      reverted, withdrawn, reversed), landing and its links to other proposals
+      (supersedes, superseded_by, reverses, reversed_by). On a reversed_by link:
+      operations_applied and operations_total, how many of the reversal's
+      changes were applied ('38 of 41 changes reversed')."
+    attributes: *a67
+    source_reference: *a68
+    metadata: *a69
+  timestamp: 2026-11-24T18:55:56.369Z
+  sequenceNumber: 415
