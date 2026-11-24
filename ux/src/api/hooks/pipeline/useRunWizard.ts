@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
-import { useRunPipeline } from "./usePipelineMutations";
+import { useRunPipeline, useEnqueueBatchRuns, type BatchRunSpec } from "./usePipelineMutations";
 import type { components } from "@/api/types";
 
 type PipelineRunRequest = components["schemas"]["PipelineRunRequest"];
@@ -17,6 +17,7 @@ export function useRunWizard(options: UseRunWizardOptions) {
   const { type } = options;
   const navigate = useNavigate();
   const { mutateAsync: runPipeline } = useRunPipeline();
+  const { mutateAsync: enqueueBatchRuns } = useEnqueueBatchRuns();
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<FormErrors>({});
@@ -42,10 +43,28 @@ export function useRunWizard(options: UseRunWizardOptions) {
     }
   };
 
+  // One run per spec, enqueued as one batch. A single run opens in its drawer;
+  // several open the runs list, where each shows as it progresses.
+  const handleSubmitBatch = async (specs: BatchRunSpec[]): Promise<void> => {
+    setIsSubmitting(true);
+    setErrors({});
+
+    try {
+      const { run_ids: runIds } = await enqueueBatchRuns(specs);
+      await navigate({
+        to: "/app/pipelines/runs",
+        search: runIds.length === 1 ? { selected: runIds[0] } : {},
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return {
     isSubmitting,
     errors,
     setErrors,
     handleSubmit,
+    handleSubmitBatch,
   };
 }

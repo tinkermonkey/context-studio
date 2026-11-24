@@ -1,0 +1,75 @@
+id: changeset-1795528602524-cm9n5nh9m
+name: grounding-wizard-batch
+description: "#1504: the grounding wizard grounds several classes at once: one
+  run per selected class, enqueued as one batch through the existing batch route
+  (node_id, node_type, configuration_ref, sources per run). Source names come
+  from GET /api/reference/status, the names the grounding adapter registers; no
+  second list. Classes only: grounding's node_id resolves classes, so property
+  definitions are not offered. There is no batch toggle: one node is one run,
+  several are a batch."
+created: 2026-11-24T13:56:42.533Z
+modified: 2026-11-24T14:01:25.584Z
+status: staged
+baseSnapshot: v2:sha256:53252d39ed1357a9afdd6132507b497bf81313353af91142ccb6b590b147594c
+origin:
+  kind: plan
+purpose: plan
+stats:
+  additions: 5
+  modifications: 1
+  deletions: 0
+lastSequence: 7
+unstaged:
+  - sequence: 0
+    removedAt: 6
+    change:
+      type: add
+      elementId: ux.dataconfig.use-enqueue-batch-runs
+      layerName: ux
+      after:
+        id: 039ed83e-0e53-4200-b872-c1528a4370df
+        path: ux.dataconfig.use-enqueue-batch-runs
+        spec_node_id: ux.dataconfig
+        type: dataconfig
+        layer_id: ux
+        name: useEnqueueBatchRuns
+        description: "POST /api/pipelines/batches, then POST
+          /api/pipelines/batches/{id}/runs: one run per spec in one batch."
+        attributes:
+          source: api
+          target: api.operation.enqueue-batch-runs
+        metadata:
+          created_at: 2026-11-24T13:56:46.248Z
+          updated_at: 2026-11-24T13:56:46.248Z
+          version: 1
+      timestamp: 2026-11-24T13:56:46.255Z
+    rewritten: true
+  - sequence: 0
+    removedAt: 7
+    change:
+      type: add
+      elementId: ux.dataconfig.use-enqueue-batch-runs
+      layerName: ux
+      after:
+        id: 039ed83e-0e53-4200-b872-c1528a4370df
+        path: ux.dataconfig.use-enqueue-batch-runs
+        spec_node_id: ux.dataconfig
+        type: dataconfig
+        layer_id: ux
+        name: useEnqueueBatchRuns
+        description: "POST /api/pipelines/batches, then POST
+          /api/pipelines/batches/{id}/runs: one run per spec in one batch."
+        attributes:
+          source: api
+          target: api.operation.enqueue-batch-runs
+        metadata:
+          created_at: 2026-11-24T13:56:46.248Z
+          updated_at: 2026-11-24T13:56:46.248Z
+          version: 1
+        source_reference:
+          provenance: manual
+          locations:
+            - file: ux/src/api/hooks/pipeline/usePipelineMutations.ts
+              symbol: useEnqueueBatchRuns
+      timestamp: 2026-11-24T14:01:20.272Z
+    rewritten: true

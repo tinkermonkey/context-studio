@@ -1747,13 +1747,13 @@ selectors:
     description: Schema grounding pipeline wizard form
   - selector: schema-grounding-nodes
     component: components/pipeline/wizards/SchemaGroundingWizard.tsx
-    description: Target nodes entity picker in schema grounding wizard
+    description: Target classes multi-select entity picker in schema grounding wizard
   - selector: schema-grounding-nodes-list
     component: components/pipeline/EntitySearchPicker.tsx
     description: Selected target-node chips of the schema grounding wizard's multi-select entity picker
   - selector: schema-grounding-sources
     component: components/pipeline/wizards/SchemaGroundingWizard.tsx
-    description: Knowledge sources multi-select checkboxes in schema grounding wizard
+    description: Knowledge sources multi-select checkboxes in schema grounding wizard (one per source the reference status lists)
   - selector: schema-grounding-source-dbpedia
     component: components/pipeline/wizards/SchemaGroundingWizard.tsx
     description: DBpedia source checkbox
@@ -1766,6 +1766,15 @@ selectors:
   - selector: schema-grounding-source-schema_org
     component: components/pipeline/wizards/SchemaGroundingWizard.tsx
     description: Schema.org source checkbox
+  - selector: schema-grounding-classes-only
+    component: components/pipeline/wizards/SchemaGroundingWizard.tsx
+    description: Note that grounding applies to classes only (no property definitions)
+  - selector: schema-grounding-sources-loading
+    component: components/pipeline/wizards/SchemaGroundingWizard.tsx
+    description: Shown while the knowledge sources load from the reference status
+  - selector: schema-grounding-sources-error
+    component: components/pipeline/wizards/SchemaGroundingWizard.tsx
+    description: Shown when the knowledge sources could not be loaded from the reference status
   - selector: schema-grounding-submit
     component: components/pipeline/wizards/SchemaGroundingWizard.tsx
     description: Submit button in schema grounding wizard
@@ -1947,15 +1956,6 @@ selectors:
     component: src/routes/app/pipelines/batches/$batchId.tsx
     description: Batch detail page placeholder showing deferred batch execution feature unavailability message
 
-  - selector: schema-grounding-node-type
-    component: src/components/pipeline/wizards/SchemaGroundingWizard.tsx
-    description: Container for node type selector (Class or PropertyDefinition) in grounding wizard
-  - selector: schema-grounding-node-type-class
-    component: src/components/pipeline/wizards/SchemaGroundingWizard.tsx
-    description: Button to select Class as target node type in grounding wizard
-  - selector: schema-grounding-node-type-property
-    component: src/components/pipeline/wizards/SchemaGroundingWizard.tsx
-    description: Button to select PropertyDefinition as target node type in grounding wizard
 
   - selector: run-detail-close-button
     component: src/components/pipeline/RunDetailDrawer.tsx

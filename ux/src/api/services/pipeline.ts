@@ -23,6 +23,7 @@ export type RecognitionDecision = components["schemas"]["RecognitionDecisionSche
 export type MergedMention = components["schemas"]["MergedMentionSchema"];
 type RevertRunResponse = components["schemas"]["RevertRunResponse"];
 type BatchResponse = components["schemas"]["BatchResponse"];
+type EnqueueBatchRunsResponse = components["schemas"]["EnqueueBatchRunsResponse"];
 type CancelBatchResponse = components["schemas"]["CancelBatchResponse"];
 type ResumeBatchResponse = components["schemas"]["ResumeBatchResponse"];
 type ListChangeEvents = components["schemas"]["ListResponse_VersioningChangeEventResponse_"];
@@ -275,8 +276,8 @@ class PipelineService extends BaseService {
     return this.get<BatchResponse>(`/api/pipelines/batches/${batchId}`);
   }
 
-  async enqueueBatchRuns(batchId: string, data: unknown): Promise<BatchResponse> {
-    return this.post<BatchResponse>(`/api/pipelines/batches/${batchId}/runs`, data);
+  async enqueueBatchRuns(batchId: string, data: unknown): Promise<EnqueueBatchRunsResponse> {
+    return this.post<EnqueueBatchRunsResponse>(`/api/pipelines/batches/${batchId}/runs`, data);
   }
 
   async cancelBatch(batchId: string): Promise<CancelBatchResponse> {

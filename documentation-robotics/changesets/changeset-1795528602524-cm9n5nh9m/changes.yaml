@@ -1,0 +1,108 @@
+- type: add
+  elementId: ux.dataconfig.use-enqueue-batch-runs
+  layerName: ux
+  after:
+    id: 039ed83e-0e53-4200-b872-c1528a4370df
+    path: ux.dataconfig.use-enqueue-batch-runs
+    spec_node_id: ux.dataconfig
+    type: dataconfig
+    layer_id: ux
+    name: useEnqueueBatchRuns
+    description: "POST /api/pipelines/batches, then POST
+      /api/pipelines/batches/{id}/runs: one run per spec in one batch."
+    attributes:
+      source: api
+      target: api.operation.enqueue-batch-runs
+    metadata:
+      created_at: 2026-11-24T13:56:46.248Z
+      updated_at: 2026-11-24T13:56:46.248Z
+      version: 1
+    source_reference:
+      provenance: manual
+      locations:
+        - file: ux/src/api/hooks/pipeline/usePipelineMutations.ts
+          symbol: useEnqueueBatchRuns
+  timestamp: 2026-11-24T14:01:25.570Z
+  sequenceNumber: 0
+- type: relationship-add
+  elementId: ux.dataconfig.use-enqueue-batch-runs::maps-to::api.requestbody.enqueue-batch-runs-request
+  layerName: ux
+  after:
+    source: ux.dataconfig.use-enqueue-batch-runs
+    target: api.requestbody.enqueue-batch-runs-request
+    predicate: maps-to
+    layer: ux
+    targetLayer: api
+    category: structural
+  timestamp: 2026-11-24T13:56:46.255Z
+  sequenceNumber: 1
+- type: relationship-add
+  elementId: ux.dataconfig.use-enqueue-batch-runs::maps-to::api.response.enqueue-batch-runs-response
+  layerName: ux
+  after:
+    source: ux.dataconfig.use-enqueue-batch-runs
+    target: api.response.enqueue-batch-runs-response
+    predicate: maps-to
+    layer: ux
+    targetLayer: api
+    category: structural
+  timestamp: 2026-11-24T13:56:46.255Z
+  sequenceNumber: 2
+- type: relationship-add
+  elementId: ux.subview.schema-grounding-wizard::binds-to::ux.dataconfig.use-enqueue-batch-runs
+  layerName: ux
+  after:
+    source: ux.subview.schema-grounding-wizard
+    target: ux.dataconfig.use-enqueue-batch-runs
+    predicate: binds-to
+    layer: ux
+    category: structural
+  timestamp: 2026-11-24T13:56:46.255Z
+  sequenceNumber: 3
+- type: relationship-add
+  elementId: ux.subview.schema-grounding-wizard::binds-to::ux.dataconfig.use-reference-status
+  layerName: ux
+  after:
+    source: ux.subview.schema-grounding-wizard
+    target: ux.dataconfig.use-reference-status
+    predicate: binds-to
+    layer: ux
+    category: structural
+  timestamp: 2026-11-24T13:56:46.255Z
+  sequenceNumber: 4
+- type: update
+  elementId: ux.subview.schema-grounding-wizard
+  layerName: ux
+  before:
+    id: 85fa5d2f-5cba-44fe-ae51-b48cbd901dce
+    path: ux.subview.schema-grounding-wizard
+    spec_node_id: ux.subview
+    type: subview
+    layer_id: ux
+    name: Schema Grounding Wizard
+    description: Run wizard step set for schema-node grounding.
+    source_reference: &a1
+      provenance: extracted
+      locations:
+        - file: ux/src/components/pipeline/wizards/SchemaGroundingWizard.tsx
+          symbol: SchemaGroundingWizard
+        - file: ux/src/components/pipeline/wizards/SchemaGroundingWizard.tsx
+          symbol: ux.src.components.pipeline.wizards.SchemaGroundingWizard
+    metadata: &a2
+      created_at: 2026-11-19T15:02:28.474Z
+      updated_at: 2026-11-19T15:02:28.474Z
+      version: 1
+  after:
+    id: 85fa5d2f-5cba-44fe-ae51-b48cbd901dce
+    path: ux.subview.schema-grounding-wizard
+    spec_node_id: ux.subview
+    type: subview
+    layer_id: ux
+    name: Schema Grounding Wizard
+    description: "Run wizard for schema-node grounding: pick classes (one or
+      several) and knowledge sources; one grounding run per class, enqueued as
+      one batch. Classes only: grounding's node_id resolves classes."
+    source_reference: *a1
+    metadata: *a2
+  timestamp: 2026-11-24T13:56:46.702Z
+  sequenceNumber: 5

@@ -16,6 +16,28 @@ export function useRunPipeline() {
   });
 }
 
+/** A run spec of the batch route: what to run, and the input a background worker runs it on. */
+export interface BatchRunSpec {
+  pipeline_type: string;
+  implementation_id?: string;
+  configuration_ref?: string;
+  input_data: Record<string, unknown>;
+}
+
+/** Enqueue one run per spec in one new batch; the workers execute them in the background. */
+export function useEnqueueBatchRuns() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (runs: BatchRunSpec[]) => {
+      const batch = await pipelineService.createBatch(undefined);
+      return pipelineService.enqueueBatchRuns(batch.id, { runs });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.pipelineRuns() });
+    },
+  });
+}
+
 export function useApplyRun() {
   const queryClient = useQueryClient();
   return useMutation({
