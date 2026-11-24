@@ -13,8 +13,8 @@ description: "Design of an optional pre-review stage in single_call individual
   errors, the human-checked benchmark gold and Gate D's reviewed runs, three
   takes). Plan only: nothing is built until the user approves."
 created: 2026-11-22T14:46:49.907Z
-modified: 2026-11-23T17:58:49.572Z
-status: staged
+modified: 2026-11-24T12:27:09.943Z
+status: committed
 baseSnapshot: v2:sha256:53252d39ed1357a9afdd6132507b497bf81313353af91142ccb6b590b147594c
 origin:
   kind: plan

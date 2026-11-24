@@ -16,10 +16,10 @@ Data entities, relationships, and data structure definitions.
 
 | Metric                    | Count |
 | ------------------------- | ----- |
-| Elements                  | 49    |
+| Elements                  | 50    |
 | Intra-Layer Relationships | 10    |
-| Inter-Layer Relationships | 107   |
-| Inbound Relationships     | 47    |
+| Inter-Layer Relationships | 109   |
+| Inbound Relationships     | 49    |
 | Outbound Relationships    | 60    |
 
 **Cross-Layer References**:
@@ -63,6 +63,7 @@ Data entities, relationships, and data structure definitions.
 | `data-model.objectschema.pipeline-configuration`        | `objectschema` | 1             |
 | `data-model.objectschema.pipeline-configuration-entity` | `objectschema` | 1             |
 | `data-model.objectschema.pipeline-run-entity`           | `objectschema` | 0             |
+| `data-model.objectschema.pre-review-verdict`            | `objectschema` | 0             |
 | `data-model.objectschema.predicate-entity`              | `objectschema` | 0             |
 | `data-model.objectschema.processing-metrics`            | `objectschema` | 0             |
 | `data-model.objectschema.property-definition`           | `objectschema` | 0             |
@@ -160,6 +161,8 @@ flowchart TB
 | `application.applicationcomponent.accesses.data-model.objectschema` | `application.applicationcomponent.sqlite-pipeline-configuration-repository` | `data-model.objectschema.pipeline-configuration-entity`         | `data-model` | `accesses`  | many-to-many | medium   |
 | `application.applicationcomponent.accesses.data-model.objectschema` | `application.applicationcomponent.sqlite-pipeline-repository`               | `data-model.objectschema.pipeline-run-entity`                   | `data-model` | `accesses`  | many-to-many | medium   |
 | `application.applicationcomponent.accesses.data-model.objectschema` | `application.applicationcomponent.sqlite-source-repository`                 | `data-model.objectschema.source-entity`                         | `data-model` | `accesses`  | many-to-many | medium   |
+| `application.applicationfunction.accesses.data-model.objectschema`  | `application.applicationfunction.individual-pre-review`                     | `data-model.objectschema.pipeline-configuration-entity`         | `data-model` | `accesses`  | many-to-many | medium   |
+| `application.applicationfunction.accesses.data-model.objectschema`  | `application.applicationfunction.individual-pre-review`                     | `data-model.objectschema.pre-review-verdict`                    | `data-model` | `accesses`  | many-to-many | medium   |
 | `data-model.objectschema.maps-to.api.response`                      | `data-model.objectschema.app-configuration`                                 | `api.response.app-configuration-response`                       | `api`        | `maps-to`   | many-to-many | medium   |
 | `data-model.objectschema.maps-to.data-store.collection`             | `data-model.objectschema.approval-policy-entity`                            | `data-store.collection.approval-policies`                       | `data-store` | `maps-to`   | many-to-many | medium   |
 | `data-model.objectschema.maps-to.data-store.collection`             | `data-model.objectschema.attribute-definition-entity`                       | `data-store.collection.attribute-definitions`                   | `data-store` | `maps-to`   | many-to-many | medium   |
@@ -857,6 +860,7 @@ Domain value: one version of a pipeline implementation's configuration (built-in
 | Type        | Related Element                                                             | Predicate     | Direction |
 | ----------- | --------------------------------------------------------------------------- | ------------- | --------- |
 | inter-layer | `application.applicationcomponent.sqlite-pipeline-configuration-repository` | `accesses`    | inbound   |
+| inter-layer | `application.applicationfunction.individual-pre-review`                     | `accesses`    | inbound   |
 | intra-layer | `data-model.objectschema.pipeline-configuration`                            | `specializes` | outbound  |
 
 ### Pipeline Run Entity {#pipeline-run-entity}
@@ -879,6 +883,27 @@ Domain entity: one run of a pipeline (type, implementation, configuration versio
 | ----------- | ------------------------------------------------------------- | ---------- | --------- |
 | inter-layer | `application.applicationcomponent.sqlite-pipeline-repository` | `accesses` | inbound   |
 | inter-layer | `data-store.collection.pipeline-runs`                         | `maps-to`  | outbound  |
+
+### Pre-Review Verdict {#pre-review-verdict}
+
+**ID**: `data-model.objectschema.pre-review-verdict`
+
+**Type**: `objectschema`
+
+Domain value (dataclass, domain/extraction/entities.py): the pre-review stage's answer for one extracted individual. answer (keep, split, retype, unsure), question, reasoning, original title and class, the retype's class, the classes compared, a split's parts (each with title, class and passage), model.
+
+#### Attributes
+
+| Name     | Value                                           |
+| -------- | ----------------------------------------------- |
+| required | [verdict, question, reasoning, original, model] |
+| type     | object                                          |
+
+#### Relationships
+
+| Type        | Related Element                                         | Predicate  | Direction |
+| ----------- | ------------------------------------------------------- | ---------- | --------- |
+| inter-layer | `application.applicationfunction.individual-pre-review` | `accesses` | inbound   |
 
 ### Predicate Entity {#predicate-entity}
 
@@ -1289,4 +1314,4 @@ String schema for entity identifiers — UUID v4 format, used as primary keys ac
 
 ---
 
-Generated: 2026-11-19T16:49:39.982Z | Model Version: 0.1.0
+Generated: 2026-11-24T12:27:09.956Z | Model Version: 0.1.0

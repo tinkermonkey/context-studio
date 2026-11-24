@@ -16,15 +16,15 @@ Goals, requirements, drivers, and strategic outcomes of the architecture.
 
 | Metric                    | Count |
 | ------------------------- | ----- |
-| Elements                  | 56    |
-| Intra-Layer Relationships | 68    |
-| Inter-Layer Relationships | 129   |
-| Inbound Relationships     | 129   |
+| Elements                  | 58    |
+| Intra-Layer Relationships | 72    |
+| Inter-Layer Relationships | 132   |
+| Inbound Relationships     | 132   |
 | Outbound Relationships    | 0     |
 
 **Cross-Layer References**:
 
-- **Upstream layers**: [API](./07-api-layer-report.md), [Application](./05-application-layer-report.md), [Business](./02-business-layer-report.md), [Data Model](./08-data-model-layer-report.md), [Data Store](./09-data-store-layer-report.md), [Product](./03-product-layer-report.md), [Security](./04-security-layer-report.md), [Technology](./06-technology-layer-report.md)
+- **Upstream layers**: [API](./07-api-layer-report.md), [Application](./05-application-layer-report.md), [Business](./02-business-layer-report.md), [Data Model](./08-data-model-layer-report.md), [Data Store](./09-data-store-layer-report.md), [Product](./03-product-layer-report.md), [Security](./04-security-layer-report.md), [Technology](./06-technology-layer-report.md), [Testing](./13-testing-layer-report.md)
 
 ## Intra-Layer Relationships
 
@@ -32,9 +32,10 @@ Goals, requirements, drivers, and strategic outcomes of the architecture.
 
 | Element                                                                                   | Type          | Relationships |
 | ----------------------------------------------------------------------------------------- | ------------- | ------------- |
-| `motivation.assessment.benchmark-gold-is-thin-and-mostly-model-made`                      | `assessment`  | 2             |
+| `motivation.assessment.benchmark-gold-is-thin-and-mostly-model-made`                      | `assessment`  | 3             |
 | `motivation.assessment.relationship-extraction-is-unsolved`                               | `assessment`  | 2             |
 | `motivation.assessment.security-posture-assessment`                                       | `assessment`  | 3             |
+| `motivation.assessment.splits-and-retypes-are-half-of-reviewer-changes`                   | `assessment`  | 2             |
 | `motivation.constraint.configuration-only-through-the-config-file`                        | `constraint`  | 1             |
 | `motivation.constraint.external-llm-provider-required`                                    | `constraint`  | 1             |
 | `motivation.constraint.external-reference-source-rate-limits`                             | `constraint`  | 0             |
@@ -44,7 +45,7 @@ Goals, requirements, drivers, and strategic outcomes of the architecture.
 | `motivation.constraint.sqlite-only-persistence`                                           | `constraint`  | 1             |
 | `motivation.driver.agents-invent-vocabulary`                                              | `driver`      | 2             |
 | `motivation.driver.client-ontologies-refined-by-hand`                                     | `driver`      | 3             |
-| `motivation.driver.review-is-the-normal-workflow`                                         | `driver`      | 5             |
+| `motivation.driver.review-is-the-normal-workflow`                                         | `driver`      | 6             |
 | `motivation.driver.unauthenticated-local-workspace-api`                                   | `driver`      | 2             |
 | `motivation.goal.agents-ground-on-the-curated-model`                                      | `goal`        | 5             |
 | `motivation.goal.every-decision-becomes-data`                                             | `goal`        | 3             |
@@ -56,7 +57,7 @@ Goals, requirements, drivers, and strategic outcomes of the architecture.
 | `motivation.outcome.agents-use-the-curated-vocabulary`                                    | `outcome`     | 3             |
 | `motivation.outcome.client-changes-land-without-hand-edited-specs`                        | `outcome`     | 3             |
 | `motivation.outcome.curated-domain-ontology`                                              | `outcome`     | 3             |
-| `motivation.outcome.extraction-proposals-worth-a-reviewers-time`                          | `outcome`     | 4             |
+| `motivation.outcome.extraction-proposals-worth-a-reviewers-time`                          | `outcome`     | 6             |
 | `motivation.principle.agents-propose-and-people-decide`                                   | `principle`   | 4             |
 | `motivation.principle.clients-drive-proposals`                                            | `principle`   | 2             |
 | `motivation.principle.hexagonal-domain-purity`                                            | `principle`   | 2             |
@@ -74,6 +75,7 @@ Goals, requirements, drivers, and strategic outcomes of the architecture.
 | `motivation.requirement.mcp-requires-a-bearer-token-on-loopback`                          | `requirement` | 2             |
 | `motivation.requirement.mirrored-taxonomies-accept-schema-changes-only-from-their-client` | `requirement` | 2             |
 | `motivation.requirement.one-way-to-select-a-pipeline`                                     | `requirement` | 1             |
+| `motivation.requirement.pre-review-is-adopted-only-by-a-rule-set-in-advance`              | `requirement` | 2             |
 | `motivation.requirement.proposals-record-their-pipeline-and-version`                      | `requirement` | 1             |
 | `motivation.requirement.relationships-limited-to-allowed-types`                           | `requirement` | 1             |
 | `motivation.requirement.secrets-stay-in-the-configuration-file`                           | `requirement` | 2             |
@@ -115,6 +117,7 @@ flowchart TB
   product --> motivation
   security --> motivation
   technology --> motivation
+  testing --> motivation
   class motivation current
 ```
 
@@ -185,6 +188,8 @@ flowchart TB
 | `product.feature.satisfies.motivation.requirement`                 | `product.feature.configuration-settings`                                     | `motivation.requirement.secrets-stay-in-the-configuration-file`                           | `motivation` | `satisfies`  | many-to-many | medium   |
 | `product.feature.satisfies.motivation.requirement`                 | `product.feature.dataset-selector`                                           | `motivation.requirement.individuals-belong-to-one-dataset`                                | `motivation` | `satisfies`  | many-to-many | medium   |
 | `product.feature.delivers.motivation.value`                        | `product.feature.export-bundle`                                              | `motivation.value.knowledge-reusability`                                                  | `motivation` | `delivers`   | many-to-many | medium   |
+| `product.feature.delivers.motivation.value`                        | `product.feature.extraction-pre-review`                                      | `motivation.value.reviewer-time-goes-to-judgment-calls`                                   | `motivation` | `delivers`   | many-to-many | medium   |
+| `product.feature.satisfies.motivation.requirement`                 | `product.feature.extraction-pre-review`                                      | `motivation.requirement.pre-review-is-adopted-only-by-a-rule-set-in-advance`              | `motivation` | `satisfies`  | many-to-many | medium   |
 | `product.feature.satisfies.motivation.requirement`                 | `product.feature.gold-mode`                                                  | `motivation.requirement.proposals-record-their-pipeline-and-version`                      | `motivation` | `satisfies`  | many-to-many | medium   |
 | `product.feature.satisfies.motivation.requirement`                 | `product.feature.mcp-integration-settings`                                   | `motivation.requirement.mcp-requires-a-bearer-token-on-loopback`                          | `motivation` | `satisfies`  | many-to-many | medium   |
 | `product.feature.delivers.motivation.value`                        | `product.feature.owl-skos-and-graph-ml-import-and-export`                    | `motivation.value.knowledge-reusability`                                                  | `motivation` | `delivers`   | many-to-many | medium   |
@@ -251,6 +256,7 @@ flowchart TB
 | `technology.systemsoftware.satisfies.motivation.constraint`        | `technology.systemsoftware.sqlite`                                           | `motivation.constraint.sqlite-only-persistence`                                           | `motivation` | `satisfies`  | many-to-many | medium   |
 | `technology.systemsoftware.satisfies.motivation.constraint`        | `technology.systemsoftware.uvicorn`                                          | `motivation.constraint.loopback-only-deployment`                                          | `motivation` | `satisfies`  | many-to-many | medium   |
 | `technology.systemsoftware.satisfies.motivation.constraint`        | `technology.systemsoftware.vite`                                             | `motivation.constraint.python-and-nodejs-runtime-versions`                                | `motivation` | `satisfies`  | many-to-many | medium   |
+| `testing.testcasesketch.satisfies.motivation.requirement`          | `testing.testcasesketch.seeded-errors-are-built-and-scored-offline`          | `motivation.requirement.pre-review-is-adopted-only-by-a-rule-set-in-advance`              | `motivation` | `satisfies`  | many-to-many | high     |
 
 ## Element Reference
 
@@ -270,10 +276,11 @@ The extraction benchmark has 3 documents and 294 gold individuals covering 51 of
 
 #### Relationships
 
-| Type        | Related Element                                                  | Predicate         | Direction |
-| ----------- | ---------------------------------------------------------------- | ----------------- | --------- |
-| intra-layer | `motivation.driver.review-is-the-normal-workflow`                | `associated-with` | outbound  |
-| intra-layer | `motivation.outcome.extraction-proposals-worth-a-reviewers-time` | `influence`       | outbound  |
+| Type        | Related Element                                                              | Predicate         | Direction |
+| ----------- | ---------------------------------------------------------------------------- | ----------------- | --------- |
+| intra-layer | `motivation.driver.review-is-the-normal-workflow`                            | `associated-with` | outbound  |
+| intra-layer | `motivation.outcome.extraction-proposals-worth-a-reviewers-time`             | `influence`       | outbound  |
+| intra-layer | `motivation.requirement.pre-review-is-adopted-only-by-a-rule-set-in-advance` | `influence`       | outbound  |
 
 ### Relationship Extraction Is Unsolved {#relationship-extraction-is-unsolved}
 
@@ -317,6 +324,27 @@ Single-user, loopback-only posture. The REST API has no login, so anything that 
 | intra-layer | `motivation.driver.unauthenticated-local-workspace-api`               | `associated-with` | outbound  |
 | intra-layer | `motivation.requirement.dev-server-not-reachable-from-the-lan`        | `influence`       | outbound  |
 | intra-layer | `motivation.requirement.url-sources-refuse-private-network-addresses` | `influence`       | outbound  |
+
+### Splits and Retypes Are Half of Reviewer Changes {#splits-and-retypes-are-half-of-reviewer-changes}
+
+**ID**: `motivation.assessment.splits-and-retypes-are-half-of-reviewer-changes`
+
+**Type**: `assessment`
+
+Gate D (2026-11-21, one take per document, one reviewer): 15 of the 29 rejections and retypes the person made on two real documents came down to two questions: one item or several (4 House nodes naming two or three tools or kits) and the better class (11 retypes, 5 on the DR viewer README). The DR document had no splits; its other 5 rejections were 'not an element' (dependencies or facts stated as elements). Only DR's half reflects real use. Source: documentation/extraction/experiments/2026-11-21-gate-d-real-documents.md and the Gate D reading in rearchitecture/ontology_workbench_proposal.md (PR tinkermonkey/context-studio#1675, branch claude/gate-d-value-log).
+
+#### Attributes
+
+| Name           | Value |
+| -------------- | ----- |
+| assessmentType | gap   |
+
+#### Relationships
+
+| Type        | Related Element                                                  | Predicate         | Direction |
+| ----------- | ---------------------------------------------------------------- | ----------------- | --------- |
+| intra-layer | `motivation.driver.review-is-the-normal-workflow`                | `associated-with` | outbound  |
+| intra-layer | `motivation.outcome.extraction-proposals-worth-a-reviewers-time` | `influence`       | outbound  |
 
 ### Configuration Only Through the Config File {#configuration-only-through-the-config-file}
 
@@ -531,14 +559,15 @@ Review is the key workflow for the maintainer: every agent, chat and pipeline ch
 
 #### Relationships
 
-| Type        | Related Element                                                      | Predicate         | Direction |
-| ----------- | -------------------------------------------------------------------- | ----------------- | --------- |
-| inter-layer | `security.threat.prompt-injection-via-sources-or-client-plans`       | `references`      | inbound   |
-| intra-layer | `motivation.assessment.benchmark-gold-is-thin-and-mostly-model-made` | `associated-with` | inbound   |
-| intra-layer | `motivation.assessment.relationship-extraction-is-unsolved`          | `associated-with` | inbound   |
-| intra-layer | `motivation.goal.every-decision-becomes-data`                        | `influence`       | outbound  |
-| intra-layer | `motivation.goal.trustworthy-extraction-into-datasets`               | `influence`       | outbound  |
-| intra-layer | `motivation.stakeholder.ontology-owner-and-reviewer`                 | `associated-with` | inbound   |
+| Type        | Related Element                                                         | Predicate         | Direction |
+| ----------- | ----------------------------------------------------------------------- | ----------------- | --------- |
+| inter-layer | `security.threat.prompt-injection-via-sources-or-client-plans`          | `references`      | inbound   |
+| intra-layer | `motivation.assessment.benchmark-gold-is-thin-and-mostly-model-made`    | `associated-with` | inbound   |
+| intra-layer | `motivation.assessment.relationship-extraction-is-unsolved`             | `associated-with` | inbound   |
+| intra-layer | `motivation.assessment.splits-and-retypes-are-half-of-reviewer-changes` | `associated-with` | inbound   |
+| intra-layer | `motivation.goal.every-decision-becomes-data`                           | `influence`       | outbound  |
+| intra-layer | `motivation.goal.trustworthy-extraction-into-datasets`                  | `influence`       | outbound  |
+| intra-layer | `motivation.stakeholder.ontology-owner-and-reviewer`                    | `associated-with` | inbound   |
 
 ### Unauthenticated Local Workspace API {#unauthenticated-local-workspace-api}
 
@@ -842,15 +871,17 @@ Extraction proposals are good enough that a reviewer's time on them is well spen
 
 #### Relationships
 
-| Type        | Related Element                                                      | Predicate         | Direction |
-| ----------- | -------------------------------------------------------------------- | ----------------- | --------- |
-| inter-layer | `business.businessprocess.extract-a-source-into-a-dataset`           | `realizes`        | inbound   |
-| inter-layer | `product.userworkflow.check-benchmark-gold-workflow`                 | `delivers`        | inbound   |
-| inter-layer | `product.userworkflow.extract-a-document-into-a-dataset`             | `delivers`        | inbound   |
-| intra-layer | `motivation.assessment.benchmark-gold-is-thin-and-mostly-model-made` | `influence`       | inbound   |
-| intra-layer | `motivation.assessment.relationship-extraction-is-unsolved`          | `influence`       | inbound   |
-| intra-layer | `motivation.stakeholder.ontology-owner-and-reviewer`                 | `associated-with` | outbound  |
-| intra-layer | `motivation.goal.trustworthy-extraction-into-datasets`               | `realizes`        | outbound  |
+| Type        | Related Element                                                              | Predicate         | Direction |
+| ----------- | ---------------------------------------------------------------------------- | ----------------- | --------- |
+| inter-layer | `business.businessprocess.extract-a-source-into-a-dataset`                   | `realizes`        | inbound   |
+| inter-layer | `product.userworkflow.check-benchmark-gold-workflow`                         | `delivers`        | inbound   |
+| inter-layer | `product.userworkflow.extract-a-document-into-a-dataset`                     | `delivers`        | inbound   |
+| intra-layer | `motivation.assessment.benchmark-gold-is-thin-and-mostly-model-made`         | `influence`       | inbound   |
+| intra-layer | `motivation.assessment.relationship-extraction-is-unsolved`                  | `influence`       | inbound   |
+| intra-layer | `motivation.assessment.splits-and-retypes-are-half-of-reviewer-changes`      | `influence`       | inbound   |
+| intra-layer | `motivation.stakeholder.ontology-owner-and-reviewer`                         | `associated-with` | outbound  |
+| intra-layer | `motivation.goal.trustworthy-extraction-into-datasets`                       | `realizes`        | outbound  |
+| intra-layer | `motivation.requirement.pre-review-is-adopted-only-by-a-rule-set-in-advance` | `realizes`        | inbound   |
 
 ### Agents Propose and People Decide {#agents-propose-and-people-decide}
 
@@ -1262,6 +1293,30 @@ Every entry point selects a pipeline by (type, implementation, configuration) th
 | inter-layer | `product.softwarecapability.pipeline-configuration-and-selection`   | `satisfies` | inbound   |
 | intra-layer | `motivation.principle.keep-several-implementations-and-garden-them` | `realizes`  | outbound  |
 
+### Pre-Review Is Adopted Only by a Rule Set in Advance {#pre-review-is-adopted-only-by-a-rule-set-in-advance}
+
+**ID**: `motivation.requirement.pre-review-is-adopted-only-by-a-rule-set-in-advance`
+
+**Type**: `requirement`
+
+The pre-review stage stays off by default until a decision rule written on its experiment page before the first paid run adopts it: it must cut the reviewer's split and retype changes without losing typed F1, measured over three paired takes on human-checked gold, with its own changes' precision and its false-change rate on correct elements bounded.
+
+#### Attributes
+
+| Name            | Value   |
+| --------------- | ------- |
+| priority        | high    |
+| requirementType | quality |
+
+#### Relationships
+
+| Type        | Related Element                                                      | Predicate   | Direction |
+| ----------- | -------------------------------------------------------------------- | ----------- | --------- |
+| inter-layer | `product.feature.extraction-pre-review`                              | `satisfies` | inbound   |
+| inter-layer | `testing.testcasesketch.seeded-errors-are-built-and-scored-offline`  | `satisfies` | inbound   |
+| intra-layer | `motivation.assessment.benchmark-gold-is-thin-and-mostly-model-made` | `influence` | inbound   |
+| intra-layer | `motivation.outcome.extraction-proposals-worth-a-reviewers-time`     | `realizes`  | outbound  |
+
 ### Proposals Record Their Pipeline and Version {#proposals-record-their-pipeline-and-version}
 
 **ID**: `motivation.requirement.proposals-record-their-pipeline-and-version`
@@ -1591,9 +1646,10 @@ Mechanical changes clear in bulk by threshold, so the reviewer's time goes to th
 | Type        | Related Element                                          | Predicate         | Direction |
 | ----------- | -------------------------------------------------------- | ----------------- | --------- |
 | inter-layer | `business.businessservice.proposal-adjudication-service` | `delivers`        | inbound   |
+| inter-layer | `product.feature.extraction-pre-review`                  | `delivers`        | inbound   |
 | inter-layer | `product.feature.proposal-review-page`                   | `delivers`        | inbound   |
 | intra-layer | `motivation.goal.ontology-workbench-for-client-projects` | `associated-with` | outbound  |
 
 ---
 
-Generated: 2026-11-19T16:49:39.982Z | Model Version: 0.1.0
+Generated: 2026-11-24T12:27:09.956Z | Model Version: 0.1.0
