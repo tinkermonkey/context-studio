@@ -35,6 +35,8 @@ from adapters.web.schemas.proposals import (
     DrDecisionResponse,
     GoldDecisionResponse,
     ReviewAnnotationRequest,
+    RevertPreviewItem,
+    RevertPreviewResponse,
 )
 from domain.ontology.exceptions import EntityNotFoundError
 from domain.ontology.value_objects import SourceRevision
@@ -659,6 +661,45 @@ async def revert_proposal(
             concept_schemes_deleted=result.concept_schemes_deleted,
             entities_restored=result.entities_restored,
             proposal=proposal_response(service, service.get(proposal_id)),
+        )
+
+    try:
+        return await run_sync_in_executor(run)
+    except Exception as exc:
+        raise _http_error(exc) from exc
+
+
+@router.get(
+    "/proposals/{proposal_id}/revert/preview",
+    response_model=RevertPreviewResponse,
+    responses={**_NOT_FOUND},
+)
+async def preview_revert(
+    proposal_id: str,
+    service: ProposalService = Depends(get_proposal_service),
+) -> RevertPreviewResponse:
+    """
+    List the fields an in-place revert of the proposal would overwrite.
+
+    These are fields edited after the proposal applied them: their current value
+    differs from the one the proposal's newest update set. Read-only; empty when
+    no field it updated was edited since (or nothing was applied). Entities the
+    proposal created are not checked: the revert deletes them whole.
+    """
+
+    def run() -> RevertPreviewResponse:
+        return RevertPreviewResponse(
+            overwritten=[
+                RevertPreviewItem(
+                    entity_id=edit.entity_id,
+                    entity_type=edit.entity_type,
+                    label=edit.label,
+                    field=edit.field,
+                    applied_value=edit.applied_value,
+                    current_value=edit.current_value,
+                )
+                for edit in service.preview_revert(proposal_id)
+            ]
         )
 
     try:

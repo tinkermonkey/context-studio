@@ -4039,6 +4039,31 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/proposals/{proposal_id}/revert/preview": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Preview Revert
+     * @description List the fields an in-place revert of the proposal would overwrite.
+     *
+     *     These are fields edited after the proposal applied them: their current value
+     *     differs from the one the proposal's newest update set. Read-only; empty when
+     *     no field it updated was edited since (or nothing was applied). Entities the
+     *     proposal created are not checked: the revert deletes them whole.
+     */
+    get: operations["preview_revert_api_proposals__proposal_id__revert_preview_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/proposals/{proposal_id}/landed": {
     parameters: {
       query?: never;
@@ -10777,6 +10802,47 @@ export interface components {
       referenced_id: string;
     };
     /**
+     * RevertPreviewItem
+     * @description A field edited after the proposal applied it, which an in-place revert would overwrite.
+     */
+    RevertPreviewItem: {
+      /** Entity Id */
+      entity_id: string;
+      /**
+       * Entity Type
+       * @description class, individual, relationship, ...
+       */
+      entity_type: string;
+      /**
+       * Label
+       * @description The entity's title or identifier, as it is now
+       */
+      label: string;
+      /** Field */
+      field: string;
+      /**
+       * Applied Value
+       * @description What the proposal's newest update set it to
+       */
+      applied_value?: unknown;
+      /**
+       * Current Value
+       * @description What it is now; the revert replaces it
+       */
+      current_value?: unknown;
+    };
+    /**
+     * RevertPreviewResponse
+     * @description The later edits an in-place revert of a proposal would overwrite.
+     */
+    RevertPreviewResponse: {
+      /**
+       * Overwritten
+       * @description One per entity and field the proposal updated that was edited since the apply; empty when none was. Entities it created are not checked
+       */
+      overwritten?: components["schemas"]["RevertPreviewItem"][];
+    };
+    /**
      * RevertRunResponse
      * @description Response from reverting a pipeline run.
      */
@@ -17008,6 +17074,44 @@ export interface operations {
         content: {
           "application/json": components["schemas"]["ChangeProposalRevertConflictResponse"];
         };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  preview_revert_api_proposals__proposal_id__revert_preview_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        proposal_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["RevertPreviewResponse"];
+        };
+      };
+      /** @description Change proposal not found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
       };
       /** @description Validation Error */
       422: {

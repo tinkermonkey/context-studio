@@ -1290,4 +1290,57 @@
     outline: 2px solid rgb(var(--status-rose));
     outline-offset: 1px;
   }
+  /* ---- revert dialog: the later edits it would overwrite ---- */
+  .revert-preview__note {
+    margin: 0;
+    font-size: 13px;
+    color: rgb(var(--canvas-fg-2));
+  }
+
+  .revert-preview__note--warn,
+  .revert-preview__now {
+    color: rgb(var(--semantic-version-fg));
+  }
+
+  body.dark-canvas .revert-preview__note--warn,
+  body.dark-canvas .revert-preview__now {
+    color: rgb(var(--status-amber));
+  }
+
+  .revert-preview__list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    max-height: 220px;
+    margin: 6px 0 0;
+    padding: 0;
+    overflow-y: auto;
+    list-style: none;
+  }
+
+  .revert-preview__row {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 6px 8px;
+    border: 1px solid rgb(var(--canvas-border));
+    border-radius: 6px;
+    font-size: 12.5px;
+    color: rgb(var(--canvas-fg-1));
+  }
+
+  .revert-preview__field {
+    font-family: var(--font-mono);
+    font-size: 11.5px;
+    color: rgb(var(--canvas-fg-3));
+  }
+
+  .revert-preview__values {
+    display: flex;
+    flex-direction: column;
+    font-family: var(--font-mono);
+    font-size: 11.5px;
+    color: rgb(var(--canvas-fg-3));
+    overflow-wrap: anywhere;
+  }
 }

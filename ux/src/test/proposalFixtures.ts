@@ -152,6 +152,8 @@ export const proposalHandlers = [
     const proposal = PROPOSALS.find((p) => p.id === proposalId);
     return HttpResponse.json(goldPage(proposal?.operations ?? []));
   }),
+  // Nothing edited since the apply, unless a test says otherwise.
+  http.get("*/api/proposals/:id/revert/preview", () => HttpResponse.json({ overwritten: [] })),
   http.get("*/api/proposals/:id", ({ params }) => {
     const proposal = PROPOSALS.find((p) => p.id === params.id);
     return proposal

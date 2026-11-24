@@ -30,6 +30,7 @@ import { operationColumns } from "./OperationColumns";
 import { OperationInspector, operationTitle } from "./OperationInspector";
 import { RejectReasonPicker } from "./RejectReasonPicker";
 import { RevertConflict } from "./RevertConflict";
+import { RevertProposalDialog } from "./RevertProposalDialog";
 import { TieredOperations } from "./TieredOperations";
 import {
   DEFAULT_THRESHOLD,
@@ -852,20 +853,15 @@ export function ProposalDetailPage({
         confirmLabel={`Reject ${rejecting?.ids.length ?? 0}`}
       />
 
-      <ConfirmDialog
+      <RevertProposalDialog
+        proposalId={proposal.id}
         isOpen={confirmRevert}
+        summary={revertMessage(revertSummary(proposal))}
         onClose={() => setConfirmRevert(false)}
         onConfirm={() => {
           setConfirmRevert(false);
           void actions.revertProposal();
         }}
-        title="Revert this proposal?"
-        message={
-          <span data-testid="proposal-revert-message">
-            {revertMessage(revertSummary(proposal))}
-          </span>
-        }
-        confirmLabel="Revert proposal"
       />
     </div>
   );

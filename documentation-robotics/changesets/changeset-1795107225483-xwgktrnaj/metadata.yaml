@@ -6,7 +6,7 @@ description: "Merge proposal detail and the Review page into one review surface
   a revert preview, and reversal proposals for landed changes (restore by id, a
   new reversed status)."
 created: 2026-11-19T16:53:45.487Z
-modified: 2026-11-24T12:33:22.475Z
+modified: 2026-11-24T12:50:50.943Z
 status: staged
 baseSnapshot: sha256:47cbf69a029fe1c405c7234a6260ff5326c53c044a37424fe686965c3c0497d6
 origin:
@@ -15,7 +15,7 @@ stats:
   additions: 300
   modifications: 19
   deletions: 44
-lastSequence: 385
+lastSequence: 394
 unstaged:
   - sequence: 255
     removedAt: 256
@@ -627,6 +627,266 @@ unstaged:
         attributes:
           status: draft
           implementationFormat: automated
+        metadata:
+          created_at: 2026-11-19T17:01:49.996Z
+          updated_at: 2026-11-19T17:01:49.996Z
+          version: 1
+      timestamp: 2026-11-19T17:01:50.028Z
+    rewritten: true
+  - sequence: 65
+    removedAt: 386
+    change:
+      type: add
+      elementId: api.operation.preview-revert
+      layerName: api
+      after:
+        id: 16fefbe6-b1fc-4ce7-84e3-da7c7b9595e4
+        path: api.operation.preview-revert
+        spec_node_id: api.operation
+        type: operation
+        layer_id: api
+        name: Preview Revert
+        description: List the fields an in-place revert of this proposal would overwrite
+          (edited since the apply), for the revert confirm dialog.
+        attributes:
+          operationId: preview_revert_api_proposals__proposal_id__revert_preview_get
+          summary: Preview Revert
+          tags: proposals
+          http_method: GET
+          http_path: /api/proposals/{proposal_id}/revert/preview
+        metadata:
+          created_at: 2026-11-19T16:59:46.682Z
+          updated_at: 2026-11-19T16:59:46.682Z
+          version: 1
+        accepted_gaps:
+          - direction: outgoing
+            predicate: composes
+            other_spec_node_id: api.requestbody
+            reason: A GET with only the proposal id in the path; no body.
+            decided_by: agent
+            decided_at: 2026-11-19T17:02:33.629Z
+            changeset: changeset-1795107225483-xwgktrnaj
+          - direction: incoming
+            predicate: monitors
+            other_spec_node_id: apm.span
+            reason: Every API request is traced by the generic FastAPI request span
+              (apm.span.api-request-span); the model wires no span per operation
+              and this read needs no custom span.
+            decided_by: agent
+            decided_at: 2026-11-19T17:03:15.102Z
+            changeset: changeset-1795107225483-xwgktrnaj
+      timestamp: 2026-11-19T17:03:15.131Z
+    rewritten: true
+  - sequence: 59
+    removedAt: 387
+    change:
+      type: add
+      elementId: data-model.objectschema.revert-preview-result
+      layerName: data-model
+      after:
+        id: 6267b28d-e358-4eb1-b42b-bf312a0582cf
+        path: data-model.objectschema.revert-preview-result
+        spec_node_id: data-model.objectschema
+        type: objectschema
+        layer_id: data-model
+        name: Revert Preview Result
+        description: "Domain value: the later edits an in-place revert would overwrite,
+          per entity and field, with the applied value and the current value."
+        attributes:
+          type: object
+        metadata:
+          created_at: 2026-11-19T16:59:46.681Z
+          updated_at: 2026-11-19T16:59:46.681Z
+          version: 1
+      timestamp: 2026-11-19T16:59:46.708Z
+    rewritten: true
+  - sequence: 67
+    removedAt: 388
+    change:
+      type: add
+      elementId: api.response.revert-preview-response
+      layerName: api
+      after:
+        id: 2e9fbd2d-83e6-4b0c-8204-3545d786e191
+        path: api.response.revert-preview-response
+        spec_node_id: api.response
+        type: response
+        layer_id: api
+        name: RevertPreviewResponse
+        description: "Fields an in-place revert would overwrite: entity id, kind and
+          label, field, applied value and current value."
+        attributes:
+          description: RevertPreviewResponse
+        metadata:
+          created_at: 2026-11-19T16:59:46.682Z
+          updated_at: 2026-11-19T16:59:46.682Z
+          version: 1
+      timestamp: 2026-11-19T16:59:46.708Z
+    rewritten: true
+  - sequence: 58
+    removedAt: 389
+    change:
+      type: add
+      elementId: application.applicationfunction.revert-preview
+      layerName: application
+      after:
+        id: af1388b1-d748-4cf0-8c77-980c8f2a3fba
+        path: application.applicationfunction.revert-preview
+        spec_node_id: application.applicationfunction
+        type: applicationfunction
+        layer_id: application
+        name: Revert Preview
+        description: "Lists the fields an in-place revert would overwrite: for each
+          update event of the run, the fields whose current value differs from
+          the event's new_state (edited since the apply). Read-only; no
+          transaction."
+        attributes:
+          documentation: PR 9. Lives on RevertService.
+        metadata:
+          created_at: 2026-11-19T16:59:46.681Z
+          updated_at: 2026-11-19T16:59:46.681Z
+          version: 1
+        accepted_gaps:
+          - direction: outgoing
+            predicate: realizes
+            other_spec_node_id: business.businessfunction
+            reason: Adjudication is modelled as a business process and service, not a
+              business function; the preview reaches the business through
+              RevertService.
+            decided_by: agent
+            decided_at: 2026-11-19T17:02:51.889Z
+            changeset: changeset-1795107225483-xwgktrnaj
+      timestamp: 2026-11-19T17:02:51.919Z
+    rewritten: true
+  - sequence: 175
+    removedAt: 390
+    change:
+      type: add
+      elementId: ux.dataconfig.use-revert-preview
+      layerName: ux
+      after:
+        id: 2d490c95-5462-44d2-84d6-46e9e2f3caf1
+        path: ux.dataconfig.use-revert-preview
+        spec_node_id: ux.dataconfig
+        type: dataconfig
+        layer_id: ux
+        name: useRevertPreview
+        description: GET /api/proposals/{proposal_id}/revert/preview.
+        attributes:
+          source: api
+          target: api.operation.preview-revert
+        metadata:
+          created_at: 2026-11-19T17:00:51.604Z
+          updated_at: 2026-11-19T17:00:51.604Z
+          version: 1
+      timestamp: 2026-11-19T17:00:51.633Z
+    rewritten: true
+  - sequence: 163
+    removedAt: 391
+    change:
+      type: add
+      elementId: ux.view.revert-proposal-dialog
+      layerName: ux
+      after:
+        id: f7379813-a848-4a09-a138-dc67c5bce04d
+        path: ux.view.revert-proposal-dialog
+        spec_node_id: ux.view
+        type: view
+        layer_id: ux
+        name: Revert Proposal Dialog
+        description: "Confirm an in-place revert of an unlanded proposal: names the
+          fields edited since the apply that the revert will overwrite, and the
+          revert conflicts."
+        attributes:
+          type: dialog
+          routable: false
+          title: Revert proposal
+        metadata:
+          created_at: 2026-11-19T17:00:51.603Z
+          updated_at: 2026-11-19T17:00:51.603Z
+          version: 1
+        accepted_gaps:
+          - direction: incoming
+            predicate: maps-to
+            other_spec_node_id: navigation.route
+            reason: A confirm dialog opened from the Revert control; not routable.
+            decided_by: agent
+            decided_at: 2026-11-19T17:02:35.568Z
+            changeset: changeset-1795107225483-xwgktrnaj
+      timestamp: 2026-11-19T17:02:35.597Z
+    rewritten: true
+  - sequence: 2
+    removedAt: 392
+    change:
+      type: add
+      elementId: motivation.requirement.in-place-revert-warns-of-overwritten-edits
+      layerName: motivation
+      after:
+        id: c68b6adb-5218-4a63-b25e-055726e2795b
+        path: motivation.requirement.in-place-revert-warns-of-overwritten-edits
+        spec_node_id: motivation.requirement
+        type: requirement
+        layer_id: motivation
+        name: In-Place Revert Warns of Overwritten Edits
+        description: Reverting an unlanded proposal in place first lists every field
+          edited since the apply that the revert would overwrite (current value
+          differs from the change event's new_state) and shows them in the
+          confirm dialog.
+        attributes:
+          requirementType: functional
+          priority: high
+          documentation: Owner decision 2; closes the silent-overwrite gap in
+            RevertService._inverse_update.
+        metadata:
+          created_at: 2026-11-19T16:59:05.121Z
+          updated_at: 2026-11-19T16:59:05.121Z
+          version: 1
+      timestamp: 2026-11-19T16:59:05.135Z
+    rewritten: true
+  - sequence: 267
+    removedAt: 393
+    change:
+      type: add
+      elementId: testing.testcasesketch.revert-preview-lists-a-later-edit
+      layerName: testing
+      after:
+        id: b0469fda-9a04-425a-9ad9-ac17c5e1528c
+        path: testing.testcasesketch.revert-preview-lists-a-later-edit
+        spec_node_id: testing.testcasesketch
+        type: testcasesketch
+        layer_id: testing
+        name: Revert Preview Lists a Later Edit
+        description: "Apply an update, edit the same field afterwards, then GET the
+          revert preview: the field is listed with the applied and the current
+          value."
+        attributes:
+          status: draft
+          implementationFormat: automated
+        metadata:
+          created_at: 2026-11-19T17:01:49.996Z
+          updated_at: 2026-11-19T17:01:49.996Z
+          version: 1
+      timestamp: 2026-11-19T17:01:50.028Z
+    rewritten: true
+  - sequence: 258
+    removedAt: 394
+    change:
+      type: add
+      elementId: testing.testcoveragetarget.revert-preview
+      layerName: testing
+      after:
+        id: 4040ae69-00cc-4851-8d7c-311bef7e9052
+        path: testing.testcoveragetarget.revert-preview
+        spec_node_id: testing.testcoveragetarget
+        type: testcoveragetarget
+        layer_id: testing
+        name: Revert Preview
+        description: "The fields an in-place revert would overwrite: none when untouched
+          since the apply; each later edit listed with applied and current
+          value; deletes and creates do not appear."
+        attributes:
+          targetType: api-endpoint
+          priority: high
         metadata:
           created_at: 2026-11-19T17:01:49.996Z
           updated_at: 2026-11-19T17:01:49.996Z

@@ -37,6 +37,21 @@ export function useProposalDecisions(taxonomyId: string, proposalId: string, ena
   });
 }
 
+/**
+ * The later edits an in-place revert of the proposal would overwrite. Fetched
+ * only while the revert dialog is open, and again each time: the answer is
+ * whatever was edited up to now.
+ */
+export function useRevertPreview(proposalId: string, enabled: boolean) {
+  return useQuery({
+    queryKey: QUERY_KEYS.changeProposalRevertPreview(proposalId),
+    queryFn: () => proposalsService.getRevertPreview(proposalId),
+    enabled: !!proposalId && enabled,
+    gcTime: 0,
+    retry: false,
+  });
+}
+
 export function useChangeProposal(id: string) {
   return useQuery({
     queryKey: QUERY_KEYS.changeProposal(id),

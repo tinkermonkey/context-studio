@@ -621,6 +621,64 @@ describe("revert", () => {
     expect(screen.queryByTestId("operation-check-op-rename")).not.toBeInTheDocument();
   });
 
+  it("shows the later edits a revert will overwrite before it reverts", async () => {
+    const user = userEvent.setup();
+    server.use(
+      http.get("*/api/proposals/:id/revert/preview", () =>
+        HttpResponse.json({
+          overwritten: [
+            {
+              entity_id: "cls-1",
+              entity_type: "class",
+              label: "Service",
+              field: "description",
+              applied_value: "Runs a task",
+              current_value: "Edited by hand",
+            },
+          ],
+        }),
+      ),
+    );
+    renderPage();
+
+    await user.click(await screen.findByTestId("proposal-revert"));
+
+    const preview = await screen.findByTestId("revert-preview");
+    expect(preview).toHaveAttribute("role", "group");
+    expect(preview).toHaveTextContent("Reverting overwrites 1 edit made since it was applied");
+    const row = within(preview).getByTestId("revert-preview-row-cls-1-description");
+    expect(row).toHaveClass("revert-preview__row");
+    expect(row).toHaveTextContent("Service description");
+    expect(row).toHaveTextContent("now Edited by hand");
+    expect(row).toHaveTextContent("applied as Runs a task");
+    // The revert is still the reviewer's call.
+    expect(
+      within(screen.getByRole("dialog")).getByRole("button", { name: "Revert proposal" }),
+    ).toBeEnabled();
+  });
+
+  it("says nothing was edited when the preview is empty, and when it can't be checked", async () => {
+    const user = userEvent.setup();
+    renderPage();
+    await user.click(await screen.findByTestId("proposal-revert"));
+    expect(await screen.findByTestId("revert-preview-none")).toHaveTextContent(
+      "No field this proposal updated has been edited since it was applied.",
+    );
+    await user.click(within(screen.getByRole("dialog")).getByRole("button", { name: "Cancel" }));
+
+    server.use(
+      http.get("*/api/proposals/:id/revert/preview", () =>
+        HttpResponse.json({ detail: "boom" }, { status: 500 }),
+      ),
+    );
+    await user.click(screen.getByTestId("proposal-revert"));
+    const warning = await screen.findByTestId("revert-preview-error");
+    expect(warning).toHaveAttribute("role", "alert");
+    expect(
+      within(screen.getByRole("dialog")).getByRole("button", { name: "Revert proposal" }),
+    ).toBeEnabled();
+  });
+
   it("explains a refused (409) revert: nothing changed, what blocks it, what to do first", async () => {
     const user = userEvent.setup();
     revertResponse = () =>

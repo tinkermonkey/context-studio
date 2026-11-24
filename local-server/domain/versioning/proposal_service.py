@@ -144,7 +144,7 @@ if TYPE_CHECKING:
         EntitySourceRepository,
         ProposalApplyRules,
     )
-    from domain.versioning.revert_service import RevertResult, RevertService
+    from domain.versioning.revert_service import OverwrittenEdit, RevertResult, RevertService
 
 _logger = logging.getLogger(__name__)
 
@@ -3492,6 +3492,16 @@ class ProposalService:
                 with self._atomic():
                     close(None)
             return self._get(proposal_id)
+
+    def preview_revert(self, proposal_id: str) -> list[OverwrittenEdit]:
+        """
+        The edits made since the proposal applied that an in-place revert would overwrite.
+
+        Raises:
+            ChangeProposalNotFoundError: If the proposal does not exist
+        """
+        self._get(proposal_id)
+        return self._revert.preview(proposal_id)
 
     def revert(self, proposal_id: str, reverted_by: str = DECIDED_BY_USER) -> RevertResult:
         """

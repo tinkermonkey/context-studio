@@ -655,6 +655,74 @@ class TestRevert:
         )
         assert refused.status_code == 409
 
+    def test_preview_lists_a_later_edit_an_in_place_revert_would_overwrite(
+        self, client, graph, ontology
+    ):
+        proposal = _propose(client, graph, _describe_room(graph, seq=1, text="Any room"))
+        url = f"/api/proposals/{proposal['id']}"
+        assert client.get(f"{url}/revert/preview").json() == {"overwritten": []}
+        client.post(f"{url}/apply", json={"operation_ids": _op_ids(proposal, 1)})
+        assert client.get(f"{url}/revert/preview").json() == {"overwritten": []}
+
+        room = ontology._repository.get_class(graph["room"])
+        room.description = "Edited by hand"
+        ontology._repository.save_class(room)
+
+        response = client.get(f"{url}/revert/preview")
+
+        assert response.status_code == 200, response.text
+        [edit] = response.json()["overwritten"]
+        assert edit == {
+            "entity_id": graph["room"],
+            "entity_type": "class",
+            "label": room.title,
+            "field": "description",
+            "applied_value": "Any room",
+            "current_value": "Edited by hand",
+        }
+        # Previewing changes nothing: the proposal is still revertible, and does.
+        assert client.get(url).json()["status"] == "done"
+        assert client.post(f"{url}/revert").status_code == 200
+        assert ontology._repository.get_class(graph["room"]).description != "Edited by hand"
+
+    def test_preview_does_not_flag_references_as_the_apply_recorded_them(
+        self, client, graph, ontology
+    ):
+        """A structured field the proposal set is compared as stored, not by object identity."""
+        references = [
+            {"source": "wikidata", "identifier": "Q1", "uri": "https://example.org/Q1"},
+            {"source": "dbpedia", "identifier": "D1", "uri": None, "metadata": {"k": "v"}},
+        ]
+        proposal = _propose(
+            client,
+            graph,
+            {
+                "seq": 1,
+                "op": "update",
+                "kind": "class",
+                "target_id": graph["room"],
+                "fields": {"external_references": references},
+                "rationale": "grounded",
+            },
+        )
+        url = f"/api/proposals/{proposal['id']}"
+        applied = client.post(f"{url}/apply", json={"operation_ids": _op_ids(proposal, 1)})
+        assert applied.status_code == 200, applied.text
+        assert [o["status"] for o in applied.json()["operations"]] == ["applied"]
+
+        assert client.get(f"{url}/revert/preview").json() == {"overwritten": []}
+
+        room = ontology._repository.get_class(graph["room"])
+        room.external_references = room.external_references[:1]
+        ontology._repository.save_class(room)
+
+        [edit] = client.get(f"{url}/revert/preview").json()["overwritten"]
+        assert edit["field"] == "external_references"
+        assert len(edit["applied_value"]) == 2 and len(edit["current_value"]) == 1
+
+    def test_preview_of_a_missing_proposal_is_404(self, client):
+        assert client.get("/api/proposals/nope/revert/preview").status_code == 404
+
     def test_conflict_is_409_and_names_the_blockers(self, client, graph, ontology):
         proposal = _propose(client, graph, _create_kit(seq=1, graph=graph))
         applied = client.post(
