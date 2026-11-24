@@ -6,16 +6,16 @@ description: "Merge proposal detail and the Review page into one review surface
   a revert preview, and reversal proposals for landed changes (restore by id, a
   new reversed status)."
 created: 2026-11-19T16:53:45.487Z
-modified: 2026-11-24T18:55:56.458Z
+modified: 2026-11-24T20:22:34.178Z
 status: staged
 baseSnapshot: sha256:47cbf69a029fe1c405c7234a6260ff5326c53c044a37424fe686965c3c0497d6
 origin:
   kind: plan
 stats:
   additions: 289
-  modifications: 25
+  modifications: 26
   deletions: 44
-lastSequence: 415
+lastSequence: 434
 unstaged:
   - sequence: 255
     removedAt: 256
@@ -1476,6 +1476,483 @@ unstaged:
         attributes:
           status: draft
           implementationFormat: automated
+        metadata:
+          created_at: 2026-11-19T17:01:49.996Z
+          updated_at: 2026-11-19T17:01:49.996Z
+          version: 1
+      timestamp: 2026-11-19T17:01:50.028Z
+    rewritten: true
+  - sequence: 165
+    removedAt: 416
+    change:
+      type: add
+      elementId: ux.actioncomponent.revert-control
+      layerName: ux
+      after:
+        id: f6839d02-8f13-4a8b-a7a8-03802a782d21
+        path: ux.actioncomponent.revert-control
+        spec_node_id: ux.actioncomponent
+        type: actioncomponent
+        layer_id: ux
+        name: Revert Control
+        description: "Header control: 'Revert proposal' while unlanded (its dialog's
+          confirm calls the in-place revert), 'Propose the reversal…' once
+          landed (its dialog's confirm creates the reversal proposal); hidden
+          while a reversal is open. Reads the landing state from the proposal."
+        attributes:
+          type: button
+          label: Revert proposal / Propose the reversal…
+          style: danger
+        metadata:
+          created_at: 2026-11-19T17:00:51.603Z
+          updated_at: 2026-11-19T17:00:51.603Z
+          version: 1
+      timestamp: 2026-11-19T17:03:31.012Z
+    rewritten: true
+  - sequence: 164
+    removedAt: 417
+    change:
+      type: add
+      elementId: ux.view.propose-reversal-dialog
+      layerName: ux
+      after:
+        id: 3229ad9a-b320-4bcf-ac9b-f42c683d011d
+        path: ux.view.propose-reversal-dialog
+        spec_node_id: ux.view
+        type: view
+        layer_id: ux
+        name: Propose Reversal Dialog
+        description: "For a landed proposal: explains why it cannot be undone in place
+          and what the reversal proposal will contain, then creates it and opens
+          it."
+        attributes:
+          type: dialog
+          routable: false
+          title: Propose the reversal
+        metadata:
+          created_at: 2026-11-19T17:00:51.603Z
+          updated_at: 2026-11-19T17:00:51.603Z
+          version: 1
+        accepted_gaps:
+          - direction: incoming
+            predicate: maps-to
+            other_spec_node_id: navigation.route
+            reason: A dialog opened from the Revert control on a landed proposal; not
+              routable.
+            decided_by: agent
+            decided_at: 2026-11-19T17:02:52.566Z
+            changeset: changeset-1795107225483-xwgktrnaj
+      timestamp: 2026-11-19T17:02:52.595Z
+    rewritten: true
+  - sequence: 176
+    removedAt: 418
+    change:
+      type: add
+      elementId: ux.dataconfig.use-propose-reversal
+      layerName: ux
+      after:
+        id: b7aa8378-6f6f-4389-a828-fdb4e775f4c7
+        path: ux.dataconfig.use-propose-reversal
+        spec_node_id: ux.dataconfig
+        type: dataconfig
+        layer_id: ux
+        name: useProposeReversal
+        description: POST /api/proposals/{proposal_id}/reversal.
+        attributes:
+          source: api
+          target: api.operation.propose-reversal
+        metadata:
+          created_at: 2026-11-19T17:00:51.604Z
+          updated_at: 2026-11-19T17:00:51.604Z
+          version: 1
+        accepted_gaps:
+          - direction: outgoing
+            predicate: maps-to
+            other_spec_node_id: api.requestbody
+            reason: The mutation sends no body (POST /reversal takes only the path id).
+            decided_by: agent
+            decided_at: 2026-11-19T17:02:36.245Z
+            changeset: changeset-1795107225483-xwgktrnaj
+      timestamp: 2026-11-19T17:02:36.273Z
+    rewritten: true
+  - sequence: 167
+    removedAt: 419
+    change:
+      type: add
+      elementId: ux.actioncomponent.bulk-select
+      layerName: ux
+      after:
+        id: 711171d5-6955-4d13-b26a-c89022e15469
+        path: ux.actioncomponent.bulk-select
+        spec_node_id: ux.actioncomponent
+        type: actioncomponent
+        layer_id: ux
+        name: Bulk Select
+        description: "Select ▾ (all ready · at threshold · all awaiting) and the bulk
+          bar: Accept N ready, Reject all (with one reason code). On every
+          proposal except gold checks."
+        attributes:
+          type: menu
+          label: Select
+        metadata:
+          created_at: 2026-11-19T17:00:51.603Z
+          updated_at: 2026-11-19T17:00:51.603Z
+          version: 1
+      timestamp: 2026-11-19T17:00:51.633Z
+    rewritten: true
+  - sequence: 161
+    removedAt: 420
+    change:
+      type: add
+      elementId: ux.subview.review-elements-pane
+      layerName: ux
+      after:
+        id: 827a11f3-63ad-4952-9003-bcd759a51ef3
+        path: ux.subview.review-elements-pane
+        spec_node_id: ux.subview
+        type: subview
+        layer_id: ux
+        name: Review Elements Pane
+        description: "The one operation list of the review surface (ReviewElementsPane,
+          rebuilt): groupings by change kind, layer or sequence, inline conflict
+          cards, op and scope filters, inline update diffs, Select ▾ and the
+          bulk bar (hidden on gold checks), J/K and ?selected= selection.
+          Replaces OperationColumns, the Heimdall Table and TieredOperations on
+          proposal detail."
+        attributes:
+          title: Operations
+        metadata:
+          created_at: 2026-11-19T17:00:51.603Z
+          updated_at: 2026-11-19T17:00:51.603Z
+          version: 1
+      timestamp: 2026-11-19T17:00:51.633Z
+    rewritten: true
+  - sequence: 162
+    removedAt: 421
+    change:
+      type: add
+      elementId: ux.view.wide-diff-overlay
+      layerName: ux
+      after:
+        id: 61e659fc-bace-427b-8bfe-50e7ee2295a6
+        path: ux.view.wide-diff-overlay
+        spec_node_id: ux.view
+        type: view
+        layer_id: ux
+        name: Wide Diff Overlay
+        description: "Wide side-by-side diff over the source and list panes (the
+          inspector stays beside it): changed fields as tabs, ↑↓/‹› between
+          fields, J/K to the next operation with a long change, Esc/✕/Back close
+          and return focus to the row; &diff=<field> in the URL."
+        attributes:
+          type: overlay
+          routable: false
+          title: Wide diff
+        metadata:
+          created_at: 2026-11-19T17:00:51.603Z
+          updated_at: 2026-11-19T17:00:51.603Z
+          version: 1
+        accepted_gaps:
+          - direction: incoming
+            predicate: maps-to
+            other_spec_node_id: navigation.route
+            reason: "The overlay has no route of its own: it opens on the proposal detail
+              route via the &diff=<field> search param."
+            decided_by: agent
+            decided_at: 2026-11-19T17:02:34.275Z
+            changeset: changeset-1795107225483-xwgktrnaj
+          - direction: outgoing
+            predicate: composes
+            other_spec_node_id: ux.subview
+            reason: The overlay is one Heimdall SideBySideDiff instance with field tabs; it
+              has no sub-regions worth a subview.
+            decided_by: agent
+            decided_at: 2026-11-19T17:02:34.914Z
+            changeset: changeset-1795107225483-xwgktrnaj
+      timestamp: 2026-11-19T17:02:34.941Z
+    rewritten: true
+  - sequence: 173
+    removedAt: 422
+    change:
+      type: add
+      elementId: ux.componentinstance.wide-field-diff
+      layerName: ux
+      after:
+        id: 062ba140-64a7-40a5-8485-d3b99f53525b
+        path: ux.componentinstance.wide-field-diff
+        spec_node_id: ux.componentinstance
+        type: componentinstance
+        layer_id: ux
+        name: Wide Field Diff
+        description: The side-by-side diff of the selected field in the wide diff overlay.
+        attributes:
+          ref: ux.librarycomponent.side-by-side-diff
+        metadata:
+          created_at: 2026-11-19T17:00:51.604Z
+          updated_at: 2026-11-19T17:00:51.604Z
+          version: 1
+      timestamp: 2026-11-19T17:00:51.633Z
+    rewritten: true
+  - sequence: 168
+    removedAt: 423
+    change:
+      type: add
+      elementId: ux.actioncomponent.wide-diff-button
+      layerName: ux
+      after:
+        id: d1bf277e-8056-4237-a41c-aee3c2d3da37
+        path: ux.actioncomponent.wide-diff-button
+        spec_node_id: ux.actioncomponent
+        type: actioncomponent
+        layer_id: ux
+        name: Wide Diff Button
+        description: "⤤ Wide on a long-text diff row, or W in the inspector: opens the
+          wide diff overlay on that field."
+        attributes:
+          type: icon-button
+          label: Wide
+          icon: maximize-2
+        metadata:
+          created_at: 2026-11-19T17:00:51.603Z
+          updated_at: 2026-11-19T17:00:51.603Z
+          version: 1
+      timestamp: 2026-11-19T17:00:51.633Z
+    rewritten: true
+  - sequence: 174
+    removedAt: 424
+    change:
+      type: add
+      elementId: ux.dataconfig.use-inspector-model
+      layerName: ux
+      after:
+        id: 71644fa2-805f-4aaa-83a6-70d5d04e7614
+        path: ux.dataconfig.use-inspector-model
+        spec_node_id: ux.dataconfig
+        type: dataconfig
+        layer_id: ux
+        name: useInspectorModel
+        description: Derives the inspector's data for any operation of a proposal
+          (pills, evidence, the change, why, decided record, verbs, applicable
+          reason codes) from the proposal and the entities it names.
+        attributes:
+          source: state
+          target: api.response.change-proposal-response
+        metadata:
+          created_at: 2026-11-19T17:00:51.604Z
+          updated_at: 2026-11-19T17:00:51.604Z
+          version: 1
+      timestamp: 2026-11-19T17:00:51.633Z
+    rewritten: true
+  - sequence: 64
+    removedAt: 425
+    change:
+      type: add
+      elementId: api.responses.propose-reversal-responses
+      layerName: api
+      after:
+        id: c545b855-afe6-414b-a977-b234de46887e
+        path: api.responses.propose-reversal-responses
+        spec_node_id: api.responses
+        type: responses
+        layer_id: api
+        name: propose-reversal-responses
+        description: "201: the reversal proposal (ChangeProposalResponse, with reverses
+          set)."
+        metadata:
+          created_at: 2026-11-19T16:59:46.682Z
+          updated_at: 2026-11-19T16:59:46.682Z
+          version: 1
+      timestamp: 2026-11-19T16:59:46.708Z
+    rewritten: true
+  - sequence: 66
+    removedAt: 426
+    change:
+      type: add
+      elementId: api.responses.preview-revert-responses
+      layerName: api
+      after:
+        id: 1ea57f97-d219-4bc9-ac71-56e38f3c4e8c
+        path: api.responses.preview-revert-responses
+        spec_node_id: api.responses
+        type: responses
+        layer_id: api
+        name: preview-revert-responses
+        description: "200: RevertPreviewResponse."
+        metadata:
+          created_at: 2026-11-19T16:59:46.682Z
+          updated_at: 2026-11-19T16:59:46.682Z
+          version: 1
+      timestamp: 2026-11-19T16:59:46.708Z
+    rewritten: true
+  - sequence: 273
+    removedAt: 427
+    change:
+      type: add
+      elementId: testing.testcasesketch.landed-proposal-offers-the-reversal
+      layerName: testing
+      after:
+        id: 502ec2f3-f463-415e-8ad5-154156a69e95
+        path: testing.testcasesketch.landed-proposal-offers-the-reversal
+        spec_node_id: testing.testcasesketch
+        type: testcasesketch
+        layer_id: testing
+        name: Landed Proposal Offers the Reversal
+        description: On a landed proposal the Revert control reads 'Propose the
+          reversal…'; confirming creates the reversal and both headers link each
+          other.
+        attributes:
+          status: draft
+          implementationFormat: automated
+        metadata:
+          created_at: 2026-11-19T17:01:49.996Z
+          updated_at: 2026-11-19T17:01:49.996Z
+          version: 1
+      timestamp: 2026-11-19T17:01:50.028Z
+    rewritten: true
+  - sequence: 269
+    removedAt: 428
+    change:
+      type: add
+      elementId: testing.testcasesketch.bulk-is-hidden-on-gold-checks
+      layerName: testing
+      after:
+        id: a5edc942-9e3f-4d92-bd82-a74f729dbb4c
+        path: testing.testcasesketch.bulk-is-hidden-on-gold-checks
+        spec_node_id: testing.testcasesketch
+        type: testcasesketch
+        layer_id: testing
+        name: Bulk Is Hidden on Gold Checks
+        description: Select and the bulk bar render on an extraction proposal and are
+          absent on a gold-check proposal.
+        attributes:
+          status: draft
+          implementationFormat: automated
+        metadata:
+          created_at: 2026-11-19T17:01:49.996Z
+          updated_at: 2026-11-19T17:01:49.996Z
+          version: 1
+      timestamp: 2026-11-19T17:01:50.028Z
+    rewritten: true
+  - sequence: 272
+    removedAt: 429
+    change:
+      type: add
+      elementId: testing.testcasesketch.esc-closes-the-wide-diff-and-returns-focus
+      layerName: testing
+      after:
+        id: 5675168d-ee18-42e5-b4c3-17679b9b0942
+        path: testing.testcasesketch.esc-closes-the-wide-diff-and-returns-focus
+        spec_node_id: testing.testcasesketch
+        type: testcasesketch
+        layer_id: testing
+        name: Esc Closes the Wide Diff and Returns Focus
+        description: "Open the wide diff with W, step fields with the arrows, press Esc:
+          the overlay closes, &diff= leaves the URL and focus returns to the row
+          it was opened from."
+        attributes:
+          status: draft
+          implementationFormat: automated
+        metadata:
+          created_at: 2026-11-19T17:01:49.996Z
+          updated_at: 2026-11-19T17:01:49.996Z
+          version: 1
+      timestamp: 2026-11-19T17:01:50.028Z
+    rewritten: true
+  - sequence: 270
+    removedAt: 430
+    change:
+      type: add
+      elementId: testing.testcasesketch.review-route-redirects-to-proposal-detail
+      layerName: testing
+      after:
+        id: 4bb3a83b-60b3-4e95-a672-af9aed37462f
+        path: testing.testcasesketch.review-route-redirects-to-proposal-detail
+        spec_node_id: testing.testcasesketch
+        type: testcasesketch
+        layer_id: testing
+        name: Review Route Redirects to Proposal Detail
+        description: /app/proposals/$id/review?selected=x and /app/proposals/$id?op=x
+          land on /app/proposals/$id?selected=x.
+        attributes:
+          status: draft
+          implementationFormat: automated
+        metadata:
+          created_at: 2026-11-19T17:01:49.996Z
+          updated_at: 2026-11-19T17:01:49.996Z
+          version: 1
+      timestamp: 2026-11-19T17:01:50.028Z
+    rewritten: true
+  - sequence: 263
+    removedAt: 431
+    change:
+      type: add
+      elementId: testing.testcoveragetarget.revert-and-reversal-ui
+      layerName: testing
+      after:
+        id: 70063fe9-dd24-41d3-b5d0-7db40eb36448
+        path: testing.testcoveragetarget.revert-and-reversal-ui
+        spec_node_id: testing.testcoveragetarget
+        type: testcoveragetarget
+        layer_id: testing
+        name: Revert and Reversal UI
+        description: The Revert control by landing state, the in-place revert dialog
+          listing overwritten edits, the propose-reversal dialog, and the
+          reversal links and chips (reversal open, reversed, N of M changes
+          reversed).
+        attributes:
+          targetType: ui-component
+          priority: high
+        metadata:
+          created_at: 2026-11-19T17:01:49.996Z
+          updated_at: 2026-11-19T17:01:49.996Z
+          version: 1
+      timestamp: 2026-11-19T17:01:50.028Z
+    rewritten: true
+  - sequence: 262
+    removedAt: 432
+    change:
+      type: add
+      elementId: testing.testcoveragetarget.wide-diff-overlay
+      layerName: testing
+      after:
+        id: e7c09edb-c083-43a3-8cd7-6e846aa31c49
+        path: testing.testcoveragetarget.wide-diff-overlay
+        spec_node_id: testing.testcoveragetarget
+        type: testcoveragetarget
+        layer_id: testing
+        name: Wide Diff Overlay
+        description: "The wide side-by-side diff: opening from the row or W, field tabs
+          and arrows, J/K following, Esc/Back returning focus, &diff= in the
+          URL, sentence pairing and folded unchanged runs."
+        attributes:
+          targetType: ui-component
+          priority: medium
+        metadata:
+          created_at: 2026-11-19T17:01:49.996Z
+          updated_at: 2026-11-19T17:01:49.996Z
+          version: 1
+      timestamp: 2026-11-19T17:01:50.028Z
+    rewritten: true
+  - sequence: 260
+    removedAt: 433
+    change:
+      type: add
+      elementId: testing.testcoveragetarget.one-review-page
+      layerName: testing
+      after:
+        id: 8e4bb446-1ff3-46bc-b490-a9798acea6a7
+        path: testing.testcoveragetarget.one-review-page
+        spec_node_id: testing.testcoveragetarget
+        type: testcoveragetarget
+        layer_id: testing
+        name: One Review Page
+        description: "Proposal detail as the one review surface: source pane only when
+          cited, the list's groupings, Select and bulk bar (hidden on gold
+          checks), the inspector for every operation kind, reason buttons per
+          kind, keys, ?selected= and the /review and ?op= redirects."
+        attributes:
+          targetType: ui-component
+          priority: critical
         metadata:
           created_at: 2026-11-19T17:01:49.996Z
           updated_at: 2026-11-19T17:01:49.996Z

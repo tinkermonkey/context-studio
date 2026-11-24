@@ -1141,7 +1141,12 @@
       created_at: 2026-11-19T16:59:46.682Z
       updated_at: 2026-11-19T16:59:46.682Z
       version: 1
-  timestamp: 2026-11-19T16:59:46.708Z
+    source_reference:
+      provenance: manual
+      locations:
+        - file: local-server/adapters/web/proposals_routes.py
+          symbol: propose_reversal
+  timestamp: 2026-11-24T20:22:16.870Z
   sequenceNumber: 64
 - type: add
   elementId: api.operation.preview-revert
@@ -1204,7 +1209,12 @@
       created_at: 2026-11-19T16:59:46.682Z
       updated_at: 2026-11-19T16:59:46.682Z
       version: 1
-  timestamp: 2026-11-19T16:59:46.708Z
+    source_reference:
+      provenance: manual
+      locations:
+        - file: local-server/adapters/web/proposals_routes.py
+          symbol: preview_revert
+  timestamp: 2026-11-24T20:22:16.870Z
   sequenceNumber: 66
 - type: add
   elementId: api.response.revert-preview-response
@@ -2512,7 +2522,12 @@
       created_at: 2026-11-19T17:00:51.603Z
       updated_at: 2026-11-19T17:00:51.603Z
       version: 1
-  timestamp: 2026-11-19T17:00:51.633Z
+    source_reference:
+      provenance: manual
+      locations:
+        - file: ux/src/components/proposals/review/ReviewElementsPane.tsx
+          symbol: ReviewElementsPane
+  timestamp: 2026-11-24T20:22:16.870Z
   sequenceNumber: 161
 - type: add
   elementId: ux.view.wide-diff-overlay
@@ -2553,7 +2568,12 @@
         decided_by: agent
         decided_at: 2026-11-19T17:02:34.914Z
         changeset: changeset-1795107225483-xwgktrnaj
-  timestamp: 2026-11-19T17:02:34.941Z
+    source_reference:
+      provenance: manual
+      locations:
+        - file: ux/src/components/proposals/review/WideDiffOverlay.tsx
+          symbol: WideDiffOverlay
+  timestamp: 2026-11-24T20:22:16.870Z
   sequenceNumber: 162
 - type: add
   elementId: ux.view.revert-proposal-dialog
@@ -2621,7 +2641,12 @@
         decided_by: agent
         decided_at: 2026-11-19T17:02:52.566Z
         changeset: changeset-1795107225483-xwgktrnaj
-  timestamp: 2026-11-19T17:02:52.595Z
+    source_reference:
+      provenance: manual
+      locations:
+        - file: ux/src/components/proposals/ProposeReversalDialog.tsx
+          symbol: ProposeReversalDialog
+  timestamp: 2026-11-24T20:22:16.870Z
   sequenceNumber: 164
 - type: add
   elementId: ux.actioncomponent.revert-control
@@ -2645,7 +2670,12 @@
       created_at: 2026-11-19T17:00:51.603Z
       updated_at: 2026-11-19T17:00:51.603Z
       version: 1
-  timestamp: 2026-11-19T17:03:31.012Z
+    source_reference:
+      provenance: manual
+      locations:
+        - file: ux/src/components/proposals/RevertControl.tsx
+          symbol: RevertControl
+  timestamp: 2026-11-24T20:22:16.870Z
   sequenceNumber: 165
 - type: add
   elementId: ux.actioncomponent.reject-reason-picker
@@ -2694,7 +2724,12 @@
       created_at: 2026-11-19T17:00:51.603Z
       updated_at: 2026-11-19T17:00:51.603Z
       version: 1
-  timestamp: 2026-11-19T17:00:51.633Z
+    source_reference:
+      provenance: manual
+      locations:
+        - file: ux/src/components/proposals/review/ReviewBulk.tsx
+          symbol: BulkSelect
+  timestamp: 2026-11-24T20:22:16.870Z
   sequenceNumber: 167
 - type: add
   elementId: ux.actioncomponent.wide-diff-button
@@ -2716,7 +2751,12 @@
       created_at: 2026-11-19T17:00:51.603Z
       updated_at: 2026-11-19T17:00:51.603Z
       version: 1
-  timestamp: 2026-11-19T17:00:51.633Z
+    source_reference:
+      provenance: manual
+      locations:
+        - file: ux/src/components/proposals/review/ReviewChange.tsx
+          symbol: ChangeRowView
+  timestamp: 2026-11-24T20:22:16.870Z
   sequenceNumber: 168
 - type: add
   elementId: ux.librarycomponent.pane-rail
@@ -2819,7 +2859,12 @@
       created_at: 2026-11-19T17:00:51.604Z
       updated_at: 2026-11-19T17:00:51.604Z
       version: 1
-  timestamp: 2026-11-19T17:00:51.633Z
+    source_reference:
+      provenance: manual
+      locations:
+        - file: ux/src/components/proposals/review/WideDiffOverlay.tsx
+          symbol: WideDiffOverlay
+  timestamp: 2026-11-24T20:22:16.870Z
   sequenceNumber: 173
 - type: add
   elementId: ux.dataconfig.use-inspector-model
@@ -2841,7 +2886,12 @@
       created_at: 2026-11-19T17:00:51.604Z
       updated_at: 2026-11-19T17:00:51.604Z
       version: 1
-  timestamp: 2026-11-19T17:00:51.633Z
+    source_reference:
+      provenance: manual
+      locations:
+        - file: ux/src/components/proposals/review/useInspectorModel.ts
+          symbol: useInspectorModel
+  timestamp: 2026-11-24T20:22:16.870Z
   sequenceNumber: 174
 - type: add
   elementId: ux.dataconfig.use-revert-preview
@@ -2894,7 +2944,12 @@
         decided_by: agent
         decided_at: 2026-11-19T17:02:36.245Z
         changeset: changeset-1795107225483-xwgktrnaj
-  timestamp: 2026-11-19T17:02:36.273Z
+    source_reference:
+      provenance: manual
+      locations:
+        - file: ux/src/api/hooks/proposals/useProposalMutations.ts
+          symbol: useProposeReversal
+  timestamp: 2026-11-24T20:22:16.870Z
   sequenceNumber: 176
 - type: add
   elementId: ux.dataconfig.pane-rail-preference
@@ -4029,7 +4084,11 @@
       created_at: 2026-11-19T17:01:49.996Z
       updated_at: 2026-11-19T17:01:49.996Z
       version: 1
-  timestamp: 2026-11-19T17:01:50.028Z
+    source_reference:
+      provenance: manual
+      locations:
+        - file: ux/src/components/proposals/__tests__/ProposalReviewAgainstSource.test.tsx
+  timestamp: 2026-11-24T20:22:16.870Z
   sequenceNumber: 260
 - type: add
   elementId: testing.testcoveragetarget.pane-rails
@@ -4073,7 +4132,11 @@
       created_at: 2026-11-19T17:01:49.996Z
       updated_at: 2026-11-19T17:01:49.996Z
       version: 1
-  timestamp: 2026-11-19T17:01:50.028Z
+    source_reference:
+      provenance: manual
+      locations:
+        - file: ux/src/components/proposals/__tests__/ProposalWideDiff.test.tsx
+  timestamp: 2026-11-24T20:22:16.870Z
   sequenceNumber: 262
 - type: add
   elementId: testing.testcoveragetarget.revert-and-reversal-ui
@@ -4095,7 +4158,11 @@
       created_at: 2026-11-19T17:01:49.996Z
       updated_at: 2026-11-19T17:01:49.996Z
       version: 1
-  timestamp: 2026-11-19T17:01:50.028Z
+    source_reference:
+      provenance: manual
+      locations:
+        - file: ux/src/components/proposals/__tests__/ProposalReversal.test.tsx
+  timestamp: 2026-11-24T20:22:16.870Z
   sequenceNumber: 263
 - type: add
   elementId: testing.testcasesketch.reversal-restores-a-deleted-entity-with-its-id
@@ -4249,7 +4316,12 @@
       created_at: 2026-11-19T17:01:49.996Z
       updated_at: 2026-11-19T17:01:49.996Z
       version: 1
-  timestamp: 2026-11-19T17:01:50.028Z
+    source_reference:
+      provenance: manual
+      locations:
+        - file: ux/src/components/proposals/__tests__/ProposalReviewList.test.tsx
+          symbol: "are hidden on a gold check: no Select, no checkboxes, no bulk bar"
+  timestamp: 2026-11-24T20:22:16.870Z
   sequenceNumber: 269
 - type: add
   elementId: testing.testcasesketch.review-route-redirects-to-proposal-detail
@@ -4270,7 +4342,12 @@
       created_at: 2026-11-19T17:01:49.996Z
       updated_at: 2026-11-19T17:01:49.996Z
       version: 1
-  timestamp: 2026-11-19T17:01:50.028Z
+    source_reference:
+      provenance: manual
+      locations:
+        - file: ux/src/routes/app/__tests__/-proposal-route.test.ts
+          symbol: lands on the proposal's page with the same selection, in place
+  timestamp: 2026-11-24T20:22:16.870Z
   sequenceNumber: 270
 - type: add
   elementId: testing.testcasesketch.folded-list-keeps-jk-and-ax-working
@@ -4313,7 +4390,13 @@
       created_at: 2026-11-19T17:01:49.996Z
       updated_at: 2026-11-19T17:01:49.996Z
       version: 1
-  timestamp: 2026-11-19T17:01:50.028Z
+    source_reference:
+      provenance: manual
+      locations:
+        - file: ux/src/components/proposals/__tests__/ProposalWideDiff.test.tsx
+          symbol: opens on W at the first long change, and Esc closes it, focus back on
+            the row
+  timestamp: 2026-11-24T20:22:16.870Z
   sequenceNumber: 272
 - type: add
   elementId: testing.testcasesketch.landed-proposal-offers-the-reversal
@@ -4335,7 +4418,12 @@
       created_at: 2026-11-19T17:01:49.996Z
       updated_at: 2026-11-19T17:01:49.996Z
       version: 1
-  timestamp: 2026-11-19T17:01:50.028Z
+    source_reference:
+      provenance: manual
+      locations:
+        - file: ux/src/components/proposals/__tests__/ProposalReversal.test.tsx
+          symbol: proposes the reversal of a landed proposal and opens it
+  timestamp: 2026-11-24T20:22:16.870Z
   sequenceNumber: 273
 - type: relationship-add
   elementId: testing.testcoveragemodel.context-studio-backend-test-coverage-model::composes::testing.testcoveragetarget.reject-reason-codes
@@ -5658,3 +5746,46 @@
     metadata: *a69
   timestamp: 2026-11-24T18:55:56.369Z
   sequenceNumber: 415
+- type: update
+  elementId: api.operation.list-proposals
+  layerName: api
+  before:
+    id: b744441c-2bc3-4858-9a50-1355d63027e5
+    path: api.operation.list-proposals
+    spec_node_id: api.operation
+    type: operation
+    layer_id: api
+    name: List Proposals
+    description: List proposals, newest first, each operation with its stale flag;
+      filterable by status, reversed included.
+    attributes: &a70
+      operationId: list_proposals_api_proposals_get
+      summary: List Proposals
+      tags: proposals
+      http_method: GET
+      http_path: /api/proposals
+    source_reference: &a71
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/proposals_routes.py
+          symbol: list_proposals
+    metadata: &a72
+      created_at: 2026-11-19T14:46:21.105Z
+      updated_at: 2026-11-19T14:46:21.105Z
+      version: 1
+  after:
+    id: b744441c-2bc3-4858-9a50-1355d63027e5
+    path: api.operation.list-proposals
+    spec_node_id: api.operation
+    type: operation
+    layer_id: api
+    name: List Proposals
+    description: List proposals, newest first, each operation with its stale flag;
+      filterable by status, reversed included. Its summary form (fields=summary)
+      carries each proposal's links too, so the Proposals list can show a
+      reversal under way (#1668).
+    attributes: *a70
+    source_reference: *a71
+    metadata: *a72
+  timestamp: 2026-11-24T20:22:34.106Z
+  sequenceNumber: 434
