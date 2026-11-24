@@ -4,9 +4,16 @@ import json
 import os
 import sys
 
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))))
 sys.path.append(
-    os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))), "scripts")
+    os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+)
+sys.path.append(
+    os.path.join(
+        os.path.dirname(
+            os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+        ),
+        "scripts",
+    )
 )
 
 import pytest
@@ -45,7 +52,9 @@ class TestUpdateApiSpecs:
         assert update_api_specs.main(["--check"]) == 0
         assert _snapshot(tmp_path) == before
 
-    def test_check_fails_on_a_stale_file_names_it_and_changes_nothing(self, spec_paths, tmp_path, capsys):
+    def test_check_fails_on_a_stale_file_names_it_and_changes_nothing(
+        self, spec_paths, tmp_path, capsys
+    ):
         update_api_specs.main([])
         with open(spec_paths[1], "w") as f:
             f.write(update_api_specs.render_spec({"openapi": "3.1.0", "paths": {}}))

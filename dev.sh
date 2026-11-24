@@ -203,8 +203,8 @@ snapshot_workspace() {
   fi
 }
 
-# Upgrade the copies to head. The URLs are explicit: run_migrations.py would
-# otherwise default to ./local.db. Refuses any path outside .qa-instance/.
+# Upgrade the copies to head. The URLs are explicit, so the copies are migrated
+# whatever config the script would load. Refuses any path outside .qa-instance/.
 migrate_copies() {
   local db
   for db in "$STATE_DIR/local.db" "$STATE_DIR/operations.db"; do
