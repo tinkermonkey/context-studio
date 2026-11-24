@@ -111,9 +111,11 @@ security.threat.server-side-request-forgery-via-url-sources:
   type: threat
   layer_id: security
   name: Server-Side Request Forgery via URL Sources
-  description: "Adding a URL source fetches any http(s) URL and follows redirects
-    with no private-address check, so the server can be made to reach internal
-    services. Not accepted: to fix under #1656."
+  description: Mitigated (#1656). Adding a URL source used to fetch any http(s)
+    URL and follow redirects with no address check, so the server could be made
+    to reach loopback, private and link-local services. The fetcher now vets the
+    resolved address at connect time and on every redirect hop;
+    sources.allow_private_urls is the explicit opt-out.
   attributes:
     threatens: api
     likelihood: low

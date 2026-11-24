@@ -16,11 +16,11 @@ Test strategies, test cases, test data, and test coverage.
 
 | Metric                    | Count |
 | ------------------------- | ----- |
-| Elements                  | 35    |
+| Elements                  | 37    |
 | Intra-Layer Relationships | 32    |
-| Inter-Layer Relationships | 49    |
+| Inter-Layer Relationships | 53    |
 | Inbound Relationships     | 0     |
-| Outbound Relationships    | 49    |
+| Outbound Relationships    | 53    |
 
 **Cross-Layer References**:
 
@@ -40,9 +40,11 @@ Test strategies, test cases, test data, and test coverage.
 | `testing.inputspacepartition.entity-node-type-discriminator`                                       | `inputspacepartition` | 1             |
 | `testing.outcomecategory.entity-creation-success`                                                  | `outcomecategory`     | 1             |
 | `testing.outcomecategory.validation-error`                                                         | `outcomecategory`     | 1             |
+| `testing.testcasesketch.not-an-element-opens-the-reason-step`                                      | `testcasesketch`      | 0             |
 | `testing.testcasesketch.pre-review-verdicts-reach-the-proposal-visibly`                            | `testcasesketch`      | 1             |
 | `testing.testcasesketch.seeded-errors-are-built-and-scored-offline`                                | `testcasesketch`      | 1             |
 | `testing.testcasesketch.split-witness-fires-on-gate-ds-four-splits`                                | `testcasesketch`      | 1             |
+| `testing.testcasesketch.url-sources-refuse-private-addresses`                                      | `testcasesketch`      | 0             |
 | `testing.testcasesketch.vite-config-does-not-open-the-dev-server-or-preview-to-the-network-mode-s` | `testcasesketch`      | 0             |
 | `testing.testcoveragemodel.context-studio-backend-test-coverage-model`                             | `testcoveragemodel`   | 18            |
 | `testing.testcoveragemodel.context-studio-ux-test-coverage-model`                                  | `testcoveragemodel`   | 4             |
@@ -99,10 +101,14 @@ flowchart TB
 
 | Relationship ID                                                      | Source Node                                                                                        | Dest Node                                                                    | Dest Layer    | Predicate   | Cardinality  | Strength |
 | -------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- | ------------- | ----------- | ------------ | -------- |
+| `testing.testcasesketch.tests.ux.actioncomponent`                    | `testing.testcasesketch.not-an-element-opens-the-reason-step`                                      | `ux.actioncomponent.not-an-element-button`                                   | `ux`          | `tests`     | many-to-many | medium   |
+| `testing.testcasesketch.tests.ux.subview`                            | `testing.testcasesketch.not-an-element-opens-the-reason-step`                                      | `ux.subview.review-inspector`                                                | `ux`          | `tests`     | many-to-many | medium   |
 | `testing.testcasesketch.tests.application.applicationfunction`       | `testing.testcasesketch.pre-review-verdicts-reach-the-proposal-visibly`                            | `application.applicationfunction.individual-pre-review`                      | `application` | `tests`     | many-to-many | medium   |
 | `testing.testcasesketch.satisfies.motivation.requirement`            | `testing.testcasesketch.seeded-errors-are-built-and-scored-offline`                                | `motivation.requirement.pre-review-is-adopted-only-by-a-rule-set-in-advance` | `motivation`  | `satisfies` | many-to-many | high     |
 | `testing.testcasesketch.tests.application.applicationfunction`       | `testing.testcasesketch.seeded-errors-are-built-and-scored-offline`                                | `application.applicationfunction.individual-pre-review`                      | `application` | `tests`     | many-to-many | medium   |
 | `testing.testcasesketch.tests.application.applicationfunction`       | `testing.testcasesketch.split-witness-fires-on-gate-ds-four-splits`                                | `application.applicationfunction.split-witness`                              | `application` | `tests`     | many-to-many | medium   |
+| `testing.testcasesketch.satisfies.motivation.requirement`            | `testing.testcasesketch.url-sources-refuse-private-addresses`                                      | `motivation.requirement.url-sources-refuse-private-network-addresses`        | `motivation`  | `satisfies` | many-to-many | high     |
+| `testing.testcasesketch.tests.security.countermeasure`               | `testing.testcasesketch.url-sources-refuse-private-addresses`                                      | `security.countermeasure.connect-time-address-check-for-url-sources`         | `security`    | `tests`     | many-to-many | medium   |
 | `testing.testcasesketch.satisfies.motivation.requirement`            | `testing.testcasesketch.vite-config-does-not-open-the-dev-server-or-preview-to-the-network-mode-s` | `motivation.requirement.dev-server-not-reachable-from-the-lan`               | `motivation`  | `satisfies` | many-to-many | high     |
 | `testing.testcasesketch.tests.security.countermeasure`               | `testing.testcasesketch.vite-config-does-not-open-the-dev-server-or-preview-to-the-network-mode-s` | `security.countermeasure.vite-dev-server-loopback-binding`                   | `security`    | `tests`     | many-to-many | medium   |
 | `testing.testcoveragemodel.covers.ux.uxapplication`                  | `testing.testcoveragemodel.context-studio-ux-test-coverage-model`                                  | `ux.uxapplication.context-studio-spa`                                        | `ux`          | `covers`    | many-to-many | medium   |
@@ -323,6 +329,28 @@ Expected outcome for invalid inputs: missing required fields, duplicate titles, 
 | ----------- | ------------------------------------------ | ---------- | --------- |
 | intra-layer | `testing.testcoveragetarget.ontology-crud` | `composes` | inbound   |
 
+### Not An Element Opens The Reason Step {#not-an-element-opens-the-reason-step}
+
+**ID**: `testing.testcasesketch.not-an-element-opens-the-reason-step`
+
+**Type**: `testcasesketch`
+
+Pressing Not an element (or X) on an awaiting element highlights the reasons with a prompt and focuses the first reason; in gold mode with an empty note it focuses the note and shows the Write why message. Nothing is sent until a reason is picked.
+
+#### Attributes
+
+| Name                 | Value     |
+| -------------------- | --------- |
+| implementationFormat | automated |
+| status               | automated |
+
+#### Relationships
+
+| Type        | Related Element                            | Predicate | Direction |
+| ----------- | ------------------------------------------ | --------- | --------- |
+| inter-layer | `ux.actioncomponent.not-an-element-button` | `tests`   | outbound  |
+| inter-layer | `ux.subview.review-inspector`              | `tests`   | outbound  |
+
 ### Pre-review verdicts reach the proposal visibly {#pre-review-verdicts-reach-the-proposal-visibly}
 
 **ID**: `testing.testcasesketch.pre-review-verdicts-reach-the-proposal-visibly`
@@ -386,6 +414,28 @@ Unit: the split witness marks 'Torx T20, T25', 'Copper water supply kits WX8X2, 
 | ----------- | ------------------------------------------------ | ---------- | --------- |
 | inter-layer | `application.applicationfunction.split-witness`  | `tests`    | outbound  |
 | intra-layer | `testing.testcoveragetarget.extraction-pipeline` | `composes` | inbound   |
+
+### URL sources refuse private addresses {#url-sources-refuse-private-addresses}
+
+**ID**: `testing.testcasesketch.url-sources-refuse-private-addresses`
+
+**Type**: `testcasesketch`
+
+A direct private URL, a hostname resolving to 127.0.0.1, a redirect to a private address and a rebinding name are all refused without a connection; the reference proxy's origin and allow_private_urls are the only exceptions.
+
+#### Attributes
+
+| Name                 | Value     |
+| -------------------- | --------- |
+| implementationFormat | automated |
+| status               | automated |
+
+#### Relationships
+
+| Type        | Related Element                                                       | Predicate   | Direction |
+| ----------- | --------------------------------------------------------------------- | ----------- | --------- |
+| inter-layer | `motivation.requirement.url-sources-refuse-private-network-addresses` | `satisfies` | outbound  |
+| inter-layer | `security.countermeasure.connect-time-address-check-for-url-sources`  | `tests`     | outbound  |
 
 ### vite.config &gt; does not open the dev server or preview to the network (mode %s) {#vite-config-does-not-open-the-dev-server-or-preview-to-the-network-mode-s}
 
@@ -973,4 +1023,4 @@ Coverage target for change management: change proposals (create, decide, apply, 
 
 ---
 
-Generated: 2026-11-24T14:28:53.404Z | Model Version: 0.1.0
+Generated: 2026-11-24T15:59:46.538Z | Model Version: 0.1.0

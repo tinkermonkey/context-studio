@@ -18,8 +18,8 @@ REST APIs, operations, endpoints, and API integrations.
 | ------------------------- | ----- |
 | Elements                  | 477   |
 | Intra-Layer Relationships | 374   |
-| Inter-Layer Relationships | 535   |
-| Inbound Relationships     | 205   |
+| Inter-Layer Relationships | 537   |
+| Inbound Relationships     | 207   |
 | Outbound Relationships    | 330   |
 
 **Cross-Layer References**:
@@ -959,6 +959,8 @@ flowchart TB
 | `ux.dataconfig.maps-to.api.requestbody`                   | `ux.dataconfig.use-dr-spec-drift`                    | `api.requestbody.dr-spec-drift-request`                             | `api`         | `maps-to`    | many-to-many | medium   |
 | `ux.dataconfig.maps-to.api.response`                      | `ux.dataconfig.use-dr-spec-drift`                    | `api.response.drift-response`                                       | `api`         | `maps-to`    | many-to-many | medium   |
 | `ux.dataconfig.maps-to.api.response`                      | `ux.dataconfig.use-edge-attributes`                  | `api.response.attribute-definition-response`                        | `api`         | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.requestbody`                   | `ux.dataconfig.use-enqueue-batch-runs`               | `api.requestbody.enqueue-batch-runs-request`                        | `api`         | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.response`                      | `ux.dataconfig.use-enqueue-batch-runs`               | `api.response.enqueue-batch-runs-response`                          | `api`         | `maps-to`    | many-to-many | medium   |
 | `ux.dataconfig.maps-to.api.response`                      | `ux.dataconfig.use-entities-by-id`                   | `api.response.class-response`                                       | `api`         | `maps-to`    | many-to-many | medium   |
 | `ux.dataconfig.maps-to.api.response`                      | `ux.dataconfig.use-entities-by-id`                   | `api.response.concept-scheme-response`                              | `api`         | `maps-to`    | many-to-many | medium   |
 | `ux.dataconfig.maps-to.api.response`                      | `ux.dataconfig.use-entities-by-id`                   | `api.response.individual-response`                                  | `api`         | `maps-to`    | many-to-many | medium   |
@@ -5995,9 +5997,10 @@ Request body specifying a starting node ID for directed cycle detection in the k
 
 #### Relationships
 
-| Type        | Related Element                    | Predicate  | Direction |
-| ----------- | ---------------------------------- | ---------- | --------- |
-| intra-layer | `api.operation.enqueue-batch-runs` | `composes` | inbound   |
+| Type        | Related Element                        | Predicate  | Direction |
+| ----------- | -------------------------------------- | ---------- | --------- |
+| inter-layer | `ux.dataconfig.use-enqueue-batch-runs` | `maps-to`  | inbound   |
+| intra-layer | `api.operation.enqueue-batch-runs`     | `composes` | inbound   |
 
 ### EnrichFromReferencesRequest {#enrichfromreferencesrequest}
 
@@ -7173,6 +7176,7 @@ Response containing the degree distribution histogram of the knowledge graph
 
 | Type        | Related Element                              | Predicate  | Direction |
 | ----------- | -------------------------------------------- | ---------- | --------- |
+| inter-layer | `ux.dataconfig.use-enqueue-batch-runs`       | `maps-to`  | inbound   |
 | intra-layer | `api.responses.enqueue-batch-runs-responses` | `composes` | inbound   |
 
 ### EntitySourceResponse {#entitysourceresponse}
@@ -10565,4 +10569,4 @@ Bearer token required on the /mcp endpoint (Authorization: Bearer &lt;auth_token
 
 ---
 
-Generated: 2026-11-24T14:52:48.173Z | Model Version: 0.1.0
+Generated: 2026-11-24T15:59:58.228Z | Model Version: 0.1.0

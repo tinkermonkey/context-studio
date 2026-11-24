@@ -3,7 +3,7 @@ schema: documentation-robotics-v1
 cli_version: 0.7.1
 spec_version: 0.13.0
 created: 2026-03-23T12:18:08.630Z
-updated: 2026-11-24T14:52:48.167Z
+updated: 2026-11-24T16:00:09.814Z
 project:
   name: Context Studio
   description: Local-first knowledge graph application for RAG and communication
@@ -60,7 +60,7 @@ layers:
     elements:
       actor: 2
       authenticationconfig: 1
-      countermeasure: 9
+      countermeasure: 10
       dataclassification: 2
       role: 2
       secureresource: 5
@@ -132,7 +132,8 @@ layers:
     path: documentation-robotics/model/10_ux/
     enabled: true
     elements:
-      dataconfig: 140
+      actioncomponent: 1
+      dataconfig: 141
       experiencestate: 1
       librarycomponent: 8
       statepattern: 1
@@ -172,7 +173,7 @@ layers:
       coveragerequirement: 3
       inputspacepartition: 1
       outcomecategory: 2
-      testcasesketch: 4
+      testcasesketch: 6
       testcoveragemodel: 2
       testcoveragetarget: 21
 changeset_history:
@@ -196,6 +197,21 @@ changeset_history:
     action: committed
   - name: api-spec-check-flag
     committed_at: 2026-11-24T14:52:48.167Z
+    action: committed
+  - name: not-an-element-opens-reasons
+    committed_at: 2026-11-24T15:56:29.360Z
+    action: committed
+  - name: drop-reference-proxy-workarounds
+    committed_at: 2026-11-24T15:59:03.882Z
+    action: committed
+  - name: url-sources-refuse-private-addresses
+    committed_at: 2026-11-24T15:59:46.529Z
+    action: committed
+  - name: grounding-wizard-batch
+    committed_at: 2026-11-24T15:59:58.226Z
+    action: committed
+  - name: config-bad-field-falls-back
+    committed_at: 2026-11-24T16:00:09.814Z
     action: committed
 reconciled:
   changeset: rebuild-model-from-code

@@ -572,7 +572,11 @@ technology.systemsoftware.reference-api-buddy:
   type: systemsoftware
   layer_id: technology
   name: reference-api-buddy
-  description: Caching HTTP proxy library behind the in-process reference proxy.
+  description: Caching HTTP proxy library behind the in-process reference proxy,
+    pinned at 0.5.2. Does not cache upstream errors, passes upstream statuses
+    through, completes a throttled request's in-flight entry, and takes its
+    cache-entry cap from cache.max_cache_entries; the proxy adapter carries no
+    workarounds for these.
   attributes:
     softwareType: cache
   source_reference:

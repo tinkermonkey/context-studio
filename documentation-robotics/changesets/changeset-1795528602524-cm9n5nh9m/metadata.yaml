@@ -8,8 +8,8 @@ description: "#1504: the grounding wizard grounds several classes at once: one
   definitions are not offered. There is no batch toggle: one node is one run,
   several are a batch."
 created: 2026-11-24T13:56:42.533Z
-modified: 2026-11-24T14:01:25.584Z
-status: staged
+modified: 2026-11-24T15:59:58.225Z
+status: committed
 baseSnapshot: v2:sha256:53252d39ed1357a9afdd6132507b497bf81313353af91142ccb6b590b147594c
 origin:
   kind: plan

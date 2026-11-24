@@ -1,6 +1,6 @@
 # Intra-layer relationships
 # Format: source_id -> predicate -> target_id
-# Last updated: 2026-11-24T14:52:26.866Z
+# Last updated: 2026-11-24T15:59:58.191Z
 
 - source: motivation.meaning.knowledge-as-infrastructure
   target: motivation.value.knowledge-reusability
@@ -15942,6 +15942,84 @@
   category: structural
 - source: ux.subview.status-bar-sync
   target: ux.dataconfig.use-sync-status
+  predicate: binds-to
+  layer: ux
+  category: structural
+- source: ux.view.proposal-review-view
+  target: ux.actioncomponent.not-an-element-button
+  predicate: composes
+  layer: ux
+  category: structural
+- source: testing.testcasesketch.not-an-element-opens-the-reason-step
+  target: ux.actioncomponent.not-an-element-button
+  predicate: tests
+  layer: testing
+  targetLayer: ux
+  category: structural
+- source: testing.testcasesketch.not-an-element-opens-the-reason-step
+  target: ux.subview.review-inspector
+  predicate: tests
+  layer: testing
+  targetLayer: ux
+  category: structural
+- source: security.countermeasure.connect-time-address-check-for-url-sources
+  target: security.threat.server-side-request-forgery-via-url-sources
+  predicate: mitigates
+  layer: security
+  category: structural
+- source: security.countermeasure.connect-time-address-check-for-url-sources
+  target: security.secureresource.local-rest-api
+  predicate: protects
+  layer: security
+  category: structural
+- source: security.countermeasure.connect-time-address-check-for-url-sources
+  target: security.secureresource.mcp-endpoint
+  predicate: protects
+  layer: security
+  category: structural
+- source: security.countermeasure.connect-time-address-check-for-url-sources
+  target: motivation.requirement.url-sources-refuse-private-network-addresses
+  predicate: satisfies
+  layer: security
+  targetLayer: motivation
+  category: structural
+- source: application.applicationcomponent.http-page-fetcher
+  target: security.countermeasure.connect-time-address-check-for-url-sources
+  predicate: realizes
+  layer: application
+  targetLayer: security
+  category: structural
+- source: testing.testcasesketch.url-sources-refuse-private-addresses
+  target: security.countermeasure.connect-time-address-check-for-url-sources
+  predicate: tests
+  layer: testing
+  targetLayer: security
+  category: structural
+- source: testing.testcasesketch.url-sources-refuse-private-addresses
+  target: motivation.requirement.url-sources-refuse-private-network-addresses
+  predicate: satisfies
+  layer: testing
+  targetLayer: motivation
+  category: structural
+- source: ux.dataconfig.use-enqueue-batch-runs
+  target: api.requestbody.enqueue-batch-runs-request
+  predicate: maps-to
+  layer: ux
+  targetLayer: api
+  category: structural
+- source: ux.dataconfig.use-enqueue-batch-runs
+  target: api.response.enqueue-batch-runs-response
+  predicate: maps-to
+  layer: ux
+  targetLayer: api
+  category: structural
+- source: ux.subview.schema-grounding-wizard
+  target: ux.dataconfig.use-enqueue-batch-runs
+  predicate: binds-to
+  layer: ux
+  category: structural
+- source: ux.subview.schema-grounding-wizard
+  target: ux.dataconfig.use-reference-status
   predicate: binds-to
   layer: ux
   category: structural

@@ -676,7 +676,7 @@ JavaScript UI library (v19.1) powering the Context Studio front-end — all UX c
 
 **Type**: `systemsoftware`
 
-Caching HTTP proxy library behind the in-process reference proxy.
+Caching HTTP proxy library behind the in-process reference proxy, pinned at 0.5.2. Does not cache upstream errors, passes upstream statuses through, completes a throttled request's in-flight entry, and takes its cache-entry cap from cache.max_cache_entries; the proxy adapter carries no workarounds for these.
 
 #### Attributes
 
@@ -1046,4 +1046,4 @@ Technology interaction in which the sync adapter serializes the local knowledge 
 
 ---
 
-Generated: 2026-11-24T14:28:53.404Z | Model Version: 0.1.0
+Generated: 2026-11-24T15:59:03.885Z | Model Version: 0.1.0
