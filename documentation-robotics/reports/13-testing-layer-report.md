@@ -16,53 +16,56 @@ Test strategies, test cases, test data, and test coverage.
 
 | Metric                    | Count |
 | ------------------------- | ----- |
-| Elements                  | 31    |
-| Intra-Layer Relationships | 29    |
-| Inter-Layer Relationships | 43    |
+| Elements                  | 34    |
+| Intra-Layer Relationships | 32    |
+| Inter-Layer Relationships | 47    |
 | Inbound Relationships     | 0     |
-| Outbound Relationships    | 43    |
+| Outbound Relationships    | 47    |
 
 **Cross-Layer References**:
 
-- **Downstream layers**: [Application](./05-application-layer-report.md), [Business](./02-business-layer-report.md), [Data Store](./09-data-store-layer-report.md), [UX](./10-ux-layer-report.md)
+- **Downstream layers**: [Application](./05-application-layer-report.md), [Business](./02-business-layer-report.md), [Data Store](./09-data-store-layer-report.md), [Motivation](./01-motivation-layer-report.md), [UX](./10-ux-layer-report.md)
 
 ## Intra-Layer Relationships
 
 *This layer has >30 elements. Summary table shown instead of diagram.*
 
-| Element                                                                | Type                  | Relationships |
-| ---------------------------------------------------------------------- | --------------------- | ------------- |
-| `testing.coverageexclusion.llm-api-live-call-tests`                    | `coverageexclusion`   | 1             |
-| `testing.coveragegap.s3-sync-e2e-coverage`                             | `coveragegap`         | 1             |
-| `testing.coveragerequirement.domain-unit-test-coverage`                | `coveragerequirement` | 1             |
-| `testing.coveragerequirement.e2e-test-coverage`                        | `coveragerequirement` | 1             |
-| `testing.coveragerequirement.route-integration-test-coverage`          | `coveragerequirement` | 1             |
-| `testing.inputspacepartition.entity-node-type-discriminator`           | `inputspacepartition` | 1             |
-| `testing.outcomecategory.entity-creation-success`                      | `outcomecategory`     | 1             |
-| `testing.outcomecategory.validation-error`                             | `outcomecategory`     | 1             |
-| `testing.testcoveragemodel.context-studio-backend-test-coverage-model` | `testcoveragemodel`   | 18            |
-| `testing.testcoveragemodel.context-studio-ux-test-coverage-model`      | `testcoveragemodel`   | 4             |
-| `testing.testcoveragetarget.adapter-integration-tests`                 | `testcoveragetarget`  | 1             |
-| `testing.testcoveragetarget.adapter-unit-tests`                        | `testcoveragetarget`  | 1             |
-| `testing.testcoveragetarget.admin-health`                              | `testcoveragetarget`  | 1             |
-| `testing.testcoveragetarget.chat-and-mcp-integration-tests`            | `testcoveragetarget`  | 1             |
-| `testing.testcoveragetarget.domain-unit-tests`                         | `testcoveragetarget`  | 2             |
-| `testing.testcoveragetarget.e2e-test-suite`                            | `testcoveragetarget`  | 2             |
-| `testing.testcoveragetarget.extraction-pipeline`                       | `testcoveragetarget`  | 1             |
-| `testing.testcoveragetarget.graph-analysis`                            | `testcoveragetarget`  | 1             |
-| `testing.testcoveragetarget.interchange-integration-tests`             | `testcoveragetarget`  | 1             |
-| `testing.testcoveragetarget.llm-pipeline-execution`                    | `testcoveragetarget`  | 2             |
-| `testing.testcoveragetarget.ontology-crud`                             | `testcoveragetarget`  | 3             |
-| `testing.testcoveragetarget.performance-test-suite`                    | `testcoveragetarget`  | 1             |
-| `testing.testcoveragetarget.pipeline-integration-tests`                | `testcoveragetarget`  | 1             |
-| `testing.testcoveragetarget.playwright-e2e-tests`                      | `testcoveragetarget`  | 1             |
-| `testing.testcoveragetarget.route-integration-tests`                   | `testcoveragetarget`  | 2             |
-| `testing.testcoveragetarget.source-integration-tests`                  | `testcoveragetarget`  | 1             |
-| `testing.testcoveragetarget.ux-api-client-tests`                       | `testcoveragetarget`  | 1             |
-| `testing.testcoveragetarget.ux-component-tests`                        | `testcoveragetarget`  | 1             |
-| `testing.testcoveragetarget.ux-route-tests`                            | `testcoveragetarget`  | 1             |
-| `testing.testcoveragetarget.versioning-integration-tests`              | `testcoveragetarget`  | 1             |
-| `testing.testcoveragetarget.versioning-workflow`                       | `testcoveragetarget`  | 2             |
+| Element                                                                 | Type                  | Relationships |
+| ----------------------------------------------------------------------- | --------------------- | ------------- |
+| `testing.coverageexclusion.llm-api-live-call-tests`                     | `coverageexclusion`   | 1             |
+| `testing.coveragegap.s3-sync-e2e-coverage`                              | `coveragegap`         | 1             |
+| `testing.coveragerequirement.domain-unit-test-coverage`                 | `coveragerequirement` | 1             |
+| `testing.coveragerequirement.e2e-test-coverage`                         | `coveragerequirement` | 1             |
+| `testing.coveragerequirement.route-integration-test-coverage`           | `coveragerequirement` | 1             |
+| `testing.inputspacepartition.entity-node-type-discriminator`            | `inputspacepartition` | 1             |
+| `testing.outcomecategory.entity-creation-success`                       | `outcomecategory`     | 1             |
+| `testing.outcomecategory.validation-error`                              | `outcomecategory`     | 1             |
+| `testing.testcasesketch.pre-review-verdicts-reach-the-proposal-visibly` | `testcasesketch`      | 1             |
+| `testing.testcasesketch.seeded-errors-are-built-and-scored-offline`     | `testcasesketch`      | 1             |
+| `testing.testcasesketch.split-witness-fires-on-gate-ds-four-splits`     | `testcasesketch`      | 1             |
+| `testing.testcoveragemodel.context-studio-backend-test-coverage-model`  | `testcoveragemodel`   | 18            |
+| `testing.testcoveragemodel.context-studio-ux-test-coverage-model`       | `testcoveragemodel`   | 4             |
+| `testing.testcoveragetarget.adapter-integration-tests`                  | `testcoveragetarget`  | 1             |
+| `testing.testcoveragetarget.adapter-unit-tests`                         | `testcoveragetarget`  | 1             |
+| `testing.testcoveragetarget.admin-health`                               | `testcoveragetarget`  | 1             |
+| `testing.testcoveragetarget.chat-and-mcp-integration-tests`             | `testcoveragetarget`  | 1             |
+| `testing.testcoveragetarget.domain-unit-tests`                          | `testcoveragetarget`  | 2             |
+| `testing.testcoveragetarget.e2e-test-suite`                             | `testcoveragetarget`  | 2             |
+| `testing.testcoveragetarget.extraction-pipeline`                        | `testcoveragetarget`  | 4             |
+| `testing.testcoveragetarget.graph-analysis`                             | `testcoveragetarget`  | 1             |
+| `testing.testcoveragetarget.interchange-integration-tests`              | `testcoveragetarget`  | 1             |
+| `testing.testcoveragetarget.llm-pipeline-execution`                     | `testcoveragetarget`  | 2             |
+| `testing.testcoveragetarget.ontology-crud`                              | `testcoveragetarget`  | 3             |
+| `testing.testcoveragetarget.performance-test-suite`                     | `testcoveragetarget`  | 1             |
+| `testing.testcoveragetarget.pipeline-integration-tests`                 | `testcoveragetarget`  | 1             |
+| `testing.testcoveragetarget.playwright-e2e-tests`                       | `testcoveragetarget`  | 1             |
+| `testing.testcoveragetarget.route-integration-tests`                    | `testcoveragetarget`  | 2             |
+| `testing.testcoveragetarget.source-integration-tests`                   | `testcoveragetarget`  | 1             |
+| `testing.testcoveragetarget.ux-api-client-tests`                        | `testcoveragetarget`  | 1             |
+| `testing.testcoveragetarget.ux-component-tests`                         | `testcoveragetarget`  | 1             |
+| `testing.testcoveragetarget.ux-route-tests`                             | `testcoveragetarget`  | 1             |
+| `testing.testcoveragetarget.versioning-integration-tests`               | `testcoveragetarget`  | 1             |
+| `testing.testcoveragetarget.versioning-workflow`                        | `testcoveragetarget`  | 2             |
 
 ## Inter-Layer Dependencies
 
@@ -85,57 +88,62 @@ flowchart TB
   testing --> application
   testing --> business
   testing --> data_store
+  testing --> motivation
   testing --> ux
   class testing current
 ```
 
 ## Inter-Layer Relationships Table
 
-| Relationship ID                                                      | Source Node                                                       | Dest Node                                                            | Dest Layer    | Predicate | Cardinality  | Strength |
-| -------------------------------------------------------------------- | ----------------------------------------------------------------- | -------------------------------------------------------------------- | ------------- | --------- | ------------ | -------- |
-| `testing.testcoveragemodel.covers.ux.uxapplication`                  | `testing.testcoveragemodel.context-studio-ux-test-coverage-model` | `ux.uxapplication.context-studio-spa`                                | `ux`          | `covers`  | many-to-many | medium   |
-| `testing.testcoveragetarget.covers.application.applicationcomponent` | `testing.testcoveragetarget.adapter-integration-tests`            | `application.applicationcomponent.sqlite-change-proposal-repository` | `application` | `covers`  | many-to-many | medium   |
-| `testing.testcoveragetarget.covers.application.applicationcomponent` | `testing.testcoveragetarget.adapter-integration-tests`            | `application.applicationcomponent.sqlite-ontology-repository`        | `application` | `covers`  | many-to-many | medium   |
-| `testing.testcoveragetarget.covers.application.applicationcomponent` | `testing.testcoveragetarget.adapter-integration-tests`            | `application.applicationcomponent.sqlite-pipeline-repository`        | `application` | `covers`  | many-to-many | medium   |
-| `testing.testcoveragetarget.covers.application.applicationcomponent` | `testing.testcoveragetarget.adapter-unit-tests`                   | `application.applicationcomponent.spa-cy-nlp-processor`              | `application` | `covers`  | many-to-many | medium   |
-| `testing.testcoveragetarget.covers.ux.view`                          | `testing.testcoveragetarget.admin-health`                         | `ux.view.settings-view`                                              | `ux`          | `covers`  | many-to-many | medium   |
-| `testing.testcoveragetarget.covers.application.applicationcomponent` | `testing.testcoveragetarget.chat-and-mcp-integration-tests`       | `application.applicationcomponent.mcp-server`                        | `application` | `covers`  | many-to-many | medium   |
-| `testing.testcoveragetarget.covers.application.applicationservice`   | `testing.testcoveragetarget.chat-and-mcp-integration-tests`       | `application.applicationservice.chat-service`                        | `application` | `covers`  | many-to-many | medium   |
-| `testing.testcoveragetarget.covers.application.applicationcomponent` | `testing.testcoveragetarget.domain-unit-tests`                    | `application.applicationcomponent.sqlite-ontology-repository`        | `application` | `covers`  | many-to-many | medium   |
-| `testing.testcoveragetarget.covers.application.applicationservice`   | `testing.testcoveragetarget.domain-unit-tests`                    | `application.applicationservice.ontology-service`                    | `application` | `covers`  | many-to-many | medium   |
-| `testing.testcoveragetarget.covers.application.applicationservice`   | `testing.testcoveragetarget.domain-unit-tests`                    | `application.applicationservice.proposal-service`                    | `application` | `covers`  | many-to-many | medium   |
-| `testing.testcoveragetarget.covers.business.businessprocess`         | `testing.testcoveragetarget.domain-unit-tests`                    | `business.businessprocess.adjudicate-a-proposal`                     | `business`    | `covers`  | many-to-many | medium   |
-| `testing.testcoveragetarget.covers.data-store.collection`            | `testing.testcoveragetarget.e2e-test-suite`                       | `data-store.collection.ontology-entities`                            | `data-store`  | `covers`  | many-to-many | medium   |
-| `testing.testcoveragetarget.covers.ux.view`                          | `testing.testcoveragetarget.extraction-pipeline`                  | `ux.view.pipelines-view`                                             | `ux`          | `covers`  | many-to-many | medium   |
-| `testing.testcoveragetarget.covers.ux.view`                          | `testing.testcoveragetarget.graph-analysis`                       | `ux.view.graph-view`                                                 | `ux`          | `covers`  | many-to-many | medium   |
-| `testing.testcoveragetarget.covers.application.applicationcomponent` | `testing.testcoveragetarget.interchange-integration-tests`        | `application.applicationcomponent.skos-interchange-adapter`          | `application` | `covers`  | many-to-many | medium   |
-| `testing.testcoveragetarget.covers.application.applicationcomponent` | `testing.testcoveragetarget.interchange-integration-tests`        | `application.applicationcomponent.sqlite-interchange-repository`     | `application` | `covers`  | many-to-many | medium   |
-| `testing.testcoveragetarget.covers.application.applicationservice`   | `testing.testcoveragetarget.interchange-integration-tests`        | `application.applicationservice.bundle-import-service`               | `application` | `covers`  | many-to-many | medium   |
-| `testing.testcoveragetarget.covers.business.businessprocess`         | `testing.testcoveragetarget.interchange-integration-tests`        | `business.businessprocess.client-round-trip`                         | `business`    | `covers`  | many-to-many | medium   |
-| `testing.testcoveragetarget.covers.ux.view`                          | `testing.testcoveragetarget.llm-pipeline-execution`               | `ux.view.pipeline-runs-view`                                         | `ux`          | `covers`  | many-to-many | medium   |
-| `testing.testcoveragetarget.covers.data-store.collection`            | `testing.testcoveragetarget.performance-test-suite`               | `data-store.collection.ontology-entities`                            | `data-store`  | `covers`  | many-to-many | medium   |
-| `testing.testcoveragetarget.covers.application.applicationservice`   | `testing.testcoveragetarget.pipeline-integration-tests`           | `application.applicationservice.pipeline-selection-service`          | `application` | `covers`  | many-to-many | medium   |
-| `testing.testcoveragetarget.covers.application.applicationservice`   | `testing.testcoveragetarget.pipeline-integration-tests`           | `application.applicationservice.source-extraction-service`           | `application` | `covers`  | many-to-many | medium   |
-| `testing.testcoveragetarget.covers.business.businessprocess`         | `testing.testcoveragetarget.pipeline-integration-tests`           | `business.businessprocess.extract-a-source-into-a-dataset`           | `business`    | `covers`  | many-to-many | medium   |
-| `testing.testcoveragetarget.covers.ux.view`                          | `testing.testcoveragetarget.playwright-e2e-tests`                 | `ux.view.classes-view`                                               | `ux`          | `covers`  | many-to-many | medium   |
-| `testing.testcoveragetarget.covers.ux.view`                          | `testing.testcoveragetarget.playwright-e2e-tests`                 | `ux.view.extraction-review-view`                                     | `ux`          | `covers`  | many-to-many | medium   |
-| `testing.testcoveragetarget.covers.ux.view`                          | `testing.testcoveragetarget.playwright-e2e-tests`                 | `ux.view.graph-view`                                                 | `ux`          | `covers`  | many-to-many | medium   |
-| `testing.testcoveragetarget.covers.ux.view`                          | `testing.testcoveragetarget.playwright-e2e-tests`                 | `ux.view.proposals-view`                                             | `ux`          | `covers`  | many-to-many | medium   |
-| `testing.testcoveragetarget.covers.application.applicationcomponent` | `testing.testcoveragetarget.route-integration-tests`              | `application.applicationcomponent.sqlite-ontology-repository`        | `application` | `covers`  | many-to-many | medium   |
-| `testing.testcoveragetarget.covers.business.businessprocess`         | `testing.testcoveragetarget.route-integration-tests`              | `business.businessprocess.adjudicate-a-proposal`                     | `business`    | `covers`  | many-to-many | medium   |
-| `testing.testcoveragetarget.covers.application.applicationservice`   | `testing.testcoveragetarget.source-integration-tests`             | `application.applicationservice.source-service`                      | `application` | `covers`  | many-to-many | medium   |
-| `testing.testcoveragetarget.covers.business.businessprocess`         | `testing.testcoveragetarget.source-integration-tests`             | `business.businessprocess.extract-a-source-into-a-dataset`           | `business`    | `covers`  | many-to-many | medium   |
-| `testing.testcoveragetarget.covers.ux.librarycomponent`              | `testing.testcoveragetarget.ux-component-tests`                   | `ux.librarycomponent.app-ui-primitives`                              | `ux`          | `covers`  | many-to-many | medium   |
-| `testing.testcoveragetarget.covers.ux.view`                          | `testing.testcoveragetarget.ux-component-tests`                   | `ux.view.proposal-detail-view`                                       | `ux`          | `covers`  | many-to-many | medium   |
-| `testing.testcoveragetarget.covers.ux.view`                          | `testing.testcoveragetarget.ux-component-tests`                   | `ux.view.proposal-review-view`                                       | `ux`          | `covers`  | many-to-many | medium   |
-| `testing.testcoveragetarget.covers.ux.view`                          | `testing.testcoveragetarget.ux-component-tests`                   | `ux.view.run-detail-drawer`                                          | `ux`          | `covers`  | many-to-many | medium   |
-| `testing.testcoveragetarget.covers.ux.view`                          | `testing.testcoveragetarget.ux-route-tests`                       | `ux.view.dashboard-view`                                             | `ux`          | `covers`  | many-to-many | medium   |
-| `testing.testcoveragetarget.covers.ux.view`                          | `testing.testcoveragetarget.ux-route-tests`                       | `ux.view.individuals-view`                                           | `ux`          | `covers`  | many-to-many | medium   |
-| `testing.testcoveragetarget.covers.application.applicationcomponent` | `testing.testcoveragetarget.versioning-integration-tests`         | `application.applicationcomponent.sqlite-change-repository`          | `application` | `covers`  | many-to-many | medium   |
-| `testing.testcoveragetarget.covers.application.applicationservice`   | `testing.testcoveragetarget.versioning-integration-tests`         | `application.applicationservice.claim-service`                       | `application` | `covers`  | many-to-many | medium   |
-| `testing.testcoveragetarget.covers.application.applicationservice`   | `testing.testcoveragetarget.versioning-integration-tests`         | `application.applicationservice.proposal-service`                    | `application` | `covers`  | many-to-many | medium   |
-| `testing.testcoveragetarget.covers.business.businessprocess`         | `testing.testcoveragetarget.versioning-integration-tests`         | `business.businessprocess.adjudicate-a-proposal`                     | `business`    | `covers`  | many-to-many | medium   |
-| `testing.testcoveragetarget.covers.ux.view`                          | `testing.testcoveragetarget.versioning-workflow`                  | `ux.view.datasets-view`                                              | `ux`          | `covers`  | many-to-many | medium   |
+| Relationship ID                                                      | Source Node                                                             | Dest Node                                                                    | Dest Layer    | Predicate   | Cardinality  | Strength |
+| -------------------------------------------------------------------- | ----------------------------------------------------------------------- | ---------------------------------------------------------------------------- | ------------- | ----------- | ------------ | -------- |
+| `testing.testcasesketch.tests.application.applicationfunction`       | `testing.testcasesketch.pre-review-verdicts-reach-the-proposal-visibly` | `application.applicationfunction.individual-pre-review`                      | `application` | `tests`     | many-to-many | medium   |
+| `testing.testcasesketch.satisfies.motivation.requirement`            | `testing.testcasesketch.seeded-errors-are-built-and-scored-offline`     | `motivation.requirement.pre-review-is-adopted-only-by-a-rule-set-in-advance` | `motivation`  | `satisfies` | many-to-many | high     |
+| `testing.testcasesketch.tests.application.applicationfunction`       | `testing.testcasesketch.seeded-errors-are-built-and-scored-offline`     | `application.applicationfunction.individual-pre-review`                      | `application` | `tests`     | many-to-many | medium   |
+| `testing.testcasesketch.tests.application.applicationfunction`       | `testing.testcasesketch.split-witness-fires-on-gate-ds-four-splits`     | `application.applicationfunction.split-witness`                              | `application` | `tests`     | many-to-many | medium   |
+| `testing.testcoveragemodel.covers.ux.uxapplication`                  | `testing.testcoveragemodel.context-studio-ux-test-coverage-model`       | `ux.uxapplication.context-studio-spa`                                        | `ux`          | `covers`    | many-to-many | medium   |
+| `testing.testcoveragetarget.covers.application.applicationcomponent` | `testing.testcoveragetarget.adapter-integration-tests`                  | `application.applicationcomponent.sqlite-change-proposal-repository`         | `application` | `covers`    | many-to-many | medium   |
+| `testing.testcoveragetarget.covers.application.applicationcomponent` | `testing.testcoveragetarget.adapter-integration-tests`                  | `application.applicationcomponent.sqlite-ontology-repository`                | `application` | `covers`    | many-to-many | medium   |
+| `testing.testcoveragetarget.covers.application.applicationcomponent` | `testing.testcoveragetarget.adapter-integration-tests`                  | `application.applicationcomponent.sqlite-pipeline-repository`                | `application` | `covers`    | many-to-many | medium   |
+| `testing.testcoveragetarget.covers.application.applicationcomponent` | `testing.testcoveragetarget.adapter-unit-tests`                         | `application.applicationcomponent.spa-cy-nlp-processor`                      | `application` | `covers`    | many-to-many | medium   |
+| `testing.testcoveragetarget.covers.ux.view`                          | `testing.testcoveragetarget.admin-health`                               | `ux.view.settings-view`                                                      | `ux`          | `covers`    | many-to-many | medium   |
+| `testing.testcoveragetarget.covers.application.applicationcomponent` | `testing.testcoveragetarget.chat-and-mcp-integration-tests`             | `application.applicationcomponent.mcp-server`                                | `application` | `covers`    | many-to-many | medium   |
+| `testing.testcoveragetarget.covers.application.applicationservice`   | `testing.testcoveragetarget.chat-and-mcp-integration-tests`             | `application.applicationservice.chat-service`                                | `application` | `covers`    | many-to-many | medium   |
+| `testing.testcoveragetarget.covers.application.applicationcomponent` | `testing.testcoveragetarget.domain-unit-tests`                          | `application.applicationcomponent.sqlite-ontology-repository`                | `application` | `covers`    | many-to-many | medium   |
+| `testing.testcoveragetarget.covers.application.applicationservice`   | `testing.testcoveragetarget.domain-unit-tests`                          | `application.applicationservice.ontology-service`                            | `application` | `covers`    | many-to-many | medium   |
+| `testing.testcoveragetarget.covers.application.applicationservice`   | `testing.testcoveragetarget.domain-unit-tests`                          | `application.applicationservice.proposal-service`                            | `application` | `covers`    | many-to-many | medium   |
+| `testing.testcoveragetarget.covers.business.businessprocess`         | `testing.testcoveragetarget.domain-unit-tests`                          | `business.businessprocess.adjudicate-a-proposal`                             | `business`    | `covers`    | many-to-many | medium   |
+| `testing.testcoveragetarget.covers.data-store.collection`            | `testing.testcoveragetarget.e2e-test-suite`                             | `data-store.collection.ontology-entities`                                    | `data-store`  | `covers`    | many-to-many | medium   |
+| `testing.testcoveragetarget.covers.ux.view`                          | `testing.testcoveragetarget.extraction-pipeline`                        | `ux.view.pipelines-view`                                                     | `ux`          | `covers`    | many-to-many | medium   |
+| `testing.testcoveragetarget.covers.ux.view`                          | `testing.testcoveragetarget.graph-analysis`                             | `ux.view.graph-view`                                                         | `ux`          | `covers`    | many-to-many | medium   |
+| `testing.testcoveragetarget.covers.application.applicationcomponent` | `testing.testcoveragetarget.interchange-integration-tests`              | `application.applicationcomponent.skos-interchange-adapter`                  | `application` | `covers`    | many-to-many | medium   |
+| `testing.testcoveragetarget.covers.application.applicationcomponent` | `testing.testcoveragetarget.interchange-integration-tests`              | `application.applicationcomponent.sqlite-interchange-repository`             | `application` | `covers`    | many-to-many | medium   |
+| `testing.testcoveragetarget.covers.application.applicationservice`   | `testing.testcoveragetarget.interchange-integration-tests`              | `application.applicationservice.bundle-import-service`                       | `application` | `covers`    | many-to-many | medium   |
+| `testing.testcoveragetarget.covers.business.businessprocess`         | `testing.testcoveragetarget.interchange-integration-tests`              | `business.businessprocess.client-round-trip`                                 | `business`    | `covers`    | many-to-many | medium   |
+| `testing.testcoveragetarget.covers.ux.view`                          | `testing.testcoveragetarget.llm-pipeline-execution`                     | `ux.view.pipeline-runs-view`                                                 | `ux`          | `covers`    | many-to-many | medium   |
+| `testing.testcoveragetarget.covers.data-store.collection`            | `testing.testcoveragetarget.performance-test-suite`                     | `data-store.collection.ontology-entities`                                    | `data-store`  | `covers`    | many-to-many | medium   |
+| `testing.testcoveragetarget.covers.application.applicationservice`   | `testing.testcoveragetarget.pipeline-integration-tests`                 | `application.applicationservice.pipeline-selection-service`                  | `application` | `covers`    | many-to-many | medium   |
+| `testing.testcoveragetarget.covers.application.applicationservice`   | `testing.testcoveragetarget.pipeline-integration-tests`                 | `application.applicationservice.source-extraction-service`                   | `application` | `covers`    | many-to-many | medium   |
+| `testing.testcoveragetarget.covers.business.businessprocess`         | `testing.testcoveragetarget.pipeline-integration-tests`                 | `business.businessprocess.extract-a-source-into-a-dataset`                   | `business`    | `covers`    | many-to-many | medium   |
+| `testing.testcoveragetarget.covers.ux.view`                          | `testing.testcoveragetarget.playwright-e2e-tests`                       | `ux.view.classes-view`                                                       | `ux`          | `covers`    | many-to-many | medium   |
+| `testing.testcoveragetarget.covers.ux.view`                          | `testing.testcoveragetarget.playwright-e2e-tests`                       | `ux.view.extraction-review-view`                                             | `ux`          | `covers`    | many-to-many | medium   |
+| `testing.testcoveragetarget.covers.ux.view`                          | `testing.testcoveragetarget.playwright-e2e-tests`                       | `ux.view.graph-view`                                                         | `ux`          | `covers`    | many-to-many | medium   |
+| `testing.testcoveragetarget.covers.ux.view`                          | `testing.testcoveragetarget.playwright-e2e-tests`                       | `ux.view.proposals-view`                                                     | `ux`          | `covers`    | many-to-many | medium   |
+| `testing.testcoveragetarget.covers.application.applicationcomponent` | `testing.testcoveragetarget.route-integration-tests`                    | `application.applicationcomponent.sqlite-ontology-repository`                | `application` | `covers`    | many-to-many | medium   |
+| `testing.testcoveragetarget.covers.business.businessprocess`         | `testing.testcoveragetarget.route-integration-tests`                    | `business.businessprocess.adjudicate-a-proposal`                             | `business`    | `covers`    | many-to-many | medium   |
+| `testing.testcoveragetarget.covers.application.applicationservice`   | `testing.testcoveragetarget.source-integration-tests`                   | `application.applicationservice.source-service`                              | `application` | `covers`    | many-to-many | medium   |
+| `testing.testcoveragetarget.covers.business.businessprocess`         | `testing.testcoveragetarget.source-integration-tests`                   | `business.businessprocess.extract-a-source-into-a-dataset`                   | `business`    | `covers`    | many-to-many | medium   |
+| `testing.testcoveragetarget.covers.ux.librarycomponent`              | `testing.testcoveragetarget.ux-component-tests`                         | `ux.librarycomponent.app-ui-primitives`                                      | `ux`          | `covers`    | many-to-many | medium   |
+| `testing.testcoveragetarget.covers.ux.view`                          | `testing.testcoveragetarget.ux-component-tests`                         | `ux.view.proposal-detail-view`                                               | `ux`          | `covers`    | many-to-many | medium   |
+| `testing.testcoveragetarget.covers.ux.view`                          | `testing.testcoveragetarget.ux-component-tests`                         | `ux.view.proposal-review-view`                                               | `ux`          | `covers`    | many-to-many | medium   |
+| `testing.testcoveragetarget.covers.ux.view`                          | `testing.testcoveragetarget.ux-component-tests`                         | `ux.view.run-detail-drawer`                                                  | `ux`          | `covers`    | many-to-many | medium   |
+| `testing.testcoveragetarget.covers.ux.view`                          | `testing.testcoveragetarget.ux-route-tests`                             | `ux.view.dashboard-view`                                                     | `ux`          | `covers`    | many-to-many | medium   |
+| `testing.testcoveragetarget.covers.ux.view`                          | `testing.testcoveragetarget.ux-route-tests`                             | `ux.view.individuals-view`                                                   | `ux`          | `covers`    | many-to-many | medium   |
+| `testing.testcoveragetarget.covers.application.applicationcomponent` | `testing.testcoveragetarget.versioning-integration-tests`               | `application.applicationcomponent.sqlite-change-repository`                  | `application` | `covers`    | many-to-many | medium   |
+| `testing.testcoveragetarget.covers.application.applicationservice`   | `testing.testcoveragetarget.versioning-integration-tests`               | `application.applicationservice.claim-service`                               | `application` | `covers`    | many-to-many | medium   |
+| `testing.testcoveragetarget.covers.application.applicationservice`   | `testing.testcoveragetarget.versioning-integration-tests`               | `application.applicationservice.proposal-service`                            | `application` | `covers`    | many-to-many | medium   |
+| `testing.testcoveragetarget.covers.business.businessprocess`         | `testing.testcoveragetarget.versioning-integration-tests`               | `business.businessprocess.adjudicate-a-proposal`                             | `business`    | `covers`    | many-to-many | medium   |
+| `testing.testcoveragetarget.covers.ux.view`                          | `testing.testcoveragetarget.versioning-workflow`                        | `ux.view.datasets-view`                                                      | `ux`          | `covers`    | many-to-many | medium   |
 
 ## Element Reference
 
@@ -310,6 +318,70 @@ Expected outcome for invalid inputs: missing required fields, duplicate titles, 
 | Type        | Related Element                            | Predicate  | Direction |
 | ----------- | ------------------------------------------ | ---------- | --------- |
 | intra-layer | `testing.testcoveragetarget.ontology-crud` | `composes` | inbound   |
+
+### Pre-review verdicts reach the proposal visibly {#pre-review-verdicts-reach-the-proposal-visibly}
+
+**ID**: `testing.testcasesketch.pre-review-verdicts-reach-the-proposal-visibly`
+
+**Type**: `testcasesketch`
+
+Unit, fake extraction service (TestPreReview in test_single_call_orchestrator.py): with no or a disabled pre_review setting nothing is reviewed; with one, a retype changes the individual's class and a split replaces it by its parts before relating, unsure changes nothing, the counts and tokens reach the run's metadata; a failed review keeps the individuals and the run.
+
+#### Attributes
+
+| Name   | Value |
+| ------ | ----- |
+| status | draft |
+
+#### Relationships
+
+| Type        | Related Element                                         | Predicate  | Direction |
+| ----------- | ------------------------------------------------------- | ---------- | --------- |
+| inter-layer | `application.applicationfunction.individual-pre-review` | `tests`    | outbound  |
+| intra-layer | `testing.testcoveragetarget.extraction-pipeline`        | `composes` | inbound   |
+
+### Seeded errors are built and scored offline {#seeded-errors-are-built-and-scored-offline}
+
+**ID**: `testing.testcasesketch.seeded-errors-are-built-and-scored-offline`
+
+**Type**: `testcasesketch`
+
+Unit, fake stage: the seeded-error builder merges gold pairs and retypes gold elements by stratum, and the scorer counts recovered, changed wrongly and missed seeds and false changes on the untouched controls, with Wilson intervals. No model call.
+
+#### Attributes
+
+| Name   | Value |
+| ------ | ----- |
+| status | draft |
+
+#### Relationships
+
+| Type        | Related Element                                                              | Predicate   | Direction |
+| ----------- | ---------------------------------------------------------------------------- | ----------- | --------- |
+| inter-layer | `motivation.requirement.pre-review-is-adopted-only-by-a-rule-set-in-advance` | `satisfies` | outbound  |
+| inter-layer | `application.applicationfunction.individual-pre-review`                      | `tests`     | outbound  |
+| intra-layer | `testing.testcoveragetarget.extraction-pipeline`                             | `composes`  | inbound   |
+
+### Split witness fires on Gate D's four splits {#split-witness-fires-on-gate-d-s-four-splits}
+
+**ID**: `testing.testcasesketch.split-witness-fires-on-gate-ds-four-splits`
+
+**Type**: `testcasesketch`
+
+Unit: the split witness marks 'Torx T20, T25', 'Copper water supply kits WX8X2, WX8X3, WX8X4', 'Straight and Phillips blade screwdriver' and 'Compression nut and ferrule', and its fire rate on single_call's recorded benchmark titles is reported.
+
+#### Attributes
+
+| Name   | Value |
+| ------ | ----- |
+| status | draft |
+
+#### Relationships
+
+| Type        | Related Element                                  | Predicate  | Direction |
+| ----------- | ------------------------------------------------ | ---------- | --------- |
+| inter-layer | `application.applicationfunction.split-witness`  | `tests`    | outbound  |
+| intra-layer | `testing.testcoveragetarget.extraction-pipeline` | `composes` | inbound   |
 
 ### Context Studio Backend Test Coverage Model {#context-studio-backend-test-coverage-model}
 
@@ -533,10 +605,13 @@ Coverage target for the RAG pipeline: text input -&gt; NLP extraction -&gt; embe
 
 #### Relationships
 
-| Type        | Related Element                                                        | Predicate  | Direction |
-| ----------- | ---------------------------------------------------------------------- | ---------- | --------- |
-| inter-layer | `ux.view.pipelines-view`                                               | `covers`   | outbound  |
-| intra-layer | `testing.testcoveragemodel.context-studio-backend-test-coverage-model` | `composes` | inbound   |
+| Type        | Related Element                                                         | Predicate  | Direction |
+| ----------- | ----------------------------------------------------------------------- | ---------- | --------- |
+| inter-layer | `ux.view.pipelines-view`                                                | `covers`   | outbound  |
+| intra-layer | `testing.testcoveragemodel.context-studio-backend-test-coverage-model`  | `composes` | inbound   |
+| intra-layer | `testing.testcasesketch.pre-review-verdicts-reach-the-proposal-visibly` | `composes` | outbound  |
+| intra-layer | `testing.testcasesketch.seeded-errors-are-built-and-scored-offline`     | `composes` | outbound  |
+| intra-layer | `testing.testcasesketch.split-witness-fires-on-gate-ds-four-splits`     | `composes` | outbound  |
 
 ### Graph Analysis {#graph-analysis}
 
@@ -872,4 +947,4 @@ Coverage target for change management: change proposals (create, decide, apply, 
 
 ---
 
-Generated: 2026-11-19T16:49:39.982Z | Model Version: 0.1.0
+Generated: 2026-11-24T12:27:09.956Z | Model Version: 0.1.0

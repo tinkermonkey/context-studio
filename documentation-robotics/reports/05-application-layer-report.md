@@ -16,11 +16,11 @@ Application components, services, and interactions.
 
 | Metric                    | Count |
 | ------------------------- | ----- |
-| Elements                  | 190   |
-| Intra-Layer Relationships | 414   |
-| Inter-Layer Relationships | 408   |
-| Inbound Relationships     | 229   |
-| Outbound Relationships    | 179   |
+| Elements                  | 192   |
+| Intra-Layer Relationships | 421   |
+| Inter-Layer Relationships | 414   |
+| Inbound Relationships     | 232   |
+| Outbound Relationships    | 182   |
 
 **Cross-Layer References**:
 
@@ -122,6 +122,7 @@ Application components, services, and interactions.
 | `application.applicationfunction.grounding-scoring`                         | `applicationfunction`      | 2             |
 | `application.applicationfunction.in-use-inspection`                         | `applicationfunction`      | 2             |
 | `application.applicationfunction.individual-extraction-apply`               | `applicationfunction`      | 3             |
+| `application.applicationfunction.individual-pre-review`                     | `applicationfunction`      | 7             |
 | `application.applicationfunction.llm-provider-routing`                      | `applicationfunction`      | 1             |
 | `application.applicationfunction.network-metrics-function`                  | `applicationfunction`      | 2             |
 | `application.applicationfunction.schema-connection-refinement-apply`        | `applicationfunction`      | 2             |
@@ -130,6 +131,7 @@ Application components, services, and interactions.
 | `application.applicationfunction.schema-grounding-apply`                    | `applicationfunction`      | 2             |
 | `application.applicationfunction.schema-neighborhood-traversal`             | `applicationfunction`      | 6             |
 | `application.applicationfunction.sparql-query-function`                     | `applicationfunction`      | 2             |
+| `application.applicationfunction.split-witness`                             | `applicationfunction`      | 2             |
 | `application.applicationinteraction.domain-event-publication`               | `applicationinteraction`   | 1             |
 | `application.applicationinteraction.external-reference-enrichment`          | `applicationinteraction`   | 1             |
 | `application.applicationinteraction.llm-provider-request`                   | `applicationinteraction`   | 1             |
@@ -150,7 +152,7 @@ Application components, services, and interactions.
 | `application.applicationprocess.schema-extraction-pipeline`                 | `applicationprocess`       | 5             |
 | `application.applicationprocess.schema-node-grounding-pipeline`             | `applicationprocess`       | 7             |
 | `application.applicationprocess.schema-relationship-reflection-pipeline`    | `applicationprocess`       | 7             |
-| `application.applicationprocess.single-call-individual-extraction`          | `applicationprocess`       | 3             |
+| `application.applicationprocess.single-call-individual-extraction`          | `applicationprocess`       | 4             |
 | `application.applicationservice.admin-service`                              | `applicationservice`       | 4             |
 | `application.applicationservice.approval-policy-repository`                 | `applicationservice`       | 3             |
 | `application.applicationservice.approval-policy-service`                    | `applicationservice`       | 3             |
@@ -178,10 +180,10 @@ Application components, services, and interactions.
 | `application.applicationservice.drift-planner`                              | `applicationservice`       | 2             |
 | `application.applicationservice.embedding-service`                          | `applicationservice`       | 12            |
 | `application.applicationservice.entity-source-repository`                   | `applicationservice`       | 2             |
-| `application.applicationservice.extraction-port`                            | `applicationservice`       | 3             |
+| `application.applicationservice.extraction-port`                            | `applicationservice`       | 4             |
 | `application.applicationservice.extraction-repository`                      | `applicationservice`       | 2             |
 | `application.applicationservice.extraction-run-repository`                  | `applicationservice`       | 2             |
-| `application.applicationservice.extraction-service`                         | `applicationservice`       | 31            |
+| `application.applicationservice.extraction-service`                         | `applicationservice`       | 32            |
 | `application.applicationservice.extraction-usage-repository`                | `applicationservice`       | 1             |
 | `application.applicationservice.graph-analysis-service`                     | `applicationservice`       | 11            |
 | `application.applicationservice.graph-engine`                               | `applicationservice`       | 2             |
@@ -192,7 +194,7 @@ Application components, services, and interactions.
 | `application.applicationservice.import-run-service`                         | `applicationservice`       | 9             |
 | `application.applicationservice.individual-recognizer`                      | `applicationservice`       | 3             |
 | `application.applicationservice.individual-vector-index`                    | `applicationservice`       | 6             |
-| `application.applicationservice.llmprovider`                                | `applicationservice`       | 19            |
+| `application.applicationservice.llmprovider`                                | `applicationservice`       | 20            |
 | `application.applicationservice.metrics-collector`                          | `applicationservice`       | 3             |
 | `application.applicationservice.nlpprocessor`                               | `applicationservice`       | 4             |
 | `application.applicationservice.ontology-deserializer`                      | `applicationservice`       | 3             |
@@ -213,7 +215,7 @@ Application components, services, and interactions.
 | `application.applicationservice.schema-recognition-preview-service`         | `applicationservice`       | 3             |
 | `application.applicationservice.schema-vector-index`                        | `applicationservice`       | 7             |
 | `application.applicationservice.semantic-query-engine`                      | `applicationservice`       | 2             |
-| `application.applicationservice.source-extraction-service`                  | `applicationservice`       | 13            |
+| `application.applicationservice.source-extraction-service`                  | `applicationservice`       | 14            |
 | `application.applicationservice.source-file-store`                          | `applicationservice`       | 2             |
 | `application.applicationservice.source-reader`                              | `applicationservice`       | 5             |
 | `application.applicationservice.source-repository`                          | `applicationservice`       | 4             |
@@ -534,6 +536,8 @@ flowchart TB
 | `application.applicationfunction.realizes.business.businessfunction` | `application.applicationfunction.grounding-scoring`                         | `business.businessfunction.schema-refinement`                                             | `business`    | `realizes`   | many-to-many | medium   |
 | `application.applicationfunction.satisfies.motivation.requirement`   | `application.applicationfunction.in-use-inspection`                         | `motivation.requirement.breaking-changes-never-auto-apply`                                | `motivation`  | `satisfies`  | many-to-many | medium   |
 | `application.applicationfunction.satisfies.motivation.requirement`   | `application.applicationfunction.individual-extraction-apply`               | `motivation.requirement.individuals-belong-to-one-dataset`                                | `motivation`  | `satisfies`  | many-to-many | medium   |
+| `application.applicationfunction.accesses.data-model.objectschema`   | `application.applicationfunction.individual-pre-review`                     | `data-model.objectschema.pipeline-configuration-entity`                                   | `data-model`  | `accesses`   | many-to-many | medium   |
+| `application.applicationfunction.accesses.data-model.objectschema`   | `application.applicationfunction.individual-pre-review`                     | `data-model.objectschema.pre-review-verdict`                                              | `data-model`  | `accesses`   | many-to-many | medium   |
 | `application.applicationfunction.realizes.business.businessfunction` | `application.applicationfunction.schema-connection-refinement-apply`        | `business.businessfunction.schema-refinement`                                             | `business`    | `realizes`   | many-to-many | medium   |
 | `application.applicationfunction.realizes.business.businessfunction` | `application.applicationfunction.schema-definition-refinement-apply`        | `business.businessfunction.schema-refinement`                                             | `business`    | `realizes`   | many-to-many | medium   |
 | `application.applicationfunction.realizes.business.businessfunction` | `application.applicationfunction.schema-extraction-apply`                   | `business.businessfunction.schema-refinement`                                             | `business`    | `realizes`   | many-to-many | medium   |
@@ -603,6 +607,7 @@ flowchart TB
 | `application.applicationservice.satisfies.motivation.requirement`    | `application.applicationservice.revert-service`                             | `motivation.requirement.every-applied-proposal-is-revertible`                             | `motivation`  | `satisfies`  | many-to-many | medium   |
 | `application.applicationservice.realizes.product.feature`            | `application.applicationservice.schema-recognition-preview-service`         | `product.feature.extraction-review-bench`                                                 | `product`     | `realizes`   | many-to-many | medium   |
 | `application.applicationservice.realizes.business.businessservice`   | `application.applicationservice.source-extraction-service`                  | `business.businessservice.source-extraction-service`                                      | `business`    | `realizes`   | many-to-many | medium   |
+| `application.applicationservice.realizes.product.feature`            | `application.applicationservice.source-extraction-service`                  | `product.feature.extraction-pre-review`                                                   | `product`     | `realizes`   | many-to-many | medium   |
 | `application.applicationservice.realizes.product.softwarecapability` | `application.applicationservice.source-extraction-service`                  | `product.softwarecapability.source-extraction`                                            | `product`     | `realizes`   | many-to-many | medium   |
 | `application.applicationservice.satisfies.motivation.requirement`    | `application.applicationservice.source-extraction-service`                  | `motivation.requirement.extracted-facts-cite-their-source`                                | `motivation`  | `satisfies`  | many-to-many | medium   |
 | `application.applicationservice.satisfies.motivation.requirement`    | `application.applicationservice.source-extraction-service`                  | `motivation.requirement.proposals-record-their-pipeline-and-version`                      | `motivation`  | `satisfies`  | many-to-many | medium   |
@@ -649,6 +654,9 @@ flowchart TB
 | `technology.systemsoftware.serves.application.applicationcomponent`  | `technology.systemsoftware.sqlalchemy`                                      | `application.applicationcomponent.sqlite-ontology-repository`                             | `application` | `serves`     | many-to-many | medium   |
 | `technology.systemsoftware.serves.application.applicationcomponent`  | `technology.systemsoftware.sqlite`                                          | `application.applicationcomponent.database-manager`                                       | `application` | `serves`     | many-to-many | medium   |
 | `technology.systemsoftware.serves.application.applicationcomponent`  | `technology.systemsoftware.trafilatura`                                     | `application.applicationcomponent.html-reader`                                            | `application` | `serves`     | many-to-many | medium   |
+| `testing.testcasesketch.tests.application.applicationfunction`       | `testing.testcasesketch.pre-review-verdicts-reach-the-proposal-visibly`     | `application.applicationfunction.individual-pre-review`                                   | `application` | `tests`      | many-to-many | medium   |
+| `testing.testcasesketch.tests.application.applicationfunction`       | `testing.testcasesketch.seeded-errors-are-built-and-scored-offline`         | `application.applicationfunction.individual-pre-review`                                   | `application` | `tests`      | many-to-many | medium   |
+| `testing.testcasesketch.tests.application.applicationfunction`       | `testing.testcasesketch.split-witness-fires-on-gate-ds-four-splits`         | `application.applicationfunction.split-witness`                                           | `application` | `tests`      | many-to-many | medium   |
 | `testing.testcoveragetarget.covers.application.applicationcomponent` | `testing.testcoveragetarget.adapter-integration-tests`                      | `application.applicationcomponent.sqlite-change-proposal-repository`                      | `application` | `covers`     | many-to-many | medium   |
 | `testing.testcoveragetarget.covers.application.applicationcomponent` | `testing.testcoveragetarget.adapter-integration-tests`                      | `application.applicationcomponent.sqlite-ontology-repository`                             | `application` | `covers`     | many-to-many | medium   |
 | `testing.testcoveragetarget.covers.application.applicationcomponent` | `testing.testcoveragetarget.adapter-integration-tests`                      | `application.applicationcomponent.sqlite-pipeline-repository`                             | `application` | `covers`     | many-to-many | medium   |
@@ -2753,6 +2761,36 @@ Turns an individual-extraction run's candidates into a change proposal (individu
 | intra-layer | `application.applicationservice.individual-recognizer`     | `serves`    | inbound   |
 | intra-layer | `application.applicationservice.ontology-repository`       | `serves`    | inbound   |
 
+### Individual Pre-Review {#individual-pre-review}
+
+**ID**: `application.applicationfunction.individual-pre-review`
+
+**Type**: `applicationfunction`
+
+The pre_review stage (domain/extraction/pre_review.py review_individuals; ExtractionService.review_individuals), called by SingleCallOrchestrator between find_individuals and derive_relationships when the configuration has a pre_review setting \{model, effort, max_tokens\}. One LLM call per section, against the same class catalog in a cached system prompt, given the section's text and its numbered individuals. It asks the split question where the split witness fires and the retype question of every individual, and answers split, retype or unsure per individual. The orchestrator replaces a split individual by its parts and gives a retyped one its new class before relating. An unusable answer keeps its individual as extracted; a failed call keeps the section's individuals and counts them as not reviewed in the run's metadata, never failing the run.
+
+#### Attributes
+
+| Name          | Value                                                                                                                                                                                    |
+| ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| documentation | Input: section text, catalog, individuals. Output: per-individual PreReviewVerdict; the orchestrator replaces a split individual by its parts and a retyped one's class before relating. |
+
+#### Relationships
+
+| Type        | Related Element                                                         | Predicate    | Direction |
+| ----------- | ----------------------------------------------------------------------- | ------------ | --------- |
+| inter-layer | `data-model.objectschema.pipeline-configuration-entity`                 | `accesses`   | outbound  |
+| inter-layer | `data-model.objectschema.pre-review-verdict`                            | `accesses`   | outbound  |
+| inter-layer | `testing.testcasesketch.pre-review-verdicts-reach-the-proposal-visibly` | `tests`      | inbound   |
+| inter-layer | `testing.testcasesketch.seeded-errors-are-built-and-scored-offline`     | `tests`      | inbound   |
+| intra-layer | `application.applicationfunction.split-witness`                         | `depends-on` | outbound  |
+| intra-layer | `application.applicationservice.extraction-service`                     | `realizes`   | outbound  |
+| intra-layer | `application.applicationservice.source-extraction-service`              | `realizes`   | outbound  |
+| intra-layer | `application.applicationfunction.split-witness`                         | `flows-to`   | inbound   |
+| intra-layer | `application.applicationprocess.single-call-individual-extraction`      | `depends-on` | inbound   |
+| intra-layer | `application.applicationservice.extraction-port`                        | `serves`     | inbound   |
+| intra-layer | `application.applicationservice.llmprovider`                            | `serves`     | inbound   |
+
 ### LLM Provider Routing {#llm-provider-routing}
 
 **ID**: `application.applicationfunction.llm-provider-routing`
@@ -2881,6 +2919,22 @@ Application function that executes SPARQL queries over the in-memory graph const
 | inter-layer | `data-store.accesspattern.entity-by-parent-range-scan`            | `serves`      | inbound   |
 | intra-layer | `application.applicationcomponent.network-x-graph-engine-adapter` | `assigned-to` | inbound   |
 | intra-layer | `application.applicationservice.graph-analysis-service`           | `realizes`    | outbound  |
+
+### Split Witness {#split-witness}
+
+**ID**: `application.applicationfunction.split-witness`
+
+**Type**: `applicationfunction`
+
+Deterministic and free: marks the extracted titles the split question applies to (a list separator such as a comma, 'and', '&' or '/' between noun phrases, or several part or model numbers). It catches all 4 of Gate D's splits and fires on 10-20% of single_call's recorded benchmark titles, most of them legitimately compound goals and outcomes, so it is a precondition for asking, never a verdict.
+
+#### Relationships
+
+| Type        | Related Element                                                     | Predicate    | Direction |
+| ----------- | ------------------------------------------------------------------- | ------------ | --------- |
+| inter-layer | `testing.testcasesketch.split-witness-fires-on-gate-ds-four-splits` | `tests`      | inbound   |
+| intra-layer | `application.applicationfunction.individual-pre-review`             | `depends-on` | inbound   |
+| intra-layer | `application.applicationfunction.individual-pre-review`             | `flows-to`   | outbound  |
 
 ### Domain Event Publication {#domain-event-publication}
 
@@ -3278,12 +3332,13 @@ Individual extraction in one LLM call over the source and catalog (the default i
 
 #### Relationships
 
-| Type        | Related Element                                             | Predicate  | Direction |
-| ----------- | ----------------------------------------------------------- | ---------- | --------- |
-| inter-layer | `business.businessprocess.extract-a-source-into-a-dataset`  | `realizes` | outbound  |
-| intra-layer | `application.applicationservice.pipeline-selection-service` | `realizes` | outbound  |
-| intra-layer | `application.applicationservice.source-extraction-service`  | `realizes` | outbound  |
-| intra-layer | `application.applicationservice.extraction-port`            | `serves`   | inbound   |
+| Type        | Related Element                                             | Predicate    | Direction |
+| ----------- | ----------------------------------------------------------- | ------------ | --------- |
+| inter-layer | `business.businessprocess.extract-a-source-into-a-dataset`  | `realizes`   | outbound  |
+| intra-layer | `application.applicationfunction.individual-pre-review`     | `depends-on` | outbound  |
+| intra-layer | `application.applicationservice.pipeline-selection-service` | `realizes`   | outbound  |
+| intra-layer | `application.applicationservice.source-extraction-service`  | `realizes`   | outbound  |
+| intra-layer | `application.applicationservice.extraction-port`            | `serves`     | inbound   |
 
 ### Admin Service {#admin-service}
 
@@ -3976,6 +4031,7 @@ Hexagonal port: what the pipelines context needs from the extraction context (ex
 
 | Type        | Related Element                                                       | Predicate | Direction |
 | ----------- | --------------------------------------------------------------------- | --------- | --------- |
+| intra-layer | `application.applicationfunction.individual-pre-review`               | `serves`  | outbound  |
 | intra-layer | `application.applicationprocess.find-then-type-individual-extraction` | `serves`  | outbound  |
 | intra-layer | `application.applicationprocess.individual-extraction-pipeline`       | `serves`  | outbound  |
 | intra-layer | `application.applicationprocess.single-call-individual-extraction`    | `serves`  | outbound  |
@@ -4074,6 +4130,7 @@ Domain service orchestrating four-layer knowledge extraction pipeline (KG contex
 | intra-layer | `application.applicationcomponent.sqlite-extraction-repository`           | `realizes`   | inbound   |
 | intra-layer | `application.applicationcomponent.wikidata-reference-source`              | `realizes`   | inbound   |
 | intra-layer | `application.applicationfunction.embedding-generation`                    | `realizes`   | inbound   |
+| intra-layer | `application.applicationfunction.individual-pre-review`                   | `realizes`   | inbound   |
 | intra-layer | `application.applicationservice.embedding-service`                        | `depends-on` | outbound  |
 | intra-layer | `application.applicationservice.extraction-repository`                    | `depends-on` | outbound  |
 | intra-layer | `application.applicationservice.extraction-run-repository`                | `depends-on` | outbound  |
@@ -4374,6 +4431,7 @@ Hexagonal port: LLM completion and model introspection.
 | intra-layer | `application.applicationcomponent.llm-decision-model`                  | `serves`     | outbound  |
 | intra-layer | `application.applicationcomponent.llm-provider-router`                 | `serves`     | outbound  |
 | intra-layer | `application.applicationcomponent.pipeline-orchestrator-factory`       | `serves`     | outbound  |
+| intra-layer | `application.applicationfunction.individual-pre-review`                | `serves`     | outbound  |
 | intra-layer | `application.applicationprocess.individual-extraction-pipeline`        | `serves`     | outbound  |
 | intra-layer | `application.applicationprocess.no-op-pipeline`                        | `serves`     | outbound  |
 | intra-layer | `application.applicationprocess.notes-to-claims-pipeline`              | `serves`     | outbound  |
@@ -5075,11 +5133,13 @@ Extracts a ready source into proposals in the background, and reports each sourc
 | ----------- | --------------------------------------------------------------------- | ------------ | --------- |
 | inter-layer | `api.operation.extract-source`                                        | `references` | inbound   |
 | inter-layer | `business.businessservice.source-extraction-service`                  | `realizes`   | outbound  |
+| inter-layer | `product.feature.extraction-pre-review`                               | `realizes`   | outbound  |
 | inter-layer | `product.softwarecapability.source-extraction`                        | `realizes`   | outbound  |
 | inter-layer | `motivation.requirement.extracted-facts-cite-their-source`            | `satisfies`  | outbound  |
 | inter-layer | `motivation.requirement.proposals-record-their-pipeline-and-version`  | `satisfies`  | outbound  |
 | inter-layer | `testing.testcoveragetarget.pipeline-integration-tests`               | `covers`     | inbound   |
 | intra-layer | `application.applicationcomponent.cascade-individual-recognizer`      | `realizes`   | inbound   |
+| intra-layer | `application.applicationfunction.individual-pre-review`               | `realizes`   | inbound   |
 | intra-layer | `application.applicationprocess.find-then-type-individual-extraction` | `realizes`   | inbound   |
 | intra-layer | `application.applicationprocess.individual-extraction-pipeline`       | `realizes`   | inbound   |
 | intra-layer | `application.applicationprocess.open-individual-extraction`           | `realizes`   | inbound   |
@@ -5333,4 +5393,4 @@ Hexagonal port: describes the workspace and the viewed page to the chat model.
 
 ---
 
-Generated: 2026-11-19T16:49:39.982Z | Model Version: 0.1.0
+Generated: 2026-11-24T12:27:09.956Z | Model Version: 0.1.0

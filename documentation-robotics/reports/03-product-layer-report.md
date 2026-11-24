@@ -16,11 +16,11 @@ Product features, capabilities, personas, and milestones.
 
 | Metric                    | Count |
 | ------------------------- | ----- |
-| Elements                  | 67    |
-| Intra-Layer Relationships | 115   |
-| Inter-Layer Relationships | 317   |
-| Inbound Relationships     | 258   |
-| Outbound Relationships    | 59    |
+| Elements                  | 68    |
+| Intra-Layer Relationships | 118   |
+| Inter-Layer Relationships | 320   |
+| Inbound Relationships     | 259   |
+| Outbound Relationships    | 61    |
 
 **Cross-Layer References**:
 
@@ -43,6 +43,7 @@ Product features, capabilities, personas, and milestones.
 | `product.feature.dataset-selector`                                | `feature`            | 2             |
 | `product.feature.demo-dataset-loader`                             | `feature`            | 2             |
 | `product.feature.export-bundle`                                   | `feature`            | 2             |
+| `product.feature.extraction-pre-review`                           | `feature`            | 3             |
 | `product.feature.extraction-review-bench`                         | `feature`            | 3             |
 | `product.feature.gold-mode`                                       | `feature`            | 4             |
 | `product.feature.graph-view`                                      | `feature`            | 2             |
@@ -61,7 +62,7 @@ Product features, capabilities, personas, and milestones.
 | `product.feature.sources-page-and-extract-flow`                   | `feature`            | 4             |
 | `product.feature.system-health-and-background-tasks`              | `feature`            | 2             |
 | `product.persona.client-maintainer`                               | `persona`            | 7             |
-| `product.persona.ontology-curator`                                | `persona`            | 29            |
+| `product.persona.ontology-curator`                                | `persona`            | 30            |
 | `product.softwarecapability.agent-access-over-mcp`                | `softwarecapability` | 1             |
 | `product.softwarecapability.chat-assistant`                       | `softwarecapability` | 1             |
 | `product.softwarecapability.claims-triage`                        | `softwarecapability` | 1             |
@@ -74,7 +75,7 @@ Product features, capabilities, personas, and milestones.
 | `product.softwarecapability.proposal-review-and-apply`            | `softwarecapability` | 5             |
 | `product.softwarecapability.reference-grounding`                  | `softwarecapability` | 2             |
 | `product.softwarecapability.schema-and-data-curation`             | `softwarecapability` | 3             |
-| `product.softwarecapability.source-extraction`                    | `softwarecapability` | 3             |
+| `product.softwarecapability.source-extraction`                    | `softwarecapability` | 4             |
 | `product.softwarecapability.workspace-administration`             | `softwarecapability` | 2             |
 | `product.softwarecapability.workspace-sync`                       | `softwarecapability` | 1             |
 | `product.userworkflow.adjudicate-a-client-plan`                   | `userworkflow`       | 6             |
@@ -97,7 +98,7 @@ Product features, capabilities, personas, and milestones.
 | `product.workflowstep.receive-the-client-plan`                    | `workflowstep`       | 3             |
 | `product.workflowstep.revert-an-applied-proposal`                 | `workflowstep`       | 3             |
 | `product.workflowstep.review-the-client-plan`                     | `workflowstep`       | 4             |
-| `product.workflowstep.review-the-extraction-proposal`             | `workflowstep`       | 4             |
+| `product.workflowstep.review-the-extraction-proposal`             | `workflowstep`       | 5             |
 | `product.workflowstep.see-the-citations`                          | `workflowstep`       | 3             |
 | `product.workflowstep.write-the-gold-back`                        | `workflowstep`       | 3             |
 
@@ -310,6 +311,7 @@ flowchart TB
 | `application.applicationservice.realizes.product.softwarecapability` | `application.applicationservice.reference-source`                   | `product.softwarecapability.reference-grounding`                                          | `product`    | `realizes`   | many-to-many | medium   |
 | `application.applicationservice.realizes.product.softwarecapability` | `application.applicationservice.revert-service`                     | `product.softwarecapability.proposal-review-and-apply`                                    | `product`    | `realizes`   | many-to-many | medium   |
 | `application.applicationservice.realizes.product.feature`            | `application.applicationservice.schema-recognition-preview-service` | `product.feature.extraction-review-bench`                                                 | `product`    | `realizes`   | many-to-many | medium   |
+| `application.applicationservice.realizes.product.feature`            | `application.applicationservice.source-extraction-service`          | `product.feature.extraction-pre-review`                                                   | `product`    | `realizes`   | many-to-many | medium   |
 | `application.applicationservice.realizes.product.softwarecapability` | `application.applicationservice.source-extraction-service`          | `product.softwarecapability.source-extraction`                                            | `product`    | `realizes`   | many-to-many | medium   |
 | `application.applicationservice.realizes.product.softwarecapability` | `application.applicationservice.source-file-store`                  | `product.softwarecapability.source-extraction`                                            | `product`    | `realizes`   | many-to-many | medium   |
 | `application.applicationservice.realizes.product.softwarecapability` | `application.applicationservice.source-reader`                      | `product.softwarecapability.source-extraction`                                            | `product`    | `realizes`   | many-to-many | medium   |
@@ -323,6 +325,8 @@ flowchart TB
 | `product.feature.satisfies.motivation.requirement`                   | `product.feature.configuration-settings`                            | `motivation.requirement.secrets-stay-in-the-configuration-file`                           | `motivation` | `satisfies`  | many-to-many | medium   |
 | `product.feature.satisfies.motivation.requirement`                   | `product.feature.dataset-selector`                                  | `motivation.requirement.individuals-belong-to-one-dataset`                                | `motivation` | `satisfies`  | many-to-many | medium   |
 | `product.feature.delivers.motivation.value`                          | `product.feature.export-bundle`                                     | `motivation.value.knowledge-reusability`                                                  | `motivation` | `delivers`   | many-to-many | medium   |
+| `product.feature.delivers.motivation.value`                          | `product.feature.extraction-pre-review`                             | `motivation.value.reviewer-time-goes-to-judgment-calls`                                   | `motivation` | `delivers`   | many-to-many | medium   |
+| `product.feature.satisfies.motivation.requirement`                   | `product.feature.extraction-pre-review`                             | `motivation.requirement.pre-review-is-adopted-only-by-a-rule-set-in-advance`              | `motivation` | `satisfies`  | many-to-many | medium   |
 | `product.feature.satisfies.motivation.requirement`                   | `product.feature.gold-mode`                                         | `motivation.requirement.proposals-record-their-pipeline-and-version`                      | `motivation` | `satisfies`  | many-to-many | medium   |
 | `product.feature.satisfies.motivation.requirement`                   | `product.feature.mcp-integration-settings`                          | `motivation.requirement.mcp-requires-a-bearer-token-on-loopback`                          | `motivation` | `satisfies`  | many-to-many | medium   |
 | `product.feature.delivers.motivation.value`                          | `product.feature.owl-skos-and-graph-ml-import-and-export`           | `motivation.value.knowledge-reusability`                                                  | `motivation` | `delivers`   | many-to-many | medium   |
@@ -730,6 +734,33 @@ JSON snapshot of a taxonomy, optionally with a dataset or schema only, from the 
 | inter-layer | `ux.view.taxonomy-detail-view`                         | `realizes` | inbound   |
 | intra-layer | `product.softwarecapability.client-interchange`        | `realizes` | outbound  |
 | intra-layer | `product.persona.client-maintainer`                    | `serves`   | outbound  |
+
+### Extraction Pre-Review {#extraction-pre-review}
+
+**ID**: `product.feature.extraction-pre-review`
+
+**Type**: `feature`
+
+An optional stage of individual extraction that reviews each extracted element before a person does: it splits an element that names several things and retypes one whose class is not the best fit. Built behind a pipeline configuration's pre_review setting, which no built-in configuration has. Assessed 2026-11-23 (documentation/extraction/experiments/2026-11-22-pre-review-stage.md): inconclusive, so it stays off; showing its verdicts in a proposal is not built.
+
+#### Attributes
+
+| Name     | Value    |
+| -------- | -------- |
+| priority | medium   |
+| size     | m        |
+| status   | proposed |
+
+#### Relationships
+
+| Type        | Related Element                                                              | Predicate   | Direction |
+| ----------- | ---------------------------------------------------------------------------- | ----------- | --------- |
+| inter-layer | `application.applicationservice.source-extraction-service`                   | `realizes`  | inbound   |
+| inter-layer | `motivation.value.reviewer-time-goes-to-judgment-calls`                      | `delivers`  | outbound  |
+| inter-layer | `motivation.requirement.pre-review-is-adopted-only-by-a-rule-set-in-advance` | `satisfies` | outbound  |
+| intra-layer | `product.softwarecapability.source-extraction`                               | `realizes`  | outbound  |
+| intra-layer | `product.persona.ontology-curator`                                           | `serves`    | outbound  |
+| intra-layer | `product.workflowstep.review-the-extraction-proposal`                        | `uses`      | inbound   |
 
 ### Extraction Review Bench {#extraction-review-bench}
 
@@ -1372,6 +1403,7 @@ Expert who designs schemas, writes taxonomy visions and adjudicates proposals; w
 | intra-layer | `product.feature.configuration-settings`                    | `serves`     | inbound   |
 | intra-layer | `product.feature.dataset-selector`                          | `serves`     | inbound   |
 | intra-layer | `product.feature.demo-dataset-loader`                       | `serves`     | inbound   |
+| intra-layer | `product.feature.extraction-pre-review`                     | `serves`     | inbound   |
 | intra-layer | `product.feature.extraction-review-bench`                   | `serves`     | inbound   |
 | intra-layer | `product.feature.gold-mode`                                 | `serves`     | inbound   |
 | intra-layer | `product.feature.graph-view`                                | `serves`     | inbound   |
@@ -1714,6 +1746,7 @@ Files, web pages and text turned into proposals of cited individuals and relatio
 | inter-layer | `motivation.requirement.extracted-facts-cite-their-source`      | `satisfies` | outbound  |
 | inter-layer | `motivation.requirement.relationships-limited-to-allowed-types` | `satisfies` | outbound  |
 | inter-layer | `motivation.goal.trustworthy-extraction-into-datasets`          | `supports`  | outbound  |
+| intra-layer | `product.feature.extraction-pre-review`                         | `realizes`  | inbound   |
 | intra-layer | `product.feature.extraction-review-bench`                       | `realizes`  | inbound   |
 | intra-layer | `product.feature.source-citations-on-entity-pages`              | `realizes`  | inbound   |
 | intra-layer | `product.feature.sources-page-and-extract-flow`                 | `realizes`  | inbound   |
@@ -2256,6 +2289,7 @@ Open a proposal, clear the mechanical tier by threshold, judge the rest, apply, 
 | intra-layer | `product.userworkflow.extract-a-document-into-a-dataset` | `composes` | inbound   |
 | intra-layer | `product.workflowstep.extract-into-a-dataset`            | `flows-to` | inbound   |
 | intra-layer | `product.workflowstep.see-the-citations`                 | `flows-to` | outbound  |
+| intra-layer | `product.feature.extraction-pre-review`                  | `uses`     | outbound  |
 | intra-layer | `product.feature.proposal-review-page`                   | `uses`     | outbound  |
 
 ### See the Citations {#see-the-citations}
@@ -2305,4 +2339,4 @@ Open a proposal, clear the mechanical tier by threshold, judge the rest, apply, 
 
 ---
 
-Generated: 2026-11-19T16:49:39.982Z | Model Version: 0.1.0
+Generated: 2026-11-24T12:27:09.956Z | Model Version: 0.1.0

@@ -1,0 +1,67 @@
+testing.testcasesketch.split-witness-fires-on-gate-ds-four-splits:
+  id: 52e12c37-806a-4776-b6d3-da525f31ab23
+  path: testing.testcasesketch.split-witness-fires-on-gate-ds-four-splits
+  spec_node_id: testing.testcasesketch
+  type: testcasesketch
+  layer_id: testing
+  name: Split witness fires on Gate D's four splits
+  description: "Unit: the split witness marks 'Torx T20, T25', 'Copper water
+    supply kits WX8X2, WX8X3, WX8X4', 'Straight and Phillips blade screwdriver'
+    and 'Compression nut and ferrule', and its fire rate on single_call's
+    recorded benchmark titles is reported."
+  attributes:
+    status: draft
+  source_reference:
+    provenance: manual
+    locations:
+      - file: local-server/tests/unit/domain/extraction/test_pre_review.py
+        symbol: test_the_witness_marks_every_split_from_gate_d
+  metadata:
+    created_at: 2026-11-22T14:48:32.970Z
+    updated_at: 2026-11-22T14:48:32.970Z
+    version: 1
+testing.testcasesketch.pre-review-verdicts-reach-the-proposal-visibly:
+  id: defda2fe-9dfd-45a2-b302-2c49c44f9acf
+  path: testing.testcasesketch.pre-review-verdicts-reach-the-proposal-visibly
+  spec_node_id: testing.testcasesketch
+  type: testcasesketch
+  layer_id: testing
+  name: Pre-review verdicts reach the proposal visibly
+  description: "Unit, fake extraction service (TestPreReview in
+    test_single_call_orchestrator.py): with no or a disabled pre_review setting
+    nothing is reviewed; with one, a retype changes the individual's class and a
+    split replaces it by its parts before relating, unsure changes nothing, the
+    counts and tokens reach the run's metadata; a failed review keeps the
+    individuals and the run."
+  attributes:
+    status: draft
+  source_reference:
+    provenance: manual
+    locations:
+      - file: local-server/tests/unit/domain/pipelines/test_single_call_orchestrator.py
+        symbol: TestPreReview
+  metadata:
+    created_at: 2026-11-22T14:48:32.973Z
+    updated_at: 2026-11-22T14:48:32.973Z
+    version: 1
+testing.testcasesketch.seeded-errors-are-built-and-scored-offline:
+  id: 2438511c-4928-4bf4-aa56-c785252873f7
+  path: testing.testcasesketch.seeded-errors-are-built-and-scored-offline
+  spec_node_id: testing.testcasesketch
+  type: testcasesketch
+  layer_id: testing
+  name: Seeded errors are built and scored offline
+  description: "Unit, fake stage: the seeded-error builder merges gold pairs and
+    retypes gold elements by stratum, and the scorer counts recovered, changed
+    wrongly and missed seeds and false changes on the untouched controls, with
+    Wilson intervals. No model call."
+  attributes:
+    status: draft
+  source_reference:
+    provenance: manual
+    locations:
+      - file: local-server/tests/unit/test_harness_pre_review_seeded.py
+  metadata:
+    created_at: 2026-11-22T14:48:32.973Z
+    updated_at: 2026-11-22T14:48:32.973Z
+    version: 1

@@ -242,3 +242,57 @@ application.applicationfunction.schema-neighborhood-traversal:
     created_at: 2026-11-19T14:52:33.537Z
     updated_at: 2026-11-19T14:52:33.537Z
     version: 1
+application.applicationfunction.individual-pre-review:
+  id: a70825fd-8882-4682-9bff-f8c25814c6b6
+  path: application.applicationfunction.individual-pre-review
+  spec_node_id: application.applicationfunction
+  type: applicationfunction
+  layer_id: application
+  name: Individual Pre-Review
+  description: The pre_review stage (domain/extraction/pre_review.py
+    review_individuals; ExtractionService.review_individuals), called by
+    SingleCallOrchestrator between find_individuals and derive_relationships
+    when the configuration has a pre_review setting {model, effort, max_tokens}.
+    One LLM call per section, against the same class catalog in a cached system
+    prompt, given the section's text and its numbered individuals. It asks the
+    split question where the split witness fires and the retype question of
+    every individual, and answers split, retype or unsure per individual. The
+    orchestrator replaces a split individual by its parts and gives a retyped
+    one its new class before relating. An unusable answer keeps its individual
+    as extracted; a failed call keeps the section's individuals and counts them
+    as not reviewed in the run's metadata, never failing the run.
+  attributes:
+    documentation: "Input: section text, catalog, individuals. Output:
+      per-individual PreReviewVerdict; the orchestrator replaces a split
+      individual by its parts and a retyped one's class before relating."
+  source_reference:
+    provenance: manual
+    locations:
+      - file: local-server/domain/extraction/pre_review.py
+        symbol: review_individuals
+  metadata:
+    created_at: 2026-11-22T14:48:01.263Z
+    updated_at: 2026-11-22T14:48:01.263Z
+    version: 1
+application.applicationfunction.split-witness:
+  id: 1161928f-6219-40a9-bb81-99e8ca10dc1c
+  path: application.applicationfunction.split-witness
+  spec_node_id: application.applicationfunction
+  type: applicationfunction
+  layer_id: application
+  name: Split Witness
+  description: "Deterministic and free: marks the extracted titles the split
+    question applies to (a list separator such as a comma, 'and', '&' or '/'
+    between noun phrases, or several part or model numbers). It catches all 4 of
+    Gate D's splits and fires on 10-20% of single_call's recorded benchmark
+    titles, most of them legitimately compound goals and outcomes, so it is a
+    precondition for asking, never a verdict."
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/domain/extraction/pre_review.py
+        symbol: split_witness
+  metadata:
+    created_at: 2026-11-22T14:48:01.264Z
+    updated_at: 2026-11-22T14:48:01.264Z
+    version: 1
