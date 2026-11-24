@@ -1,0 +1,483 @@
+- type: add
+  elementId: testing.testcasesketch.status-bar-shows-the-real-sync-state-and-no-placeholders
+  layerName: testing
+  after:
+    id: e7f83f86-4e94-4d1f-a046-d11f74827b04
+    path: testing.testcasesketch.status-bar-shows-the-real-sync-state-and-no-placeholders
+    spec_node_id: testing.testcasesketch
+    type: testcasesketch
+    layer_id: testing
+    name: Status bar > shows the real sync state and no placeholders
+    attributes:
+      status: automated
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: ux/e2e/tests/shell/statusbar.spec.ts
+          symbol: Status bar > shows the real sync state and no placeholders
+    metadata:
+      created_at: 2026-11-24T13:53:25.072Z
+      updated_at: 2026-11-24T13:53:25.072Z
+      version: 1
+  timestamp: 2026-11-24T13:53:25.107Z
+  sequenceNumber: 0
+  origin:
+    by: tier0
+    rule: js_test_case_call
+- type: add
+  elementId: testing.testcasesketch.describe-sync-state-counts-changes-that-are-waiting-to-be-pushed
+  layerName: testing
+  after:
+    id: 090a9439-2745-45ff-8a47-928e13f3e4d4
+    path: testing.testcasesketch.describe-sync-state-counts-changes-that-are-waiting-to-be-pushed
+    spec_node_id: testing.testcasesketch
+    type: testcasesketch
+    layer_id: testing
+    name: describeSyncState > counts changes that are waiting to be pushed
+    attributes:
+      status: automated
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: ux/src/components/shell/__tests__/StatusBarSync.test.tsx
+          symbol: describeSyncState > counts changes that are waiting to be pushed
+    metadata:
+      created_at: 2026-11-24T13:53:25.072Z
+      updated_at: 2026-11-24T13:53:25.072Z
+      version: 1
+  timestamp: 2026-11-24T13:53:25.107Z
+  sequenceNumber: 1
+  origin:
+    by: tier0
+    rule: js_test_case_call
+- type: add
+  elementId: testing.testcasesketch.describe-sync-state-reports-the-most-recent-of-the-last-push-and-the-last-pull
+  layerName: testing
+  after:
+    id: 958a0b99-df60-4995-b9e6-6c333fc89204
+    path: testing.testcasesketch.describe-sync-state-reports-the-most-recent-of-the-last-push-and-the-last-pull
+    spec_node_id: testing.testcasesketch
+    type: testcasesketch
+    layer_id: testing
+    name: describeSyncState > reports the most recent of the last push and the last
+      pull
+    attributes:
+      status: automated
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: ux/src/components/shell/__tests__/StatusBarSync.test.tsx
+          symbol: describeSyncState > reports the most recent of the last push and the
+            last pull
+    metadata:
+      created_at: 2026-11-24T13:53:25.072Z
+      updated_at: 2026-11-24T13:53:25.072Z
+      version: 1
+  timestamp: 2026-11-24T13:53:25.107Z
+  sequenceNumber: 2
+  origin:
+    by: tier0
+    rule: js_test_case_call
+- type: add
+  elementId: testing.testcasesketch.describe-sync-state-says-never-synced-when-configured-but-nothing-has-been-pushed-or-pulled
+  layerName: testing
+  after:
+    id: a9fa41d6-8db3-4567-b494-f123465695d0
+    path: testing.testcasesketch.describe-sync-state-says-never-synced-when-configured-but-nothing-has-been-pushed-or-pulled
+    spec_node_id: testing.testcasesketch
+    type: testcasesketch
+    layer_id: testing
+    name: describeSyncState > says never synced when configured but nothing has been
+      pushed or pulled
+    attributes:
+      status: automated
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: ux/src/components/shell/__tests__/StatusBarSync.test.tsx
+          symbol: describeSyncState > says never synced when configured but nothing has
+            been pushed or pulled
+    metadata:
+      created_at: 2026-11-24T13:53:25.072Z
+      updated_at: 2026-11-24T13:53:25.072Z
+      version: 1
+  timestamp: 2026-11-24T13:53:25.107Z
+  sequenceNumber: 3
+  origin:
+    by: tier0
+    rule: js_test_case_call
+- type: add
+  elementId: testing.testcasesketch.describe-sync-state-says-sync-is-degraded-when-the-status-could-not-be-computed-reliably
+  layerName: testing
+  after:
+    id: ebe463e3-911e-43da-a137-75c96a403332
+    path: testing.testcasesketch.describe-sync-state-says-sync-is-degraded-when-the-status-could-not-be-computed-reliably
+    spec_node_id: testing.testcasesketch
+    type: testcasesketch
+    layer_id: testing
+    name: describeSyncState > says sync is degraded when the status could not be
+      computed reliably
+    attributes:
+      status: automated
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: ux/src/components/shell/__tests__/StatusBarSync.test.tsx
+          symbol: describeSyncState > says sync is degraded when the status could not be
+            computed reliably
+    metadata:
+      created_at: 2026-11-24T13:53:25.072Z
+      updated_at: 2026-11-24T13:53:25.072Z
+      version: 1
+  timestamp: 2026-11-24T13:53:25.107Z
+  sequenceNumber: 4
+  origin:
+    by: tier0
+    rule: js_test_case_call
+- type: add
+  elementId: testing.testcasesketch.describe-sync-state-says-sync-is-off-when-no-sync-target-is-configured
+  layerName: testing
+  after:
+    id: 03dbb6e2-8d7e-4992-bdd1-ea627045b63b
+    path: testing.testcasesketch.describe-sync-state-says-sync-is-off-when-no-sync-target-is-configured
+    spec_node_id: testing.testcasesketch
+    type: testcasesketch
+    layer_id: testing
+    name: describeSyncState > says sync is off when no sync target is configured
+    attributes:
+      status: automated
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: ux/src/components/shell/__tests__/StatusBarSync.test.tsx
+          symbol: describeSyncState > says sync is off when no sync target is configured
+    metadata:
+      created_at: 2026-11-24T13:53:25.072Z
+      updated_at: 2026-11-24T13:53:25.072Z
+      version: 1
+  timestamp: 2026-11-24T13:53:25.107Z
+  sequenceNumber: 5
+  origin:
+    by: tier0
+    rule: js_test_case_call
+- type: add
+  elementId: testing.testcasesketch.status-bar-sync-matches-the-sync-status-response-last-sync-time-with-a-check-icon
+  layerName: testing
+  after:
+    id: e073f0de-a303-409d-8e36-ef221545b055
+    path: testing.testcasesketch.status-bar-sync-matches-the-sync-status-response-last-sync-time-with-a-check-icon
+    spec_node_id: testing.testcasesketch
+    type: testcasesketch
+    layer_id: testing
+    name: "StatusBarSync > matches the sync status response: last sync time with a
+      check icon"
+    attributes:
+      status: automated
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: ux/src/components/shell/__tests__/StatusBarSync.test.tsx
+          symbol: "StatusBarSync > matches the sync status response: last sync time with a
+            check icon"
+    metadata:
+      created_at: 2026-11-24T13:53:25.072Z
+      updated_at: 2026-11-24T13:53:25.072Z
+      version: 1
+  timestamp: 2026-11-24T13:53:25.107Z
+  sequenceNumber: 6
+  origin:
+    by: tier0
+    rule: js_test_case_call
+- type: add
+  elementId: testing.testcasesketch.status-bar-sync-matches-the-sync-status-response-sync-off
+  layerName: testing
+  after:
+    id: 1876e38a-c8e4-4748-b13e-ee6f9cce2d1e
+    path: testing.testcasesketch.status-bar-sync-matches-the-sync-status-response-sync-off
+    spec_node_id: testing.testcasesketch
+    type: testcasesketch
+    layer_id: testing
+    name: "StatusBarSync > matches the sync status response: sync off"
+    attributes:
+      status: automated
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: ux/src/components/shell/__tests__/StatusBarSync.test.tsx
+          symbol: "StatusBarSync > matches the sync status response: sync off"
+    metadata:
+      created_at: 2026-11-24T13:53:25.072Z
+      updated_at: 2026-11-24T13:53:25.072Z
+      version: 1
+  timestamp: 2026-11-24T13:53:25.107Z
+  sequenceNumber: 7
+  origin:
+    by: tier0
+    rule: js_test_case_call
+- type: add
+  elementId: testing.testcasesketch.status-bar-sync-matches-the-sync-status-response-unsynced-changes-no-check-icon
+  layerName: testing
+  after:
+    id: a4bbb0fd-e5d4-4342-94da-fa55ff0dbc35
+    path: testing.testcasesketch.status-bar-sync-matches-the-sync-status-response-unsynced-changes-no-check-icon
+    spec_node_id: testing.testcasesketch
+    type: testcasesketch
+    layer_id: testing
+    name: "StatusBarSync > matches the sync status response: unsynced changes, no
+      check icon"
+    attributes:
+      status: automated
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: ux/src/components/shell/__tests__/StatusBarSync.test.tsx
+          symbol: "StatusBarSync > matches the sync status response: unsynced changes, no
+            check icon"
+    metadata:
+      created_at: 2026-11-24T13:53:25.072Z
+      updated_at: 2026-11-24T13:53:25.072Z
+      version: 1
+  timestamp: 2026-11-24T13:53:25.107Z
+  sequenceNumber: 8
+  origin:
+    by: tier0
+    rule: js_test_case_call
+- type: add
+  elementId: testing.testcasesketch.status-bar-sync-shows-nothing-when-the-sync-status-request-fails
+  layerName: testing
+  after:
+    id: 9f8959ae-8530-4a7d-8bf6-b2b1d385658a
+    path: testing.testcasesketch.status-bar-sync-shows-nothing-when-the-sync-status-request-fails
+    spec_node_id: testing.testcasesketch
+    type: testcasesketch
+    layer_id: testing
+    name: StatusBarSync > shows nothing when the sync status request fails
+    attributes:
+      status: automated
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: ux/src/components/shell/__tests__/StatusBarSync.test.tsx
+          symbol: StatusBarSync > shows nothing when the sync status request fails
+    metadata:
+      created_at: 2026-11-24T13:53:25.072Z
+      updated_at: 2026-11-24T13:53:25.072Z
+      version: 1
+  timestamp: 2026-11-24T13:53:25.107Z
+  sequenceNumber: 9
+  origin:
+    by: tier0
+    rule: js_test_case_call
+- type: add
+  elementId: testing.testcasesketch.status-bar-sync-shows-nothing-while-the-sync-status-is-loading
+  layerName: testing
+  after:
+    id: 83d469ac-e3dc-46b5-842a-ad21771778d8
+    path: testing.testcasesketch.status-bar-sync-shows-nothing-while-the-sync-status-is-loading
+    spec_node_id: testing.testcasesketch
+    type: testcasesketch
+    layer_id: testing
+    name: StatusBarSync > shows nothing while the sync status is loading
+    attributes:
+      status: automated
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: ux/src/components/shell/__tests__/StatusBarSync.test.tsx
+          symbol: StatusBarSync > shows nothing while the sync status is loading
+    metadata:
+      created_at: 2026-11-24T13:53:25.072Z
+      updated_at: 2026-11-24T13:53:25.072Z
+      version: 1
+  timestamp: 2026-11-24T13:53:25.107Z
+  sequenceNumber: 10
+  origin:
+    by: tier0
+    rule: js_test_case_call
+- type: relationship-add
+  elementId: application.applicationservice.pipeline-selection-service::serves::ux.view.app-shell-view
+  layerName: application
+  after:
+    source: application.applicationservice.pipeline-selection-service
+    target: ux.view.app-shell-view
+    predicate: serves
+    layer: application
+    targetLayer: ux
+    category: structural
+  timestamp: 2026-11-24T13:53:25.107Z
+  sequenceNumber: 11
+  origin:
+    by: tier0
+    rule: edge:CALLS
+- type: add
+  elementId: ux.subview.status-bar-sync
+  layerName: ux
+  after:
+    id: fe323374-d579-4e02-a2f1-4dd7e8a680d4
+    path: ux.subview.status-bar-sync
+    spec_node_id: ux.subview
+    type: subview
+    layer_id: ux
+    name: StatusBarSync
+    description: The status bar's sync item.
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: ux/src/components/shell/StatusBarSync.tsx
+          symbol: StatusBarSync
+    metadata:
+      created_at: 2026-11-24T13:53:29.711Z
+      updated_at: 2026-11-24T13:53:29.711Z
+      version: 1
+  timestamp: 2026-11-24T13:53:29.727Z
+  sequenceNumber: 12
+- type: relationship-add
+  elementId: testing.testcasesketch.describe-sync-state-counts-changes-that-are-waiting-to-be-pushed::tests::ux.subview.status-bar-sync
+  layerName: testing
+  after:
+    source: testing.testcasesketch.describe-sync-state-counts-changes-that-are-waiting-to-be-pushed
+    target: ux.subview.status-bar-sync
+    predicate: tests
+    layer: testing
+    targetLayer: ux
+    category: structural
+  origin:
+    by: tier0
+    rule: js_test_case_call
+  timestamp: 2026-11-24T13:53:46.603Z
+  sequenceNumber: 13
+- type: relationship-add
+  elementId: testing.testcasesketch.describe-sync-state-reports-the-most-recent-of-the-last-push-and-the-last-pull::tests::ux.subview.status-bar-sync
+  layerName: testing
+  after:
+    source: testing.testcasesketch.describe-sync-state-reports-the-most-recent-of-the-last-push-and-the-last-pull
+    target: ux.subview.status-bar-sync
+    predicate: tests
+    layer: testing
+    targetLayer: ux
+    category: structural
+  origin:
+    by: tier0
+    rule: js_test_case_call
+  timestamp: 2026-11-24T13:53:46.603Z
+  sequenceNumber: 14
+- type: relationship-add
+  elementId: testing.testcasesketch.describe-sync-state-says-never-synced-when-configured-but-nothing-has-been-pushed-or-pulled::tests::ux.subview.status-bar-sync
+  layerName: testing
+  after:
+    source: testing.testcasesketch.describe-sync-state-says-never-synced-when-configured-but-nothing-has-been-pushed-or-pulled
+    target: ux.subview.status-bar-sync
+    predicate: tests
+    layer: testing
+    targetLayer: ux
+    category: structural
+  origin:
+    by: tier0
+    rule: js_test_case_call
+  timestamp: 2026-11-24T13:53:46.603Z
+  sequenceNumber: 15
+- type: relationship-add
+  elementId: testing.testcasesketch.describe-sync-state-says-sync-is-degraded-when-the-status-could-not-be-computed-reliably::tests::ux.subview.status-bar-sync
+  layerName: testing
+  after:
+    source: testing.testcasesketch.describe-sync-state-says-sync-is-degraded-when-the-status-could-not-be-computed-reliably
+    target: ux.subview.status-bar-sync
+    predicate: tests
+    layer: testing
+    targetLayer: ux
+    category: structural
+  origin:
+    by: tier0
+    rule: js_test_case_call
+  timestamp: 2026-11-24T13:53:46.603Z
+  sequenceNumber: 16
+- type: relationship-add
+  elementId: testing.testcasesketch.describe-sync-state-says-sync-is-off-when-no-sync-target-is-configured::tests::ux.subview.status-bar-sync
+  layerName: testing
+  after:
+    source: testing.testcasesketch.describe-sync-state-says-sync-is-off-when-no-sync-target-is-configured
+    target: ux.subview.status-bar-sync
+    predicate: tests
+    layer: testing
+    targetLayer: ux
+    category: structural
+  origin:
+    by: tier0
+    rule: js_test_case_call
+  timestamp: 2026-11-24T13:53:46.603Z
+  sequenceNumber: 17
+- type: relationship-add
+  elementId: testing.testcasesketch.status-bar-sync-matches-the-sync-status-response-last-sync-time-with-a-check-icon::tests::ux.subview.status-bar-sync
+  layerName: testing
+  after:
+    source: testing.testcasesketch.status-bar-sync-matches-the-sync-status-response-last-sync-time-with-a-check-icon
+    target: ux.subview.status-bar-sync
+    predicate: tests
+    layer: testing
+    targetLayer: ux
+    category: structural
+  origin:
+    by: tier0
+    rule: edge:TEST_FILE_NAME
+  timestamp: 2026-11-24T13:53:46.603Z
+  sequenceNumber: 18
+- type: relationship-add
+  elementId: testing.testcasesketch.status-bar-sync-matches-the-sync-status-response-sync-off::tests::ux.subview.status-bar-sync
+  layerName: testing
+  after:
+    source: testing.testcasesketch.status-bar-sync-matches-the-sync-status-response-sync-off
+    target: ux.subview.status-bar-sync
+    predicate: tests
+    layer: testing
+    targetLayer: ux
+    category: structural
+  origin:
+    by: tier0
+    rule: edge:TEST_FILE_NAME
+  timestamp: 2026-11-24T13:53:46.603Z
+  sequenceNumber: 19
+- type: relationship-add
+  elementId: testing.testcasesketch.status-bar-sync-matches-the-sync-status-response-unsynced-changes-no-check-icon::tests::ux.subview.status-bar-sync
+  layerName: testing
+  after:
+    source: testing.testcasesketch.status-bar-sync-matches-the-sync-status-response-unsynced-changes-no-check-icon
+    target: ux.subview.status-bar-sync
+    predicate: tests
+    layer: testing
+    targetLayer: ux
+    category: structural
+  origin:
+    by: tier0
+    rule: edge:TEST_FILE_NAME
+  timestamp: 2026-11-24T13:53:46.603Z
+  sequenceNumber: 20
+- type: relationship-add
+  elementId: testing.testcasesketch.status-bar-sync-shows-nothing-when-the-sync-status-request-fails::tests::ux.subview.status-bar-sync
+  layerName: testing
+  after:
+    source: testing.testcasesketch.status-bar-sync-shows-nothing-when-the-sync-status-request-fails
+    target: ux.subview.status-bar-sync
+    predicate: tests
+    layer: testing
+    targetLayer: ux
+    category: structural
+  origin:
+    by: tier0
+    rule: edge:TEST_FILE_NAME
+  timestamp: 2026-11-24T13:53:46.603Z
+  sequenceNumber: 21
+- type: relationship-add
+  elementId: testing.testcasesketch.status-bar-sync-shows-nothing-while-the-sync-status-is-loading::tests::ux.subview.status-bar-sync
+  layerName: testing
+  after:
+    source: testing.testcasesketch.status-bar-sync-shows-nothing-while-the-sync-status-is-loading
+    target: ux.subview.status-bar-sync
+    predicate: tests
+    layer: testing
+    targetLayer: ux
+    category: structural
+  origin:
+    by: tier0
+    rule: edge:TEST_FILE_NAME
+  timestamp: 2026-11-24T13:53:46.603Z
+  sequenceNumber: 22

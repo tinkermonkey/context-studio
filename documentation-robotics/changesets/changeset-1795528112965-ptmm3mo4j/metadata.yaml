@@ -5,7 +5,7 @@ description: '#1651: the status bar shows only what the app knows. Remove the
   reads the sync status API (useSyncStatus): off, N unsynced changes, last
   synced, degraded or never synced; absent while loading or on error.'
 created: 2026-11-24T13:48:32.976Z
-modified: 2026-11-24T13:48:38.050Z
+modified: 2026-11-24T13:53:53.795Z
 status: staged
 baseSnapshot: v2:sha256:53252d39ed1357a9afdd6132507b497bf81313353af91142ccb6b590b147594c
 origin:
@@ -15,4 +15,27 @@ stats:
   additions: 3
   modifications: 1
   deletions: 0
-lastSequence: 3
+lastSequence: 4
+unstaged:
+  - sequence: 0
+    removedAt: 4
+    change:
+      type: add
+      elementId: ux.subview.status-bar-sync
+      layerName: ux
+      after:
+        id: 00747120-7917-4fdd-b9ae-bc064a65dc94
+        path: ux.subview.status-bar-sync
+        spec_node_id: ux.subview
+        type: subview
+        layer_id: ux
+        name: Status Bar Sync
+        description: "Status bar item showing the real sync state from the sync status
+          API: off, unsynced change count, last sync time, degraded or never
+          synced. Absent while loading or on error."
+        metadata:
+          created_at: 2026-11-24T13:48:37.772Z
+          updated_at: 2026-11-24T13:48:37.772Z
+          version: 1
+      timestamp: 2026-11-24T13:48:37.792Z
+    rewritten: true
