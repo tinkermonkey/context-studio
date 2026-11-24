@@ -148,7 +148,8 @@ async def list_proposals(
         description=(
             "Only proposals the client has (true) or hasn't (false) landed in the taxonomy's"
             " source. false lists only proposals with something to land: at least one applied"
-            " operation, not a re-import (source bundle) and not about a dataset; with"
+            " operation, not a re-import (source bundle) and not about a dataset, whatever"
+            " their status (so landed=false with dataset_id is always empty); with"
             " status=done it lists what is still to land"
         ),
     ),

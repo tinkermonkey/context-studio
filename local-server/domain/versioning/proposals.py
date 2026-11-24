@@ -771,7 +771,9 @@ class ProposalFilter:
             only proposals with something to land that their client hasn't
             landed: at least one applied operation, not a re-import (source
             bundle, which came from the source) and not about a dataset
-            (dataset_id set), as neither changes the client's spec (#1634)
+            (dataset_id set), whatever its status, as neither changes the
+            client's spec (#1634); so landed False with a dataset_id matches
+            nothing
         implementation_id: Only proposals a run of this pipeline
             implementation made (their origin's implementation_id)
         dataset_id: Only proposals whose operations are in this dataset

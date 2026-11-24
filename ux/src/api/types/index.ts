@@ -16705,7 +16705,7 @@ export interface operations {
         status?: components["schemas"]["ProposalStatus"] | null;
         /** @description Who or what proposed them */
         source?: components["schemas"]["ProposalSource"] | null;
-        /** @description Only proposals the client has (true) or hasn't (false) landed in the taxonomy's source. false lists only proposals with something to land: at least one applied operation, not a re-import (source bundle) and not about a dataset; with status=done it lists what is still to land */
+        /** @description Only proposals the client has (true) or hasn't (false) landed in the taxonomy's source. false lists only proposals with something to land: at least one applied operation, not a re-import (source bundle) and not about a dataset, whatever their status (so landed=false with dataset_id is always empty); with status=done it lists what is still to land */
         landed?: boolean | null;
         /** @description Only proposals a run of this pipeline implementation made (their origin's implementation_id), e.g. "gold_check" for benchmark gold checks */
         implementation_id?: string | null;

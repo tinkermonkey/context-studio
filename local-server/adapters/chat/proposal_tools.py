@@ -877,7 +877,8 @@ class ListProposalsTool(_ProposalTool):
                 "type": "boolean",
                 "description": (
                     "Only proposals landed (true) in the source, or (false) with"
-                    " something to land that is not landed yet"
+                    " something to land that is not landed yet: never a re-import or a"
+                    " proposal about a dataset, whatever its status"
                 ),
             },
             "limit": {

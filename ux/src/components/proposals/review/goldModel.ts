@@ -209,8 +209,10 @@ export interface GoldRow {
   action: "Check gold" | "Continue" | "Open";
 }
 
-/** One gold check's row: what it holds and how far its check is. */
-/** A gold check's row, from the proposal's counts (the list's summary form has no operations). */
+/**
+ * One gold check's row: what it holds and how far its check is, from the
+ * proposal's counts (the list's summary form has no operations).
+ */
 export function goldRow(proposal: ChangeProposal, gold: GoldCheck): GoldRow {
   const reviewed = proposal.counts.filter(
     (c) => (c.op === "create" && c.kind === "individual") || c.kind === "relationship",
