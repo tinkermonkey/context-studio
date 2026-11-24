@@ -643,6 +643,7 @@ class ProposalService:
         source_revision: SourceRevision | None = None,
         client_metadata: Mapping[str, Any] | None = None,
         dataset_id: str | None = None,
+        review_only: bool = False,
     ) -> ChangeProposal:
         """
         Validate and store a proposal; every operation starts pending.
@@ -672,6 +673,8 @@ class ProposalService:
             dataset_id: The dataset its individual and relationship operations
                 are in; may be omitted while the taxonomy has at most one.
                 Every individual an operation references must be in it.
+            review_only: Keep the approval policy off it: a person decides
+                every operation (e.g. a benchmark gold check, #1628)
 
         Returns:
             The stored proposal, with any auto-applied outcomes (with dry_run,
@@ -758,6 +761,7 @@ class ProposalService:
                 source_revision=source_revision,
                 client_metadata={**(client_metadata or {}), **self._recorded_metadata},
                 dataset_id=dataset_id,
+                review_only=review_only,
             )
         except ValueError as exc:
             errors.append(OperationError(None, "invalid", str(exc)))
@@ -944,7 +948,10 @@ class ProposalService:
         its source applies a change first, so a person decides each one. Nor
         does an operation of an extraction from a source that cites no passage
         in it (`ChangeProposal.lacks_passage`), or one that names it by "$ref".
+        A review-only proposal has nothing auto-applied at all.
         """
+        if proposal.review_only:
+            return []  # a person decides every operation (#1628)
         taxonomy = self._repo.get_taxonomy(proposal.taxonomy_id)
         if taxonomy is None or taxonomy.mirrored:
             return []

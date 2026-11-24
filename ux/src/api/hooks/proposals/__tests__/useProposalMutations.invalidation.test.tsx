@@ -98,7 +98,13 @@ describe("change proposal mutation invalidation", () => {
     const { wrapper, invalidated } = setup();
     const { result } = renderHook(() => useCreateChangeProposal(), { wrapper });
 
-    result.current.mutate({ taxonomy_id: "tax-1", title: "Chores", source: "mcp", operations: [] });
+    result.current.mutate({
+      taxonomy_id: "tax-1",
+      title: "Chores",
+      source: "mcp",
+      operations: [],
+      review_only: false,
+    });
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
     for (const queryKey of [...PROPOSAL_QUERIES, ...ONTOLOGY_QUERIES]) {

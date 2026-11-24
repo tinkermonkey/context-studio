@@ -890,6 +890,8 @@ class ChangeProposal:
         dataset_id: The dataset its individual and relationship operations are
             in: every individual they reference belongs to it, and individuals
             it creates go into it. None when it has no such operations.
+        review_only: Set at create time: the approval policy never applies
+            any of it, so a person decides every operation (#1628)
     """
 
     id: str
@@ -905,6 +907,7 @@ class ChangeProposal:
     landed: Landing | None = None
     client_metadata: dict[str, Any] = field(default_factory=dict)
     dataset_id: str | None = None
+    review_only: bool = False
 
     def __post_init__(self) -> None:
         if not self.title or not self.title.strip():

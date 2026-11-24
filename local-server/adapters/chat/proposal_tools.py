@@ -313,7 +313,11 @@ OPERATION_SCHEMA: dict[str, Any] = {
             "type": "number",
             "minimum": 0,
             "maximum": 1,
-            "description": "Your confidence in this change, 0 to 1",
+            "description": (
+                "Your confidence in this change, 0 to 1. An operation without one never"
+                " auto-applies under a taxonomy's approval policy, whatever its minimum"
+                " (0 included), pipelines' operations too; a person decides it"
+            ),
         },
         "replacement": {
             "type": "string",
@@ -425,6 +429,13 @@ class ProposeChangesTool(_ProposalTool):
                     " (see list_datasets); every individual they reference must be in it"
                 ),
             },
+            "review_only": {
+                "type": "boolean",
+                "description": (
+                    "Keep the taxonomy's approval policy off it: nothing auto-applies, a"
+                    " person decides every operation (default false)"
+                ),
+            },
             "title": {"type": "string", "description": "A short summary of the proposal"},
             "rationale": {"type": "string", "description": "Why these changes, as a whole"},
             "operations": {
@@ -454,6 +465,9 @@ class ProposeChangesTool(_ProposalTool):
         title = required_str(args, "title")
         rationale = optional_str(args, "rationale")
         dry_run = args.get("dry_run", False)
+        review_only = args.get("review_only", False)
+        if not isinstance(review_only, bool):
+            raise ToolArgumentError("'review_only' must be true or false")
         if not isinstance(dry_run, bool):
             raise ToolArgumentError("'dry_run' must be true or false")
         raw = args.get("operations")
@@ -474,6 +488,7 @@ class ProposeChangesTool(_ProposalTool):
                 dry_run=dry_run,
                 source_revision=revision,
                 dataset_id=optional_str(args, "dataset"),
+                review_only=review_only,
             )
         except ProposalValidationError as exc:
             return _not_stored(exc.errors, drafts)

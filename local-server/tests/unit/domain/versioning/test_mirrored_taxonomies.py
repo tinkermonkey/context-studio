@@ -83,7 +83,12 @@ def spec(ontology, policies):
 
 
 def retitle(spec, title="API operation"):
-    return [OperationDraft(1, T.UPDATE, K.CLASS, spec["class"], fields={"title": title})]
+    # A stated probability: one without never auto-applies (#1628)
+    return [
+        OperationDraft(
+            1, T.UPDATE, K.CLASS, spec["class"], fields={"title": title}, probability=0.9
+        )
+    ]
 
 
 def decided(service, spec, **kwargs):

@@ -1,6 +1,7 @@
 """Unit tests for approval policies (#1355): parsing, matching, hard rules, auto-apply."""
 
 import logging
+from dataclasses import replace
 
 import pytest
 
@@ -45,7 +46,16 @@ HOUSE_RULES = {
 }
 
 
-def op(seq, op_type, kind, scope, target=None, ref=None, probability=None, **fields):
+# A stated probability: an operation without one never auto-applies (#1628)
+STATED = 0.9
+
+
+def draft(*args, probability=STATED, **kwargs):
+    """An OperationDraft that states a probability, as auto-apply needs."""
+    return OperationDraft(*args, probability=probability, **kwargs)
+
+
+def op(seq, op_type, kind, scope, target=None, ref=None, probability=STATED, **fields):
     return ProposedOperation(
         seq=seq,
         op=op_type,
@@ -215,13 +225,18 @@ class TestMatching:
         assert not policy.allows(
             op(1, T.UPDATE, K.CLASS, S.EDITORIAL, "c", probability=0.5, title="x"), [], MCP
         )
-        assert not policy.allows(op(1, T.UPDATE, K.CLASS, S.EDITORIAL, "c", title="x"), [], MCP)
+        unstated = op(1, T.UPDATE, K.CLASS, S.EDITORIAL, "c", probability=None, title="x")
+        assert not policy.allows(unstated, [], MCP)
+        # #1628: no probability never meets the rule, even a minimum of 0
         lenient = ApprovalPolicy("tax", (AutoApplyRule(scope=S.EDITORIAL),))
-        assert lenient.allows(op(1, T.UPDATE, K.CLASS, S.EDITORIAL, "c", title="x"), [], MCP)
+        assert lenient.allows(
+            op(1, T.UPDATE, K.CLASS, S.EDITORIAL, "c", probability=0.0, title="x"), [], MCP
+        )
+        assert not lenient.allows(unstated, [], MCP)
 
     def test_a_bundle_import_is_exempt_from_min_probability_alone(self):
         policy = ApprovalPolicy("tax", (AutoApplyRule(scope=S.EDITORIAL),), min_probability=0.8)
-        edit = op(1, T.UPDATE, K.CLASS, S.EDITORIAL, "c", title="x")
+        edit = op(1, T.UPDATE, K.CLASS, S.EDITORIAL, "c", probability=None, title="x")
         assert policy.allows(edit, [], ProposalSource.BUNDLE)
         assert not policy.allows(edit, [], ProposalSource.MCP)
         assert not policy.allows(edit, [], ProposalSource.CHAT)
@@ -344,14 +359,12 @@ def house(ontology):
 
 def house_drafts(house):
     return [
-        OperationDraft(
+        draft(
             1, T.CREATE, K.INDIVIDUAL, fields={"class_ids": [house["activity"]], "title": "Dust"}
         ),
-        OperationDraft(
-            2, T.CREATE, K.INDIVIDUAL, fields={"class_ids": [house["place"]], "title": "Cellar"}
-        ),
-        OperationDraft(3, T.UPDATE, K.INDIVIDUAL, house["attic"], fields={"description": "Dusty"}),
-        OperationDraft(4, T.DELETE, K.INDIVIDUAL, house["attic"]),
+        draft(2, T.CREATE, K.INDIVIDUAL, fields={"class_ids": [house["place"]], "title": "Cellar"}),
+        draft(3, T.UPDATE, K.INDIVIDUAL, house["attic"], fields={"description": "Dusty"}),
+        draft(4, T.DELETE, K.INDIVIDUAL, house["attic"]),
     ]
 
 
@@ -384,6 +397,29 @@ class TestAutoApplyOnPropose:
         assert ontology.get_individual(house["attic"]).description == "Dusty"
         assert tags.tags == [("IndividualCreated", proposal.id)]
 
+    def test_a_review_only_proposal_is_never_auto_applied(self, service, policies, house):
+        """#1628: whatever the policy says, a person decides every operation."""
+        policies.save(ApprovalPolicy.from_rules(house["taxonomy"], HOUSE_RULES))
+        drafts = house_drafts(house)[:3]
+
+        proposal = service.propose(
+            house["taxonomy"], "Gold check", drafts, ProposalSource.PIPELINE, review_only=True
+        )
+
+        assert proposal.review_only is True
+        assert {o.status for o in proposal.operations} == {OperationStatus.PENDING}
+        assert service.auto_apply_operation_ids(proposal) == []
+        assert service.get(proposal.id).review_only is True
+
+    def test_an_operation_without_a_probability_waits(self, service, policies, house):
+        """#1628: no stated probability never meets the policy's minimum, even 0."""
+        policies.save(ApprovalPolicy.from_rules(house["taxonomy"], HOUSE_RULES))
+        drafts = [replace(d, probability=None) for d in house_drafts(house)[:3]]
+
+        proposal = service.propose(house["taxonomy"], "Chores", drafts, ProposalSource.MCP)
+
+        assert {o.status for o in proposal.operations} == {OperationStatus.PENDING}
+
     def test_a_vision_change_never_auto_applies(self, service, policies, house, ontology):
         """The vision is the charter proposals are judged against; a person decides."""
         policies.save(
@@ -394,12 +430,8 @@ class TestAutoApplyOnPropose:
         )
         before = ontology.get_taxonomy(house["taxonomy"])
         drafts = [
-            OperationDraft(
-                1, T.UPDATE, K.TAXONOMY, house["taxonomy"], fields={"vision": "Anything"}
-            ),
-            OperationDraft(
-                2, T.UPDATE, K.TAXONOMY, house["taxonomy"], fields={"description": "Our home"}
-            ),
+            draft(1, T.UPDATE, K.TAXONOMY, house["taxonomy"], fields={"vision": "Anything"}),
+            draft(2, T.UPDATE, K.TAXONOMY, house["taxonomy"], fields={"description": "Our home"}),
         ]
 
         proposal = service.propose(house["taxonomy"], "Recharter", drafts, ProposalSource.MCP)
@@ -454,16 +486,14 @@ class TestAutoApplyOnPropose:
         tags = RunTags()
         publisher.subscribe(ClassCreated, tags)
         drafts = [
-            OperationDraft(
+            draft(
                 1,
                 T.CREATE,
                 K.CLASS,
                 ref="chore",
                 fields={"concept_scheme_id": house["scheme"], "title": "Chore"},
             ),
-            OperationDraft(
-                2, T.CREATE, K.INDIVIDUAL, fields={"class_ids": ["$chore"], "title": "Mop"}
-            ),
+            draft(2, T.CREATE, K.INDIVIDUAL, fields={"class_ids": ["$chore"], "title": "Mop"}),
         ]
         proposal = service.propose(house["taxonomy"], "Chores", drafts, ProposalSource.MCP)
         assert [o.status for o in proposal.operations] == [OperationStatus.APPLIED] * 2
@@ -498,24 +528,22 @@ class TestAutoApplyStaysInsideTheTaxonomy:
         # Another taxonomy's individual is in another dataset, so it can't be proposed
         # here at all (#1487); see test_another_taxonomys_individual_is_refused.
         drafts = [
-            OperationDraft(
+            draft(
                 2,
                 T.CREATE,
                 K.CLASS,
                 fields={"concept_scheme_id": other["scheme"], "title": "Gizmo"},
             ),
-            OperationDraft(3, T.CREATE, K.TAXONOMY, fields={"title": "Third"}),
-            OperationDraft(
-                4, T.UPDATE, K.TAXONOMY, other["taxonomy"], fields={"title": "Elsewhere"}
-            ),
-            OperationDraft(
+            draft(3, T.CREATE, K.TAXONOMY, fields={"title": "Third"}),
+            draft(4, T.UPDATE, K.TAXONOMY, other["taxonomy"], fields={"title": "Elsewhere"}),
+            draft(
                 5,
                 T.CREATE,
                 K.INDIVIDUAL,
                 fields={"class_ids": [house["place"], other["thing"]], "title": "Shed"},
             ),
-            OperationDraft(6, T.UPDATE, K.INDIVIDUAL, house["attic"], fields={"title": "Loft"}),
-            OperationDraft(7, T.UPDATE, K.TAXONOMY, house["taxonomy"], fields={"title": "Home"}),
+            draft(6, T.UPDATE, K.INDIVIDUAL, house["attic"], fields={"title": "Loft"}),
+            draft(7, T.UPDATE, K.TAXONOMY, house["taxonomy"], fields={"title": "Home"}),
         ]
 
         proposal = service.propose(house["taxonomy"], "Mixed", drafts, ProposalSource.MCP)
@@ -531,9 +559,7 @@ class TestAutoApplyStaysInsideTheTaxonomy:
         assert "Third" not in [t.title for t in ontology.list_taxonomies()]
 
     def test_another_taxonomys_individual_is_refused(self, service, house, other, ontology):
-        drafts = [
-            OperationDraft(1, T.UPDATE, K.INDIVIDUAL, other["widget"], fields={"title": "Gadget"})
-        ]
+        drafts = [draft(1, T.UPDATE, K.INDIVIDUAL, other["widget"], fields={"title": "Gadget"})]
 
         with pytest.raises(ProposalValidationError, match="dataset_mismatch"):
             service.propose(house["taxonomy"], "Reach", drafts, ProposalSource.MCP)
@@ -548,11 +574,9 @@ class TestAutoApplyStaysInsideTheTaxonomy:
             )
         )
         drafts = [
-            OperationDraft(1, T.UPDATE, K.PROPERTY, near.id, fields={"title": "next to"}),
-            OperationDraft(
-                2, T.CREATE, K.PROPERTY, fields={"identifier": "under", "title": "under"}
-            ),
-            OperationDraft(
+            draft(1, T.UPDATE, K.PROPERTY, near.id, fields={"title": "next to"}),
+            draft(2, T.CREATE, K.PROPERTY, fields={"identifier": "under", "title": "under"}),
+            draft(
                 3,
                 T.CREATE,
                 K.RELATIONSHIP,
@@ -569,9 +593,7 @@ class TestAutoApplyStaysInsideTheTaxonomy:
 
 def test_an_editorial_title_starting_with_a_dollar_auto_applies(service, policies, house, ontology):
     policies.save(ApprovalPolicy(house["taxonomy"], (AutoApplyRule(scope=S.EDITORIAL),)))
-    drafts = [
-        OperationDraft(1, T.UPDATE, K.INDIVIDUAL, house["attic"], fields={"title": "$5 attic"})
-    ]
+    drafts = [draft(1, T.UPDATE, K.INDIVIDUAL, house["attic"], fields={"title": "$5 attic"})]
     proposal = service.propose(house["taxonomy"], "Price", drafts, ProposalSource.MCP)
     assert statuses(proposal) == {1: APPLIED}
     assert ontology.get_individual(house["attic"]).title == "$5 attic"
@@ -583,13 +605,13 @@ class TestEveryClassIsCovered:
     def test_a_create_typed_by_an_uncovered_class_waits(self, service, policies, house):
         policies.save(ApprovalPolicy.from_rules(house["taxonomy"], self.RULE))
         drafts = [
-            OperationDraft(
+            draft(
                 1,
                 T.CREATE,
                 K.INDIVIDUAL,
                 fields={"class_ids": [house["activity"], house["place"]], "title": "Garage"},
             ),
-            OperationDraft(
+            draft(
                 2,
                 T.CREATE,
                 K.INDIVIDUAL,
@@ -609,15 +631,15 @@ class TestEveryClassIsCovered:
             )
         )
         drafts = [
-            OperationDraft(
+            draft(
                 1,
                 T.UPDATE,
                 K.INDIVIDUAL,
                 dusting.id,
                 fields={"class_ids": [house["activity"], house["place"]]},
             ),
-            OperationDraft(2, T.UPDATE, K.INDIVIDUAL, house["attic"], fields={"title": "Loft"}),
-            OperationDraft(3, T.UPDATE, K.INDIVIDUAL, sweeping.id, fields={"title": "Sweep"}),
+            draft(2, T.UPDATE, K.INDIVIDUAL, house["attic"], fields={"title": "Loft"}),
+            draft(3, T.UPDATE, K.INDIVIDUAL, sweeping.id, fields={"title": "Sweep"}),
         ]
         proposal = service.propose(house["taxonomy"], "Retype", drafts, ProposalSource.MCP)
         # Seq 1 would make Dusting a place too, and the attic is a place already.
@@ -758,13 +780,13 @@ class TestClassRulesFollowInheritance:
     ):
         policies.save(ApprovalPolicy.from_rules(house["taxonomy"], HOUSE_RULES))
         drafts = [
-            OperationDraft(
+            draft(
                 1,
                 T.CREATE,
                 K.INDIVIDUAL,
                 fields={"class_ids": [chores["dusting"]], "title": "Dust"},
             ),
-            OperationDraft(
+            draft(
                 2,
                 T.CREATE,
                 K.INDIVIDUAL,
@@ -778,7 +800,7 @@ class TestClassRulesFollowInheritance:
     def test_an_update_of_a_subclass_individual_is_covered_by_identifier_or_id(
         self, service, policies, house, chores
     ):
-        drafts = [OperationDraft(1, T.UPDATE, K.INDIVIDUAL, chores["mop"], fields={"title": "Mop"})]
+        drafts = [draft(1, T.UPDATE, K.INDIVIDUAL, chores["mop"], fields={"title": "Mop"})]
         for key in ("house_activity", house["activity"]):
             policies.save(rules(house, {"op": "update", "kind": "individual", "class": key}))
             proposal = service.propose(house["taxonomy"], "Rename", drafts, ProposalSource.MCP)
@@ -787,8 +809,8 @@ class TestClassRulesFollowInheritance:
     def test_a_rule_on_a_subclass_doesnt_cover_its_parent(self, service, policies, house, chores):
         policies.save(rules(house, {"op": "update", "kind": "individual", "class": "cleaning"}))
         drafts = [
-            OperationDraft(1, T.UPDATE, K.INDIVIDUAL, chores["cook"], fields={"title": "Bake"}),
-            OperationDraft(2, T.UPDATE, K.INDIVIDUAL, chores["mop"], fields={"title": "Mop"}),
+            draft(1, T.UPDATE, K.INDIVIDUAL, chores["cook"], fields={"title": "Bake"}),
+            draft(2, T.UPDATE, K.INDIVIDUAL, chores["mop"], fields={"title": "Mop"}),
         ]
         proposal = service.propose(house["taxonomy"], "Rename", drafts, ProposalSource.MCP)
         assert statuses(proposal) == {1: PENDING, 2: APPLIED}
@@ -799,7 +821,7 @@ class TestClassRulesFollowInheritance:
         policies.save(rules(house, {"op": "create", "kind": "class", "class": "house_activity"}))
         scheme = house["scheme"]
         drafts = [
-            OperationDraft(
+            draft(
                 1,
                 T.CREATE,
                 K.CLASS,
@@ -810,7 +832,7 @@ class TestClassRulesFollowInheritance:
                     "parent_class_id": house["activity"],
                 },
             ),
-            OperationDraft(
+            draft(
                 2,
                 T.CREATE,
                 K.CLASS,
@@ -821,7 +843,7 @@ class TestClassRulesFollowInheritance:
                 },
             ),
             # Under a class the proposal creates, itself under House activity.
-            OperationDraft(
+            draft(
                 3,
                 T.CREATE,
                 K.CLASS,
@@ -831,7 +853,7 @@ class TestClassRulesFollowInheritance:
                     "parent_class_id": "$laundry",
                 },
             ),
-            OperationDraft(
+            draft(
                 4,
                 T.CREATE,
                 K.CLASS,
@@ -842,9 +864,7 @@ class TestClassRulesFollowInheritance:
                 },
             ),
             # At the top of the scheme: no parent, so no class rule names it.
-            OperationDraft(
-                5, T.CREATE, K.CLASS, fields={"concept_scheme_id": scheme, "title": "Mood"}
-            ),
+            draft(5, T.CREATE, K.CLASS, fields={"concept_scheme_id": scheme, "title": "Mood"}),
         ]
         proposal = service.propose(house["taxonomy"], "Classes", drafts, ProposalSource.MCP)
 
@@ -860,7 +880,7 @@ class TestClassRulesFollowInheritance:
         )
         follows = chores["follows"]
         drafts = [
-            OperationDraft(
+            draft(
                 1,
                 T.CREATE,
                 K.RELATIONSHIP,
@@ -871,7 +891,7 @@ class TestClassRulesFollowInheritance:
                 },
             ),
             # The target is a Resource: not covered.
-            OperationDraft(
+            draft(
                 2,
                 T.CREATE,
                 K.RELATIONSHIP,
@@ -882,7 +902,7 @@ class TestClassRulesFollowInheritance:
                 },
             ),
             # A class end is its own class.
-            OperationDraft(
+            draft(
                 3,
                 T.CREATE,
                 K.RELATIONSHIP,
@@ -907,14 +927,14 @@ class TestClassRulesFollowInheritance:
             )
         )
         drafts = [
-            OperationDraft(
+            draft(
                 1,
                 T.CREATE,
                 K.INDIVIDUAL,
                 ref="sweep",
                 fields={"class_ids": [chores["cleaning"]], "title": "Sweep"},
             ),
-            OperationDraft(
+            draft(
                 2,
                 T.CREATE,
                 K.RELATIONSHIP,
@@ -935,14 +955,14 @@ class TestClassRulesFollowInheritance:
         """
         policies.save(ApprovalPolicy.from_rules(house["taxonomy"], HOUSE_RULES))
         drafts = [
-            OperationDraft(
+            draft(
                 1,
                 T.CREATE,
                 K.INDIVIDUAL,
                 ref="vacuum",
                 fields={"class_ids": [chores["resource"]], "title": "Vacuum"},
             ),
-            OperationDraft(
+            draft(
                 2,
                 T.CREATE,
                 K.RELATIONSHIP,
@@ -952,14 +972,14 @@ class TestClassRulesFollowInheritance:
                     "property_definition_id": chores["requires"],
                 },
             ),
-            OperationDraft(
+            draft(
                 3,
                 T.CREATE,
                 K.INDIVIDUAL,
                 fields={"class_ids": [chores["cleaning"]], "title": "Scrub"},
             ),
-            OperationDraft(4, T.UPDATE, K.INDIVIDUAL, chores["broom"], fields={"title": "Brush"}),
-            OperationDraft(
+            draft(4, T.UPDATE, K.INDIVIDUAL, chores["broom"], fields={"title": "Brush"}),
+            draft(
                 5,
                 T.CREATE,
                 K.CLASS,
@@ -980,10 +1000,10 @@ def test_a_subclass_rule_is_honoured_by_the_dry_run_verdict_and_a_real_propose(
     """The dry run's verdict and propose share _policy_auto_apply_ids (#1414 with #1425)."""
     policies.save(ApprovalPolicy.from_rules(house["taxonomy"], HOUSE_RULES))
     drafts = [
-        OperationDraft(
+        draft(
             1, T.CREATE, K.INDIVIDUAL, fields={"class_ids": [chores["dusting"]], "title": "Dust"}
         ),
-        OperationDraft(
+        draft(
             2, T.CREATE, K.INDIVIDUAL, fields={"class_ids": [chores["resource"]], "title": "Pail"}
         ),
     ]

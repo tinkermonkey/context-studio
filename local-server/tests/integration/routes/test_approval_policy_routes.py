@@ -228,6 +228,35 @@ class TestAutoApply:
         assert reverted["individuals_deleted"] == 1
         assert ontology.get_individual(house["attic"]).description in (None, "")
 
+    def test_a_review_only_proposal_is_never_auto_applied(self, client, house, ontology):
+        """#1628: review_only keeps the policy off it; a person decides every operation."""
+        client.put(_url(house["taxonomy"]), json=HOUSE_RULES)
+        body = {
+            "taxonomy_id": house["taxonomy"],
+            "title": "Gold check",
+            "source": "pipeline",
+            "review_only": True,
+            "operations": [
+                {
+                    "seq": 1,
+                    "op": "create",
+                    "kind": "individual",
+                    "fields": {"class_ids": [house["activity"]], "title": "Dust"},
+                    "probability": 0.9,
+                }
+            ],
+        }
+
+        dry_run = client.post("/api/proposals", params={"dry_run": "true"}, json=body).json()
+        response = client.post("/api/proposals", json=body)
+
+        assert dry_run["operations"][0]["auto_apply"] is False
+        assert response.status_code == 201, response.text
+        proposal = response.json()
+        assert proposal["review_only"] is True
+        assert [o["status"] for o in proposal["operations"]] == ["pending"]
+        assert client.get(f"/api/proposals/{proposal['id']}").json()["review_only"] is True
+
     def test_deletes_never_auto_apply(self, client, house, ontology):
         client.put(_url(house["taxonomy"]), json={"auto_apply": [{"kind": "individual"}]})
         proposal = client.post(

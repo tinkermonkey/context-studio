@@ -163,6 +163,7 @@ describe("ProposalsService", () => {
       taxonomy_id: "tax-1",
       title: "Clearer rooms",
       source: "mcp",
+      review_only: false,
       operations: [
         {
           seq: 1,
@@ -199,6 +200,7 @@ describe("ProposalsService", () => {
       proposalsService.createProposal({
         taxonomy_id: "tax-1",
         title: "x",
+        review_only: false,
         source: "user",
         operations: [],
       }),

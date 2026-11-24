@@ -8,6 +8,8 @@ The graph: `near` runs Room -> Room; Kitchen is a subclass of Room; Place is
 not. Den is a Room.
 """
 
+from dataclasses import replace
+
 import pytest
 
 from domain.versioning.approval_policy import ApprovalPolicy, AutoApplyRule
@@ -139,12 +141,12 @@ def test_the_approval_policy_never_auto_applies_a_mismatch(
     policies.save(ApprovalPolicy(graph["taxonomy"], (AutoApplyRule(op=T.CREATE),)))
     service = ProposalService(proposals, ontology, repo, reverter, approval_policies=policies)
 
-    proposal = propose(
-        service,
-        graph,
-        near(1, graph["den"], ends["garden"], graph["near"]),
-        near(2, graph["den"], ends["galley"], graph["near"]),
+    # Stated probabilities: an operation without one never auto-applies (#1628)
+    mismatch, fits = (
+        replace(near(1, graph["den"], ends["garden"], graph["near"]), probability=0.9),
+        replace(near(2, graph["den"], ends["galley"], graph["near"]), probability=0.9),
     )
+    proposal = propose(service, graph, mismatch, fits)
     ops = by_seq(proposal)
 
     assert ops[1].status is OperationStatus.PENDING

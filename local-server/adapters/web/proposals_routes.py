@@ -358,6 +358,7 @@ async def create_proposal(
             source_revision=revision,
             client_metadata=request.client_metadata,
             dataset_id=request.dataset_id,
+            review_only=request.review_only,
         )
         return proposal_response(service, proposal, dry_run=dry_run)
 

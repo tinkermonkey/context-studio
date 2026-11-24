@@ -826,7 +826,11 @@ def rewrite_gold(
 
 
 def _created(proposal: dict[str, Any], check: dict[str, Any]) -> str | None:
-    """Why a gold check's new proposal is not ready to review, if it isn't: all must be pending."""
+    """
+    Why a gold check's new proposal is not ready to review, if it isn't: all
+    must be pending. A safety net: the proposal is review_only (#1628), so no
+    approval policy should have applied any of it.
+    """
     decided = [o for o in proposal["operations"] if o["status"] != "pending"]
     if not decided:
         return None
@@ -886,6 +890,8 @@ def check_document(api: Any, schema: Any, document_id: str) -> dict[str, Any]:
         "source": "pipeline",
         "source_detail": f"extraction-benchmark:{document_id}",
         "dataset_id": dataset["id"],
+        # A person checks every element: no approval policy applies any of it (#1628)
+        "review_only": True,
         "operations": operations,
         "client_metadata": {
             "source_id": source["id"],

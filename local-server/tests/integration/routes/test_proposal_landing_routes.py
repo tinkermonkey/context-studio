@@ -145,7 +145,23 @@ class TestMirroredTaxonomy:
 
     def test_unmirrored_its_policy_applies_again(self, client, spec, ontology):
         client.put(f"/api/taxonomies/{spec['taxonomy']}", json={"mirrored": False})
-        proposal = _propose(client, spec)
+        body = {
+            "taxonomy_id": spec["taxonomy"],
+            "title": "Rename",
+            "source": "mcp",
+            "operations": [
+                {
+                    "seq": 1,
+                    "op": "update",
+                    "kind": "class",
+                    "target_id": spec["class"],
+                    "fields": {"title": "API operation"},
+                    # A stated probability: one without never auto-applies (#1628)
+                    "probability": 0.9,
+                }
+            ],
+        }
+        proposal = client.post("/api/proposals", json=body).json()
         assert [o["status"] for o in proposal["operations"]] == ["applied"]
 
 

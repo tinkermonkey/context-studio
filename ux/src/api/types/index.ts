@@ -4883,7 +4883,7 @@ export interface components {
       auto_apply?: components["schemas"]["AutoApplyRuleSchema"][];
       /**
        * Min Probability
-       * @description An operation also needs at least this probability
+       * @description An operation also needs at least this probability. One that states no probability never auto-applies, whatever this minimum (0 included), from any source but a bundle import (pipelines included)
        * @default 0
        */
       min_probability: number;
@@ -5521,6 +5521,12 @@ export interface components {
       client_metadata?: {
         [key: string]: unknown;
       } | null;
+      /**
+       * Review Only
+       * @description Keep the taxonomy's approval policy off it: a person decides every operation, none auto-applies (e.g. a benchmark gold check)
+       * @default false
+       */
+      review_only: boolean;
     };
     /**
      * ChangeProposalLandedRequest
@@ -5626,6 +5632,12 @@ export interface components {
        * @description Its operations in seq order; empty in a list's summary form (fields=summary)
        */
       operations: components["schemas"]["ProposedOperationResponse"][];
+      /**
+       * Review Only
+       * @description Set at create time: the approval policy never applies any of it
+       * @default false
+       */
+      review_only: boolean;
       /**
        * Counts
        * @description Its operations counted by op, kind, status and scope (in the summary form too, where operations is empty)
