@@ -1,0 +1,103 @@
+id: changeset-1795526335897-lbb9knj28
+name: relationship-end-search-and-reverse
+description: "#1673: on the review inspector, a relationship's Source and Target
+  rows search this proposal's elements that aren't rejected (a pending one by
+  its \"$ref\", resolved when it applies) as well as the dataset's individuals,
+  and say why nothing is listed; a Reverse control swaps the ends and, when the
+  predicate doesn't allow the reversed direction, offers the predicates that do
+  or says none does. Back end: a relationship create's edit may name an element
+  of the proposal by \"$ref\" (the apply path already resolves it). Done when a
+  component test on a fresh proposal finds a pending element and reverses the
+  ends, and a service test applies an edit naming an element by its ref."
+created: 2026-11-24T13:18:55.908Z
+modified: 2026-11-24T13:22:24.924Z
+status: staged
+baseSnapshot: v2:sha256:53252d39ed1357a9afdd6132507b497bf81313353af91142ccb6b590b147594c
+origin:
+  kind: plan
+purpose: plan
+stats:
+  additions: 8
+  modifications: 1
+  deletions: 0
+lastSequence: 11
+unstaged:
+  - sequence: 0
+    removedAt: 9
+    change:
+      type: add
+      elementId: ux.actioncomponent.reverse-relationship-button
+      layerName: ux
+      after:
+        id: a734b104-2bd4-4b17-b5f1-02dc21239857
+        path: ux.actioncomponent.reverse-relationship-button
+        spec_node_id: ux.actioncomponent
+        type: actioncomponent
+        layer_id: ux
+        name: Reverse Relationship Button
+        description: "Or correct it · Reverse: swaps a relationship's source and target
+          in the draft; when its predicate doesn't allow the reversed direction,
+          opens the predicate row on the ones that do or says none does."
+        attributes:
+          type: button
+          label: Reverse
+          style: ghost
+          channel: web
+        metadata:
+          created_at: 2026-11-24T13:18:56.351Z
+          updated_at: 2026-11-24T13:18:56.351Z
+          version: 1
+      timestamp: 2026-11-24T13:18:56.373Z
+    rewritten: true
+  - sequence: 1
+    removedAt: 10
+    change:
+      type: add
+      elementId: testing.testcasesketch.end-search-finds-a-pending-element-and-reverse-swaps-the-ends
+      layerName: testing
+      after:
+        id: 9d429c32-6437-4008-ab7f-3856b8c08dbf
+        path: testing.testcasesketch.end-search-finds-a-pending-element-and-reverse-swaps-the-ends
+        spec_node_id: testing.testcasesketch
+        type: testcasesketch
+        layer_id: testing
+        name: End Search Finds A Pending Element And Reverse Swaps The Ends
+        description: On a fresh extraction (nothing applied, an empty dataset), a
+          relationship's source search lists this proposal's awaiting elements,
+          the pick waits for that element to apply, and Reverse swaps the ends,
+          offering the predicates the reversed direction allows.
+        attributes:
+          status: automated
+          implementationFormat: automated
+        metadata:
+          created_at: 2026-11-24T13:18:56.353Z
+          updated_at: 2026-11-24T13:18:56.353Z
+          version: 1
+      timestamp: 2026-11-24T13:18:56.373Z
+    rewritten: true
+  - sequence: 2
+    removedAt: 11
+    change:
+      type: add
+      elementId: testing.testcasesketch.an-edited-end-names-an-element-by-its-ref
+      layerName: testing
+      after:
+        id: 1abadfe8-4c59-4282-be82-3440ab61b955
+        path: testing.testcasesketch.an-edited-end-names-an-element-by-its-ref
+        spec_node_id: testing.testcasesketch
+        type: testcasesketch
+        layer_id: testing
+        name: An Edited End Names An Element By Its Ref
+        description: "A relationship create accepted with an end changed to another
+          element of the proposal, named by its $ref: it fails unresolved_ref
+          until that element applies, then applies with the end resolved and
+          records the ref in applied_fields."
+        attributes:
+          status: automated
+          implementationFormat: automated
+        metadata:
+          created_at: 2026-11-24T13:18:56.353Z
+          updated_at: 2026-11-24T13:18:56.353Z
+          version: 1
+      timestamp: 2026-11-24T13:18:56.373Z
+    rewritten: true

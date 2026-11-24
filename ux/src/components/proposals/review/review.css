@@ -966,6 +966,13 @@
     overflow-wrap: anywhere;
   }
 
+  /* An element of this proposal among the candidates: where it comes from. */
+  .review-result__where {
+    margin-left: auto;
+    font-size: 11px;
+    white-space: nowrap;
+  }
+
   .review-result .review-pill--class {
     align-self: center;
     flex-shrink: 0;

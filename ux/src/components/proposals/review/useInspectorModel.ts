@@ -219,8 +219,9 @@ export function useInspectorModel(
     return all.slice(0, Math.max(3, acceptable.length));
   }, [recentClasses, selected, classById, classes, gold]);
 
-  // The individuals a relationship's ends can be changed to: this proposal's accepted
-  // elements, and the dataset's individuals (loaded once a relationship is open).
+  // The individuals a relationship's ends can be changed to: this proposal's elements
+  // that aren't rejected (by their "$ref", which resolves when the proposal applies), and
+  // the dataset's individuals (loaded once a relationship is open).
   const relationshipOpen = !!selected && isRelationship(selected);
   const { data: datasetIndividuals } = useIndividuals(
     { dataset_id: proposal?.dataset_id ?? undefined, limit: SMALL_SET_LIMIT, sort_by: "title" },
@@ -228,19 +229,24 @@ export function useInspectorModel(
   );
   const endCandidates = useMemo((): EndCandidate[] => {
     if (!relationshipOpen) return [];
-    const accepted = elements
-      .filter((o) => o.status === "applied" && o.result_entity_id)
-      .map((o) => ({
-        entityId: o.result_entity_id!,
-        title: shownTitle(o),
-        classId: shownClassId(o),
-        operationId: o.id,
-      }));
-    const known = new Set(accepted.map((c) => c.entityId));
+    const offered = elements.filter(
+      (o) => o.status !== "rejected" && (o.ref || o.result_entity_id),
+    );
+    const own = offered.map((o) => ({
+      entityId: o.ref ? `$${o.ref}` : o.result_entity_id!,
+      title: shownTitle(o),
+      classId: shownClassId(o),
+      operationId: o.id,
+      pending: o.status !== "applied",
+    }));
+    // An element offered above is offered once, by its ref, not again as the dataset
+    // individual it made or matched. A rejected one offers nothing, so the individual it
+    // points at (a duplicate's landed original, say) stays among the dataset's.
+    const known = new Set(offered.flatMap((o) => (o.result_entity_id ? [o.result_entity_id] : [])));
     const others = (datasetIndividuals?.items ?? [])
       .filter((i) => !known.has(i.id))
       .map((i) => ({ entityId: i.id, title: i.title, classId: i.class_ids?.[0] }));
-    return [...accepted, ...others];
+    return [...own, ...others];
   }, [relationshipOpen, elements, datasetIndividuals]);
 
   // The hover overlay the pills share, beside the inspector.
@@ -275,7 +281,12 @@ export function useInspectorModel(
   ) => {
     const ends = endsToDecide(operation, all);
     const kept = (end: { role: "source" | "target" }) => !edit?.[`${end.role}_id`];
-    return ends.undecided.some(kept) || ends.rejected.some(kept);
+    // An end the edit picks among this proposal's elements must have applied first.
+    const pickedPending = Object.values(edit ?? {}).some((value) => {
+      const create = endOperation(value, all);
+      return !!create && create.status !== "applied";
+    });
+    return ends.undecided.some(kept) || ends.rejected.some(kept) || pickedPending;
   };
 
   /**

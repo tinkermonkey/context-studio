@@ -1,13 +1,15 @@
 import { useMemo, useState, type ReactNode } from "react";
-import { Button, Chip, TextInput } from "@tinkermonkey/heimdall-ui";
+import { Button, Chip, FormCallout, TextInput } from "@tinkermonkey/heimdall-ui";
 import { Check } from "lucide-react";
 import type { ProposedOperation } from "@/api/services/proposals";
 import { ClassPill, ClassTag, Diamond, IndividualPill, PredicatePill } from "./ReviewPills";
 import {
   VERDICT_CHIP,
   endEntityId,
+  endOperation,
   relationshipEdit,
   shownFields,
+  shownTitle,
   type Verdict,
 } from "./reviewModel";
 import type { ReviewSchema } from "./reviewSchema";
@@ -34,8 +36,10 @@ export interface EndCandidate {
   entityId: string;
   title: string;
   classId?: string;
-  /** Its operation, when this proposal created it. */
+  /** Its operation, when it is an element of this proposal. */
   operationId?: string;
+  /** An element of this proposal not applied yet: picked, it is named by its "$ref". */
+  pending?: boolean;
 }
 
 /** How many results a correction row lists. */
@@ -299,21 +303,29 @@ function EndChoices({
   candidates,
   current,
   hint,
+  wanted,
   onPick,
 }: {
   role: "source" | "target";
   candidates: EndCandidate[];
-  current?: string;
+  /** The values the end holds now (a "$ref" and the id it stands for): not offered again. */
+  current: (string | undefined)[];
   hint: ReactNode;
+  /** The class the relationship type needs at this end, for the empty state. */
+  wanted: string;
   onPick: (candidate: EndCandidate) => void;
 }) {
   const [query, setQuery] = useState("");
+  const offered = useMemo(
+    () => candidates.filter((c) => !current.includes(c.entityId)),
+    [candidates, current],
+  );
   const results = useMemo(() => {
     const needle = query.trim().toLowerCase();
-    return candidates
-      .filter((c) => c.entityId !== current && (!needle || c.title.toLowerCase().includes(needle)))
+    return offered
+      .filter((c) => !needle || c.title.toLowerCase().includes(needle))
       .slice(0, RESULTS_SHOWN);
-  }, [candidates, current, query]);
+  }, [offered, query]);
   const inputId = `review-end-search-${role}`;
   return (
     <>
@@ -340,23 +352,45 @@ function EndChoices({
               >
                 <span className="review-result__name">{c.title}</span>
                 {c.classId && <ClassTag classId={c.classId} />}
+                {c.operationId && (
+                  <span className="review-muted review-result__where">
+                    {c.pending ? "in this proposal, awaiting" : "in this proposal"}
+                  </span>
+                )}
               </button>
             </li>
           ))}
         </ul>
       ) : (
-        <span className="review-fix__hint">No individual matches.</span>
+        // Why nothing is listed: nothing of the class the type needs, or nothing by that text.
+        <span className="review-fix__hint" data-testid={`review-end-empty-${role}`}>
+          {offered.length === 0
+            ? `No ${wanted} individual is in this proposal or the dataset.`
+            : `No ${wanted} individual matches “${query.trim()}”.`}
+        </span>
       )}
     </>
   );
 }
 
+/** An end as the editor holds it: its value (an id or a "$ref") and how it reads. */
+interface EndValue {
+  value: string | undefined;
+  title: string;
+  classId?: string;
+  /** An element of this proposal not applied yet. */
+  pending?: boolean;
+  operationId?: string;
+}
+
 /**
- * Or correct it: the predicate, source and target in three rows of one shape.
- * Change opens a row: the predicates the schema allows between the ends'
- * classes, or the individuals (accepted elements of this proposal, or the
- * dataset's) of a class the type allows. The changes collect into a draft,
- * accepted together.
+ * Or correct it: the predicate, source and target in three rows of one shape,
+ * and Reverse. Change opens a row: the predicates the schema allows between the
+ * ends' classes, or the individuals of a class the type allows: this
+ * proposal's elements that aren't rejected (a pending one by its "$ref") and
+ * the dataset's. Reverse swaps the ends; when the predicate doesn't allow the
+ * reversed direction it offers the predicates that do. The changes collect
+ * into a draft, accepted together.
  */
 export function RelationshipEditor({
   operation,
@@ -376,15 +410,30 @@ export function RelationshipEditor({
   onAccept: (edit: Record<string, string>) => void;
 }) {
   const [draft, setDraft] = useState<Draft>({});
+  // How each end the draft holds reads (picked from the list, or swapped by Reverse).
+  const [picked, setPicked] = useState<Partial<Record<"source_id" | "target_id", EndValue>>>({});
   const [open, setOpen] = useState<Field>();
   const proposed = shownFields(operation);
   const proposedProperty = proposed.property_definition_id as string;
   const propertyId = draft.property_definition_id ?? proposedProperty;
-  const byId = new Map(candidates.map((c) => [c.entityId, c]));
-  const sourceId = draft.source_id ?? endEntityId(proposed.source_id, operations);
-  const targetId = draft.target_id ?? endEntityId(proposed.target_id, operations);
-  const sourceClass = draft.source_id ? byId.get(draft.source_id)?.classId : ends.source.classId;
-  const targetClass = draft.target_id ? byId.get(draft.target_id)?.classId : ends.target.classId;
+  /** An end now: the draft's, else the proposed one. */
+  const endNow = (role: "source" | "target"): EndValue => {
+    const field = `${role}_id` as const;
+    if (draft[field]) return picked[field] ?? { value: draft[field], title: draft[field]! };
+    const value = proposed[field] as string | undefined;
+    const create = endOperation(value, operations);
+    return {
+      value,
+      title: ends[role].title,
+      classId: ends[role].classId,
+      operationId: create?.id,
+      pending: !!create && create.status !== "applied",
+    };
+  };
+  const source = endNow("source");
+  const target = endNow("target");
+  const sourceClass = source.classId;
+  const targetClass = target.classId;
   const property = schema.property(propertyId);
   const others = schema.allowedTypes(sourceClass, targetClass).filter((p) => p.id !== propertyId);
   const fitting = (role: "source" | "target") =>
@@ -395,23 +444,65 @@ export function RelationshipEditor({
       ),
     );
   const edit = relationshipEdit(operation, operations, draft);
+  // The draft's ends don't fit its predicate (after Reverse, or another end): it can't apply.
+  const misfit =
+    !!edit &&
+    !!property &&
+    !schema.loading &&
+    (!schema.fits(sourceClass, property.domain_class_id) ||
+      !schema.fits(targetClass, property.range_class_id));
+  // An end the draft names among this proposal's elements that hasn't applied: decide it
+  // first, or, when it was rejected (a proposed end Reverse kept), pick another.
+  const unapplied = [draft.source_id ? source : undefined, draft.target_id ? target : undefined]
+    .filter((end): end is EndValue => !!end?.pending)
+    .map((end) => operations.find((o) => o.id === end.operationId))
+    .filter((o): o is ProposedOperation => !!o);
+  const rejectedPick = unapplied.filter((o) => o.status === "rejected");
+  const pendingPick = unapplied.filter((o) => o.status !== "rejected");
   const set = (field: Field, value: string | undefined) => {
     setDraft((d) => ({ ...d, [field]: value }));
     setOpen(undefined);
   };
+  const pick = (role: "source" | "target", c: EndCandidate) => {
+    setPicked((p) => ({ ...p, [`${role}_id`]: { value: c.entityId, ...c } }));
+    set(`${role}_id`, c.entityId);
+  };
   const toggle = (field: Field) => setOpen((o) => (o === field ? undefined : field));
+  /** Swap the ends in the draft; back to the proposed ends when swapped twice. */
+  const reverse = () => {
+    const swapped = { source_id: target, target_id: source };
+    setPicked((p) => ({ ...p, ...swapped }));
+    setDraft((d) => ({ ...d, source_id: target.value, target_id: source.value }));
+    // When the predicate doesn't allow the reversed direction, open its row on the ones that do.
+    const reversedFits =
+      !property ||
+      (schema.fits(target.classId, property.domain_class_id) &&
+        schema.fits(source.classId, property.range_class_id));
+    const reversedOthers = schema
+      .allowedTypes(target.classId, source.classId)
+      .filter((p) => p.id !== propertyId);
+    setOpen(reversedFits || reversedOthers.length === 0 ? undefined : "property_definition_id");
+  };
+  const reversed =
+    !!draft.source_id &&
+    !!draft.target_id &&
+    draft.source_id === (proposed.target_id as string) &&
+    draft.target_id === (proposed.source_id as string);
 
-  const endValue = (role: "source" | "target") => {
-    const picked = draft[`${role}_id`] ? byId.get(draft[`${role}_id`]!) : undefined;
-    return <span className="review-fix__name">{picked ? picked.title : ends[role].title}</span>;
+  const endValue = (role: "source" | "target") => (
+    <span className="review-fix__name">{(role === "source" ? source : target).title}</span>
+  );
+  const wantedLabel = (role: "source" | "target") => {
+    const wanted = role === "source" ? property?.domain_class_id : property?.range_class_id;
+    return wanted ? schema.classLabel(wanted) : "";
   };
   const endHint = (role: "source" | "target") => {
-    const wanted = role === "source" ? property?.domain_class_id : property?.range_class_id;
+    const wanted = wantedLabel(role);
     const count = fitting(role).length;
     return (
       <>
-        {count} {wanted ? schema.classLabel(wanted) : "any class"}{" "}
-        {count === 1 ? "individual" : "individuals"}, in this proposal or the dataset
+        {count} {wanted || "any class"} {count === 1 ? "individual" : "individuals"}, in this
+        proposal or the dataset
       </>
     );
   };
@@ -422,13 +513,26 @@ export function RelationshipEditor({
       aria-labelledby="review-correct-it-title"
       data-testid="review-relationship-editor"
     >
-      <div className="review-block__title">
-        <span id="review-correct-it-title" className="review-eyebrow">
-          OR CORRECT IT
-        </span>
-        <span className="review-block__subtitle">
-          Change any of the three, then accept. Choices are only what the schema allows.
-        </span>
+      <div className="review-block__head">
+        <div className="review-block__title">
+          <span id="review-correct-it-title" className="review-eyebrow">
+            OR CORRECT IT
+          </span>
+          <span className="review-block__subtitle">
+            Change any of the three, or reverse it, then accept. Choices are only what the schema
+            allows.
+          </span>
+        </div>
+        <Button
+          variant="ghost"
+          size="sm"
+          disabled={busy}
+          aria-pressed={reversed}
+          onClick={reverse}
+          data-testid="review-reverse"
+        >
+          ⇄ Reverse
+        </Button>
       </div>
 
       <CorrectionRow
@@ -501,18 +605,40 @@ export function RelationshipEditor({
           <EndChoices
             role={role}
             candidates={fitting(role)}
-            current={role === "source" ? sourceId : targetId}
+            current={[
+              (role === "source" ? source : target).value,
+              endEntityId((role === "source" ? source : target).value, operations),
+            ]}
             hint={endHint(role)}
-            onPick={(c) => set(`${role}_id`, c.entityId)}
+            wanted={wantedLabel(role)}
+            onPick={(c) => pick(role, c)}
           />
         </CorrectionRow>
       ))}
+
+      {misfit && (
+        <FormCallout variant="warn" icon="alert" data-testid="review-editor-misfit">
+          {others.length > 0
+            ? `${schema.predicateLabel(propertyId)} isn't allowed from ${schema.classLabel(sourceClass)} to ${schema.classLabel(targetClass)}. Pick one of the ${others.length} that are, above.`
+            : `No predicate is allowed from ${schema.classLabel(sourceClass)} to ${schema.classLabel(targetClass)}.`}
+        </FormCallout>
+      )}
+      {rejectedPick.length > 0 && (
+        <FormCallout variant="warn" icon="alert" data-testid="review-editor-rejected-end">
+          {`${rejectedPick.map((o) => `#${o.seq} ${shownTitle(o)}`).join(" and ")} ${rejectedPick.length === 1 ? "was" : "were"} rejected: pick ${rejectedPick.length === 1 ? "another end" : "other ends"}.`}
+        </FormCallout>
+      )}
+      {pendingPick.length > 0 && (
+        <FormCallout variant="info" icon="info" data-testid="review-editor-pending">
+          {`Decide ${pendingPick.map((o) => `#${o.seq} ${shownTitle(o)}`).join(" and ")} first: ${pendingPick.length === 1 ? "this end follows its choice" : "these ends follow their choices"}.`}
+        </FormCallout>
+      )}
 
       <div className="review-block__end">
         <Button
           variant="secondary"
           size="sm"
-          disabled={busy || !edit}
+          disabled={busy || !edit || misfit || pendingPick.length > 0}
           onClick={() => edit && onAccept(edit)}
           data-testid="review-accept-edited"
         >
