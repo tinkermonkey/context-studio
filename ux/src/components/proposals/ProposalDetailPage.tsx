@@ -7,8 +7,10 @@ import {
   Icon,
   PageHeader,
   ProgressBar,
+  PaneRail,
   SegmentedControl,
   TextArea,
+  type PaneRailMark,
 } from "@tinkermonkey/heimdall-ui";
 import { useChangeProposal, useProposalDecisions } from "@/api/hooks/proposals";
 import { useTaxonomy } from "@/api/hooks/ontology/useTaxonomies";
@@ -82,15 +84,29 @@ import {
   rowStatus,
   type ListGroupBy,
 } from "./review/reviewList";
-import { isElement, isRelationship, nextAwaiting, shownClassId } from "./review/reviewModel";
+import {
+  isElement,
+  isRelationship,
+  nextAwaiting,
+  shownClassId,
+  verdictLabel,
+  verdictOf,
+} from "./review/reviewModel";
+import { usePaneFold } from "./review/paneFold";
 import { ReviewElapsed } from "./review/ReviewElapsed";
 import { usePanesHeight } from "./review/usePanesHeight";
 import { useReviewClock } from "./review/useReviewClock";
 import { useReviewKeys, ignoresKeys } from "./review/useReviewKeys";
 import { useSourcePane } from "./review/useSourcePane";
+import { sourcePassagesOf } from "./sourceModel";
 import { HOLDOUT_NOTE, SPLIT_CHIP, goldCheckOf } from "./review/goldModel";
 import { ReviewInspector } from "./review/ReviewInspector";
-import { ReviewPillsProvider, plainClick, type OperationLink } from "./review/ReviewPills";
+import {
+  IndividualCard,
+  ReviewPillsProvider,
+  plainClick,
+  type OperationLink,
+} from "./review/ReviewPills";
 import { useInspectorModel } from "./review/useInspectorModel";
 import { WideDiffOverlay } from "./review/WideDiffOverlay";
 import { longChangeFields, stepLongChange } from "./review/wideDiff";
@@ -419,6 +435,9 @@ export function ProposalDetailPage({
     return () => window.removeEventListener("keydown", listener);
   }, []);
 
+  // Either left pane folds to a rail (#1665): one at a time, remembered per viewer.
+  const paneFold = usePaneFold();
+
   // The source pane, when the proposal was extracted from a source (#1664).
   const sourcePane = useSourcePane({
     proposal,
@@ -428,7 +447,88 @@ export function ProposalDetailPage({
     select: (operationId) => onSelectOperation(operationId),
     model: inspector,
     clock,
+    onFold: () => paneFold.setFold("source"),
   });
+  // Without a source there is nothing to fold: the list is the only way through.
+  const fold = sourcePane.shown ? paneFold.fold : undefined;
+  // [ folds or unfolds the source, ] the list (one rail at a time).
+  const onFoldKey = useRef<(event: KeyboardEvent) => void>(() => {});
+  onFoldKey.current = (event) => {
+    if (!sourcePane.shown || sourcePane.adding || wideOpen) return;
+    if (event.defaultPrevented || event.metaKey || event.ctrlKey || event.altKey) return;
+    if (ignoresKeys(event.target)) return;
+    if (event.key === "[") {
+      event.preventDefault();
+      paneFold.toggle("source");
+    } else if (event.key === "]") {
+      event.preventDefault();
+      paneFold.toggle("list");
+    }
+  };
+  useEffect(() => {
+    const listener = (event: KeyboardEvent) => onFoldKey.current(event);
+    window.addEventListener("keydown", listener);
+    return () => window.removeEventListener("keydown", listener);
+  }, []);
+  // An operation's title as text: an element's, a relationship's ends, else what it changes.
+  const plainTitle = (operation: ProposedOperation) => {
+    if (isElement(operation)) return inspector.names.titleOf(operation);
+    if (isRelationship(operation) && operation.op === "create") {
+      const parts = inspector.names.relationshipParts(operation);
+      return `${parts.from} → ${parts.to}`;
+    }
+    return operationTitle(operation, context);
+  };
+  // A rail mark's hover: the item's pill card, beside the rail.
+  const railCard = (operationId: string) => {
+    const operation = operations.find((o) => o.id === operationId);
+    if (!operation) return null;
+    if (isElement(operation)) {
+      return (
+        <IndividualCard
+          title={inspector.names.titleOf(operation)}
+          classId={shownClassId(operation)}
+          verdict={verdictOf(operation)}
+          status={verdictLabel(operation)}
+          quote={sourcePassagesOf(operation)[0]?.quote ?? undefined}
+        />
+      );
+    }
+    const status = rowStatus(operation, reverted);
+    return (
+      <div className="review-card">
+        <span className="review-card__head">
+          <span className="review-card__name">{plainTitle(operation)}</span>
+          <Chip variant={status.variant}>{status.label}</Chip>
+        </span>
+      </div>
+    );
+  };
+  const railHover = {
+    onMarkHover: (operationId: string, anchor: HTMLElement) =>
+      inspector.overlay.show(
+        `rail-${operationId}`,
+        railCard(operationId),
+        anchor,
+        "review-rail-card",
+      ),
+    onMarkLeave: (operationId: string) => inspector.overlay.hide(`rail-${operationId}`),
+  };
+  // The list rail's map: every row in list order, in its status's tone.
+  const listRailMarks: PaneRailMark[] = shownOrder.flatMap((operationId, index) => {
+    const operation = operations.find((o) => o.id === operationId);
+    if (!operation) return [];
+    const status = rowStatus(operation, reverted);
+    return [
+      {
+        id: operationId,
+        position: index / Math.max(1, shownOrder.length - 1),
+        tone: status.variant as PaneRailMark["tone"],
+        label: `${status.label}: ${plainTitle(operation)}`,
+      },
+    ];
+  });
+  const selectedIndex = selectedId ? shownOrder.indexOf(selectedId) : -1;
   const panes = usePanesHeight(!!proposal && sourcePane.shown);
   // While the add form is open, keys are its own; Escape closes it wherever focus went.
   const onAddingKey = useRef<(event: KeyboardEvent) => void>(() => {});
@@ -785,12 +885,36 @@ export function ProposalDetailPage({
           data-testid="proposal-review"
         >
           <div
-            className="proposal-main"
+            className={["proposal-main", fold && `proposal-main--fold-${fold}`]
+              .filter(Boolean)
+              .join(" ")}
             data-testid="proposal-operations-list"
             data-filter={filter}
             data-group-by={groupBy}
+            data-fold={fold}
           >
-            {sourcePane.shown && sourcePane.pane}
+            {sourcePane.shown &&
+              (fold === "source" ? (
+                <PaneRail
+                  label="Source"
+                  shortcut="["
+                  expandLabel="Expand the source"
+                  mapLabel="Highlights in the source"
+                  marks={sourcePane.rail.marks}
+                  selectedPosition={sourcePane.rail.selectedPosition}
+                  onExpand={() => paneFold.setFold(undefined)}
+                  onMarkClick={(operationId) => {
+                    inspector.overlay.hide(`rail-${operationId}`);
+                    paneFold.setFold(undefined);
+                    onSelectOperation(operationId);
+                    sourcePane.showSpan(operationId);
+                  }}
+                  {...railHover}
+                  data-testid="review-source-rail"
+                />
+              ) : (
+                sourcePane.pane
+              ))}
             {wideOpen && selectedOperation && diffField && (
               <WideDiffOverlay
                 operation={selectedOperation}
@@ -808,8 +932,36 @@ export function ProposalDetailPage({
                 onClose={() => onDiff?.(undefined)}
               />
             )}
+            {fold === "list" && (
+              <PaneRail
+                label="Operations"
+                side="right"
+                shortcut="]"
+                expandLabel="Expand the list"
+                mapLabel="Operations in the list"
+                marks={listRailMarks}
+                selectedPosition={
+                  selectedIndex >= 0
+                    ? selectedIndex / Math.max(1, shownOrder.length - 1)
+                    : undefined
+                }
+                positionLabel={
+                  selectedIndex >= 0 ? `${selectedIndex + 1} / ${shownOrder.length}` : undefined
+                }
+                onExpand={() => paneFold.setFold(undefined)}
+                onMarkClick={(operationId) => {
+                  inspector.overlay.hide(`rail-${operationId}`);
+                  paneFold.setFold(undefined);
+                  onSelectOperation(operationId);
+                }}
+                {...railHover}
+                data-testid="review-list-rail"
+              />
+            )}
             <ReviewElementsPane
               id="proposal-operations"
+              hidden={fold === "list"}
+              onFold={sourcePane.shown ? () => paneFold.setFold("list") : undefined}
               title="Operations"
               listLabel="Operations to review"
               data-testid="proposal-operations"
@@ -965,7 +1117,11 @@ export function ProposalDetailPage({
               rejectPrompt={rejectPrompt}
               onShowPassage={
                 sourcePane.shown
-                  ? (quote) => sourcePane.showPassage(selectedOperation.id, quote)
+                  ? (quote) => {
+                      // Show in source unfolds a folded source first.
+                      if (fold === "source") paneFold.setFold(undefined);
+                      sourcePane.showPassage(selectedOperation.id, quote);
+                    }
                   : undefined
               }
               onWide={onDiff ? openWide : undefined}

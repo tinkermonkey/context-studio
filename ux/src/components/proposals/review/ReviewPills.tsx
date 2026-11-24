@@ -188,7 +188,7 @@ export function PredicateCard({
 }
 
 /** An individual's card: its title and decision, its class, its evidence, its relationships. */
-function IndividualCard({
+export function IndividualCard({
   title,
   classId,
   verdict,

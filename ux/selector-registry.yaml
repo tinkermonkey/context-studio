@@ -3173,6 +3173,21 @@ selectors:
   - selector: review-row-amended-*
     component: src/components/proposals/review/ReviewElementsPane.tsx
     description: "\"amended\" on a row its proposer changed since it was first proposed (amended_at, #1624)"
+  - selector: review-fold-source
+    component: src/components/proposals/review/ReviewSourcePane.tsx
+    description: "‹ in the source pane's header: folds it to its rail (aria-keyshortcuts [)"
+  - selector: review-fold-list
+    component: src/components/proposals/review/ReviewElementsPane.tsx
+    description: "‹ in the list's header, beside its filter: folds it to its rail (aria-keyshortcuts ]); only with a source pane"
+  - selector: review-source-rail
+    component: src/components/proposals/ProposalDetailPage.tsx
+    description: "The folded source (Heimdall PaneRail, .pane-rail): expand button, a toolbar \"Highlights in the source\" of one mark per highlight in its verdict's tone (named \"<verdict>: <quote>\"), the selection's notch, the key ["
+  - selector: review-list-rail
+    component: src/components/proposals/ProposalDetailPage.tsx
+    description: "The folded list (Heimdall PaneRail): expand button, a toolbar \"Operations in the list\" of one mark per row in list order (named \"<status>: <title>\"), the selection's notch and its place (\"2 / 4\"), the key ]"
+  - selector: review-rail-card
+    component: src/components/proposals/ProposalDetailPage.tsx
+    description: "A rail mark's hover card: the item's pill card (an element's), else its title and status"
   - selector: review-bulk-select
     component: src/components/proposals/review/ReviewBulk.tsx
     description: "Select ▾, a disclosure (aria-expanded, aria-controls): checks rows for the bulk bar; not on gold checks"

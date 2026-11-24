@@ -1236,6 +1236,60 @@
     }
   }
 
+  /* A left pane folded to its 40px rail (#1665), beside the other one. */
+  .proposal-main--fold-source,
+  .proposal-main--fold-list {
+    display: flex;
+    flex-direction: row;
+    gap: 16px;
+  }
+
+  .proposal-main--fold-source > .review-pane,
+  .proposal-main--fold-list > .review-pane {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  .proposal-main > .pane-rail {
+    flex: 0 0 40px;
+    min-height: 320px;
+    border: 1px solid rgb(var(--canvas-border));
+    border-radius: 8px;
+  }
+
+  /* The folded list stays mounted (its scroll and checks stay), not shown. */
+  .proposal-main .review-pane[hidden] {
+    display: none;
+  }
+
+  @media (min-width: 1280px) {
+    .proposal-review--source > .proposal-main--fold-source {
+      display: grid;
+      grid-template-columns: 40px minmax(0, 1fr);
+    }
+
+    .proposal-review--source > .proposal-main--fold-list {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 40px;
+    }
+
+    .proposal-main > .pane-rail {
+      min-height: 0;
+    }
+  }
+
+  .review-pane__actions {
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .review-fold {
+    font-size: 15px;
+    line-height: 1;
+  }
+
   .proposal-review__empty {
     margin: 0;
     padding: 16px;

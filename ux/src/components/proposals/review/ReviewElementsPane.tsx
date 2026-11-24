@@ -1,5 +1,5 @@
 import { useEffect, useRef, type ReactNode } from "react";
-import { Chip, Panel, type ChipVariant } from "@tinkermonkey/heimdall-ui";
+import { Button, Chip, Panel, type ChipVariant } from "@tinkermonkey/heimdall-ui";
 import type { ProposedOperation } from "@/api/services/proposals";
 import type { ConflictCluster } from "../tieredModel";
 import type { OperationLink } from "./ReviewPills";
@@ -53,6 +53,10 @@ interface ReviewElementsPaneProps {
   renderConflict?: (cluster: ConflictCluster) => ReactNode;
   /** The pane's id, for controls elsewhere that act on the list (aria-controls). */
   id?: string;
+  /** Fold the pane to a rail (key ]); without it the pane doesn't fold. */
+  onFold?: () => void;
+  /** Folded to its rail: kept mounted (its scroll and state stay) but not shown. */
+  hidden?: boolean;
   "data-testid"?: string;
 }
 
@@ -74,6 +78,8 @@ export function ReviewElementsPane({
   selection,
   renderConflict,
   id,
+  onFold,
+  hidden,
   "data-testid": testId = "review-elements",
 }: ReviewElementsPaneProps) {
   const listRef = useRef<HTMLDivElement>(null);
@@ -152,7 +158,28 @@ export function ReviewElementsPane({
       title={title}
       noPadding
       id={id}
-      headerAction={header}
+      hidden={hidden}
+      headerAction={
+        onFold ? (
+          <span className="review-pane__actions">
+            {header}
+            <Button
+              variant="ghost"
+              size="sm"
+              className="review-fold"
+              aria-label="Fold the list"
+              aria-keyshortcuts="]"
+              title="Fold the list (])"
+              onClick={onFold}
+              data-testid="review-fold-list"
+            >
+              ‹
+            </Button>
+          </span>
+        ) : (
+          header
+        )
+      }
       data-testid={testId}
     >
       {toolbar}

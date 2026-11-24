@@ -357,7 +357,7 @@ Before using any `@tinkermonkey/heimdall-ui` component, read the relevant skill 
 | `.claude/skills/heimdall/heimdall-shell/SKILL.md` | AppTitle, Titlebar, Statusbar, ShellLayout |
 | `.claude/skills/heimdall/heimdall-primitives/SKILL.md` | Icon, Button, Chip, Badge, StatusBadge, VersionPill, SegmentedControl |
 | `.claude/skills/heimdall/heimdall-navigation/SKILL.md` | NavItem, Sidebar, Topbar, TabBar |
-| `.claude/skills/heimdall/heimdall-layout/SKILL.md` | Panel, SplitPane |
+| `.claude/skills/heimdall/heimdall-layout/SKILL.md` | Panel, SplitPane, PaneRail |
 | `.claude/skills/heimdall/heimdall-inputs/SKILL.md` | TextInput, TextArea, NumberInput, Select, TriState, Field, FilterDropdown, EntityPicker, KeyValueEditor, OrderedList, RelationshipBuilder |
 | `.claude/skills/heimdall/heimdall-overlays/SKILL.md` | Modal, ConfirmDialog, Toast, CommandPalette, WorkspaceSwitcherDialog, Drawer |
 | `.claude/skills/heimdall/heimdall-data-display/SKILL.md` | StatTile, StatGrid, Table, KVGrid, InspectorPanel |
