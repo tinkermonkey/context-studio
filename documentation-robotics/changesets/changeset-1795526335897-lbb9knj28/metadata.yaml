@@ -10,17 +10,17 @@ description: "#1673: on the review inspector, a relationship's Source and Target
   component test on a fresh proposal finds a pending element and reverses the
   ends, and a service test applies an edit naming an element by its ref."
 created: 2026-11-24T13:18:55.908Z
-modified: 2026-11-24T13:22:24.924Z
+modified: 2026-11-24T17:50:01.220Z
 status: staged
 baseSnapshot: v2:sha256:53252d39ed1357a9afdd6132507b497bf81313353af91142ccb6b590b147594c
 origin:
   kind: plan
 purpose: plan
 stats:
-  additions: 8
+  additions: 7
   modifications: 1
   deletions: 0
-lastSequence: 11
+lastSequence: 12
 unstaged:
   - sequence: 0
     removedAt: 9
@@ -101,3 +101,16 @@ unstaged:
           version: 1
       timestamp: 2026-11-24T13:18:56.373Z
     rewritten: true
+  - sequence: 4
+    removedAt: 12
+    change:
+      type: relationship-add
+      elementId: ux.view.proposal-detail-view::composes::ux.actioncomponent.reverse-relationship-button
+      layerName: ux
+      after:
+        source: ux.view.proposal-detail-view
+        target: ux.actioncomponent.reverse-relationship-button
+        predicate: composes
+        layer: ux
+        category: structural
+      timestamp: 2026-11-24T13:18:56.373Z
