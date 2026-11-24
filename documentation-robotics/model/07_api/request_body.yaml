@@ -772,8 +772,9 @@ api.requestbody.change-proposal-reject-request:
   type: requestbody
   layer_id: api
   name: ChangeProposalRejectRequest
-  description: Operations to reject (all pending or failed ones when omitted) and
-    an optional note stored as each operation's reason.
+  description: Operations to reject (all pending or failed ones when omitted), one
+    reason code for every rejected operation (RejectionReason, now including
+    incorrect, keep_current and outdated) and an optional note.
   attributes:
     required: true
   source_reference:

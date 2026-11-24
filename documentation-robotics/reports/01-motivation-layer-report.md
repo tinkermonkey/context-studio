@@ -16,15 +16,15 @@ Goals, requirements, drivers, and strategic outcomes of the architecture.
 
 | Metric                    | Count |
 | ------------------------- | ----- |
-| Elements                  | 68    |
-| Intra-Layer Relationships | 82    |
-| Inter-Layer Relationships | 164   |
-| Inbound Relationships     | 164   |
+| Elements                  | 79    |
+| Intra-Layer Relationships | 107   |
+| Inter-Layer Relationships | 230   |
+| Inbound Relationships     | 230   |
 | Outbound Relationships    | 0     |
 
 **Cross-Layer References**:
 
-- **Upstream layers**: [API](./07-api-layer-report.md), [Application](./05-application-layer-report.md), [Business](./02-business-layer-report.md), [Data Model](./08-data-model-layer-report.md), [Data Store](./09-data-store-layer-report.md), [Product](./03-product-layer-report.md), [Security](./04-security-layer-report.md), [Technology](./06-technology-layer-report.md), [Testing](./13-testing-layer-report.md)
+- **Upstream layers**: [API](./07-api-layer-report.md), [Application](./05-application-layer-report.md), [Business](./02-business-layer-report.md), [Data Model](./08-data-model-layer-report.md), [Data Store](./09-data-store-layer-report.md), [Navigation](./11-navigation-layer-report.md), [Product](./03-product-layer-report.md), [Security](./04-security-layer-report.md), [Technology](./06-technology-layer-report.md), [Testing](./13-testing-layer-report.md), [UX](./10-ux-layer-report.md)
 
 ## Intra-Layer Relationships
 
@@ -45,11 +45,12 @@ Goals, requirements, drivers, and strategic outcomes of the architecture.
 | `motivation.constraint.sqlite-only-persistence`                                              | `constraint`  | 1             |
 | `motivation.driver.agents-invent-vocabulary`                                                 | `driver`      | 2             |
 | `motivation.driver.client-ontologies-refined-by-hand`                                        | `driver`      | 3             |
-| `motivation.driver.review-is-the-normal-workflow`                                            | `driver`      | 6             |
+| `motivation.driver.review-is-the-normal-workflow`                                            | `driver`      | 7             |
 | `motivation.driver.unauthenticated-local-workspace-api`                                      | `driver`      | 2             |
 | `motivation.goal.agents-ground-on-the-curated-model`                                         | `goal`        | 5             |
-| `motivation.goal.every-decision-becomes-data`                                                | `goal`        | 3             |
-| `motivation.goal.ontology-workbench-for-client-projects`                                     | `goal`        | 11            |
+| `motivation.goal.every-decision-becomes-data`                                                | `goal`        | 4             |
+| `motivation.goal.one-review-surface`                                                         | `goal`        | 15            |
+| `motivation.goal.ontology-workbench-for-client-projects`                                     | `goal`        | 12            |
 | `motivation.goal.packaged-desktop-application`                                               | `goal`        | 3             |
 | `motivation.goal.safe-local-first-workspace`                                                 | `goal`        | 7             |
 | `motivation.goal.trustworthy-extraction-into-datasets`                                       | `goal`        | 8             |
@@ -58,12 +59,13 @@ Goals, requirements, drivers, and strategic outcomes of the architecture.
 | `motivation.outcome.client-changes-land-without-hand-edited-specs`                           | `outcome`     | 5             |
 | `motivation.outcome.curated-domain-ontology`                                                 | `outcome`     | 3             |
 | `motivation.outcome.extraction-proposals-worth-a-reviewers-time`                             | `outcome`     | 6             |
-| `motivation.principle.agents-propose-and-people-decide`                                      | `principle`   | 9             |
+| `motivation.principle.agents-propose-and-people-decide`                                      | `principle`   | 12            |
 | `motivation.principle.clients-drive-proposals`                                               | `principle`   | 2             |
 | `motivation.principle.hexagonal-domain-purity`                                               | `principle`   | 3             |
 | `motivation.principle.intent-travels-with-every-call`                                        | `principle`   | 1             |
 | `motivation.principle.keep-several-implementations-and-garden-them`                          | `principle`   | 3             |
 | `motivation.principle.one-tool-registry-for-every-face`                                      | `principle`   | 1             |
+| `motivation.principle.reliability-and-simplicity-first-in-review`                            | `principle`   | 3             |
 | `motivation.principle.the-repo-releases-and-context-studio-refines`                          | `principle`   | 1             |
 | `motivation.requirement.a-proposer-amends-its-open-proposal-in-place`                        | `requirement` | 2             |
 | `motivation.requirement.a-proposer-withdraws-its-open-proposal`                              | `requirement` | 2             |
@@ -72,11 +74,15 @@ Goals, requirements, drivers, and strategic outcomes of the architecture.
 | `motivation.requirement.an-amended-operation-shows-what-it-replaced`                         | `requirement` | 1             |
 | `motivation.requirement.an-operation-without-a-probability-never-meets-the-probability-rule` | `requirement` | 1             |
 | `motivation.requirement.breaking-changes-never-auto-apply`                                   | `requirement` | 1             |
+| `motivation.requirement.bulk-decisions-on-every-proposal-except-gold-checks`                 | `requirement` | 1             |
 | `motivation.requirement.contexts-depend-on-each-other-only-through-public-contracts`         | `requirement` | 1             |
 | `motivation.requirement.dev-server-not-reachable-from-the-lan`                               | `requirement` | 3             |
-| `motivation.requirement.every-applied-proposal-is-revertible`                                | `requirement` | 1             |
+| `motivation.requirement.every-applied-proposal-is-revertible`                                | `requirement` | 3             |
 | `motivation.requirement.extracted-facts-cite-their-source`                                   | `requirement` | 2             |
+| `motivation.requirement.focus-by-folding-panes-to-rails`                                     | `requirement` | 1             |
+| `motivation.requirement.in-place-revert-warns-of-overwritten-edits`                          | `requirement` | 3             |
 | `motivation.requirement.individuals-belong-to-one-dataset`                                   | `requirement` | 1             |
+| `motivation.requirement.landed-proposals-are-undone-by-a-reversal-proposal`                  | `requirement` | 7             |
 | `motivation.requirement.local-api-refuses-foreign-origins`                                   | `requirement` | 1             |
 | `motivation.requirement.mcp-requires-a-bearer-token-on-loopback`                             | `requirement` | 2             |
 | `motivation.requirement.mirrored-taxonomies-accept-schema-changes-only-from-their-client`    | `requirement` | 2             |
@@ -85,21 +91,26 @@ Goals, requirements, drivers, and strategic outcomes of the architecture.
 | `motivation.requirement.pre-review-is-adopted-only-by-a-rule-set-in-advance`                 | `requirement` | 2             |
 | `motivation.requirement.proposals-link-to-each-other-through-one-link-model`                 | `requirement` | 2             |
 | `motivation.requirement.proposals-record-their-pipeline-and-version`                         | `requirement` | 1             |
+| `motivation.requirement.reason-codes-for-every-reject`                                       | `requirement` | 2             |
 | `motivation.requirement.relationships-limited-to-allowed-types`                              | `requirement` | 1             |
+| `motivation.requirement.reversal-is-decided-like-any-proposal`                               | `requirement` | 3             |
+| `motivation.requirement.reversal-restores-deleted-entities-with-their-ids`                   | `requirement` | 2             |
+| `motivation.requirement.reversed-proposal-status`                                            | `requirement` | 2             |
 | `motivation.requirement.secrets-stay-in-the-configuration-file`                              | `requirement` | 2             |
 | `motivation.requirement.the-proposals-list-filters-in-the-query-and-has-a-summary-form`      | `requirement` | 0             |
 | `motivation.requirement.unlanded-lists-only-proposals-with-something-to-land`                | `requirement` | 1             |
 | `motivation.requirement.url-sources-refuse-private-network-addresses`                        | `requirement` | 2             |
+| `motivation.requirement.wide-side-by-side-diff`                                              | `requirement` | 1             |
 | `motivation.stakeholder.agent-claude-code-and-in-app-chat`                                   | `stakeholder` | 3             |
 | `motivation.stakeholder.desktop-application-user`                                            | `stakeholder` | 1             |
 | `motivation.stakeholder.documentation-robotics-project`                                      | `stakeholder` | 3             |
 | `motivation.stakeholder.house-project`                                                       | `stakeholder` | 3             |
-| `motivation.stakeholder.ontology-owner-and-reviewer`                                         | `stakeholder` | 4             |
+| `motivation.stakeholder.ontology-owner-and-reviewer`                                         | `stakeholder` | 5             |
 | `motivation.stakeholder.platform-developer`                                                  | `stakeholder` | 2             |
 | `motivation.value.every-fact-is-traceable`                                                   | `value`       | 1             |
 | `motivation.value.knowledge-reusability`                                                     | `value`       | 2             |
 | `motivation.value.reduced-manual-curation-effort`                                            | `value`       | 1             |
-| `motivation.value.reviewer-time-goes-to-judgment-calls`                                      | `value`       | 1             |
+| `motivation.value.reviewer-time-goes-to-judgment-calls`                                      | `value`       | 2             |
 
 ## Inter-Layer Dependencies
 
@@ -124,10 +135,12 @@ flowchart TB
   business --> motivation
   data_model --> motivation
   data_store --> motivation
+  navigation --> motivation
   product --> motivation
   security --> motivation
   technology --> motivation
   testing --> motivation
+  ux --> motivation
   class motivation current
 ```
 
@@ -136,9 +149,14 @@ flowchart TB
 | Relationship ID                                                    | Source Node                                                                                        | Dest Node                                                                                    | Dest Layer   | Predicate    | Cardinality  | Strength |
 | ------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- | ------------ | ------------ | ------------ | -------- |
 | `api.operation.satisfies.motivation.requirement`                   | `api.operation.amend-proposal`                                                                     | `motivation.requirement.a-proposer-amends-its-open-proposal-in-place`                        | `motivation` | `satisfies`  | many-to-many | medium   |
+| `api.operation.satisfies.motivation.requirement`                   | `api.operation.apply-proposal`                                                                     | `motivation.requirement.reversal-is-decided-like-any-proposal`                               | `motivation` | `satisfies`  | many-to-many | medium   |
 | `api.operation.satisfies.motivation.requirement`                   | `api.operation.get-individual-sources`                                                             | `motivation.requirement.extracted-facts-cite-their-source`                                   | `motivation` | `satisfies`  | many-to-many | medium   |
+| `api.operation.satisfies.motivation.requirement`                   | `api.operation.list-proposals`                                                                     | `motivation.requirement.reversed-proposal-status`                                            | `motivation` | `satisfies`  | many-to-many | medium   |
 | `api.operation.satisfies.motivation.requirement`                   | `api.operation.list-proposals`                                                                     | `motivation.requirement.the-proposals-list-filters-in-the-query-and-has-a-summary-form`      | `motivation` | `satisfies`  | many-to-many | medium   |
 | `api.operation.satisfies.motivation.requirement`                   | `api.operation.list-proposals`                                                                     | `motivation.requirement.unlanded-lists-only-proposals-with-something-to-land`                | `motivation` | `satisfies`  | many-to-many | medium   |
+| `api.operation.satisfies.motivation.requirement`                   | `api.operation.preview-revert`                                                                     | `motivation.requirement.in-place-revert-warns-of-overwritten-edits`                          | `motivation` | `satisfies`  | many-to-many | medium   |
+| `api.operation.satisfies.motivation.requirement`                   | `api.operation.propose-reversal`                                                                   | `motivation.requirement.landed-proposals-are-undone-by-a-reversal-proposal`                  | `motivation` | `satisfies`  | many-to-many | medium   |
+| `api.operation.satisfies.motivation.requirement`                   | `api.operation.reject-proposal`                                                                    | `motivation.requirement.reason-codes-for-every-reject`                                       | `motivation` | `satisfies`  | many-to-many | medium   |
 | `api.operation.satisfies.motivation.requirement`                   | `api.operation.revert-proposal`                                                                    | `motivation.requirement.every-applied-proposal-is-revertible`                                | `motivation` | `satisfies`  | many-to-many | medium   |
 | `api.operation.satisfies.motivation.requirement`                   | `api.operation.set-approval-policy`                                                                | `motivation.requirement.breaking-changes-never-auto-apply`                                   | `motivation` | `satisfies`  | many-to-many | medium   |
 | `api.operation.satisfies.motivation.requirement`                   | `api.operation.withdraw-proposal`                                                                  | `motivation.requirement.a-proposer-withdraws-its-open-proposal`                              | `motivation` | `satisfies`  | many-to-many | medium   |
@@ -151,6 +169,9 @@ flowchart TB
 | `application.applicationfunction.satisfies.motivation.requirement` | `application.applicationfunction.proposal-amendment`                                               | `motivation.requirement.an-amended-operation-shows-what-it-replaced`                         | `motivation` | `satisfies`  | many-to-many | medium   |
 | `application.applicationfunction.satisfies.motivation.requirement` | `application.applicationfunction.proposal-linking`                                                 | `motivation.requirement.proposals-link-to-each-other-through-one-link-model`                 | `motivation` | `satisfies`  | many-to-many | medium   |
 | `application.applicationfunction.satisfies.motivation.requirement` | `application.applicationfunction.proposal-withdrawal`                                              | `motivation.requirement.a-proposer-withdraws-its-open-proposal`                              | `motivation` | `satisfies`  | many-to-many | medium   |
+| `application.applicationfunction.satisfies.motivation.requirement` | `application.applicationfunction.reversal-planning`                                                | `motivation.requirement.landed-proposals-are-undone-by-a-reversal-proposal`                  | `motivation` | `satisfies`  | many-to-many | medium   |
+| `application.applicationfunction.satisfies.motivation.requirement` | `application.applicationfunction.reversal-planning`                                                | `motivation.requirement.reversal-restores-deleted-entities-with-their-ids`                   | `motivation` | `satisfies`  | many-to-many | medium   |
+| `application.applicationfunction.satisfies.motivation.requirement` | `application.applicationfunction.revert-preview`                                                   | `motivation.requirement.in-place-revert-warns-of-overwritten-edits`                          | `motivation` | `satisfies`  | many-to-many | medium   |
 | `application.applicationfunction.satisfies.motivation.requirement` | `application.applicationfunction.spec-changes-for-a-proposal`                                      | `motivation.requirement.one-unexportable-operation-never-blocks-a-dr-spec-export`            | `motivation` | `satisfies`  | many-to-many | medium   |
 | `application.applicationservice.satisfies.motivation.requirement`  | `application.applicationservice.approval-policy-service`                                           | `motivation.requirement.an-operation-without-a-probability-never-meets-the-probability-rule` | `motivation` | `satisfies`  | many-to-many | medium   |
 | `application.applicationservice.satisfies.motivation.requirement`  | `application.applicationservice.approval-policy-service`                                           | `motivation.requirement.breaking-changes-never-auto-apply`                                   | `motivation` | `satisfies`  | many-to-many | medium   |
@@ -168,9 +189,14 @@ flowchart TB
 | `application.applicationservice.satisfies.motivation.requirement`  | `application.applicationservice.proposal-service`                                                  | `motivation.requirement.a-proposer-amends-its-open-proposal-in-place`                        | `motivation` | `satisfies`  | many-to-many | medium   |
 | `application.applicationservice.satisfies.motivation.requirement`  | `application.applicationservice.proposal-service`                                                  | `motivation.requirement.a-proposer-withdraws-its-open-proposal`                              | `motivation` | `satisfies`  | many-to-many | medium   |
 | `application.applicationservice.satisfies.motivation.requirement`  | `application.applicationservice.proposal-service`                                                  | `motivation.requirement.a-review-only-proposal-is-never-auto-applied`                        | `motivation` | `satisfies`  | many-to-many | medium   |
+| `application.applicationservice.satisfies.motivation.requirement`  | `application.applicationservice.proposal-service`                                                  | `motivation.requirement.landed-proposals-are-undone-by-a-reversal-proposal`                  | `motivation` | `satisfies`  | many-to-many | medium   |
 | `application.applicationservice.satisfies.motivation.requirement`  | `application.applicationservice.proposal-service`                                                  | `motivation.requirement.mirrored-taxonomies-accept-schema-changes-only-from-their-client`    | `motivation` | `satisfies`  | many-to-many | medium   |
 | `application.applicationservice.satisfies.motivation.requirement`  | `application.applicationservice.proposal-service`                                                  | `motivation.requirement.proposals-link-to-each-other-through-one-link-model`                 | `motivation` | `satisfies`  | many-to-many | medium   |
+| `application.applicationservice.satisfies.motivation.requirement`  | `application.applicationservice.proposal-service`                                                  | `motivation.requirement.reason-codes-for-every-reject`                                       | `motivation` | `satisfies`  | many-to-many | medium   |
+| `application.applicationservice.satisfies.motivation.requirement`  | `application.applicationservice.proposal-service`                                                  | `motivation.requirement.reversal-is-decided-like-any-proposal`                               | `motivation` | `satisfies`  | many-to-many | medium   |
+| `application.applicationservice.satisfies.motivation.requirement`  | `application.applicationservice.proposal-service`                                                  | `motivation.requirement.reversed-proposal-status`                                            | `motivation` | `satisfies`  | many-to-many | medium   |
 | `application.applicationservice.satisfies.motivation.requirement`  | `application.applicationservice.revert-service`                                                    | `motivation.requirement.every-applied-proposal-is-revertible`                                | `motivation` | `satisfies`  | many-to-many | medium   |
+| `application.applicationservice.satisfies.motivation.requirement`  | `application.applicationservice.revert-service`                                                    | `motivation.requirement.in-place-revert-warns-of-overwritten-edits`                          | `motivation` | `satisfies`  | many-to-many | medium   |
 | `application.applicationservice.satisfies.motivation.requirement`  | `application.applicationservice.source-extraction-service`                                         | `motivation.requirement.extracted-facts-cite-their-source`                                   | `motivation` | `satisfies`  | many-to-many | medium   |
 | `application.applicationservice.satisfies.motivation.requirement`  | `application.applicationservice.source-extraction-service`                                         | `motivation.requirement.proposals-record-their-pipeline-and-version`                         | `motivation` | `satisfies`  | many-to-many | medium   |
 | `application.applicationservice.satisfies.motivation.requirement`  | `application.applicationservice.source-file-store`                                                 | `motivation.requirement.extracted-facts-cite-their-source`                                   | `motivation` | `satisfies`  | many-to-many | medium   |
@@ -191,9 +217,14 @@ flowchart TB
 | `business.businessservice.realizes.motivation.goal`                | `business.businessservice.pipeline-benchmarking-service`                                           | `motivation.goal.every-decision-becomes-data`                                                | `motivation` | `realizes`   | many-to-many | medium   |
 | `business.businessservice.delivers.motivation.value`               | `business.businessservice.proposal-adjudication-service`                                           | `motivation.value.reduced-manual-curation-effort`                                            | `motivation` | `delivers`   | many-to-many | medium   |
 | `business.businessservice.delivers.motivation.value`               | `business.businessservice.proposal-adjudication-service`                                           | `motivation.value.reviewer-time-goes-to-judgment-calls`                                      | `motivation` | `delivers`   | many-to-many | medium   |
+| `business.businessservice.realizes.motivation.goal`                | `business.businessservice.proposal-adjudication-service`                                           | `motivation.goal.one-review-surface`                                                         | `motivation` | `realizes`   | many-to-many | medium   |
 | `business.businessservice.realizes.motivation.goal`                | `business.businessservice.proposal-adjudication-service`                                           | `motivation.goal.ontology-workbench-for-client-projects`                                     | `motivation` | `realizes`   | many-to-many | medium   |
 | `business.businessservice.satisfies.motivation.requirement`        | `business.businessservice.proposal-adjudication-service`                                           | `motivation.requirement.breaking-changes-never-auto-apply`                                   | `motivation` | `satisfies`  | many-to-many | medium   |
 | `business.businessservice.satisfies.motivation.requirement`        | `business.businessservice.proposal-adjudication-service`                                           | `motivation.requirement.every-applied-proposal-is-revertible`                                | `motivation` | `satisfies`  | many-to-many | medium   |
+| `business.businessservice.satisfies.motivation.requirement`        | `business.businessservice.proposal-adjudication-service`                                           | `motivation.requirement.landed-proposals-are-undone-by-a-reversal-proposal`                  | `motivation` | `satisfies`  | many-to-many | medium   |
+| `business.businessservice.satisfies.motivation.requirement`        | `business.businessservice.proposal-adjudication-service`                                           | `motivation.requirement.reason-codes-for-every-reject`                                       | `motivation` | `satisfies`  | many-to-many | medium   |
+| `business.businessservice.satisfies.motivation.requirement`        | `business.businessservice.proposal-adjudication-service`                                           | `motivation.requirement.reversal-is-decided-like-any-proposal`                               | `motivation` | `satisfies`  | many-to-many | medium   |
+| `business.businessservice.satisfies.motivation.requirement`        | `business.businessservice.proposal-adjudication-service`                                           | `motivation.requirement.reversed-proposal-status`                                            | `motivation` | `satisfies`  | many-to-many | medium   |
 | `business.businessservice.delivers.motivation.value`               | `business.businessservice.source-extraction-service`                                               | `motivation.value.every-fact-is-traceable`                                                   | `motivation` | `delivers`   | many-to-many | medium   |
 | `business.businessservice.realizes.motivation.goal`                | `business.businessservice.source-extraction-service`                                               | `motivation.goal.trustworthy-extraction-into-datasets`                                       | `motivation` | `realizes`   | many-to-many | medium   |
 | `business.businessservice.satisfies.motivation.requirement`        | `business.businessservice.source-extraction-service`                                               | `motivation.requirement.extracted-facts-cite-their-source`                                   | `motivation` | `satisfies`  | many-to-many | medium   |
@@ -201,14 +232,20 @@ flowchart TB
 | `data-model.objectschema.satisfies.motivation.requirement`         | `data-model.objectschema.operation-amendment`                                                      | `motivation.requirement.an-amended-operation-shows-what-it-replaced`                         | `motivation` | `satisfies`  | many-to-many | medium   |
 | `data-model.objectschema.satisfies.motivation.requirement`         | `data-model.objectschema.operation-draft`                                                          | `motivation.requirement.contexts-depend-on-each-other-only-through-public-contracts`         | `motivation` | `satisfies`  | many-to-many | medium   |
 | `data-model.objectschema.satisfies.motivation.requirement`         | `data-model.objectschema.predicate-entity`                                                         | `motivation.requirement.relationships-limited-to-allowed-types`                              | `motivation` | `satisfies`  | many-to-many | medium   |
+| `data-model.objectschema.satisfies.motivation.requirement`         | `data-model.objectschema.proposal-decision-entity`                                                 | `motivation.requirement.reason-codes-for-every-reject`                                       | `motivation` | `satisfies`  | many-to-many | medium   |
+| `data-model.objectschema.satisfies.motivation.requirement`         | `data-model.objectschema.proposal-entity`                                                          | `motivation.requirement.reversed-proposal-status`                                            | `motivation` | `satisfies`  | many-to-many | medium   |
 | `data-model.objectschema.satisfies.motivation.requirement`         | `data-model.objectschema.proposal-link`                                                            | `motivation.requirement.proposals-link-to-each-other-through-one-link-model`                 | `motivation` | `satisfies`  | many-to-many | medium   |
 | `data-store.collection.satisfies.motivation.requirement`           | `data-store.collection.approval-policies`                                                          | `motivation.requirement.breaking-changes-never-auto-apply`                                   | `motivation` | `satisfies`  | many-to-many | medium   |
 | `data-store.collection.satisfies.motivation.requirement`           | `data-store.collection.change-events`                                                              | `motivation.requirement.every-applied-proposal-is-revertible`                                | `motivation` | `satisfies`  | many-to-many | medium   |
 | `data-store.collection.satisfies.motivation.requirement`           | `data-store.collection.datasets`                                                                   | `motivation.requirement.individuals-belong-to-one-dataset`                                   | `motivation` | `satisfies`  | many-to-many | medium   |
 | `data-store.collection.satisfies.motivation.requirement`           | `data-store.collection.entity-sources`                                                             | `motivation.requirement.extracted-facts-cite-their-source`                                   | `motivation` | `satisfies`  | many-to-many | medium   |
 | `data-store.collection.satisfies.motivation.requirement`           | `data-store.collection.predicates`                                                                 | `motivation.requirement.relationships-limited-to-allowed-types`                              | `motivation` | `satisfies`  | many-to-many | medium   |
+| `data-store.collection.satisfies.motivation.requirement`           | `data-store.collection.proposal-decisions`                                                         | `motivation.requirement.reason-codes-for-every-reject`                                       | `motivation` | `satisfies`  | many-to-many | medium   |
 | `data-store.collection.satisfies.motivation.requirement`           | `data-store.collection.proposal-links`                                                             | `motivation.requirement.proposals-link-to-each-other-through-one-link-model`                 | `motivation` | `satisfies`  | many-to-many | medium   |
+| `data-store.collection.satisfies.motivation.requirement`           | `data-store.collection.proposals-table`                                                            | `motivation.requirement.landed-proposals-are-undone-by-a-reversal-proposal`                  | `motivation` | `satisfies`  | many-to-many | medium   |
 | `data-store.collection.satisfies.motivation.requirement`           | `data-store.collection.proposals-table`                                                            | `motivation.requirement.proposals-record-their-pipeline-and-version`                         | `motivation` | `satisfies`  | many-to-many | medium   |
+| `data-store.collection.satisfies.motivation.requirement`           | `data-store.collection.proposals-table`                                                            | `motivation.requirement.reversal-is-decided-like-any-proposal`                               | `motivation` | `satisfies`  | many-to-many | medium   |
+| `data-store.collection.satisfies.motivation.requirement`           | `data-store.collection.proposals-table`                                                            | `motivation.requirement.reversed-proposal-status`                                            | `motivation` | `satisfies`  | many-to-many | medium   |
 | `data-store.database.satisfies.motivation.constraint`              | `data-store.database.localdb`                                                                      | `motivation.constraint.sqlite-only-persistence`                                              | `motivation` | `satisfies`  | many-to-many | medium   |
 | `data-store.database.satisfies.motivation.constraint`              | `data-store.database.operationsdb`                                                                 | `motivation.constraint.sqlite-only-persistence`                                              | `motivation` | `satisfies`  | many-to-many | medium   |
 | `data-store.database.satisfies.motivation.constraint`              | `data-store.database.reference-api-cachedb`                                                        | `motivation.constraint.sqlite-only-persistence`                                              | `motivation` | `satisfies`  | many-to-many | medium   |
@@ -216,6 +253,7 @@ flowchart TB
 | `data-store.retentionpolicy.satisfies.motivation.constraint`       | `data-store.retentionpolicy.reference-api-cache-cleanup`                                           | `motivation.constraint.external-reference-source-rate-limits`                                | `motivation` | `satisfies`  | many-to-many | medium   |
 | `data-store.validationrule.satisfies.motivation.requirement`       | `data-store.validationrule.uk-dataset-taxonomy-identifier`                                         | `motivation.requirement.individuals-belong-to-one-dataset`                                   | `motivation` | `satisfies`  | many-to-many | medium   |
 | `data-store.validationrule.satisfies.motivation.requirement`       | `data-store.validationrule.uk-relationship-triple`                                                 | `motivation.requirement.relationships-limited-to-allowed-types`                              | `motivation` | `satisfies`  | many-to-many | medium   |
+| `navigation.route.satisfies.motivation.requirement`                | `navigation.route.proposal-detail-route`                                                           | `motivation.requirement.wide-side-by-side-diff`                                              | `motivation` | `satisfies`  | many-to-many | medium   |
 | `product.feature.satisfies.motivation.requirement`                 | `product.feature.approval-policy`                                                                  | `motivation.requirement.a-review-only-proposal-is-never-auto-applied`                        | `motivation` | `satisfies`  | many-to-many | medium   |
 | `product.feature.satisfies.motivation.requirement`                 | `product.feature.approval-policy`                                                                  | `motivation.requirement.an-operation-without-a-probability-never-meets-the-probability-rule` | `motivation` | `satisfies`  | many-to-many | medium   |
 | `product.feature.satisfies.motivation.requirement`                 | `product.feature.approval-policy`                                                                  | `motivation.requirement.breaking-changes-never-auto-apply`                                   | `motivation` | `satisfies`  | many-to-many | medium   |
@@ -232,8 +270,18 @@ flowchart TB
 | `product.feature.satisfies.motivation.requirement`                 | `product.feature.proposal-queue-and-detail`                                                        | `motivation.requirement.a-proposer-amends-its-open-proposal-in-place`                        | `motivation` | `satisfies`  | many-to-many | medium   |
 | `product.feature.satisfies.motivation.requirement`                 | `product.feature.proposal-queue-and-detail`                                                        | `motivation.requirement.a-proposer-withdraws-its-open-proposal`                              | `motivation` | `satisfies`  | many-to-many | medium   |
 | `product.feature.satisfies.motivation.requirement`                 | `product.feature.proposal-queue-and-detail`                                                        | `motivation.requirement.every-applied-proposal-is-revertible`                                | `motivation` | `satisfies`  | many-to-many | medium   |
+| `product.feature.satisfies.motivation.requirement`                 | `product.feature.proposal-queue-and-detail`                                                        | `motivation.requirement.in-place-revert-warns-of-overwritten-edits`                          | `motivation` | `satisfies`  | many-to-many | medium   |
 | `product.feature.satisfies.motivation.requirement`                 | `product.feature.proposal-queue-and-detail`                                                        | `motivation.requirement.proposals-link-to-each-other-through-one-link-model`                 | `motivation` | `satisfies`  | many-to-many | medium   |
+| `product.feature.satisfies.motivation.requirement`                 | `product.feature.proposal-queue-and-detail`                                                        | `motivation.requirement.reversed-proposal-status`                                            | `motivation` | `satisfies`  | many-to-many | medium   |
 | `product.feature.delivers.motivation.value`                        | `product.feature.proposal-review-page`                                                             | `motivation.value.reviewer-time-goes-to-judgment-calls`                                      | `motivation` | `delivers`   | many-to-many | medium   |
+| `product.feature.satisfies.motivation.requirement`                 | `product.feature.proposal-review-page`                                                             | `motivation.requirement.bulk-decisions-on-every-proposal-except-gold-checks`                 | `motivation` | `satisfies`  | many-to-many | medium   |
+| `product.feature.satisfies.motivation.requirement`                 | `product.feature.proposal-review-page`                                                             | `motivation.requirement.focus-by-folding-panes-to-rails`                                     | `motivation` | `satisfies`  | many-to-many | medium   |
+| `product.feature.satisfies.motivation.requirement`                 | `product.feature.proposal-review-page`                                                             | `motivation.requirement.reason-codes-for-every-reject`                                       | `motivation` | `satisfies`  | many-to-many | medium   |
+| `product.feature.satisfies.motivation.requirement`                 | `product.feature.proposal-review-page`                                                             | `motivation.requirement.wide-side-by-side-diff`                                              | `motivation` | `satisfies`  | many-to-many | medium   |
+| `product.feature.satisfies.motivation.requirement`                 | `product.feature.reversal-proposals`                                                               | `motivation.requirement.landed-proposals-are-undone-by-a-reversal-proposal`                  | `motivation` | `satisfies`  | many-to-many | medium   |
+| `product.feature.satisfies.motivation.requirement`                 | `product.feature.reversal-proposals`                                                               | `motivation.requirement.reversal-is-decided-like-any-proposal`                               | `motivation` | `satisfies`  | many-to-many | medium   |
+| `product.feature.satisfies.motivation.requirement`                 | `product.feature.reversal-proposals`                                                               | `motivation.requirement.reversal-restores-deleted-entities-with-their-ids`                   | `motivation` | `satisfies`  | many-to-many | medium   |
+| `product.feature.satisfies.motivation.requirement`                 | `product.feature.reversal-proposals`                                                               | `motivation.requirement.reversed-proposal-status`                                            | `motivation` | `satisfies`  | many-to-many | medium   |
 | `product.feature.satisfies.motivation.requirement`                 | `product.feature.schema-and-data-pages`                                                            | `motivation.requirement.individuals-belong-to-one-dataset`                                   | `motivation` | `satisfies`  | many-to-many | medium   |
 | `product.feature.satisfies.motivation.requirement`                 | `product.feature.schema-and-data-pages`                                                            | `motivation.requirement.relationships-limited-to-allowed-types`                              | `motivation` | `satisfies`  | many-to-many | medium   |
 | `product.feature.delivers.motivation.value`                        | `product.feature.source-citations-on-entity-pages`                                                 | `motivation.value.every-fact-is-traceable`                                                   | `motivation` | `delivers`   | many-to-many | medium   |
@@ -258,6 +306,11 @@ flowchart TB
 | `product.softwarecapability.supports.motivation.goal`              | `product.softwarecapability.pipeline-configuration-and-selection`                                  | `motivation.goal.trustworthy-extraction-into-datasets`                                       | `motivation` | `supports`   | many-to-many | medium   |
 | `product.softwarecapability.satisfies.motivation.requirement`      | `product.softwarecapability.proposal-review-and-apply`                                             | `motivation.requirement.breaking-changes-never-auto-apply`                                   | `motivation` | `satisfies`  | many-to-many | medium   |
 | `product.softwarecapability.satisfies.motivation.requirement`      | `product.softwarecapability.proposal-review-and-apply`                                             | `motivation.requirement.every-applied-proposal-is-revertible`                                | `motivation` | `satisfies`  | many-to-many | medium   |
+| `product.softwarecapability.satisfies.motivation.requirement`      | `product.softwarecapability.proposal-review-and-apply`                                             | `motivation.requirement.landed-proposals-are-undone-by-a-reversal-proposal`                  | `motivation` | `satisfies`  | many-to-many | medium   |
+| `product.softwarecapability.satisfies.motivation.requirement`      | `product.softwarecapability.proposal-review-and-apply`                                             | `motivation.requirement.reason-codes-for-every-reject`                                       | `motivation` | `satisfies`  | many-to-many | medium   |
+| `product.softwarecapability.satisfies.motivation.requirement`      | `product.softwarecapability.proposal-review-and-apply`                                             | `motivation.requirement.reversal-is-decided-like-any-proposal`                               | `motivation` | `satisfies`  | many-to-many | medium   |
+| `product.softwarecapability.satisfies.motivation.requirement`      | `product.softwarecapability.proposal-review-and-apply`                                             | `motivation.requirement.reversed-proposal-status`                                            | `motivation` | `satisfies`  | many-to-many | medium   |
+| `product.softwarecapability.supports.motivation.goal`              | `product.softwarecapability.proposal-review-and-apply`                                             | `motivation.goal.one-review-surface`                                                         | `motivation` | `supports`   | many-to-many | medium   |
 | `product.softwarecapability.supports.motivation.goal`              | `product.softwarecapability.proposal-review-and-apply`                                             | `motivation.goal.ontology-workbench-for-client-projects`                                     | `motivation` | `supports`   | many-to-many | medium   |
 | `product.softwarecapability.supports.motivation.goal`              | `product.softwarecapability.reference-grounding`                                                   | `motivation.goal.ontology-workbench-for-client-projects`                                     | `motivation` | `supports`   | many-to-many | medium   |
 | `product.softwarecapability.satisfies.motivation.requirement`      | `product.softwarecapability.schema-and-data-curation`                                              | `motivation.requirement.individuals-belong-to-one-dataset`                                   | `motivation` | `satisfies`  | many-to-many | medium   |
@@ -296,9 +349,35 @@ flowchart TB
 | `technology.systemsoftware.satisfies.motivation.constraint`        | `technology.systemsoftware.sqlite`                                                                 | `motivation.constraint.sqlite-only-persistence`                                              | `motivation` | `satisfies`  | many-to-many | medium   |
 | `technology.systemsoftware.satisfies.motivation.constraint`        | `technology.systemsoftware.uvicorn`                                                                | `motivation.constraint.loopback-only-deployment`                                             | `motivation` | `satisfies`  | many-to-many | medium   |
 | `technology.systemsoftware.satisfies.motivation.constraint`        | `technology.systemsoftware.vite`                                                                   | `motivation.constraint.python-and-nodejs-runtime-versions`                                   | `motivation` | `satisfies`  | many-to-many | medium   |
+| `testing.testcasesketch.satisfies.motivation.requirement`          | `testing.testcasesketch.a-second-open-reversal-is-refused`                                         | `motivation.requirement.landed-proposals-are-undone-by-a-reversal-proposal`                  | `motivation` | `satisfies`  | many-to-many | high     |
+| `testing.testcasesketch.satisfies.motivation.requirement`          | `testing.testcasesketch.bulk-is-hidden-on-gold-checks`                                             | `motivation.requirement.bulk-decisions-on-every-proposal-except-gold-checks`                 | `motivation` | `satisfies`  | many-to-many | high     |
+| `testing.testcasesketch.satisfies.motivation.requirement`          | `testing.testcasesketch.esc-closes-the-wide-diff-and-returns-focus`                                | `motivation.requirement.wide-side-by-side-diff`                                              | `motivation` | `satisfies`  | many-to-many | high     |
+| `testing.testcasesketch.satisfies.motivation.requirement`          | `testing.testcasesketch.folded-list-keeps-jk-and-ax-working`                                       | `motivation.requirement.focus-by-folding-panes-to-rails`                                     | `motivation` | `satisfies`  | many-to-many | high     |
+| `testing.testcasesketch.satisfies.motivation.requirement`          | `testing.testcasesketch.keep-current-rejects-an-update`                                            | `motivation.requirement.reason-codes-for-every-reject`                                       | `motivation` | `satisfies`  | many-to-many | high     |
+| `testing.testcasesketch.satisfies.motivation.requirement`          | `testing.testcasesketch.landed-proposal-offers-the-reversal`                                       | `motivation.requirement.landed-proposals-are-undone-by-a-reversal-proposal`                  | `motivation` | `satisfies`  | many-to-many | high     |
+| `testing.testcasesketch.satisfies.motivation.requirement`          | `testing.testcasesketch.partial-reversal-marks-the-original-reversed`                              | `motivation.requirement.reversal-is-decided-like-any-proposal`                               | `motivation` | `satisfies`  | many-to-many | high     |
+| `testing.testcasesketch.satisfies.motivation.requirement`          | `testing.testcasesketch.partial-reversal-marks-the-original-reversed`                              | `motivation.requirement.reversed-proposal-status`                                            | `motivation` | `satisfies`  | many-to-many | high     |
+| `testing.testcasesketch.satisfies.motivation.requirement`          | `testing.testcasesketch.reversal-restores-a-deleted-entity-with-its-id`                            | `motivation.requirement.reversal-restores-deleted-entities-with-their-ids`                   | `motivation` | `satisfies`  | many-to-many | high     |
+| `testing.testcasesketch.satisfies.motivation.requirement`          | `testing.testcasesketch.revert-preview-lists-a-later-edit`                                         | `motivation.requirement.in-place-revert-warns-of-overwritten-edits`                          | `motivation` | `satisfies`  | many-to-many | high     |
 | `testing.testcasesketch.satisfies.motivation.requirement`          | `testing.testcasesketch.seeded-errors-are-built-and-scored-offline`                                | `motivation.requirement.pre-review-is-adopted-only-by-a-rule-set-in-advance`                 | `motivation` | `satisfies`  | many-to-many | high     |
 | `testing.testcasesketch.satisfies.motivation.requirement`          | `testing.testcasesketch.url-sources-refuse-private-addresses`                                      | `motivation.requirement.url-sources-refuse-private-network-addresses`                        | `motivation` | `satisfies`  | many-to-many | high     |
 | `testing.testcasesketch.satisfies.motivation.requirement`          | `testing.testcasesketch.vite-config-does-not-open-the-dev-server-or-preview-to-the-network-mode-s` | `motivation.requirement.dev-server-not-reachable-from-the-lan`                               | `motivation` | `satisfies`  | many-to-many | high     |
+| `ux.actioncomponent.satisfies.motivation.requirement`              | `ux.actioncomponent.bulk-select`                                                                   | `motivation.requirement.bulk-decisions-on-every-proposal-except-gold-checks`                 | `motivation` | `satisfies`  | many-to-many | medium   |
+| `ux.actioncomponent.satisfies.motivation.requirement`              | `ux.actioncomponent.reject-reason-picker`                                                          | `motivation.requirement.reason-codes-for-every-reject`                                       | `motivation` | `satisfies`  | many-to-many | medium   |
+| `ux.actioncomponent.satisfies.motivation.requirement`              | `ux.actioncomponent.revert-control`                                                                | `motivation.requirement.landed-proposals-are-undone-by-a-reversal-proposal`                  | `motivation` | `satisfies`  | many-to-many | medium   |
+| `ux.actioncomponent.satisfies.motivation.requirement`              | `ux.actioncomponent.wide-diff-button`                                                              | `motivation.requirement.wide-side-by-side-diff`                                              | `motivation` | `satisfies`  | many-to-many | medium   |
+| `ux.librarycomponent.satisfies.motivation.requirement`             | `ux.librarycomponent.pane-rail`                                                                    | `motivation.requirement.focus-by-folding-panes-to-rails`                                     | `motivation` | `satisfies`  | many-to-many | medium   |
+| `ux.librarycomponent.satisfies.motivation.requirement`             | `ux.librarycomponent.side-by-side-diff`                                                            | `motivation.requirement.wide-side-by-side-diff`                                              | `motivation` | `satisfies`  | many-to-many | medium   |
+| `ux.view.satisfies.motivation.requirement`                         | `ux.view.proposal-detail-view`                                                                     | `motivation.requirement.bulk-decisions-on-every-proposal-except-gold-checks`                 | `motivation` | `satisfies`  | many-to-many | medium   |
+| `ux.view.satisfies.motivation.requirement`                         | `ux.view.proposal-detail-view`                                                                     | `motivation.requirement.focus-by-folding-panes-to-rails`                                     | `motivation` | `satisfies`  | many-to-many | medium   |
+| `ux.view.satisfies.motivation.requirement`                         | `ux.view.proposal-detail-view`                                                                     | `motivation.requirement.reason-codes-for-every-reject`                                       | `motivation` | `satisfies`  | many-to-many | medium   |
+| `ux.view.satisfies.motivation.requirement`                         | `ux.view.proposal-detail-view`                                                                     | `motivation.requirement.reversal-is-decided-like-any-proposal`                               | `motivation` | `satisfies`  | many-to-many | medium   |
+| `ux.view.satisfies.motivation.requirement`                         | `ux.view.proposal-detail-view`                                                                     | `motivation.requirement.reversed-proposal-status`                                            | `motivation` | `satisfies`  | many-to-many | medium   |
+| `ux.view.supports.motivation.goal`                                 | `ux.view.proposal-detail-view`                                                                     | `motivation.goal.one-review-surface`                                                         | `motivation` | `supports`   | many-to-many | medium   |
+| `ux.view.satisfies.motivation.requirement`                         | `ux.view.proposals-view`                                                                           | `motivation.requirement.reversed-proposal-status`                                            | `motivation` | `satisfies`  | many-to-many | medium   |
+| `ux.view.satisfies.motivation.requirement`                         | `ux.view.propose-reversal-dialog`                                                                  | `motivation.requirement.landed-proposals-are-undone-by-a-reversal-proposal`                  | `motivation` | `satisfies`  | many-to-many | medium   |
+| `ux.view.satisfies.motivation.requirement`                         | `ux.view.revert-proposal-dialog`                                                                   | `motivation.requirement.in-place-revert-warns-of-overwritten-edits`                          | `motivation` | `satisfies`  | many-to-many | medium   |
+| `ux.view.satisfies.motivation.requirement`                         | `ux.view.wide-diff-overlay`                                                                        | `motivation.requirement.wide-side-by-side-diff`                                              | `motivation` | `satisfies`  | many-to-many | medium   |
 
 ## Element Reference
 
@@ -608,6 +687,7 @@ Review is the key workflow for the maintainer: every agent, chat and pipeline ch
 | intra-layer | `motivation.assessment.relationship-extraction-is-unsolved`             | `associated-with` | inbound   |
 | intra-layer | `motivation.assessment.splits-and-retypes-are-half-of-reviewer-changes` | `associated-with` | inbound   |
 | intra-layer | `motivation.goal.every-decision-becomes-data`                           | `influence`       | outbound  |
+| intra-layer | `motivation.goal.one-review-surface`                                    | `influence`       | outbound  |
 | intra-layer | `motivation.goal.trustworthy-extraction-into-datasets`                  | `influence`       | outbound  |
 | intra-layer | `motivation.stakeholder.ontology-owner-and-reviewer`                    | `associated-with` | inbound   |
 
@@ -687,6 +767,45 @@ Accepts, rejects, edits and claim verdicts are stored as gold and used to benchm
 | intra-layer | `motivation.driver.review-is-the-normal-workflow`                    | `influence` | inbound   |
 | intra-layer | `motivation.goal.trustworthy-extraction-into-datasets`               | `influence` | outbound  |
 | intra-layer | `motivation.requirement.proposals-record-their-pipeline-and-version` | `realizes`  | inbound   |
+| intra-layer | `motivation.requirement.reason-codes-for-every-reject`               | `realizes`  | inbound   |
+
+### One Review Surface {#one-review-surface}
+
+**ID**: `motivation.goal.one-review-surface`
+
+**Type**: `goal`
+
+#1635: /app/proposals/$id is the only place a proposal is reviewed. One list, one inspector for every operation kind, one header, one URL scheme; a source pane only when the proposal cites a passage. Compare stays a separate page using the same pills.
+
+#### Attributes
+
+| Name          | Value                                                                                                                                                                                                                                                          |
+| ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| documentation | Approved design: review-design-3 proposal (owner decisions 19 Nov 2026). Replaces the separate /review page and the proposal-detail table so every proposal (extraction, client plan, MCP, bundle, reflection, gold check, reversal) is reviewed the same way. |
+| priority      | high                                                                                                                                                                                                                                                           |
+
+#### Relationships
+
+| Type        | Related Element                                                              | Predicate         | Direction |
+| ----------- | ---------------------------------------------------------------------------- | ----------------- | --------- |
+| inter-layer | `business.businessservice.proposal-adjudication-service`                     | `realizes`        | inbound   |
+| inter-layer | `product.softwarecapability.proposal-review-and-apply`                       | `supports`        | inbound   |
+| inter-layer | `ux.view.proposal-detail-view`                                               | `supports`        | inbound   |
+| intra-layer | `motivation.driver.review-is-the-normal-workflow`                            | `influence`       | inbound   |
+| intra-layer | `motivation.principle.reliability-and-simplicity-first-in-review`            | `influence`       | outbound  |
+| intra-layer | `motivation.goal.ontology-workbench-for-client-projects`                     | `aggregates`      | inbound   |
+| intra-layer | `motivation.principle.agents-propose-and-people-decide`                      | `influence`       | inbound   |
+| intra-layer | `motivation.requirement.bulk-decisions-on-every-proposal-except-gold-checks` | `realizes`        | inbound   |
+| intra-layer | `motivation.requirement.focus-by-folding-panes-to-rails`                     | `realizes`        | inbound   |
+| intra-layer | `motivation.requirement.in-place-revert-warns-of-overwritten-edits`          | `realizes`        | inbound   |
+| intra-layer | `motivation.requirement.landed-proposals-are-undone-by-a-reversal-proposal`  | `realizes`        | inbound   |
+| intra-layer | `motivation.requirement.reason-codes-for-every-reject`                       | `realizes`        | inbound   |
+| intra-layer | `motivation.requirement.reversal-is-decided-like-any-proposal`               | `realizes`        | inbound   |
+| intra-layer | `motivation.requirement.reversal-restores-deleted-entities-with-their-ids`   | `realizes`        | inbound   |
+| intra-layer | `motivation.requirement.reversed-proposal-status`                            | `realizes`        | inbound   |
+| intra-layer | `motivation.requirement.wide-side-by-side-diff`                              | `realizes`        | inbound   |
+| intra-layer | `motivation.stakeholder.ontology-owner-and-reviewer`                         | `influence`       | inbound   |
+| intra-layer | `motivation.value.reviewer-time-goes-to-judgment-calls`                      | `associated-with` | inbound   |
 
 ### Ontology Workbench for Client Projects {#ontology-workbench-for-client-projects}
 
@@ -715,6 +834,7 @@ Context Studio is the ontology workbench for its client projects (DR, House): cl
 | inter-layer | `product.softwarecapability.schema-and-data-curation`               | `supports`        | inbound   |
 | inter-layer | `product.softwarecapability.workspace-sync`                         | `supports`        | inbound   |
 | intra-layer | `motivation.driver.client-ontologies-refined-by-hand`               | `influence`       | inbound   |
+| intra-layer | `motivation.goal.one-review-surface`                                | `aggregates`      | outbound  |
 | intra-layer | `motivation.meaning.knowledge-as-infrastructure`                    | `associated-with` | inbound   |
 | intra-layer | `motivation.outcome.client-changes-land-without-hand-edited-specs`  | `realizes`        | inbound   |
 | intra-layer | `motivation.outcome.curated-domain-ontology`                        | `realizes`        | inbound   |
@@ -946,6 +1066,7 @@ Every agent, chat or pipeline write lands as a proposal with source, rationale, 
 | Type        | Related Element                                                                              | Predicate         | Direction |
 | ----------- | -------------------------------------------------------------------------------------------- | ----------------- | --------- |
 | intra-layer | `motivation.meaning.knowledge-as-infrastructure`                                             | `associated-with` | inbound   |
+| intra-layer | `motivation.goal.one-review-surface`                                                         | `influence`       | outbound  |
 | intra-layer | `motivation.goal.ontology-workbench-for-client-projects`                                     | `influence`       | outbound  |
 | intra-layer | `motivation.requirement.a-proposer-amends-its-open-proposal-in-place`                        | `realizes`        | inbound   |
 | intra-layer | `motivation.requirement.a-proposer-withdraws-its-open-proposal`                              | `realizes`        | inbound   |
@@ -953,7 +1074,9 @@ Every agent, chat or pipeline write lands as a proposal with source, rationale, 
 | intra-layer | `motivation.requirement.an-operation-without-a-probability-never-meets-the-probability-rule` | `realizes`        | inbound   |
 | intra-layer | `motivation.requirement.breaking-changes-never-auto-apply`                                   | `realizes`        | inbound   |
 | intra-layer | `motivation.requirement.every-applied-proposal-is-revertible`                                | `realizes`        | inbound   |
+| intra-layer | `motivation.requirement.landed-proposals-are-undone-by-a-reversal-proposal`                  | `realizes`        | inbound   |
 | intra-layer | `motivation.requirement.proposals-link-to-each-other-through-one-link-model`                 | `realizes`        | inbound   |
+| intra-layer | `motivation.requirement.reversal-is-decided-like-any-proposal`                               | `realizes`        | inbound   |
 
 ### Clients Drive Proposals {#clients-drive-proposals}
 
@@ -1059,6 +1182,29 @@ Chat tools and MCP tools come from one registry, so anything the chat can do an 
 | Type        | Related Element                                      | Predicate   | Direction |
 | ----------- | ---------------------------------------------------- | ----------- | --------- |
 | intra-layer | `motivation.goal.agents-ground-on-the-curated-model` | `influence` | outbound  |
+
+### Reliability and Simplicity First in Review {#reliability-and-simplicity-first-in-review}
+
+**ID**: `motivation.principle.reliability-and-simplicity-first-in-review`
+
+**Type**: `principle`
+
+In the review surface, reliability and simplicity come before a single mechanism: revert stays two-path (exact in-place undo while unlanded, a reviewed reversal proposal once landed) rather than an inverse proposal for everything.
+
+#### Attributes
+
+| Name          | Value                           |
+| ------------- | ------------------------------- |
+| category      | operational                     |
+| documentation | Owner decision 8 (19 Nov 2026). |
+
+#### Relationships
+
+| Type        | Related Element                                                             | Predicate   | Direction |
+| ----------- | --------------------------------------------------------------------------- | ----------- | --------- |
+| intra-layer | `motivation.goal.one-review-surface`                                        | `influence` | inbound   |
+| intra-layer | `motivation.requirement.in-place-revert-warns-of-overwritten-edits`         | `influence` | outbound  |
+| intra-layer | `motivation.requirement.landed-proposals-are-undone-by-a-reversal-proposal` | `influence` | outbound  |
 
 ### The Repo Releases and Context Studio Refines {#the-repo-releases-and-context-studio-refines}
 
@@ -1252,6 +1398,32 @@ Breaking operations (deletes included), taxonomy creates, vision edits and extra
 | inter-layer | `security.countermeasure.human-review-gate-for-agent-writes` | `satisfies` | inbound   |
 | intra-layer | `motivation.principle.agents-propose-and-people-decide`      | `realizes`  | outbound  |
 
+### Bulk Decisions on Every Proposal Except Gold Checks {#bulk-decisions-on-every-proposal-except-gold-checks}
+
+**ID**: `motivation.requirement.bulk-decisions-on-every-proposal-except-gold-checks`
+
+**Type**: `requirement`
+
+Select ▾ (all ready · at threshold · all awaiting) and the bulk bar (Accept N ready, Reject all with one reason code) are available on every proposal, extractions included; only gold checks hide them.
+
+#### Attributes
+
+| Name            | Value             |
+| --------------- | ----------------- |
+| documentation   | Owner decision 3. |
+| priority        | medium            |
+| requirementType | functional        |
+
+#### Relationships
+
+| Type        | Related Element                                        | Predicate   | Direction |
+| ----------- | ------------------------------------------------------ | ----------- | --------- |
+| inter-layer | `product.feature.proposal-review-page`                 | `satisfies` | inbound   |
+| inter-layer | `testing.testcasesketch.bulk-is-hidden-on-gold-checks` | `satisfies` | inbound   |
+| inter-layer | `ux.actioncomponent.bulk-select`                       | `satisfies` | inbound   |
+| inter-layer | `ux.view.proposal-detail-view`                         | `satisfies` | inbound   |
+| intra-layer | `motivation.goal.one-review-surface`                   | `realizes`  | outbound  |
+
 ### Contexts depend on each other only through public contracts {#contexts-depend-on-each-other-only-through-public-contracts}
 
 **ID**: `motivation.requirement.contexts-depend-on-each-other-only-through-public-contracts`
@@ -1309,7 +1481,7 @@ The Vite dev server must not expose /api (including the endpoint that returns th
 
 **Type**: `requirement`
 
-An applied proposal reverts in one transaction, with conflicts explained before anything is undone.
+An applied proposal can be undone. While unlanded it reverts in place in one transaction, with conflicts and any later edits it would overwrite shown before anything is undone; once landed it is undone by a reversal proposal that is reviewed, applied and landed like any other.
 
 #### Attributes
 
@@ -1320,16 +1492,18 @@ An applied proposal reverts in one transaction, with conflicts explained before 
 
 #### Relationships
 
-| Type        | Related Element                                          | Predicate   | Direction |
-| ----------- | -------------------------------------------------------- | ----------- | --------- |
-| inter-layer | `api.operation.revert-proposal`                          | `satisfies` | inbound   |
-| inter-layer | `application.applicationservice.change-record-port`      | `satisfies` | inbound   |
-| inter-layer | `application.applicationservice.revert-service`          | `satisfies` | inbound   |
-| inter-layer | `business.businessservice.proposal-adjudication-service` | `satisfies` | inbound   |
-| inter-layer | `data-store.collection.change-events`                    | `satisfies` | inbound   |
-| inter-layer | `product.feature.proposal-queue-and-detail`              | `satisfies` | inbound   |
-| inter-layer | `product.softwarecapability.proposal-review-and-apply`   | `satisfies` | inbound   |
-| intra-layer | `motivation.principle.agents-propose-and-people-decide`  | `realizes`  | outbound  |
+| Type        | Related Element                                                             | Predicate    | Direction |
+| ----------- | --------------------------------------------------------------------------- | ------------ | --------- |
+| inter-layer | `api.operation.revert-proposal`                                             | `satisfies`  | inbound   |
+| inter-layer | `application.applicationservice.change-record-port`                         | `satisfies`  | inbound   |
+| inter-layer | `application.applicationservice.revert-service`                             | `satisfies`  | inbound   |
+| inter-layer | `business.businessservice.proposal-adjudication-service`                    | `satisfies`  | inbound   |
+| inter-layer | `data-store.collection.change-events`                                       | `satisfies`  | inbound   |
+| inter-layer | `product.feature.proposal-queue-and-detail`                                 | `satisfies`  | inbound   |
+| inter-layer | `product.softwarecapability.proposal-review-and-apply`                      | `satisfies`  | inbound   |
+| intra-layer | `motivation.requirement.in-place-revert-warns-of-overwritten-edits`         | `aggregates` | outbound  |
+| intra-layer | `motivation.requirement.landed-proposals-are-undone-by-a-reversal-proposal` | `aggregates` | outbound  |
+| intra-layer | `motivation.principle.agents-propose-and-people-decide`                     | `realizes`   | outbound  |
 
 ### Extracted Facts Cite Their Source {#extracted-facts-cite-their-source}
 
@@ -1360,6 +1534,62 @@ Each extracted individual and relationship keeps source, page and quote; citatio
 | intra-layer | `motivation.goal.trustworthy-extraction-into-datasets`     | `realizes`        | outbound  |
 | intra-layer | `motivation.value.every-fact-is-traceable`                 | `associated-with` | inbound   |
 
+### Focus by Folding Panes to Rails {#focus-by-folding-panes-to-rails}
+
+**ID**: `motivation.requirement.focus-by-folding-panes-to-rails`
+
+**Type**: `requirement`
+
+Either left pane (source or list) folds to a 40 px rail showing a map of its items, the selection notch, its name and key; \[ and \] fold and expand; J/K, A/X and Show in source keep working while folded; one rail at a time; the list never folds without source text; the choice is remembered per viewer.
+
+#### Attributes
+
+| Name            | Value                        |
+| --------------- | ---------------------------- |
+| documentation   | Owner decision 5 (board A2). |
+| priority        | medium                       |
+| requirementType | functional                   |
+
+#### Relationships
+
+| Type        | Related Element                                              | Predicate   | Direction |
+| ----------- | ------------------------------------------------------------ | ----------- | --------- |
+| inter-layer | `product.feature.proposal-review-page`                       | `satisfies` | inbound   |
+| inter-layer | `testing.testcasesketch.folded-list-keeps-jk-and-ax-working` | `satisfies` | inbound   |
+| inter-layer | `ux.librarycomponent.pane-rail`                              | `satisfies` | inbound   |
+| inter-layer | `ux.view.proposal-detail-view`                               | `satisfies` | inbound   |
+| intra-layer | `motivation.goal.one-review-surface`                         | `realizes`  | outbound  |
+
+### In-Place Revert Warns of Overwritten Edits {#in-place-revert-warns-of-overwritten-edits}
+
+**ID**: `motivation.requirement.in-place-revert-warns-of-overwritten-edits`
+
+**Type**: `requirement`
+
+Reverting an unlanded proposal in place first lists every field edited since the apply that the revert would overwrite (current value differs from the change event's new_state) and shows them in the confirm dialog.
+
+#### Attributes
+
+| Name            | Value                                                                               |
+| --------------- | ----------------------------------------------------------------------------------- |
+| documentation   | Owner decision 2; closes the silent-overwrite gap in RevertService._inverse_update. |
+| priority        | high                                                                                |
+| requirementType | functional                                                                          |
+
+#### Relationships
+
+| Type        | Related Element                                                   | Predicate    | Direction |
+| ----------- | ----------------------------------------------------------------- | ------------ | --------- |
+| inter-layer | `api.operation.preview-revert`                                    | `satisfies`  | inbound   |
+| inter-layer | `application.applicationfunction.revert-preview`                  | `satisfies`  | inbound   |
+| inter-layer | `application.applicationservice.revert-service`                   | `satisfies`  | inbound   |
+| inter-layer | `product.feature.proposal-queue-and-detail`                       | `satisfies`  | inbound   |
+| inter-layer | `testing.testcasesketch.revert-preview-lists-a-later-edit`        | `satisfies`  | inbound   |
+| inter-layer | `ux.view.revert-proposal-dialog`                                  | `satisfies`  | inbound   |
+| intra-layer | `motivation.principle.reliability-and-simplicity-first-in-review` | `influence`  | inbound   |
+| intra-layer | `motivation.requirement.every-applied-proposal-is-revertible`     | `aggregates` | inbound   |
+| intra-layer | `motivation.goal.one-review-surface`                              | `realizes`   | outbound  |
+
 ### Individuals Belong to One Dataset {#individuals-belong-to-one-dataset}
 
 **ID**: `motivation.requirement.individuals-belong-to-one-dataset`
@@ -1389,6 +1619,45 @@ Every individual belongs to one dataset of one taxonomy; cross-dataset edges are
 | inter-layer | `product.feature.sources-page-and-extract-flow`               | `satisfies` | inbound   |
 | inter-layer | `product.softwarecapability.schema-and-data-curation`         | `satisfies` | inbound   |
 | intra-layer | `motivation.goal.trustworthy-extraction-into-datasets`        | `realizes`  | outbound  |
+
+### Landed Proposals Are Undone by a Reversal Proposal {#landed-proposals-are-undone-by-a-reversal-proposal}
+
+**ID**: `motivation.requirement.landed-proposals-are-undone-by-a-reversal-proposal`
+
+**Type**: `requirement`
+
+A landed proposal cannot be reverted in place; the Revert control offers 'Propose the reversal…', which explains why and creates a new proposal from the run's change events. Only one open reversal per proposal; the two proposals link each other (reverses / reversed_by) through #1624's proposal-link model.
+
+#### Attributes
+
+| Name            | Value                    |
+| --------------- | ------------------------ |
+| documentation   | Owner decisions 2 and 4. |
+| priority        | high                     |
+| requirementType | functional               |
+
+#### Relationships
+
+| Type        | Related Element                                                            | Predicate    | Direction |
+| ----------- | -------------------------------------------------------------------------- | ------------ | --------- |
+| inter-layer | `api.operation.propose-reversal`                                           | `satisfies`  | inbound   |
+| inter-layer | `application.applicationfunction.reversal-planning`                        | `satisfies`  | inbound   |
+| inter-layer | `application.applicationservice.proposal-service`                          | `satisfies`  | inbound   |
+| inter-layer | `business.businessservice.proposal-adjudication-service`                   | `satisfies`  | inbound   |
+| inter-layer | `data-store.collection.proposals-table`                                    | `satisfies`  | inbound   |
+| inter-layer | `product.feature.reversal-proposals`                                       | `satisfies`  | inbound   |
+| inter-layer | `product.softwarecapability.proposal-review-and-apply`                     | `satisfies`  | inbound   |
+| inter-layer | `testing.testcasesketch.a-second-open-reversal-is-refused`                 | `satisfies`  | inbound   |
+| inter-layer | `testing.testcasesketch.landed-proposal-offers-the-reversal`               | `satisfies`  | inbound   |
+| inter-layer | `ux.actioncomponent.revert-control`                                        | `satisfies`  | inbound   |
+| inter-layer | `ux.view.propose-reversal-dialog`                                          | `satisfies`  | inbound   |
+| intra-layer | `motivation.principle.reliability-and-simplicity-first-in-review`          | `influence`  | inbound   |
+| intra-layer | `motivation.requirement.every-applied-proposal-is-revertible`              | `aggregates` | inbound   |
+| intra-layer | `motivation.requirement.reversal-is-decided-like-any-proposal`             | `aggregates` | outbound  |
+| intra-layer | `motivation.requirement.reversal-restores-deleted-entities-with-their-ids` | `aggregates` | outbound  |
+| intra-layer | `motivation.requirement.reversed-proposal-status`                          | `aggregates` | outbound  |
+| intra-layer | `motivation.goal.one-review-surface`                                       | `realizes`   | outbound  |
+| intra-layer | `motivation.principle.agents-propose-and-people-decide`                    | `realizes`   | outbound  |
 
 ### Local API Refuses Foreign Origins {#local-api-refuses-foreign-origins}
 
@@ -1589,6 +1858,39 @@ Every proposal records the pipeline implementation and version that produced it;
 | inter-layer | `product.softwarecapability.extraction-benchmarking`       | `satisfies` | inbound   |
 | intra-layer | `motivation.goal.every-decision-becomes-data`              | `realizes`  | outbound  |
 
+### Reason Codes for Every Reject {#reason-codes-for-every-reject}
+
+**ID**: `motivation.requirement.reason-codes-for-every-reject`
+
+**Type**: `requirement`
+
+Every reject, of any operation kind and in bulk, takes one reason code from a single set (not_in_text, mentioned_only, too_generic, duplicate, out_of_scope, incorrect, keep_current, outdated, other) plus an optional note (required only for a gold element). Buttons are filtered by operation kind; outdated leads when the operation is stale. System rejections keep their text and no code.
+
+#### Attributes
+
+| Name            | Value                                                                                                          |
+| --------------- | -------------------------------------------------------------------------------------------------------------- |
+| documentation   | Owner decision 1. Three new codes: incorrect, keep_current, outdated. No migration: reason_code is String(20). |
+| priority        | high                                                                                                           |
+| requirementType | functional                                                                                                     |
+
+#### Relationships
+
+| Type        | Related Element                                          | Predicate   | Direction |
+| ----------- | -------------------------------------------------------- | ----------- | --------- |
+| inter-layer | `api.operation.reject-proposal`                          | `satisfies` | inbound   |
+| inter-layer | `application.applicationservice.proposal-service`        | `satisfies` | inbound   |
+| inter-layer | `business.businessservice.proposal-adjudication-service` | `satisfies` | inbound   |
+| inter-layer | `data-model.objectschema.proposal-decision-entity`       | `satisfies` | inbound   |
+| inter-layer | `data-store.collection.proposal-decisions`               | `satisfies` | inbound   |
+| inter-layer | `product.feature.proposal-review-page`                   | `satisfies` | inbound   |
+| inter-layer | `product.softwarecapability.proposal-review-and-apply`   | `satisfies` | inbound   |
+| inter-layer | `testing.testcasesketch.keep-current-rejects-an-update`  | `satisfies` | inbound   |
+| inter-layer | `ux.actioncomponent.reject-reason-picker`                | `satisfies` | inbound   |
+| inter-layer | `ux.view.proposal-detail-view`                           | `satisfies` | inbound   |
+| intra-layer | `motivation.goal.every-decision-becomes-data`            | `realizes`  | outbound  |
+| intra-layer | `motivation.goal.one-review-surface`                     | `realizes`  | outbound  |
+
 ### Relationships Limited to Allowed Types {#relationships-limited-to-allowed-types}
 
 **ID**: `motivation.requirement.relationships-limited-to-allowed-types`
@@ -1617,6 +1919,98 @@ Extraction proposes only relationships whose (source class, predicate, target cl
 | inter-layer | `product.feature.schema-and-data-pages`                | `satisfies` | inbound   |
 | inter-layer | `product.softwarecapability.source-extraction`         | `satisfies` | inbound   |
 | intra-layer | `motivation.goal.trustworthy-extraction-into-datasets` | `realizes`  | outbound  |
+
+### Reversal Is Decided Like Any Proposal {#reversal-is-decided-like-any-proposal}
+
+**ID**: `motivation.requirement.reversal-is-decided-like-any-proposal`
+
+**Type**: `requirement`
+
+A reversal proposal is reviewed, applied and landed like any other proposal: operation by operation or all at once, with reason codes and timing.
+
+#### Attributes
+
+| Name            | Value              |
+| --------------- | ------------------ |
+| documentation   | Owner decision 10. |
+| priority        | medium             |
+| requirementType | functional         |
+
+#### Relationships
+
+| Type        | Related Element                                                             | Predicate    | Direction |
+| ----------- | --------------------------------------------------------------------------- | ------------ | --------- |
+| inter-layer | `api.operation.apply-proposal`                                              | `satisfies`  | inbound   |
+| inter-layer | `application.applicationservice.proposal-service`                           | `satisfies`  | inbound   |
+| inter-layer | `business.businessservice.proposal-adjudication-service`                    | `satisfies`  | inbound   |
+| inter-layer | `data-store.collection.proposals-table`                                     | `satisfies`  | inbound   |
+| inter-layer | `product.feature.reversal-proposals`                                        | `satisfies`  | inbound   |
+| inter-layer | `product.softwarecapability.proposal-review-and-apply`                      | `satisfies`  | inbound   |
+| inter-layer | `testing.testcasesketch.partial-reversal-marks-the-original-reversed`       | `satisfies`  | inbound   |
+| inter-layer | `ux.view.proposal-detail-view`                                              | `satisfies`  | inbound   |
+| intra-layer | `motivation.requirement.landed-proposals-are-undone-by-a-reversal-proposal` | `aggregates` | inbound   |
+| intra-layer | `motivation.goal.one-review-surface`                                        | `realizes`   | outbound  |
+| intra-layer | `motivation.principle.agents-propose-and-people-decide`                     | `realizes`   | outbound  |
+
+### Reversal Restores Deleted Entities with Their Ids {#reversal-restores-deleted-entities-with-their-ids}
+
+**ID**: `motivation.requirement.reversal-restores-deleted-entities-with-their-ids`
+
+**Type**: `requirement`
+
+A reversal recreates an entity the original deleted with its old id, via a restore create that names the snapshot's id and checks it is free.
+
+#### Attributes
+
+| Name            | Value             |
+| --------------- | ----------------- |
+| documentation   | Owner decision 9. |
+| priority        | high              |
+| requirementType | functional        |
+
+#### Relationships
+
+| Type        | Related Element                                                             | Predicate    | Direction |
+| ----------- | --------------------------------------------------------------------------- | ------------ | --------- |
+| inter-layer | `application.applicationfunction.reversal-planning`                         | `satisfies`  | inbound   |
+| inter-layer | `product.feature.reversal-proposals`                                        | `satisfies`  | inbound   |
+| inter-layer | `testing.testcasesketch.reversal-restores-a-deleted-entity-with-its-id`     | `satisfies`  | inbound   |
+| intra-layer | `motivation.requirement.landed-proposals-are-undone-by-a-reversal-proposal` | `aggregates` | inbound   |
+| intra-layer | `motivation.goal.one-review-surface`                                        | `realizes`   | outbound  |
+
+### Reversed Proposal Status {#reversed-proposal-status}
+
+**ID**: `motivation.requirement.reversed-proposal-status`
+
+**Type**: `requirement`
+
+A proposal moves from done to reversed once its reversal lands, including a partial reversal; its status strip says how much was reversed ('38 of 41 changes reversed'). The status appears in the backend enum, list filters and chips.
+
+#### Attributes
+
+| Name            | Value                                                             |
+| --------------- | ----------------------------------------------------------------- |
+| documentation   | Owner decision 11. No migration: batch_runs.status is String(20). |
+| priority        | medium                                                            |
+| requirementType | functional                                                        |
+
+#### Relationships
+
+| Type        | Related Element                                                             | Predicate    | Direction |
+| ----------- | --------------------------------------------------------------------------- | ------------ | --------- |
+| inter-layer | `api.operation.list-proposals`                                              | `satisfies`  | inbound   |
+| inter-layer | `application.applicationservice.proposal-service`                           | `satisfies`  | inbound   |
+| inter-layer | `business.businessservice.proposal-adjudication-service`                    | `satisfies`  | inbound   |
+| inter-layer | `data-model.objectschema.proposal-entity`                                   | `satisfies`  | inbound   |
+| inter-layer | `data-store.collection.proposals-table`                                     | `satisfies`  | inbound   |
+| inter-layer | `product.feature.proposal-queue-and-detail`                                 | `satisfies`  | inbound   |
+| inter-layer | `product.feature.reversal-proposals`                                        | `satisfies`  | inbound   |
+| inter-layer | `product.softwarecapability.proposal-review-and-apply`                      | `satisfies`  | inbound   |
+| inter-layer | `testing.testcasesketch.partial-reversal-marks-the-original-reversed`       | `satisfies`  | inbound   |
+| inter-layer | `ux.view.proposal-detail-view`                                              | `satisfies`  | inbound   |
+| inter-layer | `ux.view.proposals-view`                                                    | `satisfies`  | inbound   |
+| intra-layer | `motivation.requirement.landed-proposals-are-undone-by-a-reversal-proposal` | `aggregates` | inbound   |
+| intra-layer | `motivation.goal.one-review-surface`                                        | `realizes`   | outbound  |
 
 ### Secrets Stay in the Configuration File {#secrets-stay-in-the-configuration-file}
 
@@ -1712,6 +2106,34 @@ Adding a URL source must refuse private, loopback and link-local addresses, incl
 | inter-layer | `testing.testcasesketch.url-sources-refuse-private-addresses`        | `satisfies` | inbound   |
 | intra-layer | `motivation.assessment.security-posture-assessment`                  | `influence` | inbound   |
 | intra-layer | `motivation.goal.safe-local-first-workspace`                         | `realizes`  | outbound  |
+
+### Wide Side-by-Side Diff {#wide-side-by-side-diff}
+
+**ID**: `motivation.requirement.wide-side-by-side-diff`
+
+**Type**: `requirement`
+
+Any long-text change opens in a wide side-by-side overlay over the source and list panes (the inspector stays visible): changed fields as tabs, ↑↓/‹› between fields, J/K to the next long change, Esc/✕/Back return focus to the row; &diff=&lt;field&gt; in the URL.
+
+#### Attributes
+
+| Name            | Value                        |
+| --------------- | ---------------------------- |
+| documentation   | Owner decision 7 (board D5). |
+| priority        | medium                       |
+| requirementType | functional                   |
+
+#### Relationships
+
+| Type        | Related Element                                                     | Predicate   | Direction |
+| ----------- | ------------------------------------------------------------------- | ----------- | --------- |
+| inter-layer | `navigation.route.proposal-detail-route`                            | `satisfies` | inbound   |
+| inter-layer | `product.feature.proposal-review-page`                              | `satisfies` | inbound   |
+| inter-layer | `testing.testcasesketch.esc-closes-the-wide-diff-and-returns-focus` | `satisfies` | inbound   |
+| inter-layer | `ux.actioncomponent.wide-diff-button`                               | `satisfies` | inbound   |
+| inter-layer | `ux.librarycomponent.side-by-side-diff`                             | `satisfies` | inbound   |
+| inter-layer | `ux.view.wide-diff-overlay`                                         | `satisfies` | inbound   |
+| intra-layer | `motivation.goal.one-review-surface`                                | `realizes`  | outbound  |
 
 ### Agent (Claude Code and In-App Chat) {#agent-claude-code-and-in-app-chat}
 
@@ -1831,6 +2253,7 @@ The person who writes taxonomy visions, adjudicates proposals (accept, edit, rej
 | intra-layer | `motivation.outcome.curated-domain-ontology`                     | `associated-with` | inbound   |
 | intra-layer | `motivation.outcome.extraction-proposals-worth-a-reviewers-time` | `associated-with` | inbound   |
 | intra-layer | `motivation.driver.review-is-the-normal-workflow`                | `associated-with` | outbound  |
+| intra-layer | `motivation.goal.one-review-surface`                             | `influence`       | outbound  |
 | intra-layer | `motivation.goal.ontology-workbench-for-client-projects`         | `influence`       | outbound  |
 
 ### Platform Developer {#platform-developer}
@@ -1942,8 +2365,9 @@ Mechanical changes clear in bulk by threshold, so the reviewer's time goes to th
 | inter-layer | `business.businessservice.proposal-adjudication-service` | `delivers`        | inbound   |
 | inter-layer | `product.feature.extraction-pre-review`                  | `delivers`        | inbound   |
 | inter-layer | `product.feature.proposal-review-page`                   | `delivers`        | inbound   |
+| intra-layer | `motivation.goal.one-review-surface`                     | `associated-with` | outbound  |
 | intra-layer | `motivation.goal.ontology-workbench-for-client-projects` | `associated-with` | outbound  |
 
 ---
 
-Generated: 2026-11-24T18:43:49.876Z | Model Version: 0.1.0
+Generated: 2026-11-24T21:17:13.774Z | Model Version: 0.1.0

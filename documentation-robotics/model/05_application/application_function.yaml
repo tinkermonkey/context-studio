@@ -394,3 +394,69 @@ application.applicationfunction.proposal-linking:
     created_at: 2026-11-24T12:39:53.767Z
     updated_at: 2026-11-24T12:39:53.767Z
     version: 1
+application.applicationfunction.reversal-planning:
+  id: 7160f59e-05dd-410b-bba5-1d66c8ade2fc
+  path: application.applicationfunction.reversal-planning
+  spec_node_id: application.applicationfunction
+  type: applicationfunction
+  layer_id: application
+  name: Reversal Planning
+  description: "Plans the reversal of a landed proposal from its run's change
+    events, newest first: create to delete, update to update with fields =
+    previous_state (base = current values, so staleness is detected), move
+    fields to move, delete to a restore create that keeps the snapshot's id,
+    relationship side effects to delete plus create; wires $refs between the
+    planned operations (domain/versioning/reversal.py)."
+  attributes:
+    documentation: PR 10. Owned by ProposalService.propose_reversal; refuses while
+      an open reversal of the same proposal exists.
+  source_reference:
+    provenance: manual
+    locations:
+      - file: local-server/domain/versioning/reversal.py
+        symbol: plan_reversal
+  accepted_gaps:
+    - direction: outgoing
+      predicate: realizes
+      other_spec_node_id: business.businessfunction
+      reason: Adjudication is modelled as a business process and service, not a
+        business function; the planner reaches the business through
+        ProposalService.
+      decided_by: agent
+      decided_at: 2026-11-19T17:02:32.491Z
+      changeset: changeset-1795107225483-xwgktrnaj
+  metadata:
+    created_at: 2026-11-19T16:59:46.680Z
+    updated_at: 2026-11-19T16:59:46.680Z
+    version: 1
+application.applicationfunction.revert-preview:
+  id: af1388b1-d748-4cf0-8c77-980c8f2a3fba
+  path: application.applicationfunction.revert-preview
+  spec_node_id: application.applicationfunction
+  type: applicationfunction
+  layer_id: application
+  name: Revert Preview
+  description: "Lists the fields an in-place revert would overwrite: for each
+    update event of the run, the fields whose current value differs from the
+    event's new_state (edited since the apply). Read-only; no transaction."
+  attributes:
+    documentation: PR 9. Lives on RevertService.
+  source_reference:
+    provenance: manual
+    locations:
+      - file: local-server/domain/versioning/revert_service.py
+        symbol: RevertService.preview
+  accepted_gaps:
+    - direction: outgoing
+      predicate: realizes
+      other_spec_node_id: business.businessfunction
+      reason: Adjudication is modelled as a business process and service, not a
+        business function; the preview reaches the business through
+        RevertService.
+      decided_by: agent
+      decided_at: 2026-11-19T17:02:51.889Z
+      changeset: changeset-1795107225483-xwgktrnaj
+  metadata:
+    created_at: 2026-11-19T16:59:46.681Z
+    updated_at: 2026-11-19T16:59:46.681Z
+    version: 1

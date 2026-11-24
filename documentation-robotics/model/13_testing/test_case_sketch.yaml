@@ -179,3 +179,217 @@ testing.testcasesketch.an-edited-end-names-an-element-by-its-ref:
     created_at: 2026-11-24T13:18:56.353Z
     updated_at: 2026-11-24T13:18:56.353Z
     version: 1
+testing.testcasesketch.reversal-restores-a-deleted-entity-with-its-id:
+  id: 3bc62883-e88e-4e98-8902-c7116ecf7ad1
+  path: testing.testcasesketch.reversal-restores-a-deleted-entity-with-its-id
+  spec_node_id: testing.testcasesketch
+  type: testcasesketch
+  layer_id: testing
+  name: Reversal Restores a Deleted Entity with Its Id
+  description: Land a proposal that deletes a class; propose and apply its
+    reversal; the class exists again with its old id and its snapshot's fields.
+  attributes:
+    status: draft
+    implementationFormat: automated
+  source_reference:
+    provenance: manual
+    locations:
+      - file: local-server/tests/integration/routes/test_proposal_reversal_routes.py
+        symbol: test_it_applies_like_any_proposal_and_restores_the_old_id
+  metadata:
+    created_at: 2026-11-19T17:01:49.996Z
+    updated_at: 2026-11-19T17:01:49.996Z
+    version: 1
+testing.testcasesketch.a-second-open-reversal-is-refused:
+  id: 44ef5428-bca2-4d71-a9e4-9daf68a86fcc
+  path: testing.testcasesketch.a-second-open-reversal-is-refused
+  spec_node_id: testing.testcasesketch
+  type: testcasesketch
+  layer_id: testing
+  name: A Second Open Reversal Is Refused
+  description: With a reversal of a landed proposal still open, POST /reversal
+    again returns 409 and creates nothing.
+  attributes:
+    status: draft
+    implementationFormat: automated
+  source_reference:
+    provenance: manual
+    locations:
+      - file: local-server/tests/integration/routes/test_proposal_reversal_routes.py
+        symbol: test_a_second_open_reversal_is_refused_and_creates_nothing
+  metadata:
+    created_at: 2026-11-19T17:01:49.996Z
+    updated_at: 2026-11-19T17:01:49.996Z
+    version: 1
+testing.testcasesketch.partial-reversal-marks-the-original-reversed:
+  id: 000ef249-9986-46e3-bda7-d629617da94a
+  path: testing.testcasesketch.partial-reversal-marks-the-original-reversed
+  spec_node_id: testing.testcasesketch
+  type: testcasesketch
+  layer_id: testing
+  name: Partial Reversal Marks the Original Reversed
+  description: Accept 38 of a 41-operation reversal and land it; the original's
+    status is reversed and its response reports 38 of 41 changes reversed.
+  attributes:
+    status: draft
+    implementationFormat: automated
+  source_reference:
+    provenance: manual
+    locations:
+      - file: local-server/tests/integration/routes/test_proposal_reversal_routes.py
+        symbol: test_a_partial_reversal_marks_it_reversed_and_counts_what_was_undone
+  metadata:
+    created_at: 2026-11-19T17:01:49.996Z
+    updated_at: 2026-11-19T17:01:49.996Z
+    version: 1
+testing.testcasesketch.revert-preview-lists-a-later-edit:
+  id: b0469fda-9a04-425a-9ad9-ac17c5e1528c
+  path: testing.testcasesketch.revert-preview-lists-a-later-edit
+  spec_node_id: testing.testcasesketch
+  type: testcasesketch
+  layer_id: testing
+  name: Revert Preview Lists a Later Edit
+  description: "Apply an update, edit the same field afterwards, then GET the
+    revert preview: the field is listed with the applied and the current value."
+  attributes:
+    status: draft
+    implementationFormat: automated
+  source_reference:
+    provenance: manual
+    locations:
+      - file: local-server/tests/integration/routes/test_proposals_routes.py
+        symbol: test_preview_lists_a_later_edit_an_in_place_revert_would_overwrite
+  metadata:
+    created_at: 2026-11-19T17:01:49.996Z
+    updated_at: 2026-11-19T17:01:49.996Z
+    version: 1
+testing.testcasesketch.keep-current-rejects-an-update:
+  id: be5406ef-ab30-4d29-89fa-8e310bcef9b9
+  path: testing.testcasesketch.keep-current-rejects-an-update
+  spec_node_id: testing.testcasesketch
+  type: testcasesketch
+  layer_id: testing
+  name: Keep Current Rejects an Update
+  description: Reject an update operation with reason keep_current; the operation
+    and its decision record the code; the request is refused for an unknown
+    code.
+  attributes:
+    status: draft
+    implementationFormat: automated
+  source_reference:
+    provenance: manual
+    locations:
+      - file: local-server/tests/integration/routes/test_proposals_routes.py
+        symbol: test_an_update_is_rejected_with_the_new_reason_codes
+  metadata:
+    created_at: 2026-11-19T17:01:49.996Z
+    updated_at: 2026-11-19T17:01:49.996Z
+    version: 1
+testing.testcasesketch.bulk-is-hidden-on-gold-checks:
+  id: a5edc942-9e3f-4d92-bd82-a74f729dbb4c
+  path: testing.testcasesketch.bulk-is-hidden-on-gold-checks
+  spec_node_id: testing.testcasesketch
+  type: testcasesketch
+  layer_id: testing
+  name: Bulk Is Hidden on Gold Checks
+  description: Select and the bulk bar render on an extraction proposal and are
+    absent on a gold-check proposal.
+  attributes:
+    status: draft
+    implementationFormat: automated
+  source_reference:
+    provenance: manual
+    locations:
+      - file: ux/src/components/proposals/__tests__/ProposalReviewList.test.tsx
+        symbol: "are hidden on a gold check: no Select, no checkboxes, no bulk bar"
+  metadata:
+    created_at: 2026-11-19T17:01:49.996Z
+    updated_at: 2026-11-19T17:01:49.996Z
+    version: 1
+testing.testcasesketch.review-route-redirects-to-proposal-detail:
+  id: 4bb3a83b-60b3-4e95-a672-af9aed37462f
+  path: testing.testcasesketch.review-route-redirects-to-proposal-detail
+  spec_node_id: testing.testcasesketch
+  type: testcasesketch
+  layer_id: testing
+  name: Review Route Redirects to Proposal Detail
+  description: /app/proposals/$id/review?selected=x and /app/proposals/$id?op=x
+    land on /app/proposals/$id?selected=x.
+  attributes:
+    status: draft
+    implementationFormat: automated
+  source_reference:
+    provenance: manual
+    locations:
+      - file: ux/src/routes/app/__tests__/-proposal-route.test.ts
+        symbol: lands on the proposal's page with the same selection, in place
+  metadata:
+    created_at: 2026-11-19T17:01:49.996Z
+    updated_at: 2026-11-19T17:01:49.996Z
+    version: 1
+testing.testcasesketch.folded-list-keeps-jk-and-ax-working:
+  id: 812db6ab-aa73-4ad3-8ac1-7f7e8680516d
+  path: testing.testcasesketch.folded-list-keeps-jk-and-ax-working
+  spec_node_id: testing.testcasesketch
+  type: testcasesketch
+  layer_id: testing
+  name: Folded List Keeps J/K and A/X Working
+  description: With the list folded to a rail, J/K move the selection (the notch
+    follows) and A/X decide the selected operation.
+  attributes:
+    status: draft
+    implementationFormat: automated
+  source_reference:
+    provenance: manual
+    locations:
+      - file: ux/src/components/proposals/__tests__/ProposalPaneRails.test.tsx
+        symbol: keeps J / K and A / X working while the list is folded
+  metadata:
+    created_at: 2026-11-19T17:01:49.996Z
+    updated_at: 2026-11-19T17:01:49.996Z
+    version: 1
+testing.testcasesketch.esc-closes-the-wide-diff-and-returns-focus:
+  id: 5675168d-ee18-42e5-b4c3-17679b9b0942
+  path: testing.testcasesketch.esc-closes-the-wide-diff-and-returns-focus
+  spec_node_id: testing.testcasesketch
+  type: testcasesketch
+  layer_id: testing
+  name: Esc Closes the Wide Diff and Returns Focus
+  description: "Open the wide diff with W, step fields with the arrows, press Esc:
+    the overlay closes, &diff= leaves the URL and focus returns to the row it
+    was opened from."
+  attributes:
+    status: draft
+    implementationFormat: automated
+  source_reference:
+    provenance: manual
+    locations:
+      - file: ux/src/components/proposals/__tests__/ProposalWideDiff.test.tsx
+        symbol: opens on W at the first long change, and Esc closes it, focus back on
+          the row
+  metadata:
+    created_at: 2026-11-19T17:01:49.996Z
+    updated_at: 2026-11-19T17:01:49.996Z
+    version: 1
+testing.testcasesketch.landed-proposal-offers-the-reversal:
+  id: 502ec2f3-f463-415e-8ad5-154156a69e95
+  path: testing.testcasesketch.landed-proposal-offers-the-reversal
+  spec_node_id: testing.testcasesketch
+  type: testcasesketch
+  layer_id: testing
+  name: Landed Proposal Offers the Reversal
+  description: On a landed proposal the Revert control reads 'Propose the
+    reversal…'; confirming creates the reversal and both headers link each
+    other.
+  attributes:
+    status: draft
+    implementationFormat: automated
+  source_reference:
+    provenance: manual
+    locations:
+      - file: ux/src/components/proposals/__tests__/ProposalReversal.test.tsx
+        symbol: proposes the reversal of a landed proposal and opens it
+  metadata:
+    created_at: 2026-11-19T17:01:49.996Z
+    updated_at: 2026-11-19T17:01:49.996Z
+    version: 1

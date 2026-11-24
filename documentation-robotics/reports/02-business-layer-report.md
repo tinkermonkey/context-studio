@@ -16,11 +16,11 @@ Business processes, functions, roles, and services.
 
 | Metric                    | Count |
 | ------------------------- | ----- |
-| Elements                  | 36    |
-| Intra-Layer Relationships | 57    |
-| Inter-Layer Relationships | 87    |
-| Inbound Relationships     | 63    |
-| Outbound Relationships    | 24    |
+| Elements                  | 37    |
+| Intra-Layer Relationships | 58    |
+| Inter-Layer Relationships | 95    |
+| Inbound Relationships     | 66    |
+| Outbound Relationships    | 29    |
 
 **Cross-Layer References**:
 
@@ -41,6 +41,7 @@ Business processes, functions, roles, and services.
 | `business.businessevent.proposal-amended`                        | `businessevent`         | 1             |
 | `business.businessevent.proposal-applied`                        | `businessevent`         | 2             |
 | `business.businessevent.proposal-landed`                         | `businessevent`         | 1             |
+| `business.businessevent.proposal-reversed`                       | `businessevent`         | 1             |
 | `business.businessevent.proposal-reverted`                       | `businessevent`         | 1             |
 | `business.businessevent.proposal-submitted`                      | `businessevent`         | 4             |
 | `business.businessevent.proposal-withdrawn`                      | `businessevent`         | 1             |
@@ -53,7 +54,7 @@ Business processes, functions, roles, and services.
 | `business.businessobject.decision-gold`                          | `businessobject`        | 3             |
 | `business.businessobject.source-document`                        | `businessobject`        | 1             |
 | `business.businessobject.taxonomy-charter`                       | `businessobject`        | 1             |
-| `business.businessprocess.adjudicate-a-proposal`                 | `businessprocess`       | 14            |
+| `business.businessprocess.adjudicate-a-proposal`                 | `businessprocess`       | 15            |
 | `business.businessprocess.check-benchmark-gold`                  | `businessprocess`       | 4             |
 | `business.businessprocess.client-round-trip`                     | `businessprocess`       | 9             |
 | `business.businessprocess.extract-a-source-into-a-dataset`       | `businessprocess`       | 7             |
@@ -153,9 +154,14 @@ flowchart TB
 | `business.businessservice.realizes.motivation.goal`                  | `business.businessservice.pipeline-benchmarking-service`              | `motivation.goal.every-decision-becomes-data`                                             | `motivation` | `realizes`   | many-to-many | medium   |
 | `business.businessservice.delivers.motivation.value`                 | `business.businessservice.proposal-adjudication-service`              | `motivation.value.reduced-manual-curation-effort`                                         | `motivation` | `delivers`   | many-to-many | medium   |
 | `business.businessservice.delivers.motivation.value`                 | `business.businessservice.proposal-adjudication-service`              | `motivation.value.reviewer-time-goes-to-judgment-calls`                                   | `motivation` | `delivers`   | many-to-many | medium   |
+| `business.businessservice.realizes.motivation.goal`                  | `business.businessservice.proposal-adjudication-service`              | `motivation.goal.one-review-surface`                                                      | `motivation` | `realizes`   | many-to-many | medium   |
 | `business.businessservice.realizes.motivation.goal`                  | `business.businessservice.proposal-adjudication-service`              | `motivation.goal.ontology-workbench-for-client-projects`                                  | `motivation` | `realizes`   | many-to-many | medium   |
 | `business.businessservice.satisfies.motivation.requirement`          | `business.businessservice.proposal-adjudication-service`              | `motivation.requirement.breaking-changes-never-auto-apply`                                | `motivation` | `satisfies`  | many-to-many | medium   |
 | `business.businessservice.satisfies.motivation.requirement`          | `business.businessservice.proposal-adjudication-service`              | `motivation.requirement.every-applied-proposal-is-revertible`                             | `motivation` | `satisfies`  | many-to-many | medium   |
+| `business.businessservice.satisfies.motivation.requirement`          | `business.businessservice.proposal-adjudication-service`              | `motivation.requirement.landed-proposals-are-undone-by-a-reversal-proposal`               | `motivation` | `satisfies`  | many-to-many | medium   |
+| `business.businessservice.satisfies.motivation.requirement`          | `business.businessservice.proposal-adjudication-service`              | `motivation.requirement.reason-codes-for-every-reject`                                    | `motivation` | `satisfies`  | many-to-many | medium   |
+| `business.businessservice.satisfies.motivation.requirement`          | `business.businessservice.proposal-adjudication-service`              | `motivation.requirement.reversal-is-decided-like-any-proposal`                            | `motivation` | `satisfies`  | many-to-many | medium   |
+| `business.businessservice.satisfies.motivation.requirement`          | `business.businessservice.proposal-adjudication-service`              | `motivation.requirement.reversed-proposal-status`                                         | `motivation` | `satisfies`  | many-to-many | medium   |
 | `business.businessservice.delivers.motivation.value`                 | `business.businessservice.source-extraction-service`                  | `motivation.value.every-fact-is-traceable`                                                | `motivation` | `delivers`   | many-to-many | medium   |
 | `business.businessservice.realizes.motivation.goal`                  | `business.businessservice.source-extraction-service`                  | `motivation.goal.trustworthy-extraction-into-datasets`                                    | `motivation` | `realizes`   | many-to-many | medium   |
 | `business.businessservice.satisfies.motivation.requirement`          | `business.businessservice.source-extraction-service`                  | `motivation.requirement.extracted-facts-cite-their-source`                                | `motivation` | `satisfies`  | many-to-many | medium   |
@@ -188,8 +194,11 @@ flowchart TB
 | `testing.testcoveragetarget.covers.business.businessprocess`         | `testing.testcoveragetarget.route-integration-tests`                  | `business.businessprocess.adjudicate-a-proposal`                                          | `business`   | `covers`     | many-to-many | medium   |
 | `testing.testcoveragetarget.covers.business.businessprocess`         | `testing.testcoveragetarget.source-integration-tests`                 | `business.businessprocess.extract-a-source-into-a-dataset`                                | `business`   | `covers`     | many-to-many | medium   |
 | `testing.testcoveragetarget.covers.business.businessprocess`         | `testing.testcoveragetarget.versioning-integration-tests`             | `business.businessprocess.adjudicate-a-proposal`                                          | `business`   | `covers`     | many-to-many | medium   |
-| `ux.view.serves.business.businessrole`                               | `ux.view.proposal-review-view`                                        | `business.businessrole.reviewer`                                                          | `business`   | `serves`     | many-to-many | medium   |
+| `ux.view.serves.business.businessrole`                               | `ux.view.proposal-detail-view`                                        | `business.businessrole.reviewer`                                                          | `business`   | `serves`     | many-to-many | medium   |
 | `ux.view.serves.business.businessrole`                               | `ux.view.proposals-view`                                              | `business.businessrole.reviewer`                                                          | `business`   | `serves`     | many-to-many | medium   |
+| `ux.view.serves.business.businessrole`                               | `ux.view.propose-reversal-dialog`                                     | `business.businessrole.reviewer`                                                          | `business`   | `serves`     | many-to-many | medium   |
+| `ux.view.serves.business.businessrole`                               | `ux.view.revert-proposal-dialog`                                      | `business.businessrole.reviewer`                                                          | `business`   | `serves`     | many-to-many | medium   |
+| `ux.view.serves.business.businessrole`                               | `ux.view.wide-diff-overlay`                                           | `business.businessrole.reviewer`                                                          | `business`   | `serves`     | many-to-many | medium   |
 
 ## Element Reference
 
@@ -336,6 +345,26 @@ The client records the commit, repo and spec version where the decisions landed.
 | Type        | Related Element                              | Predicate  | Direction |
 | ----------- | -------------------------------------------- | ---------- | --------- |
 | intra-layer | `business.businessprocess.client-round-trip` | `triggers` | inbound   |
+
+### Proposal Reversed {#proposal-reversed}
+
+**ID**: `business.businessevent.proposal-reversed`
+
+**Type**: `businessevent`
+
+The reversal of a landed proposal lands; the original is marked reversed with how many of its changes were reversed.
+
+#### Attributes
+
+| Name | Value    |
+| ---- | -------- |
+| type | internal |
+
+#### Relationships
+
+| Type        | Related Element                                  | Predicate  | Direction |
+| ----------- | ------------------------------------------------ | ---------- | --------- |
+| intra-layer | `business.businessprocess.adjudicate-a-proposal` | `triggers` | inbound   |
 
 ### Proposal Reverted {#proposal-reverted}
 
@@ -584,6 +613,7 @@ Proposed, then classified (editorial, additive, breaking), decided per operation
 | intra-layer | `business.businessevent.entity-changed-event`                | `triggers`    | outbound  |
 | intra-layer | `business.businessevent.proposal-amended`                    | `triggers`    | outbound  |
 | intra-layer | `business.businessevent.proposal-applied`                    | `triggers`    | outbound  |
+| intra-layer | `business.businessevent.proposal-reversed`                   | `triggers`    | outbound  |
 | intra-layer | `business.businessevent.proposal-reverted`                   | `triggers`    | outbound  |
 | intra-layer | `business.businessevent.proposal-withdrawn`                  | `triggers`    | outbound  |
 | intra-layer | `business.businessprocess.check-benchmark-gold`              | `flows-to`    | inbound   |
@@ -755,8 +785,11 @@ Decides proposals (accept, edit then accept, reject with reason, apply, revert) 
 | inter-layer | `motivation.stakeholder.ontology-owner-and-reviewer`             | `references`  | outbound  |
 | inter-layer | `product.persona.ontology-curator`                               | `references`  | inbound   |
 | inter-layer | `security.role.local-operator`                                   | `references`  | inbound   |
-| inter-layer | `ux.view.proposal-review-view`                                   | `serves`      | inbound   |
+| inter-layer | `ux.view.proposal-detail-view`                                   | `serves`      | inbound   |
 | inter-layer | `ux.view.proposals-view`                                         | `serves`      | inbound   |
+| inter-layer | `ux.view.propose-reversal-dialog`                                | `serves`      | inbound   |
+| inter-layer | `ux.view.revert-proposal-dialog`                                 | `serves`      | inbound   |
+| inter-layer | `ux.view.wide-diff-overlay`                                      | `serves`      | inbound   |
 | intra-layer | `business.businessactor.ontology-maintainer`                     | `assigned-to` | inbound   |
 | intra-layer | `business.businesscollaboration.client-round-trip-collaboration` | `aggregates`  | inbound   |
 | intra-layer | `business.businessfunction.schema-refinement`                    | `assigned-to` | outbound  |
@@ -839,22 +872,27 @@ Review, edit-then-accept, reject with reason, apply, revert and gold recording f
 
 #### Relationships
 
-| Type        | Related Element                                                | Predicate   | Direction |
-| ----------- | -------------------------------------------------------------- | ----------- | --------- |
-| inter-layer | `application.applicationservice.approval-policy-service`       | `realizes`  | inbound   |
-| inter-layer | `application.applicationservice.claim-service`                 | `realizes`  | inbound   |
-| inter-layer | `application.applicationservice.proposal-service`              | `realizes`  | inbound   |
-| inter-layer | `application.applicationservice.revert-service`                | `realizes`  | inbound   |
-| inter-layer | `motivation.value.reduced-manual-curation-effort`              | `delivers`  | outbound  |
-| inter-layer | `motivation.value.reviewer-time-goes-to-judgment-calls`        | `delivers`  | outbound  |
-| inter-layer | `motivation.goal.ontology-workbench-for-client-projects`       | `realizes`  | outbound  |
-| inter-layer | `motivation.requirement.breaking-changes-never-auto-apply`     | `satisfies` | outbound  |
-| inter-layer | `motivation.requirement.every-applied-proposal-is-revertible`  | `satisfies` | outbound  |
-| inter-layer | `security.threat.prompt-injection-via-sources-or-client-plans` | `targets`   | inbound   |
-| intra-layer | `business.businessprocess.adjudicate-a-proposal`               | `realizes`  | inbound   |
-| intra-layer | `business.businessprocess.triage-claims`                       | `realizes`  | inbound   |
-| intra-layer | `business.businessobject.decision-gold`                        | `delivers`  | outbound  |
-| intra-layer | `business.businessrole.reviewer`                               | `serves`    | outbound  |
+| Type        | Related Element                                                             | Predicate   | Direction |
+| ----------- | --------------------------------------------------------------------------- | ----------- | --------- |
+| inter-layer | `application.applicationservice.approval-policy-service`                    | `realizes`  | inbound   |
+| inter-layer | `application.applicationservice.claim-service`                              | `realizes`  | inbound   |
+| inter-layer | `application.applicationservice.proposal-service`                           | `realizes`  | inbound   |
+| inter-layer | `application.applicationservice.revert-service`                             | `realizes`  | inbound   |
+| inter-layer | `motivation.value.reduced-manual-curation-effort`                           | `delivers`  | outbound  |
+| inter-layer | `motivation.value.reviewer-time-goes-to-judgment-calls`                     | `delivers`  | outbound  |
+| inter-layer | `motivation.goal.one-review-surface`                                        | `realizes`  | outbound  |
+| inter-layer | `motivation.goal.ontology-workbench-for-client-projects`                    | `realizes`  | outbound  |
+| inter-layer | `motivation.requirement.breaking-changes-never-auto-apply`                  | `satisfies` | outbound  |
+| inter-layer | `motivation.requirement.every-applied-proposal-is-revertible`               | `satisfies` | outbound  |
+| inter-layer | `motivation.requirement.landed-proposals-are-undone-by-a-reversal-proposal` | `satisfies` | outbound  |
+| inter-layer | `motivation.requirement.reason-codes-for-every-reject`                      | `satisfies` | outbound  |
+| inter-layer | `motivation.requirement.reversal-is-decided-like-any-proposal`              | `satisfies` | outbound  |
+| inter-layer | `motivation.requirement.reversed-proposal-status`                           | `satisfies` | outbound  |
+| inter-layer | `security.threat.prompt-injection-via-sources-or-client-plans`              | `targets`   | inbound   |
+| intra-layer | `business.businessprocess.adjudicate-a-proposal`                            | `realizes`  | inbound   |
+| intra-layer | `business.businessprocess.triage-claims`                                    | `realizes`  | inbound   |
+| intra-layer | `business.businessobject.decision-gold`                                     | `delivers`  | outbound  |
+| intra-layer | `business.businessrole.reviewer`                                            | `serves`    | outbound  |
 
 ### Source Extraction Service {#source-extraction-service}
 
@@ -912,4 +950,4 @@ dr-reflection-plan/1 in; cs-dr-spec-changes/1 and decisions out. Agreed with DR 
 
 ---
 
-Generated: 2026-11-24T18:43:49.876Z | Model Version: 0.1.0
+Generated: 2026-11-24T21:17:13.774Z | Model Version: 0.1.0

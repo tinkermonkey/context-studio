@@ -119,3 +119,33 @@ motivation.goal.safe-local-first-workspace:
     created_at: 2026-11-19T16:14:23.185Z
     updated_at: 2026-11-19T16:14:23.185Z
     version: 1
+motivation.goal.one-review-surface:
+  id: 77a5150e-6d8b-448f-9733-06a638b8a8a0
+  path: motivation.goal.one-review-surface
+  spec_node_id: motivation.goal
+  type: goal
+  layer_id: motivation
+  name: One Review Surface
+  description: "#1635: /app/proposals/$id is the only place a proposal is
+    reviewed. One list, one inspector for every operation kind, one header, one
+    URL scheme; a source pane only when the proposal cites a passage. Compare
+    stays a separate page using the same pills."
+  attributes:
+    priority: high
+    documentation: "Approved design: review-design-3 proposal (owner decisions 19
+      Nov 2026). Replaces the separate /review page and the proposal-detail
+      table so every proposal (extraction, client plan, MCP, bundle, reflection,
+      gold check, reversal) is reviewed the same way."
+  accepted_gaps:
+    - direction: incoming
+      predicate: realizes
+      other_spec_node_id: motivation.outcome
+      reason: "The design states no measurable outcome for #1635; the goal is a UX
+        consolidation refined by requirements, not a metric."
+      decided_by: agent
+      decided_at: 2026-11-19T17:02:31.582Z
+      changeset: changeset-1795107225483-xwgktrnaj
+  metadata:
+    created_at: 2026-11-19T16:59:05.120Z
+    updated_at: 2026-11-19T16:59:05.120Z
+    version: 1

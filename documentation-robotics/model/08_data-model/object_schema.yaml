@@ -178,7 +178,10 @@ data-model.objectschema.proposal:
   layer_id: data-model
   name: Proposal
   description: "ORM model for change proposals (change_proposals, a batch_runs
-    subtype): taxonomy, origin, status, landing."
+    subtype): taxonomy, origin, status (open, done, reverted, reversed in
+    batch_runs.status) and landing. A reversal's link to the proposal it
+    reverses is a proposal_links row of kind reverses (#1624), not a column
+    here."
   attributes:
     type: object
   source_reference:
@@ -661,11 +664,14 @@ data-model.objectschema.proposal-entity:
   layer_id: data-model
   name: Proposal Entity
   description: "ChangeProposal: a set of proposed ontology changes on one
-    taxonomy, decided per operation; review_only keeps the approval policy off
-    it (#1628). Status open, done, reverted, or withdrawn (its proposer withdrew
-    it; anything it had applied is rolled back). Its links to other proposals
+    taxonomy, decided per operation, with its ordered proposed operations,
+    origin and landing; review_only keeps the approval policy off it (#1628).
+    Status open, done, reverted, withdrawn (its proposer withdrew it; anything
+    it had applied is rolled back) or reversed. Its links to other proposals
     (supersedes / superseded_by, reverses / reversed_by) come from
-    proposal_links."
+    proposal_links (#1624): a reversal is linked to the proposal it reverses by
+    a link of kind reverses, so the original knows its reversal (reversed_by)
+    and how many of the reversal's changes were applied."
   attributes:
     type: object
   source_reference:
@@ -744,10 +750,14 @@ data-model.objectschema.proposed-operation:
   type: objectschema
   layer_id: data-model
   name: Proposed Operation
-  description: "ProposedOperation: one proposed change. Status pending, applied,
+  description: "ProposedOperation: one proposed change (create, update or delete
+    of an entity), with its status and decision. Status pending, applied,
     rejected, failed, or withdrawn (removed by its proposer, or its proposal
     withdrawn: not a decision). amended_at and amendments record changes its
-    proposer made while it was pending."
+    proposer made while it was pending. A restore create names a free target id
+    (the deleted entity's snapshot id), so a reversal recreates it with its old
+    id; a rejection carries a RejectionReason code (incorrect, keep_current and
+    outdated added)."
   attributes:
     type: object
   source_reference:
@@ -767,7 +777,9 @@ data-model.objectschema.proposal-decision-entity:
   layer_id: data-model
   name: Proposal Decision Entity
   description: "Domain entity: a reviewer's or policy's decision on a proposal
-    operation, with reason code and timing (the gold record)."
+    operation, with reason code (one set for every operation kind: not_in_text,
+    mentioned_only, too_generic, duplicate, out_of_scope, incorrect,
+    keep_current, outdated, other) and timing (the gold record)."
   attributes:
     type: object
   source_reference:
@@ -1083,4 +1095,24 @@ data-model.objectschema.operation-amendment:
   metadata:
     created_at: 2026-11-24T12:39:53.767Z
     updated_at: 2026-11-24T12:39:53.767Z
+    version: 1
+data-model.objectschema.revert-preview-result:
+  id: 6267b28d-e358-4eb1-b42b-bf312a0582cf
+  path: data-model.objectschema.revert-preview-result
+  spec_node_id: data-model.objectschema
+  type: objectschema
+  layer_id: data-model
+  name: Revert Preview Result
+  description: "Domain value: the later edits an in-place revert would overwrite,
+    per entity and field, with the applied value and the current value."
+  attributes:
+    type: object
+  source_reference:
+    provenance: manual
+    locations:
+      - file: local-server/domain/versioning/revert_service.py
+        symbol: OverwrittenEdit
+  metadata:
+    created_at: 2026-11-19T16:59:46.681Z
+    updated_at: 2026-11-19T16:59:46.681Z
     version: 1

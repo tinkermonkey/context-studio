@@ -18,9 +18,9 @@ Databases, data stores, and persistence mechanisms.
 | ------------------------- | ----- |
 | Elements                  | 62    |
 | Intra-Layer Relationships | 91    |
-| Inter-Layer Relationships | 94    |
-| Inbound Relationships     | 73    |
-| Outbound Relationships    | 21    |
+| Inter-Layer Relationships | 102   |
+| Inbound Relationships     | 77    |
+| Outbound Relationships    | 25    |
 
 **Cross-Layer References**:
 
@@ -165,6 +165,9 @@ flowchart TB
 | `application.applicationcomponent.accesses.data-store.collection` | `application.applicationcomponent.sqlite-pipeline-repository`               | `data-store.collection.schema-relationship-reflection-runs`                  | `data-store`  | `accesses`   | many-to-many | medium   |
 | `application.applicationcomponent.accesses.data-store.collection` | `application.applicationcomponent.sqlite-schema-vector-index`               | `data-store.collection.ontology-entities`                                    | `data-store`  | `accesses`   | many-to-many | medium   |
 | `application.applicationcomponent.accesses.data-store.collection` | `application.applicationcomponent.sqlite-source-repository`                 | `data-store.collection.sources`                                              | `data-store`  | `accesses`   | many-to-many | medium   |
+| `application.applicationfunction.accesses.data-store.collection`  | `application.applicationfunction.reversal-planning`                         | `data-store.collection.change-events`                                        | `data-store`  | `accesses`   | many-to-many | medium   |
+| `application.applicationfunction.accesses.data-store.collection`  | `application.applicationfunction.reversal-planning`                         | `data-store.collection.proposals-table`                                      | `data-store`  | `accesses`   | many-to-many | medium   |
+| `application.applicationfunction.accesses.data-store.collection`  | `application.applicationfunction.revert-preview`                            | `data-store.collection.change-events`                                        | `data-store`  | `accesses`   | many-to-many | medium   |
 | `data-model.objectschema.maps-to.data-store.collection`           | `data-model.objectschema.approval-policy-entity`                            | `data-store.collection.approval-policies`                                    | `data-store`  | `maps-to`    | many-to-many | medium   |
 | `data-model.objectschema.maps-to.data-store.collection`           | `data-model.objectschema.attribute-definition-entity`                       | `data-store.collection.attribute-definitions`                                | `data-store`  | `maps-to`    | many-to-many | medium   |
 | `data-model.objectschema.maps-to.data-store.collection`           | `data-model.objectschema.batch-entity`                                      | `data-store.collection.batches`                                              | `data-store`  | `maps-to`    | many-to-many | medium   |
@@ -209,9 +212,13 @@ flowchart TB
 | `data-store.collection.satisfies.motivation.requirement`          | `data-store.collection.entity-sources`                                      | `motivation.requirement.extracted-facts-cite-their-source`                   | `motivation`  | `satisfies`  | many-to-many | medium   |
 | `data-store.collection.references.security.dataclassification`    | `data-store.collection.ontology-entities`                                   | `security.dataclassification.internal-knowledge-graph-data`                  | `security`    | `references` | many-to-many | medium   |
 | `data-store.collection.satisfies.motivation.requirement`          | `data-store.collection.predicates`                                          | `motivation.requirement.relationships-limited-to-allowed-types`              | `motivation`  | `satisfies`  | many-to-many | medium   |
+| `data-store.collection.satisfies.motivation.requirement`          | `data-store.collection.proposal-decisions`                                  | `motivation.requirement.reason-codes-for-every-reject`                       | `motivation`  | `satisfies`  | many-to-many | medium   |
 | `data-store.collection.satisfies.motivation.requirement`          | `data-store.collection.proposal-links`                                      | `motivation.requirement.proposals-link-to-each-other-through-one-link-model` | `motivation`  | `satisfies`  | many-to-many | medium   |
 | `data-store.collection.references.security.dataclassification`    | `data-store.collection.proposals-table`                                     | `security.dataclassification.internal-knowledge-graph-data`                  | `security`    | `references` | many-to-many | medium   |
+| `data-store.collection.satisfies.motivation.requirement`          | `data-store.collection.proposals-table`                                     | `motivation.requirement.landed-proposals-are-undone-by-a-reversal-proposal`  | `motivation`  | `satisfies`  | many-to-many | medium   |
 | `data-store.collection.satisfies.motivation.requirement`          | `data-store.collection.proposals-table`                                     | `motivation.requirement.proposals-record-their-pipeline-and-version`         | `motivation`  | `satisfies`  | many-to-many | medium   |
+| `data-store.collection.satisfies.motivation.requirement`          | `data-store.collection.proposals-table`                                     | `motivation.requirement.reversal-is-decided-like-any-proposal`               | `motivation`  | `satisfies`  | many-to-many | medium   |
+| `data-store.collection.satisfies.motivation.requirement`          | `data-store.collection.proposals-table`                                     | `motivation.requirement.reversed-proposal-status`                            | `motivation`  | `satisfies`  | many-to-many | medium   |
 | `data-store.collection.references.security.dataclassification`    | `data-store.collection.sources`                                             | `security.dataclassification.internal-knowledge-graph-data`                  | `security`    | `references` | many-to-many | medium   |
 | `data-store.database.satisfies.motivation.constraint`             | `data-store.database.localdb`                                               | `motivation.constraint.sqlite-only-persistence`                              | `motivation`  | `satisfies`  | many-to-many | medium   |
 | `data-store.database.satisfies.motivation.constraint`             | `data-store.database.operationsdb`                                          | `motivation.constraint.sqlite-only-persistence`                              | `motivation`  | `satisfies`  | many-to-many | medium   |
@@ -222,6 +229,7 @@ flowchart TB
 | `data-store.validationrule.satisfies.motivation.requirement`      | `data-store.validationrule.uk-relationship-triple`                          | `motivation.requirement.relationships-limited-to-allowed-types`              | `motivation`  | `satisfies`  | many-to-many | medium   |
 | `testing.testcoveragetarget.covers.data-store.collection`         | `testing.testcoveragetarget.e2e-test-suite`                                 | `data-store.collection.ontology-entities`                                    | `data-store`  | `covers`     | many-to-many | medium   |
 | `testing.testcoveragetarget.covers.data-store.collection`         | `testing.testcoveragetarget.performance-test-suite`                         | `data-store.collection.ontology-entities`                                    | `data-store`  | `covers`     | many-to-many | medium   |
+| `testing.testcoveragetarget.covers.data-store.collection`         | `testing.testcoveragetarget.proposal-reversal`                              | `data-store.collection.proposals-table`                                      | `data-store`  | `covers`     | many-to-many | medium   |
 
 ## Element Reference
 
@@ -388,6 +396,8 @@ Audit trail of all entity changes — stores entity_id, entity_type, event_type,
 | Type        | Related Element                                               | Predicate    | Direction |
 | ----------- | ------------------------------------------------------------- | ------------ | --------- |
 | inter-layer | `application.applicationcomponent.sqlite-change-repository`   | `accesses`   | inbound   |
+| inter-layer | `application.applicationfunction.reversal-planning`           | `accesses`   | inbound   |
+| inter-layer | `application.applicationfunction.revert-preview`              | `accesses`   | inbound   |
 | inter-layer | `data-model.objectschema.change-event-entity`                 | `maps-to`    | inbound   |
 | inter-layer | `data-model.objectschema.change-event`                        | `maps-to`    | inbound   |
 | inter-layer | `motivation.requirement.every-applied-proposal-is-revertible` | `satisfies`  | outbound  |
@@ -884,6 +894,7 @@ Reviewer and policy decisions on proposal operations, with reason codes and timi
 | ----------- | -------------------------------------------------------------------- | ------------ | --------- |
 | inter-layer | `application.applicationcomponent.sqlite-change-proposal-repository` | `accesses`   | inbound   |
 | inter-layer | `data-model.objectschema.proposal-decision-entity`                   | `maps-to`    | inbound   |
+| inter-layer | `motivation.requirement.reason-codes-for-every-reject`               | `satisfies`  | outbound  |
 | intra-layer | `data-store.collection.proposal-operations`                          | `references` | outbound  |
 | intra-layer | `data-store.collection.proposals-table`                              | `references` | outbound  |
 | intra-layer | `data-store.database.localdb`                                        | `composes`   | inbound   |
@@ -941,7 +952,7 @@ The ordered operations of each change proposal, with status and payload (local.d
 
 **Type**: `collection`
 
-Change proposals (a batch_runs subtype): taxonomy, origin, status and landing of each proposal.
+Change proposals (a batch_runs subtype): taxonomy, origin, status and landing of each proposal. Links between proposals, a reversal's to the proposal it reverses among them, are in proposal_links (#1624).
 
 #### Attributes
 
@@ -951,21 +962,26 @@ Change proposals (a batch_runs subtype): taxonomy, origin, status and landing of
 
 #### Relationships
 
-| Type        | Related Element                                                      | Predicate     | Direction |
-| ----------- | -------------------------------------------------------------------- | ------------- | --------- |
-| inter-layer | `application.applicationcomponent.sqlite-change-proposal-repository` | `accesses`    | inbound   |
-| inter-layer | `data-model.objectschema.proposal-entity`                            | `maps-to`     | inbound   |
-| inter-layer | `data-model.objectschema.proposal`                                   | `maps-to`     | inbound   |
-| inter-layer | `security.dataclassification.internal-knowledge-graph-data`          | `references`  | outbound  |
-| inter-layer | `motivation.requirement.proposals-record-their-pipeline-and-version` | `satisfies`   | outbound  |
-| intra-layer | `data-store.collection.entity-sources`                               | `references`  | inbound   |
-| intra-layer | `data-store.collection.proposal-decisions`                           | `references`  | inbound   |
-| intra-layer | `data-store.collection.proposal-operations`                          | `references`  | inbound   |
-| intra-layer | `data-store.field.review-only`                                       | `composes`    | outbound  |
-| intra-layer | `data-store.collection.batch-runs`                                   | `references`  | outbound  |
-| intra-layer | `data-store.database.localdb`                                        | `composes`    | inbound   |
-| intra-layer | `data-store.validationrule.fk-proposal-links-source`                 | `cascades-to` | inbound   |
-| intra-layer | `data-store.validationrule.fk-proposal-links-target`                 | `cascades-to` | inbound   |
+| Type        | Related Element                                                             | Predicate     | Direction |
+| ----------- | --------------------------------------------------------------------------- | ------------- | --------- |
+| inter-layer | `application.applicationcomponent.sqlite-change-proposal-repository`        | `accesses`    | inbound   |
+| inter-layer | `application.applicationfunction.reversal-planning`                         | `accesses`    | inbound   |
+| inter-layer | `data-model.objectschema.proposal-entity`                                   | `maps-to`     | inbound   |
+| inter-layer | `data-model.objectschema.proposal`                                          | `maps-to`     | inbound   |
+| inter-layer | `security.dataclassification.internal-knowledge-graph-data`                 | `references`  | outbound  |
+| inter-layer | `motivation.requirement.landed-proposals-are-undone-by-a-reversal-proposal` | `satisfies`   | outbound  |
+| inter-layer | `motivation.requirement.proposals-record-their-pipeline-and-version`        | `satisfies`   | outbound  |
+| inter-layer | `motivation.requirement.reversal-is-decided-like-any-proposal`              | `satisfies`   | outbound  |
+| inter-layer | `motivation.requirement.reversed-proposal-status`                           | `satisfies`   | outbound  |
+| inter-layer | `testing.testcoveragetarget.proposal-reversal`                              | `covers`      | inbound   |
+| intra-layer | `data-store.collection.entity-sources`                                      | `references`  | inbound   |
+| intra-layer | `data-store.collection.proposal-decisions`                                  | `references`  | inbound   |
+| intra-layer | `data-store.collection.proposal-operations`                                 | `references`  | inbound   |
+| intra-layer | `data-store.field.review-only`                                              | `composes`    | outbound  |
+| intra-layer | `data-store.collection.batch-runs`                                          | `references`  | outbound  |
+| intra-layer | `data-store.database.localdb`                                               | `composes`    | inbound   |
+| intra-layer | `data-store.validationrule.fk-proposal-links-source`                        | `cascades-to` | inbound   |
+| intra-layer | `data-store.validationrule.fk-proposal-links-target`                        | `cascades-to` | inbound   |
 
 ### reference_relations {#reference-relations}
 
@@ -1707,4 +1723,4 @@ A proposal's operations have distinct sequence numbers.
 
 ---
 
-Generated: 2026-11-24T18:43:49.876Z | Model Version: 0.1.0
+Generated: 2026-11-24T21:17:13.774Z | Model Version: 0.1.0

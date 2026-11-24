@@ -451,6 +451,9 @@ navigation.route.proposal-detail-route:
   type: route
   layer_id: navigation
   name: Proposal Detail Route
+  description: "The one review surface. Search params: ?selected=<operation> (?op=
+    redirects to it) and &diff=<field> while the wide diff is open, so Back and
+    links work."
   attributes:
     type: public
     title: /app/proposals/$proposalId
@@ -489,8 +492,10 @@ navigation.route.proposal-review-route:
   type: route
   layer_id: navigation
   name: Proposal Review Route
+  description: Redirects /app/proposals/$proposalId/review to
+    /app/proposals/$proposalId, keeping ?selected=.
   attributes:
-    type: public
+    type: redirect
     title: /app/proposals/$proposalId/review
   source_reference:
     provenance: extracted

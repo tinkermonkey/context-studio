@@ -16,11 +16,11 @@ REST APIs, operations, endpoints, and API integrations.
 
 | Metric                    | Count |
 | ------------------------- | ----- |
-| Elements                  | 485   |
-| Intra-Layer Relationships | 378   |
-| Inter-Layer Relationships | 550   |
-| Inbound Relationships     | 212   |
-| Outbound Relationships    | 338   |
+| Elements                  | 490   |
+| Intra-Layer Relationships | 382   |
+| Inter-Layer Relationships | 576   |
+| Inbound Relationships     | 227   |
+| Outbound Relationships    | 349   |
 
 **Cross-Layer References**:
 
@@ -181,6 +181,8 @@ REST APIs, operations, endpoints, and API integrations.
 | `api.operation.mcp-endpoint`                                   | `operation`       | 1             |
 | `api.operation.move-class`                                     | `operation`       | 2             |
 | `api.operation.preview-recognition`                            | `operation`       | 2             |
+| `api.operation.preview-revert`                                 | `operation`       | 1             |
+| `api.operation.propose-reversal`                               | `operation`       | 1             |
 | `api.operation.publish-taxonomy`                               | `operation`       | 2             |
 | `api.operation.pull-changes`                                   | `operation`       | 1             |
 | `api.operation.push-changes`                                   | `operation`       | 1             |
@@ -277,7 +279,7 @@ REST APIs, operations, endpoints, and API integrations.
 | `api.response.candidate-item`                                  | `response`        | 5             |
 | `api.response.centrality-response`                             | `response`        | 1             |
 | `api.response.change-history-response`                         | `response`        | 2             |
-| `api.response.change-proposal-response`                        | `response`        | 9             |
+| `api.response.change-proposal-response`                        | `response`        | 10            |
 | `api.response.change-proposal-revert-response`                 | `response`        | 1             |
 | `api.response.chat-status-response`                            | `response`        | 1             |
 | `api.response.claim-response`                                  | `response`        | 5             |
@@ -333,6 +335,7 @@ REST APIs, operations, endpoints, and API integrations.
 | `api.response.relationship-response`                           | `response`        | 3             |
 | `api.response.resolution-record-response`                      | `response`        | 0             |
 | `api.response.resume-batch-response`                           | `response`        | 1             |
+| `api.response.revert-preview-response`                         | `response`        | 1             |
 | `api.response.revert-run-response`                             | `response`        | 1             |
 | `api.response.scheme-counts-response`                          | `response`        | 1             |
 | `api.response.service-metrics-response`                        | `response`        | 1             |
@@ -490,6 +493,8 @@ REST APIs, operations, endpoints, and API integrations.
 | `api.responses.mark-proposal-landed-responses`                 | `responses`       | 2             |
 | `api.responses.move-class-responses`                           | `responses`       | 2             |
 | `api.responses.preview-recognition-responses`                  | `responses`       | 2             |
+| `api.responses.preview-revert-responses`                       | `responses`       | 2             |
+| `api.responses.propose-reversal-responses`                     | `responses`       | 2             |
 | `api.responses.publish-taxonomy-responses`                     | `responses`       | 2             |
 | `api.responses.pull-changes-responses`                         | `responses`       | 2             |
 | `api.responses.push-changes-responses`                         | `responses`       | 2             |
@@ -568,6 +573,7 @@ flowchart TB
 | `api.operation.references.application.applicationservice` | `api.operation.apply-pipeline-run`                                 | `application.applicationservice.proposal-service`                                       | `application` | `references` | many-to-many | medium   |
 | `api.operation.exposes.product.feature`                   | `api.operation.apply-proposal`                                     | `product.feature.proposal-queue-and-detail`                                             | `product`     | `exposes`    | many-to-many | medium   |
 | `api.operation.references.application.applicationservice` | `api.operation.apply-proposal`                                     | `application.applicationservice.proposal-service`                                       | `application` | `references` | many-to-many | medium   |
+| `api.operation.satisfies.motivation.requirement`          | `api.operation.apply-proposal`                                     | `motivation.requirement.reversal-is-decided-like-any-proposal`                          | `motivation`  | `satisfies`  | many-to-many | medium   |
 | `api.operation.exposes.product.feature`                   | `api.operation.build-graph`                                        | `product.feature.graph-view`                                                            | `product`     | `exposes`    | many-to-many | medium   |
 | `api.operation.references.application.applicationservice` | `api.operation.build-graph`                                        | `application.applicationservice.graph-analysis-service`                                 | `application` | `references` | many-to-many | medium   |
 | `api.operation.exposes.product.feature`                   | `api.operation.cancel-batch-runs`                                  | `product.feature.runs-page`                                                             | `product`     | `exposes`    | many-to-many | medium   |
@@ -810,6 +816,7 @@ flowchart TB
 | `api.operation.references.application.applicationservice` | `api.operation.list-property-definitions`                          | `application.applicationservice.ontology-service`                                       | `application` | `references` | many-to-many | medium   |
 | `api.operation.exposes.product.feature`                   | `api.operation.list-proposals`                                     | `product.feature.proposal-queue-and-detail`                                             | `product`     | `exposes`    | many-to-many | medium   |
 | `api.operation.references.application.applicationservice` | `api.operation.list-proposals`                                     | `application.applicationservice.proposal-service`                                       | `application` | `references` | many-to-many | medium   |
+| `api.operation.satisfies.motivation.requirement`          | `api.operation.list-proposals`                                     | `motivation.requirement.reversed-proposal-status`                                       | `motivation`  | `satisfies`  | many-to-many | medium   |
 | `api.operation.satisfies.motivation.requirement`          | `api.operation.list-proposals`                                     | `motivation.requirement.the-proposals-list-filters-in-the-query-and-has-a-summary-form` | `motivation`  | `satisfies`  | many-to-many | medium   |
 | `api.operation.satisfies.motivation.requirement`          | `api.operation.list-proposals`                                     | `motivation.requirement.unlanded-lists-only-proposals-with-something-to-land`           | `motivation`  | `satisfies`  | many-to-many | medium   |
 | `api.operation.exposes.product.feature`                   | `api.operation.list-relationships`                                 | `product.feature.schema-and-data-pages`                                                 | `product`     | `exposes`    | many-to-many | medium   |
@@ -832,6 +839,14 @@ flowchart TB
 | `api.operation.uses.application.applicationinterface`     | `api.operation.mcp-endpoint`                                       | `application.applicationinterface.mcp-interface`                                        | `application` | `uses`       | many-to-many | medium   |
 | `api.operation.references.application.applicationservice` | `api.operation.move-class`                                         | `application.applicationservice.ontology-service`                                       | `application` | `references` | many-to-many | medium   |
 | `api.operation.references.application.applicationservice` | `api.operation.preview-recognition`                                | `application.applicationservice.schema-recognition-preview-service`                     | `application` | `references` | many-to-many | medium   |
+| `api.operation.exposes.product.feature`                   | `api.operation.preview-revert`                                     | `product.feature.proposal-queue-and-detail`                                             | `product`     | `exposes`    | many-to-many | medium   |
+| `api.operation.realizes.application.applicationfunction`  | `api.operation.preview-revert`                                     | `application.applicationfunction.revert-preview`                                        | `application` | `realizes`   | many-to-many | medium   |
+| `api.operation.references.application.applicationservice` | `api.operation.preview-revert`                                     | `application.applicationservice.revert-service`                                         | `application` | `references` | many-to-many | medium   |
+| `api.operation.satisfies.motivation.requirement`          | `api.operation.preview-revert`                                     | `motivation.requirement.in-place-revert-warns-of-overwritten-edits`                     | `motivation`  | `satisfies`  | many-to-many | medium   |
+| `api.operation.exposes.product.feature`                   | `api.operation.propose-reversal`                                   | `product.feature.reversal-proposals`                                                    | `product`     | `exposes`    | many-to-many | medium   |
+| `api.operation.realizes.application.applicationfunction`  | `api.operation.propose-reversal`                                   | `application.applicationfunction.reversal-planning`                                     | `application` | `realizes`   | many-to-many | medium   |
+| `api.operation.references.application.applicationservice` | `api.operation.propose-reversal`                                   | `application.applicationservice.proposal-service`                                       | `application` | `references` | many-to-many | medium   |
+| `api.operation.satisfies.motivation.requirement`          | `api.operation.propose-reversal`                                   | `motivation.requirement.landed-proposals-are-undone-by-a-reversal-proposal`             | `motivation`  | `satisfies`  | many-to-many | medium   |
 | `api.operation.exposes.product.feature`                   | `api.operation.publish-taxonomy`                                   | `product.feature.schema-and-data-pages`                                                 | `product`     | `exposes`    | many-to-many | medium   |
 | `api.operation.references.application.applicationservice` | `api.operation.publish-taxonomy`                                   | `application.applicationservice.ontology-service`                                       | `application` | `references` | many-to-many | medium   |
 | `api.operation.exposes.product.feature`                   | `api.operation.pull-changes`                                       | `product.feature.change-history-and-sync`                                               | `product`     | `exposes`    | many-to-many | medium   |
@@ -840,6 +855,7 @@ flowchart TB
 | `api.operation.references.application.applicationservice` | `api.operation.push-changes`                                       | `application.applicationservice.versioning-service`                                     | `application` | `references` | many-to-many | medium   |
 | `api.operation.exposes.product.feature`                   | `api.operation.reject-proposal`                                    | `product.feature.proposal-queue-and-detail`                                             | `product`     | `exposes`    | many-to-many | medium   |
 | `api.operation.references.application.applicationservice` | `api.operation.reject-proposal`                                    | `application.applicationservice.proposal-service`                                       | `application` | `references` | many-to-many | medium   |
+| `api.operation.satisfies.motivation.requirement`          | `api.operation.reject-proposal`                                    | `motivation.requirement.reason-codes-for-every-reject`                                  | `motivation`  | `satisfies`  | many-to-many | medium   |
 | `api.operation.exposes.product.feature`                   | `api.operation.remove-parent-class-from-individual`                | `product.feature.schema-and-data-pages`                                                 | `product`     | `exposes`    | many-to-many | medium   |
 | `api.operation.references.application.applicationservice` | `api.operation.remove-parent-class-from-individual`                | `application.applicationservice.ontology-service`                                       | `application` | `references` | many-to-many | medium   |
 | `api.operation.exposes.product.feature`                   | `api.operation.remove-source`                                      | `product.feature.sources-page-and-extract-flow`                                         | `product`     | `exposes`    | many-to-many | medium   |
@@ -912,14 +928,26 @@ flowchart TB
 | `data-model.objectschema.maps-to.api.response`            | `data-model.objectschema.proposal-link`                            | `api.response.proposal-link-response`                                                   | `api`         | `maps-to`    | many-to-many | medium   |
 | `data-model.objectschema.maps-to.api.response`            | `data-model.objectschema.relationship-entity`                      | `api.response.relationship-response`                                                    | `api`         | `maps-to`    | many-to-many | medium   |
 | `data-model.objectschema.maps-to.api.response`            | `data-model.objectschema.resolution-record`                        | `api.response.resolution-record-response`                                               | `api`         | `maps-to`    | many-to-many | medium   |
+| `data-model.objectschema.maps-to.api.response`            | `data-model.objectschema.revert-preview-result`                    | `api.response.revert-preview-response`                                                  | `api`         | `maps-to`    | many-to-many | medium   |
 | `data-model.objectschema.maps-to.api.response`            | `data-model.objectschema.subgraph`                                 | `api.response.subgraph-data-response`                                                   | `api`         | `maps-to`    | many-to-many | medium   |
 | `data-model.objectschema.maps-to.api.response`            | `data-model.objectschema.subgraph-result`                          | `api.response.subgraph-result-response`                                                 | `api`         | `maps-to`    | many-to-many | medium   |
 | `data-model.objectschema.maps-to.api.response`            | `data-model.objectschema.system-health`                            | `api.response.database-health-response`                                                 | `api`         | `maps-to`    | many-to-many | medium   |
 | `data-model.objectschema.maps-to.api.response`            | `data-model.objectschema.taxonomy-entity`                          | `api.response.taxonomy-response`                                                        | `api`         | `maps-to`    | many-to-many | medium   |
 | `data-model.objectschema.maps-to.api.response`            | `data-model.objectschema.triple-extraction-result`                 | `api.response.triples-response`                                                         | `api`         | `maps-to`    | many-to-many | medium   |
+| `testing.testcasesketch.tests.api.operation`              | `testing.testcasesketch.a-second-open-reversal-is-refused`         | `api.operation.propose-reversal`                                                        | `api`         | `tests`      | many-to-many | medium   |
 | `testing.testcasesketch.tests.api.operation`              | `testing.testcasesketch.an-edited-end-names-an-element-by-its-ref` | `api.operation.apply-proposal`                                                          | `api`         | `tests`      | many-to-many | medium   |
+| `testing.testcasesketch.tests.api.operation`              | `testing.testcasesketch.keep-current-rejects-an-update`            | `api.operation.reject-proposal`                                                         | `api`         | `tests`      | many-to-many | medium   |
+| `testing.testcasesketch.tests.api.operation`              | `testing.testcasesketch.revert-preview-lists-a-later-edit`         | `api.operation.preview-revert`                                                          | `api`         | `tests`      | many-to-many | medium   |
 | `testing.testcoveragetarget.covers.api.operation`         | `testing.testcoveragetarget.proposal-amend-withdraw-and-links`     | `api.operation.amend-proposal`                                                          | `api`         | `covers`     | many-to-many | medium   |
 | `testing.testcoveragetarget.covers.api.operation`         | `testing.testcoveragetarget.proposal-amend-withdraw-and-links`     | `api.operation.withdraw-proposal`                                                       | `api`         | `covers`     | many-to-many | medium   |
+| `testing.testcoveragetarget.covers.api.operation`         | `testing.testcoveragetarget.proposal-reversal`                     | `api.operation.propose-reversal`                                                        | `api`         | `covers`     | many-to-many | medium   |
+| `testing.testcoveragetarget.covers.api.operation`         | `testing.testcoveragetarget.reject-reason-codes`                   | `api.operation.reject-proposal`                                                         | `api`         | `covers`     | many-to-many | medium   |
+| `testing.testcoveragetarget.covers.api.operation`         | `testing.testcoveragetarget.revert-preview`                        | `api.operation.preview-revert`                                                          | `api`         | `covers`     | many-to-many | medium   |
+| `ux.actioncomponent.triggers.api.operation`               | `ux.actioncomponent.bulk-select`                                   | `api.operation.apply-proposal`                                                          | `api`         | `triggers`   | many-to-many | medium   |
+| `ux.actioncomponent.triggers.api.operation`               | `ux.actioncomponent.bulk-select`                                   | `api.operation.reject-proposal`                                                         | `api`         | `triggers`   | many-to-many | medium   |
+| `ux.actioncomponent.triggers.api.operation`               | `ux.actioncomponent.reject-reason-picker`                          | `api.operation.reject-proposal`                                                         | `api`         | `triggers`   | many-to-many | medium   |
+| `ux.actioncomponent.triggers.api.operation`               | `ux.actioncomponent.revert-control`                                | `api.operation.propose-reversal`                                                        | `api`         | `triggers`   | many-to-many | medium   |
+| `ux.actioncomponent.triggers.api.operation`               | `ux.actioncomponent.revert-control`                                | `api.operation.revert-proposal`                                                         | `api`         | `triggers`   | many-to-many | medium   |
 | `ux.dataconfig.maps-to.api.requestbody`                   | `ux.dataconfig.use-accept-rest`                                    | `api.requestbody.accept-rest-request`                                                   | `api`         | `maps-to`    | many-to-many | medium   |
 | `ux.dataconfig.maps-to.api.response`                      | `ux.dataconfig.use-accept-rest`                                    | `api.response.accept-rest-response`                                                     | `api`         | `maps-to`    | many-to-many | medium   |
 | `ux.dataconfig.maps-to.api.requestbody`                   | `ux.dataconfig.use-add-class-to-individual`                        | `api.requestbody.individual-class-request`                                              | `api`         | `maps-to`    | many-to-many | medium   |
@@ -1019,6 +1047,7 @@ flowchart TB
 | `ux.dataconfig.maps-to.api.response`                      | `ux.dataconfig.use-individuals-by-ids`                             | `api.response.individual-response`                                                      | `api`         | `maps-to`    | many-to-many | medium   |
 | `ux.dataconfig.maps-to.api.response`                      | `ux.dataconfig.use-individuals-in-classes`                         | `api.response.individual-response`                                                      | `api`         | `maps-to`    | many-to-many | medium   |
 | `ux.dataconfig.maps-to.api.response`                      | `ux.dataconfig.use-individuals`                                    | `api.response.individual-response`                                                      | `api`         | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.response`                      | `ux.dataconfig.use-inspector-model`                                | `api.response.change-proposal-response`                                                 | `api`         | `maps-to`    | many-to-many | medium   |
 | `ux.dataconfig.maps-to.api.response`                      | `ux.dataconfig.use-load-demo-dataset`                              | `api.response.demo-dataset-load-response`                                               | `api`         | `maps-to`    | many-to-many | medium   |
 | `ux.dataconfig.maps-to.api.response`                      | `ux.dataconfig.use-mcp-connection`                                 | `api.response.mcp-connection-response`                                                  | `api`         | `maps-to`    | many-to-many | medium   |
 | `ux.dataconfig.maps-to.api.requestbody`                   | `ux.dataconfig.use-move-class`                                     | `api.requestbody.class-move-request`                                                    | `api`         | `maps-to`    | many-to-many | medium   |
@@ -1037,6 +1066,7 @@ flowchart TB
 | `ux.dataconfig.maps-to.api.response`                      | `ux.dataconfig.use-properties`                                     | `api.response.property-definition-response`                                             | `api`         | `maps-to`    | many-to-many | medium   |
 | `ux.dataconfig.maps-to.api.response`                      | `ux.dataconfig.use-proposal-comparison`                            | `api.response.proposal-comparison-response`                                             | `api`         | `maps-to`    | many-to-many | medium   |
 | `ux.dataconfig.maps-to.api.response`                      | `ux.dataconfig.use-proposal-decisions`                             | `api.response.gold-decision-response`                                                   | `api`         | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.response`                      | `ux.dataconfig.use-propose-reversal`                               | `api.response.change-proposal-response`                                                 | `api`         | `maps-to`    | many-to-many | medium   |
 | `ux.dataconfig.maps-to.api.response`                      | `ux.dataconfig.use-publish-diff-stats`                             | `api.response.publish-diff-stats`                                                       | `api`         | `maps-to`    | many-to-many | medium   |
 | `ux.dataconfig.maps-to.api.requestbody`                   | `ux.dataconfig.use-publish-taxonomy`                               | `api.requestbody.taxonomy-publish-request`                                              | `api`         | `maps-to`    | many-to-many | medium   |
 | `ux.dataconfig.maps-to.api.response`                      | `ux.dataconfig.use-publish-taxonomy`                               | `api.response.taxonomy-response`                                                        | `api`         | `maps-to`    | many-to-many | medium   |
@@ -1056,6 +1086,7 @@ flowchart TB
 | `ux.dataconfig.maps-to.api.requestbody`                   | `ux.dataconfig.use-reorder-individual-classes`                     | `api.requestbody.individual-class-list-request`                                         | `api`         | `maps-to`    | many-to-many | medium   |
 | `ux.dataconfig.maps-to.api.response`                      | `ux.dataconfig.use-reorder-individual-classes`                     | `api.response.individual-response`                                                      | `api`         | `maps-to`    | many-to-many | medium   |
 | `ux.dataconfig.maps-to.api.response`                      | `ux.dataconfig.use-revert-change-proposal`                         | `api.response.change-proposal-revert-response`                                          | `api`         | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.response`                      | `ux.dataconfig.use-revert-preview`                                 | `api.response.revert-preview-response`                                                  | `api`         | `maps-to`    | many-to-many | medium   |
 | `ux.dataconfig.maps-to.api.response`                      | `ux.dataconfig.use-revert-run`                                     | `api.response.revert-run-response`                                                      | `api`         | `maps-to`    | many-to-many | medium   |
 | `ux.dataconfig.maps-to.api.response`                      | `ux.dataconfig.use-run-grounding-workflow`                         | `api.response.workflow-run-response`                                                    | `api`         | `maps-to`    | many-to-many | medium   |
 | `ux.dataconfig.maps-to.api.requestbody`                   | `ux.dataconfig.use-run-pipeline`                                   | `api.requestbody.pipeline-run-request`                                                  | `api`         | `maps-to`    | many-to-many | medium   |
@@ -1363,7 +1394,9 @@ Apply the chosen operations in seq order under the proposal's run.
 | ----------- | ------------------------------------------------------------------ | ------------ | --------- |
 | inter-layer | `product.feature.proposal-queue-and-detail`                        | `exposes`    | outbound  |
 | inter-layer | `application.applicationservice.proposal-service`                  | `references` | outbound  |
+| inter-layer | `motivation.requirement.reversal-is-decided-like-any-proposal`     | `satisfies`  | outbound  |
 | inter-layer | `testing.testcasesketch.an-edited-end-names-an-element-by-its-ref` | `tests`      | inbound   |
+| inter-layer | `ux.actioncomponent.bulk-select`                                   | `triggers`   | inbound   |
 | intra-layer | `api.requestbody.change-proposal-apply-request`                    | `composes`   | outbound  |
 | intra-layer | `api.responses.apply-proposal-responses`                           | `composes`   | outbound  |
 
@@ -4639,7 +4672,7 @@ GET /api/properties — list all property definitions (relationship types)
 
 **Type**: `operation`
 
-List proposals, newest first, each operation with its stale flag. Filters (in the query, so total is right): taxonomy_id, status, source, landed, implementation_id, dataset_id, source_id, pipeline_type. landed=false lists only proposals with applied operations a client can land (no re-imports, no dataset proposals). fields=summary returns counts (by op, kind, status, scope) and no operations.
+List proposals, newest first, each operation with its stale flag. Filters (in the query, so total is right): taxonomy_id, status (reversed included), source, landed, implementation_id, dataset_id, source_id, pipeline_type. landed=false lists only proposals with applied operations a client can land (no re-imports, no dataset proposals). fields=summary returns counts (by op, kind, status, scope) and no operations, and carries each proposal's links, so the Proposals list can show a reversal under way (#1668).
 
 #### Attributes
 
@@ -4657,6 +4690,7 @@ List proposals, newest first, each operation with its stale flag. Filters (in th
 | ----------- | --------------------------------------------------------------------------------------- | ------------ | --------- |
 | inter-layer | `product.feature.proposal-queue-and-detail`                                             | `exposes`    | outbound  |
 | inter-layer | `application.applicationservice.proposal-service`                                       | `references` | outbound  |
+| inter-layer | `motivation.requirement.reversed-proposal-status`                                       | `satisfies`  | outbound  |
 | inter-layer | `motivation.requirement.the-proposals-list-filters-in-the-query-and-has-a-summary-form` | `satisfies`  | outbound  |
 | inter-layer | `motivation.requirement.unlanded-lists-only-proposals-with-something-to-land`           | `satisfies`  | outbound  |
 | intra-layer | `api.responses.list-proposals-responses`                                                | `composes`   | outbound  |
@@ -4948,6 +4982,67 @@ Preview which extracted candidates would match existing ontology entities.
 | intra-layer | `api.requestbody.recognition-preview-request`                       | `composes`   | outbound  |
 | intra-layer | `api.responses.preview-recognition-responses`                       | `composes`   | outbound  |
 
+### Preview Revert {#preview-revert}
+
+**ID**: `api.operation.preview-revert`
+
+**Type**: `operation`
+
+List the fields an in-place revert of this proposal would overwrite (edited since the apply), for the revert confirm dialog.
+
+#### Attributes
+
+| Name        | Value                                                         |
+| ----------- | ------------------------------------------------------------- |
+| http_method | GET                                                           |
+| http_path   | /api/proposals/\{proposal_id\}/revert/preview                 |
+| operationId | preview_revert_api_proposals__proposal_id__revert_preview_get |
+| summary     | Preview Revert                                                |
+| tags        | proposals                                                     |
+
+#### Relationships
+
+| Type        | Related Element                                                     | Predicate    | Direction |
+| ----------- | ------------------------------------------------------------------- | ------------ | --------- |
+| inter-layer | `product.feature.proposal-queue-and-detail`                         | `exposes`    | outbound  |
+| inter-layer | `application.applicationfunction.revert-preview`                    | `realizes`   | outbound  |
+| inter-layer | `application.applicationservice.revert-service`                     | `references` | outbound  |
+| inter-layer | `motivation.requirement.in-place-revert-warns-of-overwritten-edits` | `satisfies`  | outbound  |
+| inter-layer | `testing.testcasesketch.revert-preview-lists-a-later-edit`          | `tests`      | inbound   |
+| inter-layer | `testing.testcoveragetarget.revert-preview`                         | `covers`     | inbound   |
+| intra-layer | `api.responses.preview-revert-responses`                            | `composes`   | outbound  |
+
+### Propose Reversal {#propose-reversal}
+
+**ID**: `api.operation.propose-reversal`
+
+**Type**: `operation`
+
+Propose the reversal of a landed proposal: a new proposal built from its run's change events that restores deleted entities with their ids. 409 while an open reversal of it exists or when it is not landed.
+
+#### Attributes
+
+| Name        | Value                                                      |
+| ----------- | ---------------------------------------------------------- |
+| http_method | POST                                                       |
+| http_path   | /api/proposals/\{proposal_id\}/reversal                    |
+| operationId | propose_reversal_api_proposals__proposal_id__reversal_post |
+| summary     | Propose Reversal                                           |
+| tags        | proposals                                                  |
+
+#### Relationships
+
+| Type        | Related Element                                                             | Predicate    | Direction |
+| ----------- | --------------------------------------------------------------------------- | ------------ | --------- |
+| inter-layer | `product.feature.reversal-proposals`                                        | `exposes`    | outbound  |
+| inter-layer | `application.applicationfunction.reversal-planning`                         | `realizes`   | outbound  |
+| inter-layer | `application.applicationservice.proposal-service`                           | `references` | outbound  |
+| inter-layer | `motivation.requirement.landed-proposals-are-undone-by-a-reversal-proposal` | `satisfies`  | outbound  |
+| inter-layer | `testing.testcasesketch.a-second-open-reversal-is-refused`                  | `tests`      | inbound   |
+| inter-layer | `testing.testcoveragetarget.proposal-reversal`                              | `covers`     | inbound   |
+| inter-layer | `ux.actioncomponent.revert-control`                                         | `triggers`   | inbound   |
+| intra-layer | `api.responses.propose-reversal-responses`                                  | `composes`   | outbound  |
+
 ### Publish Taxonomy {#publish-taxonomy}
 
 **ID**: `api.operation.publish-taxonomy`
@@ -5033,7 +5128,7 @@ POST /api/v1/versioning/sync/push — push local changes to remote sync target (
 
 **Type**: `operation`
 
-Reject a proposal: its pending operations are decided rejected with a reason.
+Reject a proposal's operations (all pending ones when none are named), each decided rejected with one reason code and an optional note.
 
 #### Attributes
 
@@ -5047,12 +5142,17 @@ Reject a proposal: its pending operations are decided rejected with a reason.
 
 #### Relationships
 
-| Type        | Related Element                                   | Predicate    | Direction |
-| ----------- | ------------------------------------------------- | ------------ | --------- |
-| inter-layer | `product.feature.proposal-queue-and-detail`       | `exposes`    | outbound  |
-| inter-layer | `application.applicationservice.proposal-service` | `references` | outbound  |
-| intra-layer | `api.requestbody.change-proposal-reject-request`  | `composes`   | outbound  |
-| intra-layer | `api.responses.reject-proposal-responses`         | `composes`   | outbound  |
+| Type        | Related Element                                         | Predicate    | Direction |
+| ----------- | ------------------------------------------------------- | ------------ | --------- |
+| inter-layer | `product.feature.proposal-queue-and-detail`             | `exposes`    | outbound  |
+| inter-layer | `application.applicationservice.proposal-service`       | `references` | outbound  |
+| inter-layer | `motivation.requirement.reason-codes-for-every-reject`  | `satisfies`  | outbound  |
+| inter-layer | `testing.testcasesketch.keep-current-rejects-an-update` | `tests`      | inbound   |
+| inter-layer | `testing.testcoveragetarget.reject-reason-codes`        | `covers`     | inbound   |
+| inter-layer | `ux.actioncomponent.bulk-select`                        | `triggers`   | inbound   |
+| inter-layer | `ux.actioncomponent.reject-reason-picker`               | `triggers`   | inbound   |
+| intra-layer | `api.requestbody.change-proposal-reject-request`        | `composes`   | outbound  |
+| intra-layer | `api.responses.reject-proposal-responses`               | `composes`   | outbound  |
 
 ### Remove Parent Class From Individual {#remove-parent-class-from-individual}
 
@@ -5262,6 +5362,7 @@ Undo everything applied from the proposal and mark it reverted.
 | inter-layer | `product.feature.proposal-queue-and-detail`                   | `exposes`    | outbound  |
 | inter-layer | `application.applicationservice.revert-service`               | `references` | outbound  |
 | inter-layer | `motivation.requirement.every-applied-proposal-is-revertible` | `satisfies`  | outbound  |
+| inter-layer | `ux.actioncomponent.revert-control`                           | `triggers`   | inbound   |
 | intra-layer | `api.responses.revert-proposal-responses`                     | `composes`   | outbound  |
 
 ### Run Grounding Workflow {#run-grounding-workflow}
@@ -5892,7 +5993,7 @@ Create a change proposal: taxonomy, title, rationale, source, operations, client
 
 **Type**: `requestbody`
 
-Operations to reject (all pending or failed ones when omitted) and an optional note stored as each operation's reason.
+Operations to reject (all pending or failed ones when omitted), one reason code for every rejected operation (RejectionReason, now including incorrect, keep_current and outdated) and an optional note.
 
 #### Attributes
 
@@ -6797,7 +6898,7 @@ Response containing paginated change history for an entity with ordered change e
 
 **Type**: `response`
 
-A change proposal with its operations in seq order and counts: how many operations share each op, kind, status and scope. In a list's summary form, operations is empty and counts still holds. It also carries review_only (true: the approval policy never applies it) and its links to other proposals seen from it (supersedes, superseded_by, reverses, reversed_by). Each operation carries amended_at and amendments.
+A change proposal with its operations in seq order, status (open, done, reverted, withdrawn, reversed), landing and counts: how many operations share each op, kind, status and scope. In a list's summary form, operations is empty and counts still holds. It also carries review_only (true: the approval policy never applies it) and its links to other proposals seen from it (supersedes, superseded_by, reverses, reversed_by); on a reversed_by link, operations_applied and operations_total say how many of the reversal's changes were applied ('38 of 41 changes reversed'). Each operation carries amended_at and amendments.
 
 #### Attributes
 
@@ -6814,6 +6915,8 @@ A change proposal with its operations in seq order and counts: how many operatio
 | inter-layer | `ux.dataconfig.use-apply-change-proposal`         | `maps-to`  | inbound   |
 | inter-layer | `ux.dataconfig.use-change-proposal`               | `maps-to`  | inbound   |
 | inter-layer | `ux.dataconfig.use-change-proposals`              | `maps-to`  | inbound   |
+| inter-layer | `ux.dataconfig.use-inspector-model`               | `maps-to`  | inbound   |
+| inter-layer | `ux.dataconfig.use-propose-reversal`              | `maps-to`  | inbound   |
 | inter-layer | `ux.dataconfig.use-reject-change-proposal`        | `maps-to`  | inbound   |
 | inter-layer | `ux.dataconfig.use-reopen-proposal-operations`    | `maps-to`  | inbound   |
 | intra-layer | `api.responses.add-proposal-operations-responses` | `composes` | inbound   |
@@ -6823,6 +6926,7 @@ A change proposal with its operations in seq order and counts: how many operatio
 | intra-layer | `api.responses.get-proposal-responses`            | `composes` | inbound   |
 | intra-layer | `api.responses.list-proposals-responses`          | `composes` | inbound   |
 | intra-layer | `api.responses.mark-proposal-landed-responses`    | `composes` | inbound   |
+| intra-layer | `api.responses.propose-reversal-responses`        | `composes` | inbound   |
 | intra-layer | `api.responses.reject-proposal-responses`         | `composes` | inbound   |
 | intra-layer | `api.responses.reopen-operations-responses`       | `composes` | inbound   |
 
@@ -8022,6 +8126,28 @@ Response recording the resolution applied to an import conflict with resolution 
 | Type        | Related Element                             | Predicate  | Direction |
 | ----------- | ------------------------------------------- | ---------- | --------- |
 | intra-layer | `api.responses.resume-batch-runs-responses` | `composes` | inbound   |
+
+### RevertPreviewResponse {#revertpreviewresponse}
+
+**ID**: `api.response.revert-preview-response`
+
+**Type**: `response`
+
+Fields an in-place revert would overwrite: entity id, kind and label, field, applied value and current value.
+
+#### Attributes
+
+| Name        | Value                 |
+| ----------- | --------------------- |
+| description | RevertPreviewResponse |
+
+#### Relationships
+
+| Type        | Related Element                                 | Predicate  | Direction |
+| ----------- | ----------------------------------------------- | ---------- | --------- |
+| inter-layer | `data-model.objectschema.revert-preview-result` | `maps-to`  | inbound   |
+| inter-layer | `ux.dataconfig.use-revert-preview`              | `maps-to`  | inbound   |
+| intra-layer | `api.responses.preview-revert-responses`        | `composes` | inbound   |
 
 ### RevertRunResponse {#revertrunresponse}
 
@@ -10348,6 +10474,36 @@ Responses map of the move-class operation.
 | intra-layer | `api.operation.preview-recognition`         | `composes` | inbound   |
 | intra-layer | `api.response.recognition-preview-response` | `composes` | outbound  |
 
+### preview-revert-responses {#preview-revert-responses}
+
+**ID**: `api.responses.preview-revert-responses`
+
+**Type**: `responses`
+
+200: RevertPreviewResponse.
+
+#### Relationships
+
+| Type        | Related Element                        | Predicate  | Direction |
+| ----------- | -------------------------------------- | ---------- | --------- |
+| intra-layer | `api.operation.preview-revert`         | `composes` | inbound   |
+| intra-layer | `api.response.revert-preview-response` | `composes` | outbound  |
+
+### propose-reversal-responses {#propose-reversal-responses}
+
+**ID**: `api.responses.propose-reversal-responses`
+
+**Type**: `responses`
+
+201: the reversal proposal (ChangeProposalResponse, with reverses set).
+
+#### Relationships
+
+| Type        | Related Element                         | Predicate  | Direction |
+| ----------- | --------------------------------------- | ---------- | --------- |
+| intra-layer | `api.operation.propose-reversal`        | `composes` | inbound   |
+| intra-layer | `api.response.change-proposal-response` | `composes` | outbound  |
+
 ### publish-taxonomy-responses {#publish-taxonomy-responses}
 
 **ID**: `api.responses.publish-taxonomy-responses`
@@ -10754,4 +10910,4 @@ Bearer token required on the /mcp endpoint (Authorization: Bearer &lt;auth_token
 
 ---
 
-Generated: 2026-11-24T18:43:49.876Z | Model Version: 0.1.0
+Generated: 2026-11-24T21:17:13.774Z | Model Version: 0.1.0

@@ -26,8 +26,10 @@ motivation.requirement.every-applied-proposal-is-revertible:
   type: requirement
   layer_id: motivation
   name: Every Applied Proposal Is Revertible
-  description: An applied proposal reverts in one transaction, with conflicts
-    explained before anything is undone.
+  description: An applied proposal can be undone. While unlanded it reverts in
+    place in one transaction, with conflicts and any later edits it would
+    overwrite shown before anything is undone; once landed it is undone by a
+    reversal proposal that is reviewed, applied and landed like any other.
   attributes:
     requirementType: functional
     priority: high
@@ -497,4 +499,225 @@ motivation.requirement.a-proposer-withdraws-its-open-proposal:
   metadata:
     created_at: 2026-11-24T12:39:53.756Z
     updated_at: 2026-11-24T12:39:53.756Z
+    version: 1
+motivation.requirement.reason-codes-for-every-reject:
+  id: e1ad5f83-d6c1-440c-9b9b-73821c9b5c89
+  path: motivation.requirement.reason-codes-for-every-reject
+  spec_node_id: motivation.requirement
+  type: requirement
+  layer_id: motivation
+  name: Reason Codes for Every Reject
+  description: Every reject, of any operation kind and in bulk, takes one reason
+    code from a single set (not_in_text, mentioned_only, too_generic, duplicate,
+    out_of_scope, incorrect, keep_current, outdated, other) plus an optional
+    note (required only for a gold element). Buttons are filtered by operation
+    kind; outdated leads when the operation is stale. System rejections keep
+    their text and no code.
+  attributes:
+    requirementType: functional
+    priority: high
+    documentation: "Owner decision 1. Three new codes: incorrect, keep_current,
+      outdated. No migration: reason_code is String(20)."
+  source_reference:
+    provenance: manual
+    locations:
+      - file: local-server/domain/versioning/proposals.py
+        symbol: RejectionReason
+  accepted_gaps:
+    - direction: outgoing
+      predicate: realizes
+      other_spec_node_id: motivation.principle
+      reason: It serves the goal Every Decision Becomes Data (realized directly), not
+        a standing principle.
+      decided_by: agent
+      decided_at: 2026-11-19T17:02:51.359Z
+      changeset: changeset-1795107225483-xwgktrnaj
+  metadata:
+    created_at: 2026-11-19T16:59:05.121Z
+    updated_at: 2026-11-19T16:59:05.121Z
+    version: 1
+motivation.requirement.in-place-revert-warns-of-overwritten-edits:
+  id: c68b6adb-5218-4a63-b25e-055726e2795b
+  path: motivation.requirement.in-place-revert-warns-of-overwritten-edits
+  spec_node_id: motivation.requirement
+  type: requirement
+  layer_id: motivation
+  name: In-Place Revert Warns of Overwritten Edits
+  description: Reverting an unlanded proposal in place first lists every field
+    edited since the apply that the revert would overwrite (current value
+    differs from the change event's new_state) and shows them in the confirm
+    dialog.
+  attributes:
+    requirementType: functional
+    priority: high
+    documentation: Owner decision 2; closes the silent-overwrite gap in
+      RevertService._inverse_update.
+  source_reference:
+    provenance: manual
+    locations:
+      - file: local-server/domain/versioning/revert_service.py
+        symbol: RevertService.preview
+  metadata:
+    created_at: 2026-11-19T16:59:05.121Z
+    updated_at: 2026-11-19T16:59:05.121Z
+    version: 1
+motivation.requirement.landed-proposals-are-undone-by-a-reversal-proposal:
+  id: d25f8abc-9bfa-4675-9ef7-1c71d845edd4
+  path: motivation.requirement.landed-proposals-are-undone-by-a-reversal-proposal
+  spec_node_id: motivation.requirement
+  type: requirement
+  layer_id: motivation
+  name: Landed Proposals Are Undone by a Reversal Proposal
+  description: "A landed proposal cannot be reverted in place; the Revert control
+    offers 'Propose the reversal…', which explains why and creates a new
+    proposal from the run's change events. Only one open reversal per proposal;
+    the two proposals link each other (reverses / reversed_by) through #1624's
+    proposal-link model."
+  attributes:
+    requirementType: functional
+    priority: high
+    documentation: Owner decisions 2 and 4.
+  source_reference:
+    provenance: manual
+    locations:
+      - file: local-server/domain/versioning/proposal_service.py
+        symbol: ProposalService.propose_reversal
+  metadata:
+    created_at: 2026-11-19T16:59:05.121Z
+    updated_at: 2026-11-19T16:59:05.121Z
+    version: 1
+motivation.requirement.reversal-restores-deleted-entities-with-their-ids:
+  id: a30e98b3-1ad2-4296-b7c4-88dbcc170e40
+  path: motivation.requirement.reversal-restores-deleted-entities-with-their-ids
+  spec_node_id: motivation.requirement
+  type: requirement
+  layer_id: motivation
+  name: Reversal Restores Deleted Entities with Their Ids
+  description: A reversal recreates an entity the original deleted with its old
+    id, via a restore create that names the snapshot's id and checks it is free.
+  attributes:
+    requirementType: functional
+    priority: high
+    documentation: Owner decision 9.
+  source_reference:
+    provenance: manual
+    locations:
+      - file: local-server/domain/versioning/revert_service.py
+        symbol: RevertService.restore
+  metadata:
+    created_at: 2026-11-19T16:59:05.121Z
+    updated_at: 2026-11-19T16:59:05.121Z
+    version: 1
+motivation.requirement.reversal-is-decided-like-any-proposal:
+  id: 47ec680f-beba-417a-81d0-ef857ba3694f
+  path: motivation.requirement.reversal-is-decided-like-any-proposal
+  spec_node_id: motivation.requirement
+  type: requirement
+  layer_id: motivation
+  name: Reversal Is Decided Like Any Proposal
+  description: "A reversal proposal is reviewed, applied and landed like any other
+    proposal: operation by operation or all at once, with reason codes and
+    timing."
+  attributes:
+    requirementType: functional
+    priority: medium
+    documentation: Owner decision 10.
+  source_reference:
+    provenance: manual
+    locations:
+      - file: local-server/domain/versioning/proposal_service.py
+        symbol: ProposalService.propose_reversal
+  metadata:
+    created_at: 2026-11-19T16:59:05.121Z
+    updated_at: 2026-11-19T16:59:05.121Z
+    version: 1
+motivation.requirement.reversed-proposal-status:
+  id: 7677944c-5458-42fa-9dff-d9895f8119a4
+  path: motivation.requirement.reversed-proposal-status
+  spec_node_id: motivation.requirement
+  type: requirement
+  layer_id: motivation
+  name: Reversed Proposal Status
+  description: A proposal moves from done to reversed once its reversal lands,
+    including a partial reversal; its status strip says how much was reversed
+    ('38 of 41 changes reversed'). The status appears in the backend enum, list
+    filters and chips.
+  attributes:
+    requirementType: functional
+    priority: medium
+    documentation: "Owner decision 11. No migration: batch_runs.status is String(20)."
+  source_reference:
+    provenance: manual
+    locations:
+      - file: local-server/domain/versioning/proposal_service.py
+        symbol: ProposalService._mark_reversed_by
+  accepted_gaps:
+    - direction: outgoing
+      predicate: realizes
+      other_spec_node_id: motivation.principle
+      reason: A status value is bookkeeping for the reversal requirement it is
+        aggregated under; no principle is realized by it directly.
+      decided_by: agent
+      decided_at: 2026-11-19T17:02:31.984Z
+      changeset: changeset-1795107225483-xwgktrnaj
+  metadata:
+    created_at: 2026-11-19T16:59:05.121Z
+    updated_at: 2026-11-19T16:59:05.121Z
+    version: 1
+motivation.requirement.bulk-decisions-on-every-proposal-except-gold-checks:
+  id: ec541daf-6f11-4b44-99de-19612a59c326
+  path: motivation.requirement.bulk-decisions-on-every-proposal-except-gold-checks
+  spec_node_id: motivation.requirement
+  type: requirement
+  layer_id: motivation
+  name: Bulk Decisions on Every Proposal Except Gold Checks
+  description: Select ▾ (all ready · at threshold · all awaiting) and the bulk bar
+    (Accept N ready, Reject all with one reason code) are available on every
+    proposal, extractions included; only gold checks hide them.
+  attributes:
+    requirementType: functional
+    priority: medium
+    documentation: Owner decision 3.
+  metadata:
+    created_at: 2026-11-19T16:59:05.121Z
+    updated_at: 2026-11-19T16:59:05.121Z
+    version: 1
+motivation.requirement.focus-by-folding-panes-to-rails:
+  id: a4555124-9cd3-4b86-b3ef-2f363bf816a8
+  path: motivation.requirement.focus-by-folding-panes-to-rails
+  spec_node_id: motivation.requirement
+  type: requirement
+  layer_id: motivation
+  name: Focus by Folding Panes to Rails
+  description: Either left pane (source or list) folds to a 40 px rail showing a
+    map of its items, the selection notch, its name and key; [ and ] fold and
+    expand; J/K, A/X and Show in source keep working while folded; one rail at a
+    time; the list never folds without source text; the choice is remembered per
+    viewer.
+  attributes:
+    requirementType: functional
+    priority: medium
+    documentation: Owner decision 5 (board A2).
+  metadata:
+    created_at: 2026-11-19T16:59:05.121Z
+    updated_at: 2026-11-19T16:59:05.121Z
+    version: 1
+motivation.requirement.wide-side-by-side-diff:
+  id: 91b8c158-3eda-4581-9cb1-08f2638bb586
+  path: motivation.requirement.wide-side-by-side-diff
+  spec_node_id: motivation.requirement
+  type: requirement
+  layer_id: motivation
+  name: Wide Side-by-Side Diff
+  description: "Any long-text change opens in a wide side-by-side overlay over the
+    source and list panes (the inspector stays visible): changed fields as tabs,
+    ↑↓/‹› between fields, J/K to the next long change, Esc/✕/Back return focus
+    to the row; &diff=<field> in the URL."
+  attributes:
+    requirementType: functional
+    priority: medium
+    documentation: Owner decision 7 (board D5).
+  metadata:
+    created_at: 2026-11-19T16:59:05.121Z
+    updated_at: 2026-11-19T16:59:05.121Z
     version: 1

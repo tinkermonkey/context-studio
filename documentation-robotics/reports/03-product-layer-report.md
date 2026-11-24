@@ -16,15 +16,15 @@ Product features, capabilities, personas, and milestones.
 
 | Metric                    | Count |
 | ------------------------- | ----- |
-| Elements                  | 68    |
-| Intra-Layer Relationships | 118   |
-| Inter-Layer Relationships | 327   |
-| Inbound Relationships     | 261   |
-| Outbound Relationships    | 66    |
+| Elements                  | 69    |
+| Intra-Layer Relationships | 123   |
+| Inter-Layer Relationships | 351   |
+| Inbound Relationships     | 270   |
+| Outbound Relationships    | 81    |
 
 **Cross-Layer References**:
 
-- **Upstream layers**: [API](./07-api-layer-report.md), [Application](./05-application-layer-report.md), [UX](./10-ux-layer-report.md)
+- **Upstream layers**: [API](./07-api-layer-report.md), [Application](./05-application-layer-report.md), [Testing](./13-testing-layer-report.md), [UX](./10-ux-layer-report.md)
 - **Downstream layers**: [Business](./02-business-layer-report.md), [Motivation](./01-motivation-layer-report.md)
 
 ## Intra-Layer Relationships
@@ -54,15 +54,16 @@ Product features, capabilities, personas, and milestones.
 | `product.feature.pending-changes-on-entity-pages`                 | `feature`            | 2             |
 | `product.feature.pipeline-run-wizard`                             | `feature`            | 2             |
 | `product.feature.proposal-queue-and-detail`                       | `feature`            | 7             |
-| `product.feature.proposal-review-page`                            | `feature`            | 7             |
+| `product.feature.proposal-review-page`                            | `feature`            | 8             |
 | `product.feature.reference-sources-and-grounding-workflows`       | `feature`            | 2             |
+| `product.feature.reversal-proposals`                              | `feature`            | 5             |
 | `product.feature.runs-page`                                       | `feature`            | 2             |
 | `product.feature.schema-and-data-pages`                           | `feature`            | 2             |
 | `product.feature.source-citations-on-entity-pages`                | `feature`            | 3             |
 | `product.feature.sources-page-and-extract-flow`                   | `feature`            | 4             |
 | `product.feature.system-health-and-background-tasks`              | `feature`            | 2             |
-| `product.persona.client-maintainer`                               | `persona`            | 7             |
-| `product.persona.ontology-curator`                                | `persona`            | 30            |
+| `product.persona.client-maintainer`                               | `persona`            | 8             |
+| `product.persona.ontology-curator`                                | `persona`            | 31            |
 | `product.softwarecapability.agent-access-over-mcp`                | `softwarecapability` | 1             |
 | `product.softwarecapability.chat-assistant`                       | `softwarecapability` | 1             |
 | `product.softwarecapability.claims-triage`                        | `softwarecapability` | 1             |
@@ -72,7 +73,7 @@ Product features, capabilities, personas, and milestones.
 | `product.softwarecapability.extraction-benchmarking`              | `softwarecapability` | 2             |
 | `product.softwarecapability.graph-exploration`                    | `softwarecapability` | 1             |
 | `product.softwarecapability.pipeline-configuration-and-selection` | `softwarecapability` | 3             |
-| `product.softwarecapability.proposal-review-and-apply`            | `softwarecapability` | 5             |
+| `product.softwarecapability.proposal-review-and-apply`            | `softwarecapability` | 6             |
 | `product.softwarecapability.reference-grounding`                  | `softwarecapability` | 2             |
 | `product.softwarecapability.schema-and-data-curation`             | `softwarecapability` | 3             |
 | `product.softwarecapability.source-extraction`                    | `softwarecapability` | 4             |
@@ -96,7 +97,7 @@ Product features, capabilities, personas, and milestones.
 | `product.workflowstep.open-the-gold-check`                        | `workflowstep`       | 3             |
 | `product.workflowstep.open-the-proposal-from-the-queue`           | `workflowstep`       | 3             |
 | `product.workflowstep.receive-the-client-plan`                    | `workflowstep`       | 3             |
-| `product.workflowstep.revert-an-applied-proposal`                 | `workflowstep`       | 3             |
+| `product.workflowstep.revert-an-applied-proposal`                 | `workflowstep`       | 4             |
 | `product.workflowstep.review-the-client-plan`                     | `workflowstep`       | 4             |
 | `product.workflowstep.review-the-extraction-proposal`             | `workflowstep`       | 5             |
 | `product.workflowstep.see-the-citations`                          | `workflowstep`       | 3             |
@@ -124,6 +125,7 @@ flowchart TB
   application --> product
   product --> business
   product --> motivation
+  testing --> product
   ux --> product
   class product current
 ```
@@ -260,6 +262,8 @@ flowchart TB
 | `api.operation.exposes.product.feature`                              | `api.operation.list-workflow-runs`                                  | `product.feature.reference-sources-and-grounding-workflows`                                  | `product`    | `exposes`    | many-to-many | medium   |
 | `api.operation.exposes.product.feature`                              | `api.operation.load-demo-dataset`                                   | `product.feature.demo-dataset-loader`                                                        | `product`    | `exposes`    | many-to-many | medium   |
 | `api.operation.exposes.product.feature`                              | `api.operation.mark-proposal-landed`                                | `product.feature.proposal-queue-and-detail`                                                  | `product`    | `exposes`    | many-to-many | medium   |
+| `api.operation.exposes.product.feature`                              | `api.operation.preview-revert`                                      | `product.feature.proposal-queue-and-detail`                                                  | `product`    | `exposes`    | many-to-many | medium   |
+| `api.operation.exposes.product.feature`                              | `api.operation.propose-reversal`                                    | `product.feature.reversal-proposals`                                                         | `product`    | `exposes`    | many-to-many | medium   |
 | `api.operation.exposes.product.feature`                              | `api.operation.publish-taxonomy`                                    | `product.feature.schema-and-data-pages`                                                      | `product`    | `exposes`    | many-to-many | medium   |
 | `api.operation.exposes.product.feature`                              | `api.operation.pull-changes`                                        | `product.feature.change-history-and-sync`                                                    | `product`    | `exposes`    | many-to-many | medium   |
 | `api.operation.exposes.product.feature`                              | `api.operation.push-changes`                                        | `product.feature.change-history-and-sync`                                                    | `product`    | `exposes`    | many-to-many | medium   |
@@ -309,6 +313,7 @@ flowchart TB
 | `application.applicationservice.realizes.product.softwarecapability` | `application.applicationservice.pipeline-run-repository`            | `product.softwarecapability.pipeline-configuration-and-selection`                            | `product`    | `realizes`   | many-to-many | medium   |
 | `application.applicationservice.realizes.product.softwarecapability` | `application.applicationservice.pipeline-selection-service`         | `product.softwarecapability.pipeline-configuration-and-selection`                            | `product`    | `realizes`   | many-to-many | medium   |
 | `application.applicationservice.realizes.product.feature`            | `application.applicationservice.proposal-comparison-service`        | `product.feature.compare-two-pipelines`                                                      | `product`    | `realizes`   | many-to-many | medium   |
+| `application.applicationservice.realizes.product.feature`            | `application.applicationservice.proposal-service`                   | `product.feature.reversal-proposals`                                                         | `product`    | `realizes`   | many-to-many | medium   |
 | `application.applicationservice.realizes.product.softwarecapability` | `application.applicationservice.proposal-service`                   | `product.softwarecapability.proposal-review-and-apply`                                       | `product`    | `realizes`   | many-to-many | medium   |
 | `application.applicationservice.realizes.product.softwarecapability` | `application.applicationservice.reference-source`                   | `product.softwarecapability.reference-grounding`                                             | `product`    | `realizes`   | many-to-many | medium   |
 | `application.applicationservice.realizes.product.softwarecapability` | `application.applicationservice.revert-service`                     | `product.softwarecapability.proposal-review-and-apply`                                       | `product`    | `realizes`   | many-to-many | medium   |
@@ -338,8 +343,18 @@ flowchart TB
 | `product.feature.satisfies.motivation.requirement`                   | `product.feature.proposal-queue-and-detail`                         | `motivation.requirement.a-proposer-amends-its-open-proposal-in-place`                        | `motivation` | `satisfies`  | many-to-many | medium   |
 | `product.feature.satisfies.motivation.requirement`                   | `product.feature.proposal-queue-and-detail`                         | `motivation.requirement.a-proposer-withdraws-its-open-proposal`                              | `motivation` | `satisfies`  | many-to-many | medium   |
 | `product.feature.satisfies.motivation.requirement`                   | `product.feature.proposal-queue-and-detail`                         | `motivation.requirement.every-applied-proposal-is-revertible`                                | `motivation` | `satisfies`  | many-to-many | medium   |
+| `product.feature.satisfies.motivation.requirement`                   | `product.feature.proposal-queue-and-detail`                         | `motivation.requirement.in-place-revert-warns-of-overwritten-edits`                          | `motivation` | `satisfies`  | many-to-many | medium   |
 | `product.feature.satisfies.motivation.requirement`                   | `product.feature.proposal-queue-and-detail`                         | `motivation.requirement.proposals-link-to-each-other-through-one-link-model`                 | `motivation` | `satisfies`  | many-to-many | medium   |
+| `product.feature.satisfies.motivation.requirement`                   | `product.feature.proposal-queue-and-detail`                         | `motivation.requirement.reversed-proposal-status`                                            | `motivation` | `satisfies`  | many-to-many | medium   |
 | `product.feature.delivers.motivation.value`                          | `product.feature.proposal-review-page`                              | `motivation.value.reviewer-time-goes-to-judgment-calls`                                      | `motivation` | `delivers`   | many-to-many | medium   |
+| `product.feature.satisfies.motivation.requirement`                   | `product.feature.proposal-review-page`                              | `motivation.requirement.bulk-decisions-on-every-proposal-except-gold-checks`                 | `motivation` | `satisfies`  | many-to-many | medium   |
+| `product.feature.satisfies.motivation.requirement`                   | `product.feature.proposal-review-page`                              | `motivation.requirement.focus-by-folding-panes-to-rails`                                     | `motivation` | `satisfies`  | many-to-many | medium   |
+| `product.feature.satisfies.motivation.requirement`                   | `product.feature.proposal-review-page`                              | `motivation.requirement.reason-codes-for-every-reject`                                       | `motivation` | `satisfies`  | many-to-many | medium   |
+| `product.feature.satisfies.motivation.requirement`                   | `product.feature.proposal-review-page`                              | `motivation.requirement.wide-side-by-side-diff`                                              | `motivation` | `satisfies`  | many-to-many | medium   |
+| `product.feature.satisfies.motivation.requirement`                   | `product.feature.reversal-proposals`                                | `motivation.requirement.landed-proposals-are-undone-by-a-reversal-proposal`                  | `motivation` | `satisfies`  | many-to-many | medium   |
+| `product.feature.satisfies.motivation.requirement`                   | `product.feature.reversal-proposals`                                | `motivation.requirement.reversal-is-decided-like-any-proposal`                               | `motivation` | `satisfies`  | many-to-many | medium   |
+| `product.feature.satisfies.motivation.requirement`                   | `product.feature.reversal-proposals`                                | `motivation.requirement.reversal-restores-deleted-entities-with-their-ids`                   | `motivation` | `satisfies`  | many-to-many | medium   |
+| `product.feature.satisfies.motivation.requirement`                   | `product.feature.reversal-proposals`                                | `motivation.requirement.reversed-proposal-status`                                            | `motivation` | `satisfies`  | many-to-many | medium   |
 | `product.feature.satisfies.motivation.requirement`                   | `product.feature.schema-and-data-pages`                             | `motivation.requirement.individuals-belong-to-one-dataset`                                   | `motivation` | `satisfies`  | many-to-many | medium   |
 | `product.feature.satisfies.motivation.requirement`                   | `product.feature.schema-and-data-pages`                             | `motivation.requirement.relationships-limited-to-allowed-types`                              | `motivation` | `satisfies`  | many-to-many | medium   |
 | `product.feature.delivers.motivation.value`                          | `product.feature.source-citations-on-entity-pages`                  | `motivation.value.every-fact-is-traceable`                                                   | `motivation` | `delivers`   | many-to-many | medium   |
@@ -368,6 +383,11 @@ flowchart TB
 | `product.softwarecapability.supports.motivation.goal`                | `product.softwarecapability.pipeline-configuration-and-selection`   | `motivation.goal.trustworthy-extraction-into-datasets`                                       | `motivation` | `supports`   | many-to-many | medium   |
 | `product.softwarecapability.satisfies.motivation.requirement`        | `product.softwarecapability.proposal-review-and-apply`              | `motivation.requirement.breaking-changes-never-auto-apply`                                   | `motivation` | `satisfies`  | many-to-many | medium   |
 | `product.softwarecapability.satisfies.motivation.requirement`        | `product.softwarecapability.proposal-review-and-apply`              | `motivation.requirement.every-applied-proposal-is-revertible`                                | `motivation` | `satisfies`  | many-to-many | medium   |
+| `product.softwarecapability.satisfies.motivation.requirement`        | `product.softwarecapability.proposal-review-and-apply`              | `motivation.requirement.landed-proposals-are-undone-by-a-reversal-proposal`                  | `motivation` | `satisfies`  | many-to-many | medium   |
+| `product.softwarecapability.satisfies.motivation.requirement`        | `product.softwarecapability.proposal-review-and-apply`              | `motivation.requirement.reason-codes-for-every-reject`                                       | `motivation` | `satisfies`  | many-to-many | medium   |
+| `product.softwarecapability.satisfies.motivation.requirement`        | `product.softwarecapability.proposal-review-and-apply`              | `motivation.requirement.reversal-is-decided-like-any-proposal`                               | `motivation` | `satisfies`  | many-to-many | medium   |
+| `product.softwarecapability.satisfies.motivation.requirement`        | `product.softwarecapability.proposal-review-and-apply`              | `motivation.requirement.reversed-proposal-status`                                            | `motivation` | `satisfies`  | many-to-many | medium   |
+| `product.softwarecapability.supports.motivation.goal`                | `product.softwarecapability.proposal-review-and-apply`              | `motivation.goal.one-review-surface`                                                         | `motivation` | `supports`   | many-to-many | medium   |
 | `product.softwarecapability.supports.motivation.goal`                | `product.softwarecapability.proposal-review-and-apply`              | `motivation.goal.ontology-workbench-for-client-projects`                                     | `motivation` | `supports`   | many-to-many | medium   |
 | `product.softwarecapability.realizes.business.businessfunction`      | `product.softwarecapability.reference-grounding`                    | `business.businessfunction.schema-refinement`                                                | `business`   | `realizes`   | many-to-many | medium   |
 | `product.softwarecapability.supports.motivation.goal`                | `product.softwarecapability.reference-grounding`                    | `motivation.goal.ontology-workbench-for-client-projects`                                     | `motivation` | `supports`   | many-to-many | medium   |
@@ -388,6 +408,8 @@ flowchart TB
 | `product.userworkflow.realizes.business.businessprocess`             | `product.userworkflow.extract-a-document-into-a-dataset`            | `business.businessprocess.extract-a-source-into-a-dataset`                                   | `business`   | `realizes`   | many-to-many | medium   |
 | `product.userworkflow.delivers.motivation.outcome`                   | `product.userworkflow.review-and-decide-a-proposal`                 | `motivation.outcome.curated-domain-ontology`                                                 | `motivation` | `delivers`   | many-to-many | medium   |
 | `product.userworkflow.realizes.business.businessprocess`             | `product.userworkflow.review-and-decide-a-proposal`                 | `business.businessprocess.adjudicate-a-proposal`                                             | `business`   | `realizes`   | many-to-many | medium   |
+| `testing.testcoveragetarget.covers.product.feature`                  | `testing.testcoveragetarget.one-review-page`                        | `product.feature.proposal-review-page`                                                       | `product`    | `covers`     | many-to-many | medium   |
+| `testing.testcoveragetarget.covers.product.feature`                  | `testing.testcoveragetarget.proposal-reversal`                      | `product.feature.reversal-proposals`                                                         | `product`    | `covers`     | many-to-many | medium   |
 | `ux.view.realizes.product.feature`                                   | `ux.view.app-shell-view`                                            | `product.feature.chat-panel`                                                                 | `product`    | `realizes`   | many-to-many | medium   |
 | `ux.view.realizes.product.feature`                                   | `ux.view.app-shell-view`                                            | `product.feature.system-health-and-background-tasks`                                         | `product`    | `realizes`   | many-to-many | medium   |
 | `ux.view.realizes.product.feature`                                   | `ux.view.batch-detail-view`                                         | `product.feature.runs-page`                                                                  | `product`    | `realizes`   | many-to-many | medium   |
@@ -432,16 +454,19 @@ flowchart TB
 | `ux.view.realizes.product.feature`                                   | `ux.view.property-drawer`                                           | `product.feature.pending-changes-on-entity-pages`                                            | `product`    | `realizes`   | many-to-many | medium   |
 | `ux.view.realizes.product.feature`                                   | `ux.view.property-drawer`                                           | `product.feature.schema-and-data-pages`                                                      | `product`    | `realizes`   | many-to-many | medium   |
 | `ux.view.realizes.product.feature`                                   | `ux.view.proposal-compare-view`                                     | `product.feature.compare-two-pipelines`                                                      | `product`    | `realizes`   | many-to-many | medium   |
+| `ux.view.realizes.product.feature`                                   | `ux.view.proposal-detail-view`                                      | `product.feature.gold-mode`                                                                  | `product`    | `realizes`   | many-to-many | medium   |
 | `ux.view.realizes.product.feature`                                   | `ux.view.proposal-detail-view`                                      | `product.feature.proposal-queue-and-detail`                                                  | `product`    | `realizes`   | many-to-many | medium   |
-| `ux.view.realizes.product.feature`                                   | `ux.view.proposal-review-view`                                      | `product.feature.gold-mode`                                                                  | `product`    | `realizes`   | many-to-many | medium   |
-| `ux.view.realizes.product.feature`                                   | `ux.view.proposal-review-view`                                      | `product.feature.proposal-review-page`                                                       | `product`    | `realizes`   | many-to-many | medium   |
+| `ux.view.realizes.product.feature`                                   | `ux.view.proposal-detail-view`                                      | `product.feature.proposal-review-page`                                                       | `product`    | `realizes`   | many-to-many | medium   |
+| `ux.view.realizes.product.feature`                                   | `ux.view.proposal-detail-view`                                      | `product.feature.reversal-proposals`                                                         | `product`    | `realizes`   | many-to-many | medium   |
 | `ux.view.realizes.product.feature`                                   | `ux.view.proposals-view`                                            | `product.feature.proposal-queue-and-detail`                                                  | `product`    | `realizes`   | many-to-many | medium   |
+| `ux.view.realizes.product.feature`                                   | `ux.view.propose-reversal-dialog`                                   | `product.feature.reversal-proposals`                                                         | `product`    | `realizes`   | many-to-many | medium   |
 | `ux.view.realizes.product.feature`                                   | `ux.view.reference-source-drawer`                                   | `product.feature.reference-sources-and-grounding-workflows`                                  | `product`    | `realizes`   | many-to-many | medium   |
 | `ux.view.realizes.product.feature`                                   | `ux.view.reference-sources-view`                                    | `product.feature.reference-sources-and-grounding-workflows`                                  | `product`    | `realizes`   | many-to-many | medium   |
 | `ux.view.realizes.product.feature`                                   | `ux.view.relationship-drawer`                                       | `product.feature.schema-and-data-pages`                                                      | `product`    | `realizes`   | many-to-many | medium   |
 | `ux.view.realizes.product.feature`                                   | `ux.view.relationship-drawer`                                       | `product.feature.source-citations-on-entity-pages`                                           | `product`    | `realizes`   | many-to-many | medium   |
 | `ux.view.realizes.product.feature`                                   | `ux.view.relationships-view`                                        | `product.feature.dataset-selector`                                                           | `product`    | `realizes`   | many-to-many | medium   |
 | `ux.view.realizes.product.feature`                                   | `ux.view.relationships-view`                                        | `product.feature.schema-and-data-pages`                                                      | `product`    | `realizes`   | many-to-many | medium   |
+| `ux.view.realizes.product.feature`                                   | `ux.view.revert-proposal-dialog`                                    | `product.feature.proposal-queue-and-detail`                                                  | `product`    | `realizes`   | many-to-many | medium   |
 | `ux.view.realizes.product.feature`                                   | `ux.view.run-detail-drawer`                                         | `product.feature.runs-page`                                                                  | `product`    | `realizes`   | many-to-many | medium   |
 | `ux.view.realizes.product.feature`                                   | `ux.view.run-wizard-view`                                           | `product.feature.pipeline-run-wizard`                                                        | `product`    | `realizes`   | many-to-many | medium   |
 | `ux.view.realizes.product.feature`                                   | `ux.view.scheme-drawer`                                             | `product.feature.inline-suggesters-in-drawers`                                               | `product`    | `realizes`   | many-to-many | medium   |
@@ -459,6 +484,7 @@ flowchart TB
 | `ux.view.realizes.product.feature`                                   | `ux.view.taxonomy-drawer`                                           | `product.feature.schema-and-data-pages`                                                      | `product`    | `realizes`   | many-to-many | medium   |
 | `ux.view.realizes.product.feature`                                   | `ux.view.taxonomy-publish-dialog`                                   | `product.feature.schema-and-data-pages`                                                      | `product`    | `realizes`   | many-to-many | medium   |
 | `ux.view.realizes.product.feature`                                   | `ux.view.versioning-view`                                           | `product.feature.change-history-and-sync`                                                    | `product`    | `realizes`   | many-to-many | medium   |
+| `ux.view.realizes.product.feature`                                   | `ux.view.wide-diff-overlay`                                         | `product.feature.proposal-review-page`                                                       | `product`    | `realizes`   | many-to-many | medium   |
 
 ## Element Reference
 
@@ -819,7 +845,7 @@ Paste-text tuning bench with an example library and recognition preview; applies
 | inter-layer | `api.operation.list-gold`                                            | `exposes`   | inbound   |
 | inter-layer | `motivation.requirement.proposals-record-their-pipeline-and-version` | `satisfies` | outbound  |
 | inter-layer | `ux.view.benchmark-gold-view`                                        | `realizes`  | inbound   |
-| inter-layer | `ux.view.proposal-review-view`                                       | `realizes`  | inbound   |
+| inter-layer | `ux.view.proposal-detail-view`                                       | `realizes`  | inbound   |
 | intra-layer | `product.softwarecapability.extraction-benchmarking`                 | `realizes`  | outbound  |
 | intra-layer | `product.persona.ontology-curator`                                   | `serves`    | outbound  |
 | intra-layer | `product.workflowstep.open-the-gold-check`                           | `uses`      | inbound   |
@@ -1026,7 +1052,7 @@ Pending proposal operations shown on taxonomy and class pages and the property d
 
 **Type**: `feature`
 
-Proposal list with the needs-decision banner, mechanical threshold, tiered operations, conflict and in-use cards, apply, revert and landing state.
+Proposal list with the needs-decision banner and status filters (reversed included), and each proposal's header and status strip: apply, revert in place while unlanded (with a preview of overwritten edits) or propose the reversal once landed, landed and reversal chips, apply results, revert conflicts, export and compare.
 
 #### Attributes
 
@@ -1048,6 +1074,7 @@ Proposal list with the needs-decision banner, mechanical threshold, tiered opera
 | inter-layer | `api.operation.get-proposal`                                                 | `exposes`   | inbound   |
 | inter-layer | `api.operation.list-proposals`                                               | `exposes`   | inbound   |
 | inter-layer | `api.operation.mark-proposal-landed`                                         | `exposes`   | inbound   |
+| inter-layer | `api.operation.preview-revert`                                               | `exposes`   | inbound   |
 | inter-layer | `api.operation.reject-proposal`                                              | `exposes`   | inbound   |
 | inter-layer | `api.operation.reopen-operations`                                            | `exposes`   | inbound   |
 | inter-layer | `api.operation.revert-proposal`                                              | `exposes`   | inbound   |
@@ -1055,9 +1082,12 @@ Proposal list with the needs-decision banner, mechanical threshold, tiered opera
 | inter-layer | `motivation.requirement.a-proposer-amends-its-open-proposal-in-place`        | `satisfies` | outbound  |
 | inter-layer | `motivation.requirement.a-proposer-withdraws-its-open-proposal`              | `satisfies` | outbound  |
 | inter-layer | `motivation.requirement.every-applied-proposal-is-revertible`                | `satisfies` | outbound  |
+| inter-layer | `motivation.requirement.in-place-revert-warns-of-overwritten-edits`          | `satisfies` | outbound  |
 | inter-layer | `motivation.requirement.proposals-link-to-each-other-through-one-link-model` | `satisfies` | outbound  |
+| inter-layer | `motivation.requirement.reversed-proposal-status`                            | `satisfies` | outbound  |
 | inter-layer | `ux.view.proposal-detail-view`                                               | `realizes`  | inbound   |
 | inter-layer | `ux.view.proposals-view`                                                     | `realizes`  | inbound   |
+| inter-layer | `ux.view.revert-proposal-dialog`                                             | `realizes`  | inbound   |
 | intra-layer | `product.softwarecapability.proposal-review-and-apply`                       | `realizes`  | outbound  |
 | intra-layer | `product.persona.ontology-curator`                                           | `serves`    | outbound  |
 | intra-layer | `product.workflowstep.apply-the-decisions`                                   | `uses`      | inbound   |
@@ -1072,7 +1102,7 @@ Proposal list with the needs-decision banner, mechanical threshold, tiered opera
 
 **Type**: `feature`
 
-/app/proposals/$id/review: the source beside the candidates, review pills with hover overlays, the review inspector, tier control and reject-the-rest.
+/app/proposals/$id: the one review surface for every proposal (extraction, client plan, MCP, bundle, reflection, gold check, reversal). A source pane when the proposal cites a passage; the list with change-plan groupings, Select and the bulk bar (not on gold checks), conflict cards and filters; the review inspector for every operation kind with reason codes; panes that fold to rails; a wide side-by-side diff overlay. /review and ?op= redirect here.
 
 #### Attributes
 
@@ -1083,19 +1113,26 @@ Proposal list with the needs-decision banner, mechanical threshold, tiered opera
 
 #### Relationships
 
-| Type        | Related Element                                                 | Predicate  | Direction |
-| ----------- | --------------------------------------------------------------- | ---------- | --------- |
-| inter-layer | `api.operation.add-proposal-operations`                         | `exposes`  | inbound   |
-| inter-layer | `api.operation.get-source-text`                                 | `exposes`  | inbound   |
-| inter-layer | `motivation.value.reviewer-time-goes-to-judgment-calls`         | `delivers` | outbound  |
-| inter-layer | `ux.view.proposal-review-view`                                  | `realizes` | inbound   |
-| intra-layer | `product.softwarecapability.proposal-review-and-apply`          | `realizes` | outbound  |
-| intra-layer | `product.persona.ontology-curator`                              | `serves`   | outbound  |
-| intra-layer | `product.workflowstep.clear-mechanical-operations-by-threshold` | `uses`     | inbound   |
-| intra-layer | `product.workflowstep.judge-the-gold-candidates`                | `uses`     | inbound   |
-| intra-layer | `product.workflowstep.judge-the-remaining-operations`           | `uses`     | inbound   |
-| intra-layer | `product.workflowstep.review-the-client-plan`                   | `uses`     | inbound   |
-| intra-layer | `product.workflowstep.review-the-extraction-proposal`           | `uses`     | inbound   |
+| Type        | Related Element                                                              | Predicate    | Direction |
+| ----------- | ---------------------------------------------------------------------------- | ------------ | --------- |
+| inter-layer | `api.operation.add-proposal-operations`                                      | `exposes`    | inbound   |
+| inter-layer | `api.operation.get-source-text`                                              | `exposes`    | inbound   |
+| inter-layer | `motivation.value.reviewer-time-goes-to-judgment-calls`                      | `delivers`   | outbound  |
+| inter-layer | `motivation.requirement.bulk-decisions-on-every-proposal-except-gold-checks` | `satisfies`  | outbound  |
+| inter-layer | `motivation.requirement.focus-by-folding-panes-to-rails`                     | `satisfies`  | outbound  |
+| inter-layer | `motivation.requirement.reason-codes-for-every-reject`                       | `satisfies`  | outbound  |
+| inter-layer | `motivation.requirement.wide-side-by-side-diff`                              | `satisfies`  | outbound  |
+| inter-layer | `testing.testcoveragetarget.one-review-page`                                 | `covers`     | inbound   |
+| inter-layer | `ux.view.proposal-detail-view`                                               | `realizes`   | inbound   |
+| inter-layer | `ux.view.wide-diff-overlay`                                                  | `realizes`   | inbound   |
+| intra-layer | `product.softwarecapability.proposal-review-and-apply`                       | `realizes`   | outbound  |
+| intra-layer | `product.persona.ontology-curator`                                           | `serves`     | outbound  |
+| intra-layer | `product.feature.reversal-proposals`                                         | `depends-on` | inbound   |
+| intra-layer | `product.workflowstep.clear-mechanical-operations-by-threshold`              | `uses`       | inbound   |
+| intra-layer | `product.workflowstep.judge-the-gold-candidates`                             | `uses`       | inbound   |
+| intra-layer | `product.workflowstep.judge-the-remaining-operations`                        | `uses`       | inbound   |
+| intra-layer | `product.workflowstep.review-the-client-plan`                                | `uses`       | inbound   |
+| intra-layer | `product.workflowstep.review-the-extraction-proposal`                        | `uses`       | inbound   |
 
 ### Reference Sources and Grounding Workflows {#reference-sources-and-grounding-workflows}
 
@@ -1130,6 +1167,41 @@ Proposal list with the needs-decision banner, mechanical threshold, tiered opera
 | inter-layer | `ux.view.reference-sources-view`                 | `realizes` | inbound   |
 | intra-layer | `product.softwarecapability.reference-grounding` | `realizes` | outbound  |
 | intra-layer | `product.persona.ontology-curator`               | `serves`   | outbound  |
+
+### Reversal Proposals {#reversal-proposals}
+
+**ID**: `product.feature.reversal-proposals`
+
+**Type**: `feature`
+
+Undo a landed proposal by proposing its reversal: a new proposal built from the run's change events (restoring deleted entities with their ids), decided one by one or all at once, linked both ways to the original, which becomes reversed ('N of M changes reversed').
+
+#### Attributes
+
+| Name     | Value   |
+| -------- | ------- |
+| priority | high    |
+| size     | l       |
+| status   | planned |
+
+#### Relationships
+
+| Type        | Related Element                                                             | Predicate    | Direction |
+| ----------- | --------------------------------------------------------------------------- | ------------ | --------- |
+| inter-layer | `api.operation.propose-reversal`                                            | `exposes`    | inbound   |
+| inter-layer | `application.applicationservice.proposal-service`                           | `realizes`   | inbound   |
+| inter-layer | `motivation.requirement.landed-proposals-are-undone-by-a-reversal-proposal` | `satisfies`  | outbound  |
+| inter-layer | `motivation.requirement.reversal-is-decided-like-any-proposal`              | `satisfies`  | outbound  |
+| inter-layer | `motivation.requirement.reversal-restores-deleted-entities-with-their-ids`  | `satisfies`  | outbound  |
+| inter-layer | `motivation.requirement.reversed-proposal-status`                           | `satisfies`  | outbound  |
+| inter-layer | `testing.testcoveragetarget.proposal-reversal`                              | `covers`     | inbound   |
+| inter-layer | `ux.view.proposal-detail-view`                                              | `realizes`   | inbound   |
+| inter-layer | `ux.view.propose-reversal-dialog`                                           | `realizes`   | inbound   |
+| intra-layer | `product.feature.proposal-review-page`                                      | `depends-on` | outbound  |
+| intra-layer | `product.softwarecapability.proposal-review-and-apply`                      | `realizes`   | outbound  |
+| intra-layer | `product.persona.client-maintainer`                                         | `serves`     | outbound  |
+| intra-layer | `product.persona.ontology-curator`                                          | `serves`     | outbound  |
+| intra-layer | `product.workflowstep.revert-an-applied-proposal`                           | `uses`       | inbound   |
 
 ### Runs Page {#runs-page}
 
@@ -1384,6 +1456,7 @@ Maintainer of a client project (DR, House) who sends plans through an agent and 
 | intra-layer | `product.feature.export-bundle`                           | `serves`     | inbound   |
 | intra-layer | `product.feature.mcp-integration-settings`                | `serves`     | inbound   |
 | intra-layer | `product.feature.owl-skos-and-graph-ml-import-and-export` | `serves`     | inbound   |
+| intra-layer | `product.feature.reversal-proposals`                      | `serves`     | inbound   |
 | intra-layer | `product.userworkflow.adjudicate-a-client-plan`           | `serves`     | inbound   |
 | intra-layer | `product.userworkflow.connect-an-agent`                   | `serves`     | inbound   |
 
@@ -1429,6 +1502,7 @@ Expert who designs schemas, writes taxonomy visions and adjudicates proposals; w
 | intra-layer | `product.feature.proposal-queue-and-detail`                 | `serves`     | inbound   |
 | intra-layer | `product.feature.proposal-review-page`                      | `serves`     | inbound   |
 | intra-layer | `product.feature.reference-sources-and-grounding-workflows` | `serves`     | inbound   |
+| intra-layer | `product.feature.reversal-proposals`                        | `serves`     | inbound   |
 | intra-layer | `product.feature.runs-page`                                 | `serves`     | inbound   |
 | intra-layer | `product.feature.schema-and-data-pages`                     | `serves`     | inbound   |
 | intra-layer | `product.feature.source-citations-on-entity-pages`          | `serves`     | inbound   |
@@ -1669,18 +1743,24 @@ Tiered review, edit-then-accept, reject with reason, apply, revert and gold reco
 
 #### Relationships
 
-| Type        | Related Element                                               | Predicate   | Direction |
-| ----------- | ------------------------------------------------------------- | ----------- | --------- |
-| inter-layer | `application.applicationservice.proposal-service`             | `realizes`  | inbound   |
-| inter-layer | `application.applicationservice.revert-service`               | `realizes`  | inbound   |
-| inter-layer | `motivation.requirement.breaking-changes-never-auto-apply`    | `satisfies` | outbound  |
-| inter-layer | `motivation.requirement.every-applied-proposal-is-revertible` | `satisfies` | outbound  |
-| inter-layer | `motivation.goal.ontology-workbench-for-client-projects`      | `supports`  | outbound  |
-| intra-layer | `product.feature.approval-policy`                             | `realizes`  | inbound   |
-| intra-layer | `product.feature.compare-two-pipelines`                       | `realizes`  | inbound   |
-| intra-layer | `product.feature.pending-changes-on-entity-pages`             | `realizes`  | inbound   |
-| intra-layer | `product.feature.proposal-queue-and-detail`                   | `realizes`  | inbound   |
-| intra-layer | `product.feature.proposal-review-page`                        | `realizes`  | inbound   |
+| Type        | Related Element                                                             | Predicate   | Direction |
+| ----------- | --------------------------------------------------------------------------- | ----------- | --------- |
+| inter-layer | `application.applicationservice.proposal-service`                           | `realizes`  | inbound   |
+| inter-layer | `application.applicationservice.revert-service`                             | `realizes`  | inbound   |
+| inter-layer | `motivation.requirement.breaking-changes-never-auto-apply`                  | `satisfies` | outbound  |
+| inter-layer | `motivation.requirement.every-applied-proposal-is-revertible`               | `satisfies` | outbound  |
+| inter-layer | `motivation.requirement.landed-proposals-are-undone-by-a-reversal-proposal` | `satisfies` | outbound  |
+| inter-layer | `motivation.requirement.reason-codes-for-every-reject`                      | `satisfies` | outbound  |
+| inter-layer | `motivation.requirement.reversal-is-decided-like-any-proposal`              | `satisfies` | outbound  |
+| inter-layer | `motivation.requirement.reversed-proposal-status`                           | `satisfies` | outbound  |
+| inter-layer | `motivation.goal.one-review-surface`                                        | `supports`  | outbound  |
+| inter-layer | `motivation.goal.ontology-workbench-for-client-projects`                    | `supports`  | outbound  |
+| intra-layer | `product.feature.approval-policy`                                           | `realizes`  | inbound   |
+| intra-layer | `product.feature.compare-two-pipelines`                                     | `realizes`  | inbound   |
+| intra-layer | `product.feature.pending-changes-on-entity-pages`                           | `realizes`  | inbound   |
+| intra-layer | `product.feature.proposal-queue-and-detail`                                 | `realizes`  | inbound   |
+| intra-layer | `product.feature.proposal-review-page`                                      | `realizes`  | inbound   |
+| intra-layer | `product.feature.reversal-proposals`                                        | `realizes`  | inbound   |
 
 ### Reference Grounding {#reference-grounding}
 
@@ -2244,12 +2324,12 @@ Open a proposal, clear the mechanical tier by threshold, judge the rest, apply, 
 
 #### Attributes
 
-| Name     | Value                                                   |
-| -------- | ------------------------------------------------------- |
-| action   | Revert the applied proposal after reading any conflicts |
-| optional | true                                                    |
-| outcome  | The changes are undone in one transaction               |
-| sequence | 5                                                       |
+| Name     | Value                                                                                                                                            |
+| -------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| action   | Revert the applied proposal in place while unlanded, after reading conflicts and the edits it would overwrite; once landed, propose its reversal |
+| optional | true                                                                                                                                             |
+| outcome  | Unlanded: the changes are undone in one transaction. Landed: a linked reversal proposal is opened for review                                     |
+| sequence | 5                                                                                                                                                |
 
 #### Relationships
 
@@ -2258,6 +2338,7 @@ Open a proposal, clear the mechanical tier by threshold, judge the rest, apply, 
 | intra-layer | `product.userworkflow.review-and-decide-a-proposal` | `composes` | inbound   |
 | intra-layer | `product.workflowstep.apply-the-decisions`          | `flows-to` | inbound   |
 | intra-layer | `product.feature.proposal-queue-and-detail`         | `uses`     | outbound  |
+| intra-layer | `product.feature.reversal-proposals`                | `uses`     | outbound  |
 
 ### Review the Client Plan {#review-the-client-plan}
 
@@ -2353,4 +2434,4 @@ Open a proposal, clear the mechanical tier by threshold, judge the rest, apply, 
 
 ---
 
-Generated: 2026-11-24T18:43:49.876Z | Model Version: 0.1.0
+Generated: 2026-11-24T21:17:13.774Z | Model Version: 0.1.0

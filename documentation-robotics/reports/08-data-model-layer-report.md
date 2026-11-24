@@ -16,15 +16,15 @@ Data entities, relationships, and data structure definitions.
 
 | Metric                    | Count |
 | ------------------------- | ----- |
-| Elements                  | 54    |
+| Elements                  | 55    |
 | Intra-Layer Relationships | 10    |
-| Inter-Layer Relationships | 118   |
-| Inbound Relationships     | 51    |
-| Outbound Relationships    | 67    |
+| Inter-Layer Relationships | 127   |
+| Inbound Relationships     | 57    |
+| Outbound Relationships    | 70    |
 
 **Cross-Layer References**:
 
-- **Upstream layers**: [Application](./05-application-layer-report.md)
+- **Upstream layers**: [Application](./05-application-layer-report.md), [Testing](./13-testing-layer-report.md)
 - **Downstream layers**: [API](./07-api-layer-report.md), [Business](./02-business-layer-report.md), [Data Store](./09-data-store-layer-report.md), [Motivation](./01-motivation-layer-report.md)
 
 ## Intra-Layer Relationships
@@ -79,6 +79,7 @@ Data entities, relationships, and data structure definitions.
 | `data-model.objectschema.relationship`                  | `objectschema` | 1             |
 | `data-model.objectschema.relationship-entity`           | `objectschema` | 0             |
 | `data-model.objectschema.resolution-record`             | `objectschema` | 0             |
+| `data-model.objectschema.revert-preview-result`         | `objectschema` | 0             |
 | `data-model.objectschema.source-entity`                 | `objectschema` | 0             |
 | `data-model.objectschema.subgraph`                      | `objectschema` | 0             |
 | `data-model.objectschema.subgraph-result`               | `objectschema` | 0             |
@@ -111,6 +112,7 @@ flowchart TB
   data_model --> business
   data_model --> data_store
   data_model --> motivation
+  testing --> data_model
   class data_model current
 ```
 
@@ -169,6 +171,11 @@ flowchart TB
 | `application.applicationfunction.accesses.data-model.objectschema`  | `application.applicationfunction.individual-pre-review`                     | `data-model.objectschema.pre-review-verdict`                                         | `data-model` | `accesses`  | many-to-many | medium   |
 | `application.applicationfunction.accesses.data-model.objectschema`  | `application.applicationfunction.proposal-amendment`                        | `data-model.objectschema.operation-amendment`                                        | `data-model` | `accesses`  | many-to-many | medium   |
 | `application.applicationfunction.accesses.data-model.objectschema`  | `application.applicationfunction.proposal-linking`                          | `data-model.objectschema.proposal-link`                                              | `data-model` | `accesses`  | many-to-many | medium   |
+| `application.applicationfunction.accesses.data-model.objectschema`  | `application.applicationfunction.reversal-planning`                         | `data-model.objectschema.change-event-entity`                                        | `data-model` | `accesses`  | many-to-many | medium   |
+| `application.applicationfunction.accesses.data-model.objectschema`  | `application.applicationfunction.reversal-planning`                         | `data-model.objectschema.proposal-entity`                                            | `data-model` | `accesses`  | many-to-many | medium   |
+| `application.applicationfunction.accesses.data-model.objectschema`  | `application.applicationfunction.reversal-planning`                         | `data-model.objectschema.proposed-operation`                                         | `data-model` | `accesses`  | many-to-many | medium   |
+| `application.applicationfunction.accesses.data-model.objectschema`  | `application.applicationfunction.revert-preview`                            | `data-model.objectschema.change-event-entity`                                        | `data-model` | `accesses`  | many-to-many | medium   |
+| `application.applicationfunction.accesses.data-model.objectschema`  | `application.applicationfunction.revert-preview`                            | `data-model.objectschema.revert-preview-result`                                      | `data-model` | `accesses`  | many-to-many | medium   |
 | `data-model.objectschema.maps-to.api.response`                      | `data-model.objectschema.app-configuration`                                 | `api.response.app-configuration-response`                                            | `api`        | `maps-to`   | many-to-many | medium   |
 | `data-model.objectschema.maps-to.data-store.collection`             | `data-model.objectschema.approval-policy-entity`                            | `data-store.collection.approval-policies`                                            | `data-store` | `maps-to`   | many-to-many | medium   |
 | `data-model.objectschema.maps-to.data-store.collection`             | `data-model.objectschema.attribute-definition-entity`                       | `data-store.collection.attribute-definitions`                                        | `data-store` | `maps-to`   | many-to-many | medium   |
@@ -219,7 +226,9 @@ flowchart TB
 | `data-model.objectschema.maps-to.api.response`                      | `data-model.objectschema.property-definition`                               | `api.response.property-definition-response`                                          | `api`        | `maps-to`   | many-to-many | medium   |
 | `data-model.objectschema.maps-to.data-store.collection`             | `data-model.objectschema.property-definition`                               | `data-store.collection.property-definitions-table`                                   | `data-store` | `maps-to`   | many-to-many | medium   |
 | `data-model.objectschema.maps-to.data-store.collection`             | `data-model.objectschema.proposal-decision-entity`                          | `data-store.collection.proposal-decisions`                                           | `data-store` | `maps-to`   | many-to-many | medium   |
+| `data-model.objectschema.satisfies.motivation.requirement`          | `data-model.objectschema.proposal-decision-entity`                          | `motivation.requirement.reason-codes-for-every-reject`                               | `motivation` | `satisfies` | many-to-many | medium   |
 | `data-model.objectschema.maps-to.data-store.collection`             | `data-model.objectschema.proposal-entity`                                   | `data-store.collection.proposals-table`                                              | `data-store` | `maps-to`   | many-to-many | medium   |
+| `data-model.objectschema.satisfies.motivation.requirement`          | `data-model.objectschema.proposal-entity`                                   | `motivation.requirement.reversed-proposal-status`                                    | `motivation` | `satisfies` | many-to-many | medium   |
 | `data-model.objectschema.maps-to.api.response`                      | `data-model.objectschema.proposal-link`                                     | `api.response.proposal-link-response`                                                | `api`        | `maps-to`   | many-to-many | medium   |
 | `data-model.objectschema.maps-to.data-store.collection`             | `data-model.objectschema.proposal-link`                                     | `data-store.collection.proposal-links`                                               | `data-store` | `maps-to`   | many-to-many | medium   |
 | `data-model.objectschema.satisfies.motivation.requirement`          | `data-model.objectschema.proposal-link`                                     | `motivation.requirement.proposals-link-to-each-other-through-one-link-model`         | `motivation` | `satisfies` | many-to-many | medium   |
@@ -229,6 +238,7 @@ flowchart TB
 | `data-model.objectschema.maps-to.data-store.collection`             | `data-model.objectschema.relationship-entity`                               | `data-store.collection.relationships`                                                | `data-store` | `maps-to`   | many-to-many | medium   |
 | `data-model.objectschema.maps-to.data-store.collection`             | `data-model.objectschema.relationship`                                      | `data-store.collection.relationships`                                                | `data-store` | `maps-to`   | many-to-many | medium   |
 | `data-model.objectschema.maps-to.api.response`                      | `data-model.objectschema.resolution-record`                                 | `api.response.resolution-record-response`                                            | `api`        | `maps-to`   | many-to-many | medium   |
+| `data-model.objectschema.maps-to.api.response`                      | `data-model.objectschema.revert-preview-result`                             | `api.response.revert-preview-response`                                               | `api`        | `maps-to`   | many-to-many | medium   |
 | `data-model.objectschema.maps-to.data-store.collection`             | `data-model.objectschema.source-entity`                                     | `data-store.collection.sources`                                                      | `data-store` | `maps-to`   | many-to-many | medium   |
 | `data-model.objectschema.maps-to.api.response`                      | `data-model.objectschema.subgraph`                                          | `api.response.subgraph-data-response`                                                | `api`        | `maps-to`   | many-to-many | medium   |
 | `data-model.objectschema.maps-to.api.response`                      | `data-model.objectschema.subgraph-result`                                   | `api.response.subgraph-result-response`                                              | `api`        | `maps-to`   | many-to-many | medium   |
@@ -236,6 +246,7 @@ flowchart TB
 | `data-model.objectschema.maps-to.api.response`                      | `data-model.objectschema.taxonomy-entity`                                   | `api.response.taxonomy-response`                                                     | `api`        | `maps-to`   | many-to-many | medium   |
 | `data-model.objectschema.maps-to.data-store.collection`             | `data-model.objectschema.taxonomy-entity`                                   | `data-store.collection.ontology-entities`                                            | `data-store` | `maps-to`   | many-to-many | medium   |
 | `data-model.objectschema.maps-to.api.response`                      | `data-model.objectschema.triple-extraction-result`                          | `api.response.triples-response`                                                      | `api`        | `maps-to`   | many-to-many | medium   |
+| `testing.testcoveragetarget.covers.data-model.objectschema`         | `testing.testcoveragetarget.reject-reason-codes`                            | `data-model.objectschema.proposal-decision-entity`                                   | `data-model` | `covers`    | many-to-many | medium   |
 
 ## Element Reference
 
@@ -412,6 +423,8 @@ Domain entity recording a single change to an entity; carries entity_id, entity_
 | inter-layer | `application.applicationcomponent.duck-db-sync-adapter`     | `accesses`    | inbound   |
 | inter-layer | `application.applicationcomponent.s3-sync-adapter`          | `accesses`    | inbound   |
 | inter-layer | `application.applicationcomponent.sqlite-change-repository` | `accesses`    | inbound   |
+| inter-layer | `application.applicationfunction.reversal-planning`         | `accesses`    | inbound   |
+| inter-layer | `application.applicationfunction.revert-preview`            | `accesses`    | inbound   |
 | inter-layer | `api.response.change-history-response`                      | `maps-to`     | outbound  |
 | inter-layer | `data-store.collection.change-events`                       | `maps-to`     | outbound  |
 | intra-layer | `data-model.objectschema.change-event`                      | `specializes` | outbound  |
@@ -1076,7 +1089,7 @@ Domain entity defining a property (relationship type) with identifier, title, op
 
 **Type**: `objectschema`
 
-ORM model for change proposals (change_proposals, a batch_runs subtype): taxonomy, origin, status, landing.
+ORM model for change proposals (change_proposals, a batch_runs subtype): taxonomy, origin, status (open, done, reverted, reversed in batch_runs.status) and landing. A reversal's link to the proposal it reverses is a proposal_links row of kind reverses (#1624), not a column here.
 
 #### Attributes
 
@@ -1098,7 +1111,7 @@ ORM model for change proposals (change_proposals, a batch_runs subtype): taxonom
 
 **Type**: `objectschema`
 
-Domain entity: a reviewer's or policy's decision on a proposal operation, with reason code and timing (the gold record).
+Domain entity: a reviewer's or policy's decision on a proposal operation, with reason code (one set for every operation kind: not_in_text, mentioned_only, too_generic, duplicate, out_of_scope, incorrect, keep_current, outdated, other) and timing (the gold record).
 
 #### Attributes
 
@@ -1108,10 +1121,12 @@ Domain entity: a reviewer's or policy's decision on a proposal operation, with r
 
 #### Relationships
 
-| Type        | Related Element                                                      | Predicate  | Direction |
-| ----------- | -------------------------------------------------------------------- | ---------- | --------- |
-| inter-layer | `application.applicationcomponent.sqlite-change-proposal-repository` | `accesses` | inbound   |
-| inter-layer | `data-store.collection.proposal-decisions`                           | `maps-to`  | outbound  |
+| Type        | Related Element                                                      | Predicate   | Direction |
+| ----------- | -------------------------------------------------------------------- | ----------- | --------- |
+| inter-layer | `application.applicationcomponent.sqlite-change-proposal-repository` | `accesses`  | inbound   |
+| inter-layer | `data-store.collection.proposal-decisions`                           | `maps-to`   | outbound  |
+| inter-layer | `motivation.requirement.reason-codes-for-every-reject`               | `satisfies` | outbound  |
+| inter-layer | `testing.testcoveragetarget.reject-reason-codes`                     | `covers`    | inbound   |
 
 ### Proposal Entity {#proposal-entity}
 
@@ -1119,7 +1134,7 @@ Domain entity: a reviewer's or policy's decision on a proposal operation, with r
 
 **Type**: `objectschema`
 
-ChangeProposal: a set of proposed ontology changes on one taxonomy, decided per operation; review_only keeps the approval policy off it (#1628). Status open, done, reverted, or withdrawn (its proposer withdrew it; anything it had applied is rolled back). Its links to other proposals (supersedes / superseded_by, reverses / reversed_by) come from proposal_links.
+ChangeProposal: a set of proposed ontology changes on one taxonomy, decided per operation, with its ordered proposed operations, origin and landing; review_only keeps the approval policy off it (#1628). Status open, done, reverted, withdrawn (its proposer withdrew it; anything it had applied is rolled back) or reversed. Its links to other proposals (supersedes / superseded_by, reverses / reversed_by) come from proposal_links (#1624): a reversal is linked to the proposal it reverses by a link of kind reverses, so the original knows its reversal (reversed_by) and how many of the reversal's changes were applied.
 
 #### Attributes
 
@@ -1132,7 +1147,9 @@ ChangeProposal: a set of proposed ontology changes on one taxonomy, decided per 
 | Type        | Related Element                                                      | Predicate     | Direction |
 | ----------- | -------------------------------------------------------------------- | ------------- | --------- |
 | inter-layer | `application.applicationcomponent.sqlite-change-proposal-repository` | `accesses`    | inbound   |
+| inter-layer | `application.applicationfunction.reversal-planning`                  | `accesses`    | inbound   |
 | inter-layer | `data-store.collection.proposals-table`                              | `maps-to`     | outbound  |
+| inter-layer | `motivation.requirement.reversed-proposal-status`                    | `satisfies`   | outbound  |
 | intra-layer | `data-model.objectschema.proposal`                                   | `specializes` | outbound  |
 
 ### Proposal Link {#proposal-link}
@@ -1165,7 +1182,7 @@ ProposalLink (domain/versioning/proposals.py): source_proposal_id, kind (Proposa
 
 **Type**: `objectschema`
 
-ProposedOperation: one proposed change. Status pending, applied, rejected, failed, or withdrawn (removed by its proposer, or its proposal withdrawn: not a decision). amended_at and amendments record changes its proposer made while it was pending.
+ProposedOperation: one proposed change (create, update or delete of an entity), with its status and decision. Status pending, applied, rejected, failed, or withdrawn (removed by its proposer, or its proposal withdrawn: not a decision). amended_at and amendments record changes its proposer made while it was pending. A restore create names a free target id (the deleted entity's snapshot id), so a reversal recreates it with its old id; a rejection carries a RejectionReason code (incorrect, keep_current and outdated added).
 
 #### Attributes
 
@@ -1178,6 +1195,7 @@ ProposedOperation: one proposed change. Status pending, applied, rejected, faile
 | Type        | Related Element                                                      | Predicate  | Direction |
 | ----------- | -------------------------------------------------------------------- | ---------- | --------- |
 | inter-layer | `application.applicationcomponent.sqlite-change-proposal-repository` | `accesses` | inbound   |
+| inter-layer | `application.applicationfunction.reversal-planning`                  | `accesses` | inbound   |
 | inter-layer | `data-store.collection.proposal-operations`                          | `maps-to`  | outbound  |
 
 ### Relationship {#relationship}
@@ -1243,6 +1261,27 @@ A recorded resolution for a specific conflict in an import run; captures match_k
 | ----------- | ---------------------------------------------------------------- | ---------- | --------- |
 | inter-layer | `application.applicationcomponent.sqlite-interchange-repository` | `accesses` | inbound   |
 | inter-layer | `api.response.resolution-record-response`                        | `maps-to`  | outbound  |
+
+### Revert Preview Result {#revert-preview-result}
+
+**ID**: `data-model.objectschema.revert-preview-result`
+
+**Type**: `objectschema`
+
+Domain value: the later edits an in-place revert would overwrite, per entity and field, with the applied value and the current value.
+
+#### Attributes
+
+| Name | Value  |
+| ---- | ------ |
+| type | object |
+
+#### Relationships
+
+| Type        | Related Element                                  | Predicate  | Direction |
+| ----------- | ------------------------------------------------ | ---------- | --------- |
+| inter-layer | `application.applicationfunction.revert-preview` | `accesses` | inbound   |
+| inter-layer | `api.response.revert-preview-response`           | `maps-to`  | outbound  |
 
 ### Source Entity {#source-entity}
 
@@ -1415,4 +1454,4 @@ String schema for entity identifiers — UUID v4 format, used as primary keys ac
 
 ---
 
-Generated: 2026-11-24T18:43:49.876Z | Model Version: 0.1.0
+Generated: 2026-11-24T21:17:13.774Z | Model Version: 0.1.0

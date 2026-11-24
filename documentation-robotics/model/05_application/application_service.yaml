@@ -176,8 +176,12 @@ application.applicationservice.proposal-service:
   type: applicationservice
   layer_id: application
   name: Proposal Service
-  description: "Change proposals: create, decide, apply, reject, reopen, land and
-    read operations; applies them under a run with approval rules."
+  description: "Change proposals: create, decide, apply, reject (always with a
+    reason code), reopen, land and read operations; applies them under a run
+    with approval rules. Proposes the reversal of a landed proposal (one open
+    reversal at a time), applies its restore creates with the snapshot's ids,
+    and marks the original reversed when the reversal lands, recording how many
+    of its changes were reversed."
   attributes:
     serviceType: synchronous
   source_reference:
@@ -196,7 +200,9 @@ application.applicationservice.revert-service:
   type: applicationservice
   layer_id: application
   name: Revert Service
-  description: Reverts everything a run or proposal applied, from its change events.
+  description: Reverts everything a run or proposal applied, from its change
+    events; previews the later edits an in-place revert would overwrite (fields
+    whose current value differs from the event's new_state).
   attributes:
     serviceType: synchronous
   source_reference:

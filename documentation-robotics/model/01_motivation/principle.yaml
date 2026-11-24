@@ -133,3 +133,21 @@ motivation.principle.hexagonal-domain-purity:
     created_at: 2026-11-19T16:14:23.186Z
     updated_at: 2026-11-19T16:14:23.186Z
     version: 1
+motivation.principle.reliability-and-simplicity-first-in-review:
+  id: 20e21328-58ba-4063-83d4-a19c3f59322d
+  path: motivation.principle.reliability-and-simplicity-first-in-review
+  spec_node_id: motivation.principle
+  type: principle
+  layer_id: motivation
+  name: Reliability and Simplicity First in Review
+  description: "In the review surface, reliability and simplicity come before a
+    single mechanism: revert stays two-path (exact in-place undo while unlanded,
+    a reviewed reversal proposal once landed) rather than an inverse proposal
+    for everything."
+  attributes:
+    category: operational
+    documentation: Owner decision 8 (19 Nov 2026).
+  metadata:
+    created_at: 2026-11-19T16:59:19.394Z
+    updated_at: 2026-11-19T16:59:19.394Z
+    version: 1

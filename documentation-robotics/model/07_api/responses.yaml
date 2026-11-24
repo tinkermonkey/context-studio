@@ -1913,3 +1913,37 @@ api.responses.withdraw-proposal-responses:
     created_at: 2026-11-24T12:40:18.625Z
     updated_at: 2026-11-24T12:40:18.625Z
     version: 1
+api.responses.propose-reversal-responses:
+  id: c545b855-afe6-414b-a977-b234de46887e
+  path: api.responses.propose-reversal-responses
+  spec_node_id: api.responses
+  type: responses
+  layer_id: api
+  name: propose-reversal-responses
+  description: "201: the reversal proposal (ChangeProposalResponse, with reverses set)."
+  source_reference:
+    provenance: manual
+    locations:
+      - file: local-server/adapters/web/proposals_routes.py
+        symbol: propose_reversal
+  metadata:
+    created_at: 2026-11-19T16:59:46.682Z
+    updated_at: 2026-11-19T16:59:46.682Z
+    version: 1
+api.responses.preview-revert-responses:
+  id: 1ea57f97-d219-4bc9-ac71-56e38f3c4e8c
+  path: api.responses.preview-revert-responses
+  spec_node_id: api.responses
+  type: responses
+  layer_id: api
+  name: preview-revert-responses
+  description: "200: RevertPreviewResponse."
+  source_reference:
+    provenance: manual
+    locations:
+      - file: local-server/adapters/web/proposals_routes.py
+        symbol: preview_revert
+  metadata:
+    created_at: 2026-11-19T16:59:46.682Z
+    updated_at: 2026-11-19T16:59:46.682Z
+    version: 1
