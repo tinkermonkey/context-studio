@@ -1,0 +1,19 @@
+id: changeset-1795523401637-q2buw60jm
+name: url-sources-refuse-private-addresses
+description: "Fix #1656: URL sources refuse loopback, private, link-local and
+  other non-public addresses. The fetcher vets the address when it connects (a
+  guarded httpcore network backend), checks every redirect hop itself, ignores
+  proxy environment variables, and allows only the reference proxy's loopback
+  origin. sources.allow_private_urls (default false) is the explicit exception."
+created: 2026-11-24T12:30:01.645Z
+modified: 2026-11-24T12:30:16.552Z
+status: staged
+baseSnapshot: v2:sha256:53252d39ed1357a9afdd6132507b497bf81313353af91142ccb6b590b147594c
+origin:
+  kind: plan
+purpose: plan
+stats:
+  additions: 9
+  modifications: 3
+  deletions: 0
+lastSequence: 11

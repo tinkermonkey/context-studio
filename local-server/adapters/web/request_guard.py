@@ -103,7 +103,7 @@ def add_browser_guards(app: FastAPI, server: ServerConfig) -> None:
     if "*" in server.cors_origins:
         logger.warning(
             "server.cors_origins '*' is ignored; allowed browser origins: %s. To open the UI"
-            " at another origin (e.g. http://127.0.0.1:3100), list it in server.cors_origins",
+            " at another origin (e.g. http://localhost:3101), list it in server.cors_origins",
             sorted(allowed_origins),
         )
     app.add_middleware(

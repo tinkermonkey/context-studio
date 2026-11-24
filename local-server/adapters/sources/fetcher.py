@@ -4,16 +4,38 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from email.message import Message
+from urllib.parse import unquote, urlsplit
 
 import httpx
 
 from adapters.reference.http_headers import USER_AGENT
+from adapters.sources.network_guard import (
+    BlockedAddressError,
+    GuardedNetworkBackend,
+    GuardedTransport,
+)
 from domain.extraction.exceptions import SourceFailedError
 from domain.extraction.sources import FetchedPage, SourceFailure, check_url
+from utils.logger import get_logger
+
+logger = get_logger(__name__)
+
+# One answer for a refused address and for a name that doesn't resolve: two answers would
+# tell whoever supplied the URL whether an internal name resolves to a private address
+NOT_PUBLIC_DETAIL = (
+    "Could not fetch the page: the address must resolve to a public web address "
+    "(sources.allow_private_urls in config.json allows others)"
+)
 
 
 class HttpPageFetcher:
-    """Fetches one page, following redirects, and stops reading past the size limit."""
+    """
+    Fetches one page and stops reading past the size limit.
+
+    Only public addresses are fetched (#1656): the connection itself checks the
+    address it makes (see network_guard), and every redirect is a new request
+    that is checked the same way.
+    """
 
     def __init__(
         self,
@@ -21,16 +43,23 @@ class HttpPageFetcher:
         max_redirects: int = 5,
         transport: httpx.BaseTransport | None = None,
         proxied: Mapping[str, str] | None = None,
+        allow_private_urls: bool = False,
     ) -> None:
         """
         Args:
+            transport: Tests pass an httpx.MockTransport, which makes no connection
+                and so is not checked; None uses the checked network transport
             proxied: A site's base URL -> where to send its pages instead: the
                 reference proxy's URL for that site (Wikipedia), which caches and
                 rate limits them. A site sent to itself (proxy off) goes direct.
+                The proxy's address is the one non-public address that is fetched.
+            allow_private_urls: Fetch loopback, private and link-local addresses too
+                (sources.allow_private_urls)
         """
         self._timeout = timeout_seconds
         self._max_redirects = max_redirects
-        self._transport = transport  # tests pass an httpx.MockTransport
+        self._transport = transport
+        self._allow_private_urls = allow_private_urls
         self._proxied = {
             site.rstrip("/"): via.rstrip("/")
             for site, via in (proxied or {}).items()
@@ -39,47 +68,84 @@ class HttpPageFetcher:
 
     def fetch(self, url: str, max_bytes: int) -> FetchedPage:
         try:
-            with httpx.Client(
-                follow_redirects=True,
-                max_redirects=self._max_redirects,
-                timeout=self._timeout,
-                headers={"User-Agent": USER_AGENT},
-                transport=self._transport,
-            ) as client:
-                with client.stream("GET", self._route(check_url(url))) as response:
-                    if response.status_code >= 400:
-                        raise _fetch_failed(f"The server answered HTTP {response.status_code}")
-                    declared = response.headers.get("content-length")
-                    if declared and declared.isdigit() and int(declared) > max_bytes:
-                        raise _too_large(max_bytes)
-                    body = bytearray()
-                    for chunk in response.iter_bytes():
-                        body.extend(chunk)
-                        if len(body) > max_bytes:
-                            raise _too_large(max_bytes)
-                    return FetchedPage(
-                        data=bytes(body),
-                        content_type=response.headers.get("content-type"),
-                        url=self._unroute(str(response.url)),
-                        file_name=_disposition_file_name(
-                            response.headers.get("content-disposition")
-                        ),
-                    )
+            # Normalized first (dot segments removed, host lower-cased), so that what is
+            # matched against a proxied site and what is requested are the same URL
+            current = str(httpx.URL(check_url(url)))
+            for _ in range(self._max_redirects + 1):
+                routed, proxy_origin = self._route(current)
+                # A new client for every hop: the connection's address check depends on
+                # whether this hop is the proxy's, and nothing carries over from a redirect.
+                with self._client(proxy_origin) as client:
+                    with client.stream("GET", routed) as response:
+                        if response.has_redirect_location:
+                            location = response.headers["location"]
+                            current = check_url(self._unroute(str(response.url.join(location))))
+                            continue
+                        return self._read(response, current, max_bytes)
+            raise _fetch_failed(f"Followed more than {self._max_redirects} redirects")
+        except BlockedAddressError as exc:
+            logger.warning("Refused a source fetch to a non-public address (%s)", exc)
+            raise _fetch_failed(NOT_PUBLIC_DETAIL) from exc
         except httpx.TimeoutException as exc:
             raise _fetch_failed(f"Timed out after {self._timeout:g} seconds") from exc
         # InvalidURL (a typo'd host, a tab in the URL) and StreamError aren't HTTPErrors
         except (httpx.HTTPError, httpx.InvalidURL, httpx.StreamError) as exc:
-            raise _fetch_failed(f"Could not fetch the page ({exc})") from exc
+            # What went wrong stays in the log: an answer that says "refused" or "no route"
+            # for a port is a port scan for whoever supplied the URL
+            logger.warning("A source fetch failed: %s", exc)
+            raise _fetch_failed("Could not fetch the page") from exc
         except ValueError as exc:  # check_url: not an http or https URL
             raise _fetch_failed(str(exc)) from exc
 
+    def _client(self, proxy_origin: tuple[str, int] | None) -> httpx.Client:
+        """A client for one request: no redirects, no proxy settings from the environment."""
+        transport = self._transport or GuardedTransport(
+            GuardedNetworkBackend(
+                allowed_origin=proxy_origin, allow_private=self._allow_private_urls
+            )
+        )
+        return httpx.Client(
+            follow_redirects=False,
+            trust_env=False,
+            timeout=self._timeout,
+            headers={"User-Agent": USER_AGENT},
+            transport=transport,
+        )
 
-    def _route(self, url: str) -> str:
-        """The URL to request: through the proxy when its site is proxied."""
+    def _read(self, response: httpx.Response, url: str, max_bytes: int) -> FetchedPage:
+        """The page an answer carries, read up to the size limit."""
+        if response.status_code >= 400:
+            raise _fetch_failed(f"The server answered HTTP {response.status_code}")
+        declared = response.headers.get("content-length")
+        if declared and declared.isdigit() and int(declared) > max_bytes:
+            raise _too_large(max_bytes)
+        body = bytearray()
+        for chunk in response.iter_bytes():
+            body.extend(chunk)
+            if len(body) > max_bytes:
+                raise _too_large(max_bytes)
+        return FetchedPage(
+            data=bytes(body),
+            content_type=response.headers.get("content-type"),
+            url=url,
+            file_name=_disposition_file_name(response.headers.get("content-disposition")),
+        )
+
+    def _route(self, url: str) -> tuple[str, tuple[str, int] | None]:
+        """
+        Where to request a (normalized) URL, and which address may be connected to
+        although it is not public.
+
+        A proxied site's pages go to the reference proxy on loopback, and only a URL that
+        stays under that site's path on the proxy is allowed there: the proxy also serves
+        other reference APIs (and an upstream on a private network), which a URL must not
+        reach by climbing out of the site's path.
+        """
         for site, via in self._proxied.items():
             if _on_site(url, site):
-                return via + url[len(site) :]
-        return url
+                routed = via + url[len(site) :]
+                return routed, _origin(routed) if _stays_under(routed, via) else None
+        return url, None
 
     def _unroute(self, url: str) -> str:
         """A fetched page's URL as its site's own, not the proxy's."""
@@ -87,6 +153,27 @@ class HttpPageFetcher:
             if _on_site(url, via):
                 return site + url[len(via) :]
         return url
+
+
+def _origin(url: str) -> tuple[str, int]:
+    """The (host, port) a request to the URL connects to, as httpcore passes them on."""
+    parsed = httpx.URL(url)
+    return parsed.host.lower(), parsed.port or (443 if parsed.scheme == "https" else 80)
+
+
+def _stays_under(url: str, base: str) -> bool:
+    """
+    Whether a URL's path is the base's path or below it, with no way out of it.
+
+    Dot segments are removed when a URL is normalized; this also refuses the encoded
+    forms (%2e%2e, %2f), which a server may decode after the request is made.
+    """
+    path = urlsplit(url).path
+    base_path = urlsplit(base).path
+    decoded = unquote(unquote(path))
+    if "\\" in decoded or any(part in (".", "..") for part in decoded.split("/")):
+        return False
+    return path == base_path or path.startswith(base_path + "/")
 
 
 def _on_site(url: str, base: str) -> bool:

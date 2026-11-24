@@ -612,10 +612,9 @@ async def lifespan(app: FastAPI):
             # Wikipedia pages go through the reference proxy (cached, rate limited)
             fetcher=HttpPageFetcher(
                 proxied={
-                    reference_proxy.upstream_url("wikipedia"): reference_proxy.base_url(
-                        "wikipedia"
-                    )
-                }
+                    reference_proxy.upstream_url("wikipedia"): reference_proxy.base_url("wikipedia")
+                },
+                allow_private_urls=settings.sources.allow_private_urls,
             ),
             files=LocalSourceFileStore(sources_dir),
             max_bytes=settings.sources.max_bytes,
