@@ -204,3 +204,54 @@
     metadata: *a10
   timestamp: 2026-11-24T12:25:47.111Z
   sequenceNumber: 7
+- type: add
+  elementId: testing.testcasesketch.vite-config-does-not-open-the-dev-server-or-preview-to-the-network-mode-s
+  layerName: testing
+  after:
+    id: 7dd1e7df-7403-4106-969d-46ebd1a51451
+    path: testing.testcasesketch.vite-config-does-not-open-the-dev-server-or-preview-to-the-network-mode-s
+    spec_node_id: testing.testcasesketch
+    type: testcasesketch
+    layer_id: testing
+    name: vite.config > does not open the dev server or preview to the network (mode
+      %s)
+    description: vite.config.ts resolves with no server.host or preview.host (so
+      Vite's localhost default applies) in the development, e2e and production
+      modes.
+    attributes:
+      status: automated
+      implementationFormat: automated
+    source_reference:
+      provenance: manual
+      locations:
+        - file: ux/vite.config.test.ts
+    metadata:
+      created_at: 2026-11-24T12:28:29.186Z
+      updated_at: 2026-11-24T12:28:29.186Z
+      version: 1
+  timestamp: 2026-11-24T12:28:29.195Z
+  sequenceNumber: 8
+- type: relationship-add
+  elementId: testing.testcasesketch.vite-config-does-not-open-the-dev-server-or-preview-to-the-network-mode-s::tests::security.countermeasure.vite-dev-server-loopback-binding
+  layerName: testing
+  after:
+    source: testing.testcasesketch.vite-config-does-not-open-the-dev-server-or-preview-to-the-network-mode-s
+    target: security.countermeasure.vite-dev-server-loopback-binding
+    predicate: tests
+    layer: testing
+    targetLayer: security
+    category: structural
+  timestamp: 2026-11-24T12:28:29.195Z
+  sequenceNumber: 9
+- type: relationship-add
+  elementId: testing.testcasesketch.vite-config-does-not-open-the-dev-server-or-preview-to-the-network-mode-s::satisfies::motivation.requirement.dev-server-not-reachable-from-the-lan
+  layerName: testing
+  after:
+    source: testing.testcasesketch.vite-config-does-not-open-the-dev-server-or-preview-to-the-network-mode-s
+    target: motivation.requirement.dev-server-not-reachable-from-the-lan
+    predicate: satisfies
+    layer: testing
+    targetLayer: motivation
+    category: structural
+  timestamp: 2026-11-24T12:28:29.195Z
+  sequenceNumber: 10

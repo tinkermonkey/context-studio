@@ -1,0 +1,20 @@
+id: changeset-1795523289888-4yrwiu68v
+name: vite-dev-server-loopback-only-as-built
+description: As-built extraction of the code at 156a8a8, files changed since
+  main. Staged by codebase_extract.
+created: 2026-11-24T12:28:09.899Z
+modified: 2026-11-24T12:28:09.929Z
+status: staged
+baseSnapshot: v2:sha256:53252d39ed1357a9afdd6132507b497bf81313353af91142ccb6b590b147594c
+origin:
+  kind: extract
+purpose: verification
+verifies: changeset-1795523137877-3cv6j8rfu
+scope:
+  since: main
+  codeCommit: 156a8a8aec84194aa17603c06b10d1f735feef89
+stats:
+  additions: 2
+  modifications: 0
+  deletions: 0
+lastSequence: 1
