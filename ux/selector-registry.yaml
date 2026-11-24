@@ -3331,6 +3331,9 @@ selectors:
   - selector: review-editor-pending
     component: src/components/proposals/review/ReviewRelationship.tsx
     description: "OR CORRECT IT: an end picked among this proposal's elements hasn't applied yet (\"Decide #4 Feedback first: this end follows its choice.\"); Accept with these changes is disabled"
+  - selector: review-editor-rejected-end
+    component: src/components/proposals/review/ReviewRelationship.tsx
+    description: "OR CORRECT IT: an end the draft keeps (after Reverse) was rejected (\"#2 Reference check was rejected: pick another end.\"); Accept with these changes is disabled"
   - selector: review-show-in-source
     component: src/components/proposals/review/ReviewInspector.tsx
     description: "A relationship's EVIDENCE: Show in source, scrolls the source to its first passage"

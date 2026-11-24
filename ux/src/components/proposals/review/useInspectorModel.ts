@@ -229,19 +229,20 @@ export function useInspectorModel(
   );
   const endCandidates = useMemo((): EndCandidate[] => {
     if (!relationshipOpen) return [];
-    const own = elements
-      .filter((o) => o.status !== "rejected" && (o.ref || o.result_entity_id))
-      .map((o) => ({
-        entityId: o.ref ? `$${o.ref}` : o.result_entity_id!,
-        title: shownTitle(o),
-        classId: shownClassId(o),
-        operationId: o.id,
-        pending: o.status !== "applied",
-      }));
-    // An element this proposal created is offered once, by its ref, not again as a dataset individual.
-    const known = new Set(
-      elements.flatMap((o) => (o.result_entity_id && !o.matched ? [o.result_entity_id] : [])),
+    const offered = elements.filter(
+      (o) => o.status !== "rejected" && (o.ref || o.result_entity_id),
     );
+    const own = offered.map((o) => ({
+      entityId: o.ref ? `$${o.ref}` : o.result_entity_id!,
+      title: shownTitle(o),
+      classId: shownClassId(o),
+      operationId: o.id,
+      pending: o.status !== "applied",
+    }));
+    // An element offered above is offered once, by its ref, not again as the dataset
+    // individual it made or matched. A rejected one offers nothing, so the individual it
+    // points at (a duplicate's landed original, say) stays among the dataset's.
+    const known = new Set(offered.flatMap((o) => (o.result_entity_id ? [o.result_entity_id] : [])));
     const others = (datasetIndividuals?.items ?? [])
       .filter((i) => !known.has(i.id))
       .map((i) => ({ entityId: i.id, title: i.title, classId: i.class_ids?.[0] }));

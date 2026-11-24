@@ -2166,6 +2166,56 @@ describe("a relationship's ends on a fresh extraction (#1673)", () => {
     });
   });
 
+  it("offers the individual a rejected duplicate points at, and a near match once", async () => {
+    // Feedback was rejected as a duplicate of the dataset's own Feedback loop; Reference
+    // check applied as its near match Reference checking.
+    decideOp("op-added", {
+      status: "rejected",
+      reason_code: "duplicate",
+      result_entity_id: "ind-loop",
+    });
+    decideOp("op-ref", { status: "applied", matched: true, result_entity_id: "ind-checking" });
+    server.use(
+      http.get("*/api/individuals", () =>
+        HttpResponse.json({
+          items: [
+            { id: "ind-loop", title: "Feedback loop", class_ids: ["cls-feature"] },
+            { id: "ind-checking", title: "Reference checking", class_ids: ["cls-feature"] },
+          ],
+          total: 2,
+          limit: 500,
+          offset: 0,
+        }),
+      ),
+    );
+    const user = await renderPage();
+    await user.click(screen.getByTestId("review-row-op-rel"));
+    await user.click(screen.getByTestId("review-change-source"));
+    const options = within(screen.getByRole("group", { name: "Source" })).getAllByTestId(
+      "review-end-option-source",
+    );
+    const titles = options.map((o) => o.textContent ?? "");
+    expect(titles.some((t) => t.includes("Feedback loop"))).toBe(true);
+    // The near match is the current source, offered by its ref only: not again from the dataset.
+    expect(titles.some((t) => t.includes("Reference checking"))).toBe(false);
+    expect(titles.some((t) => t.startsWith("Feedback") && t.includes("in this proposal"))).toBe(
+      false,
+    );
+  });
+
+  it("says a rejected end was rejected after Reverse, not that it waits for a decision", async () => {
+    decideOp("op-ref", { status: "rejected", reason_code: "not_in_text" });
+    decideOp("op-edit", { status: "applied", result_entity_id: "res-edit" });
+    const user = await renderPage();
+    await user.click(screen.getByTestId("review-row-op-rel"));
+    await user.click(screen.getByTestId("review-reverse"));
+    expect(screen.getByTestId("review-editor-rejected-end")).toHaveTextContent(
+      "#2 Reference check was rejected: pick another end.",
+    );
+    expect(screen.queryByTestId("review-editor-pending")).not.toBeInTheDocument();
+    expect(screen.getByTestId("review-accept-edited")).toBeDisabled();
+  });
+
   it("accepts with a pending element's ref once it applied, resolved by the server", async () => {
     decideOp("op-added", { status: "applied", result_entity_id: "ind-77" });
     decideOp("op-edit", { status: "applied", result_entity_id: "res-edit" });

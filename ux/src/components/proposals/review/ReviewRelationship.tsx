@@ -451,11 +451,14 @@ export function RelationshipEditor({
     !schema.loading &&
     (!schema.fits(sourceClass, property.domain_class_id) ||
       !schema.fits(targetClass, property.range_class_id));
-  // An end picked among this proposal's elements that hasn't applied: decide it first.
-  const pendingPick = [draft.source_id ? source : undefined, draft.target_id ? target : undefined]
+  // An end the draft names among this proposal's elements that hasn't applied: decide it
+  // first, or, when it was rejected (a proposed end Reverse kept), pick another.
+  const unapplied = [draft.source_id ? source : undefined, draft.target_id ? target : undefined]
     .filter((end): end is EndValue => !!end?.pending)
     .map((end) => operations.find((o) => o.id === end.operationId))
     .filter((o): o is ProposedOperation => !!o);
+  const rejectedPick = unapplied.filter((o) => o.status === "rejected");
+  const pendingPick = unapplied.filter((o) => o.status !== "rejected");
   const set = (field: Field, value: string | undefined) => {
     setDraft((d) => ({ ...d, [field]: value }));
     setOpen(undefined);
@@ -618,6 +621,11 @@ export function RelationshipEditor({
           {others.length > 0
             ? `${schema.predicateLabel(propertyId)} isn't allowed from ${schema.classLabel(sourceClass)} to ${schema.classLabel(targetClass)}. Pick one of the ${others.length} that are, above.`
             : `No predicate is allowed from ${schema.classLabel(sourceClass)} to ${schema.classLabel(targetClass)}.`}
+        </FormCallout>
+      )}
+      {rejectedPick.length > 0 && (
+        <FormCallout variant="warn" icon="alert" data-testid="review-editor-rejected-end">
+          {`${rejectedPick.map((o) => `#${o.seq} ${shownTitle(o)}`).join(" and ")} ${rejectedPick.length === 1 ? "was" : "were"} rejected: pick ${rejectedPick.length === 1 ? "another end" : "other ends"}.`}
         </FormCallout>
       )}
       {pendingPick.length > 0 && (
