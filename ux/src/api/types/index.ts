@@ -5745,7 +5745,7 @@ export interface components {
       review_only: boolean;
       /**
        * Links
-       * @description Its links to other proposals (supersedes, superseded_by, reverses, reversed_by), oldest first; empty in a list's summary form
+       * @description Its links to other proposals (supersedes, superseded_by, reverses, reversed_by), oldest first; in a list's summary form too, so the list can say a reversal is open
        */
       links?: components["schemas"]["ProposalLinkResponse"][];
       /**

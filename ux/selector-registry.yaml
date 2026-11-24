@@ -3641,8 +3641,23 @@ selectors:
     component: src/components/proposals/ProposalDetailPage.tsx
     description: "Downloads DR's decisions JSON (dr_spec proposals only)"
   - selector: proposal-revert
+    component: src/components/proposals/RevertControl.tsx
+    description: "Revert proposal button of an unlanded proposal (the header's revert control, #1668); opens a ConfirmDialog saying what it undoes"
+  - selector: proposal-propose-reversal
+    component: src/components/proposals/RevertControl.tsx
+    description: "\"Propose the reversal…\" button of a landed proposal (the header's revert control, #1668); opens the propose-reversal dialog. Hidden while a reversal is under way and on a reversal itself"
+  - selector: propose-reversal-dialog
+    component: src/components/proposals/ProposeReversalDialog.tsx
+    description: "Propose-reversal confirm dialog body: why a landed proposal can't be undone in place, what the reversal holds, and that it is decided like any proposal"
+  - selector: propose-reversal-contents
+    component: src/components/proposals/ProposeReversalDialog.tsx
+    description: "Propose-reversal dialog: what the new proposal undoes (the count of changes the proposal applied)"
+  - selector: proposal-reversal-*
     component: src/components/proposals/ProposalDetailPage.tsx
-    description: "Revert proposal button; opens a ConfirmDialog saying what it undoes"
+    description: "Reversal links (#1668): in the status strip proposal-reversal-reverses (a reversal, linking its original) and proposal-reversal-reversed_by (reversal open, reversal not landed, or reversed by, linking the reversal); in the Proposals list proposal-reversal-{id}, the chip of a reversal under way"
+  - selector: proposal-reversal-count
+    component: src/components/proposals/ProposalDetailPage.tsx
+    description: "On a reversed proposal's strip: how many of its changes the reversal undid (\"N of M changes reversed\")"
   - selector: proposal-revert-message
     component: src/components/proposals/ProposalDetailPage.tsx
     description: "What a revert undoes, in the revert ConfirmDialog"
