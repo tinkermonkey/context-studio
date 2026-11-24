@@ -662,7 +662,10 @@ data-model.objectschema.proposal-entity:
   name: Proposal Entity
   description: "ChangeProposal: a set of proposed ontology changes on one
     taxonomy, decided per operation; review_only keeps the approval policy off
-    it (#1628)."
+    it (#1628). Status open, done, reverted, or withdrawn (its proposer withdrew
+    it; anything it had applied is rolled back). Its links to other proposals
+    (supersedes / superseded_by, reverses / reversed_by) come from
+    proposal_links."
   attributes:
     type: object
   source_reference:
@@ -741,8 +744,10 @@ data-model.objectschema.proposed-operation:
   type: objectschema
   layer_id: data-model
   name: Proposed Operation
-  description: "Domain value: one operation in a change proposal
-    (create/update/delete of an entity), with its status and decision."
+  description: "ProposedOperation: one proposed change. Status pending, applied,
+    rejected, failed, or withdrawn (removed by its proposer, or its proposal
+    withdrawn: not a decision). amended_at and amendments record changes its
+    proposer made while it was pending."
   attributes:
     type: object
   source_reference:
@@ -1029,4 +1034,53 @@ data-model.objectschema.operation-count:
   metadata:
     created_at: 2026-11-24T12:34:33.368Z
     updated_at: 2026-11-24T12:34:33.368Z
+    version: 1
+data-model.objectschema.proposal-link:
+  id: 1934138c-8ef7-47d0-85de-f61f20f9c132
+  path: data-model.objectschema.proposal-link
+  spec_node_id: data-model.objectschema
+  type: objectschema
+  layer_id: data-model
+  name: Proposal Link
+  description: "ProposalLink (domain/versioning/proposals.py): source_proposal_id,
+    kind (ProposalLinkKind: supersedes | reverses), target_proposal_id,
+    created_at, note."
+  attributes:
+    type: object
+    required:
+      - source_proposal_id
+      - kind
+      - target_proposal_id
+      - created_at
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/domain/versioning/proposals.py
+        symbol: ProposalLink
+  metadata:
+    created_at: 2026-11-24T12:39:53.766Z
+    updated_at: 2026-11-24T12:39:53.766Z
+    version: 1
+data-model.objectschema.operation-amendment:
+  id: 457f7b22-69b8-4a6d-b634-2e2ed38cab5e
+  path: data-model.objectschema.operation-amendment
+  spec_node_id: data-model.objectschema
+  type: objectschema
+  layer_id: data-model
+  name: Operation Amendment
+  description: "One earlier version of an amended operation: its fields, base and
+    rationale, and when it was replaced."
+  attributes:
+    type: object
+    required:
+      - fields
+      - amended_at
+  source_reference:
+    provenance: manual
+    locations:
+      - file: local-server/domain/versioning/proposals.py
+        symbol: ProposedOperation.amendments
+  metadata:
+    created_at: 2026-11-24T12:39:53.767Z
+    updated_at: 2026-11-24T12:39:53.767Z
     version: 1

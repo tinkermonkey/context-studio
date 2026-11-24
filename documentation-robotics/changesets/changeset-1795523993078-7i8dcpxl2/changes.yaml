@@ -1391,3 +1391,89 @@
     metadata: *a12
   timestamp: 2026-11-24T14:06:13.155Z
   sequenceNumber: 85
+- type: update
+  elementId: data-model.objectschema.proposal-entity
+  layerName: data-model
+  before:
+    id: 2ff8aa70-673e-4390-97c0-5ebca5cea559
+    path: data-model.objectschema.proposal-entity
+    spec_node_id: data-model.objectschema
+    type: objectschema
+    layer_id: data-model
+    name: Proposal Entity
+    description: "ChangeProposal: a set of proposed ontology changes on one
+      taxonomy, decided per operation. Status open, done, reverted, or withdrawn
+      (its proposer withdrew it; anything it had applied is rolled back). Its
+      links to other proposals (supersedes / superseded_by, reverses /
+      reversed_by) come from proposal_links."
+    attributes: &a13
+      type: object
+    source_reference: &a14
+      provenance: extracted
+      locations:
+        - file: local-server/domain/versioning/proposals.py
+          symbol: ChangeProposal
+    metadata: &a15
+      created_at: 2026-05-09T10:25:00.196Z
+      updated_at: 2026-05-09T10:25:00.196Z
+      version: 1
+  after:
+    id: 2ff8aa70-673e-4390-97c0-5ebca5cea559
+    path: data-model.objectschema.proposal-entity
+    spec_node_id: data-model.objectschema
+    type: objectschema
+    layer_id: data-model
+    name: Proposal Entity
+    description: "ChangeProposal: a set of proposed ontology changes on one
+      taxonomy, decided per operation; review_only keeps the approval policy off
+      it (#1628). Status open, done, reverted, or withdrawn (its proposer
+      withdrew it; anything it had applied is rolled back). Its links to other
+      proposals (supersedes / superseded_by, reverses / reversed_by) come from
+      proposal_links."
+    attributes: *a13
+    source_reference: *a14
+    metadata: *a15
+  timestamp: 2026-11-24T18:40:31.073Z
+  sequenceNumber: 101
+- type: update
+  elementId: api.response.change-proposal-response
+  layerName: api
+  before:
+    id: 2f4dc526-a1c7-40c9-8173-5cc609b51427
+    path: api.response.change-proposal-response
+    spec_node_id: api.response
+    type: response
+    layer_id: api
+    name: ChangeProposalResponse
+    description: "A change proposal with its operations in seq order, and links: its
+      links to other proposals seen from it (supersedes, superseded_by,
+      reverses, reversed_by). Each operation carries amended_at and amendments."
+    attributes: &a16
+      description: ChangeProposalResponse
+    source_reference: &a17
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/schemas/proposals.py
+          symbol: ChangeProposalResponse
+    metadata: &a18
+      created_at: 2026-11-19T15:15:02.501Z
+      updated_at: 2026-11-19T15:15:02.501Z
+      version: 1
+  after:
+    id: 2f4dc526-a1c7-40c9-8173-5cc609b51427
+    path: api.response.change-proposal-response
+    spec_node_id: api.response
+    type: response
+    layer_id: api
+    name: ChangeProposalResponse
+    description: "A change proposal with its operations in seq order and counts: how
+      many operations share each op, kind, status and scope. In a list's summary
+      form, operations is empty and counts still holds. It also carries
+      review_only (true: the approval policy never applies it) and its links to
+      other proposals seen from it (supersedes, superseded_by, reverses,
+      reversed_by). Each operation carries amended_at and amendments."
+    attributes: *a16
+    source_reference: *a17
+    metadata: *a18
+  timestamp: 2026-11-24T18:40:31.131Z
+  sequenceNumber: 102

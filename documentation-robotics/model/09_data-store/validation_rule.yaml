@@ -216,3 +216,48 @@ data-store.validationrule.uk-chat-message-seq:
     created_at: 2026-11-19T15:57:11.230Z
     updated_at: 2026-11-19T15:57:11.230Z
     version: 1
+data-store.validationrule.uq-proposal-links-source-kind-target:
+  id: ca0b0578-75d2-4d37-a2cb-04e535fe4665
+  path: data-store.validationrule.uq-proposal-links-source-kind-target
+  spec_node_id: data-store.validationrule
+  type: validationrule
+  layer_id: data-store
+  name: uq_proposal_links_source_kind_target
+  description: "A link is recorded once: unique (source_proposal_id, kind,
+    target_proposal_id)."
+  attributes:
+    ruleType: UNIQUE
+  metadata:
+    created_at: 2026-11-24T12:39:53.761Z
+    updated_at: 2026-11-24T12:39:53.761Z
+    version: 1
+data-store.validationrule.fk-proposal-links-source:
+  id: e44543e7-cfb1-42ef-a3d5-93875fe794c4
+  path: data-store.validationrule.fk-proposal-links-source
+  spec_node_id: data-store.validationrule
+  type: validationrule
+  layer_id: data-store
+  name: fk_proposal_links_source
+  description: proposal_links.source_proposal_id references change_proposals.id;
+    deleting the proposal deletes its links.
+  attributes:
+    ruleType: FOREIGN_KEY
+  metadata:
+    created_at: 2026-11-24T12:39:53.762Z
+    updated_at: 2026-11-24T12:39:53.762Z
+    version: 1
+data-store.validationrule.fk-proposal-links-target:
+  id: 5c4a30b8-ab99-419c-90d0-f902c6117d5d
+  path: data-store.validationrule.fk-proposal-links-target
+  spec_node_id: data-store.validationrule
+  type: validationrule
+  layer_id: data-store
+  name: fk_proposal_links_target
+  description: proposal_links.target_proposal_id references change_proposals.id;
+    deleting the proposal deletes its links.
+  attributes:
+    ruleType: FOREIGN_KEY
+  metadata:
+    created_at: 2026-11-24T12:39:53.762Z
+    updated_at: 2026-11-24T12:39:53.762Z
+    version: 1

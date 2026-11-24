@@ -16,8 +16,8 @@ Business processes, functions, roles, and services.
 
 | Metric                    | Count |
 | ------------------------- | ----- |
-| Elements                  | 34    |
-| Intra-Layer Relationships | 55    |
+| Elements                  | 36    |
+| Intra-Layer Relationships | 57    |
 | Inter-Layer Relationships | 87    |
 | Inbound Relationships     | 63    |
 | Outbound Relationships    | 24    |
@@ -38,10 +38,12 @@ Business processes, functions, roles, and services.
 | `business.businessactor.ontology-maintainer`                     | `businessactor`         | 1             |
 | `business.businesscollaboration.client-round-trip-collaboration` | `businesscollaboration` | 3             |
 | `business.businessevent.entity-changed-event`                    | `businessevent`         | 1             |
+| `business.businessevent.proposal-amended`                        | `businessevent`         | 1             |
 | `business.businessevent.proposal-applied`                        | `businessevent`         | 2             |
 | `business.businessevent.proposal-landed`                         | `businessevent`         | 1             |
 | `business.businessevent.proposal-reverted`                       | `businessevent`         | 1             |
 | `business.businessevent.proposal-submitted`                      | `businessevent`         | 4             |
+| `business.businessevent.proposal-withdrawn`                      | `businessevent`         | 1             |
 | `business.businessevent.sync-completed-event`                    | `businessevent`         | 1             |
 | `business.businessfunction.schema-refinement`                    | `businessfunction`      | 3             |
 | `business.businessfunction.semantic-search`                      | `businessfunction`      | 1             |
@@ -51,7 +53,7 @@ Business processes, functions, roles, and services.
 | `business.businessobject.decision-gold`                          | `businessobject`        | 3             |
 | `business.businessobject.source-document`                        | `businessobject`        | 1             |
 | `business.businessobject.taxonomy-charter`                       | `businessobject`        | 1             |
-| `business.businessprocess.adjudicate-a-proposal`                 | `businessprocess`       | 12            |
+| `business.businessprocess.adjudicate-a-proposal`                 | `businessprocess`       | 14            |
 | `business.businessprocess.check-benchmark-gold`                  | `businessprocess`       | 4             |
 | `business.businessprocess.client-round-trip`                     | `businessprocess`       | 9             |
 | `business.businessprocess.extract-a-source-into-a-dataset`       | `businessprocess`       | 7             |
@@ -274,6 +276,26 @@ An ontology change is recorded: every create, update or delete of a taxonomy, sc
 | ----------- | ------------------------------------------------ | ---------- | --------- |
 | intra-layer | `business.businessprocess.adjudicate-a-proposal` | `triggers` | inbound   |
 
+### Proposal Amended {#proposal-amended}
+
+**ID**: `business.businessevent.proposal-amended`
+
+**Type**: `businessevent`
+
+The proposer changed, added or removed pending operations of its open proposal.
+
+#### Attributes
+
+| Name | Value    |
+| ---- | -------- |
+| type | external |
+
+#### Relationships
+
+| Type        | Related Element                                  | Predicate  | Direction |
+| ----------- | ------------------------------------------------ | ---------- | --------- |
+| intra-layer | `business.businessprocess.adjudicate-a-proposal` | `triggers` | inbound   |
+
 ### Proposal Applied {#proposal-applied}
 
 **ID**: `business.businessevent.proposal-applied`
@@ -357,6 +379,26 @@ A proposal arrives from any source (MCP, chat, pipeline, bundle, user).
 | intra-layer | `business.businessfunction.schema-refinement`              | `triggers` | inbound   |
 | intra-layer | `business.businessprocess.client-round-trip`               | `triggers` | inbound   |
 | intra-layer | `business.businessprocess.extract-a-source-into-a-dataset` | `triggers` | inbound   |
+
+### Proposal Withdrawn {#proposal-withdrawn}
+
+**ID**: `business.businessevent.proposal-withdrawn`
+
+**Type**: `businessevent`
+
+The proposer withdrew an open proposal, possibly naming the proposal that supersedes it.
+
+#### Attributes
+
+| Name | Value    |
+| ---- | -------- |
+| type | external |
+
+#### Relationships
+
+| Type        | Related Element                                  | Predicate  | Direction |
+| ----------- | ------------------------------------------------ | ---------- | --------- |
+| intra-layer | `business.businessprocess.adjudicate-a-proposal` | `triggers` | inbound   |
 
 ### Sync Completed Event {#sync-completed-event}
 
@@ -540,8 +582,10 @@ Proposed, then classified (editorial, additive, breaking), decided per operation
 | intra-layer | `business.businessobject.taxonomy-charter`                   | `accesses`    | outbound  |
 | intra-layer | `business.businessservice.proposal-adjudication-service`     | `realizes`    | outbound  |
 | intra-layer | `business.businessevent.entity-changed-event`                | `triggers`    | outbound  |
+| intra-layer | `business.businessevent.proposal-amended`                    | `triggers`    | outbound  |
 | intra-layer | `business.businessevent.proposal-applied`                    | `triggers`    | outbound  |
 | intra-layer | `business.businessevent.proposal-reverted`                   | `triggers`    | outbound  |
+| intra-layer | `business.businessevent.proposal-withdrawn`                  | `triggers`    | outbound  |
 | intra-layer | `business.businessprocess.check-benchmark-gold`              | `flows-to`    | inbound   |
 | intra-layer | `business.businessprocess.extract-a-source-into-a-dataset`   | `flows-to`    | inbound   |
 | intra-layer | `business.businessrole.reviewer`                             | `assigned-to` | inbound   |
@@ -868,4 +912,4 @@ dr-reflection-plan/1 in; cs-dr-spec-changes/1 and decisions out. Agreed with DR 
 
 ---
 
-Generated: 2026-11-19T16:49:39.982Z | Model Version: 0.1.0
+Generated: 2026-11-24T18:43:49.876Z | Model Version: 0.1.0

@@ -16,11 +16,11 @@ Data entities, relationships, and data structure definitions.
 
 | Metric                    | Count |
 | ------------------------- | ----- |
-| Elements                  | 52    |
+| Elements                  | 54    |
 | Intra-Layer Relationships | 10    |
-| Inter-Layer Relationships | 111   |
-| Inbound Relationships     | 49    |
-| Outbound Relationships    | 62    |
+| Inter-Layer Relationships | 118   |
+| Inbound Relationships     | 51    |
+| Outbound Relationships    | 67    |
 
 **Cross-Layer References**:
 
@@ -59,6 +59,7 @@ Data entities, relationships, and data structure definitions.
 | `data-model.objectschema.knowledge-graph`               | `objectschema` | 0             |
 | `data-model.objectschema.ontology-class-entity`         | `objectschema` | 0             |
 | `data-model.objectschema.ontology-entity`               | `objectschema` | 3             |
+| `data-model.objectschema.operation-amendment`           | `objectschema` | 0             |
 | `data-model.objectschema.operation-count`               | `objectschema` | 0             |
 | `data-model.objectschema.operation-draft`               | `objectschema` | 0             |
 | `data-model.objectschema.path-result`                   | `objectschema` | 0             |
@@ -73,6 +74,7 @@ Data entities, relationships, and data structure definitions.
 | `data-model.objectschema.proposal`                      | `objectschema` | 1             |
 | `data-model.objectschema.proposal-decision-entity`      | `objectschema` | 0             |
 | `data-model.objectschema.proposal-entity`               | `objectschema` | 1             |
+| `data-model.objectschema.proposal-link`                 | `objectschema` | 0             |
 | `data-model.objectschema.proposed-operation`            | `objectschema` | 0             |
 | `data-model.objectschema.relationship`                  | `objectschema` | 1             |
 | `data-model.objectschema.relationship-entity`           | `objectschema` | 0             |
@@ -165,6 +167,8 @@ flowchart TB
 | `application.applicationcomponent.accesses.data-model.objectschema` | `application.applicationcomponent.sqlite-source-repository`                 | `data-model.objectschema.source-entity`                                              | `data-model` | `accesses`  | many-to-many | medium   |
 | `application.applicationfunction.accesses.data-model.objectschema`  | `application.applicationfunction.individual-pre-review`                     | `data-model.objectschema.pipeline-configuration-entity`                              | `data-model` | `accesses`  | many-to-many | medium   |
 | `application.applicationfunction.accesses.data-model.objectschema`  | `application.applicationfunction.individual-pre-review`                     | `data-model.objectschema.pre-review-verdict`                                         | `data-model` | `accesses`  | many-to-many | medium   |
+| `application.applicationfunction.accesses.data-model.objectschema`  | `application.applicationfunction.proposal-amendment`                        | `data-model.objectschema.operation-amendment`                                        | `data-model` | `accesses`  | many-to-many | medium   |
+| `application.applicationfunction.accesses.data-model.objectschema`  | `application.applicationfunction.proposal-linking`                          | `data-model.objectschema.proposal-link`                                              | `data-model` | `accesses`  | many-to-many | medium   |
 | `data-model.objectschema.maps-to.api.response`                      | `data-model.objectschema.app-configuration`                                 | `api.response.app-configuration-response`                                            | `api`        | `maps-to`   | many-to-many | medium   |
 | `data-model.objectschema.maps-to.data-store.collection`             | `data-model.objectschema.approval-policy-entity`                            | `data-store.collection.approval-policies`                                            | `data-store` | `maps-to`   | many-to-many | medium   |
 | `data-model.objectschema.maps-to.data-store.collection`             | `data-model.objectschema.attribute-definition-entity`                       | `data-store.collection.attribute-definitions`                                        | `data-store` | `maps-to`   | many-to-many | medium   |
@@ -199,6 +203,8 @@ flowchart TB
 | `data-model.objectschema.maps-to.api.response`                      | `data-model.objectschema.ontology-class-entity`                             | `api.response.class-response`                                                        | `api`        | `maps-to`   | many-to-many | medium   |
 | `data-model.objectschema.maps-to.data-store.collection`             | `data-model.objectschema.ontology-class-entity`                             | `data-store.collection.ontology-entities`                                            | `data-store` | `maps-to`   | many-to-many | medium   |
 | `data-model.objectschema.maps-to.data-store.collection`             | `data-model.objectschema.ontology-entity`                                   | `data-store.collection.ontology-entities`                                            | `data-store` | `maps-to`   | many-to-many | medium   |
+| `data-model.objectschema.maps-to.data-store.collection`             | `data-model.objectschema.operation-amendment`                               | `data-store.collection.proposal-operations`                                          | `data-store` | `maps-to`   | many-to-many | medium   |
+| `data-model.objectschema.satisfies.motivation.requirement`          | `data-model.objectschema.operation-amendment`                               | `motivation.requirement.an-amended-operation-shows-what-it-replaced`                 | `motivation` | `satisfies` | many-to-many | medium   |
 | `data-model.objectschema.maps-to.api.response`                      | `data-model.objectschema.operation-count`                                   | `api.response.operation-count-response`                                              | `api`        | `maps-to`   | many-to-many | medium   |
 | `data-model.objectschema.satisfies.motivation.requirement`          | `data-model.objectschema.operation-draft`                                   | `motivation.requirement.contexts-depend-on-each-other-only-through-public-contracts` | `motivation` | `satisfies` | many-to-many | medium   |
 | `data-model.objectschema.maps-to.api.response`                      | `data-model.objectschema.path-result`                                       | `api.response.path-result-response`                                                  | `api`        | `maps-to`   | many-to-many | medium   |
@@ -214,6 +220,9 @@ flowchart TB
 | `data-model.objectschema.maps-to.data-store.collection`             | `data-model.objectschema.property-definition`                               | `data-store.collection.property-definitions-table`                                   | `data-store` | `maps-to`   | many-to-many | medium   |
 | `data-model.objectschema.maps-to.data-store.collection`             | `data-model.objectschema.proposal-decision-entity`                          | `data-store.collection.proposal-decisions`                                           | `data-store` | `maps-to`   | many-to-many | medium   |
 | `data-model.objectschema.maps-to.data-store.collection`             | `data-model.objectschema.proposal-entity`                                   | `data-store.collection.proposals-table`                                              | `data-store` | `maps-to`   | many-to-many | medium   |
+| `data-model.objectschema.maps-to.api.response`                      | `data-model.objectschema.proposal-link`                                     | `api.response.proposal-link-response`                                                | `api`        | `maps-to`   | many-to-many | medium   |
+| `data-model.objectschema.maps-to.data-store.collection`             | `data-model.objectschema.proposal-link`                                     | `data-store.collection.proposal-links`                                               | `data-store` | `maps-to`   | many-to-many | medium   |
+| `data-model.objectschema.satisfies.motivation.requirement`          | `data-model.objectschema.proposal-link`                                     | `motivation.requirement.proposals-link-to-each-other-through-one-link-model`         | `motivation` | `satisfies` | many-to-many | medium   |
 | `data-model.objectschema.maps-to.data-store.collection`             | `data-model.objectschema.proposal`                                          | `data-store.collection.proposals-table`                                              | `data-store` | `maps-to`   | many-to-many | medium   |
 | `data-model.objectschema.maps-to.data-store.collection`             | `data-model.objectschema.proposed-operation`                                | `data-store.collection.proposal-operations`                                          | `data-store` | `maps-to`   | many-to-many | medium   |
 | `data-model.objectschema.maps-to.api.response`                      | `data-model.objectschema.relationship-entity`                               | `api.response.relationship-response`                                                 | `api`        | `maps-to`   | many-to-many | medium   |
@@ -803,6 +812,29 @@ Single-table inheritance ORM schema for all ontology entities (taxonomy, concept
 | intra-layer | `data-model.objectschema.change-event`                        | `specializes` | inbound   |
 | intra-layer | `data-model.objectschema.relationship`                        | `specializes` | outbound  |
 
+### Operation Amendment {#operation-amendment}
+
+**ID**: `data-model.objectschema.operation-amendment`
+
+**Type**: `objectschema`
+
+One earlier version of an amended operation: its fields, base and rationale, and when it was replaced.
+
+#### Attributes
+
+| Name     | Value                |
+| -------- | -------------------- |
+| required | [fields, amended_at] |
+| type     | object               |
+
+#### Relationships
+
+| Type        | Related Element                                                      | Predicate   | Direction |
+| ----------- | -------------------------------------------------------------------- | ----------- | --------- |
+| inter-layer | `application.applicationfunction.proposal-amendment`                 | `accesses`  | inbound   |
+| inter-layer | `data-store.collection.proposal-operations`                          | `maps-to`   | outbound  |
+| inter-layer | `motivation.requirement.an-amended-operation-shows-what-it-replaced` | `satisfies` | outbound  |
+
 ### Operation Count {#operation-count}
 
 **ID**: `data-model.objectschema.operation-count`
@@ -1087,7 +1119,7 @@ Domain entity: a reviewer's or policy's decision on a proposal operation, with r
 
 **Type**: `objectschema`
 
-ChangeProposal: a set of proposed ontology changes on one taxonomy, decided per operation; review_only keeps the approval policy off it (#1628).
+ChangeProposal: a set of proposed ontology changes on one taxonomy, decided per operation; review_only keeps the approval policy off it (#1628). Status open, done, reverted, or withdrawn (its proposer withdrew it; anything it had applied is rolled back). Its links to other proposals (supersedes / superseded_by, reverses / reversed_by) come from proposal_links.
 
 #### Attributes
 
@@ -1103,13 +1135,37 @@ ChangeProposal: a set of proposed ontology changes on one taxonomy, decided per 
 | inter-layer | `data-store.collection.proposals-table`                              | `maps-to`     | outbound  |
 | intra-layer | `data-model.objectschema.proposal`                                   | `specializes` | outbound  |
 
+### Proposal Link {#proposal-link}
+
+**ID**: `data-model.objectschema.proposal-link`
+
+**Type**: `objectschema`
+
+ProposalLink (domain/versioning/proposals.py): source_proposal_id, kind (ProposalLinkKind: supersedes \| reverses), target_proposal_id, created_at, note.
+
+#### Attributes
+
+| Name     | Value                                                      |
+| -------- | ---------------------------------------------------------- |
+| required | [source_proposal_id, kind, target_proposal_id, created_at] |
+| type     | object                                                     |
+
+#### Relationships
+
+| Type        | Related Element                                                              | Predicate   | Direction |
+| ----------- | ---------------------------------------------------------------------------- | ----------- | --------- |
+| inter-layer | `application.applicationfunction.proposal-linking`                           | `accesses`  | inbound   |
+| inter-layer | `api.response.proposal-link-response`                                        | `maps-to`   | outbound  |
+| inter-layer | `data-store.collection.proposal-links`                                       | `maps-to`   | outbound  |
+| inter-layer | `motivation.requirement.proposals-link-to-each-other-through-one-link-model` | `satisfies` | outbound  |
+
 ### Proposed Operation {#proposed-operation}
 
 **ID**: `data-model.objectschema.proposed-operation`
 
 **Type**: `objectschema`
 
-Domain value: one operation in a change proposal (create/update/delete of an entity), with its status and decision.
+ProposedOperation: one proposed change. Status pending, applied, rejected, failed, or withdrawn (removed by its proposer, or its proposal withdrawn: not a decision). amended_at and amendments record changes its proposer made while it was pending.
 
 #### Attributes
 
@@ -1359,4 +1415,4 @@ String schema for entity identifiers — UUID v4 format, used as primary keys ac
 
 ---
 
-Generated: 2026-11-24T18:23:42.953Z | Model Version: 0.1.0
+Generated: 2026-11-24T18:43:49.876Z | Model Version: 0.1.0

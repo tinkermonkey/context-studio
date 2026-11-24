@@ -417,3 +417,84 @@ motivation.requirement.an-operation-without-a-probability-never-meets-the-probab
     created_at: 2026-11-24T13:31:22.976Z
     updated_at: 2026-11-24T13:31:22.976Z
     version: 1
+motivation.requirement.proposals-link-to-each-other-through-one-link-model:
+  id: e20b127f-0e57-46af-9365-01acaff67475
+  path: motivation.requirement.proposals-link-to-each-other-through-one-link-model
+  spec_node_id: motivation.requirement
+  type: requirement
+  layer_id: motivation
+  name: Proposals link to each other through one link model
+  description: "#1624 decision (2026-11-20): one proposal-to-proposal link model
+    covers supersede (a withdrawn proposal and the one that replaces it) and
+    #1667's reversal (a reversal proposal and the landed proposal it undoes). A
+    link is (source proposal, kind, target proposal); kinds: supersedes,
+    reverses. It replaces the separate change_proposals.reverses_id the
+    one-review-surface plan staged. A proposal shows its links both ways:
+    supersedes / superseded_by, reverses / reversed_by."
+  attributes:
+    requirementType: functional
+    priority: high
+  metadata:
+    created_at: 2026-11-24T12:39:53.756Z
+    updated_at: 2026-11-24T12:39:53.756Z
+    version: 1
+motivation.requirement.a-proposer-amends-its-open-proposal-in-place:
+  id: ba4a58bf-dc45-49ab-a086-64b69bb1f698
+  path: motivation.requirement.a-proposer-amends-its-open-proposal-in-place
+  spec_node_id: motivation.requirement
+  type: requirement
+  layer_id: motivation
+  name: A proposer amends its open proposal in place
+  description: "#1624: on a proposal that is still open, one call replaces a
+    pending operation's fields (by seq), adds operations, or removes pending
+    operations, with the same validation, scope check and dry_run as
+    propose_changes. Applied and rejected operations never change. A
+    one-sentence change to one of nine operations takes one call and leaves one
+    proposal."
+  attributes:
+    requirementType: functional
+    priority: high
+  metadata:
+    created_at: 2026-11-24T12:39:53.756Z
+    updated_at: 2026-11-24T12:39:53.756Z
+    version: 1
+motivation.requirement.an-amended-operation-shows-what-it-replaced:
+  id: 51bfaa78-e5ad-4a1f-bd71-26bf0bb91cc3
+  path: motivation.requirement.an-amended-operation-shows-what-it-replaced
+  spec_node_id: motivation.requirement
+  type: requirement
+  layer_id: motivation
+  name: An amended operation shows what it replaced
+  description: "#1624: an operation amended after it was proposed says when
+    (amended_at) and keeps each earlier version of its fields (amendments), so a
+    reviewer who already read it knows to read it again and can see what
+    changed. get_proposal and the review page show it."
+  attributes:
+    requirementType: functional
+    priority: medium
+  metadata:
+    created_at: 2026-11-24T12:39:53.756Z
+    updated_at: 2026-11-24T12:39:53.756Z
+    version: 1
+motivation.requirement.a-proposer-withdraws-its-open-proposal:
+  id: e61a5b1a-1fba-4134-a55b-9b32556c1d86
+  path: motivation.requirement.a-proposer-withdraws-its-open-proposal
+  spec_node_id: motivation.requirement
+  type: requirement
+  layer_id: motivation
+  name: A proposer withdraws its open proposal
+  description: "#1624: a proposer withdraws an open proposal it no longer stands
+    behind, optionally naming the proposal that supersedes it (a supersedes
+    link). Withdrawing undoes it whole (owner, 2026-11-24): what it applied is
+    rolled back as a revert does, its undecided operations become withdrawn (not
+    a reviewer's decision, so not gold), and the proposal ends withdrawn, never
+    half-applied. If the rollback conflicts with later changes, the withdraw is
+    refused (409) naming what blocks it, as revert is. propose_changes can name
+    the proposals a new one supersedes, which withdraws them in the same call."
+  attributes:
+    requirementType: functional
+    priority: high
+  metadata:
+    created_at: 2026-11-24T12:39:53.756Z
+    updated_at: 2026-11-24T12:39:53.756Z
+    version: 1

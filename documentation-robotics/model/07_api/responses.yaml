@@ -1885,3 +1885,31 @@ api.responses.get-schema-refinement-candidates-responses:
     created_at: 2026-11-19T15:45:33.526Z
     updated_at: 2026-11-19T15:45:33.526Z
     version: 1
+api.responses.amend-proposal-responses:
+  id: af56d383-7f3a-4c63-8e7b-f0ae3bd8a941
+  path: api.responses.amend-proposal-responses
+  spec_node_id: api.responses
+  type: responses
+  layer_id: api
+  name: Amend Proposal Responses
+  description: "200 the amended proposal (a dry run: validated only); 404 unknown
+    proposal; 409 not open, or a named operation is decided; 422 an invalid
+    operation."
+  metadata:
+    created_at: 2026-11-24T12:40:18.623Z
+    updated_at: 2026-11-24T12:40:18.623Z
+    version: 1
+api.responses.withdraw-proposal-responses:
+  id: 1e00917f-6e3b-4d2b-a12b-820467ec3cdc
+  path: api.responses.withdraw-proposal-responses
+  spec_node_id: api.responses
+  type: responses
+  layer_id: api
+  name: Withdraw Proposal Responses
+  description: 200 the withdrawn proposal; 404 unknown proposal or superseded_by;
+    409 not open, or the rollback conflicts
+    (ChangeProposalRevertConflictResponse blockers).
+  metadata:
+    created_at: 2026-11-24T12:40:18.625Z
+    updated_at: 2026-11-24T12:40:18.625Z
+    version: 1

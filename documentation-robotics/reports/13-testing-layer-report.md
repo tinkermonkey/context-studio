@@ -16,11 +16,11 @@ Test strategies, test cases, test data, and test coverage.
 
 | Metric                    | Count |
 | ------------------------- | ----- |
-| Elements                  | 39    |
+| Elements                  | 40    |
 | Intra-Layer Relationships | 32    |
-| Inter-Layer Relationships | 56    |
+| Inter-Layer Relationships | 58    |
 | Inbound Relationships     | 0     |
-| Outbound Relationships    | 56    |
+| Outbound Relationships    | 58    |
 
 **Cross-Layer References**:
 
@@ -64,6 +64,7 @@ Test strategies, test cases, test data, and test coverage.
 | `testing.testcoveragetarget.performance-test-suite`                                                | `testcoveragetarget`  | 1             |
 | `testing.testcoveragetarget.pipeline-integration-tests`                                            | `testcoveragetarget`  | 1             |
 | `testing.testcoveragetarget.playwright-e2e-tests`                                                  | `testcoveragetarget`  | 1             |
+| `testing.testcoveragetarget.proposal-amend-withdraw-and-links`                                     | `testcoveragetarget`  | 0             |
 | `testing.testcoveragetarget.route-integration-tests`                                               | `testcoveragetarget`  | 2             |
 | `testing.testcoveragetarget.source-integration-tests`                                              | `testcoveragetarget`  | 1             |
 | `testing.testcoveragetarget.ux-api-client-tests`                                                   | `testcoveragetarget`  | 1             |
@@ -145,6 +146,8 @@ flowchart TB
 | `testing.testcoveragetarget.covers.ux.view`                          | `testing.testcoveragetarget.playwright-e2e-tests`                                                  | `ux.view.extraction-review-view`                                             | `ux`          | `covers`    | many-to-many | medium   |
 | `testing.testcoveragetarget.covers.ux.view`                          | `testing.testcoveragetarget.playwright-e2e-tests`                                                  | `ux.view.graph-view`                                                         | `ux`          | `covers`    | many-to-many | medium   |
 | `testing.testcoveragetarget.covers.ux.view`                          | `testing.testcoveragetarget.playwright-e2e-tests`                                                  | `ux.view.proposals-view`                                                     | `ux`          | `covers`    | many-to-many | medium   |
+| `testing.testcoveragetarget.covers.api.operation`                    | `testing.testcoveragetarget.proposal-amend-withdraw-and-links`                                     | `api.operation.amend-proposal`                                               | `api`         | `covers`    | many-to-many | medium   |
+| `testing.testcoveragetarget.covers.api.operation`                    | `testing.testcoveragetarget.proposal-amend-withdraw-and-links`                                     | `api.operation.withdraw-proposal`                                            | `api`         | `covers`    | many-to-many | medium   |
 | `testing.testcoveragetarget.covers.application.applicationcomponent` | `testing.testcoveragetarget.route-integration-tests`                                               | `application.applicationcomponent.sqlite-ontology-repository`                | `application` | `covers`    | many-to-many | medium   |
 | `testing.testcoveragetarget.covers.business.businessprocess`         | `testing.testcoveragetarget.route-integration-tests`                                               | `business.businessprocess.adjudicate-a-proposal`                             | `business`    | `covers`    | many-to-many | medium   |
 | `testing.testcoveragetarget.covers.application.applicationservice`   | `testing.testcoveragetarget.source-integration-tests`                                              | `application.applicationservice.source-service`                              | `application` | `covers`    | many-to-many | medium   |
@@ -905,6 +908,27 @@ Playwright end-to-end specs over the running stack: data, design, graph, ontolog
 | inter-layer | `ux.view.proposals-view`                                          | `covers`   | outbound  |
 | intra-layer | `testing.testcoveragemodel.context-studio-ux-test-coverage-model` | `composes` | inbound   |
 
+### Proposal amend withdraw and links {#proposal-amend-withdraw-and-links}
+
+**ID**: `testing.testcoveragetarget.proposal-amend-withdraw-and-links`
+
+**Type**: `testcoveragetarget`
+
+Amend (replace, add, remove; dry run; decided operations refused; amendments kept), withdraw (nothing applied; partly applied rolls back and ends withdrawn; a conflicting rollback is refused with blockers; with and without superseded_by), propose with supersedes, link reads both ways, MCP tools amend_proposal and withdraw_proposal and their REST parity.
+
+#### Attributes
+
+| Name       | Value        |
+| ---------- | ------------ |
+| targetType | api-endpoint |
+
+#### Relationships
+
+| Type        | Related Element                   | Predicate | Direction |
+| ----------- | --------------------------------- | --------- | --------- |
+| inter-layer | `api.operation.amend-proposal`    | `covers`  | outbound  |
+| inter-layer | `api.operation.withdraw-proposal` | `covers`  | outbound  |
+
 ### Route Integration Tests {#route-integration-tests}
 
 **ID**: `testing.testcoveragetarget.route-integration-tests`
@@ -1072,4 +1096,4 @@ Coverage target for change management: change proposals (create, decide, apply, 
 
 ---
 
-Generated: 2026-11-24T17:51:04.666Z | Model Version: 0.1.0
+Generated: 2026-11-24T18:43:49.876Z | Model Version: 0.1.0

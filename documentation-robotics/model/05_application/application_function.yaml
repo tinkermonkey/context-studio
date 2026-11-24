@@ -334,3 +334,63 @@ application.applicationfunction.spec-changes-for-a-proposal:
     created_at: 2026-11-24T12:37:15.594Z
     updated_at: 2026-11-24T12:37:15.594Z
     version: 1
+application.applicationfunction.proposal-amendment:
+  id: 1cfa18f9-eea8-4d52-b9e6-854d6f0df711
+  path: application.applicationfunction.proposal-amendment
+  spec_node_id: application.applicationfunction
+  type: applicationfunction
+  layer_id: application
+  name: Proposal amendment
+  description: "ProposalService.amend: replaces, adds and removes pending
+    operations of an open proposal by seq in one call, validating and scoping
+    them as propose does (dry_run too), keeping each replaced version in
+    amendments; then the approval policy runs over what changed, as on propose."
+  source_reference:
+    provenance: manual
+    locations:
+      - file: local-server/domain/versioning/proposal_service.py
+        symbol: ProposalService.amend
+  metadata:
+    created_at: 2026-11-24T12:39:53.767Z
+    updated_at: 2026-11-24T12:39:53.767Z
+    version: 1
+application.applicationfunction.proposal-withdrawal:
+  id: 23d1fed8-d320-4431-bb8f-458ab534e9f4
+  path: application.applicationfunction.proposal-withdrawal
+  spec_node_id: application.applicationfunction
+  type: applicationfunction
+  layer_id: application
+  name: Proposal withdrawal
+  description: "ProposalService.withdraw: on an open proposal, rolls back what it
+    applied (the revert path: RevertService, decisions superseded), marks its
+    undecided operations withdrawn, sets the proposal withdrawn, and records a
+    supersedes link from the proposal named as its replacement, if any. Refused
+    when the rollback conflicts, with the blockers."
+  source_reference:
+    provenance: manual
+    locations:
+      - file: local-server/domain/versioning/proposal_service.py
+        symbol: ProposalService.withdraw
+  metadata:
+    created_at: 2026-11-24T12:39:53.767Z
+    updated_at: 2026-11-24T12:39:53.767Z
+    version: 1
+application.applicationfunction.proposal-linking:
+  id: 3f70b472-6ba0-44b5-ab8e-45cdca8d4f6e
+  path: application.applicationfunction.proposal-linking
+  spec_node_id: application.applicationfunction
+  type: applicationfunction
+  layer_id: application
+  name: Proposal linking
+  description: "Records and reads proposal links (supersedes, reverses) for a
+    proposal, both directions; #1667's reversal planning records its reverses
+    link here."
+  source_reference:
+    provenance: manual
+    locations:
+      - file: local-server/domain/versioning/proposal_service.py
+        symbol: ProposalService.links_of
+  metadata:
+    created_at: 2026-11-24T12:39:53.767Z
+    updated_at: 2026-11-24T12:39:53.767Z
+    version: 1

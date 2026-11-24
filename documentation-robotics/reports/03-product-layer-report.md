@@ -18,9 +18,9 @@ Product features, capabilities, personas, and milestones.
 | ------------------------- | ----- |
 | Elements                  | 68    |
 | Intra-Layer Relationships | 118   |
-| Inter-Layer Relationships | 322   |
-| Inbound Relationships     | 259   |
-| Outbound Relationships    | 63    |
+| Inter-Layer Relationships | 327   |
+| Inbound Relationships     | 261   |
+| Outbound Relationships    | 66    |
 
 **Cross-Layer References**:
 
@@ -137,6 +137,7 @@ flowchart TB
 | `api.operation.exposes.product.feature`                              | `api.operation.add-proposal-operations`                             | `product.feature.proposal-queue-and-detail`                                                  | `product`    | `exposes`    | many-to-many | medium   |
 | `api.operation.exposes.product.feature`                              | `api.operation.add-proposal-operations`                             | `product.feature.proposal-review-page`                                                       | `product`    | `exposes`    | many-to-many | medium   |
 | `api.operation.exposes.product.feature`                              | `api.operation.add-source`                                          | `product.feature.sources-page-and-extract-flow`                                              | `product`    | `exposes`    | many-to-many | medium   |
+| `api.operation.exposes.product.feature`                              | `api.operation.amend-proposal`                                      | `product.feature.proposal-queue-and-detail`                                                  | `product`    | `exposes`    | many-to-many | medium   |
 | `api.operation.exposes.product.feature`                              | `api.operation.apply-proposal`                                      | `product.feature.proposal-queue-and-detail`                                                  | `product`    | `exposes`    | many-to-many | medium   |
 | `api.operation.exposes.product.feature`                              | `api.operation.build-graph`                                         | `product.feature.graph-view`                                                                 | `product`    | `exposes`    | many-to-many | medium   |
 | `api.operation.exposes.product.feature`                              | `api.operation.cancel-batch-runs`                                   | `product.feature.runs-page`                                                                  | `product`    | `exposes`    | many-to-many | medium   |
@@ -281,6 +282,7 @@ flowchart TB
 | `api.operation.exposes.product.feature`                              | `api.operation.update-configuration-section`                        | `product.feature.configuration-settings`                                                     | `product`    | `exposes`    | many-to-many | medium   |
 | `api.operation.exposes.product.feature`                              | `api.operation.update-individual`                                   | `product.feature.schema-and-data-pages`                                                      | `product`    | `exposes`    | many-to-many | medium   |
 | `api.operation.exposes.product.feature`                              | `api.operation.update-property-definition`                          | `product.feature.schema-and-data-pages`                                                      | `product`    | `exposes`    | many-to-many | medium   |
+| `api.operation.exposes.product.feature`                              | `api.operation.withdraw-proposal`                                   | `product.feature.proposal-queue-and-detail`                                                  | `product`    | `exposes`    | many-to-many | medium   |
 | `application.applicationservice.realizes.product.softwarecapability` | `application.applicationservice.admin-service`                      | `product.softwarecapability.workspace-administration`                                        | `product`    | `realizes`   | many-to-many | medium   |
 | `application.applicationservice.realizes.product.feature`            | `application.applicationservice.approval-policy-service`            | `product.feature.approval-policy`                                                            | `product`    | `realizes`   | many-to-many | medium   |
 | `application.applicationservice.realizes.product.feature`            | `application.applicationservice.bundle-export-service`              | `product.feature.export-bundle`                                                              | `product`    | `realizes`   | many-to-many | medium   |
@@ -333,7 +335,10 @@ flowchart TB
 | `product.feature.satisfies.motivation.requirement`                   | `product.feature.mcp-integration-settings`                          | `motivation.requirement.mcp-requires-a-bearer-token-on-loopback`                             | `motivation` | `satisfies`  | many-to-many | medium   |
 | `product.feature.delivers.motivation.value`                          | `product.feature.owl-skos-and-graph-ml-import-and-export`           | `motivation.value.knowledge-reusability`                                                     | `motivation` | `delivers`   | many-to-many | medium   |
 | `product.feature.satisfies.motivation.requirement`                   | `product.feature.pipeline-run-wizard`                               | `motivation.requirement.one-way-to-select-a-pipeline`                                        | `motivation` | `satisfies`  | many-to-many | medium   |
+| `product.feature.satisfies.motivation.requirement`                   | `product.feature.proposal-queue-and-detail`                         | `motivation.requirement.a-proposer-amends-its-open-proposal-in-place`                        | `motivation` | `satisfies`  | many-to-many | medium   |
+| `product.feature.satisfies.motivation.requirement`                   | `product.feature.proposal-queue-and-detail`                         | `motivation.requirement.a-proposer-withdraws-its-open-proposal`                              | `motivation` | `satisfies`  | many-to-many | medium   |
 | `product.feature.satisfies.motivation.requirement`                   | `product.feature.proposal-queue-and-detail`                         | `motivation.requirement.every-applied-proposal-is-revertible`                                | `motivation` | `satisfies`  | many-to-many | medium   |
+| `product.feature.satisfies.motivation.requirement`                   | `product.feature.proposal-queue-and-detail`                         | `motivation.requirement.proposals-link-to-each-other-through-one-link-model`                 | `motivation` | `satisfies`  | many-to-many | medium   |
 | `product.feature.delivers.motivation.value`                          | `product.feature.proposal-review-page`                              | `motivation.value.reviewer-time-goes-to-judgment-calls`                                      | `motivation` | `delivers`   | many-to-many | medium   |
 | `product.feature.satisfies.motivation.requirement`                   | `product.feature.schema-and-data-pages`                             | `motivation.requirement.individuals-belong-to-one-dataset`                                   | `motivation` | `satisfies`  | many-to-many | medium   |
 | `product.feature.satisfies.motivation.requirement`                   | `product.feature.schema-and-data-pages`                             | `motivation.requirement.relationships-limited-to-allowed-types`                              | `motivation` | `satisfies`  | many-to-many | medium   |
@@ -1032,29 +1037,34 @@ Proposal list with the needs-decision banner, mechanical threshold, tiered opera
 
 #### Relationships
 
-| Type        | Related Element                                               | Predicate   | Direction |
-| ----------- | ------------------------------------------------------------- | ----------- | --------- |
-| inter-layer | `api.operation.add-proposal-operations`                       | `exposes`   | inbound   |
-| inter-layer | `api.operation.apply-proposal`                                | `exposes`   | inbound   |
-| inter-layer | `api.operation.clear-proposal-landed`                         | `exposes`   | inbound   |
-| inter-layer | `api.operation.create-proposal`                               | `exposes`   | inbound   |
-| inter-layer | `api.operation.get-proposal-decisions`                        | `exposes`   | inbound   |
-| inter-layer | `api.operation.get-proposal`                                  | `exposes`   | inbound   |
-| inter-layer | `api.operation.list-proposals`                                | `exposes`   | inbound   |
-| inter-layer | `api.operation.mark-proposal-landed`                          | `exposes`   | inbound   |
-| inter-layer | `api.operation.reject-proposal`                               | `exposes`   | inbound   |
-| inter-layer | `api.operation.reopen-operations`                             | `exposes`   | inbound   |
-| inter-layer | `api.operation.revert-proposal`                               | `exposes`   | inbound   |
-| inter-layer | `motivation.requirement.every-applied-proposal-is-revertible` | `satisfies` | outbound  |
-| inter-layer | `ux.view.proposal-detail-view`                                | `realizes`  | inbound   |
-| inter-layer | `ux.view.proposals-view`                                      | `realizes`  | inbound   |
-| intra-layer | `product.softwarecapability.proposal-review-and-apply`        | `realizes`  | outbound  |
-| intra-layer | `product.persona.ontology-curator`                            | `serves`    | outbound  |
-| intra-layer | `product.workflowstep.apply-the-decisions`                    | `uses`      | inbound   |
-| intra-layer | `product.workflowstep.client-lands-the-decisions`             | `uses`      | inbound   |
-| intra-layer | `product.workflowstep.open-the-proposal-from-the-queue`       | `uses`      | inbound   |
-| intra-layer | `product.workflowstep.receive-the-client-plan`                | `uses`      | inbound   |
-| intra-layer | `product.workflowstep.revert-an-applied-proposal`             | `uses`      | inbound   |
+| Type        | Related Element                                                              | Predicate   | Direction |
+| ----------- | ---------------------------------------------------------------------------- | ----------- | --------- |
+| inter-layer | `api.operation.add-proposal-operations`                                      | `exposes`   | inbound   |
+| inter-layer | `api.operation.amend-proposal`                                               | `exposes`   | inbound   |
+| inter-layer | `api.operation.apply-proposal`                                               | `exposes`   | inbound   |
+| inter-layer | `api.operation.clear-proposal-landed`                                        | `exposes`   | inbound   |
+| inter-layer | `api.operation.create-proposal`                                              | `exposes`   | inbound   |
+| inter-layer | `api.operation.get-proposal-decisions`                                       | `exposes`   | inbound   |
+| inter-layer | `api.operation.get-proposal`                                                 | `exposes`   | inbound   |
+| inter-layer | `api.operation.list-proposals`                                               | `exposes`   | inbound   |
+| inter-layer | `api.operation.mark-proposal-landed`                                         | `exposes`   | inbound   |
+| inter-layer | `api.operation.reject-proposal`                                              | `exposes`   | inbound   |
+| inter-layer | `api.operation.reopen-operations`                                            | `exposes`   | inbound   |
+| inter-layer | `api.operation.revert-proposal`                                              | `exposes`   | inbound   |
+| inter-layer | `api.operation.withdraw-proposal`                                            | `exposes`   | inbound   |
+| inter-layer | `motivation.requirement.a-proposer-amends-its-open-proposal-in-place`        | `satisfies` | outbound  |
+| inter-layer | `motivation.requirement.a-proposer-withdraws-its-open-proposal`              | `satisfies` | outbound  |
+| inter-layer | `motivation.requirement.every-applied-proposal-is-revertible`                | `satisfies` | outbound  |
+| inter-layer | `motivation.requirement.proposals-link-to-each-other-through-one-link-model` | `satisfies` | outbound  |
+| inter-layer | `ux.view.proposal-detail-view`                                               | `realizes`  | inbound   |
+| inter-layer | `ux.view.proposals-view`                                                     | `realizes`  | inbound   |
+| intra-layer | `product.softwarecapability.proposal-review-and-apply`                       | `realizes`  | outbound  |
+| intra-layer | `product.persona.ontology-curator`                                           | `serves`    | outbound  |
+| intra-layer | `product.workflowstep.apply-the-decisions`                                   | `uses`      | inbound   |
+| intra-layer | `product.workflowstep.client-lands-the-decisions`                            | `uses`      | inbound   |
+| intra-layer | `product.workflowstep.open-the-proposal-from-the-queue`                      | `uses`      | inbound   |
+| intra-layer | `product.workflowstep.receive-the-client-plan`                               | `uses`      | inbound   |
+| intra-layer | `product.workflowstep.revert-an-applied-proposal`                            | `uses`      | inbound   |
 
 ### Proposal Review Page {#proposal-review-page}
 
@@ -2343,4 +2353,4 @@ Open a proposal, clear the mechanical tier by threshold, judge the rest, apply, 
 
 ---
 
-Generated: 2026-11-24T18:01:11.522Z | Model Version: 0.1.0
+Generated: 2026-11-24T18:43:49.876Z | Model Version: 0.1.0

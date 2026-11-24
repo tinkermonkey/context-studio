@@ -890,3 +890,39 @@ api.requestbody.bundle-document:
     created_at: 2026-11-19T15:45:33.526Z
     updated_at: 2026-11-19T15:45:33.526Z
     version: 1
+api.requestbody.proposal-amend-request:
+  id: fd15fb42-71b1-4fae-a7d1-07f2ff724ef0
+  path: api.requestbody.proposal-amend-request
+  spec_node_id: api.requestbody
+  type: requestbody
+  layer_id: api
+  name: Proposal Amend Request
+  description: "{replace: [{seq, fields, rationale?, probability?, evidence?}],
+    add: [operation drafts as in propose], remove: [seq], rationale?}: at least
+    one of replace, add, remove."
+  source_reference:
+    provenance: manual
+    locations:
+      - file: local-server/adapters/web/schemas/proposals.py
+        symbol: ChangeProposalAmendRequest
+  metadata:
+    created_at: 2026-11-24T12:39:53.769Z
+    updated_at: 2026-11-24T12:39:53.769Z
+    version: 1
+api.requestbody.proposal-withdraw-request:
+  id: 2dc0c1e8-dca1-4e39-b81e-dfc4cca04877
+  path: api.requestbody.proposal-withdraw-request
+  spec_node_id: api.requestbody
+  type: requestbody
+  layer_id: api
+  name: Proposal Withdraw Request
+  description: "{superseded_by?: proposal id, note?}."
+  source_reference:
+    provenance: manual
+    locations:
+      - file: local-server/adapters/web/schemas/proposals.py
+        symbol: ChangeProposalWithdrawRequest
+  metadata:
+    created_at: 2026-11-24T12:39:53.770Z
+    updated_at: 2026-11-24T12:39:53.770Z
+    version: 1
