@@ -94,7 +94,7 @@ def plan_reversal(
     drafts: list[ProposedOperation] = []
     skipped = 0
     unplanned: list[str] = []
-    for event in events:
+    for position, event in enumerate(events):
         kind = _KINDS.get(_entity_type(event))
         label = f"{_entity_type(event)} {event.entity_id}"
         if kind is None:
@@ -113,7 +113,13 @@ def plan_reversal(
             elif not snapshot:
                 unplanned.append(f"{label}: its delete recorded no snapshot to restore")
             else:
-                drafts.append(_restore(kind, event.entity_id, snapshot))
+                drafts.append(
+                    _restore(
+                        kind,
+                        event.entity_id,
+                        _before_updates(event.entity_id, snapshot, events[position + 1 :]),
+                    )
+                )
         else:
             if now is None or event.entity_id in made:
                 # Gone, or made by the run: undoing the create deletes it whole.
@@ -135,6 +141,23 @@ def _entity_type(event: ChangeEvent) -> str:
     entity_type = entity_type.replace("conceptscheme", "concept_scheme")
     entity_type = entity_type.replace("propertydefinition", "property_definition")
     return entity_type.replace("attributedefinition", "attribute_definition")
+
+
+def _before_updates(
+    entity_id: str, snapshot: dict[str, Any], older: list[ChangeEvent]
+) -> dict[str, Any]:
+    """
+    A deleted entity's snapshot as it was before the run changed it: the run's
+    updates of it that came before the delete (`older`, newest first) are set
+    back, the oldest last. Without this a delete that cascades from another
+    (a relationship removed with its individual) restores the entity with the
+    values the run had given it.
+    """
+    restored = dict(snapshot)
+    for event in older:
+        if event.operation == ChangeOperation.UPDATE and event.entity_id == entity_id:
+            restored.update(event.previous_state or {})
+    return restored
 
 
 def _delete(kind: OperationKind, entity_id: str, now: dict[str, Any]) -> ProposedOperation:

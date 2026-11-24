@@ -160,6 +160,59 @@ def test_attribute_values_an_update_added_are_removed_and_changed_ones_set_back(
     assert operation.base == {DATA_FIELD: {"size": 3, "colour": "red"}}
 
 
+def test_a_cascaded_delete_restores_the_values_the_run_found_not_the_ones_it_set():
+    """
+    The run updated relationship r1's attributes, then deleted individual i1,
+    which cascaded to r1 with a snapshot holding the new attributes.
+    """
+    events = [
+        _event("i1", "individual", ChangeOperation.DELETE, previous_state={"id": "i1"}),
+        _event(
+            "r1",
+            "relationship",
+            ChangeOperation.DELETE,
+            previous_state={"id": "r1", "attributes": {"since": "2026"}, "source_id": "i1"},
+        ),
+        _event(
+            "r1",
+            "relationship",
+            ChangeOperation.UPDATE,
+            {"attributes": {"since": "2026"}},
+            {"attributes": {"since": "2020"}},
+        ),
+    ]
+
+    plan = _plan(events, {})
+
+    restore_i, restore_r = plan.operations
+    assert (restore_i.target_id, restore_r.target_id) == ("i1", "r1")
+    assert restore_r.fields == {"id": "r1", "attributes": {"since": "2020"}, "source_id": "i1"}
+    assert plan.skipped == 1  # the update: there is nothing left to set back
+
+
+def test_several_updates_before_a_delete_set_the_oldest_values_back():
+    events = [
+        _event("c1", "class", ChangeOperation.DELETE, previous_state={"id": "c1", "title": "C"}),
+        _event("c1", "class", ChangeOperation.UPDATE, {"title": "C"}, {"title": "B"}),
+        _event("c1", "class", ChangeOperation.UPDATE, {"title": "B"}, {"title": "A"}),
+    ]
+
+    [restore] = _plan(events, {}).operations
+
+    assert restore.fields["title"] == "A"
+
+
+def test_updates_of_other_entities_do_not_leak_into_a_restore():
+    events = [
+        _event("c1", "class", ChangeOperation.DELETE, previous_state={"id": "c1", "title": "C"}),
+        _event("c2", "class", ChangeOperation.UPDATE, {"title": "Y"}, {"title": "X"}),
+    ]
+
+    [restore] = _plan(events, {("class", "c2"): {"id": "c2", "title": "Y"}}).operations[:1]
+
+    assert restore.fields == {"id": "c1", "title": "C"}
+
+
 def test_what_is_already_undone_or_gone_is_skipped_not_planned():
     events = [
         _event("gone", "class", ChangeOperation.CREATE, {}),
