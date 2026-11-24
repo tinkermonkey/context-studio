@@ -84,9 +84,11 @@
     name: A proposer withdraws its open proposal
     description: "#1624: a proposer withdraws an open proposal it no longer stands
       behind, optionally naming the proposal that supersedes it (a supersedes
-      link). Its undecided operations become withdrawn (not a reviewer's
-      decision, so not gold); applied ones stand. A proposal with nothing
-      applied becomes withdrawn; one with applied operations becomes done.
+      link). Withdrawing undoes it whole (owner, 2026-11-24): what it applied is
+      rolled back as a revert does, its undecided operations become withdrawn
+      (not a reviewer's decision, so not gold), and the proposal ends withdrawn,
+      never half-applied. If the rollback conflicts with later changes, the
+      withdraw is refused (409) naming what blocks it, as revert is.
       propose_changes can name the proposals a new one supersedes, which
       withdraws them in the same call."
     attributes:
@@ -96,7 +98,7 @@
       created_at: 2026-11-24T12:39:53.756Z
       updated_at: 2026-11-24T12:39:53.756Z
       version: 1
-  timestamp: 2026-11-24T12:39:53.784Z
+  timestamp: 2026-11-24T14:06:12.731Z
   sequenceNumber: 3
 - type: add
   elementId: data-store.collection.proposal-links
@@ -325,14 +327,16 @@
     type: applicationfunction
     layer_id: application
     name: Proposal withdrawal
-    description: "ProposalService.withdraw: withdraws an open proposal (its
-      undecided operations become withdrawn) and records a supersedes link from
-      the proposal named as its replacement, if any."
+    description: "ProposalService.withdraw: on an open proposal, rolls back what it
+      applied (the revert path: RevertService, decisions superseded), marks its
+      undecided operations withdrawn, sets the proposal withdrawn, and records a
+      supersedes link from the proposal named as its replacement, if any.
+      Refused when the rollback conflicts, with the blockers."
     metadata:
       created_at: 2026-11-24T12:39:53.767Z
       updated_at: 2026-11-24T12:39:53.767Z
       version: 1
-  timestamp: 2026-11-24T12:39:53.784Z
+  timestamp: 2026-11-24T14:06:12.831Z
   sequenceNumber: 14
 - type: add
   elementId: application.applicationfunction.proposal-linking
@@ -388,8 +392,10 @@
     type: operation
     layer_id: api
     name: Withdraw Proposal
-    description: Withdraw an open proposal, optionally naming the proposal that
-      supersedes it. 409 when it is not open.
+    description: "Withdraw an open proposal: roll back what it applied, mark the
+      rest withdrawn, optionally naming the proposal that supersedes it. 409
+      when it is not open, or when the rollback conflicts with later changes
+      (the blockers, as revert gives them)."
     attributes:
       operationId: withdraw_proposal_api_proposals__proposal_id__withdraw_post
       summary: Withdraw Proposal
@@ -400,7 +406,7 @@
       created_at: 2026-11-24T12:39:53.769Z
       updated_at: 2026-11-24T12:39:53.769Z
       version: 1
-  timestamp: 2026-11-24T12:39:53.784Z
+  timestamp: 2026-11-24T14:06:12.897Z
   sequenceNumber: 17
 - type: add
   elementId: api.requestbody.proposal-amend-request
@@ -923,16 +929,17 @@
     layer_id: testing
     name: Proposal amend withdraw and links
     description: Amend (replace, add, remove; dry run; decided operations refused;
-      amendments kept), withdraw (with and without superseded_by; partly applied
-      becomes done), propose with supersedes, link reads both ways, MCP tools
-      amend_proposal and withdraw_proposal and their REST parity.
+      amendments kept), withdraw (nothing applied; partly applied rolls back and
+      ends withdrawn; a conflicting rollback is refused with blockers; with and
+      without superseded_by), propose with supersedes, link reads both ways, MCP
+      tools amend_proposal and withdraw_proposal and their REST parity.
     attributes:
       targetType: api-endpoint
     metadata:
       created_at: 2026-11-24T12:40:02.838Z
       updated_at: 2026-11-24T12:40:02.838Z
       version: 1
-  timestamp: 2026-11-24T12:40:02.851Z
+  timestamp: 2026-11-24T14:06:13.257Z
   sequenceNumber: 59
 - type: relationship-add
   elementId: testing.testcoveragetarget.proposal-amend-withdraw-and-links::covers::api.operation.amend-proposal
@@ -1114,12 +1121,13 @@
     layer_id: api
     name: Withdraw Proposal Responses
     description: 200 the withdrawn proposal; 404 unknown proposal or superseded_by;
-      409 not open.
+      409 not open, or the rollback conflicts
+      (ChangeProposalRevertConflictResponse blockers).
     metadata:
       created_at: 2026-11-24T12:40:18.625Z
       updated_at: 2026-11-24T12:40:18.625Z
       version: 1
-  timestamp: 2026-11-24T12:40:18.668Z
+  timestamp: 2026-11-24T14:06:12.961Z
   sequenceNumber: 67
 - type: relationship-add
   elementId: api.operation.amend-proposal::composes::api.responses.amend-proposal-responses
@@ -1271,3 +1279,46 @@
     category: structural
   timestamp: 2026-11-24T12:40:18.668Z
   sequenceNumber: 80
+- type: update
+  elementId: data-model.objectschema.proposal-entity
+  layerName: data-model
+  before:
+    id: 2ff8aa70-673e-4390-97c0-5ebca5cea559
+    path: data-model.objectschema.proposal-entity
+    spec_node_id: data-model.objectschema
+    type: objectschema
+    layer_id: data-model
+    name: Proposal Entity
+    description: "ChangeProposal: a set of proposed ontology changes on one
+      taxonomy, decided per operation. Status open, done, reverted, or withdrawn
+      (the proposer withdrew it with nothing applied). Its links to other
+      proposals (supersedes / superseded_by, reverses / reversed_by) come from
+      proposal_links."
+    attributes: &a10
+      type: object
+    source_reference: &a11
+      provenance: extracted
+      locations:
+        - file: local-server/domain/versioning/proposals.py
+          symbol: ChangeProposal
+    metadata: &a12
+      created_at: 2026-05-09T10:25:00.196Z
+      updated_at: 2026-05-09T10:25:00.196Z
+      version: 1
+  after:
+    id: 2ff8aa70-673e-4390-97c0-5ebca5cea559
+    path: data-model.objectschema.proposal-entity
+    spec_node_id: data-model.objectschema
+    type: objectschema
+    layer_id: data-model
+    name: Proposal Entity
+    description: "ChangeProposal: a set of proposed ontology changes on one
+      taxonomy, decided per operation. Status open, done, reverted, or withdrawn
+      (its proposer withdrew it; anything it had applied is rolled back). Its
+      links to other proposals (supersedes / superseded_by, reverses /
+      reversed_by) come from proposal_links."
+    attributes: *a10
+    source_reference: *a11
+    metadata: *a12
+  timestamp: 2026-11-24T14:06:13.155Z
+  sequenceNumber: 85
