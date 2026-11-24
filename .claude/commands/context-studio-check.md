@@ -29,12 +29,18 @@ In **strict** mode (`npm run validate-selectors -- --strict`), it also hard-fail
 ## 3. OpenAPI / type freshness
 
 ```bash
-cd local-server && python scripts/update_api_specs.py --check 2>/dev/null || python scripts/update_api_specs.py
-cd ux && npm run generate-types
-git diff --quiet -- ux/src/api/types/index.ts ux/documentation/openapi.json local-server/documentation/openapi.json && echo "✓ types in sync" || echo "✗ types drifted — commit regenerated files"
+cd local-server && source .venv/bin/activate && python scripts/update_api_specs.py --check
 ```
 
-If the generated files have changes after regeneration, the OpenAPI spec is stale.
+`--check` generates the spec, compares it with `local-server/documentation/openapi.json` and `ux/documentation/openapi.json`, writes nothing, and exits 1 naming each stale file. Do not hide stderr (an import error from the app shows there) and do not regenerate as a fallback: a stale spec is a failure to report. Fix it with `python scripts/update_api_specs.py`, then commit the files.
+
+The generated types are checked against the committed spec by regenerating into a temporary copy:
+
+```bash
+cd ux && cp src/api/types/index.ts "${TMPDIR:-/tmp}/index.ts.committed" && npm run generate-types && cmp src/api/types/index.ts "${TMPDIR:-/tmp}/index.ts.committed" && echo "✓ types in sync" || echo "✗ types stale: commit the regenerated ux/src/api/types/index.ts"
+```
+
+(`generate-types` rewrites `ux/src/api/types/index.ts`; when it differs from the copy, the committed file was stale.)
 
 ## 4. TypeScript
 

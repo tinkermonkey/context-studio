@@ -15,13 +15,29 @@ DATE=$(date +%Y-%m-%d)
 OUTPUT_DIR="$REPO_ROOT/screenshots/audit/$DATE"
 mkdir -p "$OUTPUT_DIR"
 
-APP_PORT=3100
-BACKEND_PORT=8000
 DESIGN_PORT=3200
+
+# In a git worktree the app under test is the QA instance from `./dev.sh --worktree`
+# (ports in .qa-instance/state); never start servers on the default ports there.
+# In the main checkout the defaults apply and missing servers are started.
+if [[ "$(git -C "$REPO_ROOT" rev-parse --git-dir)" != "$(git -C "$REPO_ROOT" rev-parse --git-common-dir)" ]]; then
+  QA_STATE="$REPO_ROOT/.qa-instance/state"
+  if [[ ! -f "$QA_STATE" ]]; then
+    echo "No QA instance in this worktree. Start one with: ./dev.sh --worktree --from-workspace" >&2
+    exit 1
+  fi
+  APP_PORT="$(sed -n 's/^FRONTEND_PORT=//p' "$QA_STATE" | tail -1)"
+  BACKEND_PORT="$(sed -n 's/^BACKEND_PORT=//p' "$QA_STATE" | tail -1)"
+  IN_WORKTREE=1
+else
+  APP_PORT=3100
+  BACKEND_PORT=8000
+  IN_WORKTREE=0
+fi
 
 # ── Ensure servers are running ─────────────────────────────────────────────────
 
-if ! lsof -ti ":$BACKEND_PORT" > /dev/null 2>&1; then
+if [[ "$IN_WORKTREE" == 0 ]] && ! lsof -ti ":$BACKEND_PORT" > /dev/null 2>&1; then
   echo "Starting backend on :$BACKEND_PORT..."
   cd "$REPO_ROOT/local-server"
   source .venv/bin/activate
@@ -30,7 +46,7 @@ if ! lsof -ti ":$BACKEND_PORT" > /dev/null 2>&1; then
   cd "$REPO_ROOT/ux"
 fi
 
-if ! lsof -ti ":$APP_PORT" > /dev/null 2>&1; then
+if [[ "$IN_WORKTREE" == 0 ]] && ! lsof -ti ":$APP_PORT" > /dev/null 2>&1; then
   echo "Starting Vite dev server on :$APP_PORT..."
   cd "$REPO_ROOT/ux"
   npm run dev > /tmp/vite-dev.log 2>&1 &
