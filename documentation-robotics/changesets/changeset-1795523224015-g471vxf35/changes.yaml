@@ -40,7 +40,12 @@
       created_at: 2026-11-24T12:27:23.131Z
       updated_at: 2026-11-24T12:27:23.131Z
       version: 1
-  timestamp: 2026-11-24T12:27:23.164Z
+    source_reference:
+      provenance: manual
+      locations:
+        - file: local-server/scripts/check_domain_imports.py
+          symbol: check_domain_imports
+  timestamp: 2026-11-24T12:33:54.905Z
   sequenceNumber: 1
 - type: add
   elementId: data-model.objectschema.operation-draft
@@ -62,7 +67,12 @@
       created_at: 2026-11-24T12:27:23.133Z
       updated_at: 2026-11-24T12:27:23.133Z
       version: 1
-  timestamp: 2026-11-24T12:27:23.164Z
+    source_reference:
+      provenance: manual
+      locations:
+        - file: local-server/domain/versioning/proposals.py
+          symbol: OperationDraft
+  timestamp: 2026-11-24T12:33:54.905Z
   sequenceNumber: 2
 - type: relationship-add
   elementId: application.applicationfunction.domain-import-check::satisfies::motivation.requirement.contexts-depend-on-each-other-only-through-public-contracts

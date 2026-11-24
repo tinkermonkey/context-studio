@@ -11,7 +11,7 @@ description: "#1633: record and enforce the cross-context rule. A context may
   architecture_design.md §4) state the rule and graph, and the check fails on a
   violation."
 created: 2026-11-24T12:27:04.048Z
-modified: 2026-11-24T12:27:47.435Z
+modified: 2026-11-24T12:33:54.907Z
 status: staged
 baseSnapshot: v2:sha256:53252d39ed1357a9afdd6132507b497bf81313353af91142ccb6b590b147594c
 origin:
@@ -21,4 +21,52 @@ stats:
   additions: 9
   modifications: 2
   deletions: 0
-lastSequence: 10
+lastSequence: 12
+unstaged:
+  - sequence: 2
+    removedAt: 11
+    change:
+      type: add
+      elementId: data-model.objectschema.operation-draft
+      layerName: data-model
+      after:
+        id: 8674784b-2f54-4820-81ee-5b233117eb4e
+        path: data-model.objectschema.operation-draft
+        spec_node_id: data-model.objectschema
+        type: objectschema
+        layer_id: data-model
+        name: Operation Draft
+        description: One operation a pipeline or client drafts for a change proposal,
+          before ProposalService validates and stores it. A value object of the
+          versioning context (domain/versioning/proposals.py), so other contexts
+          import it without the service module.
+        attributes:
+          type: object
+        metadata:
+          created_at: 2026-11-24T12:27:23.133Z
+          updated_at: 2026-11-24T12:27:23.133Z
+          version: 1
+      timestamp: 2026-11-24T12:27:23.164Z
+    rewritten: true
+  - sequence: 1
+    removedAt: 12
+    change:
+      type: add
+      elementId: application.applicationfunction.domain-import-check
+      layerName: application
+      after:
+        id: 606dd263-18a3-481f-bafe-263edcad6526
+        path: application.applicationfunction.domain-import-check
+        spec_node_id: application.applicationfunction
+        type: applicationfunction
+        layer_id: application
+        name: Domain import check
+        description: "scripts/check_domain_imports.py: fails when domain/ imports
+          infrastructure, imports another context's private names or modules, or
+          constructs another context's application service."
+        metadata:
+          created_at: 2026-11-24T12:27:23.131Z
+          updated_at: 2026-11-24T12:27:23.131Z
+          version: 1
+      timestamp: 2026-11-24T12:27:23.164Z
+    rewritten: true
