@@ -1,0 +1,285 @@
+- type: add
+  elementId: security.countermeasure.connect-time-address-check-for-url-sources
+  layerName: security
+  after:
+    id: 866b6c0c-43b0-4602-934f-159e085638be
+    path: security.countermeasure.connect-time-address-check-for-url-sources
+    spec_node_id: security.countermeasure
+    type: countermeasure
+    layer_id: security
+    name: Connect-Time Address Check for URL Sources
+    description: The page fetcher connects through a guarded httpcore network
+      backend that resolves the host once, refuses the connection when any
+      address is not public (loopback, private, link-local, unspecified,
+      multicast, or one embedded in an IPv4-mapped, NAT64 or 6to4 address) and
+      connects to the vetted IP, keeping SNI. Each redirect hop is a new vetted
+      connection, proxy environment variables are ignored, and only the
+      reference proxy's loopback origin is allowed. sources.allow_private_urls
+      (off by default) lifts the check.
+    attributes:
+      type: technical
+      effectiveness: high
+      implemented: true
+      description: URL sources cannot reach non-public addresses
+    source_reference:
+      provenance: manual
+      locations:
+        - file: local-server/adapters/sources/network_guard.py
+    metadata:
+      created_at: 2026-11-24T12:30:12.210Z
+      updated_at: 2026-11-24T12:30:12.210Z
+      version: 1
+  timestamp: 2026-11-24T12:30:12.224Z
+  sequenceNumber: 0
+- type: relationship-add
+  elementId: security.countermeasure.connect-time-address-check-for-url-sources::mitigates::security.threat.server-side-request-forgery-via-url-sources
+  layerName: security
+  after:
+    source: security.countermeasure.connect-time-address-check-for-url-sources
+    target: security.threat.server-side-request-forgery-via-url-sources
+    predicate: mitigates
+    layer: security
+    category: structural
+  timestamp: 2026-11-24T12:30:12.224Z
+  sequenceNumber: 1
+- type: relationship-add
+  elementId: security.countermeasure.connect-time-address-check-for-url-sources::protects::security.secureresource.local-rest-api
+  layerName: security
+  after:
+    source: security.countermeasure.connect-time-address-check-for-url-sources
+    target: security.secureresource.local-rest-api
+    predicate: protects
+    layer: security
+    category: structural
+  timestamp: 2026-11-24T12:30:12.224Z
+  sequenceNumber: 2
+- type: relationship-add
+  elementId: security.countermeasure.connect-time-address-check-for-url-sources::protects::security.secureresource.mcp-endpoint
+  layerName: security
+  after:
+    source: security.countermeasure.connect-time-address-check-for-url-sources
+    target: security.secureresource.mcp-endpoint
+    predicate: protects
+    layer: security
+    category: structural
+  timestamp: 2026-11-24T12:30:12.224Z
+  sequenceNumber: 3
+- type: relationship-add
+  elementId: security.countermeasure.connect-time-address-check-for-url-sources::satisfies::motivation.requirement.url-sources-refuse-private-network-addresses
+  layerName: security
+  after:
+    source: security.countermeasure.connect-time-address-check-for-url-sources
+    target: motivation.requirement.url-sources-refuse-private-network-addresses
+    predicate: satisfies
+    layer: security
+    targetLayer: motivation
+    category: structural
+  timestamp: 2026-11-24T12:30:12.224Z
+  sequenceNumber: 4
+- type: relationship-add
+  elementId: application.applicationcomponent.http-page-fetcher::realizes::security.countermeasure.connect-time-address-check-for-url-sources
+  layerName: application
+  after:
+    source: application.applicationcomponent.http-page-fetcher
+    target: security.countermeasure.connect-time-address-check-for-url-sources
+    predicate: realizes
+    layer: application
+    targetLayer: security
+    category: structural
+  timestamp: 2026-11-24T12:30:12.224Z
+  sequenceNumber: 5
+- type: update
+  elementId: security.threat.server-side-request-forgery-via-url-sources
+  layerName: security
+  before:
+    id: 8e630d6a-17a8-44a7-acc4-f35291bccb71
+    path: security.threat.server-side-request-forgery-via-url-sources
+    spec_node_id: security.threat
+    type: threat
+    layer_id: security
+    name: Server-Side Request Forgery via URL Sources
+    description: "Adding a URL source fetches any http(s) URL and follows redirects
+      with no private-address check, so the server can be made to reach internal
+      services. Not accepted: to fix under #1656."
+    attributes: &a1
+      threatens: api
+      likelihood: low
+      impact: moderate
+      criticality: medium
+      description: URL sources can reach private addresses (#1656)
+    source_reference: &a2
+      provenance: manual
+      locations:
+        - file: local-server/adapters/sources/fetcher.py
+    accepted_gaps: &a3
+      - direction: incoming
+        predicate: mitigates
+        other_spec_node_id: security.countermeasure
+        reason: "Unmitigated today (check_url checks the scheme only); the fix is
+          tracked as requirement url-sources-refuse-private-network-addresses
+          and GitHub issue #1656."
+        decided_by: agent
+        decided_at: 2026-11-19T16:36:30.945Z
+        changeset: changeset-1795099306929-dmd727eav
+      - direction: outgoing
+        predicate: influence
+        other_spec_node_id: security.dataclassification
+        reason: SSRF reaches services on the private network, not a workspace data
+          classification; its impact is on whatever internal service answers.
+        decided_by: agent
+        decided_at: 2026-11-19T16:36:34.016Z
+        changeset: changeset-1795099306929-dmd727eav
+    metadata: &a4
+      created_at: 2026-11-19T16:18:36.733Z
+      updated_at: 2026-11-19T16:18:36.733Z
+      version: 1
+  after:
+    id: 8e630d6a-17a8-44a7-acc4-f35291bccb71
+    path: security.threat.server-side-request-forgery-via-url-sources
+    spec_node_id: security.threat
+    type: threat
+    layer_id: security
+    name: Server-Side Request Forgery via URL Sources
+    description: Mitigated (#1656). Adding a URL source used to fetch any http(s)
+      URL and follow redirects with no address check, so the server could be
+      made to reach loopback, private and link-local services. The fetcher now
+      vets the resolved address at connect time and on every redirect hop;
+      sources.allow_private_urls is the explicit opt-out.
+    attributes: *a1
+    source_reference: *a2
+    accepted_gaps: *a3
+    metadata: *a4
+  timestamp: 2026-11-24T12:30:12.463Z
+  sequenceNumber: 6
+- type: update
+  elementId: motivation.requirement.url-sources-refuse-private-network-addresses
+  layerName: motivation
+  before:
+    id: 76e3ac0a-91b3-442d-ac94-b97c93064e3a
+    path: motivation.requirement.url-sources-refuse-private-network-addresses
+    spec_node_id: motivation.requirement
+    type: requirement
+    layer_id: motivation
+    name: URL Sources Refuse Private Network Addresses
+    description: "Adding a URL source must refuse private, loopback and link-local
+      addresses, including after redirects, so the server cannot be used to
+      reach internal services (SSRF). Open: GitHub issue #1656."
+    attributes: &a5
+      requirementType: non-functional
+      priority: high
+      documentation: "To fix: tinkermonkey/context-studio#1656 (SSRF via URL sources)."
+    source_reference: &a6
+      provenance: manual
+      locations:
+        - file: local-server/domain/extraction/sources.py
+    metadata: &a7
+      created_at: 2026-11-19T16:14:23.186Z
+      updated_at: 2026-11-19T16:14:23.186Z
+      version: 1
+  after:
+    id: 76e3ac0a-91b3-442d-ac94-b97c93064e3a
+    path: motivation.requirement.url-sources-refuse-private-network-addresses
+    spec_node_id: motivation.requirement
+    type: requirement
+    layer_id: motivation
+    name: URL Sources Refuse Private Network Addresses
+    description: Adding a URL source must refuse private, loopback and link-local
+      addresses, including after redirects, so the server cannot be used to
+      reach internal services (SSRF). Met by the connect-time address check
+      (#1656); sources.allow_private_urls is the explicit exception.
+    attributes: *a5
+    source_reference: *a6
+    metadata: *a7
+  timestamp: 2026-11-24T12:30:12.683Z
+  sequenceNumber: 7
+- type: update
+  elementId: application.applicationcomponent.http-page-fetcher
+  layerName: application
+  before:
+    id: 9558e9a7-6580-4d98-821c-dd41756c61db
+    path: application.applicationcomponent.http-page-fetcher
+    spec_node_id: application.applicationcomponent
+    type: applicationcomponent
+    layer_id: application
+    name: HTTP Page Fetcher
+    description: "PageFetcher port: fetches one web page for a URL source, following
+      redirects, with a size limit."
+    attributes: &a8
+      type: service-component
+    source_reference: &a9
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/sources/fetcher.py
+          symbol: HttpPageFetcher
+    metadata: &a10
+      created_at: 2026-11-19T14:51:53.022Z
+      updated_at: 2026-11-19T14:51:53.022Z
+      version: 1
+  after:
+    id: 9558e9a7-6580-4d98-821c-dd41756c61db
+    path: application.applicationcomponent.http-page-fetcher
+    spec_node_id: application.applicationcomponent
+    type: applicationcomponent
+    layer_id: application
+    name: HTTP Page Fetcher
+    description: "PageFetcher port: fetches one web page for a URL source, following
+      redirects hop by hop, with a size limit. Every hop connects only to a
+      public address (the reference proxy's loopback origin excepted), ignores
+      proxy environment variables, and reports failures without the target's
+      details."
+    attributes: *a8
+    source_reference: *a9
+    metadata: *a10
+  timestamp: 2026-11-24T12:30:12.899Z
+  sequenceNumber: 8
+- type: add
+  elementId: testing.testcasesketch.url-sources-refuse-private-addresses
+  layerName: testing
+  after:
+    id: 59dd08ad-ad1a-4055-9fb9-eb1f830d2030
+    path: testing.testcasesketch.url-sources-refuse-private-addresses
+    spec_node_id: testing.testcasesketch
+    type: testcasesketch
+    layer_id: testing
+    name: URL sources refuse private addresses
+    description: A direct private URL, a hostname resolving to 127.0.0.1, a redirect
+      to a private address and a rebinding name are all refused without a
+      connection; the reference proxy's origin and allow_private_urls are the
+      only exceptions.
+    attributes:
+      status: automated
+      implementationFormat: automated
+    source_reference:
+      provenance: manual
+      locations:
+        - file: local-server/tests/integration/sources/test_fetcher_private_addresses.py
+    metadata:
+      created_at: 2026-11-24T12:30:16.543Z
+      updated_at: 2026-11-24T12:30:16.543Z
+      version: 1
+  timestamp: 2026-11-24T12:30:16.551Z
+  sequenceNumber: 9
+- type: relationship-add
+  elementId: testing.testcasesketch.url-sources-refuse-private-addresses::tests::security.countermeasure.connect-time-address-check-for-url-sources
+  layerName: testing
+  after:
+    source: testing.testcasesketch.url-sources-refuse-private-addresses
+    target: security.countermeasure.connect-time-address-check-for-url-sources
+    predicate: tests
+    layer: testing
+    targetLayer: security
+    category: structural
+  timestamp: 2026-11-24T12:30:16.551Z
+  sequenceNumber: 10
+- type: relationship-add
+  elementId: testing.testcasesketch.url-sources-refuse-private-addresses::satisfies::motivation.requirement.url-sources-refuse-private-network-addresses
+  layerName: testing
+  after:
+    source: testing.testcasesketch.url-sources-refuse-private-addresses
+    target: motivation.requirement.url-sources-refuse-private-network-addresses
+    predicate: satisfies
+    layer: testing
+    targetLayer: motivation
+    category: structural
+  timestamp: 2026-11-24T12:30:16.551Z
+  sequenceNumber: 11

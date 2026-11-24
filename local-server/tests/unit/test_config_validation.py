@@ -329,6 +329,11 @@ class TestSourcesConfig:
     def test_allowed_roots_default_to_none(self) -> None:
         assert SourcesConfig().allowed_roots == []
 
+    def test_private_urls_are_refused_unless_the_config_allows_them(self) -> None:
+        assert SourcesConfig().allow_private_urls is False
+        assert Settings().sources.allow_private_urls is False
+        assert Settings(sources={"allow_private_urls": True}).sources.allow_private_urls is True
+
     def test_absolute_roots_are_kept_and_home_expands(self) -> None:
         config = SourcesConfig(allowed_roots=["/data/docs", "~/notes"])
         assert config.allowed_roots == ["/data/docs", str(Path("~/notes").expanduser())]

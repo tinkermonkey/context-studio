@@ -1165,6 +1165,7 @@ resource <span class="s">contextstudio://taxonomies/{id}/vision</span>
     <div class="eyebrow">Good to know</div>
     <ul>
       <li>Agents can add local files only from folders listed in <code class="inline">config.json › sources.allowed_roots</code>, which is empty by default.</li>
+      <li>URL sources fetch public web addresses only: a URL, or a redirect, that leads to this machine, a private network or a link-local address is refused, unless <code class="inline">config.json › sources.allow_private_urls</code> is on (it is off by default).</li>
       <li>Schema suggestions are off for mirrored taxonomies such as <code class="inline">dr_spec</code>; only that client proposes schema changes there.</li>
       <li>Removing a source hides it but keeps the citations on facts already accepted.</li>
       <li>Next up: fewer duplicate and junk candidates on real documents (<a href="https://github.com/tinkermonkey/context-studio/issues/1570" target="_blank" rel="noopener">#1570</a>, <a href="https://github.com/tinkermonkey/context-studio/issues/1571" target="_blank" rel="noopener">#1571</a>, <a href="https://github.com/tinkermonkey/context-studio/issues/1575" target="_blank" rel="noopener">#1575</a>) and relationships across chunks (<a href="https://github.com/tinkermonkey/context-studio/issues/1572" target="_blank" rel="noopener">#1572</a>).</li>

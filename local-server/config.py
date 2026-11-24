@@ -332,6 +332,14 @@ class SourcesConfig(BaseModel):
         default_factory=list,
         description="Folders a client may add a source from by path (over MCP); nothing else",
     )
+    allow_private_urls: bool = Field(
+        default=False,
+        description=(
+            "Let a URL source fetch loopback, private-network and link-local addresses "
+            "(a file server on this machine, an intranet page). Off, the server refuses them, "
+            "so a URL from an agent or a document can't reach services behind the firewall"
+        ),
+    )
 
     @field_validator("allowed_roots")
     @classmethod
