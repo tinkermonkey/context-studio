@@ -120,7 +120,7 @@ class ChangeEventRecorder:
             Any exception from the change repository is propagated to allow
             the event publisher to include it in the failures list.
         """
-        batch_run_id = get_current_batch_run_id()
+        batch_run_id = event.batch_run_id or get_current_batch_run_id()
         change_id = self.change_repo.record_change(
             entity_id=event.result_id,
             entity_type="extraction_result",

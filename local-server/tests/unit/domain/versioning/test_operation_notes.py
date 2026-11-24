@@ -4,7 +4,8 @@ import pytest
 
 from domain.ontology.services import OntologyService
 from domain.versioning.exceptions import ProposalValidationError
-from domain.versioning.proposal_service import OperationDraft, ProposalService
+from domain.versioning.proposal_service import ProposalService
+from domain.versioning.proposals import OperationDraft
 from domain.versioning.proposals import (
     ChangeScope,
     OperationKind,

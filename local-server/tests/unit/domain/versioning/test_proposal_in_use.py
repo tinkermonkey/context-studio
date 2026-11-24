@@ -23,7 +23,8 @@ from domain.versioning.change_records import (
     schema_change_records,
 )
 from domain.versioning.in_use import InUseInspector
-from domain.versioning.proposal_service import OperationDraft, ProposalService
+from domain.versioning.proposal_service import ProposalService
+from domain.versioning.proposals import OperationDraft
 from domain.versioning.proposals import (
     InUseResolution,
     OperationKind,

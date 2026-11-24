@@ -18,7 +18,7 @@ from adapters.persistence.sqlite.models import Base
 from domain.interchange.services import (
     ImportRunService,
     get_current_batch_run_id,
-    set_import_run_context,
+    set_batch_run_context,
 )
 from domain.interchange.value_objects import (
     SerializationFormat,
@@ -124,7 +124,7 @@ def test_change_events_inside_import_have_batch_run_id(change_repo, session_fact
     create_batch_run_row(session_factory, import_run.id)
 
     # Set the correlation context
-    set_import_run_context(import_run.id)
+    set_batch_run_context(import_run.id)
 
     try:
         # Verify context is set
@@ -148,18 +148,18 @@ def test_change_events_inside_import_have_batch_run_id(change_repo, session_fact
         assert len(events_with_import_run) > 0
     finally:
         # Clear the context
-        set_import_run_context(None)
+        set_batch_run_context(None)
 
 
 def test_context_cleared_after_import(session_factory):
     """Context is cleared after import operation ends."""
     # Set context
     test_id = str(uuid4())
-    set_import_run_context(test_id)
+    set_batch_run_context(test_id)
     assert get_current_batch_run_id() == test_id
 
     # Clear context
-    set_import_run_context(None)
+    set_batch_run_context(None)
     assert get_current_batch_run_id() is None
 
 
@@ -177,7 +177,7 @@ def test_multiple_events_in_same_import_linked_to_same_run(change_repo, session_
     # start_run does not persist; change events need the run's batch_runs row
     create_batch_run_row(session_factory, import_run.id)
 
-    set_import_run_context(import_run.id)
+    set_batch_run_context(import_run.id)
 
     try:
         # Record multiple change events within the import context
@@ -218,7 +218,7 @@ def test_multiple_events_in_same_import_linked_to_same_run(change_repo, session_
             if event.batch_run_id is not None:
                 assert event.batch_run_id == import_run.id
     finally:
-        set_import_run_context(None)
+        set_batch_run_context(None)
 
 
 def test_change_event_recorder_auto_correlation_from_context(
@@ -239,7 +239,7 @@ def test_change_event_recorder_auto_correlation_from_context(
     create_batch_run_row(session_factory, import_run.id)
 
     # Set the correlation context
-    set_import_run_context(import_run.id)
+    set_batch_run_context(import_run.id)
 
     try:
         # Verify context is set
@@ -272,4 +272,4 @@ def test_change_event_recorder_auto_correlation_from_context(
         assert auto_correlated_events[0].operation == ChangeOperation.CREATE.value
     finally:
         # Clear the context
-        set_import_run_context(None)
+        set_batch_run_context(None)

@@ -35,7 +35,8 @@ from adapters.persistence.sqlite.proposal_repo import SQLiteChangeProposalReposi
 from adapters.persistence.sqlite.schema_vector_index import SqliteSchemaVectorIndex
 from adapters.persistence.sqlite.transaction import SharedSessionFactory, SqliteTransactionScope
 from domain.ontology.services import OntologyService
-from domain.versioning.proposal_service import OperationDraft, ProposalService
+from domain.versioning.proposal_service import ProposalService
+from domain.versioning.proposals import OperationDraft
 from domain.versioning.proposals import OperationKind as K
 from domain.versioning.proposals import OperationStatus, ProposalSource
 from domain.versioning.proposals import OperationType as T

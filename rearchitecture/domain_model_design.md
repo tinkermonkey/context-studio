@@ -760,25 +760,36 @@ class MergeResult:
 
 ## 11. Cross-Context Dependency Map
 
-Bounded contexts communicate only through their ports. Here is the dependency graph:
+Each bounded context is a package under `local-server/domain/`. The arrows are the dependencies the code has (`A ──► B`: A imports from B); `scripts/check_domain_imports.py` checks the rule below.
 
 ```
-  Ontology Management ◄──── Graph Analysis
-        ▲                        (reads ontology data to build graphs)
-        │
-        ├──── Knowledge Extraction
-        │     (reads KG context for RAG layer 0)
-        │
-        ├──── Version Control
-        │     (reads current entity state for diff computation)
-        │
-        └──── LLM Pipeline Management
-              (no direct dependency on ontology, but extraction uses LLM)
+  Graph Analysis, Chat, Admin, Decision   (no imports from another context)
 
-  Shared ports:
-  ─ OntologyRepository is consumed by Ontology, Graph, and Extraction contexts
-  ─ LLMProvider is consumed by Extraction and Pipeline contexts
-  ─ EventPublisher is consumed by Ontology and produces events for Version Control
+  Knowledge Extraction ──► Ontology       (entities, ports: reads ontology data)
+          │
+          └────────────► Pipelines        (ports, stage prompts, exceptions)
+
+  Pipelines ───────────► Ontology         (entities, ports; OntologyService in the
+          │                                apply services, injected)
+          ├────────────► Extraction       (extractors, value objects, ports)
+          ├────────────► Versioning       (ProposalService: proposals and claims;
+          │                                OperationDraft and other value objects)
+          └────────────► Decision         (ports, value objects)
+
+  Versioning ──────────► Ontology         (OntologyService to apply, entities,
+          │                                events, snapshots)
+          ├────────────► Interchange      (bundles; the batch-run correlation context)
+          └────────────► Extraction       (SourceRepository port, to read passages)
+
+  Interchange ─────────► Ontology, Versioning (proposal value objects)
+
+  Shared kernel (domain/ports.py, domain/events.py): EventPublisher, DomainEvent,
+  ChangeRecordPort. OntologyRepository is read by Extraction, Pipelines,
+  Versioning and Interchange; LLMProvider by Extraction and Pipelines.
 ```
 
-The key rule: contexts never import each other's services directly. They share data through ports (primarily `OntologyRepository` for read access).
+**The rule.** A context may depend on another context's ports, entities, value objects, exceptions, public functions, and its application service's public methods. The application service is always injected at the composition root, never constructed. A context reads another context's data through that context's repository port and changes it only through that context's application service (pipelines propose through `ProposalService` and apply through `OntologyService`, so validation and the approval policy stay in one place). A context never touches another context's adapters or private (`_`) members, and never shares state through ambient globals.
+
+`scripts/check_domain_imports.py` enforces what an import can show: inside `domain/`, no import of another context's private names or modules, nothing but the service class from another context's application service module (`*_service.py`; its value objects come from their own module, as `OperationDraft` comes from `versioning/proposals.py`), and no call that constructs another context's `*Service`.
+
+**Known exception.** The change-event correlation context (`domain/interchange/services.py`: `set_batch_run_context` / `get_current_batch_run_id`) is still an ambient `ContextVar`. Proposal apply (versioning), the interchange import and the pipelines run route set it around their writes, and only the change event recorder adapter reads it, to tag change events with their run. Extraction no longer uses it: `ExtractionCompleted` carries its `batch_run_id` (#1633). Making the rest explicit means every ontology write and event carries the run id.

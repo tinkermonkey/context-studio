@@ -28,7 +28,8 @@ from adapters.web.proposals_routes import router as proposals_router
 from domain.ontology.services import OntologyService
 from domain.pipelines.proposal_comparison import ProposalComparisonService
 from domain.pipelines.source_proposals import SUPERSEDED_REASON
-from domain.versioning.proposal_service import OperationDraft, ProposalService
+from domain.versioning.proposal_service import ProposalService
+from domain.versioning.proposals import OperationDraft
 from domain.versioning.proposals import OperationKind as K
 from domain.versioning.proposals import OperationType as T
 from domain.versioning.proposals import ProposalSource

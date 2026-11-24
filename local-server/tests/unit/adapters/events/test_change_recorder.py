@@ -90,6 +90,21 @@ class TestChangeEventRecorder:
         finally:
             set_batch_run_context(None)
 
+    def test_on_extraction_completed_records_the_events_own_run(self, recorder, mock_change_repo):
+        """An event's own batch_run_id wins over the ambient context (#1633)."""
+        set_batch_run_context("outer-run")
+        try:
+            event = ExtractionCompleted(
+                result_id="result-456", entity_count=1, duration_ms=10, batch_run_id="run-1"
+            )
+
+            recorder.on_extraction_completed(event)
+
+            call_args = mock_change_repo.record_change.call_args
+            assert call_args.kwargs["batch_run_id"] == "run-1"
+        finally:
+            set_batch_run_context(None)
+
     def test_on_extraction_completed_propagates_exception(self, recorder, mock_change_repo):
         """Test that repo exceptions propagate to the event publisher."""
         set_batch_run_context(None)

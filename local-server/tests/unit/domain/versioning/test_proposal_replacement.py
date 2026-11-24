@@ -10,7 +10,7 @@ import pytest
 
 from domain.versioning.exceptions import ProposalValidationError
 from domain.versioning.in_use import PairMatch, compare_pair
-from domain.versioning.proposal_service import OperationDraft
+from domain.versioning.proposals import OperationDraft
 from domain.versioning.proposals import OperationKind, OperationType, ProposalSource
 from tests.unit.domain.versioning.test_proposal_in_use import (  # noqa: F401 - fixtures
     add_fitting_type,

@@ -4,7 +4,6 @@ Unit tests for ImportRunService.
 Tests service methods for managing import run lifecycle, including:
 - Creating and starting import runs
 - Committing, failing, and rolling back runs
-- Context variable management for correlation tracking
 """
 
 from datetime import datetime, timezone
@@ -12,11 +11,7 @@ from datetime import datetime, timezone
 import pytest
 
 from domain.interchange.entities import ImportRunStatus, ResolutionRecord
-from domain.interchange.services import (
-    ImportRunService,
-    get_current_import_run_id,
-    set_import_run_context,
-)
+from domain.interchange.services import ImportRunService
 from domain.interchange.value_objects import (
     MatchKind,
     ResolutionKind,
@@ -248,81 +243,11 @@ class TestImportRunServiceRollbackRun:
             service.rollback_run(run)
 
 
-class TestImportRunServiceContextVariables:
-    """Test context variable management for import correlation."""
-
-    def test_get_context_import_run_id_when_not_set(self):
-        """get_context_import_run_id returns None when not set."""
-        # Clear context first
-        set_import_run_context(None)
-
-        service = ImportRunService()
-        result = service.get_context_import_run_id()
-
-        assert result is None
-
-    def test_get_context_import_run_id_when_set(self):
-        """get_context_import_run_id returns the set run ID."""
-        service = ImportRunService()
-        test_id = "test-run-12345"
-
-        service.set_context_import_run_id(test_id)
-        try:
-            assert service.get_context_import_run_id() == test_id
-        finally:
-            set_import_run_context(None)
-
-    def test_set_context_import_run_id_clears_with_none(self):
-        """set_context_import_run_id clears context when passed None."""
-        service = ImportRunService()
-        test_id = "test-run-12345"
-
-        # Set a value
-        service.set_context_import_run_id(test_id)
-        assert service.get_context_import_run_id() == test_id
-
-        # Clear it
-        service.set_context_import_run_id(None)
-        assert service.get_context_import_run_id() is None
-
-    def test_set_context_import_run_id_overwrites_previous(self):
-        """set_context_import_run_id overwrites previous values."""
-        service = ImportRunService()
-        id1 = "run-1"
-        id2 = "run-2"
-
-        try:
-            service.set_context_import_run_id(id1)
-            assert service.get_context_import_run_id() == id1
-
-            service.set_context_import_run_id(id2)
-            assert service.get_context_import_run_id() == id2
-        finally:
-            set_import_run_context(None)
-
-    def test_global_context_functions_integration(self):
-        """Test integration between service methods and global context functions."""
-        service = ImportRunService()
-        test_id = "test-run-integration"
-
-        # Use service method
-        service.set_context_import_run_id(test_id)
-
-        # Check with global function
-        assert get_current_import_run_id() == test_id
-
-        # Clear with global function
-        set_import_run_context(None)
-
-        # Check with service method
-        assert service.get_context_import_run_id() is None
-
-
 class TestImportRunServiceLifecycle:
     """Test full lifecycle workflows."""
 
     def test_complete_successful_import_lifecycle(self):
-        """Test complete lifecycle: start → set context → commit."""
+        """Test complete lifecycle: start → commit."""
         service = ImportRunService()
         scope = SerializationScope(scope_type=SerializationScopeType.WHOLE_GRAPH)
 
@@ -335,16 +260,8 @@ class TestImportRunServiceLifecycle:
         )
         assert run.status == ImportRunStatus.PENDING
 
-        # Set context for correlation
-        service.set_context_import_run_id(run.id)
-        try:
-            assert service.get_context_import_run_id() == run.id
-
-            # Commit
-            run = service.commit_run(run)
-            assert run.status == ImportRunStatus.COMMITTED
-        finally:
-            set_import_run_context(None)
+        run = service.commit_run(run)
+        assert run.status == ImportRunStatus.COMMITTED
 
     def test_failed_import_lifecycle(self):
         """Test lifecycle: start → fail."""

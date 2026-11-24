@@ -19,7 +19,7 @@ from adapters.interchange.dr_relationships import dr_cardinality
 from adapters.interchange.dr_spec import iter_relationship_schemas
 from adapters.interchange.dr_spec_changes import spec_changes_for
 from domain.ontology.value_objects import SourceRevision
-from domain.versioning.proposal_service import OperationDraft
+from domain.versioning.proposals import OperationDraft
 from domain.versioning.proposals import (
     InUseResolution,
     OperationStatus,

@@ -53,7 +53,7 @@ from domain.pipelines.source_operations import (
     best_probability,
     passage_evidence,
 )
-from domain.versioning.proposal_service import OperationDraft
+from domain.versioning.proposals import OperationDraft
 from domain.versioning.proposals import OperationKind, OperationType
 
 MAX_PASSAGES = 10

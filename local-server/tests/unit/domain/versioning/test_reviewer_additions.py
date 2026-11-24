@@ -15,7 +15,8 @@ from domain.versioning.exceptions import (
     ProposalValidationError,
 )
 from domain.versioning.gold import DecisionKind
-from domain.versioning.proposal_service import OperationDraft, ProposalService
+from domain.versioning.proposal_service import ProposalService
+from domain.versioning.proposals import OperationDraft
 from domain.versioning.proposals import (
     OperationStatus,
     ProposalSource,

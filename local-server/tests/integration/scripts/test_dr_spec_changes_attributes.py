@@ -21,7 +21,7 @@ import pytest
 from adapters.chat.proposal_tools import build_proposal_tools
 from adapters.interchange.dr_spec import _attribute_records
 from adapters.interchange.dr_spec_changes import spec_changes_for
-from domain.versioning.proposal_service import OperationDraft
+from domain.versioning.proposals import OperationDraft
 from domain.versioning.proposals import OperationStatus, ProposalSource
 from scripts.dr_ontology_loader import DR_SOURCE, DR_TAXONOMY_IDENTIFIER
 from tests.integration.scripts import test_dr_reflection_plan as plan_tests
@@ -56,7 +56,7 @@ def dr_name(attr):
 def test_an_attribute_update_proposed_over_mcp_by_id_exports(parts):
     _, repo, proposals = parts
     target = some_attribute(repo)
-    (propose_changes, *_) = build_proposal_tools(proposals, ProposalSource.MCP)
+    propose_changes, *_ = build_proposal_tools(proposals, ProposalSource.MCP)
     taxonomy = repo.get_by_identifier(DR_TAXONOMY_IDENTIFIER)
     outcome = propose_changes.run(
         {
@@ -272,7 +272,11 @@ def test_an_update_to_a_date_is_skipped(parts):
             repo,
             proposals,
             OperationDraft(
-                seq=1, op="update", kind="attribute", target_id=target.id, fields={"datatype": "date"}
+                seq=1,
+                op="update",
+                kind="attribute",
+                target_id=target.id,
+                fields={"datatype": "date"},
             ),
         ),
     )

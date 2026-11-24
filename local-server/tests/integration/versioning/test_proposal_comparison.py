@@ -31,7 +31,8 @@ from domain.pipelines.proposal_comparison import (
 )
 from domain.versioning.exceptions import RevertConflictError
 from domain.versioning.gold import DecisionFilter
-from domain.versioning.proposal_service import OperationDraft, ProposalService
+from domain.versioning.proposal_service import ProposalService
+from domain.versioning.proposals import OperationDraft
 from domain.versioning.proposals import OperationKind as K
 from domain.versioning.proposals import OperationStatus, ProposalSource, RejectionReason
 from domain.versioning.proposals import OperationType as T

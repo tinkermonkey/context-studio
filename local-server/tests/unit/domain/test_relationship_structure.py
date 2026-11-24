@@ -9,7 +9,8 @@ import pytest
 from domain.ontology.entities import AttributeDefinition, PropertyDefinition
 from domain.ontology.services import OntologyService
 from domain.versioning.exceptions import ProposalValidationError
-from domain.versioning.proposal_service import OperationDraft, ProposalService
+from domain.versioning.proposal_service import ProposalService
+from domain.versioning.proposals import OperationDraft
 from domain.versioning.proposals import (
     OperationKind,
     OperationStatus,
@@ -172,7 +173,9 @@ class TestEdgeAttributes:
             ({"unit": "lb"}, "'unit' allows only ['each', 'kg'], not 'lb'"),
         ],
     )
-    def test_an_unknown_or_mistyped_attribute_is_refused(self, ontology, house, attributes, problem):
+    def test_an_unknown_or_mistyped_attribute_is_refused(
+        self, ontology, house, attributes, problem
+    ):
         with pytest.raises(ValueError, match=problem.replace("[", r"\[").replace("]", r"\]")):
             ontology.create_relationship(
                 house["sweep"], house["broom"], house["requires"], attributes=attributes
@@ -180,9 +183,7 @@ class TestEdgeAttributes:
 
 
 class TestProposals:
-    def test_a_proposal_sets_structure_and_adds_an_edge_attribute(
-        self, proposals, ontology, house
-    ):
+    def test_a_proposal_sets_structure_and_adds_an_edge_attribute(self, proposals, ontology, house):
         drafts = [
             OperationDraft(
                 1,

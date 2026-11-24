@@ -18,7 +18,6 @@ from types import MappingProxyType
 from typing import TYPE_CHECKING, Any, Callable, Mapping
 from uuid import uuid4
 
-from domain.interchange.services import set_batch_run_context
 from domain.ontology.ports import (
     EmbeddingService,
     IndividualVectorIndex,
@@ -653,9 +652,6 @@ class ExtractionService:
         # Save initial run record
         self._extraction_run_repo.save_extraction_run(run)
 
-        # Set correlation context so change events are linked to this extraction run
-        set_batch_run_context(run_id)
-
         start_time = time.time()
         triples_extracted = 0
         triples_committed = 0
@@ -668,93 +664,89 @@ class ExtractionService:
         provider_refused = False
 
         try:
-            try:
-                # Two-pass extraction (karpathy_loop_design.md §7): pass 1 grounds
-                # individuals to ontology classes, pass 2 derives relationships from
-                # the closed set of predicates the ontology permits between those
-                # classes. The nlp_grounded mode (issue #1141) replaces pass 1's
-                # LLM typing with spaCy noun-chunk extraction + vector retrieval +
-                # LLM confirmation, then reuses the same relationship derivation.
-                if self._extraction_mode == "nlp_grounded":
-                    extracted_triples, extraction_warnings = self._extract_triples_nlp_grounded(
-                        text,
-                        ontology,
-                        ontology_id,
-                        model,
-                        temperature,
-                        spent,
-                        prompts,
-                        dataset_id,
-                        max_tokens,
-                    )
-                else:
-                    extracted_triples, extraction_warnings = self._extract_triples_two_pass(
-                        text,
-                        ontology,
-                        ontology_id,
-                        model,
-                        temperature,
-                        spent,
-                        prompts,
-                        dataset_id,
-                        max_tokens,
-                    )
-                triples_extracted = len(extracted_triples)
-                triples_committed = triples_extracted
-                warnings.extend(extraction_warnings)
-
-            except Exception as exc:
-                _logger.error(f"Triple extraction failed: {exc}", exc_info=exc)
-                extracted_triples = []
-                run_status = ExtractionRunStatus.FAILED
-                failed = failure_fields(exc)
-                failure_reason = failed["failure_reason"]
-                incomplete_response = failed["incomplete_response"]
-                provider_failed = failed["provider_failed"]
-                provider_refused = failed["provider_refused"]
-                warnings.append(f"Extraction failed: {failure_reason}")
-
-            # Update run record: the responses of a failed extraction cost tokens too
-            tokens_used = spent.total
-            duration_ms = int((time.time() - start_time) * 1000)
-            run = ExtractionRun(
-                id=run.id,
-                source_document_uri=run.source_document_uri,
-                source_text_hash=run.source_text_hash,
-                pipeline_config_ref=run.pipeline_config_ref,
-                model=run.model,
-                temperature=run.temperature,
-                tokens_used=tokens_used,
-                duration_ms=duration_ms,
-                triples_extracted=triples_extracted,
-                triples_committed=triples_committed,
-                status=run_status,
-            )
-
-            self._extraction_run_repo.update_extraction_run(run)
-
-            # Publish completion event only on successful extraction
-            # (with batch_run_id still in context for change event recording)
-            if run_status == ExtractionRunStatus.COMPLETED:
-                failures = self._event_publisher.publish(
-                    ExtractionCompleted(
-                        result_id=run_id,
-                        entity_count=triples_extracted,
-                        duration_ms=duration_ms,
-                    )
+            # Two-pass extraction (karpathy_loop_design.md §7): pass 1 grounds
+            # individuals to ontology classes, pass 2 derives relationships from
+            # the closed set of predicates the ontology permits between those
+            # classes. The nlp_grounded mode (issue #1141) replaces pass 1's
+            # LLM typing with spaCy noun-chunk extraction + vector retrieval +
+            # LLM confirmation, then reuses the same relationship derivation.
+            if self._extraction_mode == "nlp_grounded":
+                extracted_triples, extraction_warnings = self._extract_triples_nlp_grounded(
+                    text,
+                    ontology,
+                    ontology_id,
+                    model,
+                    temperature,
+                    spent,
+                    prompts,
+                    dataset_id,
+                    max_tokens,
                 )
-                if failures:
-                    handler_names = ", ".join(name for name, _ in failures)
-                    _logger.warning(
-                        "Event handlers failed for ExtractionCompleted (result_id=%s): %s. "
-                        "Extraction result is returned but audit trail may have gaps.",
-                        run_id,
-                        handler_names,
-                    )
+            else:
+                extracted_triples, extraction_warnings = self._extract_triples_two_pass(
+                    text,
+                    ontology,
+                    ontology_id,
+                    model,
+                    temperature,
+                    spent,
+                    prompts,
+                    dataset_id,
+                    max_tokens,
+                )
+            triples_extracted = len(extracted_triples)
+            triples_committed = triples_extracted
+            warnings.extend(extraction_warnings)
 
-        finally:
-            # Always clear the correlation context after extraction
-            set_batch_run_context(None)
+        except Exception as exc:
+            _logger.error(f"Triple extraction failed: {exc}", exc_info=exc)
+            extracted_triples = []
+            run_status = ExtractionRunStatus.FAILED
+            failed = failure_fields(exc)
+            failure_reason = failed["failure_reason"]
+            incomplete_response = failed["incomplete_response"]
+            provider_failed = failed["provider_failed"]
+            provider_refused = failed["provider_refused"]
+            warnings.append(f"Extraction failed: {failure_reason}")
+
+        # Update run record: the responses of a failed extraction cost tokens too
+        tokens_used = spent.total
+        duration_ms = int((time.time() - start_time) * 1000)
+        run = ExtractionRun(
+            id=run.id,
+            source_document_uri=run.source_document_uri,
+            source_text_hash=run.source_text_hash,
+            pipeline_config_ref=run.pipeline_config_ref,
+            model=run.model,
+            temperature=run.temperature,
+            tokens_used=tokens_used,
+            duration_ms=duration_ms,
+            triples_extracted=triples_extracted,
+            triples_committed=triples_committed,
+            status=run_status,
+        )
+
+        self._extraction_run_repo.update_extraction_run(run)
+
+        # Publish completion event only on successful extraction; it carries
+        # the run id, so the change it records is linked to this run
+        if run_status == ExtractionRunStatus.COMPLETED:
+            failures = self._event_publisher.publish(
+                ExtractionCompleted(
+                    result_id=run_id,
+                    entity_count=triples_extracted,
+                    duration_ms=duration_ms,
+                    batch_run_id=run_id,
+                )
+            )
+            if failures:
+                handler_names = ", ".join(name for name, _ in failures)
+                _logger.warning(
+                    "Event handlers failed for ExtractionCompleted (result_id=%s): %s. "
+                    "Extraction result is returned but audit trail may have gaps.",
+                    run_id,
+                    handler_names,
+                )
 
         # Serialize SourceSpan objects in provenance to dict format for API contract
         serialized_triples = [_serialize_triple_provenance(triple) for triple in extracted_triples]

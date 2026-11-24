@@ -19,9 +19,9 @@ from domain.versioning.proposal_service import (
     MAX_RATIONALE_CHARS,
     MAX_SEQ,
     MAX_TITLE_CHARS,
-    OperationDraft,
     ProposalService,
 )
+from domain.versioning.proposals import OperationDraft
 from domain.versioning.proposals import (
     ChangeScope,
     OperationKind,

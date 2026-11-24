@@ -8,7 +8,7 @@ on decisions.
 import pytest
 
 from domain.versioning.exceptions import ProposalValidationError
-from domain.versioning.proposal_service import OperationDraft
+from domain.versioning.proposals import OperationDraft
 from domain.versioning.proposals import OperationStatus, ProposalSource
 from tests.unit.domain.versioning.test_proposal_service import (  # noqa: F401 - fixtures
     K,

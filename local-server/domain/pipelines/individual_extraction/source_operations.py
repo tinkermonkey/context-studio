@@ -65,7 +65,7 @@ from domain.pipelines.source_operations import (
     merged_evidence,
     passage_evidence,
 )
-from domain.versioning.proposal_service import OperationDraft
+from domain.versioning.proposals import OperationDraft
 from domain.versioning.proposals import AlternativeKind, OperationKind, OperationType
 
 
