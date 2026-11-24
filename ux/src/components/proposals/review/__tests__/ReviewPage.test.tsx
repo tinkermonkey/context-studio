@@ -616,7 +616,29 @@ describe("the review page", () => {
     expect(screen.queryByTestId("review-correct")).not.toBeInTheDocument();
   });
 
-  it("decides by key: J / K move, A accepts, X focuses the reasons", async () => {
+  it("opens the reason step on Not an element: prompt, highlight, focus, nothing sent", async () => {
+    const user = await renderPage();
+    await user.click(screen.getByTestId("review-row-op-region"));
+    // The live region is there, empty, before the prompt: screen readers announce its text.
+    expect(screen.getByTestId("review-reasons-prompt")).toBeEmptyDOMElement();
+    expect(screen.getByTestId("review-reasons-prompt")).toHaveAttribute("role", "status");
+    expect(screen.getByTestId("review-reasons-block")).not.toHaveClass("review-block--prompt");
+    await user.click(screen.getByTestId("review-not"));
+    expect(screen.getByTestId("review-reasons-block")).toHaveClass("review-block--prompt");
+    expect(screen.getByTestId("review-reasons-prompt")).toHaveTextContent(
+      "Pick a reason to reject it.",
+    );
+    expect(screen.getByTestId("review-reasons-prompt")).toHaveAttribute("role", "status");
+    expect(screen.getByTestId("review-reason-not_in_text")).toHaveFocus();
+    // Nothing is recorded until a reason is picked.
+    expect(rejects).toHaveLength(0);
+    expect(applies).toHaveLength(0);
+    await user.click(screen.getByTestId("review-reason-too_generic"));
+    await waitFor(() => expect(rejects).toHaveLength(1));
+    expect(rejects[0]).toMatchObject({ operation_ids: ["op-region"], reason_code: "too_generic" });
+  });
+
+  it("decides by key: J / K move, A accepts, X opens the reasons", async () => {
     const user = await renderPage();
     await user.keyboard("j");
     expect(inspectorTitle()).toHaveTextContent("Reference check");
@@ -626,6 +648,10 @@ describe("the review page", () => {
     expect(inspectorTitle()).toHaveTextContent("Reference check");
     await user.keyboard("x");
     expect(screen.getByTestId("review-reason-not_in_text")).toHaveFocus();
+    expect(screen.getByTestId("review-reasons-block")).toHaveClass("review-block--prompt");
+    expect(screen.getByTestId("review-reasons-prompt")).toHaveTextContent(
+      "Pick a reason to reject it.",
+    );
     // Typing in the note is text, not a command.
     await user.click(screen.getByTestId("review-note"));
     await user.keyboard("a");
@@ -1410,7 +1436,15 @@ describe("gold mode", () => {
       "aria-describedby",
       "review-note-required",
     );
-    // X goes to the note while it is empty.
+    // Not an element goes to the note while it is empty, and says why.
+    await user.click(screen.getByTestId("review-not"));
+    expect(screen.getByTestId("review-note")).toHaveFocus();
+    expect(screen.getByTestId("review-reasons-block")).toHaveClass("review-block--prompt");
+    expect(screen.getByTestId("review-reasons-prompt")).toHaveTextContent(
+      "Write why in the note, then pick a reason to reject it.",
+    );
+    expect(rejects).toHaveLength(0);
+    // X does the same.
     await user.click(screen.getByTestId("review-inspector-title"));
     await user.keyboard("x");
     expect(screen.getByTestId("review-note")).toHaveFocus();

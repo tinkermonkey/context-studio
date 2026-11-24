@@ -548,7 +548,8 @@ export function ReviewPage({
       setAddError(addErrorMessage(error, { title, classLabel: names.classLabel(classId) }));
     }
   };
-  const reasonsRef = useRef<HTMLDivElement>(null);
+  // Key X opens the selected operation's reason step: each press bumps this.
+  const [rejectPrompt, setRejectPrompt] = useState(0);
 
   // A near match's choice, by operation: an existing individual, or create new.
   const [nearChoices, setNearChoices] = useState<Record<string, NearMatchChoice>>({});
@@ -752,9 +753,8 @@ export function ReviewPage({
       });
     } else if (key === "x") {
       event.preventDefault();
-      // A reason, or (in gold mode, before a note is written) the note it needs.
-      const reason = reasonsRef.current?.querySelector<HTMLButtonElement>("button:not(:disabled)");
-      (reason ?? document.getElementById("review-note"))?.focus();
+      // The reason step, as the "Not an element" button opens it.
+      setRejectPrompt((n) => n + 1);
     } else if (["1", "2", "3"].includes(key) && isElement(selected) && !existingOf(selected)) {
       const suggestion = suggestions[Number(key) - 1];
       if (!suggestion) return;
@@ -976,7 +976,7 @@ export function ReviewPage({
               onForgetClass={(classId) => setRecentClasses((recent) => forgetPick(recent, classId))}
               deciding={deciding}
               busy={actions.busy}
-              reasonsRef={reasonsRef}
+              rejectPrompt={rejectPrompt}
               onCorrect={() => void decide(selected, { kind: "correct" })}
               onPickClass={(classId) => void decide(selected, { kind: "class", classId })}
               onReject={(reasonCode, note) =>

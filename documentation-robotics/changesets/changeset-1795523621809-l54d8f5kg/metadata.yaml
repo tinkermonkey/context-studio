@@ -1,0 +1,76 @@
+id: changeset-1795523621809-l54d8f5kg
+name: not-an-element-opens-reasons
+description: '#1672: on the Review page, "Not an element" / "Not a relationship"
+  (and key X) visibly open the reason step instead of only moving focus: the
+  reasons block scrolls into view, is highlighted and says to pick a reason, and
+  the first reason is focused; in gold mode with no note yet, the note field is
+  focused and the "Write why" message shows. Done when the button never does
+  nothing and a component test covers normal and gold mode.'
+created: 2026-11-24T12:33:41.828Z
+modified: 2026-11-24T12:39:23.001Z
+status: staged
+baseSnapshot: v2:sha256:53252d39ed1357a9afdd6132507b497bf81313353af91142ccb6b590b147594c
+origin:
+  kind: plan
+purpose: plan
+stats:
+  additions: 5
+  modifications: 0
+  deletions: 0
+lastSequence: 6
+unstaged:
+  - sequence: 0
+    removedAt: 5
+    change:
+      type: add
+      elementId: ux.actioncomponent.not-an-element-button
+      layerName: ux
+      after:
+        id: 84275f84-4063-4778-a4bc-1372303bb08d
+        path: ux.actioncomponent.not-an-element-button
+        spec_node_id: ux.actioncomponent
+        type: actioncomponent
+        layer_id: ux
+        name: Not An Element Button
+        description: "The inspector's \"Not an element\" / \"Not a relationship\" button
+          (key X). It opens the reason step: scrolls the reasons into view,
+          highlights them with \"Pick a reason to reject it\" and focuses the
+          first reason, or in gold mode with no note yet, the note field. The
+          rejection is recorded when a reason is picked."
+        attributes:
+          type: button
+          label: Not an element
+          style: secondary
+          channel: web
+        metadata:
+          created_at: 2026-11-24T12:33:48.266Z
+          updated_at: 2026-11-24T12:33:48.266Z
+          version: 1
+      timestamp: 2026-11-24T12:33:48.276Z
+    rewritten: true
+  - sequence: 1
+    removedAt: 6
+    change:
+      type: add
+      elementId: testing.testcasesketch.not-an-element-opens-the-reason-step
+      layerName: testing
+      after:
+        id: 3772c2a1-cd31-42d8-a7ac-61bf6e24ed5a
+        path: testing.testcasesketch.not-an-element-opens-the-reason-step
+        spec_node_id: testing.testcasesketch
+        type: testcasesketch
+        layer_id: testing
+        name: Not An Element Opens The Reason Step
+        description: Pressing Not an element (or X) on an awaiting element highlights
+          the reasons with a prompt and focuses the first reason; in gold mode
+          with an empty note it focuses the note and shows the Write why
+          message. Nothing is sent until a reason is picked.
+        attributes:
+          status: automated
+          implementationFormat: automated
+        metadata:
+          created_at: 2026-11-24T12:33:48.269Z
+          updated_at: 2026-11-24T12:33:48.269Z
+          version: 1
+      timestamp: 2026-11-24T12:33:48.276Z
+    rewritten: true
