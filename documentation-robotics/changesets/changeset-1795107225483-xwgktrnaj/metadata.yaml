@@ -6,7 +6,7 @@ description: "Merge proposal detail and the Review page into one review surface
   a revert preview, and reversal proposals for landed changes (restore by id, a
   new reversed status)."
 created: 2026-11-19T16:53:45.487Z
-modified: 2026-11-19T17:03:31.072Z
+modified: 2026-11-24T12:33:22.475Z
 status: staged
 baseSnapshot: sha256:47cbf69a029fe1c405c7234a6260ff5326c53c044a37424fe686965c3c0497d6
 origin:
@@ -15,7 +15,7 @@ stats:
   additions: 300
   modifications: 19
   deletions: 44
-lastSequence: 381
+lastSequence: 385
 unstaged:
   - sequence: 255
     removedAt: 256
@@ -517,4 +517,119 @@ unstaged:
           updated_at: 2026-11-19T17:00:51.603Z
           version: 1
       timestamp: 2026-11-19T17:00:51.633Z
+    rewritten: true
+  - sequence: 166
+    removedAt: 382
+    change:
+      type: add
+      elementId: ux.actioncomponent.reject-reason-picker
+      layerName: ux
+      after:
+        id: d4f67081-1be6-41d9-b495-7ea4d1c5724f
+        path: ux.actioncomponent.reject-reason-picker
+        spec_node_id: ux.actioncomponent
+        type: actioncomponent
+        layer_id: ux
+        name: Reject Reason Picker
+        description: "'Or reject it, because': the reason-code buttons filtered by
+          operation kind (outdated leads when stale) plus an optional note, in
+          the inspector; the same picker in the bulk reject dialog."
+        attributes:
+          type: button
+          label: Reject reason
+        metadata:
+          created_at: 2026-11-19T17:00:51.603Z
+          updated_at: 2026-11-19T17:00:51.603Z
+          version: 1
+      timestamp: 2026-11-19T17:00:51.633Z
+    rewritten: true
+  - sequence: 1
+    removedAt: 383
+    change:
+      type: add
+      elementId: motivation.requirement.reason-codes-for-every-reject
+      layerName: motivation
+      after:
+        id: e1ad5f83-d6c1-440c-9b9b-73821c9b5c89
+        path: motivation.requirement.reason-codes-for-every-reject
+        spec_node_id: motivation.requirement
+        type: requirement
+        layer_id: motivation
+        name: Reason Codes for Every Reject
+        description: Every reject, of any operation kind and in bulk, takes one reason
+          code from a single set (not_in_text, mentioned_only, too_generic,
+          duplicate, out_of_scope, incorrect, keep_current, outdated, other)
+          plus an optional note (required only for a gold element). Buttons are
+          filtered by operation kind; outdated leads when the operation is
+          stale. System rejections keep their text and no code.
+        attributes:
+          requirementType: functional
+          priority: high
+          documentation: "Owner decision 1. Three new codes: incorrect, keep_current,
+            outdated. No migration: reason_code is String(20)."
+        metadata:
+          created_at: 2026-11-19T16:59:05.121Z
+          updated_at: 2026-11-19T16:59:05.121Z
+          version: 1
+        accepted_gaps:
+          - direction: outgoing
+            predicate: realizes
+            other_spec_node_id: motivation.principle
+            reason: It serves the goal Every Decision Becomes Data (realized directly), not
+              a standing principle.
+            decided_by: agent
+            decided_at: 2026-11-19T17:02:51.359Z
+            changeset: changeset-1795107225483-xwgktrnaj
+      timestamp: 2026-11-19T17:02:51.388Z
+    rewritten: true
+  - sequence: 257
+    removedAt: 384
+    change:
+      type: add
+      elementId: testing.testcoveragetarget.reject-reason-codes
+      layerName: testing
+      after:
+        id: c33aee09-82a0-491d-9954-d006e4a34706
+        path: testing.testcoveragetarget.reject-reason-codes
+        spec_node_id: testing.testcoveragetarget
+        type: testcoveragetarget
+        layer_id: testing
+        name: Reject Reason Codes
+        description: Rejecting any operation kind, singly and in bulk, with each reason
+          code including incorrect, keep_current and outdated; gold only
+          special-cases duplicate; system rejections keep their text and no
+          code.
+        attributes:
+          targetType: api-endpoint
+          priority: high
+        metadata:
+          created_at: 2026-11-19T17:01:49.996Z
+          updated_at: 2026-11-19T17:01:49.996Z
+          version: 1
+      timestamp: 2026-11-19T17:01:50.028Z
+    rewritten: true
+  - sequence: 268
+    removedAt: 385
+    change:
+      type: add
+      elementId: testing.testcasesketch.keep-current-rejects-an-update
+      layerName: testing
+      after:
+        id: be5406ef-ab30-4d29-89fa-8e310bcef9b9
+        path: testing.testcasesketch.keep-current-rejects-an-update
+        spec_node_id: testing.testcasesketch
+        type: testcasesketch
+        layer_id: testing
+        name: Keep Current Rejects an Update
+        description: Reject an update operation with reason keep_current; the operation
+          and its decision record the code; the request is refused for an
+          unknown code.
+        attributes:
+          status: draft
+          implementationFormat: automated
+        metadata:
+          created_at: 2026-11-19T17:01:49.996Z
+          updated_at: 2026-11-19T17:01:49.996Z
+          version: 1
+      timestamp: 2026-11-19T17:01:50.028Z
     rewritten: true
