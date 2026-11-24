@@ -1,6 +1,6 @@
 # Intra-layer relationships
 # Format: source_id -> predicate -> target_id
-# Last updated: 2026-11-24T17:48:35.715Z
+# Last updated: 2026-11-24T17:51:04.631Z
 
 - source: motivation.meaning.knowledge-as-infrastructure
   target: motivation.value.knowledge-reusability
@@ -16114,4 +16114,27 @@
   predicate: satisfies
   layer: application
   targetLayer: motivation
+  category: structural
+- source: ux.view.proposal-review-view
+  target: ux.actioncomponent.reverse-relationship-button
+  predicate: composes
+  layer: ux
+  category: structural
+- source: testing.testcasesketch.end-search-finds-a-pending-element-and-reverse-swaps-the-ends
+  target: ux.actioncomponent.reverse-relationship-button
+  predicate: tests
+  layer: testing
+  targetLayer: ux
+  category: structural
+- source: testing.testcasesketch.end-search-finds-a-pending-element-and-reverse-swaps-the-ends
+  target: ux.subview.review-inspector
+  predicate: tests
+  layer: testing
+  targetLayer: ux
+  category: structural
+- source: testing.testcasesketch.an-edited-end-names-an-element-by-its-ref
+  target: api.operation.apply-proposal
+  predicate: tests
+  layer: testing
+  targetLayer: api
   category: structural

@@ -133,3 +133,49 @@ testing.testcasesketch.url-sources-refuse-private-addresses:
     created_at: 2026-11-24T12:30:16.543Z
     updated_at: 2026-11-24T12:30:16.543Z
     version: 1
+testing.testcasesketch.end-search-finds-a-pending-element-and-reverse-swaps-the-ends:
+  id: 9d429c32-6437-4008-ab7f-3856b8c08dbf
+  path: testing.testcasesketch.end-search-finds-a-pending-element-and-reverse-swaps-the-ends
+  spec_node_id: testing.testcasesketch
+  type: testcasesketch
+  layer_id: testing
+  name: End Search Finds A Pending Element And Reverse Swaps The Ends
+  description: On a fresh extraction (nothing applied, an empty dataset), a
+    relationship's source search lists this proposal's awaiting elements, the
+    pick waits for that element to apply, and Reverse swaps the ends, offering
+    the predicates the reversed direction allows.
+  attributes:
+    status: automated
+    implementationFormat: automated
+  source_reference:
+    provenance: manual
+    locations:
+      - file: ux/src/components/proposals/review/__tests__/ReviewPage.test.tsx
+        symbol: a relationship's ends on a fresh extraction (#1673)
+  metadata:
+    created_at: 2026-11-24T13:18:56.353Z
+    updated_at: 2026-11-24T13:18:56.353Z
+    version: 1
+testing.testcasesketch.an-edited-end-names-an-element-by-its-ref:
+  id: 1abadfe8-4c59-4282-be82-3440ab61b955
+  path: testing.testcasesketch.an-edited-end-names-an-element-by-its-ref
+  spec_node_id: testing.testcasesketch
+  type: testcasesketch
+  layer_id: testing
+  name: An Edited End Names An Element By Its Ref
+  description: "A relationship create accepted with an end changed to another
+    element of the proposal, named by its $ref: it fails unresolved_ref until
+    that element applies, then applies with the end resolved and records the ref
+    in applied_fields."
+  attributes:
+    status: automated
+    implementationFormat: automated
+  source_reference:
+    provenance: manual
+    locations:
+      - file: local-server/tests/unit/domain/versioning/test_review_redecide.py
+        symbol: TestEditedRelationshipCreate.test_an_end_can_name_an_element_of_the_proposal_by_its_ref
+  metadata:
+    created_at: 2026-11-24T13:18:56.353Z
+    updated_at: 2026-11-24T13:18:56.353Z
+    version: 1

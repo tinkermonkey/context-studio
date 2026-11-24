@@ -3,7 +3,7 @@ schema: documentation-robotics-v1
 cli_version: 0.7.1
 spec_version: 0.13.0
 created: 2026-03-23T12:18:08.630Z
-updated: 2026-11-24T17:49:07.642Z
+updated: 2026-11-24T17:51:04.664Z
 project:
   name: Context Studio
   description: Local-first knowledge graph application for RAG and communication
@@ -132,7 +132,7 @@ layers:
     path: documentation-robotics/model/10_ux/
     enabled: true
     elements:
-      actioncomponent: 1
+      actioncomponent: 2
       dataconfig: 141
       experiencestate: 1
       librarycomponent: 8
@@ -173,7 +173,7 @@ layers:
       coveragerequirement: 3
       inputspacepartition: 1
       outcomecategory: 2
-      testcasesketch: 6
+      testcasesketch: 8
       testcoveragemodel: 2
       testcoveragetarget: 21
 changeset_history:
@@ -224,6 +224,9 @@ changeset_history:
     action: committed
   - name: migrations-follow-the-config
     committed_at: 2026-11-24T17:49:07.642Z
+    action: committed
+  - name: relationship-end-search-and-reverse
+    committed_at: 2026-11-24T17:51:04.664Z
     action: committed
 reconciled:
   changeset: rebuild-model-from-code
