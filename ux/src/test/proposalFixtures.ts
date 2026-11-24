@@ -174,3 +174,8 @@ export const proposalHandlers = [
     return HttpResponse.json({ items, total: items.length, limit: 500, offset: 0 });
   }),
 ];
+
+/** An apply body's amended_at for operations the page showed as first proposed (#1624). */
+export function unamended(ids: string[]): Record<string, null> {
+  return Object.fromEntries(ids.map((id) => [id, null]));
+}

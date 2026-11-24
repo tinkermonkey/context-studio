@@ -492,6 +492,14 @@ class ProposeChangesTool(_ProposalTool):
         drafts, errors = _drafts(raw)
         if errors:
             return _not_stored(errors, drafts, checked=False)
+        supersedes = _ids(args, "supersedes")
+        for old_id in supersedes:
+            try:
+                why = _foreign(self._service.get(old_id), self._source)
+            except ChangeProposalNotFoundError:
+                continue  # propose reports it, with everything else wrong
+            if why is not None:
+                return _not_stored([OperationError(None, "not_yours", why)], drafts)
         try:
             proposal = self._service.propose(
                 taxonomy_id,
@@ -503,7 +511,7 @@ class ProposeChangesTool(_ProposalTool):
                 source_revision=revision,
                 dataset_id=optional_str(args, "dataset"),
                 review_only=review_only,
-                supersedes=_ids(args, "supersedes"),
+                supersedes=supersedes,
             )
         except ProposalValidationError as exc:
             return _not_stored(exc.errors, drafts)
@@ -528,6 +536,31 @@ class ProposeChangesTool(_ProposalTool):
         return _dry_run(view) if dry_run else _stored(proposal, view)
 
 
+def _without_bulky(operation: dict[str, Any]) -> dict[str, Any]:
+    """An operation view less base and evidence, in its amendments too."""
+    kept = {k: v for k, v in operation.items() if k not in BULKY_OPERATION_KEYS}
+    if "amendments" in kept:
+        kept["amendments"] = [
+            {k: v for k, v in a.items() if k not in BULKY_OPERATION_KEYS}
+            for a in kept["amendments"]
+        ]
+    return kept
+
+
+def _foreign(proposal: ChangeProposal, source: ProposalSource) -> str | None:
+    """
+    Why a client of one source can't amend, withdraw or supersede this proposal:
+    clients drive their own proposals, so an agent never rolls back a pipeline's
+    or a person's. None when it can.
+    """
+    if proposal.source is source:
+        return None
+    return (
+        f"Proposal {proposal.id} was proposed by {proposal.source.value}, not {source.value};"
+        " you can amend, withdraw or supersede only proposals you made"
+    )
+
+
 def _ids(args: dict[str, Any], key: str) -> list[str]:
     """A list of ids from tool input (empty when absent)."""
     value = args.get(key) or []
@@ -544,11 +577,12 @@ class AmendProposalTool(_ProposalTool):
         "Change your open proposal in place instead of proposing it again: replace"
         " pending (or failed) operations by seq, add operations, remove pending ones."
         " A replace item gives seq and what changes (e.g. just fields); anything it"
-        " leaves out is kept from the operation it replaces. Each changed operation is"
+        " leaves out is kept from the operation it replaces, and its fields merge key by"
+        " key over the operation's. Only your own proposals (this client's source). Each changed operation is"
         " validated and scoped as in propose_changes, goes back to pending, and keeps"
         " what it replaced (get_proposal shows amended_at and amendments, so the"
-        " reviewer reads it again). A removed operation is withdrawn. Applied and"
-        " rejected operations never change. dry_run checks without changing anything."
+        " reviewer reads it again). remove takes pending operations only; a removed one"
+        " is withdrawn. Applied, rejected and withdrawn operations never change. dry_run checks without changing anything."
     )
     input_schema = {
         "type": "object",
@@ -570,7 +604,7 @@ class AmendProposalTool(_ProposalTool):
             "remove": {
                 "type": "array",
                 "items": {"type": "integer"},
-                "description": "Seqs of pending operations to withdraw",
+                "description": "Seqs of pending operations to withdraw (not failed ones)",
             },
             "dry_run": {"type": "boolean", "description": "Validate only (default false)"},
         },
@@ -591,6 +625,9 @@ class AmendProposalTool(_ProposalTool):
             proposal = self._service.get(proposal_id)
         except ChangeProposalNotFoundError as exc:
             return error_outcome(str(exc), "Proposal not found")
+        why = _foreign(proposal, self._source)
+        if why is not None:
+            return error_outcome(why, "Proposal not amended")
         current = {o.seq: o for o in proposal.operations}
         raw_replace = args.get("replace") or []
         raw_add = args.get("add") or []
@@ -617,7 +654,11 @@ class AmendProposalTool(_ProposalTool):
 
 
 def _merged(item: dict[str, Any], operation: Any) -> dict[str, Any]:
-    """A replace item over the operation it replaces: what it leaves out is kept."""
+    """
+    A replace item over the operation it replaces: what it leaves out is kept,
+    and its fields merge key by key over the operation's (to drop a field, the
+    REST amend takes whole operations).
+    """
     if operation is None:
         return item
     kept = {
@@ -633,7 +674,10 @@ def _merged(item: dict[str, Any], operation: Any) -> dict[str, Any]:
         "replacement": operation.proposed_replacement_id,
         "alternatives": operation.alternatives,
     }
-    return {**kept, **item}
+    merged = {**kept, **item}
+    if isinstance(item.get("fields"), dict):
+        merged["fields"] = {**operation.fields, **item["fields"]}
+    return merged
 
 
 def _not_amended(errors: Sequence[OperationError]) -> ToolOutcome:
@@ -657,7 +701,8 @@ class WithdrawProposalTool(_ProposalTool):
         " undecided operations are withdrawn, and it ends withdrawn. Name the"
         " proposal that replaces it in superseded_by to link the two (or pass"
         " supersedes to propose_changes, which does both in one call). Refused for a"
-        " proposal that isn't open, or when what it applied can't be rolled back."
+        " proposal that isn't open, one another source made (only your own), or when"
+        " what it applied can't be rolled back."
     )
     input_schema = {
         "type": "object",
@@ -674,6 +719,12 @@ class WithdrawProposalTool(_ProposalTool):
 
     def run(self, args: dict[str, Any]) -> ToolOutcome:
         proposal_id = required_str(args, "id")
+        try:
+            why = _foreign(self._service.get(proposal_id), self._source)
+        except ChangeProposalNotFoundError as exc:
+            return error_outcome(str(exc), "Proposal not found")
+        if why is not None:
+            return error_outcome(why, "Proposal not withdrawn")
         try:
             proposal = self._service.withdraw(
                 proposal_id,
@@ -982,10 +1033,7 @@ class GetProposalTool(_ProposalTool):
         content = dumps(payload)
         if len(content) > MAX_PROPOSAL_CHARS:
             # The bulky values go first (the review page shows them), then whole operations.
-            payload["operations"] = [
-                {k: v for k, v in o.items() if k not in BULKY_OPERATION_KEYS}
-                for o in payload["operations"]
-            ]
+            payload["operations"] = [_without_bulky(o) for o in payload["operations"]]
             payload["fields_omitted"] = (
                 f"{' and '.join(BULKY_OPERATION_KEYS)} are left out to fit (the review page"
                 " shows them); fields and applied_fields are kept"

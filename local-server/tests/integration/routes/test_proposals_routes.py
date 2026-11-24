@@ -412,7 +412,7 @@ class TestApply:
         assert client.post(url, json={"operation_ids": [op_id]}).status_code == 200
         again = client.post(url, json={"operation_ids": [op_id]})
         assert again.status_code == 409
-        assert "already applied or rejected" in again.json()["detail"]
+        assert "already applied, rejected or withdrawn" in again.json()["detail"]
 
 
 class TestApplyWithEdits:

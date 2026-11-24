@@ -30,11 +30,17 @@ from tests.unit.domain.versioning.test_proposal_service import (  # noqa: F401 -
 
 
 def nine_rewordings(graph):
-    """Operation drafts of the kind #1624 describes: wording changes, pending review."""
+    """Nine operation drafts of the kind #1624 describes: wording changes, pending review."""
     return [
         draft(1, T.UPDATE, K.CLASS, graph["room"], description="A room in the house"),
         draft(2, T.UPDATE, K.CLASS, graph["kitchen"], description="Where food is made"),
         draft(3, T.UPDATE, K.CLASS, graph["place"], description="Somewhere"),
+        draft(4, T.UPDATE, K.CLASS, graph["room"], title="Room"),
+        draft(5, T.UPDATE, K.CLASS, graph["kitchen"], title="Kitchen"),
+        draft(6, T.UPDATE, K.CLASS, graph["place"], title="Place"),
+        draft(7, T.UPDATE, K.SCHEME, graph["vocab"], description="The house's words"),
+        draft(8, T.UPDATE, K.SCHEME, graph["other"], description="The house's records"),
+        draft(9, T.UPDATE, K.TAXONOMY, graph["taxonomy"], description="Our home"),
     ]
 
 
@@ -66,13 +72,22 @@ class TestAmend:
 
         amended = service.amend(
             proposal.id,
-            add=[draft(4, T.UPDATE, K.CLASS, graph["kitchen"], title="Galley")],
+            add=[
+                draft(
+                    10,
+                    T.CREATE,
+                    K.CLASS,
+                    ref="hall",
+                    concept_scheme_id=graph["vocab"],
+                    title="Hall",
+                )
+            ],
             remove=[3],
         )
 
         ops = by_seq(service.get(amended.id))
-        assert ops[4].status is OperationStatus.PENDING and ops[4].amended_at is not None
-        assert ops[4].amendments == []
+        assert ops[10].status is OperationStatus.PENDING and ops[10].amended_at is not None
+        assert ops[10].amendments == []
         assert (ops[3].status, ops[3].reason) == (OperationStatus.WITHDRAWN, REMOVED_REASON)
         assert amended.status is ProposalStatus.OPEN
 
@@ -103,12 +118,12 @@ class TestAmend:
         with pytest.raises(ProposalValidationError) as raised:
             service.amend(
                 proposal.id,
-                replace=[draft(9, T.UPDATE, K.CLASS, graph["room"], description="x")],
+                replace=[draft(99, T.UPDATE, K.CLASS, graph["room"], description="x")],
                 add=[draft(2, T.UPDATE, K.CLASS, graph["vocab"], title="x")],
             )
 
         codes = {(e.seq, e.code) for e in raised.value.errors}
-        assert (9, "unknown_seq") in codes and (2, "invalid") in codes
+        assert (99, "unknown_seq") in codes and (2, "invalid") in codes
 
     def test_a_replacement_is_validated_as_on_propose(self, service, graph):
         proposal = propose(service, graph, *nine_rewordings(graph))
@@ -131,6 +146,83 @@ class TestAmend:
             )
 
         assert [(e.seq, e.code) for e in raised.value.errors] == [(3, "conflicting_op")]
+
+    def test_a_replacement_conflicting_with_a_kept_operation_at_a_higher_seq_is_refused(
+        self, service, graph
+    ):
+        """Review of #1728: seq 1 now changes what seq 2 already changes."""
+        proposal = propose(service, graph, *nine_rewordings(graph))
+
+        with pytest.raises(ProposalValidationError) as raised:
+            service.amend(
+                proposal.id,
+                replace=[draft(1, T.UPDATE, K.CLASS, graph["kitchen"], description="Twice")],
+            )
+
+        assert [(e.seq, e.code) for e in raised.value.errors] == [(1, "conflicting_op")]
+
+    def test_a_replacement_touching_what_a_kept_delete_removes_is_refused(self, service, graph):
+        proposal = propose(
+            service,
+            graph,
+            draft(1, T.UPDATE, K.CLASS, graph["room"], description="A room"),
+            draft(2, T.DELETE, K.CLASS, graph["place"]),
+        )
+
+        with pytest.raises(ProposalValidationError) as raised:
+            service.amend(
+                proposal.id,
+                replace=[draft(1, T.UPDATE, K.CLASS, graph["place"], description="Gone soon")],
+            )
+
+        assert [(e.seq, e.code) for e in raised.value.errors] == [(1, "conflicting_op")]
+
+    def test_a_failed_operation_is_replaced_but_never_removed(self, service, proposals, graph):
+        proposal = propose(service, graph, *nine_rewordings(graph))
+        failed = by_seq(proposal)[1]
+        failed.status = OperationStatus.FAILED
+        proposals.save_operations(proposal.id, [failed])
+
+        with pytest.raises(ProposalValidationError) as raised:
+            service.amend(proposal.id, remove=[1])
+        amended = service.amend(
+            proposal.id,
+            replace=[draft(1, T.UPDATE, K.CLASS, graph["room"], description="Again")],
+        )
+
+        assert [(e.seq, e.code) for e in raised.value.errors] == [(1, "decided")]
+        assert by_seq(amended)[1].status is OperationStatus.PENDING
+
+    def test_the_replaced_version_keeps_every_proposer_set_field(self, service, graph):
+        """Review of #1728: op, kind, target, ref, notes, replacement and alternatives too."""
+        proposal = propose(service, graph, *nine_rewordings(graph))
+
+        amended = service.amend(
+            proposal.id,
+            replace=[draft(3, T.UPDATE, K.CLASS, graph["place"], description="A spot")],
+        )
+
+        (earlier,) = by_seq(amended)[3].amendments
+        assert {k: earlier[k] for k in ("op", "kind", "target_id", "ref", "fields")} == {
+            "op": "update",
+            "kind": "class",
+            "target_id": graph["place"],
+            "ref": None,
+            "fields": {"description": "Somewhere"},
+        }
+        assert {"notes", "replacement", "alternatives", "scope", "amended_at"} <= set(earlier)
+
+    def test_a_first_data_operation_resolves_the_proposals_dataset(self, service, graph):
+        """Review of #1728: as propose does, a schema-only proposal takes its dataset."""
+        proposal = propose(service, graph, *nine_rewordings(graph))
+        assert proposal.dataset_id is None
+
+        service.amend(
+            proposal.id,
+            add=[draft(10, T.CREATE, K.INDIVIDUAL, title="Pantry", class_ids=[graph["room"]])],
+        )
+
+        assert service.get(proposal.id).dataset_id is not None
 
     def test_dropping_a_ref_still_in_use_is_refused(self, service, graph):
         proposal = propose(
@@ -224,7 +316,98 @@ class TestWithdraw:
             service.withdraw(proposal.id, superseded_by=proposal.id)
 
 
+class TestAWithdrawnProposalTakesNoDecisions:
+    """Review of #1728: nothing is applied, rejected, reopened or added after a withdraw."""
+
+    def test_apply_and_reject_are_refused(self, service, graph):
+        proposal = propose(service, graph, *nine_rewordings(graph))
+        service.withdraw(proposal.id)
+        first = by_seq(proposal)[1].id
+
+        with pytest.raises(ChangeProposalStateError, match="withdrawn"):
+            service.apply(proposal.id, [first])
+        with pytest.raises(ChangeProposalStateError, match="withdrawn"):
+            service.reject(proposal.id, [first])
+        with pytest.raises(ChangeProposalStateError, match="withdrawn"):
+            service.reopen(proposal.id, [first])
+        with pytest.raises(ChangeProposalStateError, match="withdrawn"):
+            service.revert(proposal.id)
+
+    def test_a_removed_operation_is_never_applied(self, service, graph):
+        proposal = propose(service, graph, *nine_rewordings(graph))
+        service.amend(proposal.id, remove=[2])
+
+        with pytest.raises(ChangeProposalStateError, match="withdrawn"):
+            service.apply(proposal.id, [by_seq(proposal)[2].id])
+
+
+class TestApplyWhatWasRead:
+    """Review of #1728: an operation amended since the reviewer read it is refused."""
+
+    def test_an_amendment_since_the_read_is_refused(self, service, graph):
+        proposal = propose(service, graph, *nine_rewordings(graph))
+        seen = by_seq(proposal)[1]
+        service.amend(
+            proposal.id,
+            replace=[draft(1, T.UPDATE, K.CLASS, graph["room"], description="Changed")],
+        )
+
+        with pytest.raises(ChangeProposalStateError, match="amended"):
+            service.apply(proposal.id, [seen.id], amended_at={seen.id: seen.amended_at})
+
+        current = by_seq(service.get(proposal.id))[1]
+        applied = service.apply(
+            proposal.id, [current.id], amended_at={current.id: current.amended_at}
+        )
+        assert by_seq(applied)[1].status is OperationStatus.APPLIED
+
+
+class TestWithdrawSupersededBy:
+    def test_the_replacement_must_be_on_the_same_taxonomy_and_standing(
+        self, service, ontology, graph
+    ):
+        old = propose(service, graph, *nine_rewordings(graph))
+        other = ontology.create_taxonomy(title="Garden")
+        elsewhere = service.propose(
+            other.id,
+            "Garden",
+            [draft(1, T.UPDATE, K.TAXONOMY, other.id, description="Green")],
+            ProposalSource.USER,
+        )
+        gone = propose(service, graph, *nine_rewordings(graph)[:1])
+        service.withdraw(gone.id)
+
+        with pytest.raises(ChangeProposalStateError, match="another taxonomy"):
+            service.withdraw(old.id, superseded_by=elsewhere.id)
+        with pytest.raises(ChangeProposalStateError, match="withdrawn"):
+            service.withdraw(old.id, superseded_by=gone.id)
+        assert service.get(old.id).status is ProposalStatus.OPEN
+
+
 class TestSupersedeOnPropose:
+    def test_a_failed_withdraw_stores_nothing(self, proposals, ontology, repo, graph):
+        """Review of #1728: withdraw first; if it fails, no new proposal exists."""
+        from domain.versioning.exceptions import RevertConflictError
+        from domain.versioning.proposal_service import ProposalService
+        from tests.unit.domain.versioning.test_proposal_service import StubRevertService
+
+        service = ProposalService(
+            proposals, ontology, repo, StubRevertService(error=RevertConflictError("no", []))
+        )
+        old = propose(service, graph, *nine_rewordings(graph))
+
+        with pytest.raises(RevertConflictError):
+            service.propose(
+                graph["taxonomy"],
+                "Take two",
+                nine_rewordings(graph),
+                ProposalSource.MCP,
+                supersedes=[old.id],
+            )
+
+        assert [p.id for p in proposals._proposals.values()] == [old.id]
+        assert service.get(old.id).status is ProposalStatus.OPEN
+
     def test_propose_withdraws_and_links_what_it_supersedes(self, service, graph):
         old = propose(service, graph, *nine_rewordings(graph))
 

@@ -5495,6 +5495,13 @@ export interface components {
        */
       operation_ids: string[];
       /**
+       * Amended At
+       * @description Operation id -> the amended_at the reviewer saw (null: as first proposed); an operation its proposer amended since is refused (409), so nobody approves a version they never read
+       */
+      amended_at?: {
+        [key: string]: string | null;
+      };
+      /**
        * Force Stale
        * @description Operations to apply even though their target changed since proposed
        */
@@ -17250,7 +17257,7 @@ export interface operations {
         };
         content?: never;
       };
-      /** @description An operation is already applied or rejected */
+      /** @description The proposal is reverted or withdrawn, an operation is already applied, rejected or withdrawn, or (apply) it was amended since it was read */
       409: {
         headers: {
           [name: string]: unknown;

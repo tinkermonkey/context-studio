@@ -70,7 +70,14 @@ router = APIRouter(prefix="/api", tags=["proposals"])
 _logger = get_logger(__name__)
 
 _NOT_FOUND = {404: {"description": "Change proposal not found"}}
-_STATE_CONFLICT = {409: {"description": "An operation is already applied or rejected"}}
+_STATE_CONFLICT = {
+    409: {
+        "description": (
+            "The proposal is reverted or withdrawn, an operation is already applied,"
+            " rejected or withdrawn, or (apply) it was amended since it was read"
+        )
+    }
+}
 
 
 def _annotation(annotation: Optional[ReviewAnnotationRequest]) -> Optional[dict[str, Any]]:
@@ -627,6 +634,7 @@ async def apply_proposal(
             chosen_alternatives=request.chosen_alternatives,
             review_ms=request.review_ms,
             annotations=_annotations(request.annotations),
+            amended_at=request.amended_at,
         )
         return proposal_response(service, proposal)
 

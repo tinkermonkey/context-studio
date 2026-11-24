@@ -461,6 +461,14 @@ class SQLiteChangeProposalRepository:
             run.status = status.value  # type: ignore[assignment]
             session.commit()
 
+    def set_dataset(self, proposal_id: str, dataset_id: Optional[str]) -> None:
+        with self._session_factory() as session:
+            run = session.get(ChangeProposalRun, proposal_id)
+            if run is None:
+                raise ValueError(f"No proposal {proposal_id}")
+            run.dataset_id = dataset_id  # type: ignore[assignment]
+            session.commit()
+
 
 def _unjudged_rejection():
     """

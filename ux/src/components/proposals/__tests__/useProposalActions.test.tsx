@@ -3,6 +3,7 @@
  * individual create's class edit and the review time with an apply, and the
  * reason code, note and review time with a reject.
  */
+import { renameOperation, unamended } from "@/test/proposalFixtures";
 import type { ReactNode } from "react";
 import { describe, it, expect, beforeAll, afterEach, afterAll } from "vitest";
 import { act, renderHook } from "@testing-library/react";
@@ -19,7 +20,7 @@ import type {
   ChangeProposalApplyRequest,
   ChangeProposalRejectRequest,
 } from "@/api/services/proposals";
-import { useProposalActions } from "../useProposalActions";
+import { amendedAtShown, useProposalActions } from "../useProposalActions";
 
 const server = setupServer();
 beforeAll(() => server.listen({ onUnhandledRequest: "error" }));
@@ -66,6 +67,7 @@ describe("useProposalActions", () => {
 
     expect(body).toEqual({
       operation_ids: ["op-1"],
+      amended_at: unamended(["op-1"]),
       force_stale: [],
       edits: { "op-1": { class_ids: ["class-2"] } },
       review_ms: { "op-1": 3100 },
@@ -98,6 +100,7 @@ describe("useProposalActions", () => {
     expect(bodies).toEqual([
       {
         operation_ids: ["op-1"],
+        amended_at: unamended(["op-1"]),
         force_stale: [],
         edits: {},
         annotations: { "op-1": { tier: "core", also_defensible: ["class-2"] } },
@@ -124,7 +127,12 @@ describe("useProposalActions", () => {
       await result.current.accept(["op-1"]);
     });
 
-    expect(body).toEqual({ operation_ids: ["op-1"], force_stale: [], edits: {} });
+    expect(body).toEqual({
+      operation_ids: ["op-1"],
+      amended_at: unamended(["op-1"]),
+      force_stale: [],
+      edits: {},
+    });
   });
 
   it("rejects with a reason code, a note and the review time", async () => {
@@ -169,5 +177,14 @@ describe("useProposalActions", () => {
     });
 
     expect(body).toEqual({ operation_ids: ["op-1"], note: "duplicate of op-2" });
+  });
+});
+
+describe("amendedAtShown (#1624)", () => {
+  it("sends the amended_at the page showed, null for an operation as first proposed", () => {
+    const amended = { ...renameOperation, id: "op-a", amended_at: "2026-11-24T12:00:00Z" };
+    expect(
+      amendedAtShown([renameOperation, amended], ["op-a", renameOperation.id, "op-x"]),
+    ).toEqual({ "op-a": "2026-11-24T12:00:00Z", [renameOperation.id]: null });
   });
 });

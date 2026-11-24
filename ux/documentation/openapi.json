@@ -7973,7 +7973,7 @@
             "description": "Change proposal not found"
           },
           "409": {
-            "description": "An operation is already applied or rejected"
+            "description": "The proposal is reverted or withdrawn, an operation is already applied, rejected or withdrawn, or (apply) it was amended since it was read"
           },
           "422": {
             "description": "An operation id is not in the proposal, the reason_code is unknown, or review_ms names an operation not being rejected"
@@ -11566,6 +11566,22 @@
             "minItems": 1,
             "title": "Operation Ids",
             "description": "Operations to apply"
+          },
+          "amended_at": {
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "type": "object",
+            "title": "Amended At",
+            "description": "Operation id -> the amended_at the reviewer saw (null: as first proposed); an operation its proposer amended since is refused (409), so nobody approves a version they never read"
           },
           "force_stale": {
             "items": {

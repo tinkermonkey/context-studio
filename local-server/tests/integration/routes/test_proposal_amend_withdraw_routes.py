@@ -13,7 +13,11 @@ import json  # noqa: E402
 
 import pytest  # noqa: E402
 
-from adapters.chat.proposal_tools import AmendProposalTool, WithdrawProposalTool  # noqa: E402
+from adapters.chat.proposal_tools import (  # noqa: E402
+    AmendProposalTool,
+    GetProposalTool,
+    WithdrawProposalTool,
+)
 from domain.ontology.exceptions import EntityNotFoundError  # noqa: E402
 from domain.versioning.proposals import ProposalSource  # noqa: E402
 from tests.integration.routes.test_approval_policy_routes import (  # noqa: E402, F401 - fixtures
@@ -200,3 +204,93 @@ class TestMcpTools:
 
         assert json.loads(outcome.content)["status"] == "withdrawn"
         assert again.is_error and "only an open" in again.content
+
+
+class TestReviewOf1728:
+    """The fixes the review of #1728 asked for, end to end over REST and MCP."""
+
+    def test_supersede_rolls_the_old_one_back_before_the_new_one_is_checked(
+        self, client, house, ontology
+    ):
+        """The old proposal's applied change overlaps the new one's: neither undoes the other."""
+        old = _propose(
+            client, house, _describe(1, house["attic"], "Dusty"), _create(2, house, "Cellar")
+        )
+        client.post(
+            f"/api/proposals/{old['id']}/apply",
+            json={"operation_ids": [old["operations"][0]["id"]]},
+        )
+        assert ontology.get_individual(house["attic"]).description == "Dusty"
+
+        new = _propose(
+            client,
+            house,
+            _describe(1, house["attic"], "Dusty, under the roof"),
+            supersedes=[old["id"]],
+        )
+
+        assert client.get(f"/api/proposals/{old['id']}").json()["status"] == "withdrawn"
+        assert ontology.get_individual(house["attic"]).description in (None, "")
+        (operation,) = new["operations"]
+        assert operation["stale"] is False  # checked against the rolled-back graph
+        applied = client.post(
+            f"/api/proposals/{new['id']}/apply", json={"operation_ids": [operation["id"]]}
+        )
+        assert applied.status_code == 200, applied.text
+        assert ontology.get_individual(house["attic"]).description == "Dusty, under the roof"
+
+    def test_apply_refuses_a_version_the_reviewer_never_read(self, client, house):
+        proposal = _propose(client, house, _describe(1, house["attic"], "Dusty"))
+        (shown,) = proposal["operations"]
+        client.post(
+            f"/api/proposals/{proposal['id']}/amend",
+            json={"replace": [_describe(1, house["attic"], "Damp")]},
+        )
+
+        stale = client.post(
+            f"/api/proposals/{proposal['id']}/apply",
+            json={"operation_ids": [shown["id"]], "amended_at": {shown["id"]: None}},
+        )
+
+        assert stale.status_code == 409
+        assert "amended" in stale.json()["detail"]
+
+    def test_mcp_amends_and_withdraws_only_its_own_proposals(self, client, house):
+        by_a_person = _propose(client, house, _describe(1, house["attic"], "Dusty"), source="user")
+        service = client.app.state.proposal_service
+        amend = AmendProposalTool(service, ProposalSource.MCP)
+        withdraw = WithdrawProposalTool(service, ProposalSource.MCP)
+
+        amended = amend.run({"id": by_a_person["id"], "remove": [1]})
+        withdrawn = withdraw.run({"id": by_a_person["id"]})
+
+        assert amended.is_error and "only proposals you made" in amended.content
+        assert withdrawn.is_error and "only proposals you made" in withdrawn.content
+        assert client.get(f"/api/proposals/{by_a_person['id']}").json()["status"] == "open"
+
+    def test_mcp_amend_merges_fields_and_leaves_one_proposal(self, client, house):
+        proposal = _propose(
+            client,
+            house,
+            {
+                "seq": 1,
+                "op": "create",
+                "kind": "individual",
+                "fields": {"class_ids": [house["place"]], "title": "Cellar"},
+            },
+        )
+        service = client.app.state.proposal_service
+
+        outcome = AmendProposalTool(service, ProposalSource.MCP).run(
+            {"id": proposal["id"], "replace": [{"seq": 1, "fields": {"title": "Wine cellar"}}]}
+        )
+        shown = json.loads(
+            GetProposalTool(service, ProposalSource.MCP).run({"id": proposal["id"]}).content
+        )
+
+        assert not outcome.is_error, outcome.content
+        assert client.get("/api/proposals").json()["total"] == 1
+        (operation,) = shown["operations"]
+        assert operation["fields"] == {"class_ids": [house["place"]], "title": "Wine cellar"}
+        assert operation["amended_at"]
+        assert operation["amendments"][0]["fields"]["title"] == "Cellar"

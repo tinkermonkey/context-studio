@@ -191,6 +191,11 @@ class FakeChangeProposalRepository:
             raise ValueError(f"No proposal {proposal_id}")
         self._proposals[proposal_id].status = status
 
+    def set_dataset(self, proposal_id: str, dataset_id: Optional[str]) -> None:
+        if proposal_id not in self._proposals:
+            raise ValueError(f"No proposal {proposal_id}")
+        self._proposals[proposal_id].dataset_id = dataset_id
+
 
 def _matches(decision: ProposalDecision, f: DecisionFilter) -> bool:
     return (

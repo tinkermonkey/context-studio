@@ -233,6 +233,10 @@ class ChangeProposalRepository(Protocol):
         """Persist the proposal's status."""
         ...
 
+    def set_dataset(self, proposal_id: str, dataset_id: Optional[str]) -> None:
+        """Persist the dataset its data operations are in (an amendment's first one, #1624)."""
+        ...
+
 
 class EntitySourceRepository(Protocol):
     """Port for the source passages behind applied entities (see domain.versioning.provenance)."""

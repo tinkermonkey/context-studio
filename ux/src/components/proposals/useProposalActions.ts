@@ -142,6 +142,17 @@ function message(error: unknown): string {
  * skip the global mutation toast. One apply or reject runs at a time. The last apply's operation ids
  * drive the results view; a refused (409) revert is kept for the page to explain.
  */
+/** Each operation's amended_at as the page shows it (null: as first proposed). */
+export function amendedAtShown(
+  operations: ProposedOperation[],
+  operationIds: string[],
+): Record<string, string | null> {
+  const shown = new Map(operations.map((o) => [o.id, o.amended_at ?? null]));
+  return Object.fromEntries(
+    operationIds.filter((id) => shown.has(id)).map((id) => [id, shown.get(id) ?? null]),
+  );
+}
+
 export function useProposalActions(proposal: ChangeProposal | undefined) {
   const { toast } = useToasts();
   const apply = useApplyChangeProposal();
@@ -213,12 +224,15 @@ export function useProposalActions(proposal: ChangeProposal | undefined) {
     setLastEdits((previous) => remember(previous, edits));
     setLastAlternatives((previous) => remember(previous, chosenAlternatives));
     setLastResolutions((previous) => remember(previous, resolutions));
+    // The version the page showed: the server refuses one amended since (#1624)
+    const amendedAt = amendedAtShown(proposal?.operations ?? [], operationIds);
     try {
       const proposal = await apply.mutateAsync({
         id,
         data: {
           operation_ids: operationIds,
           force_stale: forceStale,
+          amended_at: amendedAt,
           edits,
           ...(Object.keys(chosenAlternatives).length > 0
             ? { chosen_alternatives: chosenAlternatives }

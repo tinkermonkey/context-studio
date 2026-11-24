@@ -236,6 +236,12 @@ class ChangeProposalApplyRequest(BaseModel):
     """Operations to apply, in seq order, under the proposal's run."""
 
     operation_ids: list[str] = Field(..., min_length=1, description="Operations to apply")
+    amended_at: dict[str, Optional[datetime]] = Field(
+        default_factory=dict,
+        description="Operation id -> the amended_at the reviewer saw (null: as first "
+        "proposed); an operation its proposer amended since is refused (409), so nobody "
+        "approves a version they never read",
+    )
     force_stale: list[str] = Field(
         default_factory=list,
         description="Operations to apply even though their target changed since proposed",

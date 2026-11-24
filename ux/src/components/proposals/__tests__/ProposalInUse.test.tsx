@@ -11,7 +11,7 @@ import { http, HttpResponse } from "msw";
 import { setupServer } from "msw/node";
 import { render } from "@/test/test-utils";
 import { entityPageHandlers } from "@/test/entityPageHandlers";
-import { openProposal, proposalHandlers } from "@/test/proposalFixtures";
+import { openProposal, proposalHandlers, unamended } from "@/test/proposalFixtures";
 import type { ChangeProposal, ProposedOperation } from "@/api/services/proposals";
 import { ProposalDetailPage } from "../ProposalDetailPage";
 
@@ -192,6 +192,7 @@ describe("a blocked relationship-type delete", () => {
     await waitFor(() => expect(applied).toHaveLength(1));
     expect(applied[0]).toEqual({
       operation_ids: ["op-delete"],
+      amended_at: unamended(["op-delete"]),
       force_stale: [],
       edits: {},
       resolutions: { "op-delete": { strategy: "delete", relationship_ids: ["rel-1", "rel-2"] } },

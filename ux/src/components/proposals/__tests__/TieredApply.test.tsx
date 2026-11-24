@@ -12,7 +12,7 @@ import { http, HttpResponse } from "msw";
 import { setupServer } from "msw/node";
 import { render } from "@/test/test-utils";
 import { entityPageHandlers } from "@/test/entityPageHandlers";
-import { goldPage, proposalHandlers } from "@/test/proposalFixtures";
+import { goldPage, proposalHandlers, unamended } from "@/test/proposalFixtures";
 import { reflectionProposal } from "@/test/reflectionFixtures";
 import type { ChangeProposal } from "@/api/services/proposals";
 import { ProposalDetailPage } from "../ProposalDetailPage";
@@ -172,6 +172,7 @@ describe("Threshold over mechanical kinds", () => {
     await waitFor(() => expect(applied).toHaveLength(1));
     expect(applied[0]).toMatchObject({
       operation_ids: ["m-dup", "m-rename", "m-reverse"],
+      amended_at: unamended(["m-dup", "m-rename", "m-reverse"]),
       force_stale: [],
       edits: {},
     });
@@ -295,7 +296,12 @@ describe("Reflection answers in the inspector", () => {
     await userEvent.click(await screen.findByTestId("operation-accept"));
 
     await waitFor(() => expect(applied).toHaveLength(1));
-    expect(applied[0]).toEqual({ operation_ids: ["j-retarget"], force_stale: [], edits: {} });
+    expect(applied[0]).toEqual({
+      operation_ids: ["j-retarget"],
+      amended_at: unamended(["j-retarget"]),
+      force_stale: [],
+      edits: {},
+    });
   });
 
   it("an alternative pick accepts with an edit and the chosen alternative", async () => {
@@ -313,6 +319,7 @@ describe("Reflection answers in the inspector", () => {
     await waitFor(() => expect(applied).toHaveLength(1));
     expect(applied[0]).toEqual({
       operation_ids: ["j-retarget"],
+      amended_at: unamended(["j-retarget"]),
       force_stale: [],
       edits: {
         "j-retarget": {
