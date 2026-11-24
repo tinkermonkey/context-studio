@@ -1,6 +1,6 @@
 # Intra-layer relationships
 # Format: source_id -> predicate -> target_id
-# Last updated: 2026-11-24T15:59:58.191Z
+# Last updated: 2026-11-24T17:48:35.715Z
 
 - source: motivation.meaning.knowledge-as-infrastructure
   target: motivation.value.knowledge-reusability
@@ -16022,4 +16022,96 @@
   target: ux.dataconfig.use-reference-status
   predicate: binds-to
   layer: ux
+  category: structural
+- source: application.applicationfunction.domain-import-check
+  target: motivation.requirement.contexts-depend-on-each-other-only-through-public-contracts
+  predicate: satisfies
+  layer: application
+  targetLayer: motivation
+  category: structural
+- source: application.applicationservice.extraction-service
+  target: motivation.requirement.contexts-depend-on-each-other-only-through-public-contracts
+  predicate: satisfies
+  layer: application
+  targetLayer: motivation
+  category: structural
+- source: application.applicationservice.proposal-service
+  target: data-model.objectschema.operation-draft
+  predicate: accesses
+  layer: application
+  targetLayer: data-model
+  category: structural
+- source: data-model.objectschema.operation-draft
+  target: motivation.requirement.contexts-depend-on-each-other-only-through-public-contracts
+  predicate: satisfies
+  layer: data-model
+  targetLayer: motivation
+  category: structural
+- source: motivation.requirement.contexts-depend-on-each-other-only-through-public-contracts
+  target: motivation.principle.hexagonal-domain-purity
+  predicate: realizes
+  layer: motivation
+  category: structural
+- source: application.applicationservice.import-run-service
+  target: motivation.requirement.contexts-depend-on-each-other-only-through-public-contracts
+  predicate: satisfies
+  layer: application
+  targetLayer: motivation
+  category: structural
+- source: api.operation.list-proposals
+  target: motivation.requirement.unlanded-lists-only-proposals-with-something-to-land
+  predicate: satisfies
+  layer: api
+  targetLayer: motivation
+  category: structural
+- source: api.operation.list-proposals
+  target: motivation.requirement.the-proposals-list-filters-in-the-query-and-has-a-summary-form
+  predicate: satisfies
+  layer: api
+  targetLayer: motivation
+  category: structural
+- source: application.applicationservice.change-proposal-repository
+  target: motivation.requirement.unlanded-lists-only-proposals-with-something-to-land
+  predicate: satisfies
+  layer: application
+  targetLayer: motivation
+  category: structural
+- source: application.applicationservice.change-proposal-repository
+  target: motivation.requirement.the-proposals-list-filters-in-the-query-and-has-a-summary-form
+  predicate: satisfies
+  layer: application
+  targetLayer: motivation
+  category: structural
+- source: application.applicationservice.change-proposal-repository
+  target: data-model.objectschema.operation-count
+  predicate: accesses
+  layer: application
+  targetLayer: data-model
+  category: structural
+- source: motivation.requirement.unlanded-lists-only-proposals-with-something-to-land
+  target: motivation.outcome.client-changes-land-without-hand-edited-specs
+  predicate: realizes
+  layer: motivation
+  category: structural
+- source: data-model.objectschema.operation-count
+  target: api.response.operation-count-response
+  predicate: maps-to
+  layer: data-model
+  targetLayer: api
+  category: structural
+- source: motivation.requirement.one-unexportable-operation-never-blocks-a-dr-spec-export
+  target: motivation.outcome.client-changes-land-without-hand-edited-specs
+  predicate: realizes
+  layer: motivation
+  category: structural
+- source: application.applicationcomponent.dr-spec-changes-exporter
+  target: application.applicationfunction.spec-changes-for-a-proposal
+  predicate: assigned-to
+  layer: application
+  category: structural
+- source: application.applicationfunction.spec-changes-for-a-proposal
+  target: motivation.requirement.one-unexportable-operation-never-blocks-a-dr-spec-export
+  predicate: satisfies
+  layer: application
+  targetLayer: motivation
   category: structural

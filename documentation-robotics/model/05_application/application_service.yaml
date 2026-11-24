@@ -114,9 +114,10 @@ application.applicationservice.import-run-service:
   layer_id: application
   name: Import Run Service
   description: Domain service managing import run lifecycle for SKOS/OWL/GraphML
-    interchange — creates runs in PENDING state, transitions them to
-    COMMITTED/FAILED/ROLLED_BACK, and manages correlation context for change
-    event linkage
+    interchange — creates runs in PENDING state and transitions them to
+    COMMITTED/FAILED/ROLLED_BACK. The batch-run correlation context it owns is
+    set with set_batch_run_context (the backward-compatible
+    set_import_run_context is gone).
   attributes:
     serviceType: synchronous
   source_reference:
@@ -1088,7 +1089,11 @@ application.applicationservice.change-proposal-repository:
   type: applicationservice
   layer_id: application
   name: ChangeProposalRepository
-  description: "Hexagonal port: stores change proposals and the outcome of each operation."
+  description: Port for storing and querying change proposals. The list and count
+    queries share one filter (taxonomy, status, source, landed with
+    nothing-to-land left out, implementation, dataset, source, pipeline type);
+    operation_tallies counts operations by op, kind, status and scope without
+    loading them.
   attributes:
     serviceType: synchronous
   source_reference:

@@ -16,11 +16,11 @@ Application components, services, and interactions.
 
 | Metric                    | Count |
 | ------------------------- | ----- |
-| Elements                  | 192   |
-| Intra-Layer Relationships | 421   |
-| Inter-Layer Relationships | 415   |
+| Elements                  | 194   |
+| Intra-Layer Relationships | 422   |
+| Inter-Layer Relationships | 423   |
 | Inbound Relationships     | 232   |
-| Outbound Relationships    | 183   |
+| Outbound Relationships    | 191   |
 
 **Cross-Layer References**:
 
@@ -52,7 +52,7 @@ Application components, services, and interactions.
 | `application.applicationcomponent.dr-predicate-rules`                       | `applicationcomponent`     | 3             |
 | `application.applicationcomponent.dr-reflection-plan-importer`              | `applicationcomponent`     | 4             |
 | `application.applicationcomponent.dr-relationship-rules`                    | `applicationcomponent`     | 3             |
-| `application.applicationcomponent.dr-spec-changes-exporter`                 | `applicationcomponent`     | 3             |
+| `application.applicationcomponent.dr-spec-changes-exporter`                 | `applicationcomponent`     | 4             |
 | `application.applicationcomponent.dr-spec-drift-planner`                    | `applicationcomponent`     | 4             |
 | `application.applicationcomponent.dr-spec-reader`                           | `applicationcomponent`     | 2             |
 | `application.applicationcomponent.duck-db-sync-adapter`                     | `applicationcomponent`     | 3             |
@@ -117,6 +117,7 @@ Application components, services, and interactions.
 | `application.applicationevent.ontology-changed-event`                       | `applicationevent`         | 1             |
 | `application.applicationevent.sync-completed-event`                         | `applicationevent`         | 1             |
 | `application.applicationfunction.definition-enrichment`                     | `applicationfunction`      | 4             |
+| `application.applicationfunction.domain-import-check`                       | `applicationfunction`      | 0             |
 | `application.applicationfunction.embedding-generation`                      | `applicationfunction`      | 2             |
 | `application.applicationfunction.evidence-pack-building`                    | `applicationfunction`      | 4             |
 | `application.applicationfunction.grounding-scoring`                         | `applicationfunction`      | 2             |
@@ -131,6 +132,7 @@ Application components, services, and interactions.
 | `application.applicationfunction.schema-grounding-apply`                    | `applicationfunction`      | 2             |
 | `application.applicationfunction.schema-neighborhood-traversal`             | `applicationfunction`      | 6             |
 | `application.applicationfunction.sparql-query-function`                     | `applicationfunction`      | 2             |
+| `application.applicationfunction.spec-changes-for-a-proposal`               | `applicationfunction`      | 1             |
 | `application.applicationfunction.split-witness`                             | `applicationfunction`      | 2             |
 | `application.applicationinteraction.domain-event-publication`               | `applicationinteraction`   | 1             |
 | `application.applicationinteraction.external-reference-enrichment`          | `applicationinteraction`   | 1             |
@@ -532,6 +534,7 @@ flowchart TB
 | `application.applicationcomponent.accesses.data-model.objectschema`  | `application.applicationcomponent.sqlite-source-repository`                 | `data-model.objectschema.source-entity`                                                   | `data-model`  | `accesses`   | many-to-many | medium   |
 | `application.applicationcomponent.accesses.data-store.collection`    | `application.applicationcomponent.sqlite-source-repository`                 | `data-store.collection.sources`                                                           | `data-store`  | `accesses`   | many-to-many | medium   |
 | `application.applicationfunction.realizes.business.businessfunction` | `application.applicationfunction.definition-enrichment`                     | `business.businessfunction.schema-refinement`                                             | `business`    | `realizes`   | many-to-many | medium   |
+| `application.applicationfunction.satisfies.motivation.requirement`   | `application.applicationfunction.domain-import-check`                       | `motivation.requirement.contexts-depend-on-each-other-only-through-public-contracts`      | `motivation`  | `satisfies`  | many-to-many | medium   |
 | `application.applicationfunction.realizes.business.businessfunction` | `application.applicationfunction.embedding-generation`                      | `business.businessfunction.semantic-search`                                               | `business`    | `realizes`   | many-to-many | medium   |
 | `application.applicationfunction.realizes.business.businessfunction` | `application.applicationfunction.evidence-pack-building`                    | `business.businessfunction.schema-refinement`                                             | `business`    | `realizes`   | many-to-many | medium   |
 | `application.applicationfunction.realizes.business.businessfunction` | `application.applicationfunction.grounding-scoring`                         | `business.businessfunction.schema-refinement`                                             | `business`    | `realizes`   | many-to-many | medium   |
@@ -544,6 +547,7 @@ flowchart TB
 | `application.applicationfunction.realizes.business.businessfunction` | `application.applicationfunction.schema-extraction-apply`                   | `business.businessfunction.schema-refinement`                                             | `business`    | `realizes`   | many-to-many | medium   |
 | `application.applicationfunction.realizes.business.businessfunction` | `application.applicationfunction.schema-grounding-apply`                    | `business.businessfunction.schema-refinement`                                             | `business`    | `realizes`   | many-to-many | medium   |
 | `application.applicationfunction.realizes.business.businessfunction` | `application.applicationfunction.schema-neighborhood-traversal`             | `business.businessfunction.schema-refinement`                                             | `business`    | `realizes`   | many-to-many | medium   |
+| `application.applicationfunction.satisfies.motivation.requirement`   | `application.applicationfunction.spec-changes-for-a-proposal`               | `motivation.requirement.one-unexportable-operation-never-blocks-a-dr-spec-export`         | `motivation`  | `satisfies`  | many-to-many | medium   |
 | `application.applicationinterface.exposes.security.secureresource`   | `application.applicationinterface.mcp-interface`                            | `security.secureresource.mcp-endpoint`                                                    | `security`    | `exposes`    | many-to-many | medium   |
 | `application.applicationinterface.exposes.security.secureresource`   | `application.applicationinterface.rest-api-interface`                       | `security.secureresource.local-rest-api`                                                  | `security`    | `exposes`    | many-to-many | medium   |
 | `application.applicationprocess.realizes.business.businessprocess`   | `application.applicationprocess.claim-triage-pipeline`                      | `business.businessprocess.triage-claims`                                                  | `business`    | `realizes`   | many-to-many | medium   |
@@ -562,6 +566,9 @@ flowchart TB
 | `application.applicationservice.realizes.product.feature`            | `application.applicationservice.bundle-export-service`                      | `product.feature.export-bundle`                                                           | `product`     | `realizes`   | many-to-many | medium   |
 | `application.applicationservice.realizes.business.businessservice`   | `application.applicationservice.bundle-import-service`                      | `business.businessservice.client-interchange-service`                                     | `business`    | `realizes`   | many-to-many | medium   |
 | `application.applicationservice.realizes.product.softwarecapability` | `application.applicationservice.bundle-import-service`                      | `product.softwarecapability.client-interchange`                                           | `product`     | `realizes`   | many-to-many | medium   |
+| `application.applicationservice.accesses.data-model.objectschema`    | `application.applicationservice.change-proposal-repository`                 | `data-model.objectschema.operation-count`                                                 | `data-model`  | `accesses`   | many-to-many | medium   |
+| `application.applicationservice.satisfies.motivation.requirement`    | `application.applicationservice.change-proposal-repository`                 | `motivation.requirement.the-proposals-list-filters-in-the-query-and-has-a-summary-form`   | `motivation`  | `satisfies`  | many-to-many | medium   |
+| `application.applicationservice.satisfies.motivation.requirement`    | `application.applicationservice.change-proposal-repository`                 | `motivation.requirement.unlanded-lists-only-proposals-with-something-to-land`             | `motivation`  | `satisfies`  | many-to-many | medium   |
 | `application.applicationservice.satisfies.motivation.requirement`    | `application.applicationservice.change-record-port`                         | `motivation.requirement.every-applied-proposal-is-revertible`                             | `motivation`  | `satisfies`  | many-to-many | medium   |
 | `application.applicationservice.realizes.business.businessservice`   | `application.applicationservice.chat-service`                               | `business.businessservice.agent-context-service`                                          | `business`    | `realizes`   | many-to-many | medium   |
 | `application.applicationservice.realizes.product.softwarecapability` | `application.applicationservice.chat-service`                               | `product.softwarecapability.chat-assistant`                                               | `product`     | `realizes`   | many-to-many | medium   |
@@ -580,12 +587,14 @@ flowchart TB
 | `application.applicationservice.realizes.product.softwarecapability` | `application.applicationservice.extraction-run-repository`                  | `product.softwarecapability.source-extraction`                                            | `product`     | `realizes`   | many-to-many | medium   |
 | `application.applicationservice.realizes.business.businessservice`   | `application.applicationservice.extraction-service`                         | `business.businessservice.source-extraction-service`                                      | `business`    | `realizes`   | many-to-many | medium   |
 | `application.applicationservice.realizes.product.softwarecapability` | `application.applicationservice.extraction-service`                         | `product.softwarecapability.source-extraction`                                            | `product`     | `realizes`   | many-to-many | medium   |
+| `application.applicationservice.satisfies.motivation.requirement`    | `application.applicationservice.extraction-service`                         | `motivation.requirement.contexts-depend-on-each-other-only-through-public-contracts`      | `motivation`  | `satisfies`  | many-to-many | medium   |
 | `application.applicationservice.realizes.business.businessservice`   | `application.applicationservice.graph-analysis-service`                     | `business.businessservice.agent-context-service`                                          | `business`    | `realizes`   | many-to-many | medium   |
 | `application.applicationservice.realizes.product.softwarecapability` | `application.applicationservice.graph-analysis-service`                     | `product.softwarecapability.graph-exploration`                                            | `product`     | `realizes`   | many-to-many | medium   |
 | `application.applicationservice.realizes.product.softwarecapability` | `application.applicationservice.grounding-adapter-port`                     | `product.softwarecapability.reference-grounding`                                          | `product`     | `realizes`   | many-to-many | medium   |
 | `application.applicationservice.realizes.business.businessservice`   | `application.applicationservice.import-run-service`                         | `business.businessservice.client-interchange-service`                                     | `business`    | `realizes`   | many-to-many | medium   |
 | `application.applicationservice.realizes.product.feature`            | `application.applicationservice.import-run-service`                         | `product.feature.owl-skos-and-graph-ml-import-and-export`                                 | `product`     | `realizes`   | many-to-many | medium   |
 | `application.applicationservice.realizes.product.softwarecapability` | `application.applicationservice.import-run-service`                         | `product.softwarecapability.client-interchange`                                           | `product`     | `realizes`   | many-to-many | medium   |
+| `application.applicationservice.satisfies.motivation.requirement`    | `application.applicationservice.import-run-service`                         | `motivation.requirement.contexts-depend-on-each-other-only-through-public-contracts`      | `motivation`  | `satisfies`  | many-to-many | medium   |
 | `application.applicationservice.realizes.product.softwarecapability` | `application.applicationservice.metrics-collector`                          | `product.softwarecapability.workspace-administration`                                     | `product`     | `realizes`   | many-to-many | medium   |
 | `application.applicationservice.realizes.business.businessservice`   | `application.applicationservice.ontology-service`                           | `business.businessservice.agent-context-service`                                          | `business`    | `realizes`   | many-to-many | medium   |
 | `application.applicationservice.realizes.product.softwarecapability` | `application.applicationservice.ontology-service`                           | `product.softwarecapability.schema-and-data-curation`                                     | `product`     | `realizes`   | many-to-many | medium   |
@@ -599,6 +608,7 @@ flowchart TB
 | `application.applicationservice.satisfies.motivation.requirement`    | `application.applicationservice.proposal-apply-rules`                       | `motivation.requirement.relationships-limited-to-allowed-types`                           | `motivation`  | `satisfies`  | many-to-many | medium   |
 | `application.applicationservice.realizes.business.businessservice`   | `application.applicationservice.proposal-comparison-service`                | `business.businessservice.pipeline-benchmarking-service`                                  | `business`    | `realizes`   | many-to-many | medium   |
 | `application.applicationservice.realizes.product.feature`            | `application.applicationservice.proposal-comparison-service`                | `product.feature.compare-two-pipelines`                                                   | `product`     | `realizes`   | many-to-many | medium   |
+| `application.applicationservice.accesses.data-model.objectschema`    | `application.applicationservice.proposal-service`                           | `data-model.objectschema.operation-draft`                                                 | `data-model`  | `accesses`   | many-to-many | medium   |
 | `application.applicationservice.realizes.business.businessservice`   | `application.applicationservice.proposal-service`                           | `business.businessservice.proposal-adjudication-service`                                  | `business`    | `realizes`   | many-to-many | medium   |
 | `application.applicationservice.realizes.product.softwarecapability` | `application.applicationservice.proposal-service`                           | `product.softwarecapability.proposal-review-and-apply`                                    | `product`     | `realizes`   | many-to-many | medium   |
 | `application.applicationservice.satisfies.motivation.requirement`    | `application.applicationservice.proposal-service`                           | `motivation.requirement.mirrored-taxonomies-accept-schema-changes-only-from-their-client` | `motivation`  | `satisfies`  | many-to-many | medium   |
@@ -1140,11 +1150,12 @@ Exports a decided proposal's applied DR spec changes in the cs-dr-spec-changes/1
 
 #### Relationships
 
-| Type        | Related Element                                           | Predicate  | Direction |
-| ----------- | --------------------------------------------------------- | ---------- | --------- |
-| intra-layer | `application.applicationservice.proposal-service`         | `realizes` | outbound  |
-| intra-layer | `application.applicationcomponent.interchange-chat-tools` | `uses`     | inbound   |
-| intra-layer | `application.applicationservice.ontology-repository`      | `serves`   | inbound   |
+| Type        | Related Element                                               | Predicate     | Direction |
+| ----------- | ------------------------------------------------------------- | ------------- | --------- |
+| intra-layer | `application.applicationfunction.spec-changes-for-a-proposal` | `assigned-to` | outbound  |
+| intra-layer | `application.applicationservice.proposal-service`             | `realizes`    | outbound  |
+| intra-layer | `application.applicationcomponent.interchange-chat-tools`     | `uses`        | inbound   |
+| intra-layer | `application.applicationservice.ontology-repository`          | `serves`      | inbound   |
 
 ### DR Spec Drift Planner {#dr-spec-drift-planner}
 
@@ -2587,7 +2598,7 @@ DecisionModel adapter for the Workers AI state-plus-questions API (the Clef deci
 
 **Type**: `applicationevent`
 
-Domain event fired when an entity extraction pipeline run completes successfully
+Domain event fired when an entity extraction pipeline run completes successfully. Carries the run's batch_run_id explicitly, so the change event recorder tags the change with it without an ambient context.
 
 #### Attributes
 
@@ -2678,6 +2689,20 @@ Enriches schema-node definitions in the background and proposes them.
 | intra-layer | `application.applicationprocess.schema-definition-refinement-pipeline` | `depends-on` | inbound   |
 | intra-layer | `application.applicationservice.ontology-repository`                   | `serves`     | inbound   |
 | intra-layer | `application.applicationservice.proposal-service`                      | `serves`     | inbound   |
+
+### Domain import check {#domain-import-check}
+
+**ID**: `application.applicationfunction.domain-import-check`
+
+**Type**: `applicationfunction`
+
+scripts/check_domain_imports.py: fails when domain/ imports infrastructure, imports another context's private names or modules, or constructs another context's application service.
+
+#### Relationships
+
+| Type        | Related Element                                                                      | Predicate   | Direction |
+| ----------- | ------------------------------------------------------------------------------------ | ----------- | --------- |
+| inter-layer | `motivation.requirement.contexts-depend-on-each-other-only-through-public-contracts` | `satisfies` | outbound  |
 
 ### Embedding Generation {#embedding-generation}
 
@@ -2922,6 +2947,21 @@ Application function that executes SPARQL queries over the in-memory graph const
 | intra-layer | `application.applicationcomponent.network-x-graph-engine-adapter` | `assigned-to` | inbound   |
 | intra-layer | `application.applicationservice.graph-analysis-service`           | `realizes`    | outbound  |
 
+### Spec changes for a proposal {#spec-changes-for-a-proposal}
+
+**ID**: `application.applicationfunction.spec-changes-for-a-proposal`
+
+**Type**: `applicationfunction`
+
+spec_changes_for: a decided proposal's applied operations as a cs-dr-spec-changes/1 document; what can't export is listed under skipped with why.
+
+#### Relationships
+
+| Type        | Related Element                                                                   | Predicate     | Direction |
+| ----------- | --------------------------------------------------------------------------------- | ------------- | --------- |
+| inter-layer | `motivation.requirement.one-unexportable-operation-never-blocks-a-dr-spec-export` | `satisfies`   | outbound  |
+| intra-layer | `application.applicationcomponent.dr-spec-changes-exporter`                       | `assigned-to` | inbound   |
+
 ### Split Witness {#split-witness}
 
 **ID**: `application.applicationfunction.split-witness`
@@ -3048,7 +3088,7 @@ HTTP REST interface exposed by FastAPI, providing all routes for ontology manage
 
 **Type**: `applicationprocess`
 
-Database schema migration process managed by Alembic, runs on application startup to apply pending migrations to local.db and operations.db
+Database schema migration process managed by Alembic, runs on application startup to apply pending migrations to local.db and operations.db. scripts/run_migrations.py runs the same migrations by hand: it resolves both databases from the config the app loads (CONFIG_PATH, else local-server/config.json; relative paths relative to local-server/), from any working directory, unless --local-db-url or --operations-db-url is given.
 
 #### Relationships
 
@@ -3523,7 +3563,7 @@ Plans a Context Studio bundle against the workspace and proposes it as one chang
 
 **Type**: `applicationservice`
 
-Hexagonal port: stores change proposals and the outcome of each operation.
+Port for storing and querying change proposals. The list and count queries share one filter (taxonomy, status, source, landed with nothing-to-land left out, implementation, dataset, source, pipeline type); operation_tallies counts operations by op, kind, status and scope without loading them.
 
 #### Attributes
 
@@ -3533,11 +3573,14 @@ Hexagonal port: stores change proposals and the outcome of each operation.
 
 #### Relationships
 
-| Type        | Related Element                                                      | Predicate    | Direction |
-| ----------- | -------------------------------------------------------------------- | ------------ | --------- |
-| intra-layer | `application.applicationcomponent.sqlite-change-proposal-repository` | `realizes`   | inbound   |
-| intra-layer | `application.applicationservice.proposal-service`                    | `depends-on` | inbound   |
-| intra-layer | `application.applicationservice.source-extraction-service`           | `depends-on` | inbound   |
+| Type        | Related Element                                                                         | Predicate    | Direction |
+| ----------- | --------------------------------------------------------------------------------------- | ------------ | --------- |
+| inter-layer | `data-model.objectschema.operation-count`                                               | `accesses`   | outbound  |
+| inter-layer | `motivation.requirement.the-proposals-list-filters-in-the-query-and-has-a-summary-form` | `satisfies`  | outbound  |
+| inter-layer | `motivation.requirement.unlanded-lists-only-proposals-with-something-to-land`           | `satisfies`  | outbound  |
+| intra-layer | `application.applicationcomponent.sqlite-change-proposal-repository`                    | `realizes`   | inbound   |
+| intra-layer | `application.applicationservice.proposal-service`                                       | `depends-on` | inbound   |
+| intra-layer | `application.applicationservice.source-extraction-service`                              | `depends-on` | inbound   |
 
 ### ChangeRecordPort {#changerecordport}
 
@@ -4098,55 +4141,56 @@ Domain service orchestrating four-layer knowledge extraction pipeline (KG contex
 
 #### Relationships
 
-| Type        | Related Element                                                           | Predicate    | Direction |
-| ----------- | ------------------------------------------------------------------------- | ------------ | --------- |
-| inter-layer | `api.operation.analyze-text`                                              | `references` | inbound   |
-| inter-layer | `api.operation.create-grounding-workflow`                                 | `references` | inbound   |
-| inter-layer | `api.operation.delete-grounding-workflow`                                 | `references` | inbound   |
-| inter-layer | `api.operation.enrich-from-references`                                    | `references` | inbound   |
-| inter-layer | `api.operation.extract-entities`                                          | `references` | inbound   |
-| inter-layer | `api.operation.get-grounding-workflow`                                    | `references` | inbound   |
-| inter-layer | `api.operation.get-reference-relations`                                   | `references` | inbound   |
-| inter-layer | `api.operation.get-reference-status`                                      | `references` | inbound   |
-| inter-layer | `api.operation.list-grounding-workflows`                                  | `references` | inbound   |
-| inter-layer | `api.operation.list-workflow-runs`                                        | `references` | inbound   |
-| inter-layer | `api.operation.run-grounding-workflow`                                    | `references` | inbound   |
-| inter-layer | `api.operation.search-references`                                         | `references` | inbound   |
-| inter-layer | `api.operation.update-grounding-workflow`                                 | `references` | inbound   |
-| inter-layer | `business.businessservice.source-extraction-service`                      | `realizes`   | outbound  |
-| inter-layer | `product.softwarecapability.source-extraction`                            | `realizes`   | outbound  |
-| intra-layer | `application.applicationcomponent.anthropic-llm-provider`                 | `realizes`   | inbound   |
-| intra-layer | `application.applicationcomponent.cached-reference-source`                | `realizes`   | inbound   |
-| intra-layer | `application.applicationcomponent.concept-net-reference-source`           | `realizes`   | inbound   |
-| intra-layer | `application.applicationcomponent.dbpedia-reference-source`               | `realizes`   | inbound   |
-| intra-layer | `application.applicationcomponent.grounding-adapter`                      | `realizes`   | inbound   |
-| intra-layer | `application.applicationcomponent.in-process-event-publisher`             | `realizes`   | inbound   |
-| intra-layer | `application.applicationcomponent.llm-provider-router`                    | `realizes`   | inbound   |
-| intra-layer | `application.applicationcomponent.local-reference-repository`             | `realizes`   | inbound   |
-| intra-layer | `application.applicationcomponent.open-ai-llm-provider`                   | `realizes`   | inbound   |
-| intra-layer | `application.applicationcomponent.open-router-llm-provider`               | `realizes`   | inbound   |
-| intra-layer | `application.applicationcomponent.schema-org-reference-source`            | `realizes`   | inbound   |
-| intra-layer | `application.applicationcomponent.sentence-transformer-embedding-adapter` | `realizes`   | inbound   |
-| intra-layer | `application.applicationcomponent.sklearn-clusterer`                      | `realizes`   | inbound   |
-| intra-layer | `application.applicationcomponent.spa-cy-nlp-processor`                   | `realizes`   | inbound   |
-| intra-layer | `application.applicationcomponent.sqlite-extraction-repository`           | `realizes`   | inbound   |
-| intra-layer | `application.applicationcomponent.wikidata-reference-source`              | `realizes`   | inbound   |
-| intra-layer | `application.applicationfunction.embedding-generation`                    | `realizes`   | inbound   |
-| intra-layer | `application.applicationfunction.individual-pre-review`                   | `realizes`   | inbound   |
-| intra-layer | `application.applicationservice.embedding-service`                        | `depends-on` | outbound  |
-| intra-layer | `application.applicationservice.extraction-repository`                    | `depends-on` | outbound  |
-| intra-layer | `application.applicationservice.extraction-run-repository`                | `depends-on` | outbound  |
-| intra-layer | `application.applicationservice.graph-analysis-service`                   | `depends-on` | outbound  |
-| intra-layer | `application.applicationservice.individual-recognizer`                    | `depends-on` | outbound  |
-| intra-layer | `application.applicationservice.individual-vector-index`                  | `depends-on` | outbound  |
-| intra-layer | `application.applicationservice.llmprovider`                              | `depends-on` | outbound  |
-| intra-layer | `application.applicationservice.nlpprocessor`                             | `depends-on` | outbound  |
-| intra-layer | `application.applicationservice.ontology-repository`                      | `depends-on` | outbound  |
-| intra-layer | `application.applicationservice.ontology-service`                         | `depends-on` | outbound  |
-| intra-layer | `application.applicationservice.reference-source`                         | `depends-on` | outbound  |
-| intra-layer | `application.applicationservice.schema-vector-index`                      | `depends-on` | outbound  |
-| intra-layer | `application.applicationservice.graph-analysis-service`                   | `flows-to`   | outbound  |
-| intra-layer | `application.applicationservice.ontology-service`                         | `depends-on` | inbound   |
+| Type        | Related Element                                                                      | Predicate    | Direction |
+| ----------- | ------------------------------------------------------------------------------------ | ------------ | --------- |
+| inter-layer | `api.operation.analyze-text`                                                         | `references` | inbound   |
+| inter-layer | `api.operation.create-grounding-workflow`                                            | `references` | inbound   |
+| inter-layer | `api.operation.delete-grounding-workflow`                                            | `references` | inbound   |
+| inter-layer | `api.operation.enrich-from-references`                                               | `references` | inbound   |
+| inter-layer | `api.operation.extract-entities`                                                     | `references` | inbound   |
+| inter-layer | `api.operation.get-grounding-workflow`                                               | `references` | inbound   |
+| inter-layer | `api.operation.get-reference-relations`                                              | `references` | inbound   |
+| inter-layer | `api.operation.get-reference-status`                                                 | `references` | inbound   |
+| inter-layer | `api.operation.list-grounding-workflows`                                             | `references` | inbound   |
+| inter-layer | `api.operation.list-workflow-runs`                                                   | `references` | inbound   |
+| inter-layer | `api.operation.run-grounding-workflow`                                               | `references` | inbound   |
+| inter-layer | `api.operation.search-references`                                                    | `references` | inbound   |
+| inter-layer | `api.operation.update-grounding-workflow`                                            | `references` | inbound   |
+| inter-layer | `business.businessservice.source-extraction-service`                                 | `realizes`   | outbound  |
+| inter-layer | `product.softwarecapability.source-extraction`                                       | `realizes`   | outbound  |
+| inter-layer | `motivation.requirement.contexts-depend-on-each-other-only-through-public-contracts` | `satisfies`  | outbound  |
+| intra-layer | `application.applicationcomponent.anthropic-llm-provider`                            | `realizes`   | inbound   |
+| intra-layer | `application.applicationcomponent.cached-reference-source`                           | `realizes`   | inbound   |
+| intra-layer | `application.applicationcomponent.concept-net-reference-source`                      | `realizes`   | inbound   |
+| intra-layer | `application.applicationcomponent.dbpedia-reference-source`                          | `realizes`   | inbound   |
+| intra-layer | `application.applicationcomponent.grounding-adapter`                                 | `realizes`   | inbound   |
+| intra-layer | `application.applicationcomponent.in-process-event-publisher`                        | `realizes`   | inbound   |
+| intra-layer | `application.applicationcomponent.llm-provider-router`                               | `realizes`   | inbound   |
+| intra-layer | `application.applicationcomponent.local-reference-repository`                        | `realizes`   | inbound   |
+| intra-layer | `application.applicationcomponent.open-ai-llm-provider`                              | `realizes`   | inbound   |
+| intra-layer | `application.applicationcomponent.open-router-llm-provider`                          | `realizes`   | inbound   |
+| intra-layer | `application.applicationcomponent.schema-org-reference-source`                       | `realizes`   | inbound   |
+| intra-layer | `application.applicationcomponent.sentence-transformer-embedding-adapter`            | `realizes`   | inbound   |
+| intra-layer | `application.applicationcomponent.sklearn-clusterer`                                 | `realizes`   | inbound   |
+| intra-layer | `application.applicationcomponent.spa-cy-nlp-processor`                              | `realizes`   | inbound   |
+| intra-layer | `application.applicationcomponent.sqlite-extraction-repository`                      | `realizes`   | inbound   |
+| intra-layer | `application.applicationcomponent.wikidata-reference-source`                         | `realizes`   | inbound   |
+| intra-layer | `application.applicationfunction.embedding-generation`                               | `realizes`   | inbound   |
+| intra-layer | `application.applicationfunction.individual-pre-review`                              | `realizes`   | inbound   |
+| intra-layer | `application.applicationservice.embedding-service`                                   | `depends-on` | outbound  |
+| intra-layer | `application.applicationservice.extraction-repository`                               | `depends-on` | outbound  |
+| intra-layer | `application.applicationservice.extraction-run-repository`                           | `depends-on` | outbound  |
+| intra-layer | `application.applicationservice.graph-analysis-service`                              | `depends-on` | outbound  |
+| intra-layer | `application.applicationservice.individual-recognizer`                               | `depends-on` | outbound  |
+| intra-layer | `application.applicationservice.individual-vector-index`                             | `depends-on` | outbound  |
+| intra-layer | `application.applicationservice.llmprovider`                                         | `depends-on` | outbound  |
+| intra-layer | `application.applicationservice.nlpprocessor`                                        | `depends-on` | outbound  |
+| intra-layer | `application.applicationservice.ontology-repository`                                 | `depends-on` | outbound  |
+| intra-layer | `application.applicationservice.ontology-service`                                    | `depends-on` | outbound  |
+| intra-layer | `application.applicationservice.reference-source`                                    | `depends-on` | outbound  |
+| intra-layer | `application.applicationservice.schema-vector-index`                                 | `depends-on` | outbound  |
+| intra-layer | `application.applicationservice.graph-analysis-service`                              | `flows-to`   | outbound  |
+| intra-layer | `application.applicationservice.ontology-service`                                    | `depends-on` | inbound   |
 
 ### ExtractionUsageRepository {#extractionusagerepository}
 
@@ -4328,7 +4372,7 @@ Hexagonal port: narrow health check for NLP components.
 
 **Type**: `applicationservice`
 
-Domain service managing import run lifecycle for SKOS/OWL/GraphML interchange — creates runs in PENDING state, transitions them to COMMITTED/FAILED/ROLLED_BACK, and manages correlation context for change event linkage
+Domain service managing import run lifecycle for SKOS/OWL/GraphML interchange — creates runs in PENDING state and transitions them to COMMITTED/FAILED/ROLLED_BACK. The batch-run correlation context it owns is set with set_batch_run_context (the backward-compatible set_import_run_context is gone).
 
 #### Attributes
 
@@ -4338,25 +4382,26 @@ Domain service managing import run lifecycle for SKOS/OWL/GraphML interchange �
 
 #### Relationships
 
-| Type        | Related Element                                                  | Predicate    | Direction |
-| ----------- | ---------------------------------------------------------------- | ------------ | --------- |
-| inter-layer | `api.operation.export-ontology`                                  | `references` | inbound   |
-| inter-layer | `api.operation.get-import-run`                                   | `references` | inbound   |
-| inter-layer | `api.operation.get-run-change-events`                            | `references` | inbound   |
-| inter-layer | `api.operation.import-ontology`                                  | `references` | inbound   |
-| inter-layer | `api.operation.list-import-runs`                                 | `references` | inbound   |
-| inter-layer | `business.businessservice.client-interchange-service`            | `realizes`   | outbound  |
-| inter-layer | `product.feature.owl-skos-and-graph-ml-import-and-export`        | `realizes`   | outbound  |
-| inter-layer | `product.softwarecapability.client-interchange`                  | `realizes`   | outbound  |
-| intra-layer | `application.applicationcomponent.graph-ml-interchange-adapter`  | `realizes`   | inbound   |
-| intra-layer | `application.applicationcomponent.owl-interchange-adapter`       | `realizes`   | inbound   |
-| intra-layer | `application.applicationcomponent.skos-interchange-adapter`      | `realizes`   | inbound   |
-| intra-layer | `application.applicationcomponent.sqlite-interchange-repository` | `realizes`   | inbound   |
-| intra-layer | `application.applicationservice.batch-run-repository`            | `depends-on` | outbound  |
-| intra-layer | `application.applicationservice.ontology-service`                | `depends-on` | outbound  |
-| intra-layer | `application.applicationservice.versioning-service`              | `depends-on` | outbound  |
-| intra-layer | `application.applicationservice.versioning-service`              | `flows-to`   | outbound  |
-| intra-layer | `application.applicationservice.ontology-service`                | `depends-on` | inbound   |
+| Type        | Related Element                                                                      | Predicate    | Direction |
+| ----------- | ------------------------------------------------------------------------------------ | ------------ | --------- |
+| inter-layer | `api.operation.export-ontology`                                                      | `references` | inbound   |
+| inter-layer | `api.operation.get-import-run`                                                       | `references` | inbound   |
+| inter-layer | `api.operation.get-run-change-events`                                                | `references` | inbound   |
+| inter-layer | `api.operation.import-ontology`                                                      | `references` | inbound   |
+| inter-layer | `api.operation.list-import-runs`                                                     | `references` | inbound   |
+| inter-layer | `business.businessservice.client-interchange-service`                                | `realizes`   | outbound  |
+| inter-layer | `product.feature.owl-skos-and-graph-ml-import-and-export`                            | `realizes`   | outbound  |
+| inter-layer | `product.softwarecapability.client-interchange`                                      | `realizes`   | outbound  |
+| inter-layer | `motivation.requirement.contexts-depend-on-each-other-only-through-public-contracts` | `satisfies`  | outbound  |
+| intra-layer | `application.applicationcomponent.graph-ml-interchange-adapter`                      | `realizes`   | inbound   |
+| intra-layer | `application.applicationcomponent.owl-interchange-adapter`                           | `realizes`   | inbound   |
+| intra-layer | `application.applicationcomponent.skos-interchange-adapter`                          | `realizes`   | inbound   |
+| intra-layer | `application.applicationcomponent.sqlite-interchange-repository`                     | `realizes`   | inbound   |
+| intra-layer | `application.applicationservice.batch-run-repository`                                | `depends-on` | outbound  |
+| intra-layer | `application.applicationservice.ontology-service`                                    | `depends-on` | outbound  |
+| intra-layer | `application.applicationservice.versioning-service`                                  | `depends-on` | outbound  |
+| intra-layer | `application.applicationservice.versioning-service`                                  | `flows-to`   | outbound  |
+| intra-layer | `application.applicationservice.ontology-service`                                    | `depends-on` | inbound   |
 
 ### IndividualRecognizer {#individualrecognizer}
 
@@ -4957,6 +5002,7 @@ Change proposals: create, decide, apply, reject, reopen, land and read operation
 | inter-layer | `api.operation.mark-proposal-landed`                                                      | `references` | inbound   |
 | inter-layer | `api.operation.reject-proposal`                                                           | `references` | inbound   |
 | inter-layer | `api.operation.reopen-operations`                                                         | `references` | inbound   |
+| inter-layer | `data-model.objectschema.operation-draft`                                                 | `accesses`   | outbound  |
 | inter-layer | `business.businessservice.proposal-adjudication-service`                                  | `realizes`   | outbound  |
 | inter-layer | `product.softwarecapability.proposal-review-and-apply`                                    | `realizes`   | outbound  |
 | inter-layer | `motivation.requirement.mirrored-taxonomies-accept-schema-changes-only-from-their-client` | `satisfies`  | outbound  |
@@ -5395,4 +5441,4 @@ Hexagonal port: describes the workspace and the viewed page to the chat model.
 
 ---
 
-Generated: 2026-11-24T16:00:09.816Z | Model Version: 0.1.0
+Generated: 2026-11-24T17:49:07.647Z | Model Version: 0.1.0

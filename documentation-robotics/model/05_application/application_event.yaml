@@ -47,7 +47,8 @@ application.applicationevent.extraction-completed-event:
   layer_id: application
   name: Extraction Completed Event
   description: Domain event fired when an entity extraction pipeline run completes
-    successfully
+    successfully. Carries the run's batch_run_id explicitly, so the change event
+    recorder tags the change with it without an ambient context.
   attributes:
     eventType: domain
   source_reference:

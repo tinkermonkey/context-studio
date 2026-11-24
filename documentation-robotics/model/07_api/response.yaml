@@ -947,6 +947,9 @@ api.response.change-proposal-response:
   type: response
   layer_id: api
   name: ChangeProposalResponse
+  description: "A change proposal with its operations in seq order and counts: how
+    many operations share each op, kind, status and scope. In a list's summary
+    form, operations is empty and counts still holds."
   attributes:
     description: ChangeProposalResponse
   source_reference:
@@ -1610,4 +1613,24 @@ api.response.candidate-item:
   metadata:
     created_at: 2026-11-19T15:45:33.526Z
     updated_at: 2026-11-19T15:45:33.526Z
+    version: 1
+api.response.operation-count-response:
+  id: 20d94c65-2473-47c0-ac59-4c8321d910e7
+  path: api.response.operation-count-response
+  spec_node_id: api.response
+  type: response
+  layer_id: api
+  name: Operation Count Response
+  description: One OperationCount in ChangeProposalResponse.counts.
+  attributes:
+    description: How many of the proposal's operations share this op, kind, status
+      and scope.
+  source_reference:
+    provenance: manual
+    locations:
+      - file: local-server/adapters/web/schemas/proposals.py
+        symbol: OperationCountResponse
+  metadata:
+    created_at: 2026-11-24T12:34:43.018Z
+    updated_at: 2026-11-24T12:34:43.018Z
     version: 1

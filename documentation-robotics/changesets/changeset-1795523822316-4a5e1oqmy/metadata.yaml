@@ -8,8 +8,8 @@ description: "#1623: one operation without a DR reference no longer blocks a
   the rest of the proposal exports. Done when get_spec_changes and
   export_dr_spec_changes.py export proposal ce4bfe6b's eight other operations."
 created: 2026-11-24T12:37:02.362Z
-modified: 2026-11-24T12:37:15.612Z
-status: staged
+modified: 2026-11-24T17:48:35.834Z
+status: committed
 baseSnapshot: v2:sha256:53252d39ed1357a9afdd6132507b497bf81313353af91142ccb6b590b147594c
 origin:
   kind: plan

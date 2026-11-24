@@ -981,3 +981,51 @@ data-model.objectschema.pre-review-verdict:
     created_at: 2026-11-22T14:48:01.265Z
     updated_at: 2026-11-22T14:48:01.265Z
     version: 1
+data-model.objectschema.operation-draft:
+  id: 8674784b-2f54-4820-81ee-5b233117eb4e
+  path: data-model.objectschema.operation-draft
+  spec_node_id: data-model.objectschema
+  type: objectschema
+  layer_id: data-model
+  name: Operation Draft
+  description: One operation a pipeline or client drafts for a change proposal,
+    before ProposalService validates and stores it. A value object of the
+    versioning context (domain/versioning/proposals.py), so other contexts
+    import it without the service module.
+  attributes:
+    type: object
+  source_reference:
+    provenance: manual
+    locations:
+      - file: local-server/domain/versioning/proposals.py
+        symbol: OperationDraft
+  metadata:
+    created_at: 2026-11-24T12:27:23.133Z
+    updated_at: 2026-11-24T12:27:23.133Z
+    version: 1
+data-model.objectschema.operation-count:
+  id: 524e7554-0b34-41ec-b859-6fad055f73f3
+  path: data-model.objectschema.operation-count
+  spec_node_id: data-model.objectschema
+  type: objectschema
+  layer_id: data-model
+  name: Operation Count
+  description: How many of a proposal's operations share one op, kind, status and
+    scope; a list summary carries these instead of the operations.
+  attributes:
+    type: object
+    required:
+      - op
+      - kind
+      - status
+      - scope
+      - count
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/domain/versioning/proposals.py
+        symbol: OperationCount
+  metadata:
+    created_at: 2026-11-24T12:34:33.368Z
+    updated_at: 2026-11-24T12:34:33.368Z
+    version: 1

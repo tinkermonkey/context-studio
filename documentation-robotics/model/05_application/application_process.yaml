@@ -24,9 +24,13 @@ application.applicationprocess.alembic-migration-runner:
   type: applicationprocess
   layer_id: application
   name: Alembic Migration Runner
-  description: Database schema migration process managed by Alembic, runs on
+  description: "Database schema migration process managed by Alembic, runs on
     application startup to apply pending migrations to local.db and
-    operations.db
+    operations.db. scripts/run_migrations.py runs the same migrations by hand:
+    it resolves both databases from the config the app loads (CONFIG_PATH, else
+    local-server/config.json; relative paths relative to local-server/), from
+    any working directory, unless --local-db-url or --operations-db-url is
+    given."
   source_reference:
     provenance: extracted
     locations:

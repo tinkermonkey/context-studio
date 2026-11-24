@@ -5,8 +5,8 @@ description: "#1649: run_migrations.py migrates the databases named by the
   way for both and from any working directory; --local-db-url and
   --operations-db-url stay as overrides."
 created: 2026-11-24T13:15:35.890Z
-modified: 2026-11-24T13:15:38.484Z
-status: staged
+modified: 2026-11-24T17:49:07.641Z
+status: committed
 baseSnapshot: v2:sha256:53252d39ed1357a9afdd6132507b497bf81313353af91142ccb6b590b147594c
 origin:
   kind: plan

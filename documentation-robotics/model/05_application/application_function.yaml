@@ -296,3 +296,41 @@ application.applicationfunction.split-witness:
     created_at: 2026-11-22T14:48:01.264Z
     updated_at: 2026-11-22T14:48:01.264Z
     version: 1
+application.applicationfunction.domain-import-check:
+  id: 606dd263-18a3-481f-bafe-263edcad6526
+  path: application.applicationfunction.domain-import-check
+  spec_node_id: application.applicationfunction
+  type: applicationfunction
+  layer_id: application
+  name: Domain import check
+  description: "scripts/check_domain_imports.py: fails when domain/ imports
+    infrastructure, imports another context's private names or modules, or
+    constructs another context's application service."
+  source_reference:
+    provenance: manual
+    locations:
+      - file: local-server/scripts/check_domain_imports.py
+        symbol: check_domain_imports
+  metadata:
+    created_at: 2026-11-24T12:27:23.131Z
+    updated_at: 2026-11-24T12:27:23.131Z
+    version: 1
+application.applicationfunction.spec-changes-for-a-proposal:
+  id: a64040b0-1906-4675-be77-3f98e297b1b5
+  path: application.applicationfunction.spec-changes-for-a-proposal
+  spec_node_id: application.applicationfunction
+  type: applicationfunction
+  layer_id: application
+  name: Spec changes for a proposal
+  description: "spec_changes_for: a decided proposal's applied operations as a
+    cs-dr-spec-changes/1 document; what can't export is listed under skipped
+    with why."
+  source_reference:
+    provenance: manual
+    locations:
+      - file: local-server/adapters/interchange/dr_spec_changes.py
+        symbol: spec_changes_for
+  metadata:
+    created_at: 2026-11-24T12:37:15.594Z
+    updated_at: 2026-11-24T12:37:15.594Z
+    version: 1
