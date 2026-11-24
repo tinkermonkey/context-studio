@@ -34,6 +34,8 @@ from domain.chat.entities import ChatMessage
 from domain.chat.ports import ChatModel
 from domain.chat.value_objects import ModelEvent, ToolSpec
 from domain.pipelines.exceptions import (
+    LLM_NOT_CONFIGURED_MESSAGE,
+    LLMNotConfiguredError,
     LLMProviderError,
     LLMRateLimitError,
     LLMRequestRefusedError,
@@ -48,14 +50,6 @@ logger = get_logger(__name__)
 # Anthropic SDK errors (AuthenticationError / PermissionDeniedError) carry them as
 # `status_code`.
 _AUTH_FAILURE_STATUSES = (401, 403)
-
-# What every call that needs a model says when no provider key is configured
-NO_LLM_KEY_MESSAGE = (
-    "No LLM provider key is configured, so features that call a model are disabled."
-    " Set llm.openai_api_key, llm.anthropic_api_key or llm.openrouter_api_key in"
-    " config.json (or the OPENAI_API_KEY, ANTHROPIC_API_KEY or OPENROUTER_API_KEY"
-    " environment variable) and restart."
-)
 
 
 def _is_auth_failure(error: Exception) -> bool:
@@ -204,8 +198,8 @@ class LLMProviderRouter:
         )
         if self._no_key_configured:
             # Many workflows need no model: the app runs, and every call that
-            # needs one raises NO_LLM_KEY_MESSAGE
-            logger.warning(NO_LLM_KEY_MESSAGE)
+            # needs one raises LLMNotConfiguredError
+            logger.warning(LLM_NOT_CONFIGURED_MESSAGE)
 
         if openai_api_key:
             try:
@@ -358,7 +352,7 @@ class LLMProviderRouter:
                 supporting provider failed
         """
         if self._no_key_configured:
-            raise ValueError(NO_LLM_KEY_MESSAGE)
+            raise LLMNotConfiguredError()
         last_error: Exception | None = None
         candidates = [
             (name, self._chat_models[name])
@@ -441,7 +435,7 @@ class LLMProviderRouter:
             ValueError: If no configured provider supports the model
         """
         if self._no_key_configured:
-            raise LLMRequestRefusedError(NO_LLM_KEY_MESSAGE)
+            raise LLMNotConfiguredError()
         try:
             return self._providers_for(model)
         except ValueError as error:

@@ -180,6 +180,29 @@ LLM_KEY_ENV_FALLBACKS = {
 }
 
 
+def _warn_unusable_llm_key(field_name: str, value: Any) -> None:
+    """Log that an LLM key in config.json is not a string and counts as not set."""
+    kind = "null" if value is None else f"a {type(value).__name__}, not a string"
+    _config_logger.warning(
+        f"llm.{field_name} in config.json is {kind}; treating it as not set"
+        f" (the {LLM_KEY_ENV_FALLBACKS[field_name]} environment variable applies,"
+        " if set). Features that call a model stay disabled until a key is set."
+    )
+
+
+def _drop_unusable_llm_keys(config_data: Any) -> None:
+    """
+    Warn once for each LLM key that is not a string and remove it, so it is not
+    warned about again on each validation pass.
+    """
+    llm = config_data.get("llm") if isinstance(config_data, dict) else None
+    if not isinstance(llm, dict):
+        return
+    for field_name in LLM_KEY_ENV_FALLBACKS:
+        if field_name in llm and not isinstance(llm[field_name], str):
+            _warn_unusable_llm_key(field_name, llm.pop(field_name))
+
+
 class LLMConfig(BaseModel):
     """LLM provider configuration section"""
 
@@ -199,12 +222,7 @@ class LLMConfig(BaseModel):
         """
         if isinstance(value, str):
             return value
-        kind = "null" if value is None else f"a {type(value).__name__}, not a string"
-        _config_logger.warning(
-            f"llm.{info.field_name} in config.json is {kind}; treating it as not set"
-            f" (the {LLM_KEY_ENV_FALLBACKS[info.field_name]} environment variable applies,"
-            " if set). Features that call a model stay disabled until a key is set."
-        )
+        _warn_unusable_llm_key(str(info.field_name), value)
         return ""
 
     @model_validator(mode="after")
@@ -604,6 +622,7 @@ class ConfigurationManager:
             ValidationError: If an error names nothing that can be set aside
         """
         data = copy.deepcopy(config_data)
+        _drop_unusable_llm_keys(data)
         # Each pass sets aside at least one value, so this ends
         while True:
             try:

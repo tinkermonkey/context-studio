@@ -119,6 +119,7 @@ from adapters.web.pipelines_routes import router as pipelines_router
 from adapters.web.proposal_comparison_routes import router as proposal_comparison_router
 from adapters.web.proposals_routes import router as proposals_router
 from adapters.web.reference_routes import router as reference_router
+from adapters.web.llm_errors import add_llm_error_handlers
 from adapters.web.request_guard import add_browser_guards
 from adapters.web.sources_routes import router as sources_router
 from adapters.web.versioning_routes import router as versioning_router
@@ -1002,6 +1003,9 @@ settings = get_settings()
 
 # Only the app's own UI may call the API from a browser
 add_browser_guards(app, settings.server)
+
+# A call that needs a model with no provider key answers 503 and says which settings to fill in
+add_llm_error_handlers(app)
 
 # Include routers (these are the FastAPI APIRouter instances)
 app.include_router(ontology_router)

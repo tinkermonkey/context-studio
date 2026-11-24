@@ -87,6 +87,27 @@ class LLMRequestRefusedError(LLMProviderError):
     pass
 
 
+# What every call that needs a model says when no provider key is configured
+LLM_NOT_CONFIGURED_MESSAGE = (
+    "No LLM provider key is configured, so features that call a model are disabled."
+    " Set llm.openai_api_key, llm.anthropic_api_key or llm.openrouter_api_key in"
+    " config.json (or the OPENAI_API_KEY, ANTHROPIC_API_KEY or OPENROUTER_API_KEY"
+    " environment variable) and restart."
+)
+
+
+class LLMNotConfiguredError(LLMRequestRefusedError, ValueError):
+    """
+    Raised for a call that needs a model when no provider key is configured.
+    Every call for any model will meet it until a key is set; the message names
+    the settings to fill in. It is a ValueError too, which is what chat's
+    streaming port raises for a model nothing serves.
+    """
+
+    def __init__(self) -> None:
+        super().__init__(LLM_NOT_CONFIGURED_MESSAGE)
+
+
 class PipelineExecutionError(PipelineError):
     """
     Raised when internal orchestrator logic fails unexpectedly.

@@ -74,6 +74,19 @@ class TestLLMKeys:
         )
         assert settings.server.port == 9123
 
+    def test_the_warning_is_logged_once_even_when_other_values_are_invalid(self, tmp_path, caplog):
+        content = {
+            "llm": {"openai_api_key": None},
+            "server": {"port": 80},
+            "chat": {"max_tool_rounds": 0},
+        }
+
+        with caplog.at_level(logging.WARNING, logger="config"):
+            load(tmp_path, content)
+
+        warnings = [r for r in caplog.records if "llm.openai_api_key" in r.getMessage()]
+        assert len(warnings) == 1
+
     def test_a_key_that_is_not_a_string_is_not_set(self, tmp_path, caplog):
         with caplog.at_level(logging.WARNING, logger="config"):
             settings = load(tmp_path, {"llm": {"openai_api_key": 12345}}).get_settings()
@@ -85,9 +98,7 @@ class TestLLMKeys:
 class TestInvalidValues:
     """An invalid value is named in the log and takes its default; the rest loads."""
 
-    def test_an_out_of_range_value_takes_its_default_and_other_fields_stay(
-        self, tmp_path, caplog
-    ):
+    def test_an_out_of_range_value_takes_its_default_and_other_fields_stay(self, tmp_path, caplog):
         content = {
             "server": {"port": 9123},
             "chat": {"max_tool_rounds": 999, "model": "claude-opus-5-5"},
@@ -150,9 +161,7 @@ class TestInvalidValues:
         assert "server.port" in caplog.text
         assert "chat.max_tool_rounds" in caplog.text
 
-    def test_the_log_does_not_echo_a_credential_given_as_an_invalid_value(
-        self, tmp_path, caplog
-    ):
+    def test_the_log_does_not_echo_a_credential_given_as_an_invalid_value(self, tmp_path, caplog):
         content = {"server": {"port": "sk-secret-credential-value"}}
 
         with caplog.at_level(logging.ERROR, logger="config"):

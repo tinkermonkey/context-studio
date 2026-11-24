@@ -26,6 +26,7 @@ from adapters.llm.anthropic_provider import AnthropicProvider
 from adapters.llm.provider_router import LLMProviderRouter, _completion_error
 from domain.extraction.llm_calls import failure_fields
 from domain.pipelines.exceptions import (
+    LLMNotConfiguredError,
     LLMProviderError,
     LLMRateLimitError,
     LLMRequestRefusedError,
@@ -160,6 +161,7 @@ class TestLLMProviderRouter:
             else:
                 router.complete("sys", "user", "claude-sonnet-5-5")
 
+        assert isinstance(exc_info.value, LLMNotConfiguredError)
         message = str(exc_info.value)
         assert "llm.openai_api_key" in message
         assert "llm.anthropic_api_key" in message
@@ -174,6 +176,7 @@ class TestLLMProviderRouter:
             ):
                 pass
 
+        assert isinstance(exc_info.value, LLMNotConfiguredError)
         assert "llm.anthropic_api_key" in str(exc_info.value)
 
     @patch("adapters.llm.provider_router.OpenAIProvider")
