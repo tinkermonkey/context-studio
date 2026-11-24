@@ -192,9 +192,10 @@ motivation.requirement.url-sources-refuse-private-network-addresses:
   type: requirement
   layer_id: motivation
   name: URL Sources Refuse Private Network Addresses
-  description: "Adding a URL source must refuse private, loopback and link-local
+  description: Adding a URL source must refuse private, loopback and link-local
     addresses, including after redirects, so the server cannot be used to reach
-    internal services (SSRF). Open: GitHub issue #1656."
+    internal services (SSRF). Met by the connect-time address check (#1656);
+    sources.allow_private_urls is the explicit exception.
   attributes:
     requirementType: non-functional
     priority: high

@@ -162,7 +162,9 @@ security.countermeasure.secret-safe-configuration:
   name: Secret-Safe Configuration
   description: config.json is untracked (config.example.json is the template);
     keys derived from the environment are not written back; configuration models
-    that may hold credentials hide input values in validation errors.
+    that may hold credentials hide input values in validation errors. Loading
+    sets an invalid value aside with its field named (never its value) and loads
+    the rest, rather than discarding the file.
   attributes:
     type: technical
     effectiveness: medium
@@ -198,4 +200,32 @@ security.countermeasure.vite-dev-server-loopback-binding:
   metadata:
     created_at: 2026-11-24T12:25:42.371Z
     updated_at: 2026-11-24T12:25:42.371Z
+    version: 1
+security.countermeasure.connect-time-address-check-for-url-sources:
+  id: 866b6c0c-43b0-4602-934f-159e085638be
+  path: security.countermeasure.connect-time-address-check-for-url-sources
+  spec_node_id: security.countermeasure
+  type: countermeasure
+  layer_id: security
+  name: Connect-Time Address Check for URL Sources
+  description: The page fetcher connects through a guarded httpcore network
+    backend that resolves the host once, refuses the connection when any address
+    is not public (loopback, private, link-local, unspecified, multicast, or one
+    embedded in an IPv4-mapped, NAT64 or 6to4 address) and connects to the
+    vetted IP, keeping SNI. Each redirect hop is a new vetted connection, proxy
+    environment variables are ignored, and only the reference proxy's loopback
+    origin is allowed. sources.allow_private_urls (off by default) lifts the
+    check.
+  attributes:
+    type: technical
+    effectiveness: high
+    implemented: true
+    description: URL sources cannot reach non-public addresses
+  source_reference:
+    provenance: manual
+    locations:
+      - file: local-server/adapters/sources/network_guard.py
+  metadata:
+    created_at: 2026-11-24T12:30:12.210Z
+    updated_at: 2026-11-24T12:30:12.210Z
     version: 1

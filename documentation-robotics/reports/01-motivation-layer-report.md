@@ -18,8 +18,8 @@ Goals, requirements, drivers, and strategic outcomes of the architecture.
 | ------------------------- | ----- |
 | Elements                  | 58    |
 | Intra-Layer Relationships | 72    |
-| Inter-Layer Relationships | 134   |
-| Inbound Relationships     | 134   |
+| Inter-Layer Relationships | 136   |
+| Inbound Relationships     | 136   |
 | Outbound Relationships    | 0     |
 
 **Cross-Layer References**:
@@ -235,6 +235,7 @@ flowchart TB
 | `product.userworkflow.delivers.motivation.outcome`                 | `product.userworkflow.connect-an-agent`                                                            | `motivation.outcome.agents-use-the-curated-vocabulary`                                    | `motivation` | `delivers`   | many-to-many | medium   |
 | `product.userworkflow.delivers.motivation.outcome`                 | `product.userworkflow.extract-a-document-into-a-dataset`                                           | `motivation.outcome.extraction-proposals-worth-a-reviewers-time`                          | `motivation` | `delivers`   | many-to-many | medium   |
 | `product.userworkflow.delivers.motivation.outcome`                 | `product.userworkflow.review-and-decide-a-proposal`                                                | `motivation.outcome.curated-domain-ontology`                                              | `motivation` | `delivers`   | many-to-many | medium   |
+| `security.countermeasure.satisfies.motivation.requirement`         | `security.countermeasure.connect-time-address-check-for-url-sources`                               | `motivation.requirement.url-sources-refuse-private-network-addresses`                     | `motivation` | `satisfies`  | many-to-many | medium   |
 | `security.countermeasure.satisfies.motivation.requirement`         | `security.countermeasure.human-review-gate-for-agent-writes`                                       | `motivation.requirement.breaking-changes-never-auto-apply`                                | `motivation` | `satisfies`  | many-to-many | medium   |
 | `security.countermeasure.satisfies.motivation.requirement`         | `security.countermeasure.loopback-only-mcp-startup`                                                | `motivation.requirement.mcp-requires-a-bearer-token-on-loopback`                          | `motivation` | `satisfies`  | many-to-many | medium   |
 | `security.countermeasure.satisfies.motivation.requirement`         | `security.countermeasure.mcp-bearer-token-check`                                                   | `motivation.requirement.mcp-requires-a-bearer-token-on-loopback`                          | `motivation` | `satisfies`  | many-to-many | medium   |
@@ -258,6 +259,7 @@ flowchart TB
 | `technology.systemsoftware.satisfies.motivation.constraint`        | `technology.systemsoftware.uvicorn`                                                                | `motivation.constraint.loopback-only-deployment`                                          | `motivation` | `satisfies`  | many-to-many | medium   |
 | `technology.systemsoftware.satisfies.motivation.constraint`        | `technology.systemsoftware.vite`                                                                   | `motivation.constraint.python-and-nodejs-runtime-versions`                                | `motivation` | `satisfies`  | many-to-many | medium   |
 | `testing.testcasesketch.satisfies.motivation.requirement`          | `testing.testcasesketch.seeded-errors-are-built-and-scored-offline`                                | `motivation.requirement.pre-review-is-adopted-only-by-a-rule-set-in-advance`              | `motivation` | `satisfies`  | many-to-many | high     |
+| `testing.testcasesketch.satisfies.motivation.requirement`          | `testing.testcasesketch.url-sources-refuse-private-addresses`                                      | `motivation.requirement.url-sources-refuse-private-network-addresses`                     | `motivation` | `satisfies`  | many-to-many | high     |
 | `testing.testcasesketch.satisfies.motivation.requirement`          | `testing.testcasesketch.vite-config-does-not-open-the-dev-server-or-preview-to-the-network-mode-s` | `motivation.requirement.dev-server-not-reachable-from-the-lan`                            | `motivation` | `satisfies`  | many-to-many | high     |
 
 ## Element Reference
@@ -1406,7 +1408,7 @@ API keys and tokens live only in the untracked config.json; keys read from the e
 
 **Type**: `requirement`
 
-Adding a URL source must refuse private, loopback and link-local addresses, including after redirects, so the server cannot be used to reach internal services (SSRF). Open: GitHub issue #1656.
+Adding a URL source must refuse private, loopback and link-local addresses, including after redirects, so the server cannot be used to reach internal services (SSRF). Met by the connect-time address check (#1656); sources.allow_private_urls is the explicit exception.
 
 #### Attributes
 
@@ -1418,10 +1420,12 @@ Adding a URL source must refuse private, loopback and link-local addresses, incl
 
 #### Relationships
 
-| Type        | Related Element                                     | Predicate   | Direction |
-| ----------- | --------------------------------------------------- | ----------- | --------- |
-| intra-layer | `motivation.assessment.security-posture-assessment` | `influence` | inbound   |
-| intra-layer | `motivation.goal.safe-local-first-workspace`        | `realizes`  | outbound  |
+| Type        | Related Element                                                      | Predicate   | Direction |
+| ----------- | -------------------------------------------------------------------- | ----------- | --------- |
+| inter-layer | `security.countermeasure.connect-time-address-check-for-url-sources` | `satisfies` | inbound   |
+| inter-layer | `testing.testcasesketch.url-sources-refuse-private-addresses`        | `satisfies` | inbound   |
+| intra-layer | `motivation.assessment.security-posture-assessment`                  | `influence` | inbound   |
+| intra-layer | `motivation.goal.safe-local-first-workspace`                         | `realizes`  | outbound  |
 
 ### Agent (Claude Code and In-App Chat) {#agent-claude-code-and-in-app-chat}
 
@@ -1656,4 +1660,4 @@ Mechanical changes clear in bulk by threshold, so the reviewer's time goes to th
 
 ---
 
-Generated: 2026-11-24T14:28:53.404Z | Model Version: 0.1.0
+Generated: 2026-11-24T15:59:46.538Z | Model Version: 0.1.0

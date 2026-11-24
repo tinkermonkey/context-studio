@@ -7,8 +7,8 @@ description: '#1672: on the Review page, "Not an element" / "Not a relationship"
   focused and the "Write why" message shows. Done when the button never does
   nothing and a component test covers normal and gold mode.'
 created: 2026-11-24T12:33:41.828Z
-modified: 2026-11-24T12:39:23.001Z
-status: staged
+modified: 2026-11-24T15:56:29.359Z
+status: committed
 baseSnapshot: v2:sha256:53252d39ed1357a9afdd6132507b497bf81313353af91142ccb6b590b147594c
 origin:
   kind: plan

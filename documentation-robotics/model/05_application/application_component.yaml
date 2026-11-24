@@ -69,10 +69,12 @@ application.applicationcomponent.llm-provider-router:
   type: applicationcomponent
   layer_id: application
   name: LLM Provider Router
-  description: Infrastructure adapter routing LLM completion requests to the
-    appropriate provider — selects between OpenAI and Anthropic providers based
-    on pipeline configuration and exposes available provider list for health
-    checks
+  description: "Infrastructure adapter routing LLM completion requests to the
+    appropriate provider — selects between OpenAI, Anthropic and OpenRouter
+    providers based on the model and exposes the available provider list for
+    health checks. With no key configured it is built with no providers: the app
+    starts, and every completion or chat turn refuses with a message naming the
+    llm.* config fields."
   attributes:
     type: service-component
   source_reference:
@@ -548,7 +550,8 @@ application.applicationcomponent.cached-reference-source:
   name: Cached Reference Source
   description: In-process caching HTTP proxy in front of the external reference
     sources (ConceptNet, DBpedia, Wikidata, schema.org); caches successful
-    upstream responses only.
+    upstream responses only (the library does not cache errors) with the cache
+    cap set in the proxy config.
   attributes:
     type: service-component
   source_reference:
@@ -1395,7 +1398,9 @@ application.applicationcomponent.http-page-fetcher:
   layer_id: application
   name: HTTP Page Fetcher
   description: "PageFetcher port: fetches one web page for a URL source, following
-    redirects, with a size limit."
+    redirects hop by hop, with a size limit. Every hop connects only to a public
+    address (the reference proxy's loopback origin excepted), ignores proxy
+    environment variables, and reports failures without the target's details."
   attributes:
     type: service-component
   source_reference:

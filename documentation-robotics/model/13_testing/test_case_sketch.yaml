@@ -87,3 +87,49 @@ testing.testcasesketch.vite-config-does-not-open-the-dev-server-or-preview-to-th
     created_at: 2026-11-24T12:28:29.186Z
     updated_at: 2026-11-24T12:28:29.186Z
     version: 1
+testing.testcasesketch.not-an-element-opens-the-reason-step:
+  id: 3772c2a1-cd31-42d8-a7ac-61bf6e24ed5a
+  path: testing.testcasesketch.not-an-element-opens-the-reason-step
+  spec_node_id: testing.testcasesketch
+  type: testcasesketch
+  layer_id: testing
+  name: Not An Element Opens The Reason Step
+  description: Pressing Not an element (or X) on an awaiting element highlights
+    the reasons with a prompt and focuses the first reason; in gold mode with an
+    empty note it focuses the note and shows the Write why message. Nothing is
+    sent until a reason is picked.
+  attributes:
+    status: automated
+    implementationFormat: automated
+  source_reference:
+    provenance: manual
+    locations:
+      - file: ux/src/components/proposals/review/__tests__/ReviewPage.test.tsx
+        symbol: "opens the reason step on Not an element: prompt, highlight, focus,
+          nothing sent"
+  metadata:
+    created_at: 2026-11-24T12:33:48.269Z
+    updated_at: 2026-11-24T12:33:48.269Z
+    version: 1
+testing.testcasesketch.url-sources-refuse-private-addresses:
+  id: 59dd08ad-ad1a-4055-9fb9-eb1f830d2030
+  path: testing.testcasesketch.url-sources-refuse-private-addresses
+  spec_node_id: testing.testcasesketch
+  type: testcasesketch
+  layer_id: testing
+  name: URL sources refuse private addresses
+  description: A direct private URL, a hostname resolving to 127.0.0.1, a redirect
+    to a private address and a rebinding name are all refused without a
+    connection; the reference proxy's origin and allow_private_urls are the only
+    exceptions.
+  attributes:
+    status: automated
+    implementationFormat: automated
+  source_reference:
+    provenance: manual
+    locations:
+      - file: local-server/tests/integration/sources/test_fetcher_private_addresses.py
+  metadata:
+    created_at: 2026-11-24T12:30:16.543Z
+    updated_at: 2026-11-24T12:30:16.543Z
+    version: 1

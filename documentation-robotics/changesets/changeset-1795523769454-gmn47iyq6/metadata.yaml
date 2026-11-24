@@ -6,8 +6,8 @@ description: "#1650: one invalid value in config.json no longer discards the
   providers, and calls that need a model refuse naming the llm.* fields (health
   issue, chat status and run errors say why)."
 created: 2026-11-24T12:36:09.468Z
-modified: 2026-11-24T12:36:12.517Z
-status: staged
+modified: 2026-11-24T16:00:09.813Z
+status: committed
 baseSnapshot: v2:sha256:53252d39ed1357a9afdd6132507b497bf81313353af91142ccb6b590b147594c
 origin:
   kind: plan

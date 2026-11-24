@@ -16,11 +16,11 @@ User interface components, screens, and user experience elements.
 
 | Metric                    | Count |
 | ------------------------- | ----- |
-| Elements                  | 231   |
-| Intra-Layer Relationships | 471   |
-| Inter-Layer Relationships | 323   |
-| Inbound Relationships     | 54    |
-| Outbound Relationships    | 269   |
+| Elements                  | 233   |
+| Intra-Layer Relationships | 474   |
+| Inter-Layer Relationships | 327   |
+| Inbound Relationships     | 56    |
+| Outbound Relationships    | 271   |
 
 **Cross-Layer References**:
 
@@ -33,6 +33,7 @@ User interface components, screens, and user experience elements.
 
 | Element                                              | Type               | Relationships |
 | ---------------------------------------------------- | ------------------ | ------------- |
+| `ux.actioncomponent.not-an-element-button`           | `actioncomponent`  | 1             |
 | `ux.dataconfig.use-accept-rest`                      | `dataconfig`       | 1             |
 | `ux.dataconfig.use-add-class-to-individual`          | `dataconfig`       | 1             |
 | `ux.dataconfig.use-add-proposal-individual`          | `dataconfig`       | 1             |
@@ -83,6 +84,7 @@ User interface components, screens, and user experience elements.
 | `ux.dataconfig.use-demo-datasets`                    | `dataconfig`       | 1             |
 | `ux.dataconfig.use-dr-spec-drift`                    | `dataconfig`       | 1             |
 | `ux.dataconfig.use-edge-attributes`                  | `dataconfig`       | 1             |
+| `ux.dataconfig.use-enqueue-batch-runs`               | `dataconfig`       | 1             |
 | `ux.dataconfig.use-entities-by-id`                   | `dataconfig`       | 6             |
 | `ux.dataconfig.use-entity-counts`                    | `dataconfig`       | 6             |
 | `ux.dataconfig.use-entity-sources`                   | `dataconfig`       | 2             |
@@ -129,7 +131,7 @@ User interface components, screens, and user experience elements.
 | `ux.dataconfig.use-pull-sync`                        | `dataconfig`       | 1             |
 | `ux.dataconfig.use-push-sync`                        | `dataconfig`       | 1             |
 | `ux.dataconfig.use-recognition-preview`              | `dataconfig`       | 2             |
-| `ux.dataconfig.use-reference-status`                 | `dataconfig`       | 3             |
+| `ux.dataconfig.use-reference-status`                 | `dataconfig`       | 4             |
 | `ux.dataconfig.use-registered-models`                | `dataconfig`       | 1             |
 | `ux.dataconfig.use-reject-change-proposal`           | `dataconfig`       | 2             |
 | `ux.dataconfig.use-relationships`                    | `dataconfig`       | 4             |
@@ -207,7 +209,7 @@ User interface components, screens, and user experience elements.
 | `ux.subview.review-inspector`                        | `subview`          | 4             |
 | `ux.subview.schema-candidate-review`                 | `subview`          | 16            |
 | `ux.subview.schema-extraction-wizard`                | `subview`          | 6             |
-| `ux.subview.schema-grounding-wizard`                 | `subview`          | 6             |
+| `ux.subview.schema-grounding-wizard`                 | `subview`          | 8             |
 | `ux.subview.sparql-editor`                           | `subview`          | 2             |
 | `ux.subview.status-bar-sync`                         | `subview`          | 2             |
 | `ux.subview.sync-status`                             | `subview`          | 5             |
@@ -247,7 +249,7 @@ User interface components, screens, and user experience elements.
 | `ux.view.property-drawer`                            | `view`             | 18            |
 | `ux.view.proposal-compare-view`                      | `view`             | 9             |
 | `ux.view.proposal-detail-view`                       | `view`             | 25            |
-| `ux.view.proposal-review-view`                       | `view`             | 25            |
+| `ux.view.proposal-review-view`                       | `view`             | 26            |
 | `ux.view.proposals-view`                             | `view`             | 2             |
 | `ux.view.reference-source-drawer`                    | `view`             | 1             |
 | `ux.view.reference-sources-view`                     | `view`             | 1             |
@@ -336,6 +338,8 @@ flowchart TB
 | `navigation.route.maps-to.ux.view`                      | `navigation.route.taxonomy-detail-route`                          | `ux.view.taxonomy-detail-view`                              | `ux`         | `maps-to`    | many-to-many | medium   |
 | `navigation.route.maps-to.ux.view`                      | `navigation.route.versioning-route`                               | `ux.view.versioning-view`                                   | `ux`         | `maps-to`    | many-to-many | medium   |
 | `navigation.route.maps-to.ux.view`                      | `navigation.route.welcome-route`                                  | `ux.view.welcome-view`                                      | `ux`         | `maps-to`    | many-to-many | medium   |
+| `testing.testcasesketch.tests.ux.actioncomponent`       | `testing.testcasesketch.not-an-element-opens-the-reason-step`     | `ux.actioncomponent.not-an-element-button`                  | `ux`         | `tests`      | many-to-many | medium   |
+| `testing.testcasesketch.tests.ux.subview`               | `testing.testcasesketch.not-an-element-opens-the-reason-step`     | `ux.subview.review-inspector`                               | `ux`         | `tests`      | many-to-many | medium   |
 | `testing.testcoveragemodel.covers.ux.uxapplication`     | `testing.testcoveragemodel.context-studio-ux-test-coverage-model` | `ux.uxapplication.context-studio-spa`                       | `ux`         | `covers`     | many-to-many | medium   |
 | `testing.testcoveragetarget.covers.ux.view`             | `testing.testcoveragetarget.admin-health`                         | `ux.view.settings-view`                                     | `ux`         | `covers`     | many-to-many | medium   |
 | `testing.testcoveragetarget.covers.ux.view`             | `testing.testcoveragetarget.extraction-pipeline`                  | `ux.view.pipelines-view`                                    | `ux`         | `covers`     | many-to-many | medium   |
@@ -413,6 +417,8 @@ flowchart TB
 | `ux.dataconfig.maps-to.api.requestbody`                 | `ux.dataconfig.use-dr-spec-drift`                                 | `api.requestbody.dr-spec-drift-request`                     | `api`        | `maps-to`    | many-to-many | medium   |
 | `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-dr-spec-drift`                                 | `api.response.drift-response`                               | `api`        | `maps-to`    | many-to-many | medium   |
 | `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-edge-attributes`                               | `api.response.attribute-definition-response`                | `api`        | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.requestbody`                 | `ux.dataconfig.use-enqueue-batch-runs`                            | `api.requestbody.enqueue-batch-runs-request`                | `api`        | `maps-to`    | many-to-many | medium   |
+| `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-enqueue-batch-runs`                            | `api.response.enqueue-batch-runs-response`                  | `api`        | `maps-to`    | many-to-many | medium   |
 | `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-entities-by-id`                                | `api.response.class-response`                               | `api`        | `maps-to`    | many-to-many | medium   |
 | `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-entities-by-id`                                | `api.response.concept-scheme-response`                      | `api`        | `maps-to`    | many-to-many | medium   |
 | `ux.dataconfig.maps-to.api.response`                    | `ux.dataconfig.use-entities-by-id`                                | `api.response.individual-response`                          | `api`        | `maps-to`    | many-to-many | medium   |
@@ -623,6 +629,30 @@ flowchart TB
 | `ux.view.realizes.product.feature`                      | `ux.view.versioning-view`                                         | `product.feature.change-history-and-sync`                   | `product`    | `realizes`   | many-to-many | medium   |
 
 ## Element Reference
+
+### Not An Element Button {#not-an-element-button}
+
+**ID**: `ux.actioncomponent.not-an-element-button`
+
+**Type**: `actioncomponent`
+
+The inspector's "Not an element" / "Not a relationship" button (key X). It opens the reason step: scrolls the reasons into view, highlights them with "Pick a reason to reject it" and focuses the first reason, or in gold mode with no note yet, the note field. The rejection is recorded when a reason is picked.
+
+#### Attributes
+
+| Name    | Value          |
+| ------- | -------------- |
+| channel | web            |
+| label   | Not an element |
+| style   | secondary      |
+| type    | button         |
+
+#### Relationships
+
+| Type        | Related Element                                               | Predicate  | Direction |
+| ----------- | ------------------------------------------------------------- | ---------- | --------- |
+| inter-layer | `testing.testcasesketch.not-an-element-opens-the-reason-step` | `tests`    | inbound   |
+| intra-layer | `ux.view.proposal-review-view`                                | `composes` | inbound   |
 
 ### useAcceptRest {#useacceptrest}
 
@@ -1832,6 +1862,29 @@ GET /api/properties/\{property_id\}/attributes.
 | inter-layer | `api.response.attribute-definition-response` | `maps-to`  | outbound  |
 | intra-layer | `ux.view.property-drawer`                    | `binds-to` | inbound   |
 
+### useEnqueueBatchRuns {#useenqueuebatchruns}
+
+**ID**: `ux.dataconfig.use-enqueue-batch-runs`
+
+**Type**: `dataconfig`
+
+POST /api/pipelines/batches, then POST /api/pipelines/batches/\{id\}/runs: one run per spec in one batch.
+
+#### Attributes
+
+| Name   | Value                            |
+| ------ | -------------------------------- |
+| source | api                              |
+| target | api.operation.enqueue-batch-runs |
+
+#### Relationships
+
+| Type        | Related Element                              | Predicate  | Direction |
+| ----------- | -------------------------------------------- | ---------- | --------- |
+| inter-layer | `api.requestbody.enqueue-batch-runs-request` | `maps-to`  | outbound  |
+| inter-layer | `api.response.enqueue-batch-runs-response`   | `maps-to`  | outbound  |
+| intra-layer | `ux.subview.schema-grounding-wizard`         | `binds-to` | inbound   |
+
 ### useEntitiesById {#useentitiesbyid}
 
 **ID**: `ux.dataconfig.use-entities-by-id`
@@ -2977,6 +3030,7 @@ GET /api/reference/status.
 | Type        | Related Element                                 | Predicate  | Direction |
 | ----------- | ----------------------------------------------- | ---------- | --------- |
 | inter-layer | `api.response.reference-status-response-schema` | `maps-to`  | outbound  |
+| intra-layer | `ux.subview.schema-grounding-wizard`            | `binds-to` | inbound   |
 | intra-layer | `ux.view.grounding-workflows-view`              | `binds-to` | inbound   |
 | intra-layer | `ux.view.reference-source-drawer`               | `binds-to` | inbound   |
 | intra-layer | `ux.view.reference-sources-view`                | `binds-to` | inbound   |
@@ -4629,12 +4683,13 @@ Inspector for one reviewed element: class, relationship, decision and reason cod
 
 #### Relationships
 
-| Type        | Related Element                 | Predicate  | Direction |
-| ----------- | ------------------------------- | ---------- | --------- |
-| intra-layer | `ux.dataconfig.use-datasets`    | `binds-to` | outbound  |
-| intra-layer | `ux.dataconfig.use-source`      | `binds-to` | outbound  |
-| intra-layer | `ux.dataconfig.use-source-text` | `binds-to` | outbound  |
-| intra-layer | `ux.view.proposal-review-view`  | `composes` | inbound   |
+| Type        | Related Element                                               | Predicate  | Direction |
+| ----------- | ------------------------------------------------------------- | ---------- | --------- |
+| inter-layer | `testing.testcasesketch.not-an-element-opens-the-reason-step` | `tests`    | inbound   |
+| intra-layer | `ux.dataconfig.use-datasets`                                  | `binds-to` | outbound  |
+| intra-layer | `ux.dataconfig.use-source`                                    | `binds-to` | outbound  |
+| intra-layer | `ux.dataconfig.use-source-text`                               | `binds-to` | outbound  |
+| intra-layer | `ux.view.proposal-review-view`                                | `composes` | inbound   |
 
 ### Schema Candidate Review {#schema-candidate-review}
 
@@ -4690,16 +4745,18 @@ Run wizard step set for schema extraction.
 
 **Type**: `subview`
 
-Run wizard step set for schema-node grounding.
+Run wizard for schema-node grounding: pick classes (one or several) and knowledge sources; one grounding run per class, enqueued as one batch. Classes only: grounding's node_id resolves classes.
 
 #### Relationships
 
 | Type        | Related Element                              | Predicate  | Direction |
 | ----------- | -------------------------------------------- | ---------- | --------- |
+| intra-layer | `ux.dataconfig.use-enqueue-batch-runs`       | `binds-to` | outbound  |
 | intra-layer | `ux.dataconfig.use-entities-by-id`           | `binds-to` | outbound  |
 | intra-layer | `ux.dataconfig.use-entity-type-query`        | `binds-to` | outbound  |
 | intra-layer | `ux.dataconfig.use-pipeline-configurations`  | `binds-to` | outbound  |
 | intra-layer | `ux.dataconfig.use-pipeline-implementations` | `binds-to` | outbound  |
+| intra-layer | `ux.dataconfig.use-reference-status`         | `binds-to` | outbound  |
 | intra-layer | `ux.dataconfig.use-run-wizard`               | `binds-to` | outbound  |
 | intra-layer | `ux.view.run-wizard-view`                    | `composes` | inbound   |
 
@@ -5865,6 +5922,7 @@ Review an extraction proposal against its source text, with highlights and reaso
 | intra-layer | `ux.dataconfig.use-taxonomies-by-ids`            | `binds-to` | outbound  |
 | intra-layer | `ux.dataconfig.use-taxonomy-classes`             | `binds-to` | outbound  |
 | intra-layer | `ux.dataconfig.use-taxonomy-predicates`          | `binds-to` | outbound  |
+| intra-layer | `ux.actioncomponent.not-an-element-button`       | `composes` | outbound  |
 | intra-layer | `ux.subview.review-inspector`                    | `composes` | outbound  |
 
 ### Proposals View {#proposals-view}
@@ -6311,4 +6369,4 @@ First-run welcome page.
 
 ---
 
-Generated: 2026-11-24T14:52:26.937Z | Model Version: 0.1.0
+Generated: 2026-11-24T15:59:58.228Z | Model Version: 0.1.0

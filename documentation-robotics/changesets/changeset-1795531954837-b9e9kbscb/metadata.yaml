@@ -5,8 +5,8 @@ description: Pin reference-api-buddy 0.5.2 and delete the proxy workarounds
   config. Updates the Cached Reference Source component and its
   constraint/database descriptions; no new elements.
 created: 2026-11-24T14:52:34.863Z
-modified: 2026-11-24T14:52:43.608Z
-status: staged
+modified: 2026-11-24T15:59:03.880Z
+status: committed
 baseSnapshot: v2:sha256:dd16e4a0acbe878e671ca77ede8a40e8fab6d64e4d34beadd84fb37985bb9515
 origin:
   kind: plan

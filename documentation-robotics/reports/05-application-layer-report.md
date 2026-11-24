@@ -18,9 +18,9 @@ Application components, services, and interactions.
 | ------------------------- | ----- |
 | Elements                  | 192   |
 | Intra-Layer Relationships | 421   |
-| Inter-Layer Relationships | 414   |
+| Inter-Layer Relationships | 415   |
 | Inbound Relationships     | 232   |
-| Outbound Relationships    | 182   |
+| Outbound Relationships    | 183   |
 
 **Cross-Layer References**:
 
@@ -445,6 +445,7 @@ flowchart TB
 | `application.applicationcomponent.accesses.data-model.objectschema`  | `application.applicationcomponent.canon-demo-dataset-loader`                | `data-model.objectschema.taxonomy-entity`                                                 | `data-model`  | `accesses`   | many-to-many | medium   |
 | `application.applicationcomponent.realizes.security.countermeasure`  | `application.applicationcomponent.database-manager`                         | `security.countermeasure.parameterized-queries-via-orm`                                   | `security`    | `realizes`   | many-to-many | medium   |
 | `application.applicationcomponent.accesses.data-model.objectschema`  | `application.applicationcomponent.duck-db-sync-adapter`                     | `data-model.objectschema.change-event-entity`                                             | `data-model`  | `accesses`   | many-to-many | medium   |
+| `application.applicationcomponent.realizes.security.countermeasure`  | `application.applicationcomponent.http-page-fetcher`                        | `security.countermeasure.connect-time-address-check-for-url-sources`                      | `security`    | `realizes`   | many-to-many | medium   |
 | `application.applicationcomponent.realizes.security.countermeasure`  | `application.applicationcomponent.http-page-fetcher`                        | `security.countermeasure.source-size-limit`                                               | `security`    | `realizes`   | many-to-many | medium   |
 | `application.applicationcomponent.accesses.data-model.objectschema`  | `application.applicationcomponent.json-file-config-store`                   | `data-model.objectschema.app-configuration`                                               | `data-model`  | `accesses`   | many-to-many | medium   |
 | `application.applicationcomponent.realizes.security.countermeasure`  | `application.applicationcomponent.json-file-config-store`                   | `security.countermeasure.secret-safe-configuration`                                       | `security`    | `realizes`   | many-to-many | medium   |
@@ -785,7 +786,7 @@ Runs pending pipeline runs on background worker threads and records their outcom
 
 **Type**: `applicationcomponent`
 
-In-process caching HTTP proxy in front of the external reference sources (ConceptNet, DBpedia, Wikidata, schema.org); caches successful upstream responses only.
+In-process caching HTTP proxy in front of the external reference sources (ConceptNet, DBpedia, Wikidata, schema.org); caches successful upstream responses only (the library does not cache errors) with the cache cap set in the proxy config.
 
 #### Attributes
 
@@ -1293,7 +1294,7 @@ SourceReader for HTML: the page's main text without navigation, footers and comm
 
 **Type**: `applicationcomponent`
 
-PageFetcher port: fetches one web page for a URL source, following redirects, with a size limit.
+PageFetcher port: fetches one web page for a URL source, following redirects hop by hop, with a size limit. Every hop connects only to a public address (the reference proxy's loopback origin excepted), ignores proxy environment variables, and reports failures without the target's details.
 
 #### Attributes
 
@@ -1303,12 +1304,13 @@ PageFetcher port: fetches one web page for a URL source, following redirects, wi
 
 #### Relationships
 
-| Type        | Related Element                                 | Predicate  | Direction |
-| ----------- | ----------------------------------------------- | ---------- | --------- |
-| inter-layer | `security.countermeasure.source-size-limit`     | `realizes` | outbound  |
-| inter-layer | `technology.systemsoftware.httpx`               | `serves`   | inbound   |
-| intra-layer | `application.applicationservice.page-fetcher`   | `realizes` | outbound  |
-| intra-layer | `application.applicationservice.source-service` | `realizes` | outbound  |
+| Type        | Related Element                                                      | Predicate  | Direction |
+| ----------- | -------------------------------------------------------------------- | ---------- | --------- |
+| inter-layer | `security.countermeasure.connect-time-address-check-for-url-sources` | `realizes` | outbound  |
+| inter-layer | `security.countermeasure.source-size-limit`                          | `realizes` | outbound  |
+| inter-layer | `technology.systemsoftware.httpx`                                    | `serves`   | inbound   |
+| intra-layer | `application.applicationservice.page-fetcher`                        | `realizes` | outbound  |
+| intra-layer | `application.applicationservice.source-service`                      | `realizes` | outbound  |
 
 ### In-Process Event Publisher {#in-process-event-publisher}
 
@@ -1409,7 +1411,7 @@ DecisionModel adapter over the LLM provider router, answering yes/no, choice and
 
 **Type**: `applicationcomponent`
 
-Infrastructure adapter routing LLM completion requests to the appropriate provider — selects between OpenAI and Anthropic providers based on pipeline configuration and exposes available provider list for health checks
+Infrastructure adapter routing LLM completion requests to the appropriate provider — selects between OpenAI, Anthropic and OpenRouter providers based on the model and exposes the available provider list for health checks. With no key configured it is built with no providers: the app starts, and every completion or chat turn refuses with a message naming the llm.\* config fields.
 
 #### Attributes
 
@@ -5393,4 +5395,4 @@ Hexagonal port: describes the workspace and the viewed page to the chat model.
 
 ---
 
-Generated: 2026-11-24T12:27:09.956Z | Model Version: 0.1.0
+Generated: 2026-11-24T16:00:09.816Z | Model Version: 0.1.0

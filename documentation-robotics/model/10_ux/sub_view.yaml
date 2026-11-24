@@ -347,7 +347,9 @@ ux.subview.schema-grounding-wizard:
   type: subview
   layer_id: ux
   name: Schema Grounding Wizard
-  description: Run wizard step set for schema-node grounding.
+  description: "Run wizard for schema-node grounding: pick classes (one or
+    several) and knowledge sources; one grounding run per class, enqueued as one
+    batch. Classes only: grounding's node_id resolves classes."
   source_reference:
     provenance: extracted
     locations:
