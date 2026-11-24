@@ -1,0 +1,24 @@
+- type: relationship-add
+  elementId: application.applicationservice.proposal-service::accesses::data-model.objectschema.operation-draft
+  layerName: application
+  after:
+    source: application.applicationservice.proposal-service
+    target: data-model.objectschema.operation-draft
+    predicate: accesses
+    layer: application
+    targetLayer: data-model
+    category: structural
+  timestamp: 2026-11-24T21:42:48.758Z
+  sequenceNumber: 0
+- type: relationship-add
+  elementId: application.applicationservice.change-proposal-repository::accesses::data-model.objectschema.operation-count
+  layerName: application
+  after:
+    source: application.applicationservice.change-proposal-repository
+    target: data-model.objectschema.operation-count
+    predicate: accesses
+    layer: application
+    targetLayer: data-model
+    category: structural
+  timestamp: 2026-11-24T21:42:48.758Z
+  sequenceNumber: 1

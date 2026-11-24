@@ -18,8 +18,8 @@ Data entities, relationships, and data structure definitions.
 | ------------------------- | ----- |
 | Elements                  | 55    |
 | Intra-Layer Relationships | 10    |
-| Inter-Layer Relationships | 127   |
-| Inbound Relationships     | 57    |
+| Inter-Layer Relationships | 129   |
+| Inbound Relationships     | 59    |
 | Outbound Relationships    | 70    |
 
 **Cross-Layer References**:
@@ -176,6 +176,8 @@ flowchart TB
 | `application.applicationfunction.accesses.data-model.objectschema`  | `application.applicationfunction.reversal-planning`                         | `data-model.objectschema.proposed-operation`                                         | `data-model` | `accesses`  | many-to-many | medium   |
 | `application.applicationfunction.accesses.data-model.objectschema`  | `application.applicationfunction.revert-preview`                            | `data-model.objectschema.change-event-entity`                                        | `data-model` | `accesses`  | many-to-many | medium   |
 | `application.applicationfunction.accesses.data-model.objectschema`  | `application.applicationfunction.revert-preview`                            | `data-model.objectschema.revert-preview-result`                                      | `data-model` | `accesses`  | many-to-many | medium   |
+| `application.applicationservice.accesses.data-model.objectschema`   | `application.applicationservice.change-proposal-repository`                 | `data-model.objectschema.operation-count`                                            | `data-model` | `accesses`  | many-to-many | medium   |
+| `application.applicationservice.accesses.data-model.objectschema`   | `application.applicationservice.proposal-service`                           | `data-model.objectschema.operation-draft`                                            | `data-model` | `accesses`  | many-to-many | medium   |
 | `data-model.objectschema.maps-to.api.response`                      | `data-model.objectschema.app-configuration`                                 | `api.response.app-configuration-response`                                            | `api`        | `maps-to`   | many-to-many | medium   |
 | `data-model.objectschema.maps-to.data-store.collection`             | `data-model.objectschema.approval-policy-entity`                            | `data-store.collection.approval-policies`                                            | `data-store` | `maps-to`   | many-to-many | medium   |
 | `data-model.objectschema.maps-to.data-store.collection`             | `data-model.objectschema.attribute-definition-entity`                       | `data-store.collection.attribute-definitions`                                        | `data-store` | `maps-to`   | many-to-many | medium   |
@@ -865,9 +867,10 @@ How many of a proposal's operations share one op, kind, status and scope; a list
 
 #### Relationships
 
-| Type        | Related Element                         | Predicate | Direction |
-| ----------- | --------------------------------------- | --------- | --------- |
-| inter-layer | `api.response.operation-count-response` | `maps-to` | outbound  |
+| Type        | Related Element                                             | Predicate  | Direction |
+| ----------- | ----------------------------------------------------------- | ---------- | --------- |
+| inter-layer | `application.applicationservice.change-proposal-repository` | `accesses` | inbound   |
+| inter-layer | `api.response.operation-count-response`                     | `maps-to`  | outbound  |
 
 ### Operation Draft {#operation-draft}
 
@@ -887,6 +890,7 @@ One operation a pipeline or client drafts for a change proposal, before Proposal
 
 | Type        | Related Element                                                                      | Predicate   | Direction |
 | ----------- | ------------------------------------------------------------------------------------ | ----------- | --------- |
+| inter-layer | `application.applicationservice.proposal-service`                                    | `accesses`  | inbound   |
 | inter-layer | `motivation.requirement.contexts-depend-on-each-other-only-through-public-contracts` | `satisfies` | outbound  |
 
 ### Path Result {#path-result}
@@ -1454,4 +1458,4 @@ String schema for entity identifiers — UUID v4 format, used as primary keys ac
 
 ---
 
-Generated: 2026-11-24T21:17:13.774Z | Model Version: 0.1.0
+Generated: 2026-11-24T21:43:16.427Z | Model Version: 0.1.0
