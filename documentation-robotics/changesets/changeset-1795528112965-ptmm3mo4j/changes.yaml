@@ -1,0 +1,85 @@
+- type: add
+  elementId: ux.subview.status-bar-sync
+  layerName: ux
+  after:
+    id: 00747120-7917-4fdd-b9ae-bc064a65dc94
+    path: ux.subview.status-bar-sync
+    spec_node_id: ux.subview
+    type: subview
+    layer_id: ux
+    name: Status Bar Sync
+    description: "Status bar item showing the real sync state from the sync status
+      API: off, unsynced change count, last sync time, degraded or never synced.
+      Absent while loading or on error."
+    metadata:
+      created_at: 2026-11-24T13:48:37.772Z
+      updated_at: 2026-11-24T13:48:37.772Z
+      version: 1
+    source_reference:
+      provenance: manual
+      locations:
+        - file: ux/src/components/shell/StatusBarSync.tsx
+          symbol: StatusBarSync
+  timestamp: 2026-11-24T13:53:53.794Z
+  sequenceNumber: 0
+- type: relationship-add
+  elementId: ux.view.app-shell-view::composes::ux.subview.status-bar-sync
+  layerName: ux
+  after:
+    source: ux.view.app-shell-view
+    target: ux.subview.status-bar-sync
+    predicate: composes
+    layer: ux
+    category: structural
+  timestamp: 2026-11-24T13:48:37.792Z
+  sequenceNumber: 1
+- type: relationship-add
+  elementId: ux.subview.status-bar-sync::binds-to::ux.dataconfig.use-sync-status
+  layerName: ux
+  after:
+    source: ux.subview.status-bar-sync
+    target: ux.dataconfig.use-sync-status
+    predicate: binds-to
+    layer: ux
+    category: structural
+  timestamp: 2026-11-24T13:48:37.792Z
+  sequenceNumber: 2
+- type: update
+  elementId: ux.view.app-shell-view
+  layerName: ux
+  before:
+    id: 18067f4c-35d4-45c0-934f-c0fb45ce014b
+    path: ux.view.app-shell-view
+    spec_node_id: ux.view
+    type: view
+    layer_id: ux
+    name: App Shell View
+    description: "Application shell: titlebar, sidebar navigation, command palette,
+      chat panel and the outlet for /app pages."
+    attributes: &a1
+      type: full-screen
+      routable: true
+    source_reference: &a2
+      provenance: extracted
+      locations:
+        - file: ux/src/routes/app.tsx
+          symbol: AppShell
+    metadata: &a3
+      created_at: 2026-11-19T14:59:11.248Z
+      updated_at: 2026-11-19T14:59:11.248Z
+      version: 1
+  after:
+    id: 18067f4c-35d4-45c0-934f-c0fb45ce014b
+    path: ux.view.app-shell-view
+    spec_node_id: ux.view
+    type: view
+    layer_id: ux
+    name: App Shell View
+    description: "Application shell: titlebar, sidebar navigation, command palette,
+      chat panel, status bar (daemon health and counts, sync state) and the
+      outlet for /app pages."
+    attributes: *a1
+    source_reference: *a2
+    metadata: *a3
+  timestamp: 2026-11-24T13:48:38.049Z
+  sequenceNumber: 3

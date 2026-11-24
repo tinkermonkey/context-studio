@@ -1623,6 +1623,9 @@ selectors:
   - selector: workspace-switcher
     component: src/routes/app.tsx
     description: Workspace switcher pill in the topbar leading slot — opens the workspace switcher
+  - selector: statusbar-sync
+    component: src/components/shell/StatusBarSync.tsx
+    description: Status bar sync item (right side); shows the real sync state, absent while loading or on error
   - selector: topbar-actions
     component: src/components/shell/TopbarActions.tsx
     description: Right-side action cluster in the topbar (chat assistant, canvas theme toggle)
