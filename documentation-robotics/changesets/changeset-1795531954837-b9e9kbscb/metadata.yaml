@@ -1,0 +1,18 @@
+id: changeset-1795531954837-b9e9kbscb
+name: drop-reference-proxy-workarounds
+description: Pin reference-api-buddy 0.5.2 and delete the proxy workarounds
+  (SuccessOnlyCacheEngine, OwnedInFlightTracker); the cache cap comes from
+  config. Updates the Cached Reference Source component and its
+  constraint/database descriptions; no new elements.
+created: 2026-11-24T14:52:34.863Z
+modified: 2026-11-24T14:52:43.608Z
+status: staged
+baseSnapshot: v2:sha256:dd16e4a0acbe878e671ca77ede8a40e8fab6d64e4d34beadd84fb37985bb9515
+origin:
+  kind: plan
+purpose: plan
+stats:
+  additions: 0
+  modifications: 2
+  deletions: 0
+lastSequence: 1

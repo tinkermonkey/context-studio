@@ -9,15 +9,11 @@ runs and the source's own API when the proxy is off or failed to start.
 
 import logging
 import os
-import threading
 from typing import Any
 
-from reference_api_buddy.cache.engine import CacheEngine
 from reference_api_buddy.core.handler import ProxyHTTPRequestHandler
-from reference_api_buddy.core.inflight_tracker import InFlightTracker
 from reference_api_buddy.core.proxy import CachingProxy
 from reference_api_buddy.core.server import ThreadedHTTPServer
-from reference_api_buddy.database.models import CachedResponse
 
 from config import ReferenceProxyConfig
 from utils.logger import get_logger
@@ -31,75 +27,14 @@ PROXY_HOST = "127.0.0.1"
 MAX_THROTTLE_DELAY_SECONDS = 5
 
 # reference-api-buddy evicts past 1,000 entries by default, too few for bulk enrichment.
+# Passed as `cache.max_cache_entries` in the proxy config.
 MAX_CACHE_ENTRIES = 100_000
 
 MAX_CACHED_RESPONSE_BYTES = 10 * 1024 * 1024
 
 
-class SuccessOnlyCacheEngine(CacheEngine):
-    """
-    Caches successful upstream responses only.
-
-    reference-api-buddy 0.5.0 turns an upstream error into a 502 and caches it for
-    the full TTL, so a single outage would blank a search term for a week.
-    """
-
-    def set(
-        self, cache_key: str, response: CachedResponse, domain_key: str | None = None
-    ) -> bool:
-        """Store the response unless it is an error."""
-        if response.status_code >= 400:
-            return False
-        return super().set(cache_key, response, domain_key=domain_key)
-
-
-class OwnedInFlightTracker(InFlightTracker):
-    """
-    Remembers which handler thread registered each in-flight request.
-
-    reference-api-buddy 0.5.0 registers a request as in-flight before checking the
-    rate limit, and its 429 answer never completes it. Every later request for that
-    term then waits 60s on a result that never comes. `release_current_thread`
-    completes whatever the finished request left behind.
-    """
-
-    def __init__(self) -> None:
-        super().__init__()
-        self._owners: dict[str, int] = {}
-
-    def should_wait(self, cache_key: str):
-        """Register the request, noting this thread as its owner when it goes upstream."""
-        request = super().should_wait(cache_key)
-        if request is None:
-            with self.lock:
-                self._owners[cache_key] = threading.get_ident()
-        return request
-
-    def complete_request(self, cache_key: str, result=None, error=None) -> None:
-        """Complete the request and forget its owner."""
-        with self.lock:
-            self._owners.pop(cache_key, None)
-        super().complete_request(cache_key, result=result, error=error)
-
-    def release_current_thread(self) -> None:
-        """Complete every request this thread registered but never completed."""
-        thread_id = threading.get_ident()
-        with self.lock:
-            leaked = [key for key, owner in self._owners.items() if owner == thread_id]
-        for cache_key in leaked:
-            self.complete_request(
-                cache_key, error=RuntimeError("Request ended without an upstream answer")
-            )
-
-
-class ReleasingRequestHandler(ProxyHTTPRequestHandler):
-    """Proxy handler that releases leaked in-flight requests and logs quietly."""
-
-    def _handle_request(self, method: str) -> None:
-        try:
-            super()._handle_request(method)
-        finally:
-            self.proxy.inflight_tracker.release_current_thread()
+class QuietRequestHandler(ProxyHTTPRequestHandler):
+    """Proxy handler that sends access lines to the debug log instead of stderr."""
 
     def log_message(self, format: str, *args: Any) -> None:
         """Send per-request access lines to the debug log instead of stderr."""
@@ -160,15 +95,8 @@ class ReferenceProxy:
 
             proxy = CachingProxy(self._proxy_config())
             _route_library_logs()
-            proxy.inflight_tracker = OwnedInFlightTracker()
-            proxy.cache_engine = SuccessOnlyCacheEngine(
-                proxy.db_manager,
-                config=proxy.config,
-                max_response_size=MAX_CACHED_RESPONSE_BYTES,
-                max_cache_entries=MAX_CACHE_ENTRIES,
-            )
             # start() serves on a server that already exists, so this handler is used
-            proxy.server = ThreadedHTTPServer((PROXY_HOST, 0), ReleasingRequestHandler, proxy)
+            proxy.server = ThreadedHTTPServer((PROXY_HOST, 0), QuietRequestHandler, proxy)
             proxy.start(blocking=False)
         except Exception as e:
             logger.error(
@@ -228,6 +156,7 @@ class ReferenceProxy:
             "cache": {
                 "database_path": self._config.cache_db_path,
                 "max_cache_response_size": MAX_CACHED_RESPONSE_BYTES,
+                "max_cache_entries": MAX_CACHE_ENTRIES,
                 "default_ttl_seconds": self._config.cache_ttl_hours * 3600,
             },
             "domain_mappings": {name: {"upstream": src.upstream} for name, src in sources.items()},
