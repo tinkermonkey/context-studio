@@ -95,17 +95,6 @@
   timestamp: 2026-11-24T13:18:56.373Z
   sequenceNumber: 3
 - type: relationship-add
-  elementId: ux.view.proposal-detail-view::composes::ux.actioncomponent.reverse-relationship-button
-  layerName: ux
-  after:
-    source: ux.view.proposal-detail-view
-    target: ux.actioncomponent.reverse-relationship-button
-    predicate: composes
-    layer: ux
-    category: structural
-  timestamp: 2026-11-24T13:18:56.373Z
-  sequenceNumber: 4
-- type: relationship-add
   elementId: testing.testcasesketch.end-search-finds-a-pending-element-and-reverse-swaps-the-ends::tests::ux.actioncomponent.reverse-relationship-button
   layerName: testing
   after:
