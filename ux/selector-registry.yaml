@@ -3282,7 +3282,7 @@ selectors:
     description: "The reason step's block (section, aria-label \"Not an element\" / \"Not a relationship\"): the reasons, the note and its message; .review-block--prompt once Not an element or X opened it"
   - selector: review-reasons-prompt
     component: src/components/proposals/review/ReviewInspector.tsx
-    description: "The reason step's prompt (role=status) once Not an element or X opened it: \"Pick a reason to reject it.\", or in gold mode with no note \"Write why in the note, then pick a reason to reject it.\""
+    description: "The reason step's live region (role=status), always rendered and empty until Not an element or X opens the step, then: \"Pick a reason to reject it.\", or in gold mode with no note \"Write why in the note, then pick a reason to reject it.\""
   - selector: review-reason-*
     component: src/components/proposals/review/ReviewInspector.tsx
     description: "A reason button by code (not_in_text, too_generic, mentioned_only, out_of_scope, duplicate, other); rejects with reason_code, note and review_ms"

@@ -619,7 +619,9 @@ describe("the review page", () => {
   it("opens the reason step on Not an element: prompt, highlight, focus, nothing sent", async () => {
     const user = await renderPage();
     await user.click(screen.getByTestId("review-row-op-region"));
-    expect(screen.queryByTestId("review-reasons-prompt")).not.toBeInTheDocument();
+    // The live region is there, empty, before the prompt: screen readers announce its text.
+    expect(screen.getByTestId("review-reasons-prompt")).toBeEmptyDOMElement();
+    expect(screen.getByTestId("review-reasons-prompt")).toHaveAttribute("role", "status");
     expect(screen.getByTestId("review-reasons-block")).not.toHaveClass("review-block--prompt");
     await user.click(screen.getByTestId("review-not"));
     expect(screen.getByTestId("review-reasons-block")).toHaveClass("review-block--prompt");

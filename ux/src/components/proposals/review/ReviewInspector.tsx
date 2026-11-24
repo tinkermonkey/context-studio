@@ -607,13 +607,14 @@ export function ReviewInspector({
       data-testid="review-reasons-block"
     >
       <Eyebrow>{`OR NOT ${kind.toUpperCase()}, BECAUSE`}</Eyebrow>
-      {prompting && (
-        <span className="review-prompt" role="status" data-testid="review-reasons-prompt">
-          {noteMissing
+      {/* Always rendered, so a screen reader announces the text when it appears. */}
+      <span className="review-prompt" role="status" data-testid="review-reasons-prompt">
+        {prompting
+          ? noteMissing
             ? "Write why in the note, then pick a reason to reject it."
-            : "Pick a reason to reject it."}
-        </span>
-      )}
+            : "Pick a reason to reject it."
+          : ""}
+      </span>
       <div
         ref={reasonsRef}
         className="review-reasons"

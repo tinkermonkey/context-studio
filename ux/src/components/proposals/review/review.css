@@ -1034,6 +1034,15 @@
     color: var(--rv-rose-fg);
   }
 
+  /* Empty until the reason step is asked for: kept in the accessibility tree, taking no room. */
+  .review-prompt:empty {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+
   /* ---- or a better class: the suggestions as class tags ---- */
   .review-suggestions {
     display: flex;
