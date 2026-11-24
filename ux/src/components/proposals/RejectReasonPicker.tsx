@@ -6,17 +6,24 @@ interface RejectReasonPickerProps {
   operations: ProposedOperation[];
   value: RejectionReason;
   onChange: (code: RejectionReason) => void;
+  /** Distinguishes this picker from another on the page (the dialog's is the default). */
+  testIdPrefix?: string;
 }
 
 /** One reason code for every operation a bulk reject covers. */
-export function RejectReasonPicker({ operations, value, onChange }: RejectReasonPickerProps) {
+export function RejectReasonPicker({
+  operations,
+  value,
+  onChange,
+  testIdPrefix = "reject-reason",
+}: RejectReasonPickerProps) {
   return (
     <div
       className="reject-reasons"
       role="radiogroup"
       aria-label="Reason for every rejected operation"
-      id="reject-reason-picker"
-      data-testid="reject-reason-picker"
+      id={`${testIdPrefix}-picker`}
+      data-testid={`${testIdPrefix}-picker`}
     >
       {reasonsFor(operations).map((reason) => (
         <button
@@ -28,7 +35,7 @@ export function RejectReasonPicker({ operations, value, onChange }: RejectReason
             reason.code === value ? "reject-reason reject-reason--selected" : "reject-reason"
           }
           onClick={() => onChange(reason.code)}
-          data-testid={`reject-reason-${reason.code}`}
+          data-testid={`${testIdPrefix}-${reason.code}`}
         >
           {reason.label}
         </button>

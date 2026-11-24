@@ -3980,6 +3980,12 @@ selectors:
   - selector: reject-reason-picker
     component: src/components/proposals/RejectReasonPicker.tsx
     description: "Reject all / Reject selected confirm dialog: one reason code for every operation it rejects (role=radiogroup; the codes that fit all of them, Other by default)"
+  - selector: operation-reject-reason-picker
+    component: src/components/proposals/RejectReasonPicker.tsx
+    description: "Operation inspector: the reason code for rejecting this operation (role=radiogroup; keep_current for a blocked delete, outdated when stale, else other)"
+  - selector: operation-reject-reason-*
+    component: src/components/proposals/RejectReasonPicker.tsx
+    description: "A reason code in the operation inspector's reject picker (role=radio, aria-checked), by code"
   - selector: reject-reason-*
     component: src/components/proposals/RejectReasonPicker.tsx
     description: "A reason code in the bulk reject dialog's picker (role=radio, aria-checked), by code"

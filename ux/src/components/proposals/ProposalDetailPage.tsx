@@ -826,11 +826,7 @@ export function ProposalDetailPage({
               A rejected operation can&apos;t be applied later. Operations already applied stay
               applied.
             </p>
-            <Field
-              label="Because"
-              hint="one reason for every operation"
-              htmlFor="reject-reason-picker"
-            >
+            <Field label="Because" hint="one reason for every operation">
               <RejectReasonPicker
                 operations={operations.filter((o) => rejecting?.ids.includes(o.id))}
                 value={rejectCode}

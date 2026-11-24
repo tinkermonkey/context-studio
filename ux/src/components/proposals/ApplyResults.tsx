@@ -149,7 +149,11 @@ export function ApplyResults({ proposal, operationIds, context, actions }: Apply
                 variant="ghost"
                 size="sm"
                 disabled={actions.busy}
-                onClick={() => actions.rejectOperations([row.id])}
+                onClick={() =>
+                  actions.rejectOperations([row.id], undefined, {
+                    reasonCode: row.operation.stale ? "outdated" : "other",
+                  })
+                }
                 data-testid={`apply-reject-${row.id}`}
               >
                 Reject

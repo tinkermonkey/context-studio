@@ -134,8 +134,26 @@ describe("deciding one operation in the inspector", () => {
     await user.click(screen.getByTestId("operation-reject"));
 
     await waitFor(() => expect(rejected).toHaveLength(1));
-    expect(rejected[0]).toEqual({ operation_ids: ["op-rename"], note: "Duplicate of seq 3" });
+    expect(rejected[0]).toEqual({
+      operation_ids: ["op-rename"],
+      note: "Duplicate of seq 3",
+      reason_code: "other",
+    });
     expect(applied).toHaveLength(0);
+  });
+
+  it("rejects with the reason picked in the inspector", async () => {
+    const user = userEvent.setup();
+    renderPage("op-rename");
+
+    const picker = await screen.findByTestId("operation-reject-reason-picker");
+    expect(picker).toHaveAttribute("role", "radiogroup");
+    await user.click(within(picker).getByRole("radio", { name: "Wrong" }));
+    expect(within(picker).getByRole("radio", { name: "Wrong" })).toBeChecked();
+    await user.click(screen.getByTestId("operation-reject"));
+
+    await waitFor(() => expect(rejected).toHaveLength(1));
+    expect(rejected[0]).toMatchObject({ operation_ids: ["op-rename"], reason_code: "incorrect" });
   });
 
   it("edits a DR triple, then accepts it: the edit is sent and the result is marked edited", async () => {
@@ -499,6 +517,20 @@ describe("accept all and the results", () => {
     expect(screen.getByTestId("apply-result-op-rename")).toHaveTextContent(
       "component_serves_service",
     );
+  });
+
+  it("rejects a failed operation from the results with a reason code", async () => {
+    const user = userEvent.setup();
+    failures = { "op-class": "target_changed: description changed since proposed" };
+    renderPage();
+    await user.click(await screen.findByTestId("proposal-accept-all"));
+    await user.click(await screen.findByTestId("apply-reject-op-class"));
+
+    await waitFor(() => expect(rejected).toHaveLength(1));
+    expect(rejected[0]).toMatchObject({
+      operation_ids: ["op-class"],
+      reason_code: proposal.operations[3].stale ? "outdated" : "other",
+    });
   });
 
   it("confirms Reject all awaiting before rejecting every pending and failed operation", async () => {

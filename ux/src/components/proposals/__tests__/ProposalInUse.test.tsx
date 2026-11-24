@@ -266,7 +266,11 @@ describe("a blocked relationship-type delete", () => {
     await user.click(screen.getByTestId("operation-reject"));
 
     await waitFor(() => expect(rejected).toHaveLength(1));
-    expect(rejected[0]).toEqual({ operation_ids: ["op-delete"], note: "Both events need it" });
+    expect(rejected[0]).toEqual({
+      operation_ids: ["op-delete"],
+      note: "Both events need it",
+      reason_code: "keep_current",
+    });
     expect(applied).toHaveLength(0);
   });
 });
