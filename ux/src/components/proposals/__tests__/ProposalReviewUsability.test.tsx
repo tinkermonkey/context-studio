@@ -75,15 +75,18 @@ function renderPage(selectedOperationId?: string, onSelectOperation = vi.fn()) {
   return onSelectOperation;
 }
 
+/** The review inspector's blocks, top to bottom, by their accessible names. */
 function sectionTitles(): string[] {
-  const inspector = screen.getByTestId("operation-inspector");
-  return [...inspector.querySelectorAll(".inspector-panel__section-title")].map(
-    (t) => t.firstChild?.textContent ?? "",
+  const inspector = screen.getByTestId("review-inspector");
+  return [...inspector.querySelectorAll("section.review-block")].map(
+    (section) => section.getAttribute("aria-label") ?? "",
   );
 }
 
 describe("the inspector's section order", () => {
-  it("puts Rationale after Replacement, ahead of the answers and the change", async () => {
+  // The review inspector's order (#1635, #1662): what replaces it, the change, why, the
+  // questions it asked, the evidence pack, then the decision.
+  it("puts the Replacement first, then the change, why, the answers and the evidence pack", async () => {
     // m-dup is a delete naming a replacement.
     const task = { id: CLASS_IDS.task, title: "task" };
     const tool = { id: CLASS_IDS.tool, title: "tool" };
@@ -102,24 +105,26 @@ describe("the inspector's section order", () => {
       cycle: false,
     };
     renderPage("m-dup");
-    await screen.findByTestId("operation-inspector");
+    await screen.findByTestId("review-inspector");
     await screen.findByTestId("operation-replacement");
 
     const titles = sectionTitles();
     const at = (title: string) => titles.indexOf(title);
     expect(at("Replacement")).toBeGreaterThanOrEqual(0);
-    expect(at("Rationale")).toBe(at("Replacement") + 1);
-    expect(at("Reflection answers")).toBe(at("Rationale") + 1);
-    expect(at("Change")).toBe(at("Reflection answers") + 1);
-    expect(at("Evidence pack")).toBe(at("Change") + 1);
+    expect(at("The change")).toBe(at("Replacement") + 1);
+    expect(at("Why")).toBe(at("The change") + 1);
+    expect(at("The questions it asked")).toBe(at("Why") + 1);
+    expect(at("Evidence pack")).toBe(at("The questions it asked") + 1);
+    expect(at("Decide")).toBeGreaterThan(at("Evidence pack"));
   });
 
-  it("puts Rationale first after the decision without a replacement", async () => {
+  it("puts the change first without a replacement, why right after it", async () => {
     renderPage("j-retarget");
     await screen.findByTestId("reflection-answers");
     const titles = sectionTitles();
-    expect(titles.indexOf("Rationale")).toBe(titles.indexOf("Reflection answers") - 1);
-    expect(titles.indexOf("Rationale")).toBeLessThan(titles.indexOf("Change"));
+    expect(titles.indexOf("Replacement")).toBe(-1);
+    expect(titles.indexOf("Why")).toBe(titles.indexOf("The change") + 1);
+    expect(titles.indexOf("The questions it asked")).toBe(titles.indexOf("Why") + 1);
   });
 });
 
@@ -162,7 +167,7 @@ describe("definition overlays on reflection answers", () => {
     renderPage("j-retarget");
     const option = await screen.findByTestId("reflection-option-source_for-project");
     await waitFor(() => expect(option).toHaveAttribute("data-defined", "true"));
-    const inspector = screen.getByTestId("operation-inspector");
+    const inspector = screen.getByTestId("review-inspector");
     const rect = (top: number, left: number, height: number, width: number) =>
       ({ top, left, bottom: top + height, right: left + width, height, width }) as DOMRect;
     vi.spyOn(inspector, "getBoundingClientRect").mockReturnValue(rect(0, 1000, 800, 380));

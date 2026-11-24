@@ -164,15 +164,6 @@ export function extractedFromSource(proposal: ChangeProposal | undefined): boole
   );
 }
 
-/**
- * Whether proposal detail opens `operation` in the review inspector: every
- * operation but a DR relationship type's (a property operation, a reflection
- * or a replacement), which keeps OperationInspector until #1662.
- */
-export function opensReviewInspector(operation: ProposedOperation): boolean {
-  return operation.kind !== "property" && !operation.reflection && !operation.replacement_check;
-}
-
 /** The source most of the elements' passages are in. */
 export function reviewSourceId(operations: ProposedOperation[]): string | undefined {
   const counts = new Map<string, number>();

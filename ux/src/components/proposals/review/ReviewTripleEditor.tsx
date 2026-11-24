@@ -18,10 +18,10 @@ import {
   sameDrTriple,
   type DrSpec,
   type DrTriple,
-} from "./decisionModel";
-import type { TripleSource } from "./proposalModel";
-import type { ApplyOutcome, Edits } from "./useProposalActions";
-import "./proposals.css";
+} from "../decisionModel";
+import type { TripleSource } from "../proposalModel";
+import type { ApplyOutcome, Edits } from "../useProposalActions";
+import "../proposals.css";
 
 type Taxonomy = components["schemas"]["TaxonomyResponse"];
 type Part = keyof DrTriple;
@@ -59,7 +59,7 @@ function TripleText({ triple, compareTo }: { triple?: DrTriple; compareTo?: DrTr
   );
 }
 
-interface DrTripleEditorProps {
+interface ReviewTripleEditorProps {
   operation: ProposedOperation;
   proposal: ChangeProposal;
   taxonomy: Taxonomy;
@@ -80,7 +80,7 @@ interface DrTripleEditorProps {
  * classes, its predicate catalog and the relationship types that exist; the
  * server checks again, and its refusal shows here until the next change.
  */
-export function DrTripleEditor({
+export function ReviewTripleEditor({
   operation,
   proposal,
   taxonomy,
@@ -89,7 +89,7 @@ export function DrTripleEditor({
   onApply,
   onCancel,
   busy,
-}: DrTripleEditorProps) {
+}: ReviewTripleEditorProps) {
   const isDelete = operation.op === "delete";
   const { classes, isError: classesFailed } = useTaxonomyClasses(taxonomy.id);
   const { data: predicates, isError: predicatesFailed } = useTaxonomyPredicates(taxonomy.id);

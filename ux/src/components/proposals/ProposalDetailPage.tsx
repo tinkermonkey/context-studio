@@ -24,10 +24,8 @@ import { usePageBreadcrumbs } from "@/hooks/usePageBreadcrumbs";
 import { linkPath } from "@/lib/entityPaths";
 import { ApplyResults } from "./ApplyResults";
 import { SelectionBar, ThresholdBar } from "./DecisionBars";
-import { OperationDecided } from "./OperationDecided";
-import { OperationDecision } from "./OperationDecision";
 import { operationColumns } from "./OperationColumns";
-import { OperationInspector, operationTitle } from "./OperationInspector";
+import { operationTitle } from "./OperationDiff";
 import { RejectReasonPicker } from "./RejectReasonPicker";
 import { RevertConflict } from "./RevertConflict";
 import { RevertProposalDialog } from "./RevertProposalDialog";
@@ -80,7 +78,7 @@ import {
 } from "./tieredModel";
 import { nearMatchHeldIds, nearMatchHeldNote, noPassageHeldIds } from "./sourceModel";
 import { ProposalOriginChip } from "./ProposalOrigin";
-import { extractedFromSource, opensReviewInspector } from "./review/reviewModel";
+import { extractedFromSource } from "./review/reviewModel";
 import { goldCheckOf } from "./review/goldModel";
 import { ReviewInspector } from "./review/ReviewInspector";
 import { ReviewPillsProvider, plainClick, type OperationLink } from "./review/ReviewPills";
@@ -709,66 +707,45 @@ export function ProposalDetailPage({
           data={operations}
           selectedId={selectedOperationId}
           renderInspectorContent={(operation) => {
-            if (opensReviewInspector(operation)) {
-              return (
-                <ReviewInspector
-                  key={operation.id}
-                  {...inspector.inspectorProps(operation)}
-                  keyboard={false}
-                  onWide={onDiff ? openWide : undefined}
-                  reverted={reverted}
-                  decidedBy={
-                    reverted
-                      ? undefined
-                      : decidedByLabel(
-                          decisions?.find((d) => d.operation_id === operation.id)?.decided_by,
-                          decisions?.find((d) => d.operation_id === operation.id)?.decided_at,
-                        )
-                  }
-                />
-              );
-            }
             const picks = picksByOperation[operation.id] ?? {};
             const picking = decidesHere && takesPicks(operation);
+            const decision = decisions?.find((d) => d.operation_id === operation.id);
             return (
-              <OperationInspector
+              <ReviewInspector
                 key={operation.id}
-                operation={operation}
-                operations={operations}
-                context={context}
-                picks={picks}
-                definitionOf={definitionOf(operation)}
-                onPick={
-                  picking
-                    ? (question, option) =>
-                        setPicksByOperation((all) => ({
-                          ...all,
-                          [operation.id]: { ...all[operation.id], [question]: option },
-                        }))
+                {...inspector.inspectorProps(operation)}
+                keyboard={false}
+                reverted={reverted}
+                onWide={onDiff ? openWide : undefined}
+                decidedBy={
+                  reverted ? undefined : decidedByLabel(decision?.decided_by, decision?.decided_at)
+                }
+                type={
+                  operation.kind === "property"
+                    ? {
+                        decision: {
+                          proposal,
+                          taxonomy,
+                          current: context.currentProperty(operation.target_id),
+                          staleCause: operation.stale ? causeOf(operation) : undefined,
+                          actions,
+                          picks: operation.reflection
+                            ? pickOutcome(operation.reflection, picks)
+                            : undefined,
+                        },
+                        current: context.currentProperty(operation.target_id),
+                        picks,
+                        onPick: picking
+                          ? (question: string, option: string) =>
+                              setPicksByOperation((all) => ({
+                                ...all,
+                                [operation.id]: { ...all[operation.id], [question]: option },
+                              }))
+                          : undefined,
+                        definitionOf: definitionOf(operation),
+                      }
                     : undefined
                 }
-                decision={
-                  decidesHere && isAwaiting(operation) ? (
-                    <OperationDecision
-                      operation={operation}
-                      proposal={proposal}
-                      taxonomy={taxonomy}
-                      current={context.currentProperty(operation.target_id)}
-                      staleCause={operation.stale ? causeOf(operation) : undefined}
-                      actions={actions}
-                      picks={
-                        operation.reflection ? pickOutcome(operation.reflection, picks) : undefined
-                      }
-                    />
-                  ) : !isAwaiting(operation) ? (
-                    <OperationDecided
-                      operation={operation}
-                      decision={decisions?.find((d) => d.operation_id === operation.id)}
-                      reverted={reverted}
-                    />
-                  ) : undefined
-                }
-                reverted={reverted}
               />
             );
           }}

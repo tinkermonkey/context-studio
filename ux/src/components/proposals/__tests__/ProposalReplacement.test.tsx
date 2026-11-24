@@ -126,7 +126,7 @@ describe("a delete naming its replacement", () => {
     theDelete().replacement_check = null;
     renderPage("op-delete");
 
-    await screen.findByTestId("operation-inspector");
+    await screen.findByTestId("review-inspector");
     expect(screen.queryByTestId("operation-replacement")).not.toBeInTheDocument();
   });
 });

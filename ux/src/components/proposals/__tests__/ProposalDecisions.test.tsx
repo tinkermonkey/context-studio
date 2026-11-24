@@ -103,6 +103,28 @@ function renderPage(selectedOperationId?: string) {
   );
 }
 
+describe("a DR relationship type's head (#1662)", () => {
+  it("reads From → predicate → To, its ends as class pills by DR reference", async () => {
+    renderPage("op-create");
+    const title = await screen.findByTestId("review-inspector-title");
+    const triple = title.querySelector(".review-type-triple")!;
+    expect(triple).not.toBeNull();
+    const pills = [...triple.children];
+    expect(pills).toHaveLength(3);
+    // From: ApplicationService, which has no DR reference, by its title.
+    await waitFor(() => expect(pills[0]).toHaveTextContent("ApplicationService"));
+    // The predicate, pointing on.
+    expect(pills[1]).toHaveClass("review-pill--predicate");
+    expect(pills[1]).toHaveTextContent("uses →");
+    // To: ApplicationComponent, by its DR reference.
+    await waitFor(() => expect(pills[2]).toHaveTextContent("application.component"));
+    expect(pills[2]).not.toHaveTextContent("class-1");
+    // The accessible name stays the type's title.
+    expect(title).toHaveAttribute("aria-label");
+    expect(title.getAttribute("aria-label")).not.toBe("");
+  });
+});
+
 describe("deciding one operation in the inspector", () => {
   it("accepts it: applies just that operation and shows the results", async () => {
     const user = userEvent.setup();
@@ -130,11 +152,13 @@ describe("deciding one operation in the inspector", () => {
     const user = userEvent.setup();
     renderPage("op-rename");
 
-    await user.type(await screen.findByTestId("operation-reject-note"), "Duplicate of seq 3");
-    await user.click(screen.getByTestId("operation-reject"));
+    await user.click(await screen.findByTestId("review-not"));
+    await user.type(screen.getByTestId("review-note"), "Duplicate of seq 3");
+    await user.click(screen.getByTestId("review-reason-other"));
 
     await waitFor(() => expect(rejected).toHaveLength(1));
-    expect(rejected[0]).toEqual({
+    // A reason code and the note, from the inspector's reason step (#1662).
+    expect(rejected[0]).toMatchObject({
       operation_ids: ["op-rename"],
       note: "Duplicate of seq 3",
       reason_code: "other",
@@ -146,11 +170,11 @@ describe("deciding one operation in the inspector", () => {
     const user = userEvent.setup();
     renderPage("op-rename");
 
-    const picker = await screen.findByTestId("operation-reject-reason-picker");
-    expect(picker).toHaveAttribute("role", "radiogroup");
-    await user.click(within(picker).getByRole("radio", { name: "Wrong" }));
-    expect(within(picker).getByRole("radio", { name: "Wrong" })).toBeChecked();
-    await user.click(screen.getByTestId("operation-reject"));
+    // The inspector's reason step (#1662) offers the codes that fit a change (#1659).
+    await user.click(await screen.findByTestId("review-not"));
+    const reasons = screen.getByTestId("review-reasons");
+    expect(within(reasons).getByRole("button", { name: "Keep as it is" })).toBeInTheDocument();
+    await user.click(within(reasons).getByRole("button", { name: "Wrong" }));
 
     await waitFor(() => expect(rejected).toHaveLength(1));
     expect(rejected[0]).toMatchObject({ operation_ids: ["op-rename"], reason_code: "incorrect" });
@@ -261,6 +285,31 @@ describe("a failed edit", () => {
     });
     renderPage("op-delete");
     expect(await screen.findByTestId("operation-accept")).toHaveTextContent("Apply as proposed");
+    // One failure message, the head's, with its reason; the callout says what can be done.
+    expect(screen.getByTestId("review-failed")).toHaveTextContent(
+      "The last apply failed: invalid_edit: predicate 'x' is not in the DR predicate catalog",
+    );
+    expect(screen.getByTestId("operation-failed-callout")).toHaveTextContent(
+      "The edit wasn't applied. Edit it again, apply it as proposed, or reject it.",
+    );
+    expect(screen.getByTestId("review-inspector")).not.toHaveTextContent("under Change");
+  });
+
+  it("shows a plain failed type's failure once, in the inspector's head", async () => {
+    Object.assign(proposal.operations[0], {
+      status: "failed",
+      stale: false,
+      reason: "conflict: the identifier is taken",
+    });
+    renderPage("op-rename");
+    expect(await screen.findByTestId("review-failed")).toHaveTextContent(
+      "The last apply failed: conflict: the identifier is taken",
+    );
+    expect(screen.queryByTestId("operation-failed-callout")).not.toBeInTheDocument();
+    expect(
+      screen.getAllByRole("alert").filter((a) => /failed/i.test(a.textContent ?? "")),
+    ).toHaveLength(1);
+    expect(screen.getByTestId("operation-accept")).toHaveTextContent("Apply again");
   });
 
   it("keeps the edit through Apply anyway; a cancel shows no old reason, a 422 reaches the editor", async () => {

@@ -95,8 +95,8 @@ describe("a class's operational definition in the review inspector (#1660)", () 
   });
   it("shows no notes section for an operation without notes", async () => {
     renderPage("op-rename");
-    await screen.findByTestId("operation-rationale");
-    expect(screen.queryByTestId("operation-notes")).not.toBeInTheDocument();
+    await screen.findByTestId("review-why-rationale");
+    expect(screen.queryByTestId("review-why-notes")).not.toBeInTheDocument();
   });
 });
 

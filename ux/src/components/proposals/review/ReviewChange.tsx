@@ -19,6 +19,22 @@ import { ClassPill } from "./ReviewPills";
 import { longChangeFields } from "./wideDiff";
 import type { ReviewSchema } from "./reviewSchema";
 
+/** A relationship type's triple fields under the names a reviewer reads them by. */
+const PROPERTY_FIELD_LABELS: Record<string, string> = {
+  canonical_predicate: "predicate",
+  domain_class_id: "source",
+  range_class_id: "destination",
+  // A DR relationship type's x-dr-evidence lines, not the proposal's evidence.
+  evidence: "spec evidence",
+};
+
+/** A field as the change rows read it. */
+function labelOf(operation: ProposedOperation, field: string): string {
+  return operation.kind === "property"
+    ? (PROPERTY_FIELD_LABELS[field] ?? fieldLabel(field))
+    : fieldLabel(field);
+}
+
 /** Fields that name classes: read as class pills (with their hovers) when the schema knows them. */
 const CLASS_FIELDS = new Set([
   "class_ids",
@@ -141,6 +157,16 @@ function Value({ field, value, operation, operations, context, schema }: ValuePr
       </span>
     );
   }
+  // A relationship type's spec evidence: one line each.
+  if (field === "evidence" && Array.isArray(value) && value.length > 0) {
+    return (
+      <ul className="review-diff__lines">
+        {value.map((line, i) => (
+          <li key={i}>{formatValue(line)}</li>
+        ))}
+      </ul>
+    );
+  }
   const lines = fieldLines(field, value, (id) => context.endLabel(id, operation));
   if (lines && lines.length > 0) {
     return (
@@ -207,7 +233,7 @@ function ChangeRowView({
   /** A long text change: opens it in the wide diff. */
   onWide?: () => void;
 }) {
-  const label = fieldLabel(row.field);
+  const label = labelOf(operation, row.field);
   const value = (v: unknown) => (
     <Value
       field={row.field}
