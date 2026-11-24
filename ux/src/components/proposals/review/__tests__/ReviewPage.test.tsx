@@ -2049,7 +2049,139 @@ describe("the relationship inspector", () => {
     expect(screen.getByTestId("review-draft-source")).toHaveTextContent("Feedback");
     await user.click(screen.getByTestId("review-accept-edited"));
     await waitFor(() => expect(applies).toHaveLength(1));
-    expect(applies[0].edits).toEqual({ "op-rel": { source_id: "ind-77" } });
+    // An element of this proposal is named by its ref, as the proposed ends are (#1673).
+    expect(applies[0].edits).toEqual({ "op-rel": { source_id: "$added" } });
+  });
+});
+
+describe("a relationship's ends on a fresh extraction (#1673)", () => {
+  const enablesType = createPropertyDefinition({
+    id: "prop-4",
+    identifier: "capability_enables_feature",
+    title: "product.softwarecapability enables product.feature",
+    canonical_predicate: "enables",
+    domain_class_id: "cls-capability",
+    range_class_id: "cls-feature",
+  });
+
+  beforeEach(() => {
+    useSchemaAndReopen();
+    // Nothing applied yet, and an empty dataset: the elements to come are the only candidates.
+    decideOp("op-added", { status: "pending", result_entity_id: null });
+    server.use(
+      http.get("*/api/individuals", () =>
+        HttpResponse.json({ items: [], total: 0, limit: 500, offset: 0 }),
+      ),
+    );
+  });
+
+  it("finds this proposal's pending elements, and won't accept until the one picked applies", async () => {
+    const user = await renderPage();
+    await user.click(screen.getByTestId("review-row-op-rel"));
+    await user.click(screen.getByTestId("review-change-source"));
+    const panel = screen.getByRole("group", { name: "Source" });
+    // Reference check (the current source) and Feedback, both awaiting, both features.
+    expect(
+      within(panel).getByText("2 product.feature individuals, in this proposal or the dataset"),
+    ).toBeInTheDocument();
+    const [feedback] = within(panel).getAllByTestId("review-end-option-source");
+    expect(feedback).toHaveTextContent("Feedback");
+    expect(feedback).toHaveTextContent("in this proposal, awaiting");
+    await user.click(feedback);
+    expect(screen.getByTestId("review-draft-source")).toHaveTextContent("Feedback");
+    expect(screen.getByTestId("review-editor-pending")).toHaveTextContent(
+      "Decide #4 Feedback first: this end follows its choice.",
+    );
+    expect(screen.getByTestId("review-accept-edited")).toBeDisabled();
+    expect(applies).toHaveLength(0);
+  });
+
+  it("says why the list is empty: nothing of the class the type needs, or nothing by that text", async () => {
+    const user = await renderPage();
+    await user.click(screen.getByTestId("review-row-op-rel"));
+    await user.click(screen.getByTestId("review-change-target"));
+    // Edit Check is the only capability, and it is the target already.
+    expect(screen.getByTestId("review-end-empty-target")).toHaveTextContent(
+      "No Software capability individual is in this proposal or the dataset.",
+    );
+    await user.click(screen.getByTestId("review-change-target"));
+    await user.click(screen.getByTestId("review-change-source"));
+    await user.type(screen.getByTestId("review-end-search-source"), "zzz");
+    expect(screen.getByTestId("review-end-empty-source")).toHaveTextContent(
+      "No product.feature individual matches “zzz”.",
+    );
+  });
+
+  it("reverses the ends, and says when no predicate allows the reversed direction", async () => {
+    const user = await renderPage();
+    await user.click(screen.getByTestId("review-row-op-rel"));
+    const reverse = screen.getByTestId("review-reverse");
+    expect(reverse).toHaveAttribute("aria-pressed", "false");
+    await user.click(reverse);
+    expect(reverse).toHaveAttribute("aria-pressed", "true");
+    expect(screen.getByTestId("review-draft-source")).toHaveTextContent("Edit Check");
+    expect(screen.getByTestId("review-draft-target")).toHaveTextContent("Reference check");
+    expect(screen.getByTestId("review-editor-misfit")).toHaveTextContent(
+      "No predicate is allowed from Software capability to product.feature.",
+    );
+    expect(screen.getByTestId("review-accept-edited")).toBeDisabled();
+    // Reversed again, it is the relationship as proposed: nothing to accept as an edit.
+    await user.click(reverse);
+    expect(screen.getByTestId("review-draft-source")).toHaveTextContent("Reference check");
+    expect(screen.queryByTestId("review-editor-misfit")).not.toBeInTheDocument();
+    expect(screen.getByTestId("review-accept-edited")).toBeDisabled();
+  });
+
+  it("offers the predicates the reversed direction allows, and accepts it by the ends' refs", async () => {
+    server.use(
+      http.get("*/api/properties", () =>
+        HttpResponse.json({
+          items: [realizesType, servesType, drivesType, enablesType],
+          total: 4,
+          limit: 5000,
+          offset: 0,
+        }),
+      ),
+    );
+    decideOp("op-edit", { status: "applied", result_entity_id: "res-edit" });
+    decideOp("op-ref", { status: "applied", result_entity_id: "res-ref" });
+    const user = await renderPage();
+    await user.click(screen.getByTestId("review-row-op-rel"));
+    await user.click(screen.getByTestId("review-reverse"));
+    expect(screen.getByTestId("review-editor-misfit")).toHaveTextContent(
+      "realizes isn't allowed from Software capability to product.feature. Pick one of the 1 that are, above.",
+    );
+    // The predicate row opens on the ones that are.
+    const options = within(screen.getByRole("group", { name: "Predicate" })).getAllByTestId(
+      /^review-predicate-option-/,
+    );
+    expect(options).toHaveLength(1);
+    expect(options[0]).toHaveTextContent("enables");
+    await user.click(options[0]);
+    expect(screen.queryByTestId("review-editor-misfit")).not.toBeInTheDocument();
+    await user.click(screen.getByTestId("review-accept-edited"));
+    await waitFor(() => expect(applies).toHaveLength(1));
+    expect(applies[0].edits).toEqual({
+      "op-rel": { property_definition_id: "prop-4", source_id: "$edit", target_id: "$ref" },
+    });
+  });
+
+  it("accepts with a pending element's ref once it applied, resolved by the server", async () => {
+    decideOp("op-added", { status: "applied", result_entity_id: "ind-77" });
+    decideOp("op-edit", { status: "applied", result_entity_id: "res-edit" });
+    const user = await renderPage();
+    await user.click(screen.getByTestId("review-row-op-rel"));
+    await user.click(screen.getByTestId("review-change-source"));
+    const [feedback] = within(screen.getByRole("group", { name: "Source" })).getAllByTestId(
+      "review-end-option-source",
+    );
+    expect(feedback).toHaveTextContent("in this proposal");
+    expect(feedback).not.toHaveTextContent("awaiting");
+    await user.click(feedback);
+    expect(screen.queryByTestId("review-editor-pending")).not.toBeInTheDocument();
+    await user.click(screen.getByTestId("review-accept-edited"));
+    await waitFor(() => expect(applies).toHaveLength(1));
+    expect(applies[0].edits).toEqual({ "op-rel": { source_id: "$added" } });
   });
 });
 

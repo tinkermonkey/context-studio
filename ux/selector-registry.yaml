@@ -3321,7 +3321,16 @@ selectors:
     description: "The hover overlay (role=tooltip, .definition-overlay, beside the inspector) of a class, individual or predicate pill: definition, layer, and for a class the relationships the schema allows from and to it"
   - selector: review-end-*
     component: src/components/proposals/review/ReviewRelationship.tsx
-    description: "An end card of the relationship block: review-end-{source,target} (FROM / TO), with its -individual (bold text with a dot, .review-pill--individual; a link when it is an element of the proposal), -status (its verdict chip, or \"in the workspace\"), -class (class tag); review-end-search-{role} and review-end-option-{role}: an open Source / Target row's search and results"
+    description: "An end card of the relationship block: review-end-{source,target} (FROM / TO), with its -individual (bold text with a dot, .review-pill--individual; a link when it is an element of the proposal), -status (its verdict chip, or \"in the workspace\"), -class (class tag); review-end-search-{role} and review-end-option-{role}: an open Source / Target row's search and results (this proposal's elements that aren't rejected, by their $ref, and the dataset's individuals); review-end-empty-{role}: why nothing is listed (no individual of the class the type needs, or none matching the text)"
+  - selector: review-reverse
+    component: src/components/proposals/review/ReviewRelationship.tsx
+    description: "OR CORRECT IT: Reverse (ghost, aria-pressed) swaps the draft's source and target; when the predicate doesn't allow the reversed direction the predicate row opens on the ones that do"
+  - selector: review-editor-misfit
+    component: src/components/proposals/review/ReviewRelationship.tsx
+    description: "OR CORRECT IT: the draft's ends don't fit its predicate (after Reverse or another end): which predicates are allowed instead, or that none is; Accept with these changes is disabled"
+  - selector: review-editor-pending
+    component: src/components/proposals/review/ReviewRelationship.tsx
+    description: "OR CORRECT IT: an end picked among this proposal's elements hasn't applied yet (\"Decide #4 Feedback first: this end follows its choice.\"); Accept with these changes is disabled"
   - selector: review-show-in-source
     component: src/components/proposals/review/ReviewInspector.tsx
     description: "A relationship's EVIDENCE: Show in source, scrolls the source to its first passage"

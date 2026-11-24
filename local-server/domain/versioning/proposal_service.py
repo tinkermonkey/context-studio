@@ -2166,8 +2166,10 @@ class ProposalService:
     ) -> None:
         """
         Each edit is a non-empty object for a property update or delete, or an
-        individual create, being applied. An individual create's sets only a
-        non-empty title and/or a non-empty list of class ids.
+        individual or relationship create, being applied. An individual create's
+        sets only a non-empty title and/or a non-empty list of class ids. Only a
+        relationship create's edit may name another create of the proposal by
+        "$ref" (one of its ends).
         """
         by_id = {o.id: o for o in chosen}
         misplaced = sorted(i for i in edits if i not in by_id)
@@ -2204,7 +2206,9 @@ class ProposalService:
             refs = sorted(
                 name for name, value in fields.items() if name in ID_FIELDS and _is_ref(value)
             )
-            if refs:
+            # A relationship create's end may name an element this proposal creates by its
+            # "$ref", as the proposed ends do (#1673): it resolves when that element applies.
+            if refs and not relationship_create:
                 raise ValueError(f"{label}: an edit can't point at a $ref ({refs})")
 
     @staticmethod

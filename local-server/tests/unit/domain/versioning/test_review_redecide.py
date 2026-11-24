@@ -290,9 +290,55 @@ class TestEditedRelationshipCreate:
         with pytest.raises(ValueError, match="sets only property_definition_id"):
             service.apply(proposal.id, [op.id], edits={op.id: {"title": "x"}})
 
-    def test_an_edit_naming_a_ref_is_a_value_error(self, service, graph):
+    def test_an_end_can_name_an_element_of_the_proposal_by_its_ref(
+        self, service, graph, repo, proposals
+    ):
+        # #1673: the reviewer picks another element this proposal creates as an end.
+        library = OperationDraft(
+            seq=3,
+            op=T.CREATE,
+            kind=K.INDIVIDUAL,
+            ref="library",
+            fields={"class_ids": [graph["room"]], "title": "Library"},
+            evidence=[PASSAGE],
+        )
+        proposal = propose(service, graph, create_study(graph), near_den(graph), library)
+        ops = ops_of(proposal)
+        relationship = ops[2]
+        edit = {relationship.id: {"target_id": "$library"}}
+
+        # Until the element it names applies, the relationship can't.
+        unresolved = ops_of(service.apply(proposal.id, [ops[1].id, relationship.id], edits=edit))
+        assert unresolved[2].status is OperationStatus.FAILED
+        assert unresolved[2].reason.startswith("unresolved_ref"), unresolved[2].reason
+
+        service.apply(proposal.id, [ops[3].id])
+        applied = ops_of(service.apply(proposal.id, [relationship.id], edits=edit))[2]
+
+        assert applied.status is OperationStatus.APPLIED, applied.reason
+        created = repo.get_relationship(applied.result_entity_id)
+        library_id = ops_of(service.get(proposal.id))[3].result_entity_id
+        assert created.source_id == ops_of(service.get(proposal.id))[1].result_entity_id
+        assert created.target_id == library_id
+        # Recorded by its ref, as the proposed ends are.
+        assert applied.applied_fields["target_id"] == "$library"
+
+    def test_an_end_naming_an_unknown_ref_is_an_invalid_edit(self, service, graph):
         proposal = propose(service, graph, create_study(graph), near_den(graph))
-        op = ops_of(proposal)[2]
+        ops = ops_of(proposal)
+
+        applied = ops_of(
+            service.apply(
+                proposal.id, [ops[1].id, ops[2].id], edits={ops[2].id: {"target_id": "$nowhere"}}
+            )
+        )[2]
+
+        assert applied.status is OperationStatus.FAILED
+        assert applied.reason.startswith("invalid_edit"), applied.reason
+
+    def test_an_individual_create_edit_naming_a_ref_is_a_value_error(self, service, graph):
+        proposal = propose(service, graph, create_study(graph))
+        op = ops_of(proposal)[1]
 
         with pytest.raises(ValueError, match=r"\$ref"):
-            service.apply(proposal.id, [op.id], edits={op.id: {"target_id": "$study"}})
+            service.apply(proposal.id, [op.id], edits={op.id: {"class_ids": ["$study"]}})
