@@ -16,6 +16,8 @@ export interface OperationTally {
   applied: number;
   rejected: number;
   failed: number;
+  /** Removed by its proposer (#1624): not part of the review, so not in total. */
+  withdrawn: number;
   /** Still waiting for a decision: pending or failed (a failed one can be applied or rejected). */
   awaiting: number;
 }
@@ -33,12 +35,13 @@ export function tallyOperations(
     applied: 0,
     rejected: 0,
     failed: 0,
+    withdrawn: 0,
     awaiting: 0,
   };
   for (const operation of operations) {
     const n = operation.count ?? 1;
     tally[operation.status] += n;
-    tally.total += n;
+    if (operation.status !== "withdrawn") tally.total += n;
   }
   tally.awaiting = tally.pending + tally.failed;
   return tally;
@@ -102,12 +105,14 @@ export const OPERATION_STATUS_VARIANT: Record<OperationStatus, ChipVariant> = {
   applied: "emerald",
   rejected: "neutral",
   failed: "rose",
+  withdrawn: "neutral",
 };
 
 export const PROPOSAL_STATUS_VARIANT: Record<ChangeProposal["status"], ChipVariant> = {
   open: "amber",
   done: "emerald",
   reverted: "neutral",
+  withdrawn: "neutral",
 };
 
 export const OP_VARIANT: Record<ProposedOperation["op"], ChipVariant> = {

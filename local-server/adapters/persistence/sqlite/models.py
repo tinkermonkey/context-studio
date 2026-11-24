@@ -1694,7 +1694,7 @@ class ProposalOperation(Base):  # type: ignore[valid-type,misc]
         evidence: JSON list of {quote, url, entity_id}
         probability: Proposer's confidence, 0 to 1
         scope: editorial, additive or breaking
-        status: pending, applied, rejected or failed
+        status: pending, applied, rejected, failed or withdrawn (removed by its proposer)
         result_entity_id: Entity created or changed, once applied
         reason: Why it failed or was rejected
         reason_code: Why a reviewer rejected it, as a code (not_in_text, too_generic,
@@ -1749,11 +1749,65 @@ class ProposalOperation(Base):  # type: ignore[valid-type,misc]
     type_change = Column(JSON, nullable=True)
     alternatives = Column(JSON, nullable=False, default=list, server_default="[]")
     added_by_reviewer = Column(Boolean, nullable=False, default=False, server_default=text("0"))
+    amended_at = Column(
+        UtcDateTime,
+        nullable=True,
+        doc="When its proposer last amended it, or added it to the stored proposal (#1624)",
+    )
+    amendments = Column(
+        JSON,
+        nullable=False,
+        default=list,
+        server_default="[]",
+        doc="Its earlier versions, oldest first: {fields, base, rationale, probability,"
+        " evidence, amended_at} (#1624)",
+    )
 
     __table_args__ = (UniqueConstraint("proposal_id", "seq", name="uq_proposal_operation_seq"),)
 
     def __repr__(self) -> str:
         return f"<ProposalOperation(proposal={self.proposal_id}, seq={self.seq}, op={self.op})>"
+
+
+class ProposalLinkRecord(Base):  # type: ignore[valid-type,misc]
+    """
+    A link between two change proposals (#1624): the one model for a
+    withdrawn proposal and the one that supersedes it, and for a reversal
+    and the landed proposal it reverses (#1667).
+
+    Attributes:
+        id: UUID as string, primary key
+        source_proposal_id: The proposal the link starts from
+        kind: supersedes or reverses: what the source does to the target
+        target_proposal_id: The proposal it points at
+        created_at: When it was recorded
+        note: Why, in the words of whoever recorded it
+    """
+
+    __tablename__ = "proposal_links"
+
+    id = Column(String(36), primary_key=True, nullable=False)
+    source_proposal_id = Column(
+        String(36), ForeignKey("change_proposals.id", ondelete="CASCADE"), nullable=False
+    )
+    kind = Column(String(20), nullable=False)
+    target_proposal_id = Column(
+        String(36),
+        ForeignKey("change_proposals.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    created_at = Column(UtcDateTime, nullable=False)
+    note = Column(Text, nullable=True)
+
+    __table_args__ = (
+        UniqueConstraint(
+            "source_proposal_id",
+            "kind",
+            "target_proposal_id",
+            name="uq_proposal_links_source_kind_target",
+        ),
+    )
 
 
 class ProposalDecisionRecord(Base):  # type: ignore[valid-type,misc]

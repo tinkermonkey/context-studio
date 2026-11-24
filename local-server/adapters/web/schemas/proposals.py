@@ -182,6 +182,11 @@ class ChangeProposalCreateRequest(BaseModel):
         description="Keep the taxonomy's approval policy off it: a person decides every "
         "operation, none auto-applies (e.g. a benchmark gold check)",
     )
+    supersedes: list[str] = Field(
+        default_factory=list,
+        description="Open proposals on the same taxonomy this one replaces: once it is "
+        "stored, each is withdrawn (what it applied rolled back) and linked to it",
+    )
 
     @field_validator("client_metadata")
     @classmethod
@@ -280,6 +285,36 @@ class ChangeProposalApplyRequest(BaseModel):
         description="Operation id -> what the reviewer notes for gold (tier, also_defensible "
         "classes of the taxonomy), for ops in operation_ids; recorded in its decision",
     )
+
+
+class ChangeProposalAmendRequest(BaseModel):
+    """
+    Change an open proposal in place, as its proposer (#1624): replace pending
+    or failed operations by seq, add operations, remove pending ones.
+    """
+
+    replace: list[ProposedOperationRequest] = Field(
+        default_factory=list,
+        description="Whole operations, each replacing the pending or failed operation with "
+        "its seq; validated and scoped as on create. The replaced version is kept in the "
+        "operation's amendments",
+    )
+    add: list[ProposedOperationRequest] = Field(
+        default_factory=list, description="Operations with seqs the proposal doesn't have"
+    )
+    remove: list[int] = Field(
+        default_factory=list,
+        description="Seqs of pending or failed operations to withdraw (not a decision)",
+    )
+
+
+class ChangeProposalWithdrawRequest(BaseModel):
+    """Withdraw an open proposal, as its proposer (#1624)."""
+
+    superseded_by: Optional[str] = Field(
+        None, description="The proposal that replaces it; the two are linked (supersedes)"
+    )
+    note: Optional[str] = Field(None, description="Why, kept on the link")
 
 
 class ChangeProposalRejectRequest(BaseModel):
@@ -723,6 +758,16 @@ class ProposedOperationResponse(BaseModel):
         description="Added to the proposal by its reviewer (an element the extraction "
         "missed, found in its source), not proposed",
     )
+    amended_at: Optional[datetime] = Field(
+        None,
+        description="When its proposer last amended it, or added it to the stored proposal; "
+        "null if it is as first proposed: a reviewer who read it should read it again",
+    )
+    amendments: list[dict[str, Any]] = Field(
+        default_factory=list,
+        description="Its earlier versions, oldest first, each {fields, base, rationale, "
+        "probability, evidence, amended_at}: what each amendment replaced",
+    )
     reflection: Optional[ReflectionResponse] = Field(
         None,
         description="A schema relationship reflection operation's plan row: kind, p, the "
@@ -775,6 +820,22 @@ class OperationCountResponse(BaseModel):
         )
 
 
+class ProposalLinkResponse(BaseModel):
+    """A link between this proposal and another, seen from this one (#1624)."""
+
+    kind: Literal["supersedes", "superseded_by", "reverses", "reversed_by"] = Field(
+        ...,
+        description="supersedes: this proposal replaces the other, which was withdrawn; "
+        "superseded_by: the reverse. reverses / reversed_by: a reversal and the landed "
+        "proposal it undoes",
+    )
+    proposal_id: str = Field(..., description="The other proposal")
+    title: Optional[str] = Field(None, description="The other proposal's title")
+    status: Optional[ProposalStatus] = Field(None, description="The other proposal's status")
+    created_at: datetime
+    note: Optional[str] = None
+
+
 class ChangeProposalResponse(BaseModel):
     """A change proposal with its operations in seq order."""
 
@@ -808,6 +869,11 @@ class ChangeProposalResponse(BaseModel):
     review_only: bool = Field(
         False,
         description="Set at create time: the approval policy never applies any of it",
+    )
+    links: list[ProposalLinkResponse] = Field(
+        default_factory=list,
+        description="Its links to other proposals (supersedes, superseded_by, reverses, "
+        "reversed_by), oldest first; empty in a list's summary form",
     )
     counts: list[OperationCountResponse] = Field(
         ...,
@@ -843,6 +909,7 @@ class ChangeProposalResponse(BaseModel):
         dataset_impacts: Optional[dict[str, list[DatasetImpact]]] = None,
         alternative_titles: Optional[dict[str, str]] = None,
         domain_range_mismatches: Optional[dict[str, str]] = None,
+        links: Collection[ProposalLinkResponse] = (),
     ) -> "ChangeProposalResponse":
         """
         Build the response, flagging the operations in stale_ids, with their blockers.
@@ -873,6 +940,7 @@ class ChangeProposalResponse(BaseModel):
             origin=ProposalOriginResponse.from_domain(proposal.origin),
             dataset_id=proposal.dataset_id,
             review_only=proposal.review_only,
+            links=list(links),
             counts=[
                 OperationCountResponse.from_domain(c) for c in count_operations(proposal.operations)
             ],

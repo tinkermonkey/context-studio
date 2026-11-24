@@ -12,6 +12,7 @@ from domain.versioning.proposals import (
     Landing,
     OperationCount,
     ProposalFilter,
+    ProposalLink,
     ProposalStatus,
     ProposedOperation,
     count_operations,
@@ -24,6 +25,7 @@ class FakeChangeProposalRepository:
     def __init__(self) -> None:
         self._proposals: dict[str, ChangeProposal] = {}
         self.decisions: list[ProposalDecision] = []
+        self.links: list[ProposalLink] = []
 
     def create(self, proposal: ChangeProposal) -> ChangeProposal:
         if proposal.id in self._proposals:
@@ -84,6 +86,32 @@ class FakeChangeProposalRepository:
             raise ValueError(f"Proposal {proposal_id} already has seq {sorted(taken)}")
         stored.extend(copy.deepcopy(o) for o in operations)
         stored.sort(key=lambda o: o.seq)
+
+    def amend_operations(self, proposal_id: str, operations: Sequence[ProposedOperation]) -> None:
+        if proposal_id not in self._proposals:
+            raise ValueError(f"No proposal {proposal_id}")
+        stored = self._proposals[proposal_id].operations
+        index = {o.id: i for i, o in enumerate(stored)}
+        missing = [o.id for o in operations if o.id not in index]
+        if missing:
+            raise ValueError(f"Proposal {proposal_id} has no operations {missing}")
+        for operation in operations:
+            stored[index[operation.id]] = copy.deepcopy(operation)
+
+    def add_link(self, link: ProposalLink) -> None:
+        if link not in self.links and not any(
+            (k.source_proposal_id, k.kind, k.target_proposal_id)
+            == (link.source_proposal_id, link.kind, link.target_proposal_id)
+            for k in self.links
+        ):
+            self.links.append(link)
+
+    def links_of(self, proposal_id: str) -> list[ProposalLink]:
+        return [
+            link
+            for link in self.links
+            if proposal_id in (link.source_proposal_id, link.target_proposal_id)
+        ]
 
     def save_operations(
         self,

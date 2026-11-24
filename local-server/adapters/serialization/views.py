@@ -18,7 +18,7 @@ from adapters.web.schemas.ontology import (
     RelationshipResponse,
     TaxonomyResponse,
 )
-from adapters.web.schemas.proposals import ChangeProposalResponse
+from adapters.web.schemas.proposals import ChangeProposalResponse, ProposalLinkResponse
 from domain.ontology.entities import (
     AttributeDefinition,
     Class,
@@ -28,6 +28,7 @@ from domain.ontology.entities import (
     Relationship,
     Taxonomy,
 )
+from domain.versioning.exceptions import ChangeProposalNotFoundError
 from domain.versioning.proposal_service import ProposalService
 from domain.versioning.proposals import ChangeProposal
 
@@ -67,7 +68,35 @@ def proposal_response(
         service.dataset_impacts(proposal) if with_usage else None,
         service.alternative_titles(proposal),
         service.domain_range_mismatches(proposal) if with_usage else None,
+        links=proposal_links(service, proposal.id),
     )
+
+
+# A link read from its target's side (#1624)
+_INVERSE_KIND = {"supersedes": "superseded_by", "reverses": "reversed_by"}
+
+
+def proposal_links(service: ProposalService, proposal_id: str) -> list[ProposalLinkResponse]:
+    """The proposal's links to other proposals, seen from it, with each other's title and status."""
+    links = []
+    for link in service.links_of(proposal_id):
+        outgoing = link.source_proposal_id == proposal_id
+        other_id = link.target_proposal_id if outgoing else link.source_proposal_id
+        try:
+            other = service.get(other_id)
+        except ChangeProposalNotFoundError:
+            other = None
+        links.append(
+            ProposalLinkResponse(
+                kind=link.kind.value if outgoing else _INVERSE_KIND[link.kind.value],
+                proposal_id=other_id,
+                title=other.title if other else None,
+                status=other.status if other else None,
+                created_at=link.created_at,
+                note=link.note,
+            )
+        )
+    return links
 
 
 def rest_fields(entity: Any) -> dict[str, Any]:

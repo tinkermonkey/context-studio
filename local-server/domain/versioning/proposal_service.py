@@ -35,8 +35,9 @@ import threading
 from contextlib import ExitStack, nullcontext
 from dataclasses import dataclass, replace
 from dataclasses import fields as dataclass_fields
+from dataclasses import replace as replace_fields
 from datetime import date, datetime, timezone
-from typing import TYPE_CHECKING, Any, Callable, Iterable, Mapping, Sequence
+from typing import TYPE_CHECKING, Any, Callable, Collection, Iterable, Mapping, Sequence
 from uuid import uuid4
 
 from domain.interchange.services import get_current_batch_run_id, set_batch_run_context
@@ -108,6 +109,8 @@ from domain.versioning.proposals import (
     OperationStatus,
     OperationType,
     ProposalFilter,
+    ProposalLink,
+    ProposalLinkKind,
     ProposalOrigin,
     ProposalSource,
     ProposalStatus,
@@ -162,6 +165,9 @@ UNRESOLVABLE = "unresolvable"
 DOMAIN_RANGE_MISMATCH = "domain_range_mismatch"
 
 REVERTED_REASON = "proposal reverted"
+# Why an operation is withdrawn (#1624): its proposer removed it, or withdrew the proposal
+REMOVED_REASON = "removed by its proposer"
+WITHDRAWN_REASON = "proposal withdrawn by its proposer"
 # The largest review time a decision stores (a 32-bit signed integer, ~24 days)
 MAX_REVIEW_MS = 2**31 - 1
 # What a reviewer's edit of an individual create may set
@@ -428,6 +434,20 @@ def _is_ref(value: Any) -> bool:
     return isinstance(value, str) and value.startswith(_REF_PREFIX) and len(value) > 1
 
 
+def _uses_ref(operation: ProposedOperation, ref: str) -> bool:
+    """Whether the operation names "$<ref>" in its fields (at any depth) or as its replacement."""
+    name = f"{_REF_PREFIX}{ref}"
+
+    def names(value: Any) -> bool:
+        if isinstance(value, dict):
+            return any(names(v) for v in value.values())
+        if isinstance(value, (list, tuple)):
+            return any(names(v) for v in value)
+        return value == name
+
+    return names(operation.fields) or operation.proposed_replacement_id == name
+
+
 def _alternatives(raw: Any) -> list[dict[str, Any]]:
     """
     An operation's near matches, checked for shape: a list of {"kind":
@@ -644,6 +664,7 @@ class ProposalService:
         client_metadata: Mapping[str, Any] | None = None,
         dataset_id: str | None = None,
         review_only: bool = False,
+        supersedes: Sequence[str] = (),
     ) -> ChangeProposal:
         """
         Validate and store a proposal; every operation starts pending.
@@ -675,6 +696,9 @@ class ProposalService:
                 Every individual an operation references must be in it.
             review_only: Keep the approval policy off it: a person decides
                 every operation (e.g. a benchmark gold check, #1628)
+            supersedes: Open proposals on the same taxonomy this one replaces:
+                once it is stored each is withdrawn (`withdraw`), linked to it
+                as superseded (#1624)
 
         Returns:
             The stored proposal, with any auto-applied outcomes (with dry_run,
@@ -705,6 +729,7 @@ class ProposalService:
                 )
 
         errors += self._client_metadata_errors(taxonomy_id, client_metadata)
+        errors += self._supersedes_errors(taxonomy_id, supersedes)
 
         if taxonomy is not None and any(
             str(getattr(d.kind, "value", d.kind)) in _DATA_KINDS for d in operations
@@ -769,7 +794,35 @@ class ProposalService:
             raise ProposalValidationError(errors)
         if dry_run:
             return proposal
-        return self._auto_apply(self._proposals.create(proposal))
+        stored = self._auto_apply(self._proposals.create(proposal))
+        for old_id in dict.fromkeys(supersedes):
+            self.withdraw(old_id, superseded_by=stored.id, withdrawn_by=stored.source.value)
+        return self.get(stored.id) if supersedes else stored
+
+    def _supersedes_errors(
+        self, taxonomy_id: str, supersedes: Sequence[str]
+    ) -> list[OperationError]:
+        """What is wrong with the proposals a new one says it supersedes, if anything."""
+        errors: list[OperationError] = []
+        for old_id in dict.fromkeys(supersedes):
+            old = self._proposals.get(old_id) if isinstance(old_id, str) else None
+            if old is None:
+                errors.append(
+                    OperationError(None, "proposal_not_found", f"No proposal {old_id} to supersede")
+                )
+            elif old.taxonomy_id != taxonomy_id:
+                errors.append(
+                    OperationError(None, "invalid", f"Proposal {old_id} is about another taxonomy")
+                )
+            elif old.status is not ProposalStatus.OPEN:
+                errors.append(
+                    OperationError(
+                        None,
+                        "invalid",
+                        f"Proposal {old_id} is {old.status.value}; only an open one is superseded",
+                    )
+                )
+        return errors
 
     def _client_metadata_errors(
         self, taxonomy_id: str, client_metadata: Mapping[str, Any] | None
@@ -895,9 +948,12 @@ class ProposalService:
 
     # --------------------------------------------------------------- auto-apply
 
-    def _auto_apply(self, proposal: ChangeProposal) -> ChangeProposal:
+    def _auto_apply(
+        self, proposal: ChangeProposal, only: Collection[str] | None = None
+    ) -> ChangeProposal:
         """
-        Apply what the taxonomy's approval policy allows, under the proposal's run.
+        Apply what the taxonomy's approval policy allows, under the proposal's run
+        (with only: of those operations alone, e.g. what an amendment changed).
 
         Never raises: the proposal is already stored, so an error (a stored
         policy that no longer parses, a failing repository) is logged and the
@@ -907,6 +963,8 @@ class ProposalService:
             return proposal
         try:
             auto = self._policy_auto_apply_ids(proposal)
+            if only is not None:
+                auto = [i for i in auto if i in only]
             # apply takes the proposal's lock itself; propose never holds it.
             if not auto:
                 return proposal
@@ -3574,6 +3632,271 @@ class ProposalService:
                 self._reopen_duplicates(copies, reverted_by)
 
             return self._revert.revert_with_summary(proposal.id, on_reverted=close_proposal)
+
+    # ---------------------------------------------------- amend and withdraw
+
+    def amend(
+        self,
+        proposal_id: str,
+        replace: Sequence[OperationDraft] = (),
+        add: Sequence[OperationDraft] = (),
+        remove: Sequence[int] = (),
+        dry_run: bool = False,
+    ) -> ChangeProposal:
+        """
+        Change an open proposal in place, as its proposer (#1624): replace
+        pending (or failed) operations by seq, add operations, remove pending
+        ones. Each replacement and addition is validated and scoped as propose
+        does, against the operations the proposal keeps. A replaced operation
+        keeps its id, goes back to pending, and records what it replaced in
+        amendments (with amended_at); an added one carries amended_at too; a
+        removed one is withdrawn, not a decision. The approval policy then runs
+        over what changed, as on propose. Applied, rejected and withdrawn
+        operations never change.
+
+        Args:
+            replace: Whole operations, each by the seq it replaces
+            add: Operations with seqs the proposal doesn't have
+            remove: Seqs of pending operations to withdraw
+            dry_run: Validate only; the amended proposal is returned unstored
+
+        Raises:
+            ChangeProposalNotFoundError: If the proposal does not exist
+            ChangeProposalStateError: If it isn't open
+            ProposalValidationError: With every problem found; nothing changes
+        """
+        with self._lock(proposal_id):
+            proposal = self._get(proposal_id)
+            if proposal.status is not ProposalStatus.OPEN:
+                raise ChangeProposalStateError(
+                    f"Change proposal {proposal_id} is {proposal.status.value}; only an open"
+                    " proposal can be amended"
+                )
+            amended, changed = self._amended(proposal, replace, add, remove)
+            if dry_run:
+                return amended
+            replaced = [o for o in amended.operations if o.id in changed and o.amendments]
+            removed = [o for o in amended.operations if o.seq in set(remove)]
+            added = [o for o in amended.operations if o.id in changed and not o.amendments]
+            with self._atomic():
+                if replaced or removed:
+                    self._proposals.amend_operations(proposal.id, [*replaced, *removed])
+                if added:
+                    self._proposals.add_operations(proposal.id, added)
+                if amended.status is not proposal.status:
+                    self._proposals.set_status(proposal.id, amended.status)
+        return self._auto_apply(self._get(proposal_id), only=changed)
+
+    def _amended(
+        self,
+        proposal: ChangeProposal,
+        replace: Sequence[OperationDraft],
+        add: Sequence[OperationDraft],
+        remove: Sequence[int],
+    ) -> tuple[ChangeProposal, set[str]]:
+        """The proposal as the amendment leaves it, and the ids of the operations it changed."""
+        errors: list[OperationError] = []
+        if not (replace or add or remove):
+            errors.append(
+                OperationError(
+                    None, "invalid", "An amendment needs at least one of replace, add or remove"
+                )
+            )
+        by_seq = {o.seq: o for o in proposal.operations}
+        replaced = {d.seq: d for d in replace}
+        added = {d.seq: d for d in add}
+        removed = set(remove)
+        mentioned = [*(d.seq for d in replace), *(d.seq for d in add), *remove]
+        for seq in sorted({x for x in mentioned if mentioned.count(x) > 1}, key=str):
+            errors.append(OperationError(seq, "invalid", f"seq {seq} is named more than once"))
+        for seq in [*replaced, *removed]:
+            current = by_seq.get(seq) if isinstance(seq, int) else None
+            if current is None:
+                errors.append(OperationError(seq, "unknown_seq", f"The proposal has no seq {seq}"))
+            elif current.decided:
+                errors.append(
+                    OperationError(
+                        seq,
+                        "decided",
+                        f"seq {seq} is {current.status.value}; only a pending or failed"
+                        " operation can change",
+                    )
+                )
+        for seq in added:
+            if seq in by_seq:
+                errors.append(
+                    OperationError(seq, "invalid", f"seq {seq} is taken; add with a new seq")
+                )
+            elif isinstance(seq, bool) or not isinstance(seq, int) or not 0 <= seq <= MAX_SEQ:
+                errors.append(
+                    OperationError(seq, "invalid", f"seq must be an integer from 0 to {MAX_SEQ}")
+                )
+        if errors:
+            raise ProposalValidationError(errors)
+
+        changed: dict[int, ProposedOperation] = {}
+        refs: dict[str, OperationKind] = {}
+        touched: dict[tuple[str, str], int] = {}
+        deleted: dict[str, int] = {}
+        planned: dict[str, str | None] = {}
+        taxonomy_id = proposal.taxonomy_id
+        for seq in sorted((set(by_seq) - removed) | set(added)):
+            draft = replaced.get(seq) or added.get(seq)
+            if draft is None:
+                kept = by_seq[seq]
+                if kept.status is OperationStatus.WITHDRAWN:
+                    continue
+                # What a kept operation proposes still constrains the changed ones.
+                for check in (
+                    lambda: self._check_predicate(kept, taxonomy_id, planned),
+                    lambda: self._check_predicate_op(kept, taxonomy_id, planned, deleted),
+                    lambda: self._check_conflicts(kept, touched, deleted),
+                ):
+                    try:
+                        check()
+                    except _Invalid:
+                        pass
+                if kept.ref and kept.op is OperationType.CREATE:
+                    refs.setdefault(kept.ref, kept.kind)
+                continue
+            try:
+                operation = self._validated(draft, refs)
+                self._check_dataset(operation, proposal.dataset_id)
+                self._check_alternatives(operation, taxonomy_id, proposal.dataset_id)
+                self._check_predicate(operation, taxonomy_id, planned)
+                self._check_predicate_op(operation, taxonomy_id, planned, deleted)
+                self._check_conflicts(operation, touched, deleted)
+                changed[seq] = operation
+            except _Invalid as exc:
+                errors.append(OperationError(seq, exc.code, exc.message))
+            if draft.ref and draft.op == OperationType.CREATE:
+                try:
+                    refs.setdefault(draft.ref, OperationKind(draft.kind))
+                except ValueError:
+                    pass
+        # A ref the amendment drops can't still be used by what stays.
+        for seq in [*removed, *replaced]:
+            old_ref = by_seq[seq].ref
+            if not old_ref or old_ref in refs:
+                continue
+            users = [
+                o.seq
+                for o in proposal.operations
+                if o.seq not in removed
+                and o.seq not in replaced
+                and not o.decided
+                and _uses_ref(o, old_ref)
+            ] + [o.seq for o in changed.values() if _uses_ref(o, old_ref)]
+            if users:
+                errors.append(
+                    OperationError(
+                        seq,
+                        "ref_in_use",
+                        f"seq {', '.join(map(str, sorted(users)))} still use ${old_ref}",
+                    )
+                )
+        if errors:
+            raise ProposalValidationError(errors)
+
+        now = datetime.now(timezone.utc)
+        operations: list[ProposedOperation] = []
+        for operation in proposal.operations:
+            if operation.seq in replaced:
+                new = changed[operation.seq]
+                new.id = operation.id
+                new.amendments = [
+                    *operation.amendments,
+                    {
+                        "fields": operation.fields,
+                        "base": operation.base,
+                        "rationale": operation.rationale,
+                        "probability": operation.probability,
+                        "evidence": operation.evidence,
+                        "amended_at": now.isoformat(),
+                    },
+                ]
+                new.amended_at = now
+                operations.append(new)
+            elif operation.seq in removed:
+                operations.append(
+                    replace_fields(
+                        operation, status=OperationStatus.WITHDRAWN, reason=REMOVED_REASON
+                    )
+                )
+            else:
+                operations.append(operation)
+        for seq in added:
+            changed[seq].amended_at = now
+            operations.append(changed[seq])
+        amended = replace_fields(proposal, operations=operations)
+        amended.settle_status()
+        return amended, {o.id for o in changed.values()}
+
+    def withdraw(
+        self,
+        proposal_id: str,
+        superseded_by: str | None = None,
+        note: str | None = None,
+        withdrawn_by: str = DECIDED_BY_USER,
+    ) -> ChangeProposal:
+        """
+        Withdraw an open proposal, as its proposer (#1624): undo it whole. What
+        it applied is rolled back as `revert` does (its decisions superseded),
+        its undecided operations are withdrawn (not a decision), and it ends
+        withdrawn, never half-applied. With superseded_by, the proposal that
+        replaces it is linked to it (supersedes).
+
+        Raises:
+            ChangeProposalNotFoundError: If either proposal does not exist
+            ChangeProposalStateError: If it isn't open, or names itself
+            RevertConflictError, RevertRefusedError: From RevertService when
+                what it applied can't be rolled back; nothing is changed
+        """
+        if superseded_by is not None:
+            if superseded_by == proposal_id:
+                raise ChangeProposalStateError("A proposal can't supersede itself")
+            self._get(superseded_by)
+        copies = self._duplicates_of(self._get(proposal_id))
+        with ExitStack() as stack:
+            for locked in sorted({proposal_id, *copies}):
+                stack.enter_context(self._lock(locked))
+            proposal = self._get(proposal_id)
+            if proposal.status is not ProposalStatus.OPEN:
+                raise ChangeProposalStateError(
+                    f"Change proposal {proposal_id} is {proposal.status.value}; only an open"
+                    " proposal can be withdrawn"
+                )
+            copies = {
+                pid: ids for pid, ids in self._duplicates_of(proposal).items() if pid in copies
+            }
+
+            def close_proposal(_result: RevertResult) -> None:
+                # Inside the rollback's transaction: the status commits with it.
+                now = datetime.now(timezone.utc)
+                undecided = proposal.pending
+                for operation in undecided:
+                    operation.status = OperationStatus.WITHDRAWN
+                    operation.reason = WITHDRAWN_REASON
+                if undecided:
+                    self._proposals.save_operations(proposal.id, undecided)
+                self._proposals.supersede_decisions(proposal.id, now, withdrawn_by)
+                if self._sources is not None:
+                    self._sources.delete_for_proposal(proposal.id)
+                self._proposals.set_status(proposal.id, ProposalStatus.WITHDRAWN)
+                self._reopen_duplicates(copies, withdrawn_by)
+                if superseded_by is not None:
+                    self._proposals.add_link(
+                        ProposalLink(
+                            superseded_by, ProposalLinkKind.SUPERSEDES, proposal.id, now, note
+                        )
+                    )
+
+            self._revert.revert_with_summary(proposal.id, on_reverted=close_proposal)
+        return self._get(proposal_id)
+
+    def links_of(self, proposal_id: str) -> list[ProposalLink]:
+        """Every link from or to the proposal (supersedes, reverses), oldest first."""
+        return self._proposals.links_of(proposal_id)
 
     def _duplicates_of(self, proposal: ChangeProposal) -> dict[str, list[str]]:
         """

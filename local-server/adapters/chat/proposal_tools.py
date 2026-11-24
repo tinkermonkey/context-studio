@@ -43,6 +43,8 @@ from domain.versioning.exceptions import (
     ChangeProposalStateError,
     OperationError,
     ProposalValidationError,
+    RevertConflictError,
+    RevertRefusedError,
 )
 from domain.versioning.proposal_service import (
     ID_FIELDS,
@@ -100,10 +102,13 @@ def proposal_ref(proposal: ChangeProposal) -> EntityRef:
 
 
 def _counts(proposal: ChangeProposal) -> dict[str, int]:
-    """Operations per status, every status present."""
+    """Operations per status: every status present, withdrawn only when there are some."""
     counts = {s.value: 0 for s in OperationStatus}
     for operation in proposal.operations:
         counts[operation.status.value] += 1
+    if not counts[OperationStatus.WITHDRAWN.value]:
+        # Listed only when the proposer withdrew some (#1624)
+        del counts[OperationStatus.WITHDRAWN.value]
     return counts
 
 
@@ -429,6 +434,15 @@ class ProposeChangesTool(_ProposalTool):
                     " (see list_datasets); every individual they reference must be in it"
                 ),
             },
+            "supersedes": {
+                "type": "array",
+                "items": {"type": "string"},
+                "description": (
+                    "Ids of your open proposals on the same taxonomy this one replaces:"
+                    " once it is stored each is withdrawn (what it applied rolled back)"
+                    " and linked to it as superseded"
+                ),
+            },
             "review_only": {
                 "type": "boolean",
                 "description": (
@@ -489,6 +503,7 @@ class ProposeChangesTool(_ProposalTool):
                 source_revision=revision,
                 dataset_id=optional_str(args, "dataset"),
                 review_only=review_only,
+                supersedes=_ids(args, "supersedes"),
             )
         except ProposalValidationError as exc:
             return _not_stored(exc.errors, drafts)
@@ -511,6 +526,170 @@ class ProposeChangesTool(_ProposalTool):
                 )
             return _stored(proposal, None)
         return _dry_run(view) if dry_run else _stored(proposal, view)
+
+
+def _ids(args: dict[str, Any], key: str) -> list[str]:
+    """A list of ids from tool input (empty when absent)."""
+    value = args.get(key) or []
+    if not isinstance(value, list) or not all(isinstance(v, str) for v in value):
+        raise ToolArgumentError(f"'{key}' must be a list of ids")
+    return value
+
+
+class AmendProposalTool(_ProposalTool):
+    """The proposer changes its own open proposal in place (#1624)."""
+
+    name = "amend_proposal"
+    description = (
+        "Change your open proposal in place instead of proposing it again: replace"
+        " pending (or failed) operations by seq, add operations, remove pending ones."
+        " A replace item gives seq and what changes (e.g. just fields); anything it"
+        " leaves out is kept from the operation it replaces. Each changed operation is"
+        " validated and scoped as in propose_changes, goes back to pending, and keeps"
+        " what it replaced (get_proposal shows amended_at and amendments, so the"
+        " reviewer reads it again). A removed operation is withdrawn. Applied and"
+        " rejected operations never change. dry_run checks without changing anything."
+    )
+    input_schema = {
+        "type": "object",
+        "properties": {
+            "id": {"type": "string", "description": "The proposal's id"},
+            "replace": {
+                "type": "array",
+                "items": {"type": "object"},
+                "description": (
+                    "Operations by seq, as in propose_changes; keys left out are"
+                    " kept from the operation being replaced"
+                ),
+            },
+            "add": {
+                "type": "array",
+                "items": {"type": "object"},
+                "description": "New operations with seqs the proposal doesn't have",
+            },
+            "remove": {
+                "type": "array",
+                "items": {"type": "integer"},
+                "description": "Seqs of pending operations to withdraw",
+            },
+            "dry_run": {"type": "boolean", "description": "Validate only (default false)"},
+        },
+        "required": ["id"],
+    }
+
+    def run(self, args: dict[str, Any]) -> ToolOutcome:
+        proposal_id = required_str(args, "id")
+        dry_run = args.get("dry_run", False)
+        if not isinstance(dry_run, bool):
+            raise ToolArgumentError("'dry_run' must be true or false")
+        remove = args.get("remove") or []
+        if not isinstance(remove, list) or not all(
+            isinstance(s, int) and not isinstance(s, bool) for s in remove
+        ):
+            raise ToolArgumentError("'remove' must be a list of seqs")
+        try:
+            proposal = self._service.get(proposal_id)
+        except ChangeProposalNotFoundError as exc:
+            return error_outcome(str(exc), "Proposal not found")
+        current = {o.seq: o for o in proposal.operations}
+        raw_replace = args.get("replace") or []
+        raw_add = args.get("add") or []
+        if not isinstance(raw_replace, list) or not isinstance(raw_add, list):
+            raise ToolArgumentError("'replace' and 'add' must be lists of operations")
+        replace, replace_errors = _drafts(
+            [_merged(item, current.get(item.get("seq"))) for item in raw_replace]
+            if all(isinstance(i, dict) for i in raw_replace)
+            else raw_replace
+        )
+        add, add_errors = _drafts(raw_add)
+        if replace_errors or add_errors:
+            return _not_amended([*replace_errors, *add_errors])
+        try:
+            amended = self._service.amend(
+                proposal_id, replace=replace, add=add, remove=remove, dry_run=dry_run
+            )
+        except ProposalValidationError as exc:
+            return _not_amended(exc.errors)
+        except ChangeProposalStateError as exc:
+            return error_outcome(str(exc), "Proposal not amended")
+        view = _view(self._service, amended, dry_run=dry_run)
+        return _dry_run(view) if dry_run else _stored(amended, view)
+
+
+def _merged(item: dict[str, Any], operation: Any) -> dict[str, Any]:
+    """A replace item over the operation it replaces: what it leaves out is kept."""
+    if operation is None:
+        return item
+    kept = {
+        "op": operation.op.value,
+        "kind": operation.kind.value,
+        "target_id": operation.target_id,
+        "ref": operation.ref,
+        "fields": operation.fields,
+        "rationale": operation.rationale,
+        "notes": operation.notes,
+        "evidence": operation.evidence,
+        "probability": operation.probability,
+        "replacement": operation.proposed_replacement_id,
+        "alternatives": operation.alternatives,
+    }
+    return {**kept, **item}
+
+
+def _not_amended(errors: Sequence[OperationError]) -> ToolOutcome:
+    """A refused amendment: every problem, by seq."""
+    payload = {
+        "amended": False,
+        "errors": [{"seq": e.seq, "code": e.code, "message": e.message} for e in errors],
+        "next": "Nothing changed. Fix these and call amend_proposal again.",
+    }
+    content, _ = _capped(payload, "errors", lambda _: "fix these and resend to see the rest")
+    return ToolOutcome(content=content, summary=f"Proposal not amended: {len(errors)} problems")
+
+
+class WithdrawProposalTool(_ProposalTool):
+    """The proposer withdraws its own open proposal (#1624)."""
+
+    name = "withdraw_proposal"
+    description = (
+        "Withdraw your open proposal when you no longer stand behind it, so the"
+        " reviewer doesn't have to reject it: what it applied is rolled back, its"
+        " undecided operations are withdrawn, and it ends withdrawn. Name the"
+        " proposal that replaces it in superseded_by to link the two (or pass"
+        " supersedes to propose_changes, which does both in one call). Refused for a"
+        " proposal that isn't open, or when what it applied can't be rolled back."
+    )
+    input_schema = {
+        "type": "object",
+        "properties": {
+            "id": {"type": "string", "description": "The proposal's id"},
+            "superseded_by": {
+                "type": "string",
+                "description": "The proposal that replaces it",
+            },
+            "note": {"type": "string", "description": "Why, kept on the link"},
+        },
+        "required": ["id"],
+    }
+
+    def run(self, args: dict[str, Any]) -> ToolOutcome:
+        proposal_id = required_str(args, "id")
+        try:
+            proposal = self._service.withdraw(
+                proposal_id,
+                superseded_by=optional_str(args, "superseded_by"),
+                note=optional_str(args, "note"),
+                withdrawn_by=self._source.value,
+            )
+        except ChangeProposalNotFoundError as exc:
+            return error_outcome(str(exc), "Proposal not found")
+        except (ChangeProposalStateError, RevertConflictError, RevertRefusedError) as exc:
+            return error_outcome(str(exc), "Proposal not withdrawn")
+        return ToolOutcome(
+            content=dumps(_proposal_summary(proposal)),
+            summary=f"Proposal withdrawn: {proposal.title}",
+            entities=(proposal_ref(proposal),),
+        )
 
 
 def _drafts(raw: Sequence[Any]) -> tuple[list[OperationDraft], list[OperationError]]:

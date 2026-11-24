@@ -28,8 +28,10 @@ from adapters.chat.claim_tools import build_claim_tools
 from adapters.chat.context import ConfigChatSettings, OntologyWorkspaceContext
 from adapters.chat.interchange_tools import build_interchange_tools
 from adapters.chat.proposal_tools import (
+    AmendProposalTool,
     DrSpecDriftTool,
     MarkProposalLandedTool,
+    WithdrawProposalTool,
     build_proposal_tools,
 )
 from adapters.chat.run_tools import build_run_tools
@@ -938,6 +940,8 @@ async def lifespan(app: FastAPI):
                     write_tools=[
                         *build_proposal_tools(proposal_service, ProposalSource.MCP),
                         MarkProposalLandedTool(proposal_service, ProposalSource.MCP),
+                        AmendProposalTool(proposal_service, ProposalSource.MCP),
+                        WithdrawProposalTool(proposal_service, ProposalSource.MCP),
                         DrSpecDriftTool(app.state.drift_import_service),
                         *build_interchange_tools(
                             proposal_service, ontology_repo, ProposalSource.MCP

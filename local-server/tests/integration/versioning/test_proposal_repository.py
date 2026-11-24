@@ -35,6 +35,8 @@ from domain.versioning.proposals import (
     OperationCount,
     OperationType,
     ProposalFilter,
+    ProposalLink,
+    ProposalLinkKind,
     ProposalSource,
     ProposalStatus,
     ProposedOperation,
@@ -374,3 +376,37 @@ def test_deleting_the_run_deletes_the_proposal_and_its_operations(session_factor
         session.commit()
         assert session.query(ProposalOperation).count() == 0
     assert repo.get("p1") is None
+
+
+def test_links_are_read_from_either_end_and_recorded_once(repo):
+    """#1624: one link model for supersede and reversal."""
+    repo.create(_proposal("old"))
+    repo.create(_proposal("new"))
+    link = ProposalLink("new", ProposalLinkKind.SUPERSEDES, "old", NOW, note="reworded")
+
+    repo.add_link(link)
+    repo.add_link(link)
+
+    assert repo.links_of("old") == [link]
+    assert repo.links_of("new") == [link]
+    assert repo.links_of("p-none") == []
+
+
+def test_amend_operations_rewrites_what_an_amendment_changes(repo):
+    """#1624: fields, base, scope, status and the amendment history, by id."""
+    created = repo.create(_proposal())
+    _, _, update = created.operations
+    update.fields = {"description": "A room on a floor, with a door."}
+    update.status = OperationStatus.WITHDRAWN
+    update.amended_at = NOW
+    update.amendments = [{"fields": {"description": "A room on a floor."}, "amended_at": "x"}]
+
+    repo.amend_operations("p1", [update])
+
+    stored = repo.get("p1").operations[2]
+    assert stored.fields == {"description": "A room on a floor, with a door."}
+    assert stored.status is OperationStatus.WITHDRAWN
+    assert stored.amended_at == NOW
+    assert stored.amendments == update.amendments
+    with pytest.raises(ValueError):
+        repo.amend_operations("missing", [update])

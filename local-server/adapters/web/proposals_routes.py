@@ -21,6 +21,7 @@ from adapters.web.dependencies import get_approval_policy_service, get_proposal_
 from adapters.web.schemas.ontology import ListResponse
 from adapters.web.schemas.proposals import (
     AddIndividualRequest,
+    ChangeProposalAmendRequest,
     ApprovalPolicyRequest,
     ApprovalPolicyResponse,
     ChangeProposalApplyRequest,
@@ -32,8 +33,10 @@ from adapters.web.schemas.proposals import (
     ChangeProposalRevertConflictResponse,
     ChangeProposalRevertResponse,
     ChangeProposalValidationErrorResponse,
+    ChangeProposalWithdrawRequest,
     DrDecisionResponse,
     GoldDecisionResponse,
+    ProposedOperationRequest,
     ReviewAnnotationRequest,
     RevertPreviewItem,
     RevertPreviewResponse,
@@ -320,24 +323,7 @@ async def create_proposal(
                 "errors": [{"seq": None, "code": "invalid_source", "message": message}],
             },
         )
-    drafts = [
-        OperationDraft(
-            seq=o.seq,
-            op=o.op,
-            kind=o.kind,
-            target_id=o.target_id,
-            ref=o.ref,
-            fields=o.fields,
-            rationale=o.rationale,
-            notes=o.notes,
-            evidence=o.evidence,
-            probability=o.probability,
-            claimed_scope=o.scope,
-            replacement=o.replacement,
-            alternatives=[a.model_dump() for a in o.alternatives],
-        )
-        for o in request.operations
-    ]
+    drafts = _drafts(request.operations)
 
     try:
         revision = request.source_revision.to_domain() if request.source_revision else None
@@ -359,11 +345,115 @@ async def create_proposal(
             client_metadata=request.client_metadata,
             dataset_id=request.dataset_id,
             review_only=request.review_only,
+            supersedes=request.supersedes,
         )
         return proposal_response(service, proposal, dry_run=dry_run)
 
     if dry_run:
         response.status_code = status.HTTP_200_OK
+    try:
+        return await run_sync_in_executor(run)
+    except Exception as exc:
+        raise _http_error(exc) from exc
+
+
+def _drafts(operations: list[ProposedOperationRequest]) -> list[OperationDraft]:
+    """Request operations as the drafts ProposalService validates."""
+    return [
+        OperationDraft(
+            seq=o.seq,
+            op=o.op,
+            kind=o.kind,
+            target_id=o.target_id,
+            ref=o.ref,
+            fields=o.fields,
+            rationale=o.rationale,
+            notes=o.notes,
+            evidence=o.evidence,
+            probability=o.probability,
+            claimed_scope=o.scope,
+            replacement=o.replacement,
+            alternatives=[a.model_dump() for a in o.alternatives],
+        )
+        for o in operations
+    ]
+
+
+@router.post(
+    "/proposals/{proposal_id}/amend",
+    response_model=ChangeProposalResponse,
+    responses={
+        **_NOT_FOUND,
+        409: {"description": "The proposal is not open"},
+        422: {
+            "description": (
+                "The amendment is invalid (an unknown or decided seq, an invalid operation); "
+                "detail.errors lists every problem by seq, and nothing changed"
+            ),
+        },
+    },
+)
+async def amend_proposal(
+    proposal_id: str,
+    request: ChangeProposalAmendRequest,
+    dry_run: bool = Query(
+        False, description="Validate only: return the amended proposal, change nothing"
+    ),
+    service: ProposalService = Depends(get_proposal_service),
+) -> ChangeProposalResponse:
+    """
+    Change an open proposal in place, as its proposer: replace pending or failed
+    operations by seq, add operations, remove pending ones (#1624). A replaced
+    operation goes back to pending and keeps what it replaced in amendments;
+    a removed one is withdrawn. The approval policy runs over what changed.
+    """
+
+    def run() -> ChangeProposalResponse:
+        proposal = service.amend(
+            proposal_id,
+            replace=_drafts(request.replace),
+            add=_drafts(request.add),
+            remove=request.remove,
+            dry_run=dry_run,
+        )
+        return proposal_response(service, proposal, dry_run=dry_run)
+
+    try:
+        return await run_sync_in_executor(run)
+    except Exception as exc:
+        raise _http_error(exc) from exc
+
+
+@router.post(
+    "/proposals/{proposal_id}/withdraw",
+    response_model=ChangeProposalResponse,
+    responses={
+        **_NOT_FOUND,
+        409: {
+            "description": (
+                "The proposal is not open, or what it applied can't be rolled back "
+                "(detail.blocking, as for revert)"
+            )
+        },
+    },
+)
+async def withdraw_proposal(
+    proposal_id: str,
+    request: ChangeProposalWithdrawRequest,
+    service: ProposalService = Depends(get_proposal_service),
+) -> ChangeProposalResponse:
+    """
+    Withdraw an open proposal, as its proposer (#1624): what it applied is
+    rolled back, its undecided operations are withdrawn, and it ends withdrawn.
+    With superseded_by, the proposal that replaces it is linked to it.
+    """
+
+    def run() -> ChangeProposalResponse:
+        proposal = service.withdraw(
+            proposal_id, superseded_by=request.superseded_by, note=request.note
+        )
+        return proposal_response(service, proposal)
+
     try:
         return await run_sync_in_executor(run)
     except Exception as exc:

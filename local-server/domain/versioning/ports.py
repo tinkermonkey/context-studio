@@ -14,6 +14,7 @@ from domain.versioning.proposals import (
     Landing,
     OperationCount,
     ProposalFilter,
+    ProposalLink,
     ProposalStatus,
     ProposedOperation,
 )
@@ -155,6 +156,25 @@ class ChangeProposalRepository(Protocol):
 
         Raises ValueError for an unknown proposal or a seq the proposal already has.
         """
+        ...
+
+    def amend_operations(self, proposal_id: str, operations: Sequence[ProposedOperation]) -> None:
+        """
+        Rewrite stored operations of a proposal, matched by id, with everything
+        an amendment can change: op, kind, target, ref, fields, base, rationale,
+        notes, evidence, probability, scope, status, reason, alternatives,
+        replacement, amended_at and amendments (#1624).
+
+        Raises ValueError for an unknown proposal or operation.
+        """
+        ...
+
+    def add_link(self, link: ProposalLink) -> None:
+        """Record a link between two proposals; the same link again changes nothing."""
+        ...
+
+    def links_of(self, proposal_id: str) -> list[ProposalLink]:
+        """Every link from or to the proposal, oldest first."""
         ...
 
     def save_operations(
