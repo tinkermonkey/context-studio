@@ -3355,6 +3355,12 @@ selectors:
   - selector: review-quote-*
     component: src/components/proposals/review/ReviewChange.tsx
     description: "A sourceless operation's evidence (1-based): a figure with the quote (a plain blockquote) and its caption (claim, entity, url)"
+  - selector: review-wide-diff
+    component: src/components/proposals/review/WideDiffOverlay.tsx
+    description: "The wide diff overlay (role=dialog, .wide-diff) over proposal detail's list column, the inspector beside it; &diff=<field> in the URL"
+  - selector: review-wide-*
+    component: src/components/proposals/review/WideDiffOverlay.tsx
+    description: "review-wide-{field}: ⤢ Wide on a long text change row in THE CHANGE (or W in the inspector) opens it; review-wide-tab-{field}: a changed field's tab (role=tab, aria-selected; ↑ ↓ step); review-wide-prev / review-wide-next: ‹ ›; review-wide-close: ✕ (or Esc); review-wide-lines: the SideBySideDiff, sentence by sentence, unchanged runs folded"
   - selector: review-why
     component: src/components/proposals/review/ReviewInspector.tsx
     description: "WHY (section) for a proposal not extracted from a source"

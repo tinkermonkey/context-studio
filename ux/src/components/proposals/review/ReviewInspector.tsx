@@ -99,6 +99,8 @@ export interface ReviewInspectorProps {
   decidedBy?: string;
   /** The proposal was reverted: what it applied reads as reverted. */
   reverted?: boolean;
+  /** Open one of the operation's long text changes in the wide diff (#1661). */
+  onWide?: (field: string) => void;
   operations: ProposedOperation[];
   names: ReviewNames;
   schema: ReviewSchema;
@@ -387,6 +389,7 @@ export function ReviewInspector({
   staleCause,
   decidedBy,
   reverted = false,
+  onWide,
   operations,
   names,
   schema,
@@ -996,6 +999,7 @@ export function ReviewInspector({
               operations={operations}
               context={context}
               schema={schema}
+              onWide={onWide}
             />
           </Block>
         )}

@@ -1,22 +1,63 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useRef } from "react";
+import { createFileRoute, useNavigate, useRouter } from "@tanstack/react-router";
 import { ProposalDetailPage } from "@/components/proposals/ProposalDetailPage";
 
 interface ProposalSearch {
   /** The operation shown in the inspector. */
   op?: string;
+  /** The long text field open in the wide diff (#1661). */
+  diff?: string;
 }
 
 /**
  * One proposal's page. Keyed by proposal: checked operations, the threshold,
- * results and a revert conflict reset when moving to another one.
+ * results and a revert conflict reset when moving to another one. The wide
+ * diff lives in the URL (&diff=<field>): opening it adds a history entry, so
+ * Back closes it; stepping fields or operations in it replaces that entry.
  */
-export function ProposalPage({ proposalId, op }: { proposalId: string; op?: string }) {
+export function ProposalPage({
+  proposalId,
+  op,
+  diff,
+}: {
+  proposalId: string;
+  op?: string;
+  diff?: string;
+}) {
   const navigate = useNavigate();
+  const router = useRouter();
+  // The wide diff was opened here (its entry pushed): closing it goes back over that entry.
+  const diffPushed = useRef(false);
   return (
     <ProposalDetailPage
       key={proposalId}
       id={proposalId}
       selectedOperationId={op}
+      diffField={diff}
+      onDiff={(field, operationId) => {
+        if (field === undefined) {
+          if (diffPushed.current) {
+            diffPushed.current = false;
+            router.history.back();
+          } else {
+            navigate({
+              to: "/app/proposals/$proposalId",
+              params: { proposalId },
+              search: op ? { op } : {},
+              replace: true,
+            });
+          }
+          return;
+        }
+        const opening = !diff;
+        if (opening) diffPushed.current = true;
+        navigate({
+          to: "/app/proposals/$proposalId",
+          params: { proposalId },
+          search: { op: operationId ?? op, diff: field },
+          replace: !opening,
+        });
+      }}
       onCompare={(otherId) =>
         navigate({
           to: "/app/proposals/$proposalId/compare/$otherId",
@@ -26,27 +67,29 @@ export function ProposalPage({ proposalId, op }: { proposalId: string; op?: stri
       onReviewAgainstSource={() =>
         navigate({ to: "/app/proposals/$proposalId/review", params: { proposalId } })
       }
-      onSelectOperation={(operationId) =>
+      onSelectOperation={(operationId) => {
+        diffPushed.current = false;
         navigate({
           to: "/app/proposals/$proposalId",
           params: { proposalId },
           search: operationId ? { op: operationId } : {},
           replace: true,
-        })
-      }
+        });
+      }}
     />
   );
 }
 
 function ProposalRoute() {
   const { proposalId } = Route.useParams();
-  const { op } = Route.useSearch();
-  return <ProposalPage proposalId={proposalId} op={op} />;
+  const { op, diff } = Route.useSearch();
+  return <ProposalPage proposalId={proposalId} op={op} diff={diff} />;
 }
 
 export const Route = createFileRoute("/app/proposals_/$proposalId")({
   component: ProposalRoute,
   validateSearch: (search: Record<string, unknown>): ProposalSearch => ({
     op: typeof search.op === "string" ? search.op : undefined,
+    diff: typeof search.diff === "string" ? search.diff : undefined,
   }),
 });

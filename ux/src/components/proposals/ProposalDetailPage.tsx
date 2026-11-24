@@ -85,6 +85,8 @@ import { goldCheckOf } from "./review/goldModel";
 import { ReviewInspector } from "./review/ReviewInspector";
 import { ReviewPillsProvider, plainClick, type OperationLink } from "./review/ReviewPills";
 import { useInspectorModel } from "./review/useInspectorModel";
+import { WideDiffOverlay } from "./review/WideDiffOverlay";
+import { longChangeFields, stepLongChange } from "./review/wideDiff";
 import { CompareEntry } from "./compare/CompareEntry";
 import { useOperationContext } from "./useOperationContext";
 import { pendingLabel, useProposalActions } from "./useProposalActions";
@@ -129,6 +131,23 @@ interface ProposalDetailPageProps {
   onReviewAgainstSource?: () => void;
   /** Open the comparison with another open proposal for the same source. */
   onCompare?: (otherId: string) => void;
+  /** The long text field open in the wide diff (&diff=), if any. */
+  diffField?: string;
+  /**
+   * Open the wide diff on a field (of another operation, for J / K), or close it
+   * (undefined). Without it there is no wide diff.
+   */
+  onDiff?: (field: string | undefined, operationId?: string) => void;
+}
+
+/** Keys typed into a field, or pressed in a dialog, are not page commands. */
+function ignoresKeys(target: EventTarget | null): boolean {
+  if (!(target instanceof HTMLElement)) return false;
+  return (
+    target.isContentEditable ||
+    ["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName) ||
+    !!target.closest('[role="dialog"]')
+  );
 }
 
 /**
@@ -144,6 +163,8 @@ export function ProposalDetailPage({
   onSelectOperation,
   onReviewAgainstSource,
   onCompare,
+  diffField,
+  onDiff,
 }: ProposalDetailPageProps) {
   const { data: proposal, error, refetch } = useChangeProposal(id);
   const { data: taxonomy } = useTaxonomy(proposal?.taxonomy_id ?? "");
@@ -319,6 +340,44 @@ export function ProposalDetailPage({
     link: inspectorLink,
     deciding: decidesHere,
   });
+
+  // The wide diff (#1661): a long text change of the selected operation, read side by side
+  // over the list. W opens its first long change; Esc, ✕ or Back close it, and focus
+  // goes back to the Wide control of the row it was opened from.
+  const selectedOperation = operations.find((o) => o.id === selectedOperationId);
+  const wideFields = selectedOperation ? longChangeFields(selectedOperation) : [];
+  const wideOpen = !!onDiff && !!diffField && wideFields.includes(diffField);
+  const wideFrom = useRef<string | undefined>(undefined);
+  const openWide = (field: string) => {
+    wideFrom.current = field;
+    onDiff?.(field);
+  };
+  const wasOpen = useRef(false);
+  // Opened from a link (&diff= in the URL): focus goes back to that field's row.
+  if (wideOpen && !wideFrom.current) wideFrom.current = diffField;
+  useEffect(() => {
+    if (wasOpen.current && !wideOpen && wideFrom.current) {
+      const field = wideFrom.current;
+      requestAnimationFrame(() =>
+        document.querySelector<HTMLElement>(`[data-testid="review-wide-${field}"]`)?.focus(),
+      );
+    }
+    wasOpen.current = wideOpen;
+  }, [wideOpen]);
+  const onWideKey = useRef<(event: KeyboardEvent) => void>(() => {});
+  onWideKey.current = (event) => {
+    if (wideOpen || !onDiff || event.defaultPrevented || ignoresKeys(event.target)) return;
+    if (event.metaKey || event.ctrlKey || event.altKey || event.repeat) return;
+    if (event.key.toLowerCase() === "w" && wideFields.length > 0) {
+      event.preventDefault();
+      openWide(wideFields[0]);
+    }
+  };
+  useEffect(() => {
+    const listener = (event: KeyboardEvent) => onWideKey.current(event);
+    window.addEventListener("keydown", listener);
+    return () => window.removeEventListener("keydown", listener);
+  }, []);
 
   // A deep link (?op=) scrolls its row into view once the operations load.
   const tableRef = useRef<HTMLDivElement>(null);
@@ -656,6 +715,7 @@ export function ProposalDetailPage({
                   key={operation.id}
                   {...inspector.inspectorProps(operation)}
                   keyboard={false}
+                  onWide={onDiff ? openWide : undefined}
                   reverted={reverted}
                   decidedBy={
                     reverted
@@ -713,105 +773,126 @@ export function ProposalDetailPage({
             );
           }}
         >
-          <div className="proposal-table-filter" data-testid="proposal-operation-filter">
-            {offersGroupBy(operations) && (
-              <span className="proposal-group-by" data-testid="proposal-group-by">
-                <span className="proposal-bar__label">Group by</span>
-                <SegmentedControl
-                  value={groupBy}
-                  onChange={(value) => setGroupBy(value as GroupBy)}
-                  aria-label="Group operations by"
-                  options={[
-                    { value: "kind", label: "Change kind" },
-                    { value: "sequence", label: "Sequence" },
-                  ]}
-                />
-              </span>
+          <div className="proposal-main">
+            {wideOpen && selectedOperation && diffField && (
+              <WideDiffOverlay
+                operation={selectedOperation}
+                title={operationTitle(selectedOperation, context)}
+                field={diffField}
+                fields={wideFields}
+                onField={(field) => onDiff?.(field)}
+                onStep={(by) => {
+                  const next = stepLongChange(shownOrder, operations, selectedOperation.id, by);
+                  if (next) {
+                    wideFrom.current = next.field;
+                    onDiff?.(next.field, next.operationId);
+                  }
+                }}
+                onClose={() => onDiff?.(undefined)}
+              />
             )}
-            <SegmentedControl
-              value={filter}
-              onChange={(value) => chooseFilter(value as OperationFilter)}
-              aria-label="Show operations"
-              options={[
-                { value: "needs", label: `Needs decision · ${progress.awaiting}` },
-                { value: "decided", label: `Decided · ${progress.total - progress.awaiting}` },
-                { value: "all", label: `All · ${progress.total}` },
-              ]}
-            />
-            {counts.ops.length > 1 && (
-              <div data-testid="proposal-op-filter">
-                <SegmentedControl
-                  value={facets.op}
-                  onChange={(value) => chooseFacets({ ...facets, op: value as Facets["op"] })}
-                  aria-label="Show operations by op"
-                  options={[
-                    { value: "any", label: "Any op" },
-                    ...counts.ops.map(({ value, count }) => ({
-                      value,
-                      label: `${value} · ${count}`,
-                    })),
-                  ]}
-                />
-              </div>
-            )}
-            {counts.scopes.length > 1 && (
-              <div data-testid="proposal-scope-filter">
-                <SegmentedControl
-                  value={facets.scope}
-                  onChange={(value) => chooseFacets({ ...facets, scope: value as Facets["scope"] })}
-                  aria-label="Show operations by scope"
-                  options={[
-                    { value: "any", label: "Any scope" },
-                    ...counts.scopes.map(({ value, count }) => ({
-                      value,
-                      label: `${value} · ${count}`,
-                    })),
-                  ]}
-                />
-              </div>
-            )}
-          </div>
-          {/* Above the table, so the table frame is the last thing in the list
+            <div className="proposal-table-filter" data-testid="proposal-operation-filter">
+              {offersGroupBy(operations) && (
+                <span className="proposal-group-by" data-testid="proposal-group-by">
+                  <span className="proposal-bar__label">Group by</span>
+                  <SegmentedControl
+                    value={groupBy}
+                    onChange={(value) => setGroupBy(value as GroupBy)}
+                    aria-label="Group operations by"
+                    options={[
+                      { value: "kind", label: "Change kind" },
+                      { value: "sequence", label: "Sequence" },
+                    ]}
+                  />
+                </span>
+              )}
+              <SegmentedControl
+                value={filter}
+                onChange={(value) => chooseFilter(value as OperationFilter)}
+                aria-label="Show operations"
+                options={[
+                  { value: "needs", label: `Needs decision · ${progress.awaiting}` },
+                  { value: "decided", label: `Decided · ${progress.total - progress.awaiting}` },
+                  { value: "all", label: `All · ${progress.total}` },
+                ]}
+              />
+              {counts.ops.length > 1 && (
+                <div data-testid="proposal-op-filter">
+                  <SegmentedControl
+                    value={facets.op}
+                    onChange={(value) => chooseFacets({ ...facets, op: value as Facets["op"] })}
+                    aria-label="Show operations by op"
+                    options={[
+                      { value: "any", label: "Any op" },
+                      ...counts.ops.map(({ value, count }) => ({
+                        value,
+                        label: `${value} · ${count}`,
+                      })),
+                    ]}
+                  />
+                </div>
+              )}
+              {counts.scopes.length > 1 && (
+                <div data-testid="proposal-scope-filter">
+                  <SegmentedControl
+                    value={facets.scope}
+                    onChange={(value) =>
+                      chooseFacets({ ...facets, scope: value as Facets["scope"] })
+                    }
+                    aria-label="Show operations by scope"
+                    options={[
+                      { value: "any", label: "Any scope" },
+                      ...counts.scopes.map(({ value, count }) => ({
+                        value,
+                        label: `${value} · ${count}`,
+                      })),
+                    ]}
+                  />
+                </div>
+              )}
+            </div>
+            {/* Above the table, so the table frame is the last thing in the list
             column and its sticky header never scrolls under the topbar. */}
-          <p className="proposals-footnote">
-            {proposal.status === "reverted"
-              ? "This proposal was reverted: what it applied is undone, and it takes no more decisions."
-              : `Amber marks the part of a triple or the field an update changes.${showThreshold || byKind ? " Probabilities below the threshold are muted." : ""} Select an operation to see its change, rationale and evidence.`}
-          </p>
-          <div
-            ref={tableRef}
-            id="proposal-operations"
-            className="schema-table-wrap"
-            data-testid="proposal-operations-table"
-            data-filter={filter}
-            data-group-by={groupBy}
-          >
-            {byKind ? (
-              <TieredOperations
-                operations={shownOperations}
-                allOperations={operations}
-                context={context}
-                deciding={decidesHere}
-                reverted={reverted}
-                threshold={threshold}
-                onThresholdChange={setThreshold}
-                actions={actions}
-                selectedOperationId={selectedOperationId}
-                onSelectOperation={onSelectOperation}
-                emptyMessage={emptyMessage}
-              />
-            ) : (
-              <Table<ProposedOperation>
-                rowKey="id"
-                columns={columns}
-                data={shownOperations}
-                selectedRows={selectedOperationId ? [selectedOperationId] : []}
-                onRowClick={(row) =>
-                  onSelectOperation(row.id === selectedOperationId ? undefined : row.id)
-                }
-                emptyState={<span className="entity-note">{emptyMessage}</span>}
-              />
-            )}
+            <p className="proposals-footnote">
+              {proposal.status === "reverted"
+                ? "This proposal was reverted: what it applied is undone, and it takes no more decisions."
+                : `Amber marks the part of a triple or the field an update changes.${showThreshold || byKind ? " Probabilities below the threshold are muted." : ""} Select an operation to see its change, rationale and evidence.`}
+            </p>
+            <div
+              ref={tableRef}
+              id="proposal-operations"
+              className="schema-table-wrap"
+              data-testid="proposal-operations-table"
+              data-filter={filter}
+              data-group-by={groupBy}
+            >
+              {byKind ? (
+                <TieredOperations
+                  operations={shownOperations}
+                  allOperations={operations}
+                  context={context}
+                  deciding={decidesHere}
+                  reverted={reverted}
+                  threshold={threshold}
+                  onThresholdChange={setThreshold}
+                  actions={actions}
+                  selectedOperationId={selectedOperationId}
+                  onSelectOperation={onSelectOperation}
+                  emptyMessage={emptyMessage}
+                />
+              ) : (
+                <Table<ProposedOperation>
+                  rowKey="id"
+                  columns={columns}
+                  data={shownOperations}
+                  selectedRows={selectedOperationId ? [selectedOperationId] : []}
+                  onRowClick={(row) =>
+                    onSelectOperation(row.id === selectedOperationId ? undefined : row.id)
+                  }
+                  emptyState={<span className="entity-note">{emptyMessage}</span>}
+                />
+              )}
+            </div>
           </div>
         </SchemaPageLayout>
         {inspector.overlay.overlay}
