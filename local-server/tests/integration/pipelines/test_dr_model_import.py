@@ -35,12 +35,6 @@ from tests.integration.pipelines._harness.dr_spec import (
 
 MODEL_DIR = DEFAULT_VIEWER_DIR / "documentation-robotics" / "model"
 
-# The model as committed in documentation-robotics/model/. Update these when the
-# model is regenerated; the per-layer checks below derive from the manifest.
-EXPECTED_INDIVIDUALS = 1313
-EXPECTED_RELATIONSHIPS = 2807
-
-
 def _manifest_layer_counts() -> dict[str, int]:
     """Element count per layer, as declared by the model's manifest.yaml."""
     manifest = yaml.safe_load((MODEL_DIR / "manifest.yaml").read_text())
@@ -48,6 +42,18 @@ def _manifest_layer_counts() -> dict[str, int]:
         layer: sum((spec.get("elements") or {}).values())
         for layer, spec in manifest["layers"].items()
     }
+
+
+def _model_relationship_count() -> int:
+    """Relationships the model declares in relationships.yaml."""
+    return len(yaml.safe_load((MODEL_DIR / "relationships.yaml").read_text()) or [])
+
+
+# The model as committed in documentation-robotics/model/, read from its own
+# files: every landed DR plan changes it, so fixed numbers here broke CI on each
+# landing. The import must create exactly what the model declares.
+EXPECTED_INDIVIDUALS = sum(_manifest_layer_counts().values())
+EXPECTED_RELATIONSHIPS = _model_relationship_count()
 
 
 def _totals(summary: ModelImportSummary) -> Counter:
