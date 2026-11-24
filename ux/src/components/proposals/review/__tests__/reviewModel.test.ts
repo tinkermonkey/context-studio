@@ -19,7 +19,6 @@ import {
   groupForReview,
   layerMatesFirst,
   nextAwaiting,
-  opensReviewInspector,
   orderOf,
   reasonLabel,
   relationshipsOf,
@@ -135,29 +134,6 @@ describe("the source", () => {
       evidence: [passage("feedback")],
     });
     expect(extractedFromSource(createChangeProposal({ operations: [classOp] }))).toBe(false);
-  });
-
-  it("opens every operation in the review inspector but a DR relationship type's (#1660)", () => {
-    const create = element("a", { evidence: [passage("feedback")] });
-    const update = createProposedOperation({ op: "update", kind: "individual" });
-    const move = createProposedOperation({ op: "move", kind: "class" });
-    const remove = createProposedOperation({ op: "delete", kind: "class" });
-    for (const operation of [create, update, move, remove]) {
-      expect(opensReviewInspector(operation)).toBe(true);
-    }
-    // A relationship type's operations keep OperationInspector until #1662.
-    expect(opensReviewInspector(createProposedOperation({ op: "update", kind: "property" }))).toBe(
-      false,
-    );
-    expect(
-      opensReviewInspector(
-        createProposedOperation({
-          op: "update",
-          kind: "individual",
-          reflection: { questions: [], plan: {} } as unknown as ProposedOperation["reflection"],
-        }),
-      ),
-    ).toBe(false);
   });
 
   it("keys each element's passages in the source's text, leaving out misplaced ones", () => {

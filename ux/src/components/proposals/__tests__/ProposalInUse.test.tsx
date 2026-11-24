@@ -169,7 +169,7 @@ describe("a blocked relationship-type delete", () => {
     );
     // No plain Accept: it would fail as in use.
     expect(screen.queryByTestId("operation-accept")).not.toBeInTheDocument();
-    expect(screen.getByTestId("operation-reject")).toHaveTextContent("Keep the type (reject)");
+    expect(screen.getByTestId("review-not")).toHaveTextContent("Keep the type (reject)");
   });
 
   it("offers no Move when no type fits, says why, and deletes them too on request", async () => {
@@ -262,11 +262,13 @@ describe("a blocked relationship-type delete", () => {
     const user = userEvent.setup();
     renderPage("op-delete");
 
-    await user.type(await screen.findByTestId("operation-reject-note"), "Both events need it");
-    await user.click(screen.getByTestId("operation-reject"));
+    await user.click(await screen.findByTestId("review-not"));
+    await user.type(screen.getByTestId("review-note"), "Both events need it");
+    // Keeping a type in use is "Keep as it is" (#1659), picked in the inspector's reason step (#1662).
+    await user.click(screen.getByTestId("review-reason-keep_current"));
 
     await waitFor(() => expect(rejected).toHaveLength(1));
-    expect(rejected[0]).toEqual({
+    expect(rejected[0]).toMatchObject({
       operation_ids: ["op-delete"],
       note: "Both events need it",
       reason_code: "keep_current",

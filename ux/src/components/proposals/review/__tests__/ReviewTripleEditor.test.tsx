@@ -21,7 +21,7 @@ import {
   createPropertyDefinition,
   createTaxonomy,
 } from "@/api/services/__tests__/fixtures/ontology.fixtures";
-import { DrTripleEditor } from "../DrTripleEditor";
+import { ReviewTripleEditor } from "../ReviewTripleEditor";
 
 const DR = "documentation_robotics";
 const taxonomy = createTaxonomy({ id: "tax-dr", identifier: "dr_spec" });
@@ -97,7 +97,7 @@ afterAll(() => server.close());
 
 function renderEditor(operation = update, onApply = vi.fn().mockResolvedValue({})) {
   render(
-    <DrTripleEditor
+    <ReviewTripleEditor
       operation={operation}
       proposal={proposal}
       taxonomy={taxonomy}

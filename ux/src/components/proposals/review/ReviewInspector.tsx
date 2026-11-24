@@ -9,8 +9,17 @@ import {
   staleCauseText,
   type StaleCause,
 } from "../decisionModel";
-import { operationTitle } from "../OperationInspector";
-import { formatProbability, isAwaiting } from "../proposalModel";
+import { operationTitle } from "../OperationDiff";
+import {
+  formatProbability,
+  isAwaiting,
+  propertyTriples,
+  type TripleSource,
+} from "../proposalModel";
+import type { OptionDefinition, Picks, ReflectionOption } from "../tieredModel";
+import { ReplacementBlock } from "./ReplacementBlock";
+import { TypeDecision, type TypeDecisionProps } from "./TypeDecision";
+import { EvidencePack, TypeQuestions } from "./TypeQuestions";
 import type { OperationContext } from "../useOperationContext";
 import { CaptionedEvidence, ChangeBlock, ClassRefs, WhyBlock, newInProposal } from "./ReviewChange";
 import { NearMatchChoice } from "../SourcePassage";
@@ -101,6 +110,8 @@ export interface ReviewInspectorProps {
   reverted?: boolean;
   /** Open one of the operation's long text changes in the wide diff (#1661). */
   onWide?: (field: string) => void;
+  /** A DR relationship type's operation (#1662): its decision, triple editor and questions. */
+  type?: TypeInspector;
   operations: ProposedOperation[];
   names: ReviewNames;
   schema: ReviewSchema;
@@ -148,6 +159,20 @@ export interface ReviewInspectorProps {
   onShowPassage?: (quote: string) => void;
   /** Gold mode: the operation's gold tier and aliases, and what the reviewer has noted. */
   gold?: GoldInspector;
+}
+
+/** What a DR relationship type's operation adds to the inspector (#1662). */
+export interface TypeInspector {
+  /** DECIDE: Accept (plan, picks, anyway, again), the triple editor, the in-use resolution. */
+  decision: Omit<TypeDecisionProps, "operation" | "onReject">;
+  /** The target property definition as it stands now, once loaded: the triple it changes. */
+  current?: TripleSource;
+  /** A reflection's answers the reviewer picked over the plan's. */
+  picks: Picks;
+  /** Picking an answer; absent when the answers are read-only. */
+  onPick?: (question: string, option: string) => void;
+  /** An answer's definition, beside the inspector on hover and focus. */
+  definitionOf?: (question: string, option: ReflectionOption) => OptionDefinition | undefined;
 }
 
 /** What gold mode adds to the inspector for one operation. */
@@ -331,30 +356,50 @@ function Decided({
   );
 }
 
-/** A decided operation that isn't an element or relationship: its state and what the decision did. */
+/**
+ * A decided operation that isn't an element or relationship: what the decision
+ * did, who decided it and when, and that it is undone by reverting the proposal.
+ * Its state is the head's chip, not repeated here.
+ */
 function DecidedChange({
   operation,
   reverted,
+  decidedBy,
+  deciding,
 }: {
   operation: ProposedOperation;
   reverted: boolean;
+  decidedBy?: string;
+  deciding: boolean;
 }) {
   const state = decisionState(operation, reverted);
   const record = decidedRecord(operation);
+  const reason = reasonLabel(operation.reason_code);
   return (
-    <div className="review-decided" data-testid="review-decided">
-      <span className="review-chips">
-        <Chip variant={state.variant}>{state.label}</Chip>
-        {operation.status === "rejected" && reasonLabel(operation.reason_code) && (
-          <span>{`Rejected: ${reasonLabel(operation.reason_code)}.`}</span>
-        )}
-      </span>
-      {record && <span>{record}</span>}
+    <div className="review-decided" data-state={state.state} data-testid="review-decided">
+      {operation.status === "rejected" && (
+        <span>{reason ? `Rejected: ${reason}.` : "Rejected."}</span>
+      )}
+      {record && <span data-testid="review-decided-record">{record}</span>}
       {operation.status === "rejected" && operation.reason && (
         <span className="review-muted" data-testid="review-decided-note">
           {operation.reason}
         </span>
       )}
+      {decidedBy && (
+        <span className="review-block__subtitle" data-testid="review-decided-by">
+          {decidedBy}
+        </span>
+      )}
+      <span className="review-block__subtitle" data-testid="review-change-note">
+        {operation.status === "applied"
+          ? reverted
+            ? "Nothing left to decide. The proposal was reverted, so this is undone."
+            : deciding
+              ? "Nothing left to decide. Revert the proposal to undo it."
+              : "Nothing left to decide."
+          : "Nothing left to decide."}
+      </span>
     </div>
   );
 }
@@ -390,6 +435,7 @@ export function ReviewInspector({
   decidedBy,
   reverted = false,
   onWide,
+  type,
   operations,
   names,
   schema,
@@ -436,6 +482,14 @@ export function ReviewInspector({
   // any other operation reads as its change.
   const relationship = !element && isRelationship(operation) && operation.op === "create";
   const change = !element && !relationship;
+  // A DR relationship type reads as its triple, with its own decision and questions.
+  const relationshipType = operation.kind === "property";
+  const triple = relationshipType
+    ? (() => {
+        const { before, after } = propertyTriples(operation, type?.current);
+        return after ?? before;
+      })()
+    : undefined;
   const kind = element ? "an element" : "a relationship";
   // Only an individual or relationship create can be reopened to decide it again.
   const reopens = !change;
@@ -829,18 +883,18 @@ export function ReviewInspector({
     <Block label="Decision">
       <Eyebrow>DECIDED</Eyebrow>
       {change ? (
-        <DecidedChange operation={operation} reverted={reverted} />
+        <DecidedChange
+          operation={operation}
+          reverted={reverted}
+          decidedBy={decidedBy}
+          deciding={deciding}
+        />
       ) : (
         <Decided operation={operation} endOf={endOf} />
       )}
-      {decidedBy && (
+      {!change && decidedBy && (
         <span className="review-block__subtitle" data-testid="review-decided-by">
           {decidedBy}
-        </span>
-      )}
-      {deciding && !reopens && operation.status === "applied" && (
-        <span className="review-block__subtitle" data-testid="review-change-note">
-          Nothing left to decide. Revert the proposal to undo it.
         </span>
       )}
       {deciding && reopens && (
@@ -915,8 +969,43 @@ export function ReviewInspector({
         </div>
         {change ? (
           <>
-            <h2 className="review-inspector__title" data-testid="review-inspector-title">
-              {operationTitle(operation, context)}
+            <h2
+              className="review-inspector__title"
+              aria-label={operationTitle(operation, context)}
+              data-testid="review-inspector-title"
+            >
+              {triple ? (
+                // From → predicate → To, the ends as class pills (#1662).
+                <span className="review-chips review-type-triple">
+                  {typeof triple.domain === "string" ? (
+                    <ClassRefs
+                      ids={[triple.domain]}
+                      operation={operation}
+                      operations={operations}
+                      context={context}
+                      schema={schema}
+                    />
+                  ) : (
+                    <span className="review-muted">any</span>
+                  )}
+                  <span className="review-pill review-pill--predicate">
+                    <span className="review-pill__text">{`${triple.predicate ?? "—"} →`}</span>
+                  </span>
+                  {typeof triple.range === "string" ? (
+                    <ClassRefs
+                      ids={[triple.range]}
+                      operation={operation}
+                      operations={operations}
+                      context={context}
+                      schema={schema}
+                    />
+                  ) : (
+                    <span className="review-muted">any</span>
+                  )}
+                </span>
+              ) : (
+                operationTitle(operation, context)
+              )}
             </h2>
             <span className="review-mono review-muted" data-testid="review-inspector-id">
               {operation.id}
@@ -991,6 +1080,10 @@ export function ReviewInspector({
           </Block>
         )}
 
+        {operation.replacement_check && (
+          <ReplacementBlock operation={operation} context={context} />
+        )}
+
         {change && (
           <Block label="The change" data-testid="review-the-change">
             <Eyebrow>THE CHANGE</Eyebrow>
@@ -1011,7 +1104,21 @@ export function ReviewInspector({
           </Block>
         )}
 
-        {!extraction && quotes.length === 0 && <CaptionedEvidenceBlock operation={operation} />}
+        {operation.reflection && operation.reflection.questions.length > 0 && type && (
+          <TypeQuestions
+            operationId={operation.id}
+            reflection={operation.reflection}
+            picks={type.picks}
+            onPick={canDecide ? type.onPick : undefined}
+            definitionOf={type.definitionOf}
+          />
+        )}
+
+        {operation.reflection ? (
+          <EvidencePack blocks={operation.reflection.evidence_pack ?? []} />
+        ) : (
+          !extraction && quotes.length === 0 && <CaptionedEvidenceBlock operation={operation} />
+        )}
 
         {element && (
           <Block label="What the class means" data-testid="review-definition">
@@ -1028,7 +1135,11 @@ export function ReviewInspector({
 
         {decided}
         <div id="review-change" className="review-change">
-          {decide}
+          {relationshipType && type
+            ? canDecide && (
+                <TypeDecision {...type.decision} operation={operation} onReject={openReasons} />
+              )
+            : decide}
           {betterClass}
           {canDecide && relationshipEnds && (
             <RelationshipEditor

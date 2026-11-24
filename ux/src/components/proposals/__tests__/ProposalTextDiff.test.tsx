@@ -75,21 +75,18 @@ describe("a changed definition in the inspector", () => {
 
   it("keeps a short value change inline", async () => {
     renderPage("op-rename");
-    const row = await screen.findByTestId("operation-change-row-identifier");
+    const row = await screen.findByTestId("review-diff-row-identifier");
     expect(within(row).queryByTestId("operation-text-diff-identifier")).not.toBeInTheDocument();
-    expect(row.querySelector(".op-change__before--changed")).toHaveTextContent(
-      "component_realizes_service",
-    );
-    expect(row.querySelector(".op-change__after--changed")).toHaveTextContent(
-      "component_serves_service",
-    );
+    expect(within(row).queryByTestId("review-diff-text-identifier")).not.toBeInTheDocument();
+    expect(row.querySelector(".review-diff__was")).toHaveTextContent("component_realizes_service");
+    expect(row.querySelector(".review-diff__now")).toHaveTextContent("component_serves_service");
   });
 
   it("shows a long text a create sets as a plain value", async () => {
     const create = proposal.operations.find((o) => o.id === "op-create")!;
     create.fields = { ...create.fields, description: AFTER };
     renderPage("op-create");
-    const row = await screen.findByTestId("operation-change-row-description");
+    const row = await screen.findByTestId("review-diff-row-description");
     expect(within(row).queryByTestId("operation-text-diff-description")).not.toBeInTheDocument();
     expect(row).toHaveTextContent(AFTER);
   });

@@ -3116,39 +3116,9 @@ selectors:
   - selector: operation-diff-*
     component: src/components/proposals/OperationDiff.tsx
     description: "An operation's change cell (triple diff or field change), by operation id; data-op holds the op"
-  - selector: operation-inspector
-    component: src/components/proposals/OperationInspector.tsx
-    description: "Inspector for the selected operation (Change, Rationale, Evidence)"
   - selector: operation-stale-callout
-    component: src/components/proposals/OperationDecision.tsx
+    component: src/components/proposals/review/TypeDecision.tsx
     description: "Warn callout when the operation is stale: in the Decision section (what changed, Apply anyway), or under Change when it takes no decision"
-  - selector: operation-reason
-    component: src/components/proposals/OperationInspector.tsx
-    description: "Why the operation failed or was rejected"
-  - selector: operation-change-table
-    component: src/components/proposals/OperationInspector.tsx
-    description: "Field / before / after Change table"
-  - selector: operation-change-row-*
-    component: src/components/proposals/OperationInspector.tsx
-    description: "One Change table row, by field name (e.g. canonical_predicate)"
-  - selector: operation-text-diff-*
-    component: src/components/proposals/OperationInspector.tsx
-    description: "A long text change (e.g. description) as Heimdall's SideBySideDiff, by field name: changed sentences removed then added, unchanged ones as context"
-  - selector: operation-rationale
-    component: src/components/proposals/OperationInspector.tsx
-    description: "The operation's rationale text"
-  - selector: operation-evidence
-    component: src/components/proposals/OperationInspector.tsx
-    description: "Evidence quotes with claim id, entity id or url captions"
-  - selector: operation-notes
-    component: src/components/proposals/OperationInspector.tsx
-    description: "The operation's maintainer notes (Notes section), shown only when the operation has notes"
-  - selector: operation-change-lines-*
-    component: src/components/proposals/OperationInspector.tsx
-    description: "A list value in the Change table, by field: distinguish_from as \"Class: when\" lines, evidence_signals numbered"
-  - selector: operation-change-refs-*
-    component: src/components/proposals/OperationInspector.tsx
-    description: "Entities a Change field names by id (class_ids, concept_scheme_id, source_id, ...), by field: each by name with its raw id as the tooltip; a $ref as \"#seq title (new in this proposal)\""
 
   # Review an extraction against its source (/app/proposals/$proposalId/review, #1611)
   - selector: proposal-review-against-source
@@ -3379,6 +3349,18 @@ selectors:
   - selector: review-no-passage
     component: src/components/proposals/review/ReviewInspector.tsx
     description: "An operation the extraction couldn't place in its source (role=note): bulk accept holds it back; accept it here"
+  - selector: operation-replacement
+    component: src/components/proposals/review/ReplacementBlock.tsx
+    description: "REPLACEMENT (review inspector block) of a relationship-type delete naming its replacement (data-pair): the pair callout, the replacement id chip and the pair chip"
+  - selector: operation-replacement-callout
+    component: src/components/proposals/review/ReplacementBlock.tsx
+    description: "How the replacement's pair compares with the deleted type's: a callout while awaiting, a plain note once decided"
+  - selector: operation-replacement-id
+    component: src/components/proposals/review/ReplacementBlock.tsx
+    description: "The replacement's identifier as an id-tag chip (.op-replacement__id, the full id as its title)"
+  - selector: operation-replacement-deleted-callout
+    component: src/components/proposals/review/ReplacementBlock.tsx
+    description: "The replacement is itself deleted in this proposal (data-cycle when the chain loops)"
   - selector: review-not
     component: src/components/proposals/review/ReviewInspector.tsx
     description: "Not an element / Not a relationship (secondary, key X): opens the reason step: highlights it with a prompt, scrolls it into view and focuses the first reason, or in gold mode with no note the note; nothing is sent until a reason is picked"
@@ -3763,22 +3745,22 @@ selectors:
     component: src/components/proposals/TieredOperations.tsx
     description: "Shown after Keep both: decide each in the inspector, by cluster id"
   - selector: reflection-answers
-    component: src/components/proposals/ReflectionAnswers.tsx
+    component: src/components/proposals/review/TypeQuestions.tsx
     description: "Inspector: the reflection's three sorting questions with ranked options"
   - selector: reflection-question-*
-    component: src/components/proposals/ReflectionAnswers.tsx
+    component: src/components/proposals/review/TypeQuestions.tsx
     description: "One sorting question's radio group, by question (source_for, target_for, predicate_for)"
   - selector: reflection-option-*
-    component: src/components/proposals/ReflectionAnswers.tsx
+    component: src/components/proposals/review/TypeQuestions.tsx
     description: "One option of a sorting question with its probability bar and current/plan marks, by question and option; data-defined=\"true\" when it has a definition"
   - selector: reflection-definition
-    component: src/components/proposals/ReflectionAnswers.tsx
+    component: src/components/proposals/review/TypeQuestions.tsx
     description: "Overlay (role=tooltip) beside the inspector with a reflection answer's definition, shown on hover or focus of the option"
   - selector: reflection-evidence-pack
-    component: src/components/proposals/ReflectionAnswers.tsx
+    component: src/components/proposals/review/TypeQuestions.tsx
     description: "Inspector: the evidence pack blocks the decision model read"
   - selector: operation-picks-callout
-    component: src/components/proposals/OperationDecision.tsx
+    component: src/components/proposals/review/TypeDecision.tsx
     description: "Decision callout: the reviewer's picks make another triple (accept with my picks), or the current one"
   - selector: proposal-selection-bar
     component: src/components/proposals/DecisionBars.tsx
@@ -3796,79 +3778,67 @@ selectors:
     component: src/components/proposals/DecisionBars.tsx
     description: "Accepts the checked operations that aren't stale"
   - selector: operation-decision
-    component: src/components/proposals/OperationDecision.tsx
+    component: src/components/proposals/review/TypeDecision.tsx
     description: "Inspector Decision section of an operation awaiting a decision"
-  - selector: operation-decided
-    component: src/components/proposals/OperationDecided.tsx
-    description: "Inspector Decision section of a decided operation (data-state): state chip, who and when, record, nothing left to decide"
-  - selector: operation-decided-state
-    component: src/components/proposals/OperationDecided.tsx
-    description: "Decision state chip in a decided operation's Decision section"
-  - selector: operation-decided-by
-    component: src/components/proposals/OperationDecided.tsx
-    description: "\"by you · Nov 6, 12:53\": who decided and when, from the taxonomy's gold (GET /api/taxonomies/{id}/gold?proposal_id=); absent once the proposal is reverted"
-  - selector: operation-decided-record
-    component: src/components/proposals/OperationDecided.tsx
-    description: "One line on what the decision did: the replacement's pair and the relationships moved or deleted"
   - selector: operation-failed-callout
-    component: src/components/proposals/OperationDecision.tsx
+    component: src/components/proposals/review/TypeDecision.tsx
     description: "Error callout when the last apply of the operation failed"
   - selector: operation-accept
-    component: src/components/proposals/OperationDecision.tsx
+    component: src/components/proposals/review/TypeDecision.tsx
     description: "Accept (Apply anyway when stale, Apply again when failed)"
   - selector: operation-edit
-    component: src/components/proposals/OperationDecision.tsx
+    component: src/components/proposals/review/TypeDecision.tsx
     description: "\"Edit, then accept\" (update) or \"Replace instead\" (delete) for a DR relationship type"
   - selector: operation-reject
-    component: src/components/proposals/OperationDecision.tsx
+    component: src/components/proposals/review/TypeDecision.tsx
     description: "Rejects the operation with the optional reason"
   - selector: operation-reject-note
-    component: src/components/proposals/OperationDecision.tsx
+    component: src/components/proposals/review/TypeDecision.tsx
     description: "Optional reject reason, stored as the operation's reason"
   - selector: operation-edit-panel
-    component: src/components/proposals/DrTripleEditor.tsx
+    component: src/components/proposals/review/ReviewTripleEditor.tsx
     description: "Accept-with-edit editor for a DR relationship type's triple"
   - selector: operation-edit-triples
-    component: src/components/proposals/DrTripleEditor.tsx
+    component: src/components/proposals/review/ReviewTripleEditor.tsx
     description: "Current / Proposed / Your edit triples"
   - selector: operation-edit-yours
-    component: src/components/proposals/DrTripleEditor.tsx
+    component: src/components/proposals/review/ReviewTripleEditor.tsx
     description: "The edited triple, with parts that differ highlighted"
   - selector: operation-edit-mode
-    component: src/components/proposals/DrTripleEditor.tsx
+    component: src/components/proposals/review/ReviewTripleEditor.tsx
     description: "Delete as proposed / Replace with another triple (deletes only)"
   - selector: operation-edit-source
-    component: src/components/proposals/DrTripleEditor.tsx
+    component: src/components/proposals/review/ReviewTripleEditor.tsx
     description: "Source spec node id input (dr_spec classes as suggestions)"
   - selector: operation-edit-predicate
-    component: src/components/proposals/DrTripleEditor.tsx
+    component: src/components/proposals/review/ReviewTripleEditor.tsx
     description: "Predicate input (the predicate catalog as suggestions)"
   - selector: operation-edit-destination
-    component: src/components/proposals/DrTripleEditor.tsx
+    component: src/components/proposals/review/ReviewTripleEditor.tsx
     description: "Destination spec node id input"
   - selector: operation-edit-triple-error
-    component: src/components/proposals/DrTripleEditor.tsx
+    component: src/components/proposals/review/ReviewTripleEditor.tsx
     description: "Error callout: the triple already exists, another operation makes it, or a replacement keeps the current one"
   - selector: operation-edit-no-catalog
-    component: src/components/proposals/DrTripleEditor.tsx
+    component: src/components/proposals/review/ReviewTripleEditor.tsx
     description: "Error callout when dr_spec has no predicate catalog: no edit can apply until it is re-imported"
   - selector: operation-edit-server-error
-    component: src/components/proposals/DrTripleEditor.tsx
+    component: src/components/proposals/review/ReviewTripleEditor.tsx
     description: "The server's refusal of the last edited apply, until the next change"
   - selector: operation-edit-valid
-    component: src/components/proposals/DrTripleEditor.tsx
+    component: src/components/proposals/review/ReviewTripleEditor.tsx
     description: "Info callout when the edited triple passes the checks"
   - selector: operation-edit-apply
-    component: src/components/proposals/DrTripleEditor.tsx
+    component: src/components/proposals/review/ReviewTripleEditor.tsx
     description: "Apply edited / Apply replacement / Accept delete"
   - selector: operation-edit-reset
-    component: src/components/proposals/DrTripleEditor.tsx
+    component: src/components/proposals/review/ReviewTripleEditor.tsx
     description: "Back to proposed: drops the edit"
   - selector: operation-edit-cancel
-    component: src/components/proposals/DrTripleEditor.tsx
+    component: src/components/proposals/review/ReviewTripleEditor.tsx
     description: "Closes the editor"
   - selector: operation-edit-preview
-    component: src/components/proposals/DrTripleEditor.tsx
+    component: src/components/proposals/review/ReviewTripleEditor.tsx
     description: "The decision line DR receives, as JSON (fields only on an edit)"
   - selector: proposal-apply-results
     component: src/components/proposals/ApplyResults.tsx
@@ -3924,16 +3894,16 @@ selectors:
     component: src/components/proposals/OperationColumns.tsx
     description: "Amber \"doesn't fit type\" chip on an awaiting relationship create whose ends break its type's domain or range (title says why), by operation id"
   - selector: operation-domain-range-callout
-    component: src/components/proposals/OperationDecision.tsx
+    component: src/components/proposals/review/TypeDecision.tsx
     description: "Warn callout in the Decision section of a relationship create that doesn't fit its type's domain or range: why, and that applying it fails"
   - selector: proposal-selection-note
     component: src/components/proposals/DecisionBars.tsx
     description: "Selection bar text: stale and blocked operations Accept selected leaves out, else how it applies"
   - selector: operation-dataset-impact
-    component: src/components/proposals/OperationDecision.tsx
+    component: src/components/proposals/review/TypeDecision.tsx
     description: "Information callout: what a schema operation does to data of datasets that yield to the schema (#1485)"
   - selector: operation-dataset-impact-*
-    component: src/components/proposals/OperationDecision.tsx
+    component: src/components/proposals/review/TypeDecision.tsx
     description: "One yielding dataset's impact line, suffixed by the dataset identifier"
   - selector: operation-in-use
     component: src/components/proposals/InUseResolver.tsx
@@ -3991,21 +3961,9 @@ selectors:
   - selector: operation-proposed-replacement-unfit
     component: src/components/proposals/InUseResolver.tsx
     description: "Note that the delete's proposed replacement type doesn't fit every relationship using the deleted type, so the resolver doesn't offer it"
-  - selector: operation-replacement
-    component: src/components/proposals/OperationInspector.tsx
-    description: "Inspector Replacement section of a relationship-type delete that names its replacement; data-pair is same, reversed, different or missing"
-  - selector: operation-replacement-callout
-    component: src/components/proposals/OperationInspector.tsx
-    description: "Callout comparing the replacement's pair of classes with the deleted type's (warn for a different pair or a missing replacement); plain text once the operation is decided"
   - selector: operation-replacement-chip-*
     component: src/components/proposals/OperationColumns.tsx
     description: "Row chips (role=note) on a delete whose named replacement links a reversed or different pair, is gone, or is deleted by the proposal too, by operation id; coloured while awaiting, neutral once decided; data-pair holds the pair verdict, data-replacement-deleted is chain or cycle"
-  - selector: operation-replacement-id
-    component: src/components/proposals/OperationInspector.tsx
-    description: "Replacement identifier id-tag chip in the inspector: ellipsed to the panel width, full identifier in its title"
-  - selector: operation-replacement-deleted-callout
-    component: src/components/proposals/OperationInspector.tsx
-    description: "Warning that the proposal deletes the named replacement too: the chain of replacements to the type it ends at, or the cycle (data-cycle)"
 
   - selector: dr-drift-dialog
     component: src/components/ontology/DrSpecDriftDialog.tsx
@@ -4043,12 +4001,6 @@ selectors:
   - selector: reject-reason-picker
     component: src/components/proposals/RejectReasonPicker.tsx
     description: "Reject all / Reject selected confirm dialog: one reason code for every operation it rejects (role=radiogroup; the codes that fit all of them, Other by default)"
-  - selector: operation-reject-reason-picker
-    component: src/components/proposals/RejectReasonPicker.tsx
-    description: "Operation inspector: the reason code for rejecting this operation (role=radiogroup; keep_current for a blocked delete, outdated when stale, else other)"
-  - selector: operation-reject-reason-*
-    component: src/components/proposals/RejectReasonPicker.tsx
-    description: "A reason code in the operation inspector's reject picker (role=radio, aria-checked), by code"
   - selector: reject-reason-*
     component: src/components/proposals/RejectReasonPicker.tsx
     description: "A reason code in the bulk reject dialog's picker (role=radio, aria-checked), by code"
@@ -4075,27 +4027,9 @@ selectors:
     description: "Reject all / Reject selected confirm dialog: optional reason stored with every operation it rejects"
 
   # ── Extraction review beside the passage, near matches, entity provenance (#1555) ──
-  - selector: operation-source-passage
-    component: src/components/proposals/SourcePassage.tsx
-    description: "Operation inspector: Source passage section for an operation whose evidence locates a passage in a source"
-  - selector: operation-source-passage-location
-    component: src/components/proposals/SourcePassage.tsx
-    description: "Source passage: the passage's page and section (p. 5 · Parts and features), else its character offsets"
-  - selector: operation-source-title
-    component: src/components/proposals/SourcePassage.tsx
-    description: "Source passage: the source's title, a link to its taxonomy's Sources page that opens in a new tab so an unsent decision survives (text for a removed or unknown source)"
   - selector: operation-ends-callout
-    component: src/components/proposals/OperationDecision.tsx
+    component: src/components/proposals/review/TypeDecision.tsx
     description: "Decision: a relationship create whose end is an undecided (or rejected) create in the proposal; Accept is disabled"
-  - selector: operation-source-passage-text
-    component: src/components/proposals/SourcePassage.tsx
-    description: "Source passage: the passage text; data-placed=true when the quote is highlighted in its page's text, false when it shows alone"
-  - selector: operation-source-passage-mark
-    component: src/components/proposals/SourcePassage.tsx
-    description: "Source passage: the highlighted quote (<mark>) inside its page's text"
-  - selector: operation-source-passage-more
-    component: src/components/proposals/SourcePassage.tsx
-    description: "Source passage: \"Also on pp. …\" for further passages, and a note when the source was removed"
   - selector: operation-near-match
     component: src/components/proposals/SourcePassage.tsx
     description: "Decision: \"Already in dataset …?\" radio group of a near match (each existing individual with its similarity, or Create new)"
@@ -4108,18 +4042,6 @@ selectors:
   - selector: operation-no-passage-*
     component: src/components/proposals/OperationColumns.tsx
     description: "Operations table status cell: amber \"no passage\" chip (role note) on an extraction's operation that cites no passage in its source (no_passage), by operation id; bulk accepts hold it back"
-  - selector: operation-no-passage
-    component: src/components/proposals/SourcePassage.tsx
-    description: "Operation inspector: note in place of the source passage on an operation without one (no_passage): the extraction couldn't place it, bulk accept holds it back"
-  - selector: operation-relationship-ends
-    component: src/components/proposals/SourcePassage.tsx
-    description: "Operation inspector: Ends section of a relationship create with an end created in the proposal"
-  - selector: operation-relationship-end-*
-    component: src/components/proposals/SourcePassage.tsx
-    description: "Ends section: the source or target end's chip; data-kind is existing, new or near"
-  - selector: operation-relationship-ends-note
-    component: src/components/proposals/SourcePassage.tsx
-    description: "Ends section: which ends are new in the proposal and which follow a near-match choice"
   - selector: entity-sources
     component: src/components/entity/EntitySources.tsx
     description: "Entity provenance: the source passages a proposal applied an individual or relationship from"

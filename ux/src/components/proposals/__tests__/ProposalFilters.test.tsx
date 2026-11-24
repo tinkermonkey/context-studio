@@ -85,7 +85,8 @@ describe("a rejected operation lists as decided", () => {
     const user = userEvent.setup();
     renderPage("op-rename");
 
-    await user.click(await screen.findByTestId("operation-reject"));
+    await user.click(await screen.findByTestId("review-not"));
+    await user.click(screen.getByTestId("review-reason-other"));
     await waitFor(() =>
       expect(within(table()).queryByTestId("operation-diff-op-rename")).not.toBeInTheDocument(),
     );
@@ -105,7 +106,8 @@ describe("a rejected operation lists as decided", () => {
     renderPage("m-dup");
     await screen.findByTestId("tiered-operations");
 
-    await user.click(await screen.findByTestId("operation-reject"));
+    await user.click(await screen.findByTestId("review-not"));
+    await user.click(screen.getByTestId("review-reason-other"));
     await waitFor(() => expect(shownIds()).not.toContain("m-dup"));
 
     await primary(/^Decided/);

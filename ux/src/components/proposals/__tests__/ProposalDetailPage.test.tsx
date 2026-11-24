@@ -175,31 +175,29 @@ describe("ProposalDetailPage", () => {
   it("shows the selected operation in the inspector beside the table", async () => {
     const { container } = renderPage("op-rename");
 
-    const inspector = await screen.findByTestId("operation-inspector");
+    const inspector = await screen.findByTestId("review-inspector");
     expect(container.querySelector('[data-testid="schema-page-layout"]')).toBeInTheDocument();
     expect(screen.getByTestId("schema-inspector-container")).toContainElement(inspector);
-    expect(
-      within(inspector).getByText("OPERATION · seq 1 · update · property"),
-    ).toBeInTheDocument();
+    // The review inspector reads a relationship type as its triple (#1662).
+    expect(screen.getByTestId("review-inspector-eyebrow")).toHaveTextContent(
+      "update · property · seq 1",
+    );
 
-    const predicate = await screen.findByTestId("operation-change-row-canonical_predicate");
-    // Stacked: the field name, then before (struck) above after (highlighted).
-    expect(within(predicate).getByText("predicate")).toHaveClass("op-change__field");
-    expect(within(predicate).getByText("realizes")).toHaveClass("op-change__before--changed");
-    expect(within(predicate).getByText("serves")).toHaveClass("op-change__after--changed");
-    expect(within(predicate).getByText("serves")).toHaveClass("op-change__value--id");
+    const predicate = await screen.findByTestId("review-diff-row-canonical_predicate");
+    // The field name, then was (struck) above now.
+    expect(within(predicate).getByText("predicate")).toHaveClass("review-diff__field");
+    expect(predicate.querySelector(".review-diff__was")).toHaveTextContent("realizes");
+    expect(predicate.querySelector(".review-diff__now")).toHaveTextContent("serves");
 
-    expect(screen.getByTestId("operation-rationale")).toHaveTextContent("Rename the predicate.");
+    expect(screen.getByTestId("review-why-rationale")).toHaveTextContent("Rename the predicate.");
     expect(within(inspector).getByText("rename-predicate")).toHaveClass("chip--id-tag");
     expect(within(inspector).getByText("p 0.82")).toBeInTheDocument();
     expect(within(inspector).getByText("breaking")).toHaveClass("chip--rose");
 
-    const evidence = screen.getByTestId("operation-evidence");
-    expect(
-      within(evidence).getByText("realizes and serves say the same thing here."),
-    ).toBeInTheDocument();
-    expect(within(evidence).getByText("node:x#3")).toHaveClass("op-evidence__caption");
-    expect(within(evidence).getByText("https://example.com/spec")).toBeInTheDocument();
+    const evidence = screen.getByTestId("review-quote-1");
+    expect(evidence).toHaveTextContent("realizes and serves say the same thing here.");
+    expect(evidence.querySelector("figcaption")).toHaveTextContent("node:x#3");
+    expect(screen.getByTestId("review-evidence")).toHaveTextContent("https://example.com/spec");
   });
 
   it("shows a DR type's cardinality, strength and spec evidence on a create", async () => {
@@ -234,13 +232,13 @@ describe("ProposalDetailPage", () => {
     );
     renderPage("op-create");
 
-    const strength = await screen.findByTestId("operation-change-row-strength");
-    expect(within(strength).getByText("strength")).toHaveClass("op-change__field");
-    expect(within(strength).getByText("medium")).toHaveClass("op-change__value");
-    const cardinality = screen.getByTestId("operation-change-row-cardinality");
+    const strength = await screen.findByTestId("review-diff-row-strength");
+    expect(within(strength).getByText("strength")).toHaveClass("review-diff__field");
+    expect(strength.querySelector(".review-diff__now")).toHaveTextContent("medium");
+    const cardinality = screen.getByTestId("review-diff-row-cardinality");
     expect(within(cardinality).getByText("many-to-many")).toBeInTheDocument();
-    const evidence = screen.getByTestId("operation-change-row-evidence");
-    expect(within(evidence).getByText("spec evidence")).toHaveClass("op-change__field");
+    const evidence = screen.getByTestId("review-diff-row-evidence");
+    expect(within(evidence).getByText("spec evidence")).toHaveClass("review-diff__field");
     const lines = within(evidence).getAllByRole("listitem");
     expect(lines.map((li) => li.textContent)).toEqual([
       "A service config names the component.",
@@ -252,15 +250,17 @@ describe("ProposalDetailPage", () => {
     renderPage("op-delete");
 
     expect(await screen.findByTestId("operation-stale-callout")).toHaveAttribute("role", "alert");
-    const source = await screen.findByTestId("operation-change-row-domain_class_id");
+    const source = await screen.findByTestId("review-diff-row-domain_class_id");
     expect(within(source).getByText("source")).toBeInTheDocument();
-    expect(await within(source).findByText("application_component")).toBeInTheDocument();
-    // "removed" is said once, on the first row.
-    const predicate = screen.getByTestId("operation-change-row-canonical_predicate");
-    expect(within(predicate).getByText("removed")).toHaveClass("op-change__removed");
-    expect(within(source).queryByText("removed")).not.toBeInTheDocument();
+    // A class reads as its pill, by its DR reference (#1662).
+    expect(await within(source).findByText("application.component")).toBeInTheDocument();
+    // A delete lists what it removes, and says so once (#1662).
+    const predicate = screen.getByTestId("review-diff-row-canonical_predicate");
+    expect(predicate).toHaveAttribute("data-op", "delete");
+    expect(predicate.querySelector(".review-diff__now")).toBeNull();
+    expect(screen.getByTestId("review-the-change")).toHaveTextContent("Removes");
     // Bookkeeping fields of the deleted entity are not listed.
-    expect(screen.queryByTestId("operation-change-row-version")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("review-diff-row-version")).not.toBeInTheDocument();
   });
 
   it("marks an update's ends unknown when its property is gone, not 'any'", async () => {
@@ -295,7 +295,7 @@ describe("ProposalDetailPage", () => {
 
   it("has no decision controls for an operation already decided", async () => {
     renderPage("op-create");
-    const inspector = await screen.findByTestId("operation-inspector");
+    const inspector = await screen.findByTestId("review-inspector");
     expect(within(inspector).queryByTestId("operation-decision")).not.toBeInTheDocument();
     expect(
       within(inspector).queryByRole("button", { name: /accept|reject|edit|apply/i }),
@@ -309,7 +309,7 @@ describe("ProposalDetailPage", () => {
       ),
     );
     renderPage("op-rename");
-    const inspector = await screen.findByTestId("operation-inspector");
+    const inspector = await screen.findByTestId("review-inspector");
     expect(within(inspector).queryByTestId("operation-decision")).not.toBeInTheDocument();
     expect(screen.queryByTestId("proposal-actions")).not.toBeInTheDocument();
     expect(screen.queryByTestId("proposal-threshold-bar")).not.toBeInTheDocument();

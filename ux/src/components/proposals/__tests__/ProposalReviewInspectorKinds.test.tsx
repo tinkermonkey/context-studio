@@ -334,8 +334,8 @@ describe("a delete", () => {
 describe("a decided operation", () => {
   it("shows its record and who decided it, with no decision to change", async () => {
     renderPage("op-applied");
-    const decided = await screen.findByTestId("review-decided");
-    expect(decided).toHaveTextContent("applied");
+    expect(await screen.findByTestId("review-decided")).toHaveAttribute("data-state", "applied");
+    expect(screen.getByTestId("review-inspector-status")).toHaveTextContent("applied");
     expect(await screen.findByTestId("review-decided-by")).toHaveTextContent("by you");
     expect(screen.getByTestId("review-change-note")).toHaveTextContent(
       "Nothing left to decide. Revert the proposal to undo it.",

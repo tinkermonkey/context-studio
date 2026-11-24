@@ -1,105 +1,12 @@
-import { Chip, InspectorPanel } from "@tinkermonkey/heimdall-ui";
 import { useDatasets } from "@/api/hooks/ontology/useDatasets";
 import type { ProposedOperation } from "@/api/services/proposals";
 import {
   CREATE_NEW,
-  alsoOnLabel,
-  charsLabel,
   nearMatchesOf,
-  pageLabel,
-  placePassage,
-  relationshipEndsNote,
   similarityLabel,
   type NearMatchChoice as Choice,
-  type RelationshipEnd,
-  type SourcePassage,
 } from "./sourceModel";
-import { SourcesPageLink } from "@/components/sources/SourcesPageLink";
-import { usePassageSource } from "./usePassageSource";
 import "./proposals.css";
-
-/**
- * The passage an operation came from: its quote highlighted in the text
- * around it when the source's text is at hand and the quote sits at its
- * offsets, else the quote alone; its page and section, a link to the source,
- * and the pages of any further passages.
- */
-export function SourcePassageSection({ passages }: { passages: SourcePassage[] }) {
-  const first = passages[0];
-  const source = usePassageSource(first);
-  if (!first) return null;
-  const placed = placePassage(first, source);
-  const location =
-    [pageLabel(first.page), source?.section].filter(Boolean).join(" · ") || charsLabel(first);
-  const also = alsoOnLabel(passages);
-  const title = source?.title ?? `Source ${first.sourceId.slice(0, 8)}`;
-  // A listed source links to its taxonomy's Sources page; a removed one isn't listed there.
-  const linkTaxonomy = source && !source.removed ? source.taxonomyId : undefined;
-  return (
-    <InspectorPanel.Section title="Source passage">
-      <div className="op-inspector__stack op-passage" data-testid="operation-source-passage">
-        <div className="op-passage__where">
-          <span className="op-passage__location" data-testid="operation-source-passage-location">
-            {location}
-          </span>
-          {linkTaxonomy ? (
-            // A new tab, so leaving never loses an unsent decision or reason.
-            <SourcesPageLink
-              taxonomyId={linkTaxonomy}
-              newTab
-              className="entity-link op-passage__source"
-              data-testid="operation-source-title"
-            >
-              {title}
-            </SourcesPageLink>
-          ) : (
-            <span className="op-passage__source" data-testid="operation-source-title">
-              {title}
-            </span>
-          )}
-        </div>
-        <blockquote
-          className="op-passage__text"
-          data-placed={placed.placed ? "true" : "false"}
-          data-testid="operation-source-passage-text"
-        >
-          {placed.placed ? (
-            <>
-              {placed.before}
-              <mark className="op-passage__mark" data-testid="operation-source-passage-mark">
-                {placed.quote}
-              </mark>
-              {placed.after}
-            </>
-          ) : (
-            placed.quote || <span className="entity-note">No quote recorded.</span>
-          )}
-        </blockquote>
-        {(also || source?.removed) && (
-          <p className="op-passage__more" data-testid="operation-source-passage-more">
-            {[also, source?.removed && "The source was removed."].filter(Boolean).join(". ")}
-          </p>
-        )}
-      </div>
-    </InspectorPanel.Section>
-  );
-}
-
-/**
- * In place of the passage, for an extraction's operation that cites none:
- * the extraction couldn't place its quote in the source, so check it before
- * accepting. Bulk accept holds it back; Accept here still applies it.
- */
-export function NoPassageSection() {
-  return (
-    <InspectorPanel.Section title="Source passage">
-      <p className="entity-note" role="note" data-testid="operation-no-passage">
-        No passage: the extraction couldn't place this in its source, so nothing shows where it came
-        from. Bulk accept holds it back; check it, then accept it here.
-      </p>
-    </InspectorPanel.Section>
-  );
-}
 
 interface NearMatchChoiceProps {
   operation: ProposedOperation;
@@ -182,33 +89,5 @@ export function NearMatchChoice({
         existing one instead, and the passage is added to its sources.
       </p>
     </fieldset>
-  );
-}
-
-/** A relationship create's ends: which are new in the proposal and which follow a near match. */
-export function RelationshipEndsSection({ ends }: { ends: RelationshipEnd[] }) {
-  const note = relationshipEndsNote(ends);
-  if (!note || ends.every((e) => e.kind === "existing")) return null;
-  return (
-    <InspectorPanel.Section title="Ends">
-      <div className="op-inspector__stack" data-testid="operation-relationship-ends">
-        <div className="op-inspector__chips">
-          {ends.map((end) => (
-            <Chip
-              key={end.role}
-              variant={end.kind === "near" ? "violet" : end.kind === "new" ? "amber" : "neutral"}
-              data-testid={`operation-relationship-end-${end.role}`}
-              data-kind={end.kind}
-            >
-              {end.role}: {end.kind === "existing" ? "existing" : `#${end.seq}`}
-              {end.kind === "near" ? " · near match" : end.kind === "new" ? " · new" : ""}
-            </Chip>
-          ))}
-        </div>
-        <p className="op-decided__note" data-testid="operation-relationship-ends-note">
-          {note}
-        </p>
-      </div>
-    </InspectorPanel.Section>
   );
 }

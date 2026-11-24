@@ -1,6 +1,6 @@
 import { type FocusEvent } from "react";
-import { Chip, InspectorPanel, ProgressBar } from "@tinkermonkey/heimdall-ui";
-import { useHoverOverlay } from "./HoverOverlay";
+import { Chip, ProgressBar } from "@tinkermonkey/heimdall-ui";
+import { useHoverOverlay } from "../HoverOverlay";
 import {
   QUESTION_LABELS,
   effectiveOption,
@@ -9,10 +9,10 @@ import {
   type Picks,
   type Reflection,
   type ReflectionOption,
-} from "./tieredModel";
-import "./proposals.css";
+} from "../tieredModel";
+import "../proposals.css";
 
-interface ReflectionAnswersProps {
+interface TypeQuestionsProps {
   operationId: string;
   reflection: Reflection;
   picks: Picks;
@@ -36,19 +36,21 @@ function DefinitionContent({ definition }: { definition: OptionDefinition }) {
 }
 
 /**
- * The three sorting questions a reflection asked, each option a radio button
- * with its probability bar, marked current and plan. Picking another answer
- * than the plan's turns Accept plan into Accept with my picks.
+ * THE QUESTIONS IT ASKED (#1662): the three sorting questions a reflection
+ * asked, each option a quick pick with its probability bar, marked current and
+ * plan. Picking another answer than the plan's turns Accept plan into Accept
+ * with my picks. An answer's definition shows beside the inspector on hover and
+ * focus.
  */
-export function ReflectionAnswers({
+export function TypeQuestions({
   operationId,
   reflection,
   picks,
   onPick,
   definitionOf,
-}: ReflectionAnswersProps) {
+}: TypeQuestionsProps) {
   // Beside the inspector; Escape dismisses it, a scroll moves it along with its answer.
-  const overlay = useHoverOverlay("[data-testid='operation-inspector']");
+  const overlay = useHoverOverlay("#review-inspector");
   const show = (id: string, definition: OptionDefinition | undefined, anchor: Element) =>
     definition
       ? overlay.show(
@@ -60,7 +62,8 @@ export function ReflectionAnswers({
       : overlay.hide(id);
   const hide = overlay.hide;
   return (
-    <InspectorPanel.Section title="Reflection answers">
+    <section className="review-block" aria-label="The questions it asked">
+      <span className="review-eyebrow">THE QUESTIONS IT ASKED</span>
       <div className="op-inspector__stack" data-testid="reflection-answers">
         {reflection.questions.map((q) => {
           const chosen = effectiveOption(reflection, q.question, picks)?.option;
@@ -158,14 +161,15 @@ export function ReflectionAnswers({
         })}
       </div>
       {overlay.overlay}
-    </InspectorPanel.Section>
+    </section>
   );
 }
 
 /** The evidence pack the decision model read, block by block. */
 export function EvidencePack({ blocks }: { blocks: string[] }) {
   return (
-    <InspectorPanel.Section title="Evidence pack" count={blocks.length}>
+    <section className="review-block" aria-label="Evidence pack">
+      <span className="review-eyebrow">{`EVIDENCE PACK · ${blocks.length}`}</span>
       {blocks.length > 0 ? (
         <div className="op-inspector__stack" data-testid="reflection-evidence-pack">
           {blocks.map((block, index) => (
@@ -175,8 +179,8 @@ export function EvidencePack({ blocks }: { blocks: string[] }) {
           ))}
         </div>
       ) : (
-        <p className="entity-note">No evidence pack recorded.</p>
+        <p className="review-muted">No evidence pack recorded.</p>
       )}
-    </InspectorPanel.Section>
+    </section>
   );
 }

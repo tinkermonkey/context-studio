@@ -130,11 +130,13 @@ describe("deciding one operation in the inspector", () => {
     const user = userEvent.setup();
     renderPage("op-rename");
 
-    await user.type(await screen.findByTestId("operation-reject-note"), "Duplicate of seq 3");
-    await user.click(screen.getByTestId("operation-reject"));
+    await user.click(await screen.findByTestId("review-not"));
+    await user.type(screen.getByTestId("review-note"), "Duplicate of seq 3");
+    await user.click(screen.getByTestId("review-reason-other"));
 
     await waitFor(() => expect(rejected).toHaveLength(1));
-    expect(rejected[0]).toEqual({
+    // A reason code and the note, from the inspector's reason step (#1662).
+    expect(rejected[0]).toMatchObject({
       operation_ids: ["op-rename"],
       note: "Duplicate of seq 3",
       reason_code: "other",
@@ -146,11 +148,11 @@ describe("deciding one operation in the inspector", () => {
     const user = userEvent.setup();
     renderPage("op-rename");
 
-    const picker = await screen.findByTestId("operation-reject-reason-picker");
-    expect(picker).toHaveAttribute("role", "radiogroup");
-    await user.click(within(picker).getByRole("radio", { name: "Wrong" }));
-    expect(within(picker).getByRole("radio", { name: "Wrong" })).toBeChecked();
-    await user.click(screen.getByTestId("operation-reject"));
+    // The inspector's reason step (#1662) offers the codes that fit a change (#1659).
+    await user.click(await screen.findByTestId("review-not"));
+    const reasons = screen.getByTestId("review-reasons");
+    expect(within(reasons).getByRole("button", { name: "Keep as it is" })).toBeInTheDocument();
+    await user.click(within(reasons).getByRole("button", { name: "Wrong" }));
 
     await waitFor(() => expect(rejected).toHaveLength(1));
     expect(rejected[0]).toMatchObject({ operation_ids: ["op-rename"], reason_code: "incorrect" });

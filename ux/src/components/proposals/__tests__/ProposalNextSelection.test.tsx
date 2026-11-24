@@ -83,7 +83,8 @@ function selectedRow() {
 describe("after a decision under Needs decision", () => {
   it("selects the row below the decided one and shows it in the inspector", async () => {
     render(<Harness initial="op-rename" />);
-    await userEvent.click(await screen.findByTestId("operation-reject"));
+    await userEvent.click(await screen.findByTestId("review-not"));
+    await userEvent.click(screen.getByTestId("review-reason-other"));
 
     await waitFor(() => expect(selected()).toBe("op-delete"));
     await inspected("op-delete");
@@ -121,10 +122,11 @@ describe("after a decision under Needs decision", () => {
         /^Needs decision/,
       ),
     );
-    await userEvent.click(screen.getByTestId("operation-reject"));
+    await userEvent.click(screen.getByTestId("review-not"));
+    await userEvent.click(screen.getByTestId("review-reason-other"));
 
     await waitFor(() => expect(selected()).toBe("none"));
-    expect(screen.queryByTestId("operation-inspector")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("review-inspector")).not.toBeInTheDocument();
   });
 
   it("selects the next row when a bulk decision covered the selected one", async () => {
@@ -146,14 +148,16 @@ describe("after a decision under Needs decision", () => {
     // Judgment: j-retarget, j-compound. Conflicts: c-rename, c-delete.
     render(<Harness initial="m-blocked" />);
     await screen.findByTestId("tiered-operations");
-    await userEvent.click(await screen.findByTestId("operation-reject"));
+    await userEvent.click(await screen.findByTestId("review-not"));
+    await userEvent.click(screen.getByTestId("review-reason-other"));
     await waitFor(() => expect(selected()).toBe("m-reverse"));
     await inspected("m-reverse");
 
     // The last mechanical row moves on into the judgment section.
     await userEvent.click(document.querySelector<HTMLElement>("tr[data-row-key='m-stale']")!);
     await waitFor(() => expect(selected()).toBe("m-stale"));
-    await userEvent.click(await screen.findByTestId("operation-reject"));
+    await userEvent.click(await screen.findByTestId("review-not"));
+    await userEvent.click(screen.getByTestId("review-reason-other"));
     await waitFor(() => expect(selected()).toBe("j-retarget"));
     await inspected("j-retarget");
   });
@@ -166,7 +170,8 @@ describe("moving past decided conflict members", () => {
     // The last judgment row; the conflict card below lists c-rename (rejected), then c-delete.
     render(<Harness initial="j-compound" />);
     await screen.findByTestId("tiered-operations");
-    await userEvent.click(await screen.findByTestId("operation-reject"));
+    await userEvent.click(await screen.findByTestId("review-not"));
+    await userEvent.click(screen.getByTestId("review-reason-other"));
 
     await waitFor(() => expect(selected()).toBe("c-delete"));
     await inspected("c-delete");
@@ -179,7 +184,8 @@ describe("selection that stays put", () => {
       ["op-rename", "op-create"].includes(o.id),
     );
     render(<Harness initial="op-rename" />);
-    await userEvent.click(await screen.findByTestId("operation-reject"));
+    await userEvent.click(await screen.findByTestId("review-not"));
+    await userEvent.click(screen.getByTestId("review-reason-other"));
 
     await waitFor(() =>
       expect(screen.getByTestId("proposal-operations-table")).toHaveAttribute("data-filter", "all"),
@@ -210,7 +216,8 @@ describe("selection that stays put", () => {
     await userEvent.click(
       within(await screen.findByRole("group", { name: "Show operations" })).getByText(/^All/),
     );
-    await userEvent.click(screen.getByTestId("operation-reject"));
+    await userEvent.click(screen.getByTestId("review-not"));
+    await userEvent.click(screen.getByTestId("review-reason-other"));
 
     await waitFor(() => expect(screen.queryByTestId("operation-decision")).not.toBeInTheDocument());
     expect(selected()).toBe("op-rename");

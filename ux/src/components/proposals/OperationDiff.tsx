@@ -256,3 +256,21 @@ export function OperationDiff({ operation: proposed, context }: OperationDiffPro
     </div>
   );
 }
+
+/** An operation's title as the inspector reads it: a relationship type's triple, else its subject. */
+export function operationTitle(proposed: ProposedOperation, context: OperationContext): string {
+  const operation = asApplied(proposed);
+  if (operation.kind === "property") {
+    const { before, after } = propertyTriples(
+      operation,
+      context.currentProperty(operation.target_id),
+    );
+    const triple = after ?? before;
+    const text = triple
+      ? `${context.endLabel(triple.domain, operation)} ${triple.predicate ?? "—"} ${context.endLabel(triple.range, operation)}`
+      : operation.kind;
+    return operation.op === "delete" ? `Remove ${text}` : text;
+  }
+  const subject = subjectOf(operation, context);
+  return operation.op === "delete" ? `Remove ${subject}` : subject;
+}

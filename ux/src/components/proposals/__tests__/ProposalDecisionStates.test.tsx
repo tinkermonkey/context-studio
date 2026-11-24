@@ -183,14 +183,15 @@ describe("a proposal with everything decided", () => {
     decideAll();
     const { container } = renderPage("op-delete");
 
-    const decided = await screen.findByTestId("operation-decided");
+    const decided = await screen.findByTestId("review-decided");
     expect(container.querySelector('[data-testid="schema-page-layout"]')).toBeInTheDocument();
     expect(decided).toHaveAttribute("data-state", "applied");
-    expect(within(decided).getByTestId("operation-decided-state")).toHaveClass("chip--emerald");
-    expect(await within(decided).findByTestId("operation-decided-by")).toHaveTextContent(
+    // The state is the head's chip (#1662).
+    expect(screen.getByTestId("review-inspector-status")).toHaveClass("chip--emerald");
+    expect(await within(decided).findByTestId("review-decided-by")).toHaveTextContent(
       /^by you · Nov \d+, \d\d:\d\d$/,
     );
-    expect(within(decided).getByTestId("operation-decided-record")).toHaveTextContent(
+    expect(within(decided).getByTestId("review-decided-record")).toHaveTextContent(
       "The replacement linked the pair reversed; 2 relationships moved to service_realizes_component with their ends swapped.",
     );
     expect(decided).toHaveTextContent("Nothing left to decide. Revert the proposal to undo it.");
@@ -198,7 +199,7 @@ describe("a proposal with everything decided", () => {
     // Who and when come from the taxonomy's gold, filtered to this proposal.
     expect(goldQueries.at(-1)?.get("proposal_id")).toBe("proposal-1");
     // One state chip: the Decision section's, not repeated under Change.
-    const inspector = screen.getByTestId("operation-inspector");
+    const inspector = screen.getByTestId("review-inspector");
     expect(within(inspector).getAllByText("applied", { exact: true })).toHaveLength(1);
 
     const replacement = screen.getByTestId("operation-replacement");
@@ -228,15 +229,15 @@ describe("a proposal with everything decided", () => {
     proposal.status = "reverted";
     renderPage("op-delete");
 
-    const decided = await screen.findByTestId("operation-decided");
+    const decided = await screen.findByTestId("review-decided");
     expect(decided).toHaveAttribute("data-state", "reverted");
-    expect(within(decided).getByTestId("operation-decided-state")).toHaveClass("chip--neutral");
-    expect(within(decided).getByTestId("operation-decided-state")).toHaveTextContent("reverted");
+    expect(screen.getByTestId("review-inspector-status")).toHaveClass("chip--neutral");
+    expect(screen.getByTestId("review-inspector-status")).toHaveTextContent("reverted");
     expect(decided).toHaveTextContent("The proposal was reverted, so this is undone.");
     expect(screen.getByTestId("operation-state-op-delete")).toHaveTextContent("reverted");
     expect(screen.getByTestId("operation-state-op-delete")).toHaveClass("chip--neutral");
     expect(screen.getByTestId("operation-state-op-rename")).toHaveTextContent("rejected");
-    expect(within(decided).queryByTestId("operation-decided-by")).not.toBeInTheDocument();
+    expect(within(decided).queryByTestId("review-decided-by")).not.toBeInTheDocument();
     expect(goldQueries).toHaveLength(0);
     expect(screen.getByTestId("proposal-summary")).toHaveAttribute("class", "proposal-summary");
   });
@@ -245,7 +246,7 @@ describe("a proposal with everything decided", () => {
     decideAll();
     renderPage("op-rename");
 
-    const decided = await screen.findByTestId("operation-decided");
+    const decided = await screen.findByTestId("review-decided");
     expect(decided).toHaveAttribute("data-state", "rejected");
     expect(decided).toHaveTextContent("Nothing left to decide.");
     expect(decided).not.toHaveTextContent("Revert the proposal");
@@ -347,7 +348,7 @@ describe("a proposal with decisions outstanding", () => {
     expect(await screen.findByTestId("operation-decision")).toBeInTheDocument();
     await user.click(screen.getByRole("radio", { name: "Decided · 1" }));
     expect(screen.queryByTestId("operation-diff-op-rename")).not.toBeInTheDocument();
-    expect(screen.getByTestId("operation-inspector")).toBeInTheDocument();
+    expect(screen.getByTestId("review-inspector")).toBeInTheDocument();
     expect(screen.getByTestId("operation-decision")).toBeInTheDocument();
     expect(container.querySelector('[data-testid="schema-page-layout"]')).toBeInTheDocument();
   });
@@ -359,7 +360,7 @@ describe("a proposal with decisions outstanding", () => {
     expect(await screen.findByTestId("operation-diff-op-create")).toBeInTheDocument();
     expect(screen.getByRole("radio", { name: "All · 4" })).toHaveAttribute("aria-checked", "true");
     await waitFor(() =>
-      expect(screen.getByTestId("operation-decided")).toHaveAttribute("data-state", "applied"),
+      expect(screen.getByTestId("review-decided")).toHaveAttribute("data-state", "applied"),
     );
   });
 });
@@ -425,13 +426,13 @@ describe("deciding from the banner and the table", () => {
     );
     renderPage("op-delete");
 
-    expect(await screen.findByTestId("operation-decided-by")).toBeInTheDocument();
+    expect(await screen.findByTestId("review-decided-by")).toBeInTheDocument();
     await user.click(screen.getByTestId("proposal-revert"));
     await user.click(screen.getByRole("button", { name: "Revert proposal" }));
     await waitFor(() =>
-      expect(screen.getByTestId("operation-decided")).toHaveAttribute("data-state", "reverted"),
+      expect(screen.getByTestId("review-decided")).toHaveAttribute("data-state", "reverted"),
     );
-    expect(screen.queryByTestId("operation-decided-by")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("review-decided-by")).not.toBeInTheDocument();
   });
 });
 

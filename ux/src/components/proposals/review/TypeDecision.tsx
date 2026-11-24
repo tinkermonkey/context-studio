@@ -1,19 +1,18 @@
 import { useState } from "react";
-import { Button, Field, FormCallout, InspectorPanel, TextArea } from "@tinkermonkey/heimdall-ui";
-import type { ChangeProposal, ProposedOperation, RejectionReason } from "@/api/services/proposals";
+import { Button, FormCallout } from "@tinkermonkey/heimdall-ui";
+import type { ChangeProposal, ProposedOperation } from "@/api/services/proposals";
 import type { components } from "@/api/types";
-import { DrTripleEditor } from "./DrTripleEditor";
-import { InUseResolver } from "./InUseResolver";
+import { ReviewTripleEditor } from "./ReviewTripleEditor";
+import { InUseResolver } from "../InUseResolver";
 import {
   blockersOf,
   datasetImpactText,
   isDrEditable,
   staleCauseText,
   type StaleCause,
-} from "./decisionModel";
-import type { TripleSource } from "./proposalModel";
-import { NearMatchChoice } from "./SourcePassage";
-import { RejectReasonPicker } from "./RejectReasonPicker";
+} from "../decisionModel";
+import type { TripleSource } from "../proposalModel";
+import { NearMatchChoice } from "../SourcePassage";
 import {
   chosenAlternative,
   defaultNearMatchChoice,
@@ -21,19 +20,19 @@ import {
   relationshipEnds,
   type NearMatchChoice as NearMatchChoiceValue,
   type RelationshipEnd,
-} from "./sourceModel";
+} from "../sourceModel";
 
 /** "#1", "#1 and #2" */
 function seqList(ends: RelationshipEnd[]): string {
   return [...new Set(ends.map((e) => `#${e.seq}`))].join(" and ");
 }
-import type { PickOutcome } from "./tieredModel";
-import type { ProposalActions } from "./useProposalActions";
-import "./proposals.css";
+import type { PickOutcome } from "../tieredModel";
+import type { ProposalActions } from "../useProposalActions";
+import "../proposals.css";
 
 type Taxonomy = components["schemas"]["TaxonomyResponse"];
 
-interface OperationDecisionProps {
+export interface TypeDecisionProps {
   operation: ProposedOperation;
   proposal: ChangeProposal;
   taxonomy?: Taxonomy;
@@ -43,15 +42,18 @@ interface OperationDecisionProps {
   actions: ProposalActions;
   /** A reflection operation: what the reviewer's answer picks make of it. */
   picks?: PickOutcome;
+  /** Reject: opens the inspector's reason step (a reason code and a note). */
+  onReject: () => void;
 }
 
 /**
- * The inspector's Decision section for an operation awaiting a decision:
- * Accept (Apply anyway when stale, Apply again when failed), "Edit, then
- * accept" or "Replace instead" for a DR relationship type, and Reject with an
- * optional reason. A relationship-type delete that relationships still use
- * resolves them instead of Accept (move them or delete them too), and its
- * Reject keeps the type.
+ * DECIDE in the review inspector for a DR relationship type (#1662): Accept
+ * (Apply anyway when stale, Apply again when failed, Accept plan or Accept with
+ * my picks for a reflection), "Edit, then accept" or "Replace instead" (the
+ * triple editor, as Or correct it), and Reject, which opens the inspector's
+ * reason step. A relationship-type delete that relationships still use resolves
+ * them instead of Accept (move them or delete them too), and its Reject keeps
+ * the type.
  */
 /** The plain in-use failure of a delete applied without a resolution. */
 const IN_USE_FAILURE = /is in use by \d+ relationship/;
@@ -66,7 +68,7 @@ function resolutionFailure(operation: ProposedOperation, resolutionSent: boolean
   return operation.reason;
 }
 
-export function OperationDecision({
+export function TypeDecision({
   operation,
   proposal,
   taxonomy,
@@ -74,17 +76,12 @@ export function OperationDecision({
   staleCause,
   actions,
   picks,
-}: OperationDecisionProps) {
-  const [note, setNote] = useState("");
+  onReject,
+}: TypeDecisionProps) {
   const [editing, setEditing] = useState(false);
   const editable = !!taxonomy && isDrEditable(operation, taxonomy.identifier);
   const failed = operation.status === "failed";
   const blockers = blockersOf(operation);
-  const noteId = `operation-reject-note-${operation.id}`;
-  // What a reject most likely means: keep the type, the target moved on, or none of the above.
-  const [reasonCode, setReasonCode] = useState<RejectionReason>(
-    blockers ? "keep_current" : operation.stale ? "outdated" : "other",
-  );
   // While the reviewer's answers differ from the plan's, every action applies them: the
   // operation never falls back to the plan (or a blocked delete to its delete).
   const picksChanged = !!picks?.changed;
@@ -146,7 +143,8 @@ export function OperationDecision({
   const endsBlock = undecidedEnds.length > 0 || rejectedEnds.length > 0;
 
   return (
-    <InspectorPanel.Section title="Decision">
+    <section className="review-block" aria-label="Decide" data-testid="review-decide">
+      <span className="review-eyebrow">{editing ? "OR CORRECT IT" : "DECIDE"}</span>
       <div className="op-inspector__stack op-decision" data-testid="operation-decision">
         {operation.stale && (
           <FormCallout variant="warn" icon="alert" data-testid="operation-stale-callout">
@@ -224,7 +222,7 @@ export function OperationDecision({
           )
         )}
         {editing && taxonomy ? (
-          <DrTripleEditor
+          <ReviewTripleEditor
             operation={operation}
             proposal={proposal}
             taxonomy={taxonomy}
@@ -290,36 +288,18 @@ export function OperationDecision({
                 </Button>
               )}
               <Button
-                variant="danger"
+                variant="secondary"
                 size="sm"
                 disabled={actions.busy}
-                onClick={() => actions.rejectOperations([operation.id], note, { reasonCode })}
-                data-testid="operation-reject"
+                onClick={onReject}
+                data-testid="review-not"
               >
                 {blockers ? "Keep the type (reject)" : "Reject"}
               </Button>
             </div>
-            <Field label="Because" hint="stored with a reject">
-              <RejectReasonPicker
-                operations={[operation]}
-                value={reasonCode}
-                onChange={setReasonCode}
-                testIdPrefix="operation-reject-reason"
-              />
-            </Field>
-            <Field label="Note" hint="optional, stored with a reject" htmlFor={noteId}>
-              <TextArea
-                id={noteId}
-                rows={2}
-                value={note}
-                placeholder={blockers ? "Why keep the type?" : "Why reject it?"}
-                onChange={(e) => setNote(e.target.value)}
-                data-testid="operation-reject-note"
-              />
-            </Field>
           </>
         )}
       </div>
-    </InspectorPanel.Section>
+    </section>
   );
 }
