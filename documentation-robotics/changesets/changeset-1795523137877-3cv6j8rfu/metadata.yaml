@@ -1,0 +1,17 @@
+id: changeset-1795523137877-3cv6j8rfu
+name: vite-dev-server-loopback-only
+description: "Fix #1655: the Vite dev server listens on loopback only (drop
+  server.host: true), so the REST API and the MCP token are not reachable from
+  the LAN. Adds the countermeasure and a test that pins the default."
+created: 2026-11-24T12:25:37.887Z
+modified: 2026-11-24T12:25:47.114Z
+status: staged
+baseSnapshot: v2:sha256:53252d39ed1357a9afdd6132507b497bf81313353af91142ccb6b590b147594c
+origin:
+  kind: plan
+purpose: plan
+stats:
+  additions: 5
+  modifications: 3
+  deletions: 0
+lastSequence: 7
