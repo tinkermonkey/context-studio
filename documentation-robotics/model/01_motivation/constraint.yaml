@@ -126,8 +126,10 @@ motivation.constraint.python-and-nodejs-runtime-versions:
   type: constraint
   layer_id: motivation
   name: Python and Node.js Runtime Versions
-  description: The back end runs on Python 3.11 or later; the front-end toolchain
-    needs Node.js 24.
+  description: The back end runs on Python 3.14 everywhere (venv, mypy, black, CI,
+    Dockerfile.agent; local-server/.python-version); the front-end toolchain
+    needs Node.js 24. The packaged desktop app ships its own interpreter, so
+    users never choose a Python.
   attributes:
     constraintType: technical
   source_reference:

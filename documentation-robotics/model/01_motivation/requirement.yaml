@@ -382,3 +382,38 @@ motivation.requirement.one-unexportable-operation-never-blocks-a-dr-spec-export:
     created_at: 2026-11-24T12:37:04.076Z
     updated_at: 2026-11-24T12:37:04.076Z
     version: 1
+motivation.requirement.a-review-only-proposal-is-never-auto-applied:
+  id: f7d74602-9665-4fc4-aaee-168c46510836
+  path: motivation.requirement.a-review-only-proposal-is-never-auto-applied
+  spec_node_id: motivation.requirement
+  type: requirement
+  layer_id: motivation
+  name: A review-only proposal is never auto-applied
+  description: "#1628: a proposal created with review_only is left whole for a
+    person to decide, whatever the taxonomy's approval policy says. Benchmark
+    gold checks set it."
+  attributes:
+    requirementType: functional
+    priority: high
+  metadata:
+    created_at: 2026-11-24T13:31:22.976Z
+    updated_at: 2026-11-24T13:31:22.976Z
+    version: 1
+motivation.requirement.an-operation-without-a-probability-never-meets-the-probability-rule:
+  id: 001cda13-9ecf-43a4-b971-5b6606268ee5
+  path: motivation.requirement.an-operation-without-a-probability-never-meets-the-probability-rule
+  spec_node_id: motivation.requirement
+  type: requirement
+  layer_id: motivation
+  name: An operation without a probability never meets the probability rule
+  description: "#1628: an operation that states no probability never satisfies a
+    policy's min_probability (0 included), so it never auto-applies under a
+    policy; a bundle import's operations stay exempt (the project's own released
+    source)."
+  attributes:
+    requirementType: functional
+    priority: high
+  metadata:
+    created_at: 2026-11-24T13:31:22.976Z
+    updated_at: 2026-11-24T13:31:22.976Z
+    version: 1

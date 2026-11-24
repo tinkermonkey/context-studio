@@ -660,8 +660,9 @@ data-model.objectschema.proposal-entity:
   type: objectschema
   layer_id: data-model
   name: Proposal Entity
-  description: "Domain entity: a change proposal to one taxonomy, with its ordered
-    proposed operations, origin, status and landing."
+  description: "ChangeProposal: a set of proposed ontology changes on one
+    taxonomy, decided per operation; review_only keeps the approval policy off
+    it (#1628)."
   attributes:
     type: object
   source_reference:

@@ -6,7 +6,7 @@ technology.systemsoftware.python:
   layer_id: technology
   name: Python
   description: Primary backend runtime for local-server — all domain services,
-    adapters, and API routes are implemented in Python 3.x
+    adapters, and API routes are implemented in Python 3.14.
   attributes:
     softwareType: middleware
   source_reference:

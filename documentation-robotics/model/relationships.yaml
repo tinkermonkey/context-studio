@@ -1,6 +1,6 @@
 # Intra-layer relationships
 # Format: source_id -> predicate -> target_id
-# Last updated: 2026-11-24T17:51:04.631Z
+# Last updated: 2026-11-24T18:01:11.484Z
 
 - source: motivation.meaning.knowledge-as-infrastructure
   target: motivation.value.knowledge-reusability
@@ -16137,4 +16137,43 @@
   predicate: tests
   layer: testing
   targetLayer: api
+  category: structural
+- source: motivation.requirement.a-review-only-proposal-is-never-auto-applied
+  target: motivation.principle.agents-propose-and-people-decide
+  predicate: realizes
+  layer: motivation
+  category: structural
+- source: motivation.requirement.an-operation-without-a-probability-never-meets-the-probability-rule
+  target: motivation.principle.agents-propose-and-people-decide
+  predicate: realizes
+  layer: motivation
+  category: structural
+- source: data-store.collection.proposals-table
+  target: data-store.field.review-only
+  predicate: composes
+  layer: data-store
+  category: structural
+- source: application.applicationservice.proposal-service
+  target: motivation.requirement.a-review-only-proposal-is-never-auto-applied
+  predicate: satisfies
+  layer: application
+  targetLayer: motivation
+  category: structural
+- source: application.applicationservice.approval-policy-service
+  target: motivation.requirement.an-operation-without-a-probability-never-meets-the-probability-rule
+  predicate: satisfies
+  layer: application
+  targetLayer: motivation
+  category: structural
+- source: product.feature.approval-policy
+  target: motivation.requirement.a-review-only-proposal-is-never-auto-applied
+  predicate: satisfies
+  layer: product
+  targetLayer: motivation
+  category: structural
+- source: product.feature.approval-policy
+  target: motivation.requirement.an-operation-without-a-probability-never-meets-the-probability-rule
+  predicate: satisfies
+  layer: product
+  targetLayer: motivation
   category: structural

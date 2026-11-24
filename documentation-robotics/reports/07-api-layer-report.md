@@ -5792,6 +5792,8 @@ Which operations to apply, with optional edits, chosen alternatives, resolutions
 
 **Type**: `requestbody`
 
+Create a change proposal: taxonomy, title, rationale, source, operations, client_metadata, dataset; review_only true keeps the approval policy off it (a person decides every operation; gold checks set it).
+
 #### Relationships
 
 | Type        | Related Element                 | Predicate  | Direction |
@@ -6693,7 +6695,7 @@ Response containing paginated change history for an entity with ordered change e
 
 **Type**: `response`
 
-A change proposal with its operations in seq order and counts: how many operations share each op, kind, status and scope. In a list's summary form, operations is empty and counts still holds.
+A change proposal with its operations in seq order and counts: how many operations share each op, kind, status and scope. In a list's summary form, operations is empty and counts still holds. It also carries review_only (true: the approval policy never applies it).
 
 #### Attributes
 
@@ -10602,4 +10604,4 @@ Bearer token required on the /mcp endpoint (Authorization: Bearer &lt;auth_token
 
 ---
 
-Generated: 2026-11-24T17:51:04.666Z | Model Version: 0.1.0
+Generated: 2026-11-24T18:01:11.522Z | Model Version: 0.1.0

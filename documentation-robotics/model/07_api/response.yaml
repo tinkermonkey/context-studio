@@ -949,7 +949,8 @@ api.response.change-proposal-response:
   name: ChangeProposalResponse
   description: "A change proposal with its operations in seq order and counts: how
     many operations share each op, kind, status and scope. In a list's summary
-    form, operations is empty and counts still holds."
+    form, operations is empty and counts still holds. It also carries
+    review_only (true: the approval policy never applies it)."
   attributes:
     description: ChangeProposalResponse
   source_reference:

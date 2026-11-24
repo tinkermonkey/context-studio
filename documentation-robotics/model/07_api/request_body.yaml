@@ -545,6 +545,9 @@ api.requestbody.change-proposal-create-request:
   type: requestbody
   layer_id: api
   name: ChangeProposalCreateRequest
+  description: "Create a change proposal: taxonomy, title, rationale, source,
+    operations, client_metadata, dataset; review_only true keeps the approval
+    policy off it (a person decides every operation; gold checks set it)."
   source_reference:
     provenance: extracted
     locations:
