@@ -18,9 +18,9 @@ Application components, services, and interactions.
 | ------------------------- | ----- |
 | Elements                  | 194   |
 | Intra-Layer Relationships | 422   |
-| Inter-Layer Relationships | 425   |
+| Inter-Layer Relationships | 423   |
 | Inbound Relationships     | 232   |
-| Outbound Relationships    | 193   |
+| Outbound Relationships    | 191   |
 
 **Cross-Layer References**:
 
@@ -567,7 +567,6 @@ flowchart TB
 | `application.applicationservice.realizes.product.feature`            | `application.applicationservice.bundle-export-service`                      | `product.feature.export-bundle`                                                              | `product`     | `realizes`   | many-to-many | medium   |
 | `application.applicationservice.realizes.business.businessservice`   | `application.applicationservice.bundle-import-service`                      | `business.businessservice.client-interchange-service`                                        | `business`    | `realizes`   | many-to-many | medium   |
 | `application.applicationservice.realizes.product.softwarecapability` | `application.applicationservice.bundle-import-service`                      | `product.softwarecapability.client-interchange`                                              | `product`     | `realizes`   | many-to-many | medium   |
-| `application.applicationservice.accesses.data-model.objectschema`    | `application.applicationservice.change-proposal-repository`                 | `data-model.objectschema.operation-count`                                                    | `data-model`  | `accesses`   | many-to-many | medium   |
 | `application.applicationservice.satisfies.motivation.requirement`    | `application.applicationservice.change-proposal-repository`                 | `motivation.requirement.the-proposals-list-filters-in-the-query-and-has-a-summary-form`      | `motivation`  | `satisfies`  | many-to-many | medium   |
 | `application.applicationservice.satisfies.motivation.requirement`    | `application.applicationservice.change-proposal-repository`                 | `motivation.requirement.unlanded-lists-only-proposals-with-something-to-land`                | `motivation`  | `satisfies`  | many-to-many | medium   |
 | `application.applicationservice.satisfies.motivation.requirement`    | `application.applicationservice.change-record-port`                         | `motivation.requirement.every-applied-proposal-is-revertible`                                | `motivation`  | `satisfies`  | many-to-many | medium   |
@@ -609,7 +608,6 @@ flowchart TB
 | `application.applicationservice.satisfies.motivation.requirement`    | `application.applicationservice.proposal-apply-rules`                       | `motivation.requirement.relationships-limited-to-allowed-types`                              | `motivation`  | `satisfies`  | many-to-many | medium   |
 | `application.applicationservice.realizes.business.businessservice`   | `application.applicationservice.proposal-comparison-service`                | `business.businessservice.pipeline-benchmarking-service`                                     | `business`    | `realizes`   | many-to-many | medium   |
 | `application.applicationservice.realizes.product.feature`            | `application.applicationservice.proposal-comparison-service`                | `product.feature.compare-two-pipelines`                                                      | `product`     | `realizes`   | many-to-many | medium   |
-| `application.applicationservice.accesses.data-model.objectschema`    | `application.applicationservice.proposal-service`                           | `data-model.objectschema.operation-draft`                                                    | `data-model`  | `accesses`   | many-to-many | medium   |
 | `application.applicationservice.realizes.business.businessservice`   | `application.applicationservice.proposal-service`                           | `business.businessservice.proposal-adjudication-service`                                     | `business`    | `realizes`   | many-to-many | medium   |
 | `application.applicationservice.realizes.product.softwarecapability` | `application.applicationservice.proposal-service`                           | `product.softwarecapability.proposal-review-and-apply`                                       | `product`     | `realizes`   | many-to-many | medium   |
 | `application.applicationservice.satisfies.motivation.requirement`    | `application.applicationservice.proposal-service`                           | `motivation.requirement.a-review-only-proposal-is-never-auto-applied`                        | `motivation`  | `satisfies`  | many-to-many | medium   |
@@ -3578,7 +3576,6 @@ Port for storing and querying change proposals. The list and count queries share
 
 | Type        | Related Element                                                                         | Predicate    | Direction |
 | ----------- | --------------------------------------------------------------------------------------- | ------------ | --------- |
-| inter-layer | `data-model.objectschema.operation-count`                                               | `accesses`   | outbound  |
 | inter-layer | `motivation.requirement.the-proposals-list-filters-in-the-query-and-has-a-summary-form` | `satisfies`  | outbound  |
 | inter-layer | `motivation.requirement.unlanded-lists-only-proposals-with-something-to-land`           | `satisfies`  | outbound  |
 | intra-layer | `application.applicationcomponent.sqlite-change-proposal-repository`                    | `realizes`   | inbound   |
@@ -5005,7 +5002,6 @@ Change proposals: create, decide, apply, reject, reopen, land and read operation
 | inter-layer | `api.operation.mark-proposal-landed`                                                      | `references` | inbound   |
 | inter-layer | `api.operation.reject-proposal`                                                           | `references` | inbound   |
 | inter-layer | `api.operation.reopen-operations`                                                         | `references` | inbound   |
-| inter-layer | `data-model.objectschema.operation-draft`                                                 | `accesses`   | outbound  |
 | inter-layer | `business.businessservice.proposal-adjudication-service`                                  | `realizes`   | outbound  |
 | inter-layer | `product.softwarecapability.proposal-review-and-apply`                                    | `realizes`   | outbound  |
 | inter-layer | `motivation.requirement.a-review-only-proposal-is-never-auto-applied`                     | `satisfies`  | outbound  |
@@ -5445,4 +5441,4 @@ Hexagonal port: describes the workspace and the viewed page to the chat model.
 
 ---
 
-Generated: 2026-11-24T18:01:11.522Z | Model Version: 0.1.0
+Generated: 2026-11-24T18:23:42.953Z | Model Version: 0.1.0

@@ -1,0 +1,22 @@
+- type: relationship-delete
+  elementId: application.applicationservice.proposal-service::accesses::data-model.objectschema.operation-draft
+  layerName: application
+  before:
+    source: application.applicationservice.proposal-service
+    target: data-model.objectschema.operation-draft
+    predicate: accesses
+    layer: application
+    targetLayer: data-model
+  timestamp: 2026-11-24T18:17:32.038Z
+  sequenceNumber: 0
+- type: relationship-delete
+  elementId: application.applicationservice.change-proposal-repository::accesses::data-model.objectschema.operation-count
+  layerName: application
+  before:
+    source: application.applicationservice.change-proposal-repository
+    target: data-model.objectschema.operation-count
+    predicate: accesses
+    layer: application
+    targetLayer: data-model
+  timestamp: 2026-11-24T18:17:32.255Z
+  sequenceNumber: 1

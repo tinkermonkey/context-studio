@@ -5,9 +5,9 @@
 | Metric              | Value                    |
 | ------------------- | ------------------------ |
 | Total Elements      | 1345                     |
-| Total Relationships | 2882                     |
+| Total Relationships | 2880                     |
 | Populated Layers    | 13                       |
-| Last Updated        | 2026-11-24T18:01:11.520Z |
+| Last Updated        | 2026-11-24T18:23:42.950Z |
 | CLI Version         | 0.7.1                    |
 | Spec Version        | 0.13.0                   |
 
@@ -73,4 +73,4 @@ Each layer is independently managed but interconnected, allowing elements in hig
 
 ---
 
-Generated: 2026-11-24T18:01:11.522Z | Model Version: 0.1.0
+Generated: 2026-11-24T18:23:42.953Z | Model Version: 0.1.0

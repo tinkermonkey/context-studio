@@ -3,7 +3,7 @@ schema: documentation-robotics-v1
 cli_version: 0.7.1
 spec_version: 0.13.0
 created: 2026-03-23T12:18:08.630Z
-updated: 2026-11-24T18:01:31.677Z
+updated: 2026-11-24T18:23:42.950Z
 project:
   name: Context Studio
   description: Local-first knowledge graph application for RAG and communication
@@ -234,6 +234,9 @@ changeset_history:
     action: committed
   - name: python-314-everywhere
     committed_at: 2026-11-24T18:01:31.677Z
+    action: committed
+  - name: drop-spec-0-14-only-relationships
+    committed_at: 2026-11-24T18:23:42.950Z
     action: committed
 reconciled:
   changeset: rebuild-model-from-code

@@ -1,0 +1,21 @@
+id: changeset-1795544251782-vzvwd96t9
+name: drop-spec-0-14-only-relationships
+description: "Remove two relationships landed in #1734 that DR spec 0.14 allows
+  but the model's declared spec 0.13.0 does not (an application service can't
+  access an object schema in 0.13.0): proposal-service accesses operation-draft,
+  and change-proposal-repository accesses operation-count. CI imports the model
+  against 0.13.0, so they failed quality-tests on main. Re-add both when the
+  model is upgraded to spec 0.14. Done when test_dr_model_import passes on
+  main."
+created: 2026-11-24T18:17:31.802Z
+modified: 2026-11-24T18:23:42.949Z
+status: committed
+baseSnapshot: v2:sha256:6d4e3a877eb30d8d195e5d00bd7948ab7df29bf47abbd5ef31817f886d9eaa5b
+origin:
+  kind: plan
+purpose: plan
+stats:
+  additions: 0
+  modifications: 0
+  deletions: 2
+lastSequence: 1
