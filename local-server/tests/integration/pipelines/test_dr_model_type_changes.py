@@ -23,6 +23,7 @@ from types import SimpleNamespace
 from uuid import uuid4
 
 import pytest
+import yaml
 from sqlalchemy.orm import sessionmaker
 
 from adapters.events.in_process import InProcessEventPublisher
@@ -55,7 +56,7 @@ from tests.integration.pipelines._harness.dr_spec import MODEL_DR_SPEC_VERSION, 
 from tests.utils.change_recording import wire_change_recorder
 from tests.utils.parent_rows import create_batch_run_row
 
-# Used by the model: 22 relationships, and 52.
+# Both used by many of the model's relationships (counted from the model below).
 REVERSED = "data-model.objectschema.maps-to.api.response"
 RENAMED = "api.operation.composes.api.requestbody"
 AFTER_REVERSE = "api.response.maps-to.data-model.objectschema"
@@ -196,10 +197,31 @@ def reverse_and_rename(parts):
     return parts.proposals.apply(proposal.id, [first.id, second.id], edits=edits)
 
 
+def _model_relationship_count(type_id: str) -> int:
+    """
+    How many of the committed model's relationships have this DR type id
+    (`<layer>.<type>.<predicate>.<layer>.<type>`), read from relationships.yaml.
+    Every landed DR plan changes the model, so a fixed number here broke CI.
+    """
+    model_dir = DEFAULT_VIEWER_DIR / "documentation-robotics" / "model"
+    relationships = yaml.safe_load((model_dir / "relationships.yaml").read_text()) or []
+    return sum(
+        1
+        for rel in relationships
+        if ".".join(
+            [*rel["source"].split(".")[:2], rel["predicate"], *rel["target"].split(".")[:2]]
+        )
+        == type_id
+    )
+
+
 def test_the_model_uses_both_types(parts):
     repo = parts.repo
-    assert len(edges(repo, prop_by_dr_id(repo, REVERSED))) == 22
-    assert len(edges(repo, prop_by_dr_id(repo, RENAMED))) == 52
+    reversed_count = _model_relationship_count(REVERSED)
+    renamed_count = _model_relationship_count(RENAMED)
+    assert reversed_count > 1 and renamed_count > 1
+    assert len(edges(repo, prop_by_dr_id(repo, REVERSED))) == reversed_count
+    assert len(edges(repo, prop_by_dr_id(repo, RENAMED))) == renamed_count
 
 
 def test_a_reverse_swaps_in_place_and_a_rename_keeps_the_models_relationships(parts):
