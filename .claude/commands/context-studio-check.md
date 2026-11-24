@@ -37,7 +37,9 @@ cd local-server && source .venv/bin/activate && python scripts/update_api_specs.
 The generated types are checked against the committed spec by regenerating into a temporary copy:
 
 ```bash
-cd ux && cp src/api/types/index.ts "${TMPDIR:-/tmp}/index.ts.committed" && npm run generate-types && cmp src/api/types/index.ts "${TMPDIR:-/tmp}/index.ts.committed" && echo "✓ types in sync" || echo "✗ types stale: commit the regenerated ux/src/api/types/index.ts"
+cd ux && committed=$(mktemp) && cp src/api/types/index.ts "$committed" && npm run generate-types \
+  && cmp src/api/types/index.ts "$committed" && echo "✓ types in sync" \
+  || echo "✗ types stale: commit the regenerated ux/src/api/types/index.ts"; rm -f "$committed"
 ```
 
 (`generate-types` rewrites `ux/src/api/types/index.ts`; when it differs from the copy, the committed file was stale.)
