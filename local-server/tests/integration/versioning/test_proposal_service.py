@@ -29,9 +29,9 @@ from adapters.persistence.sqlite.transaction import SharedSessionFactory, Sqlite
 from domain.ontology.services import OntologyService
 from domain.versioning.exceptions import RevertConflictError
 from domain.versioning.proposal_service import ProposalService
-from domain.versioning.proposals import OperationDraft
 from domain.versioning.proposals import (
     InUseResolution,
+    OperationDraft,
     OperationStatus,
     ProposalSource,
     ProposalStatus,

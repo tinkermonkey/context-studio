@@ -21,9 +21,9 @@ from domain.versioning.proposal_service import (
     MAX_TITLE_CHARS,
     ProposalService,
 )
-from domain.versioning.proposals import OperationDraft
 from domain.versioning.proposals import (
     ChangeScope,
+    OperationDraft,
     OperationKind,
     OperationStatus,
     OperationType,
