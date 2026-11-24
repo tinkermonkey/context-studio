@@ -16,10 +16,10 @@ Goals, requirements, drivers, and strategic outcomes of the architecture.
 
 | Metric                    | Count |
 | ------------------------- | ----- |
-| Elements                  | 58    |
-| Intra-Layer Relationships | 72    |
-| Inter-Layer Relationships | 136   |
-| Inbound Relationships     | 136   |
+| Elements                  | 62    |
+| Intra-Layer Relationships | 75    |
+| Inter-Layer Relationships | 145   |
+| Inbound Relationships     | 145   |
 | Outbound Relationships    | 0     |
 
 **Cross-Layer References**:
@@ -55,18 +55,19 @@ Goals, requirements, drivers, and strategic outcomes of the architecture.
 | `motivation.goal.trustworthy-extraction-into-datasets`                                    | `goal`        | 8             |
 | `motivation.meaning.knowledge-as-infrastructure`                                          | `meaning`     | 3             |
 | `motivation.outcome.agents-use-the-curated-vocabulary`                                    | `outcome`     | 3             |
-| `motivation.outcome.client-changes-land-without-hand-edited-specs`                        | `outcome`     | 3             |
+| `motivation.outcome.client-changes-land-without-hand-edited-specs`                        | `outcome`     | 5             |
 | `motivation.outcome.curated-domain-ontology`                                              | `outcome`     | 3             |
 | `motivation.outcome.extraction-proposals-worth-a-reviewers-time`                          | `outcome`     | 6             |
 | `motivation.principle.agents-propose-and-people-decide`                                   | `principle`   | 4             |
 | `motivation.principle.clients-drive-proposals`                                            | `principle`   | 2             |
-| `motivation.principle.hexagonal-domain-purity`                                            | `principle`   | 2             |
+| `motivation.principle.hexagonal-domain-purity`                                            | `principle`   | 3             |
 | `motivation.principle.intent-travels-with-every-call`                                     | `principle`   | 1             |
 | `motivation.principle.keep-several-implementations-and-garden-them`                       | `principle`   | 3             |
 | `motivation.principle.one-tool-registry-for-every-face`                                   | `principle`   | 1             |
 | `motivation.principle.the-repo-releases-and-context-studio-refines`                       | `principle`   | 1             |
 | `motivation.requirement.agent-file-sources-limited-to-allowed-roots`                      | `requirement` | 1             |
 | `motivation.requirement.breaking-changes-never-auto-apply`                                | `requirement` | 1             |
+| `motivation.requirement.contexts-depend-on-each-other-only-through-public-contracts`      | `requirement` | 1             |
 | `motivation.requirement.dev-server-not-reachable-from-the-lan`                            | `requirement` | 3             |
 | `motivation.requirement.every-applied-proposal-is-revertible`                             | `requirement` | 1             |
 | `motivation.requirement.extracted-facts-cite-their-source`                                | `requirement` | 2             |
@@ -74,11 +75,14 @@ Goals, requirements, drivers, and strategic outcomes of the architecture.
 | `motivation.requirement.local-api-refuses-foreign-origins`                                | `requirement` | 1             |
 | `motivation.requirement.mcp-requires-a-bearer-token-on-loopback`                          | `requirement` | 2             |
 | `motivation.requirement.mirrored-taxonomies-accept-schema-changes-only-from-their-client` | `requirement` | 2             |
+| `motivation.requirement.one-unexportable-operation-never-blocks-a-dr-spec-export`         | `requirement` | 1             |
 | `motivation.requirement.one-way-to-select-a-pipeline`                                     | `requirement` | 1             |
 | `motivation.requirement.pre-review-is-adopted-only-by-a-rule-set-in-advance`              | `requirement` | 2             |
 | `motivation.requirement.proposals-record-their-pipeline-and-version`                      | `requirement` | 1             |
 | `motivation.requirement.relationships-limited-to-allowed-types`                           | `requirement` | 1             |
 | `motivation.requirement.secrets-stay-in-the-configuration-file`                           | `requirement` | 2             |
+| `motivation.requirement.the-proposals-list-filters-in-the-query-and-has-a-summary-form`   | `requirement` | 0             |
+| `motivation.requirement.unlanded-lists-only-proposals-with-something-to-land`             | `requirement` | 1             |
 | `motivation.requirement.url-sources-refuse-private-network-addresses`                     | `requirement` | 2             |
 | `motivation.stakeholder.agent-claude-code-and-in-app-chat`                                | `stakeholder` | 3             |
 | `motivation.stakeholder.desktop-application-user`                                         | `stakeholder` | 1             |
@@ -126,15 +130,23 @@ flowchart TB
 | Relationship ID                                                    | Source Node                                                                                        | Dest Node                                                                                 | Dest Layer   | Predicate    | Cardinality  | Strength |
 | ------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- | ------------ | ------------ | ------------ | -------- |
 | `api.operation.satisfies.motivation.requirement`                   | `api.operation.get-individual-sources`                                                             | `motivation.requirement.extracted-facts-cite-their-source`                                | `motivation` | `satisfies`  | many-to-many | medium   |
+| `api.operation.satisfies.motivation.requirement`                   | `api.operation.list-proposals`                                                                     | `motivation.requirement.the-proposals-list-filters-in-the-query-and-has-a-summary-form`   | `motivation` | `satisfies`  | many-to-many | medium   |
+| `api.operation.satisfies.motivation.requirement`                   | `api.operation.list-proposals`                                                                     | `motivation.requirement.unlanded-lists-only-proposals-with-something-to-land`             | `motivation` | `satisfies`  | many-to-many | medium   |
 | `api.operation.satisfies.motivation.requirement`                   | `api.operation.revert-proposal`                                                                    | `motivation.requirement.every-applied-proposal-is-revertible`                             | `motivation` | `satisfies`  | many-to-many | medium   |
 | `api.operation.satisfies.motivation.requirement`                   | `api.operation.set-approval-policy`                                                                | `motivation.requirement.breaking-changes-never-auto-apply`                                | `motivation` | `satisfies`  | many-to-many | medium   |
 | `api.ratelimit.satisfies.motivation.constraint`                    | `api.ratelimit.external-reference-api-rate-limit`                                                  | `motivation.constraint.external-reference-source-rate-limits`                             | `motivation` | `satisfies`  | many-to-many | medium   |
 | `api.securityscheme.satisfies.motivation.requirement`              | `api.securityscheme.mcp-bearer-token`                                                              | `motivation.requirement.mcp-requires-a-bearer-token-on-loopback`                          | `motivation` | `satisfies`  | many-to-many | medium   |
+| `application.applicationfunction.satisfies.motivation.requirement` | `application.applicationfunction.domain-import-check`                                              | `motivation.requirement.contexts-depend-on-each-other-only-through-public-contracts`      | `motivation` | `satisfies`  | many-to-many | medium   |
 | `application.applicationfunction.satisfies.motivation.requirement` | `application.applicationfunction.in-use-inspection`                                                | `motivation.requirement.breaking-changes-never-auto-apply`                                | `motivation` | `satisfies`  | many-to-many | medium   |
 | `application.applicationfunction.satisfies.motivation.requirement` | `application.applicationfunction.individual-extraction-apply`                                      | `motivation.requirement.individuals-belong-to-one-dataset`                                | `motivation` | `satisfies`  | many-to-many | medium   |
+| `application.applicationfunction.satisfies.motivation.requirement` | `application.applicationfunction.spec-changes-for-a-proposal`                                      | `motivation.requirement.one-unexportable-operation-never-blocks-a-dr-spec-export`         | `motivation` | `satisfies`  | many-to-many | medium   |
 | `application.applicationservice.satisfies.motivation.requirement`  | `application.applicationservice.approval-policy-service`                                           | `motivation.requirement.breaking-changes-never-auto-apply`                                | `motivation` | `satisfies`  | many-to-many | medium   |
+| `application.applicationservice.satisfies.motivation.requirement`  | `application.applicationservice.change-proposal-repository`                                        | `motivation.requirement.the-proposals-list-filters-in-the-query-and-has-a-summary-form`   | `motivation` | `satisfies`  | many-to-many | medium   |
+| `application.applicationservice.satisfies.motivation.requirement`  | `application.applicationservice.change-proposal-repository`                                        | `motivation.requirement.unlanded-lists-only-proposals-with-something-to-land`             | `motivation` | `satisfies`  | many-to-many | medium   |
 | `application.applicationservice.satisfies.motivation.requirement`  | `application.applicationservice.change-record-port`                                                | `motivation.requirement.every-applied-proposal-is-revertible`                             | `motivation` | `satisfies`  | many-to-many | medium   |
 | `application.applicationservice.satisfies.motivation.requirement`  | `application.applicationservice.drift-import-service`                                              | `motivation.requirement.mirrored-taxonomies-accept-schema-changes-only-from-their-client` | `motivation` | `satisfies`  | many-to-many | medium   |
+| `application.applicationservice.satisfies.motivation.requirement`  | `application.applicationservice.extraction-service`                                                | `motivation.requirement.contexts-depend-on-each-other-only-through-public-contracts`      | `motivation` | `satisfies`  | many-to-many | medium   |
+| `application.applicationservice.satisfies.motivation.requirement`  | `application.applicationservice.import-run-service`                                                | `motivation.requirement.contexts-depend-on-each-other-only-through-public-contracts`      | `motivation` | `satisfies`  | many-to-many | medium   |
 | `application.applicationservice.satisfies.motivation.requirement`  | `application.applicationservice.ontology-service`                                                  | `motivation.requirement.individuals-belong-to-one-dataset`                                | `motivation` | `satisfies`  | many-to-many | medium   |
 | `application.applicationservice.satisfies.motivation.requirement`  | `application.applicationservice.ontology-service`                                                  | `motivation.requirement.relationships-limited-to-allowed-types`                           | `motivation` | `satisfies`  | many-to-many | medium   |
 | `application.applicationservice.satisfies.motivation.requirement`  | `application.applicationservice.pipeline-selection-service`                                        | `motivation.requirement.one-way-to-select-a-pipeline`                                     | `motivation` | `satisfies`  | many-to-many | medium   |
@@ -169,6 +181,7 @@ flowchart TB
 | `business.businessservice.realizes.motivation.goal`                | `business.businessservice.source-extraction-service`                                               | `motivation.goal.trustworthy-extraction-into-datasets`                                    | `motivation` | `realizes`   | many-to-many | medium   |
 | `business.businessservice.satisfies.motivation.requirement`        | `business.businessservice.source-extraction-service`                                               | `motivation.requirement.extracted-facts-cite-their-source`                                | `motivation` | `satisfies`  | many-to-many | medium   |
 | `business.businessservice.satisfies.motivation.requirement`        | `business.businessservice.source-extraction-service`                                               | `motivation.requirement.relationships-limited-to-allowed-types`                           | `motivation` | `satisfies`  | many-to-many | medium   |
+| `data-model.objectschema.satisfies.motivation.requirement`         | `data-model.objectschema.operation-draft`                                                          | `motivation.requirement.contexts-depend-on-each-other-only-through-public-contracts`      | `motivation` | `satisfies`  | many-to-many | medium   |
 | `data-model.objectschema.satisfies.motivation.requirement`         | `data-model.objectschema.predicate-entity`                                                         | `motivation.requirement.relationships-limited-to-allowed-types`                           | `motivation` | `satisfies`  | many-to-many | medium   |
 | `data-store.collection.satisfies.motivation.requirement`           | `data-store.collection.approval-policies`                                                          | `motivation.requirement.breaking-changes-never-auto-apply`                                | `motivation` | `satisfies`  | many-to-many | medium   |
 | `data-store.collection.satisfies.motivation.requirement`           | `data-store.collection.change-events`                                                              | `motivation.requirement.every-applied-proposal-is-revertible`                             | `motivation` | `satisfies`  | many-to-many | medium   |
@@ -827,14 +840,16 @@ Gate C: 221/221 DR ops accepted unchanged and landed from CS's export; House pul
 
 #### Relationships
 
-| Type        | Related Element                                          | Predicate         | Direction |
-| ----------- | -------------------------------------------------------- | ----------------- | --------- |
-| inter-layer | `business.businessprocess.client-round-trip`             | `realizes`        | inbound   |
-| inter-layer | `business.businessservice.client-interchange-service`    | `realizes`        | inbound   |
-| inter-layer | `product.userworkflow.adjudicate-a-client-plan`          | `delivers`        | inbound   |
-| intra-layer | `motivation.stakeholder.documentation-robotics-project`  | `associated-with` | outbound  |
-| intra-layer | `motivation.stakeholder.house-project`                   | `associated-with` | outbound  |
-| intra-layer | `motivation.goal.ontology-workbench-for-client-projects` | `realizes`        | outbound  |
+| Type        | Related Element                                                                   | Predicate         | Direction |
+| ----------- | --------------------------------------------------------------------------------- | ----------------- | --------- |
+| inter-layer | `business.businessprocess.client-round-trip`                                      | `realizes`        | inbound   |
+| inter-layer | `business.businessservice.client-interchange-service`                             | `realizes`        | inbound   |
+| inter-layer | `product.userworkflow.adjudicate-a-client-plan`                                   | `delivers`        | inbound   |
+| intra-layer | `motivation.stakeholder.documentation-robotics-project`                           | `associated-with` | outbound  |
+| intra-layer | `motivation.stakeholder.house-project`                                            | `associated-with` | outbound  |
+| intra-layer | `motivation.goal.ontology-workbench-for-client-projects`                          | `realizes`        | outbound  |
+| intra-layer | `motivation.requirement.one-unexportable-operation-never-blocks-a-dr-spec-export` | `realizes`        | inbound   |
+| intra-layer | `motivation.requirement.unlanded-lists-only-proposals-with-something-to-land`     | `realizes`        | inbound   |
 
 ### Curated Domain Ontology {#curated-domain-ontology}
 
@@ -947,10 +962,11 @@ domain/ has no infrastructure imports; adapters implement the domain's ports (ch
 
 #### Relationships
 
-| Type        | Related Element                                                       | Predicate         | Direction |
-| ----------- | --------------------------------------------------------------------- | ----------------- | --------- |
-| intra-layer | `motivation.constraint.no-backwards-compatibility-with-legacy-server` | `influence`       | inbound   |
-| intra-layer | `motivation.stakeholder.platform-developer`                           | `associated-with` | inbound   |
+| Type        | Related Element                                                                      | Predicate         | Direction |
+| ----------- | ------------------------------------------------------------------------------------ | ----------------- | --------- |
+| intra-layer | `motivation.constraint.no-backwards-compatibility-with-legacy-server`                | `influence`       | inbound   |
+| intra-layer | `motivation.requirement.contexts-depend-on-each-other-only-through-public-contracts` | `realizes`        | inbound   |
+| intra-layer | `motivation.stakeholder.platform-developer`                                          | `associated-with` | inbound   |
 
 ### Intent Travels with Every Call {#intent-travels-with-every-call}
 
@@ -1084,6 +1100,31 @@ Breaking operations (deletes included), taxonomy creates, vision edits and extra
 | inter-layer | `product.softwarecapability.proposal-review-and-apply`       | `satisfies` | inbound   |
 | inter-layer | `security.countermeasure.human-review-gate-for-agent-writes` | `satisfies` | inbound   |
 | intra-layer | `motivation.principle.agents-propose-and-people-decide`      | `realizes`  | outbound  |
+
+### Contexts depend on each other only through public contracts {#contexts-depend-on-each-other-only-through-public-contracts}
+
+**ID**: `motivation.requirement.contexts-depend-on-each-other-only-through-public-contracts`
+
+**Type**: `requirement`
+
+A bounded context may depend on another context's ports, entities, value objects, exceptions, public functions and the public methods of its application service, which is injected at the composition root and never constructed. It never touches another context's adapters or private (_) members, and never shares state through ambient globals. scripts/check_domain_imports.py checks it (#1633).
+
+#### Attributes
+
+| Name            | Value          |
+| --------------- | -------------- |
+| priority        | high           |
+| requirementType | non-functional |
+
+#### Relationships
+
+| Type        | Related Element                                       | Predicate   | Direction |
+| ----------- | ----------------------------------------------------- | ----------- | --------- |
+| inter-layer | `application.applicationfunction.domain-import-check` | `satisfies` | inbound   |
+| inter-layer | `application.applicationservice.extraction-service`   | `satisfies` | inbound   |
+| inter-layer | `application.applicationservice.import-run-service`   | `satisfies` | inbound   |
+| inter-layer | `data-model.objectschema.operation-draft`             | `satisfies` | inbound   |
+| intra-layer | `motivation.principle.hexagonal-domain-purity`        | `realizes`  | outbound  |
 
 ### Dev Server Not Reachable from the LAN {#dev-server-not-reachable-from-the-lan}
 
@@ -1275,6 +1316,28 @@ A mirrored taxonomy (dr_spec) takes schema proposals and refinement runs only fr
 | intra-layer | `motivation.constraint.loopback-only-deployment`      | `constrains` | inbound   |
 | intra-layer | `motivation.principle.clients-drive-proposals`        | `realizes`   | outbound  |
 
+### One unexportable operation never blocks a DR spec export {#one-unexportable-operation-never-blocks-a-dr-spec-export}
+
+**ID**: `motivation.requirement.one-unexportable-operation-never-blocks-a-dr-spec-export`
+
+**Type**: `requirement`
+
+#1623: a create without a DR reference takes the reference its entity has now; one with none at all is listed under skipped (with why and the fix) and the proposal's other operations still export.
+
+#### Attributes
+
+| Name            | Value      |
+| --------------- | ---------- |
+| priority        | high       |
+| requirementType | functional |
+
+#### Relationships
+
+| Type        | Related Element                                                    | Predicate   | Direction |
+| ----------- | ------------------------------------------------------------------ | ----------- | --------- |
+| inter-layer | `application.applicationfunction.spec-changes-for-a-proposal`      | `satisfies` | inbound   |
+| intra-layer | `motivation.outcome.client-changes-land-without-hand-edited-specs` | `realizes`  | outbound  |
+
 ### One Way to Select a Pipeline {#one-way-to-select-a-pipeline}
 
 **ID**: `motivation.requirement.one-way-to-select-a-pipeline`
@@ -1401,6 +1464,51 @@ API keys and tokens live only in the untracked config.json; keys read from the e
 | inter-layer | `security.countermeasure.secret-safe-configuration`                | `satisfies`  | inbound   |
 | intra-layer | `motivation.constraint.configuration-only-through-the-config-file` | `constrains` | inbound   |
 | intra-layer | `motivation.goal.safe-local-first-workspace`                       | `realizes`   | outbound  |
+
+### The proposals list filters in the query and has a summary form {#the-proposals-list-filters-in-the-query-and-has-a-summary-form}
+
+**ID**: `motivation.requirement.the-proposals-list-filters-in-the-query-and-has-a-summary-form`
+
+**Type**: `requirement`
+
+#1626: GET /api/proposals filters by dataset_id, source_id and pipeline_type in the query, with a correct total, and fields=summary returns operation counts (by op, kind, status and scope) instead of operations, so pages that show counts download no operations.
+
+#### Attributes
+
+| Name            | Value          |
+| --------------- | -------------- |
+| priority        | medium         |
+| requirementType | non-functional |
+
+#### Relationships
+
+| Type        | Related Element                                             | Predicate   | Direction |
+| ----------- | ----------------------------------------------------------- | ----------- | --------- |
+| inter-layer | `api.operation.list-proposals`                              | `satisfies` | inbound   |
+| inter-layer | `application.applicationservice.change-proposal-repository` | `satisfies` | inbound   |
+
+### Unlanded lists only proposals with something to land {#unlanded-lists-only-proposals-with-something-to-land}
+
+**ID**: `motivation.requirement.unlanded-lists-only-proposals-with-something-to-land`
+
+**Type**: `requirement`
+
+#1634: landed=false (REST and MCP alike) lists only proposals that have applied operations a client can land in its source: never one whose operations were all rejected or reverted, never a re-import (source bundle), never one about a dataset (dataset_id set).
+
+#### Attributes
+
+| Name            | Value      |
+| --------------- | ---------- |
+| priority        | high       |
+| requirementType | functional |
+
+#### Relationships
+
+| Type        | Related Element                                                    | Predicate   | Direction |
+| ----------- | ------------------------------------------------------------------ | ----------- | --------- |
+| inter-layer | `api.operation.list-proposals`                                     | `satisfies` | inbound   |
+| inter-layer | `application.applicationservice.change-proposal-repository`        | `satisfies` | inbound   |
+| intra-layer | `motivation.outcome.client-changes-land-without-hand-edited-specs` | `realizes`  | outbound  |
 
 ### URL Sources Refuse Private Network Addresses {#url-sources-refuse-private-network-addresses}
 
@@ -1660,4 +1768,4 @@ Mechanical changes clear in bulk by threshold, so the reviewer's time goes to th
 
 ---
 
-Generated: 2026-11-24T15:59:46.538Z | Model Version: 0.1.0
+Generated: 2026-11-24T17:48:35.858Z | Model Version: 0.1.0

@@ -11,8 +11,8 @@ description: "#1633: record and enforce the cross-context rule. A context may
   architecture_design.md §4) state the rule and graph, and the check fails on a
   violation."
 created: 2026-11-24T12:27:04.048Z
-modified: 2026-11-24T12:33:54.907Z
-status: staged
+modified: 2026-11-24T17:42:23.221Z
+status: committed
 baseSnapshot: v2:sha256:53252d39ed1357a9afdd6132507b497bf81313353af91142ccb6b590b147594c
 origin:
   kind: plan

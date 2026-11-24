@@ -309,3 +309,76 @@ motivation.requirement.pre-review-is-adopted-only-by-a-rule-set-in-advance:
     created_at: 2026-11-22T14:48:01.260Z
     updated_at: 2026-11-22T14:48:01.260Z
     version: 1
+motivation.requirement.contexts-depend-on-each-other-only-through-public-contracts:
+  id: f8d11f62-4047-47ae-aaeb-62dcec284c7a
+  path: motivation.requirement.contexts-depend-on-each-other-only-through-public-contracts
+  spec_node_id: motivation.requirement
+  type: requirement
+  layer_id: motivation
+  name: Contexts depend on each other only through public contracts
+  description: A bounded context may depend on another context's ports, entities,
+    value objects, exceptions, public functions and the public methods of its
+    application service, which is injected at the composition root and never
+    constructed. It never touches another context's adapters or private (_)
+    members, and never shares state through ambient globals.
+    scripts/check_domain_imports.py checks it (#1633).
+  attributes:
+    requirementType: non-functional
+    priority: high
+  metadata:
+    created_at: 2026-11-24T12:27:23.116Z
+    updated_at: 2026-11-24T12:27:23.116Z
+    version: 1
+motivation.requirement.unlanded-lists-only-proposals-with-something-to-land:
+  id: 3d3ac48e-88e2-4ae1-93c0-f14bbd470d7a
+  path: motivation.requirement.unlanded-lists-only-proposals-with-something-to-land
+  spec_node_id: motivation.requirement
+  type: requirement
+  layer_id: motivation
+  name: Unlanded lists only proposals with something to land
+  description: "#1634: landed=false (REST and MCP alike) lists only proposals that
+    have applied operations a client can land in its source: never one whose
+    operations were all rejected or reverted, never a re-import (source bundle),
+    never one about a dataset (dataset_id set)."
+  attributes:
+    requirementType: functional
+    priority: high
+  metadata:
+    created_at: 2026-11-24T12:34:33.367Z
+    updated_at: 2026-11-24T12:34:33.367Z
+    version: 1
+motivation.requirement.the-proposals-list-filters-in-the-query-and-has-a-summary-form:
+  id: 7fcdcfac-c175-486f-9a37-4f75dd6fa144
+  path: motivation.requirement.the-proposals-list-filters-in-the-query-and-has-a-summary-form
+  spec_node_id: motivation.requirement
+  type: requirement
+  layer_id: motivation
+  name: The proposals list filters in the query and has a summary form
+  description: "#1626: GET /api/proposals filters by dataset_id, source_id and
+    pipeline_type in the query, with a correct total, and fields=summary returns
+    operation counts (by op, kind, status and scope) instead of operations, so
+    pages that show counts download no operations."
+  attributes:
+    requirementType: non-functional
+    priority: medium
+  metadata:
+    created_at: 2026-11-24T12:34:33.368Z
+    updated_at: 2026-11-24T12:34:33.368Z
+    version: 1
+motivation.requirement.one-unexportable-operation-never-blocks-a-dr-spec-export:
+  id: adee5eda-9d7a-4ac9-8eaf-6edcf3b52796
+  path: motivation.requirement.one-unexportable-operation-never-blocks-a-dr-spec-export
+  spec_node_id: motivation.requirement
+  type: requirement
+  layer_id: motivation
+  name: One unexportable operation never blocks a DR spec export
+  description: "#1623: a create without a DR reference takes the reference its
+    entity has now; one with none at all is listed under skipped (with why and
+    the fix) and the proposal's other operations still export."
+  attributes:
+    requirementType: functional
+    priority: high
+  metadata:
+    created_at: 2026-11-24T12:37:04.076Z
+    updated_at: 2026-11-24T12:37:04.076Z
+    version: 1

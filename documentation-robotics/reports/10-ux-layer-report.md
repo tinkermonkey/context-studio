@@ -4944,7 +4944,7 @@ A batch of pipeline runs with aggregate status, cancel and resume.
 
 **Type**: `view`
 
-Decisions recorded as benchmark gold, filterable and exportable.
+The benchmark gold checks, each with its document, split, size and check progress, from the gold-check proposals' summary counts (no operations downloaded).
 
 #### Attributes
 
@@ -5931,7 +5931,7 @@ Review an extraction proposal against its source text, with highlights and reaso
 
 **Type**: `view`
 
-Change proposals by status, origin and taxonomy.
+The review queue: proposals filtered by status and taxonomy, with each one's pending count and strictest scope worked out from the list's summary counts (no operations downloaded).
 
 #### Attributes
 
@@ -6369,4 +6369,4 @@ First-run welcome page.
 
 ---
 
-Generated: 2026-11-24T15:59:58.228Z | Model Version: 0.1.0
+Generated: 2026-11-24T17:47:27.525Z | Model Version: 0.1.0

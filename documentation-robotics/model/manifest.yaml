@@ -3,7 +3,7 @@ schema: documentation-robotics-v1
 cli_version: 0.7.1
 spec_version: 0.13.0
 created: 2026-03-23T12:18:08.630Z
-updated: 2026-11-24T16:00:09.814Z
+updated: 2026-11-24T17:49:07.642Z
 project:
   name: Context Studio
   description: Local-first knowledge graph application for RAG and communication
@@ -23,7 +23,7 @@ layers:
       meaning: 1
       outcome: 4
       principle: 7
-      requirement: 15
+      requirement: 19
       stakeholder: 6
       value: 4
   business:
@@ -75,7 +75,7 @@ layers:
       applicationcollaboration: 1
       applicationcomponent: 78
       applicationevent: 4
-      applicationfunction: 16
+      applicationfunction: 18
       applicationinteraction: 3
       applicationinterface: 2
       applicationprocess: 16
@@ -103,7 +103,7 @@ layers:
       operation: 172
       ratelimit: 1
       requestbody: 52
-      response: 85
+      response: 86
       responses: 164
       securityscheme: 1
   data-model:
@@ -113,7 +113,7 @@ layers:
     enabled: true
     elements:
       arrayschema: 1
-      objectschema: 47
+      objectschema: 49
       stringschema: 2
   data-store:
     order: 9
@@ -212,6 +212,18 @@ changeset_history:
     action: committed
   - name: config-bad-field-falls-back
     committed_at: 2026-11-24T16:00:09.814Z
+    action: committed
+  - name: cross-context-rule
+    committed_at: 2026-11-24T17:42:23.225Z
+    action: committed
+  - name: proposal-list-filters
+    committed_at: 2026-11-24T17:47:27.512Z
+    action: committed
+  - name: dr-spec-export-missing-reference
+    committed_at: 2026-11-24T17:48:35.837Z
+    action: committed
+  - name: migrations-follow-the-config
+    committed_at: 2026-11-24T17:49:07.642Z
     action: committed
 reconciled:
   changeset: rebuild-model-from-code

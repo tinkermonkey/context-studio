@@ -10,8 +10,8 @@ description: "#1634 + #1626: the proposals list (REST GET /api/proposals and MCP
   operations. The Proposals list and the Benchmark gold page use the summary
   form."
 created: 2026-11-24T12:34:22.409Z
-modified: 2026-11-24T13:00:07.925Z
-status: staged
+modified: 2026-11-24T17:47:27.502Z
+status: committed
 baseSnapshot: v2:sha256:53252d39ed1357a9afdd6132507b497bf81313353af91142ccb6b590b147594c
 origin:
   kind: plan

@@ -3260,7 +3260,12 @@ api.operation.list-proposals:
   type: operation
   layer_id: api
   name: List Proposals
-  description: List proposals, newest first, each operation with its stale flag.
+  description: "List proposals, newest first, each operation with its stale flag.
+    Filters (in the query, so total is right): taxonomy_id, status, source,
+    landed, implementation_id, dataset_id, source_id, pipeline_type.
+    landed=false lists only proposals with applied operations a client can land
+    (no re-imports, no dataset proposals). fields=summary returns counts (by op,
+    kind, status, scope) and no operations."
   attributes:
     operationId: list_proposals_api_proposals_get
     summary: List Proposals

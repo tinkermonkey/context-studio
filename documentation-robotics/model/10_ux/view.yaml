@@ -323,7 +323,9 @@ ux.view.benchmark-gold-view:
   type: view
   layer_id: ux
   name: Benchmark Gold View
-  description: Decisions recorded as benchmark gold, filterable and exportable.
+  description: The benchmark gold checks, each with its document, split, size and
+    check progress, from the gold-check proposals' summary counts (no operations
+    downloaded).
   attributes:
     type: page
     routable: true
@@ -423,7 +425,9 @@ ux.view.proposals-view:
   type: view
   layer_id: ux
   name: Proposals View
-  description: Change proposals by status, origin and taxonomy.
+  description: "The review queue: proposals filtered by status and taxonomy, with
+    each one's pending count and strictest scope worked out from the list's
+    summary counts (no operations downloaded)."
   attributes:
     type: page
     routable: true
