@@ -128,6 +128,8 @@ async def test_get_proposal_matches_rest(client, proposal_tools, proposals):
 
     # Only a dry run says dry_run
     assert rest.pop("dry_run") is False and "dry_run" not in tool
+    # The tool counts operations by status (its own counts); REST groups them (#1626)
+    assert sum(c["count"] for c in rest.pop("counts")) == sum(tool["counts"].values())
     for key, value in rest.items():
         assert tool[key] == value, key
     # The tool adds only its own keys, and none inside an operation

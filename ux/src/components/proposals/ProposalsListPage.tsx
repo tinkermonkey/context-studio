@@ -154,7 +154,7 @@ interface ProposalsListPageProps {
 /**
  * The review queue: proposals filtered by status (server-side) and taxonomy,
  * with each one's pending count and strictest scope worked out from its
- * operations.
+ * counts (the list's summary form: no operations are downloaded).
  */
 export function ProposalsListPage({ status, taxonomyId, onFiltersChange }: ProposalsListPageProps) {
   const navigate = useNavigate();
@@ -163,6 +163,7 @@ export function ProposalsListPage({ status, taxonomyId, onFiltersChange }: Propo
       ? { status: "done", landed: false }
       : { status: status === "all" ? undefined : status }),
     limit: LIST_LIMIT,
+    fields: "summary",
   });
   const { data: taxonomies } = useTaxonomies({ limit: SMALL_SET_LIMIT });
 
@@ -192,8 +193,8 @@ export function ProposalsListPage({ status, taxonomyId, onFiltersChange }: Propo
       source: p.source,
       status: p.status,
       landed: !!p.landed,
-      tally: tallyOperations(p.operations),
-      scope: strictestScope(p.operations),
+      tally: tallyOperations(p.counts),
+      scope: strictestScope(p.counts),
       age: formatAge(p.created_at, now),
     }));
 

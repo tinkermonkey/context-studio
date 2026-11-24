@@ -37,15 +37,18 @@ from domain.versioning.proposals import (
     ChangeScope,
     InUseResolution,
     Landing,
+    OperationCount,
     OperationKind,
     OperationStatus,
     OperationType,
+    ProposalFilter,
     ProposalSource,
     ProposalStatus,
     ProposedOperation,
     RejectionReason,
     TypeChange,
 )
+from domain.versioning.provenance import SOURCE_ID
 
 
 class SQLiteChangeProposalRepository:
@@ -93,37 +96,56 @@ class SQLiteChangeProposalRepository:
 
     def list_proposals(
         self,
-        taxonomy_id: Optional[str] = None,
-        status: Optional[ProposalStatus] = None,
-        source: Optional[ProposalSource] = None,
+        filters: ProposalFilter,
         limit: int = 50,
         offset: int = 0,
-        landed: Optional[bool] = None,
-        implementation_id: Optional[str] = None,
+        with_operations: bool = True,
     ) -> list[ChangeProposal]:
         with self._session_factory() as session:
             runs = (
-                _filtered(session, taxonomy_id, status, source, landed, implementation_id)
+                _filtered(session, filters)
                 .order_by(ChangeProposalRun.created_at.desc(), ChangeProposalRun.id.desc())
                 .offset(offset)
                 .limit(limit)
                 .all()
             )
-            operations = _operations(session, [r.id for r in runs])
+            operations = _operations(session, [r.id for r in runs]) if with_operations else {}
             return [_to_domain(run, operations.get(run.id, [])) for run in runs]
 
-    def count_proposals(
-        self,
-        taxonomy_id: Optional[str] = None,
-        status: Optional[ProposalStatus] = None,
-        source: Optional[ProposalSource] = None,
-        landed: Optional[bool] = None,
-        implementation_id: Optional[str] = None,
-    ) -> int:
+    def count_proposals(self, filters: ProposalFilter) -> int:
         with self._session_factory() as session:
-            return _filtered(
-                session, taxonomy_id, status, source, landed, implementation_id
-            ).count()
+            return _filtered(session, filters).count()
+
+    def operation_tallies(self, proposal_ids: Sequence[str]) -> dict[str, list[OperationCount]]:
+        tallies: dict[str, list[OperationCount]] = {}
+        if not proposal_ids:
+            return tallies
+        model = ProposalOperation
+        with self._session_factory() as session:
+            rows = (
+                session.query(
+                    model.proposal_id,
+                    model.op,
+                    model.kind,
+                    model.status,
+                    model.scope,
+                    func.count(model.id),
+                )
+                .filter(model.proposal_id.in_(list(proposal_ids)))
+                .group_by(model.proposal_id, model.op, model.kind, model.status, model.scope)
+                .order_by(model.proposal_id, func.min(model.seq))
+            )
+            for proposal_id, op, kind, status, scope, count in rows:
+                tallies.setdefault(proposal_id, []).append(
+                    OperationCount(
+                        op=OperationType(op),
+                        kind=OperationKind(kind),
+                        status=OperationStatus(status),
+                        scope=ChangeScope(scope),
+                        count=count,
+                    )
+                )
+        return tallies
 
     def operation_counts(self, proposal_ids: Sequence[str]) -> dict[str, int]:
         if not proposal_ids:
@@ -492,30 +514,40 @@ def _decision_to_domain(row: ProposalDecisionRecord) -> ProposalDecision:
     )
 
 
-def _filtered(
-    session: Session,
-    taxonomy_id: Optional[str],
-    status: Optional[ProposalStatus],
-    source: Optional[ProposalSource],
-    landed: Optional[bool] = None,
-    implementation_id: Optional[str] = None,
-):
-    query = session.query(ChangeProposalRun)
-    if implementation_id is not None:
-        # The pipeline implementation the proposal's origin records (ProposalOrigin)
-        recorded = func.json_extract(
-            ChangeProposalRun.client_metadata, "$.origin.implementation_id"
+def _filtered(session: Session, filters: ProposalFilter):
+    """The proposals the filter passes: ProposalFilter.matches, as a query (so totals are right)."""
+    run = ChangeProposalRun
+    query = session.query(run)
+    metadata = run.client_metadata
+    for column, value in (
+        (run.taxonomy_id, filters.taxonomy_id),
+        (run.status, filters.status.value if filters.status else None),
+        (run.source, filters.source.value if filters.source else None),
+        (run.dataset_id, filters.dataset_id),
+        (func.json_extract(metadata, "$.origin.implementation_id"), filters.implementation_id),
+        (func.json_extract(metadata, "$.origin.pipeline_type"), filters.pipeline_type),
+        (func.json_extract(metadata, f"$.{SOURCE_ID}"), filters.source_id),
+    ):
+        if value is not None:
+            query = query.filter(column == value)
+    if filters.landed is True:
+        query = query.filter(run.landed.isnot(None))
+    elif filters.landed is False:
+        # Only what a client can land (ChangeProposal.has_something_to_land, #1634)
+        applied = (
+            session.query(ProposalOperation.id)
+            .filter(
+                ProposalOperation.proposal_id == run.id,
+                ProposalOperation.status == OperationStatus.APPLIED.value,
+            )
+            .exists()
         )
-        query = query.filter(recorded == implementation_id)
-    if landed is not None:
-        column = ChangeProposalRun.landed
-        query = query.filter(column.isnot(None) if landed else column.is_(None))
-    if taxonomy_id is not None:
-        query = query.filter(ChangeProposalRun.taxonomy_id == taxonomy_id)
-    if status is not None:
-        query = query.filter(ChangeProposalRun.status == status.value)
-    if source is not None:
-        query = query.filter(ChangeProposalRun.source == source.value)
+        query = query.filter(
+            run.landed.is_(None),
+            run.source != ProposalSource.BUNDLE.value,
+            run.dataset_id.is_(None),
+            applied,
+        )
     return query
 
 

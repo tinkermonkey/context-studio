@@ -425,7 +425,7 @@ def test_unresolvable_operations_are_listed_and_nothing_is_proposed(parts):
     assert problems[0].startswith("seq 1 (delete api.nothing.serves.api.nowhere): no property")
     assert "no class for spec node api.unknown" in problems[1]
     assert "unknown fields ['cardinality']" in problems[2]
-    assert proposals._proposals.count_proposals() == 0
+    assert proposals.count_proposals() == 0
 
 
 def test_two_operations_on_one_relationship_type_are_refused_naming_both(parts):

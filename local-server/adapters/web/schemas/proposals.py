@@ -24,6 +24,7 @@ from domain.versioning.proposals import (
     ChangeProposal,
     ChangeScope,
     Landing,
+    OperationCount,
     OperationKind,
     OperationStatus,
     OperationType,
@@ -33,6 +34,7 @@ from domain.versioning.proposals import (
     ProposedOperation,
     RejectionReason,
     ResolutionStrategy,
+    count_operations,
 )
 from domain.versioning.yielding import DatasetImpact
 
@@ -752,6 +754,22 @@ class ProposalOriginResponse(BaseModel):
         return cls(**origin.to_json())
 
 
+class OperationCountResponse(BaseModel):
+    """How many of a proposal's operations share one op, kind, status and scope."""
+
+    op: OperationType
+    kind: OperationKind
+    status: OperationStatus
+    scope: ChangeScope
+    count: int
+
+    @classmethod
+    def from_domain(cls, count: OperationCount) -> "OperationCountResponse":
+        return cls(
+            op=count.op, kind=count.kind, status=count.status, scope=count.scope, count=count.count
+        )
+
+
 class ChangeProposalResponse(BaseModel):
     """A change proposal with its operations in seq order."""
 
@@ -778,7 +796,15 @@ class ChangeProposalResponse(BaseModel):
         False,
         description="Validated only: nothing was stored or applied, and the ids are not kept",
     )
-    operations: list[ProposedOperationResponse]
+    operations: list[ProposedOperationResponse] = Field(
+        ...,
+        description="Its operations in seq order; empty in a list's summary form (fields=summary)",
+    )
+    counts: list[OperationCountResponse] = Field(
+        ...,
+        description="Its operations counted by op, kind, status and scope (in the summary form "
+        "too, where operations is empty)",
+    )
     dataset_id: Optional[str] = Field(
         None, description="The dataset its individual and relationship operations are in"
     )
@@ -837,6 +863,9 @@ class ChangeProposalResponse(BaseModel):
             client_metadata=proposal.client_metadata,
             origin=ProposalOriginResponse.from_domain(proposal.origin),
             dataset_id=proposal.dataset_id,
+            counts=[
+                OperationCountResponse.from_domain(c) for c in count_operations(proposal.operations)
+            ],
             operations=[
                 _operation(
                     o,
@@ -863,6 +892,29 @@ class ChangeProposalResponse(BaseModel):
             for operation in response.operations:
                 operation.auto_apply = operation.id in auto
         return response
+
+
+def proposal_summary(
+    proposal: ChangeProposal, counts: list[OperationCount]
+) -> ChangeProposalResponse:
+    """A list's summary form of a proposal: everything but its operations, and their counts."""
+    return ChangeProposalResponse(
+        id=proposal.id,
+        taxonomy_id=proposal.taxonomy_id,
+        title=proposal.title,
+        rationale=proposal.rationale,
+        source=proposal.source,
+        source_detail=proposal.source_detail,
+        created_at=proposal.created_at,
+        status=proposal.status,
+        source_revision=SourceRevisionSchema.from_domain(proposal.source_revision),
+        landed=LandingResponse.from_domain(proposal.landed),
+        client_metadata=proposal.client_metadata,
+        origin=ProposalOriginResponse.from_domain(proposal.origin),
+        dataset_id=proposal.dataset_id,
+        operations=[],
+        counts=[OperationCountResponse.from_domain(c) for c in counts],
+    )
 
 
 def _operation(

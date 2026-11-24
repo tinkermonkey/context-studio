@@ -1,0 +1,23 @@
+id: changeset-1795523662396-kdrvrsmtm
+name: proposal-list-filters
+description: "#1634 + #1626: the proposals list (REST GET /api/proposals and MCP
+  list_proposals, one shared query in proposal_repo._filtered). landed=false
+  leaves out proposals with nothing to land: no applied operation, re-imports
+  (source bundle) and any proposal with dataset_id set. New filters dataset_id,
+  source_id (client_metadata.source_id) and pipeline_type (origin.pipeline_type)
+  in the query with a correct total, and a summary form (fields=summary) that
+  returns operation counts grouped by op, kind, status and scope instead of
+  operations. The Proposals list and the Benchmark gold page use the summary
+  form."
+created: 2026-11-24T12:34:22.409Z
+modified: 2026-11-24T12:34:43.811Z
+status: staged
+baseSnapshot: v2:sha256:53252d39ed1357a9afdd6132507b497bf81313353af91142ccb6b590b147594c
+origin:
+  kind: plan
+purpose: plan
+stats:
+  additions: 11
+  modifications: 5
+  deletions: 0
+lastSequence: 15

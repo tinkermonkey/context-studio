@@ -12,7 +12,8 @@ from domain.versioning.gold import DecisionFilter, ProposalDecision
 from domain.versioning.proposals import (
     ChangeProposal,
     Landing,
-    ProposalSource,
+    OperationCount,
+    ProposalFilter,
     ProposalStatus,
     ProposedOperation,
 )
@@ -121,26 +122,23 @@ class ChangeProposalRepository(Protocol):
 
     def list_proposals(
         self,
-        taxonomy_id: Optional[str] = None,
-        status: Optional[ProposalStatus] = None,
-        source: Optional[ProposalSource] = None,
+        filters: ProposalFilter,
         limit: int = 50,
         offset: int = 0,
-        landed: Optional[bool] = None,
-        implementation_id: Optional[str] = None,
+        with_operations: bool = True,
     ) -> list[ChangeProposal]:
-        """Return proposals, newest first, optionally filtered (landed: landed or not)."""
+        """
+        Return the proposals the filter passes (ProposalFilter.matches),
+        newest first; with_operations False leaves their operations out.
+        """
         ...
 
-    def count_proposals(
-        self,
-        taxonomy_id: Optional[str] = None,
-        status: Optional[ProposalStatus] = None,
-        source: Optional[ProposalSource] = None,
-        landed: Optional[bool] = None,
-        implementation_id: Optional[str] = None,
-    ) -> int:
-        """Count proposals matching the filters."""
+    def count_proposals(self, filters: ProposalFilter) -> int:
+        """Count the proposals the filter passes."""
+        ...
+
+    def operation_tallies(self, proposal_ids: Sequence[str]) -> dict[str, list[OperationCount]]:
+        """Each proposal's operations counted by op, kind, status and scope, without loading them."""
         ...
 
     def operation_counts(self, proposal_ids: Sequence[str]) -> dict[str, int]:

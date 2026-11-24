@@ -1608,3 +1608,56 @@ class TestListByImplementation:
         assert client.get("/api/proposals").json()["total"] == 4
         none = client.get("/api/proposals", params={"implementation_id": "nope"}).json()
         assert (none["items"], none["total"]) == ([], 0)
+
+
+class TestListFiltersAndSummary:
+    """#1626: pipeline_type in the query, and the summary form with counts only."""
+
+    def _made_by(self, client, graph, pipeline_type, title):
+        origin = {
+            "pipeline_type": pipeline_type,
+            "implementation_id": "single_call",
+            "configuration_ref": "default",
+            "configuration_version": 1,
+            "digest": "0123456789ab",
+        }
+        return _propose(
+            client,
+            graph,
+            _describe_room(graph, seq=1, text=title),
+            source="pipeline",
+            client_metadata={"origin": origin},
+        )
+
+    def test_filter_by_pipeline_type_with_a_correct_total(self, client, graph):
+        made = self._made_by(client, graph, "individual_extraction", "Mine")
+        self._made_by(client, graph, "schema_extraction", "Other")
+
+        listed = client.get(
+            "/api/proposals", params={"pipeline_type": "individual_extraction"}
+        ).json()
+
+        assert [p["id"] for p in listed["items"]] == [made["id"]]
+        assert listed["total"] == 1
+
+    def test_the_summary_form_has_counts_and_no_operations(self, client, graph):
+        made = self._made_by(client, graph, "individual_extraction", "Mine")
+        expected = [
+            {
+                "op": "update",
+                "kind": "class",
+                "status": made["operations"][0]["status"],
+                "scope": made["operations"][0]["scope"],
+                "count": 1,
+            }
+        ]
+
+        summary = client.get("/api/proposals", params={"fields": "summary"}).json()
+        full = client.get("/api/proposals").json()
+
+        (item,) = summary["items"]
+        assert (item["id"], item["operations"], item["counts"]) == (made["id"], [], expected)
+        assert item["origin"]["pipeline_type"] == "individual_extraction"
+        assert full["items"][0]["counts"] == expected
+        assert len(full["items"][0]["operations"]) == 1
+        assert client.get("/api/proposals", params={"fields": "nope"}).status_code == 422

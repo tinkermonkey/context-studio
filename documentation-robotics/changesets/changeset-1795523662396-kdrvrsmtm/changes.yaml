@@ -1,0 +1,371 @@
+- type: add
+  elementId: motivation.requirement.unlanded-lists-only-proposals-with-something-to-land
+  layerName: motivation
+  after:
+    id: 3d3ac48e-88e2-4ae1-93c0-f14bbd470d7a
+    path: motivation.requirement.unlanded-lists-only-proposals-with-something-to-land
+    spec_node_id: motivation.requirement
+    type: requirement
+    layer_id: motivation
+    name: Unlanded lists only proposals with something to land
+    description: "#1634: landed=false (REST and MCP alike) lists only proposals that
+      have applied operations a client can land in its source: never one whose
+      operations were all rejected or reverted, never a re-import (source
+      bundle), never one about a dataset (dataset_id set)."
+    attributes:
+      requirementType: functional
+      priority: high
+    metadata:
+      created_at: 2026-11-24T12:34:33.367Z
+      updated_at: 2026-11-24T12:34:33.367Z
+      version: 1
+  timestamp: 2026-11-24T12:34:33.388Z
+  sequenceNumber: 0
+- type: add
+  elementId: motivation.requirement.the-proposals-list-filters-in-the-query-and-has-a-summary-form
+  layerName: motivation
+  after:
+    id: 7fcdcfac-c175-486f-9a37-4f75dd6fa144
+    path: motivation.requirement.the-proposals-list-filters-in-the-query-and-has-a-summary-form
+    spec_node_id: motivation.requirement
+    type: requirement
+    layer_id: motivation
+    name: The proposals list filters in the query and has a summary form
+    description: "#1626: GET /api/proposals filters by dataset_id, source_id and
+      pipeline_type in the query, with a correct total, and fields=summary
+      returns operation counts (by op, kind, status and scope) instead of
+      operations, so pages that show counts download no operations."
+    attributes:
+      requirementType: non-functional
+      priority: medium
+    metadata:
+      created_at: 2026-11-24T12:34:33.368Z
+      updated_at: 2026-11-24T12:34:33.368Z
+      version: 1
+  timestamp: 2026-11-24T12:34:33.388Z
+  sequenceNumber: 1
+- type: add
+  elementId: data-model.objectschema.operation-count
+  layerName: data-model
+  after:
+    id: 524e7554-0b34-41ec-b859-6fad055f73f3
+    path: data-model.objectschema.operation-count
+    spec_node_id: data-model.objectschema
+    type: objectschema
+    layer_id: data-model
+    name: Operation Count
+    description: How many of a proposal's operations share one op, kind, status and
+      scope; a list summary carries these instead of the operations.
+    attributes:
+      type: object
+      required:
+        - op
+        - kind
+        - status
+        - scope
+        - count
+    metadata:
+      created_at: 2026-11-24T12:34:33.368Z
+      updated_at: 2026-11-24T12:34:33.368Z
+      version: 1
+  timestamp: 2026-11-24T12:34:33.388Z
+  sequenceNumber: 2
+- type: relationship-add
+  elementId: api.operation.list-proposals::satisfies::motivation.requirement.unlanded-lists-only-proposals-with-something-to-land
+  layerName: api
+  after:
+    source: api.operation.list-proposals
+    target: motivation.requirement.unlanded-lists-only-proposals-with-something-to-land
+    predicate: satisfies
+    layer: api
+    targetLayer: motivation
+    category: structural
+  timestamp: 2026-11-24T12:34:33.388Z
+  sequenceNumber: 3
+- type: relationship-add
+  elementId: api.operation.list-proposals::satisfies::motivation.requirement.the-proposals-list-filters-in-the-query-and-has-a-summary-form
+  layerName: api
+  after:
+    source: api.operation.list-proposals
+    target: motivation.requirement.the-proposals-list-filters-in-the-query-and-has-a-summary-form
+    predicate: satisfies
+    layer: api
+    targetLayer: motivation
+    category: structural
+  timestamp: 2026-11-24T12:34:33.388Z
+  sequenceNumber: 4
+- type: relationship-add
+  elementId: application.applicationservice.change-proposal-repository::satisfies::motivation.requirement.unlanded-lists-only-proposals-with-something-to-land
+  layerName: application
+  after:
+    source: application.applicationservice.change-proposal-repository
+    target: motivation.requirement.unlanded-lists-only-proposals-with-something-to-land
+    predicate: satisfies
+    layer: application
+    targetLayer: motivation
+    category: structural
+  timestamp: 2026-11-24T12:34:33.388Z
+  sequenceNumber: 5
+- type: relationship-add
+  elementId: application.applicationservice.change-proposal-repository::satisfies::motivation.requirement.the-proposals-list-filters-in-the-query-and-has-a-summary-form
+  layerName: application
+  after:
+    source: application.applicationservice.change-proposal-repository
+    target: motivation.requirement.the-proposals-list-filters-in-the-query-and-has-a-summary-form
+    predicate: satisfies
+    layer: application
+    targetLayer: motivation
+    category: structural
+  timestamp: 2026-11-24T12:34:33.388Z
+  sequenceNumber: 6
+- type: relationship-add
+  elementId: application.applicationservice.change-proposal-repository::accesses::data-model.objectschema.operation-count
+  layerName: application
+  after:
+    source: application.applicationservice.change-proposal-repository
+    target: data-model.objectschema.operation-count
+    predicate: accesses
+    layer: application
+    targetLayer: data-model
+    category: structural
+  timestamp: 2026-11-24T12:34:33.388Z
+  sequenceNumber: 7
+- type: relationship-add
+  elementId: motivation.requirement.unlanded-lists-only-proposals-with-something-to-land::realizes::motivation.outcome.client-changes-land-without-hand-edited-specs
+  layerName: motivation
+  after:
+    source: motivation.requirement.unlanded-lists-only-proposals-with-something-to-land
+    target: motivation.outcome.client-changes-land-without-hand-edited-specs
+    predicate: realizes
+    layer: motivation
+    category: structural
+  timestamp: 2026-11-24T12:34:33.388Z
+  sequenceNumber: 8
+- type: add
+  elementId: api.response.operation-count-response
+  layerName: api
+  after:
+    id: 20d94c65-2473-47c0-ac59-4c8321d910e7
+    path: api.response.operation-count-response
+    spec_node_id: api.response
+    type: response
+    layer_id: api
+    name: Operation Count Response
+    description: One OperationCount in ChangeProposalResponse.counts.
+    attributes:
+      description: How many of the proposal's operations share this op, kind, status
+        and scope.
+    metadata:
+      created_at: 2026-11-24T12:34:43.018Z
+      updated_at: 2026-11-24T12:34:43.018Z
+      version: 1
+  timestamp: 2026-11-24T12:34:43.046Z
+  sequenceNumber: 9
+- type: relationship-add
+  elementId: data-model.objectschema.operation-count::maps-to::api.response.operation-count-response
+  layerName: data-model
+  after:
+    source: data-model.objectschema.operation-count
+    target: api.response.operation-count-response
+    predicate: maps-to
+    layer: data-model
+    targetLayer: api
+    category: structural
+  timestamp: 2026-11-24T12:34:43.046Z
+  sequenceNumber: 10
+- type: update
+  elementId: api.operation.list-proposals
+  layerName: api
+  before:
+    id: b744441c-2bc3-4858-9a50-1355d63027e5
+    path: api.operation.list-proposals
+    spec_node_id: api.operation
+    type: operation
+    layer_id: api
+    name: List Proposals
+    description: List proposals, newest first, each operation with its stale flag.
+    attributes: &a1
+      operationId: list_proposals_api_proposals_get
+      summary: List Proposals
+      tags: proposals
+      http_method: GET
+      http_path: /api/proposals
+    source_reference: &a2
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/proposals_routes.py
+          symbol: list_proposals
+    metadata: &a3
+      created_at: 2026-11-19T14:46:21.105Z
+      updated_at: 2026-11-19T14:46:21.105Z
+      version: 1
+  after:
+    id: b744441c-2bc3-4858-9a50-1355d63027e5
+    path: api.operation.list-proposals
+    spec_node_id: api.operation
+    type: operation
+    layer_id: api
+    name: List Proposals
+    description: "List proposals, newest first, each operation with its stale flag.
+      Filters (in the query, so total is right): taxonomy_id, status, source,
+      landed, implementation_id, dataset_id, source_id, pipeline_type.
+      landed=false lists only proposals with applied operations a client can
+      land (no re-imports, no dataset proposals). fields=summary returns counts
+      (by op, kind, status, scope) and no operations."
+    attributes: *a1
+    source_reference: *a2
+    metadata: *a3
+  timestamp: 2026-11-24T12:34:43.691Z
+  sequenceNumber: 11
+- type: update
+  elementId: api.response.change-proposal-response
+  layerName: api
+  before:
+    id: 2f4dc526-a1c7-40c9-8173-5cc609b51427
+    path: api.response.change-proposal-response
+    spec_node_id: api.response
+    type: response
+    layer_id: api
+    name: ChangeProposalResponse
+    attributes: &a4
+      description: ChangeProposalResponse
+    source_reference: &a5
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/schemas/proposals.py
+          symbol: ChangeProposalResponse
+    metadata: &a6
+      created_at: 2026-11-19T15:15:02.501Z
+      updated_at: 2026-11-19T15:15:02.501Z
+      version: 1
+  after:
+    id: 2f4dc526-a1c7-40c9-8173-5cc609b51427
+    path: api.response.change-proposal-response
+    spec_node_id: api.response
+    type: response
+    layer_id: api
+    name: ChangeProposalResponse
+    attributes: *a4
+    source_reference: *a5
+    metadata: *a6
+    description: "A change proposal with its operations in seq order and counts: how
+      many operations share each op, kind, status and scope. In a list's summary
+      form, operations is empty and counts still holds."
+  timestamp: 2026-11-24T12:34:43.714Z
+  sequenceNumber: 12
+- type: update
+  elementId: application.applicationservice.change-proposal-repository
+  layerName: application
+  before:
+    id: 10bf0185-955e-44b4-9c51-9d9b4e2c336a
+    path: application.applicationservice.change-proposal-repository
+    spec_node_id: application.applicationservice
+    type: applicationservice
+    layer_id: application
+    name: ChangeProposalRepository
+    description: "Hexagonal port: stores change proposals and the outcome of each
+      operation."
+    attributes: &a7
+      serviceType: synchronous
+    source_reference: &a8
+      provenance: extracted
+      locations:
+        - file: local-server/domain/versioning/ports.py
+          symbol: ChangeProposalRepository
+    metadata: &a9
+      created_at: 2026-11-19T16:26:38.991Z
+      updated_at: 2026-11-19T16:26:38.991Z
+      version: 1
+  after:
+    id: 10bf0185-955e-44b4-9c51-9d9b4e2c336a
+    path: application.applicationservice.change-proposal-repository
+    spec_node_id: application.applicationservice
+    type: applicationservice
+    layer_id: application
+    name: ChangeProposalRepository
+    description: Port for storing and querying change proposals. The list and count
+      queries share one filter (taxonomy, status, source, landed with
+      nothing-to-land left out, implementation, dataset, source, pipeline type);
+      operation_tallies counts operations by op, kind, status and scope without
+      loading them.
+    attributes: *a7
+    source_reference: *a8
+    metadata: *a9
+  timestamp: 2026-11-24T12:34:43.732Z
+  sequenceNumber: 13
+- type: update
+  elementId: ux.view.proposals-view
+  layerName: ux
+  before:
+    id: 1b0c9187-8eaa-43fd-a227-c26de47376e1
+    path: ux.view.proposals-view
+    spec_node_id: ux.view
+    type: view
+    layer_id: ux
+    name: Proposals View
+    description: Change proposals by status, origin and taxonomy.
+    attributes: &a10
+      type: page
+      routable: true
+    source_reference: &a11
+      provenance: extracted
+      locations:
+        - file: ux/src/routes/app/proposals.tsx
+          symbol: ProposalsRoute
+    metadata: &a12
+      created_at: 2026-11-19T14:59:11.248Z
+      updated_at: 2026-11-19T14:59:11.248Z
+      version: 1
+  after:
+    id: 1b0c9187-8eaa-43fd-a227-c26de47376e1
+    path: ux.view.proposals-view
+    spec_node_id: ux.view
+    type: view
+    layer_id: ux
+    name: Proposals View
+    description: "The review queue: proposals filtered by status and taxonomy, with
+      each one's pending count and strictest scope worked out from the list's
+      summary counts (no operations downloaded)."
+    attributes: *a10
+    source_reference: *a11
+    metadata: *a12
+  timestamp: 2026-11-24T12:34:43.769Z
+  sequenceNumber: 14
+- type: update
+  elementId: ux.view.benchmark-gold-view
+  layerName: ux
+  before:
+    id: e7cb7d49-44ab-47a0-9484-c64c11f071b3
+    path: ux.view.benchmark-gold-view
+    spec_node_id: ux.view
+    type: view
+    layer_id: ux
+    name: Benchmark Gold View
+    description: Decisions recorded as benchmark gold, filterable and exportable.
+    attributes: &a13
+      type: page
+      routable: true
+    source_reference: &a14
+      provenance: extracted
+      locations:
+        - file: ux/src/routes/app/pipelines/gold.tsx
+          symbol: BenchmarkGoldRoute
+    metadata: &a15
+      created_at: 2026-11-19T14:59:11.248Z
+      updated_at: 2026-11-19T14:59:11.248Z
+      version: 1
+  after:
+    id: e7cb7d49-44ab-47a0-9484-c64c11f071b3
+    path: ux.view.benchmark-gold-view
+    spec_node_id: ux.view
+    type: view
+    layer_id: ux
+    name: Benchmark Gold View
+    description: The benchmark gold checks, each with its document, split, size and
+      check progress, from the gold-check proposals' summary counts (no
+      operations downloaded).
+    attributes: *a13
+    source_reference: *a14
+    metadata: *a15
+  timestamp: 2026-11-24T12:34:43.801Z
+  sequenceNumber: 15

@@ -3790,7 +3790,8 @@ export interface paths {
     };
     /**
      * List Proposals
-     * @description List proposals, newest first, each operation with its stale flag.
+     * @description List proposals, newest first. In full each operation has its stale flag; the
+     *     summary form leaves the operations out and keeps their counts.
      */
     get: operations["list_proposals_api_proposals_get"];
     put?: never;
@@ -5620,8 +5621,16 @@ export interface components {
        * @default false
        */
       dry_run: boolean;
-      /** Operations */
+      /**
+       * Operations
+       * @description Its operations in seq order; empty in a list's summary form (fields=summary)
+       */
       operations: components["schemas"]["ProposedOperationResponse"][];
+      /**
+       * Counts
+       * @description Its operations counted by op, kind, status and scope (in the summary form too, where operations is empty)
+       */
+      counts: components["schemas"]["OperationCountResponse"][];
       /**
        * Dataset Id
        * @description The dataset its individual and relationship operations are in
@@ -8900,6 +8909,18 @@ export interface components {
      * @enum {string}
      */
     NoteSource: "maintainer" | "reviewer";
+    /**
+     * OperationCountResponse
+     * @description How many of a proposal's operations share one op, kind, status and scope.
+     */
+    OperationCountResponse: {
+      op: components["schemas"]["OperationType"];
+      kind: components["schemas"]["OperationKind"];
+      status: components["schemas"]["OperationStatus"];
+      scope: components["schemas"]["ChangeScope"];
+      /** Count */
+      count: number;
+    };
     /**
      * OperationErrorResponse
      * @description Why one proposed operation is invalid.
@@ -16684,10 +16705,18 @@ export interface operations {
         status?: components["schemas"]["ProposalStatus"] | null;
         /** @description Who or what proposed them */
         source?: components["schemas"]["ProposalSource"] | null;
-        /** @description Only proposals the client has (true) or hasn't (false) landed in the taxonomy's source; with status=done, false lists decided-but-unlanded */
+        /** @description Only proposals the client has (true) or hasn't (false) landed in the taxonomy's source. false lists only proposals with something to land: at least one applied operation, not a re-import (source bundle) and not about a dataset; with status=done it lists what is still to land */
         landed?: boolean | null;
         /** @description Only proposals a run of this pipeline implementation made (their origin's implementation_id), e.g. "gold_check" for benchmark gold checks */
         implementation_id?: string | null;
+        /** @description Only proposals whose operations are in this dataset */
+        dataset_id?: string | null;
+        /** @description Only proposals extracted from this source (client_metadata.source_id) */
+        source_id?: string | null;
+        /** @description Only proposals a run of this pipeline type made (their origin's pipeline_type), e.g. "individual_extraction" */
+        pipeline_type?: string | null;
+        /** @description summary: each proposal without its operations, with their counts only */
+        fields?: "full" | "summary";
         /** @description Maximum number of results */
         limit?: number;
         /** @description Number of results to skip */

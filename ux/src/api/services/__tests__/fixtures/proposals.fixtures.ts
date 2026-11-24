@@ -6,6 +6,7 @@ import type { components } from "@/api/types";
 
 type ChangeProposal = components["schemas"]["ChangeProposalResponse"];
 type ProposedOperation = components["schemas"]["ProposedOperationResponse"];
+type OperationCount = components["schemas"]["OperationCountResponse"];
 
 export function createProposedOperation(overrides?: Partial<ProposedOperation>): ProposedOperation {
   return {
@@ -27,8 +28,9 @@ export function createProposedOperation(overrides?: Partial<ProposedOperation>):
   };
 }
 
+/** A proposal; its `counts` follow its operations unless given. */
 export function createChangeProposal(overrides?: Partial<ChangeProposal>): ChangeProposal {
-  return {
+  const proposal: ChangeProposal = {
     id: "proposal-1",
     taxonomy_id: "tax-1",
     title: "Clearer rooms",
@@ -37,6 +39,20 @@ export function createChangeProposal(overrides?: Partial<ChangeProposal>): Chang
     status: "open",
     dry_run: false,
     operations: [createProposedOperation()],
+    counts: [],
     ...overrides,
   };
+  return overrides?.counts ? proposal : { ...proposal, counts: countsOf(proposal.operations) };
+}
+
+/** The server's counts for these operations: one entry per op, kind, status and scope. */
+export function countsOf(operations: ProposedOperation[]): OperationCount[] {
+  const byKey = new Map<string, OperationCount>();
+  for (const { op, kind, status, scope } of operations) {
+    const key = [op, kind, status, scope].join("|");
+    const entry = byKey.get(key) ?? { op, kind, status, scope, count: 0 };
+    entry.count += 1;
+    byKey.set(key, entry);
+  }
+  return [...byKey.values()];
 }

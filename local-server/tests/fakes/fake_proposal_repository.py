@@ -10,9 +10,11 @@ from domain.versioning.gold import DecisionFilter, DecisionKind, ProposalDecisio
 from domain.versioning.proposals import (
     ChangeProposal,
     Landing,
-    ProposalSource,
+    OperationCount,
+    ProposalFilter,
     ProposalStatus,
     ProposedOperation,
+    count_operations,
 )
 
 
@@ -35,30 +37,31 @@ class FakeChangeProposalRepository:
 
     def list_proposals(
         self,
-        taxonomy_id: Optional[str] = None,
-        status: Optional[ProposalStatus] = None,
-        source: Optional[ProposalSource] = None,
+        filters: ProposalFilter,
         limit: int = 50,
         offset: int = 0,
-        landed: Optional[bool] = None,
-        implementation_id: Optional[str] = None,
+        with_operations: bool = True,
     ) -> list[ChangeProposal]:
         matches = sorted(
-            self._matching(taxonomy_id, status, source, landed, implementation_id),
+            (p for p in self._proposals.values() if filters.matches(p)),
             key=lambda p: (p.created_at, p.id),
             reverse=True,
         )
-        return [copy.deepcopy(p) for p in matches[offset : offset + limit]]
+        found = [copy.deepcopy(p) for p in matches[offset : offset + limit]]
+        if not with_operations:
+            for proposal in found:
+                proposal.operations = []
+        return found
 
-    def count_proposals(
-        self,
-        taxonomy_id: Optional[str] = None,
-        status: Optional[ProposalStatus] = None,
-        source: Optional[ProposalSource] = None,
-        landed: Optional[bool] = None,
-        implementation_id: Optional[str] = None,
-    ) -> int:
-        return len(self._matching(taxonomy_id, status, source, landed, implementation_id))
+    def count_proposals(self, filters: ProposalFilter) -> int:
+        return sum(1 for p in self._proposals.values() if filters.matches(p))
+
+    def operation_tallies(self, proposal_ids: Sequence[str]) -> dict[str, list[OperationCount]]:
+        return {
+            proposal_id: count_operations(self._proposals[proposal_id].operations)
+            for proposal_id in proposal_ids
+            if proposal_id in self._proposals
+        }
 
     def operation_counts(self, proposal_ids: Sequence[str]) -> dict[str, int]:
         return {
@@ -159,28 +162,6 @@ class FakeChangeProposalRepository:
         if proposal_id not in self._proposals:
             raise ValueError(f"No proposal {proposal_id}")
         self._proposals[proposal_id].status = status
-
-    def _matching(
-        self,
-        taxonomy_id: Optional[str],
-        status: Optional[ProposalStatus],
-        source: Optional[ProposalSource],
-        landed: Optional[bool] = None,
-        implementation_id: Optional[str] = None,
-    ) -> list[ChangeProposal]:
-        return [
-            p
-            for p in self._proposals.values()
-            if (taxonomy_id is None or p.taxonomy_id == taxonomy_id)
-            and (status is None or p.status == status)
-            and (source is None or p.source == source)
-            and (landed is None or (p.landed is not None) == landed)
-            and (
-                implementation_id is None
-                or ((p.client_metadata or {}).get("origin") or {}).get("implementation_id")
-                == implementation_id
-            )
-        ]
 
 
 def _matches(decision: ProposalDecision, f: DecisionFilter) -> bool:
