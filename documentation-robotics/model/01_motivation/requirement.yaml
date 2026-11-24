@@ -169,9 +169,9 @@ motivation.requirement.dev-server-not-reachable-from-the-lan:
   type: requirement
   layer_id: motivation
   name: Dev Server Not Reachable from the LAN
-  description: "The Vite dev server must not expose /api (including the endpoint
-    that returns the MCP token) to other machines on the network. Open: GitHub
-    issue #1655."
+  description: The Vite dev server must not expose /api (including the endpoint
+    that returns the MCP token) to other machines on the network. Met by binding
+    to loopback (#1655).
   attributes:
     requirementType: non-functional
     priority: high

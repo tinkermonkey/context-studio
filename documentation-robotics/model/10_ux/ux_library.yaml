@@ -9,7 +9,7 @@ ux.uxlibrary.heimdall-ui-library:
     inputs, overlays, data display, charts, graph, chat and observability
     components used by every view."
   attributes:
-    version: package.json
+    version: 0.14.0
     description: Heimdall design system (React)
   source_reference:
     provenance: extracted

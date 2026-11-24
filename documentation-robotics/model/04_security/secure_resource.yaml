@@ -87,7 +87,7 @@ security.secureresource.vite-dev-server:
   layer_id: security
   name: Vite Dev Server
   description: npm run dev serves the UI and proxies /api to the back end; it
-    listens on all interfaces.
+    listens on loopback only (Vite's default).
   attributes:
     resource: ux dev server (port 3100) proxying /api
     type: ui

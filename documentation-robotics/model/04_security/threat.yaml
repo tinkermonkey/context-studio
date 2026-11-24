@@ -76,9 +76,10 @@ security.threat.lan-exposure-via-the-vite-dev-server:
   type: threat
   layer_id: security
   name: LAN Exposure via the Vite Dev Server
-  description: "npm run dev listens on all interfaces and proxies /api, including
-    the endpoint that returns the MCP token, so another machine on the network
-    can read and change the workspace. Not accepted: to fix under #1655."
+  description: "Mitigated (#1655). The dev server used to listen on all interfaces
+    (server.host: true) and proxy /api, so another machine on the network could
+    read and change the workspace. It now binds to loopback only; LAN access
+    would need an explicit edit of vite.config.ts or a --host flag."
   attributes:
     threatens: api
     likelihood: moderate
