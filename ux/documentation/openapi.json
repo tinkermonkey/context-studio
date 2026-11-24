@@ -7903,6 +7903,52 @@
         }
       }
     },
+    "/api/proposals/{proposal_id}/revert/preview": {
+      "get": {
+        "tags": [
+          "proposals"
+        ],
+        "summary": "Preview Revert",
+        "description": "List the fields an in-place revert of the proposal would overwrite.\n\nThese are fields edited after the proposal applied them: their current value\ndiffers from the one the proposal's newest update set. Read-only; empty when\nnothing was edited since (or nothing was applied).",
+        "operationId": "preview_revert_api_proposals__proposal_id__revert_preview_get",
+        "parameters": [
+          {
+            "name": "proposal_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Proposal Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RevertPreviewResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Change proposal not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/proposals/{proposal_id}/landed": {
       "put": {
         "tags": [
@@ -20907,6 +20953,60 @@
         ],
         "title": "RevertBlocker",
         "description": "An entity outside the proposal that depends on one the proposal created."
+      },
+      "RevertPreviewItem": {
+        "properties": {
+          "entity_id": {
+            "type": "string",
+            "title": "Entity Id"
+          },
+          "entity_type": {
+            "type": "string",
+            "title": "Entity Type",
+            "description": "class, individual, relationship, ..."
+          },
+          "label": {
+            "type": "string",
+            "title": "Label",
+            "description": "The entity's title or identifier, as it is now"
+          },
+          "field": {
+            "type": "string",
+            "title": "Field"
+          },
+          "applied_value": {
+            "title": "Applied Value",
+            "description": "What the proposal's newest update set it to"
+          },
+          "current_value": {
+            "title": "Current Value",
+            "description": "What it is now; the revert replaces it"
+          }
+        },
+        "type": "object",
+        "required": [
+          "entity_id",
+          "entity_type",
+          "label",
+          "field"
+        ],
+        "title": "RevertPreviewItem",
+        "description": "A field edited after the proposal applied it, which an in-place revert would overwrite."
+      },
+      "RevertPreviewResponse": {
+        "properties": {
+          "overwritten": {
+            "items": {
+              "$ref": "#/components/schemas/RevertPreviewItem"
+            },
+            "type": "array",
+            "title": "Overwritten",
+            "description": "One per entity and field edited since the apply; empty when none was"
+          }
+        },
+        "type": "object",
+        "title": "RevertPreviewResponse",
+        "description": "The later edits an in-place revert of a proposal would overwrite."
       },
       "RevertRunResponse": {
         "properties": {

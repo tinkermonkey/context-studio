@@ -3992,6 +3992,24 @@ selectors:
   - selector: reject-reason-*
     component: src/components/proposals/RejectReasonPicker.tsx
     description: "A reason code in the bulk reject dialog's picker (role=radio, aria-checked), by code"
+  - selector: revert-proposal-dialog
+    component: src/components/proposals/RevertProposalDialog.tsx
+    description: "Revert confirm dialog body: what the revert undoes (proposal-revert-message) and the later edits it would overwrite"
+  - selector: revert-preview
+    component: src/components/proposals/RevertProposalDialog.tsx
+    description: "Revert dialog: the edits made since the apply that the revert overwrites (role=group); one revert-preview-row-{entity_id}-{field} each, with the current and the applied value"
+  - selector: revert-preview-row-*
+    component: src/components/proposals/RevertProposalDialog.tsx
+    description: "One later edit the revert overwrites: the entity, the field, its current value and the value the proposal applied"
+  - selector: revert-preview-loading
+    component: src/components/proposals/RevertProposalDialog.tsx
+    description: "Revert dialog: checking for edits made since the apply"
+  - selector: revert-preview-none
+    component: src/components/proposals/RevertProposalDialog.tsx
+    description: "Revert dialog: nothing was edited since the apply"
+  - selector: revert-preview-error
+    component: src/components/proposals/RevertProposalDialog.tsx
+    description: "Revert dialog: the check failed (role=alert); the revert can still be confirmed"
   - selector: proposal-reject-note
     component: src/components/proposals/ProposalDetailPage.tsx
     description: "Reject all / Reject selected confirm dialog: optional reason stored with every operation it rejects"

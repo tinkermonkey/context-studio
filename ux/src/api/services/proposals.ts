@@ -18,6 +18,8 @@ export type ChangeProposalRevertResponse = components["schemas"]["ChangeProposal
 export type ChangeProposalRevertConflict =
   components["schemas"]["ChangeProposalRevertConflictDetail"];
 export type RevertBlocker = components["schemas"]["RevertBlocker"];
+export type RevertPreview = components["schemas"]["RevertPreviewResponse"];
+export type RevertPreviewItem = components["schemas"]["RevertPreviewItem"];
 /** One operation's decision in DR's decisions file (`proposal-import.ts --decisions`). */
 export type DrDecision = components["schemas"]["DrDecisionResponse"];
 export type ApprovalPolicy = components["schemas"]["ApprovalPolicyResponse"];
@@ -155,6 +157,11 @@ class ProposalsService extends BaseService {
 
   async revertProposal(id: string): Promise<ChangeProposalRevertResponse> {
     return this.post<ChangeProposalRevertResponse>(`/api/proposals/${id}/revert`);
+  }
+
+  /** The fields edited since the apply that an in-place revert would overwrite. */
+  async getRevertPreview(id: string): Promise<RevertPreview> {
+    return this.get<RevertPreview>(`/api/proposals/${id}/revert/preview`);
   }
 
   /** DR's decisions file for a reflection-plan proposal; 409 once it is reverted. */

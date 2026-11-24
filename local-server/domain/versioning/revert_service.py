@@ -230,6 +230,82 @@ class RevertService:
         _logger.info(f"Reverted {reverted_count} events for batch run {batch_run_id}")
         return result
 
+    def preview(self, batch_run_id: str) -> list[OverwrittenEdit]:
+        """
+        The edits made since the run applied that reverting it in place would overwrite.
+
+        For each entity the run updated, a field whose current value differs from
+        the value the run's newest update gave it was edited afterwards, and the
+        revert restores the run's previous value over it. Entities the run
+        created are left out (the revert deletes them), and so are the run's
+        creates and deletes themselves. Read-only; nothing is changed.
+
+        Args:
+            batch_run_id: ID of the batch run a revert would undo
+
+        Returns:
+            One entry per entity and field, in the order the entities were updated
+
+        Raises:
+            ValueError: If batch_run_id is empty
+        """
+        if not batch_run_id:
+            raise ValueError("batch_run_id is required for revert")
+        events = list(self._change_repo.get_changes(batch_run_id=batch_run_id, limit=None).events)
+        pending = [
+            event
+            for event in events
+            if self._normalize_entity_type(event.entity_type) not in self._RECORD_ONLY_TYPES
+            and not self._should_skip_revert(event, events)
+        ]
+        created = {
+            event.entity_id for event in pending if event.operation == ChangeOperation.CREATE
+        }
+        # Newest first: the first value seen for a field is the one the run left.
+        applied: dict[tuple[str, str], dict[str, Any]] = {}
+        for event in pending:
+            if event.operation != ChangeOperation.UPDATE or event.entity_id in created:
+                continue
+            entity_type = self._normalize_entity_type(event.entity_type)
+            fields_left = applied.setdefault((event.entity_id, entity_type), {})
+            for name, value in (event.new_state or {}).items():
+                fields_left.setdefault(name, value)
+
+        overwritten = []
+        for (entity_id, entity_type), values in reversed(list(applied.items())):
+            entity = self._current_entity(entity_id, entity_type)
+            if entity is None:
+                continue
+            current = entity_snapshot(entity)
+            label = current.get("title") or current.get("identifier") or entity_id
+            overwritten.extend(
+                OverwrittenEdit(
+                    entity_id=entity_id,
+                    entity_type=entity_type,
+                    label=str(label),
+                    field=name,
+                    applied_value=value,
+                    current_value=current[name],
+                )
+                for name, value in values.items()
+                if name in current and current[name] != value
+            )
+        return overwritten
+
+    def _current_entity(self, entity_id: str, entity_type: str) -> Any:
+        """The entity as it is now, or None when it no longer exists."""
+        getter = {
+            "taxonomy": self._ontology_repo.get_taxonomy,
+            "concept_scheme": self._ontology_repo.get_concept_scheme,
+            "class": self._ontology_repo.get_class,
+            "individual": self._ontology_repo.get_individual,
+            "relationship": self._ontology_repo.get_relationship,
+            "property_definition": self._ontology_repo.get_property_definition,
+            "attribute_definition": self._ontology_repo.get_attribute_definition,
+            "predicate": self._ontology_repo.get_predicate,
+        }.get(entity_type)
+        return getter(entity_id) if getter is not None else None
+
     def _should_skip_revert(self, event, all_events) -> bool:
         """
         Check if an event should be skipped during revert.
@@ -443,17 +519,7 @@ class RevertService:
             raise RevertConflictError(batch_run_id, blocking)
 
     def _exists(self, entity_id: str, entity_type: str) -> bool:
-        getter = {
-            "taxonomy": self._ontology_repo.get_taxonomy,
-            "concept_scheme": self._ontology_repo.get_concept_scheme,
-            "class": self._ontology_repo.get_class,
-            "individual": self._ontology_repo.get_individual,
-            "relationship": self._ontology_repo.get_relationship,
-            "property_definition": self._ontology_repo.get_property_definition,
-            "attribute_definition": self._ontology_repo.get_attribute_definition,
-            "predicate": self._ontology_repo.get_predicate,
-        }.get(entity_type)
-        return getter is not None and getter(entity_id) is not None
+        return self._current_entity(entity_id, entity_type) is not None
 
     def _still_references(self, ref, restored: dict[str, dict]) -> bool:
         """
@@ -922,3 +988,15 @@ class RevertResult:
     taxonomies_deleted: int = 0
     concept_schemes_deleted: int = 0
     entities_restored: int = 0
+
+
+@dataclass
+class OverwrittenEdit:
+    """A field edited after a run applied it, which reverting the run in place would overwrite."""
+
+    entity_id: str
+    entity_type: str
+    label: str
+    field: str
+    applied_value: Any
+    current_value: Any

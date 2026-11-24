@@ -3,6 +3,7 @@ export {
   useAllChangeProposals,
   useChangeProposal,
   useProposalDecisions,
+  useRevertPreview,
 } from "./useProposals";
 export {
   useCreateChangeProposal,

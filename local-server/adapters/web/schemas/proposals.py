@@ -976,6 +976,26 @@ class ChangeProposalRevertResponse(BaseModel):
     proposal: ChangeProposalResponse
 
 
+class RevertPreviewItem(BaseModel):
+    """A field edited after the proposal applied it, which an in-place revert would overwrite."""
+
+    entity_id: str
+    entity_type: str = Field(description="class, individual, relationship, ...")
+    label: str = Field(description="The entity's title or identifier, as it is now")
+    field: str
+    applied_value: Any = Field(None, description="What the proposal's newest update set it to")
+    current_value: Any = Field(None, description="What it is now; the revert replaces it")
+
+
+class RevertPreviewResponse(BaseModel):
+    """The later edits an in-place revert of a proposal would overwrite."""
+
+    overwritten: list[RevertPreviewItem] = Field(
+        default_factory=list,
+        description="One per entity and field edited since the apply; empty when none was",
+    )
+
+
 class DrTripleFields(BaseModel):
     """A DR relationship's triple in DR's vocabulary."""
 

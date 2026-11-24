@@ -247,6 +247,113 @@ def test_revert_chained_updates_restores_oldest_state(ontology_repo, change_repo
 
 
 # ============================================================================
+# Preview: the later edits a revert would overwrite
+# ============================================================================
+
+
+def _class_with_description(ontology_repo, description):
+    cls = Class(
+        id="cls-1",
+        concept_scheme_id="scheme-1",
+        taxonomy_id="tx-1",
+        title="Animal",
+        description=description,
+    )
+    ontology_repo.save_class(cls)
+    return cls
+
+
+def _record_description_update(change_repo, previous, new):
+    change_repo.record_change(
+        entity_id="cls-1",
+        entity_type="class",
+        operation=ChangeOperation.UPDATE,
+        previous_state={"description": previous},
+        new_state={"description": new},
+        batch_run_id="run-1",
+    )
+
+
+def test_preview_lists_nothing_when_nothing_was_edited_since(
+    ontology_repo, change_repo, revert_svc
+):
+    _class_with_description(ontology_repo, "B")
+    _record_description_update(change_repo, "A", "B")
+
+    assert revert_svc.preview("run-1") == []
+
+
+def test_preview_lists_a_field_edited_after_the_apply(ontology_repo, change_repo, revert_svc):
+    cls = _class_with_description(ontology_repo, "B")
+    _record_description_update(change_repo, "A", "B")
+    cls.description = "Edited later"
+    ontology_repo.save_class(cls)
+
+    [edit] = revert_svc.preview("run-1")
+
+    assert (edit.entity_id, edit.entity_type, edit.label, edit.field) == (
+        "cls-1",
+        "class",
+        "Animal",
+        "description",
+    )
+    assert (edit.applied_value, edit.current_value) == ("B", "Edited later")
+    # Read-only: nothing was undone or recorded.
+    assert ontology_repo.get_class("cls-1").description == "Edited later"
+    assert len(change_repo.get_changes(batch_run_id="run-1", limit=None).events) == 1
+
+
+def test_preview_compares_with_the_newest_update_of_the_run(ontology_repo, change_repo, revert_svc):
+    """A field the run set twice is compared with the value it left, not its first."""
+    _class_with_description(ontology_repo, "C")
+    _record_description_update(change_repo, "A", "B")
+    _record_description_update(change_repo, "B", "C")
+
+    assert revert_svc.preview("run-1") == []
+
+
+def test_preview_leaves_out_creates_and_deleted_entities(ontology_repo, change_repo, revert_svc):
+    cls = _class_with_description(ontology_repo, "B")
+    change_repo.record_change(
+        entity_id="cls-1",
+        entity_type="class",
+        operation=ChangeOperation.CREATE,
+        new_state={"id": "cls-1", "title": "Animal"},
+        batch_run_id="run-1",
+    )
+    _record_description_update(change_repo, "A", "B")
+    cls.description = "Edited later"
+    ontology_repo.save_class(cls)
+    # An update to an entity that has since been deleted overwrites nothing.
+    change_repo.record_change(
+        entity_id="cls-gone",
+        entity_type="class",
+        operation=ChangeOperation.UPDATE,
+        previous_state={"description": "x"},
+        new_state={"description": "y"},
+        batch_run_id="run-1",
+    )
+
+    assert revert_svc.preview("run-1") == []
+
+
+def test_preview_is_empty_after_the_run_was_reverted(ontology_repo, change_repo, revert_svc):
+    cls = _class_with_description(ontology_repo, "B")
+    _record_description_update(change_repo, "A", "B")
+    cls.description = "Edited later"
+    ontology_repo.save_class(cls)
+
+    revert_svc.revert("run-1")
+
+    assert revert_svc.preview("run-1") == []
+
+
+def test_preview_needs_a_run_id(revert_svc):
+    with pytest.raises(ValueError):
+        revert_svc.preview("")
+
+
+# ============================================================================
 # Idempotence Tests
 # ============================================================================
 
