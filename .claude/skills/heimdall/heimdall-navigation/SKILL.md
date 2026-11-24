@@ -11,7 +11,7 @@ import '@tinkermonkey/heimdall-ui/css'
 
 ## NavItem
 
-Single shell-surface navigation button with optional icon, count, and active marker; use it to build a custom nav column when `Sidebar` does not fit.
+Single shell-surface navigation button (or link, with `href`) with optional icon, count, and active marker; use it to build a custom nav column when `Sidebar` does not fit.
 
 ```tsx
 import { NavItem } from '@tinkermonkey/heimdall-ui'
@@ -26,8 +26,9 @@ import { NavItem } from '@tinkermonkey/heimdall-ui'
 | `count` | `number` | — | Mono count, right-aligned |
 | `active` | `boolean` | `false` | Amber left marker, surface background, `aria-current="page"` |
 | `depth` | `0 \| 1` | `0` | `1` indents as a sub-item and drops the icon |
-| `type` | `'button' \| 'submit' \| 'reset'` | `'button'` | Native button type |
-| `...buttonProps` | | | Remaining props spread onto the root `<button>` (ref forwarded) |
+| `href` | `string` | — | Renders an `<a href>` with the same classes instead of a `<button>`; the remaining props are anchor props |
+| `type` | `'button' \| 'submit' \| 'reset'` | `'button'` | Native button type; button variant only |
+| `...buttonProps` | | | Remaining props spread onto the root `<button>`, or `<a>` with `href` (ref forwarded) |
 
 ### Usage
 
@@ -61,13 +62,20 @@ import { NavItem } from '@tinkermonkey/heimdall-ui'
 </div>
 ```
 
+```tsx
+// Links for a routed or static site: real <a href>, so middle-click and crawlers work
+<NavItem icon="dashboard" label="Dashboard" href="/dashboard" active={pathname === '/dashboard'} />
+```
+
 ### Gotchas
 
 - `icon` is ignored when `depth={1}`.
 - The active marker is drawn at `left: -8px`, outside the button. Give the container at least 8px horizontal padding or the marker is clipped.
 - Colors use shell tokens (`--shell-fg-*`, `--shell-surface`). On a light canvas the text has poor contrast; place NavItem on a shell-colored container.
 - The button is `width: 100%`; constrain width with the container.
-- `disabled` renders at 40% opacity with `pointer-events: none`.
+- `disabled` renders at 40% opacity with `pointer-events: none`. It is a button prop; a link (`href`) has no disabled state.
+- With `href` the type is `NavItemLinkProps` and the ref is the `<a>`; without it, `NavItemButtonProps` and the `<button>`. The ref type is `HTMLButtonElement | HTMLAnchorElement`.
+- The link variant resets `text-decoration` against a site's `a` / `a:hover` rules. A site rule as specific as `a:visited { color }` still wins over the item colour.
 - `Sidebar` renders its own item buttons, not `NavItem`. Use one or the other.
 
 ---
@@ -88,7 +96,7 @@ import { Sidebar } from '@tinkermonkey/heimdall-ui'
 | `activeItemId` | `string` | — | Id of the highlighted item or child |
 | `collapsed` | `boolean` | `false` | Icon-only 64px mode; controlled by the parent |
 | `onCollapse` | `(collapsed: boolean) => void` | — | Toggle clicked; receives the next value |
-| `onSelectItem` | `(itemId: string) => void` | — | Leaf item or child clicked |
+| `onSelectItem` | `(itemId: string, event: React.MouseEvent) => void` | — | Leaf item or child clicked. For a link, plain clicks only (not cmd/ctrl/shift/alt or middle clicks, or ones already `preventDefault`ed), before the browser follows it |
 | `defaultExpandedIds` | `string[]` | — | Parents expanded on first render (uncontrolled) |
 | `expandedIds` | `string[]` | — | Controlled set of expanded parents |
 | `onExpandedChange` | `(ids: string[]) => void` | — | Called with the next expanded set |
@@ -114,7 +122,8 @@ import { Sidebar } from '@tinkermonkey/heimdall-ui'
 | `label` | `string` | Display text; becomes the `title` tooltip when collapsed |
 | `icon` | `IconName` | 18px icon; the only thing visible when collapsed |
 | `count` | `number` | Mono count, right-aligned |
-| `children` | `Array<{ id: string; label: string; count?: number }>` | One level of sub-items; makes the item an expandable parent |
+| `href` | `string` | Renders the item as `<a href>` (same classes, `aria-current="page"` when active); ignored on a parent with `children` |
+| `children` | `Array<{ id: string; label: string; count?: number; href?: string }>` | One level of sub-items; makes the item an expandable parent. A child with `href` renders as a link |
 
 ### Usage
 
@@ -173,9 +182,38 @@ import { Sidebar } from '@tinkermonkey/heimdall-ui'
 </div>
 ```
 
+```tsx
+// Links (static or server-rendered site): items render <a href>, so navigation works before
+// any JavaScript loads. onSelectItem is optional.
+<Sidebar
+  sections={[
+    {
+      title: 'Notes',
+      items: [
+        { id: 'home', label: 'Home', icon: 'dashboard', href: '/' },
+        {
+          id: 'topics',
+          label: 'Topics',
+          icon: 'schema',
+          children: [
+            { id: 'graphs', label: 'Graphs', href: '/topics/graphs' },
+            { id: 'layout', label: 'Layout', href: '/topics/layout' },
+          ],
+        },
+      ],
+    },
+  ]}
+  activeItemId={currentPageId}
+  defaultExpandedIds={['topics']}
+  showCollapseToggle={false}
+/>
+```
+
 ### Gotchas
 
-- Clicking a parent (an item with `children`) toggles its expansion and does **not** call `onSelectItem`. Parents are not selectable; give the overview page its own leaf item if one is needed.
+- Clicking a parent (an item with `children`) toggles its expansion and does **not** call `onSelectItem`. Parents are not selectable, and stay buttons even with `href`; give the overview page its own leaf item if one is needed.
+- A link item (`href`) calls `onSelectItem` on a plain click and lets the browser navigate; it does not call `preventDefault` itself. Modifier and middle clicks (open in a new tab) don't call `onSelectItem`. For client-side routing keep `href` (so the link still works without JavaScript and in a new tab) and route in the callback: `onSelectItem={(id, event) => { event.preventDefault(); navigate(hrefOf(id)) }}`.
+- Without JavaScript (server HTML before hydration), parent items can't expand. Pass the parent of the current page in `defaultExpandedIds` so its children render in the server HTML.
 - Expansion is uncontrolled by default. `defaultExpandedIds` is read once on mount. Passing `expandedIds` switches to controlled mode: the component only reflects that prop, so update it in `onExpandedChange` or toggles do nothing.
 - `collapsed` is fully controlled. The toggle only calls `onCollapse(!collapsed)`; without `onCollapse` it does nothing, so hide it with `showCollapseToggle={false}`.
 - Collapsed mode hides section titles, labels, counts, chevrons, and child items. Items without an `icon` render as empty buttons, so give every top-level item an icon when collapse is enabled. Clicking a parent while collapsed still flips its expansion state, which shows up after expanding the sidebar.

@@ -342,6 +342,7 @@ The floating `role="dialog"` panel. Renders nothing while closed.
 ### Gotchas
 
 - `Popover.Trigger` and `Popover.Panel` throw outside a `Popover`.
+- A Select, FilterDropdown, EntityPicker or RowMenu inside the panel renders its dropdown in a portal on `document.body`. Popover's outside-click check uses `containsAcrossPortals(container, target)`, so picking from that dropdown doesn't close the popover. Use the same helper in your own outside-click handlers.
 - The trigger child must forward refs (Heimdall `Button` does) and accept `onClick`/`onKeyDown`. Its own handlers still run. Its `id` is replaced with a generated one.
 - Controlled mode: `open` without `onOpenChange` is a type error and logs a console warning; the popover stays stuck. Omit both for uncontrolled mode.
 - Closes on Escape (focus returns to the trigger) and on any mousedown outside the wrapper unless `disableOutsideClick`. Escape is stopped at the wrapper, so a Popover inside a Modal closes without closing the Modal.

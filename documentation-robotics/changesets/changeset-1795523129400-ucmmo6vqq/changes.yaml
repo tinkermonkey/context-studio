@@ -1,0 +1,85 @@
+- type: update
+  elementId: technology.systemsoftware.heimdall-ui
+  layerName: technology
+  before:
+    id: 000b2711-2fd9-43b7-8fcf-06726919d200
+    path: technology.systemsoftware.heimdall-ui
+    spec_node_id: technology.systemsoftware
+    type: systemsoftware
+    layer_id: technology
+    name: Heimdall UI
+    description: "@tinkermonkey/heimdall-ui design system: shell, navigation,
+      inputs, overlays, data display, graph and chat components for the UX."
+    attributes:
+      softwareType: middleware
+    source_reference: &a1
+      provenance: extracted
+      locations:
+        - file: ux/package.json
+          symbol: "@tinkermonkey/heimdall-ui"
+    metadata: &a2
+      created_at: 2026-11-19T14:57:00.157Z
+      updated_at: 2026-11-19T14:57:00.157Z
+      version: 1
+  after:
+    id: 000b2711-2fd9-43b7-8fcf-06726919d200
+    path: technology.systemsoftware.heimdall-ui
+    spec_node_id: technology.systemsoftware
+    type: systemsoftware
+    layer_id: technology
+    name: Heimdall UI
+    description: "@tinkermonkey/heimdall-ui design system: shell, navigation,
+      inputs, overlays, data display, graph and chat components for the UX."
+    attributes:
+      softwareType: middleware
+      documentation: "@tinkermonkey/heimdall-ui 0.14.0 (Heimdall main), installed from
+        github:tinkermonkey/heimdall and pinned by commit in
+        ux/package-lock.json. ESM only, one module per source file; dropdown
+        panels (RowMenu, Select, FilterDropdown, EntityPicker) render in a
+        portal on document.body."
+    source_reference: *a1
+    metadata: *a2
+  timestamp: 2026-11-24T12:25:32.830Z
+  sequenceNumber: 0
+- type: update
+  elementId: ux.uxlibrary.heimdall-ui-library
+  layerName: ux
+  before:
+    id: cf6d3105-c151-41c1-9f3d-909228829fbe
+    path: ux.uxlibrary.heimdall-ui-library
+    spec_node_id: ux.uxlibrary
+    type: uxlibrary
+    layer_id: ux
+    name: Heimdall UI Library
+    description: "@tinkermonkey/heimdall-ui design system: shell, navigation,
+      inputs, overlays, data display, charts, graph, chat and observability
+      components used by every view."
+    attributes:
+      version: package.json
+      description: Heimdall design system (React)
+    source_reference: &a3
+      provenance: extracted
+      locations:
+        - file: ux/package.json
+          symbol: "@tinkermonkey/heimdall-ui"
+    metadata: &a4
+      created_at: 2026-11-19T15:02:45.110Z
+      updated_at: 2026-11-19T15:02:45.110Z
+      version: 1
+  after:
+    id: cf6d3105-c151-41c1-9f3d-909228829fbe
+    path: ux.uxlibrary.heimdall-ui-library
+    spec_node_id: ux.uxlibrary
+    type: uxlibrary
+    layer_id: ux
+    name: Heimdall UI Library
+    description: "@tinkermonkey/heimdall-ui design system: shell, navigation,
+      inputs, overlays, data display, charts, graph, chat and observability
+      components used by every view."
+    attributes:
+      version: 0.14.0
+      description: Heimdall design system (React)
+    source_reference: *a3
+    metadata: *a4
+  timestamp: 2026-11-24T12:25:32.841Z
+  sequenceNumber: 1

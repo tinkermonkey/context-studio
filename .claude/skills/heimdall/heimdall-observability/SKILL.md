@@ -473,6 +473,7 @@ const lines: DiffLine[] = [
 
 - Despite the name there are no left/right panes. Interleave `removed` and `added` lines yourself, as in a unified diff.
 - The header pills are hard-coded and cannot be relabeled. Use `DiffViewer.SideBySide` for custom labels.
+- Each added or removed row's gutter announces "added" / "removed" to screen readers through the library-owned `heimdall-visually-hidden` class. It ships in `@tinkermonkey/heimdall-ui/css` and in `@tinkermonkey/heimdall-ui/css/base` (an app's own Tailwind `sr-only` does not cover it), so one of those imports is required or the words render as visible text.
 - Rows are a fixed 24px for virtualization; the body scrolls between 200px and 500px tall.
 - `lineNumber` is not displayed.
 - An empty `lines` array renders "No changes between these versions".
@@ -494,6 +495,8 @@ import { VersionTimeline, type VersionEntry } from '@tinkermonkey/heimdall-ui'
 | `onSelect` | `(id: string) => void` | — | Entry clicked or arrow-key navigated |
 | `order` | `'newest-first' \| 'oldest-first'` | `'newest-first'` | `'oldest-first'` reverses `entries` |
 | `emptyState` | `string` | `'No versions available'` | Text when `entries` is empty |
+| `now` | `Date \| string \| number` | clock at render | Time the relative timestamps are measured from; pass a fixed value for server-rendered or static HTML: labels then depend only on `now`, and dates older than a week print `en-US` in UTC, so server and browser match |
+| `formatTimestamp` | `(timestamp: Date \| string) => ReactNode` | — | Replaces the built-in relative timestamp, e.g. an absolute date or a `<time>` element |
 | `...divProps` | | | Remaining props spread onto the root `<div>` (native `onSelect` is omitted) |
 
 ### Data types
@@ -535,7 +538,7 @@ const [selectedId, setSelectedId] = useState('v3.2.1')
 - Without `onSelect`, entries are not clickable and the keyboard does nothing.
 - Keyboard (list focused): Up/Down select the previous/next entry in display order; with nothing selected, Down selects the first.
 - `transition` takes precedence over `stats`; only stats fields that are set are shown.
-- Timestamps are relative (`just now`, `5m ago`, `2h ago`, `3d ago`, then a locale date) and computed at render; they do not tick.
+- Timestamps are relative (`just now`, `5m ago`, `2h ago`, `3d ago`, then a locale date) and computed at render; they do not tick. For server-rendered or static HTML pass `now` or `formatTimestamp`, or the server and browser print different text and hydration reports a mismatch.
 
 ## LineageRail
 
