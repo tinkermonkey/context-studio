@@ -1,6 +1,6 @@
 # Intra-layer relationships
 # Format: source_id -> predicate -> target_id
-# Last updated: 2026-11-24T14:28:52.912Z
+# Last updated: 2026-11-24T14:52:26.866Z
 
 - source: motivation.meaning.knowledge-as-infrastructure
   target: motivation.value.knowledge-reusability
@@ -15934,4 +15934,14 @@
   predicate: satisfies
   layer: testing
   targetLayer: motivation
+  category: structural
+- source: ux.view.app-shell-view
+  target: ux.subview.status-bar-sync
+  predicate: composes
+  layer: ux
+  category: structural
+- source: ux.subview.status-bar-sync
+  target: ux.dataconfig.use-sync-status
+  predicate: binds-to
+  layer: ux
   category: structural

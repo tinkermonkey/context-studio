@@ -16,8 +16,8 @@ User interface components, screens, and user experience elements.
 
 | Metric                    | Count |
 | ------------------------- | ----- |
-| Elements                  | 230   |
-| Intra-Layer Relationships | 469   |
+| Elements                  | 231   |
+| Intra-Layer Relationships | 471   |
 | Inter-Layer Relationships | 323   |
 | Inbound Relationships     | 54    |
 | Outbound Relationships    | 269   |
@@ -159,7 +159,7 @@ User interface components, screens, and user experience elements.
 | `ux.dataconfig.use-sources-by-ids`                   | `dataconfig`       | 2             |
 | `ux.dataconfig.use-sparql-query`                     | `dataconfig`       | 1             |
 | `ux.dataconfig.use-stats-trends`                     | `dataconfig`       | 1             |
-| `ux.dataconfig.use-sync-status`                      | `dataconfig`       | 1             |
+| `ux.dataconfig.use-sync-status`                      | `dataconfig`       | 2             |
 | `ux.dataconfig.use-taxonomies`                       | `dataconfig`       | 15            |
 | `ux.dataconfig.use-taxonomies-by-ids`                | `dataconfig`       | 6             |
 | `ux.dataconfig.use-taxonomy`                         | `dataconfig`       | 7             |
@@ -209,11 +209,12 @@ User interface components, screens, and user experience elements.
 | `ux.subview.schema-extraction-wizard`                | `subview`          | 6             |
 | `ux.subview.schema-grounding-wizard`                 | `subview`          | 6             |
 | `ux.subview.sparql-editor`                           | `subview`          | 2             |
+| `ux.subview.status-bar-sync`                         | `subview`          | 2             |
 | `ux.subview.sync-status`                             | `subview`          | 5             |
 | `ux.uxapplication.context-studio-spa`                | `uxapplication`    | 1             |
 | `ux.uxlibrary.heimdall-ui-library`                   | `uxlibrary`        | 1             |
 | `ux.uxspec.ontology-editor-ux-spec`                  | `uxspec`           | 2             |
-| `ux.view.app-shell-view`                             | `view`             | 9             |
+| `ux.view.app-shell-view`                             | `view`             | 10            |
 | `ux.view.batch-detail-view`                          | `view`             | 0             |
 | `ux.view.benchmark-gold-view`                        | `view`             | 1             |
 | `ux.view.cascade-delete-dialog`                      | `view`             | 0             |
@@ -3699,6 +3700,7 @@ GET /api/v1/versioning/sync/status.
 | Type        | Related Element                     | Predicate  | Direction |
 | ----------- | ----------------------------------- | ---------- | --------- |
 | inter-layer | `api.response.sync-status-response` | `maps-to`  | outbound  |
+| intra-layer | `ux.subview.status-bar-sync`        | `binds-to` | inbound   |
 | intra-layer | `ux.subview.sync-status`            | `binds-to` | inbound   |
 
 ### useTaxonomies {#usetaxonomies}
@@ -4716,6 +4718,21 @@ SPARQL query editor and results.
 | intra-layer | `ux.dataconfig.use-sparql-query` | `binds-to` | outbound  |
 | intra-layer | `ux.view.graph-view`             | `composes` | inbound   |
 
+### Status Bar Sync {#status-bar-sync}
+
+**ID**: `ux.subview.status-bar-sync`
+
+**Type**: `subview`
+
+Status bar item showing the real sync state from the sync status API: off, unsynced change count, last sync time, degraded or never synced. Absent while loading or on error.
+
+#### Relationships
+
+| Type        | Related Element                 | Predicate  | Direction |
+| ----------- | ------------------------------- | ---------- | --------- |
+| intra-layer | `ux.dataconfig.use-sync-status` | `binds-to` | outbound  |
+| intra-layer | `ux.view.app-shell-view`        | `composes` | inbound   |
+
 ### Sync Status {#sync-status}
 
 **ID**: `ux.subview.sync-status`
@@ -4806,7 +4823,7 @@ UX specification for the Ontology Editor experience within Context Studio SPA. C
 
 **Type**: `view`
 
-Application shell: titlebar, sidebar navigation, command palette, chat panel and the outlet for /app pages.
+Application shell: titlebar, sidebar navigation, command palette, chat panel, status bar (daemon health and counts, sync state) and the outlet for /app pages.
 
 #### Attributes
 
@@ -4840,6 +4857,7 @@ Application shell: titlebar, sidebar navigation, command palette, chat panel and
 | intra-layer | `ux.dataconfig.use-schemes`                          | `binds-to`   | outbound  |
 | intra-layer | `ux.dataconfig.use-taxonomies`                       | `binds-to`   | outbound  |
 | intra-layer | `ux.subview.chat-panel`                              | `composes`   | outbound  |
+| intra-layer | `ux.subview.status-bar-sync`                         | `composes`   | outbound  |
 
 ### Batch Detail View {#batch-detail-view}
 
@@ -6293,4 +6311,4 @@ First-run welcome page.
 
 ---
 
-Generated: 2026-11-24T14:26:46.086Z | Model Version: 0.1.0
+Generated: 2026-11-24T14:52:26.937Z | Model Version: 0.1.0

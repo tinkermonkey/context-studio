@@ -5,8 +5,8 @@ description: '#1651: the status bar shows only what the app knows. Remove the
   reads the sync status API (useSyncStatus): off, N unsynced changes, last
   synced, degraded or never synced; absent while loading or on error.'
 created: 2026-11-24T13:48:32.976Z
-modified: 2026-11-24T13:53:53.795Z
-status: staged
+modified: 2026-11-24T14:52:26.926Z
+status: committed
 baseSnapshot: v2:sha256:53252d39ed1357a9afdd6132507b497bf81313353af91142ccb6b590b147594c
 origin:
   kind: plan
