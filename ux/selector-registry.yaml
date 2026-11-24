@@ -3325,6 +3325,42 @@ selectors:
   - selector: review-show-in-source
     component: src/components/proposals/review/ReviewInspector.tsx
     description: "A relationship's EVIDENCE: Show in source, scrolls the source to its first passage"
+  - selector: review-inspector-id
+    component: src/components/proposals/review/ReviewInspector.tsx
+    description: "The operation id under the title of an operation that is not an element or relationship (mono, muted)"
+  - selector: review-inspector-other-classes
+    component: src/components/proposals/review/ReviewInspector.tsx
+    description: 'An individual''s classes after the first: class pills, a "$ref" to this proposal''s class create as "#seq title (new in this proposal)" (.review-diff__name--new), the id in the tooltip'
+  - selector: review-the-change
+    component: src/components/proposals/review/ReviewInspector.tsx
+    description: "THE CHANGE (section) of an update, move, delete or a create that is not an element or relationship"
+  - selector: review-diff
+    component: src/components/proposals/review/ReviewChange.tsx
+    description: 'The change rows (dl.review-diff); "No field changes recorded." when there are none'
+  - selector: review-diff-*
+    component: src/components/proposals/review/ReviewChange.tsx
+    description: "review-diff-row-{field}: one field (data-op), its was (.review-diff__was, struck on an update) and now (.review-diff__now); review-diff-text-{field}: a long text change as one inline word diff (p.review-word-diff, del/ins, a folded run .review-word-diff__folded); review-diff-added-{field} / review-diff-removed-{field}: what a list gains and loses; review-diff-reordered-{field}: \"Reordered\" over a was → now, for a list whose items only moved; review-diff-unchanged: how many other fields stay as they are"
+  - selector: review-quote-*
+    component: src/components/proposals/review/ReviewChange.tsx
+    description: "A sourceless operation's evidence (1-based): a figure with the quote (a plain blockquote) and its caption (claim, entity, url)"
+  - selector: review-why
+    component: src/components/proposals/review/ReviewInspector.tsx
+    description: "WHY (section) for a proposal not extracted from a source"
+  - selector: review-why-*
+    component: src/components/proposals/review/ReviewChange.tsx
+    description: 'review-why-rationale: the rationale ("No rationale given."); review-why-notes: the operation notes; review-why-chips: plan kind, p, scope and who proposed it'
+  - selector: review-stale-callout
+    component: src/components/proposals/review/ReviewInspector.tsx
+    description: "DECIDE: a stale operation, why (staleCauseText) and that Apply anyway keeps the proposed values; the target gone says to reject it"
+  - selector: review-domain-range-callout
+    component: src/components/proposals/review/ReviewInspector.tsx
+    description: "DECIDE: a relationship that doesn't fit its type, why applying it fails; the plain failure block is left out"
+  - selector: review-dataset-impact
+    component: src/components/proposals/review/ReviewInspector.tsx
+    description: "DECIDE: data that yields to the schema and follows this change, one line per dataset"
+  - selector: review-no-passage
+    component: src/components/proposals/review/ReviewInspector.tsx
+    description: "An operation the extraction couldn't place in its source (role=note): bulk accept holds it back; accept it here"
   - selector: review-not
     component: src/components/proposals/review/ReviewInspector.tsx
     description: "Not an element / Not a relationship (secondary, key X): opens the reason step: highlights it with a prompt, scrolls it into view and focuses the first reason, or in gold mode with no note the note; nothing is sent until a reason is picked"

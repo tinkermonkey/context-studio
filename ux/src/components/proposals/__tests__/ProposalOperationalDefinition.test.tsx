@@ -60,51 +60,39 @@ const linesOf = (list: HTMLElement) =>
     .getAllByRole("listitem")
     .map((li) => li.textContent);
 
-describe("a class's operational definition in the inspector", () => {
-  it("reads distinguish_from as class: when lines, before then after", async () => {
+describe("a class's operational definition in the review inspector (#1660)", () => {
+  it("reads distinguish_from as class: when lines, by what the list gains", async () => {
     renderPage("op-class");
-    const row = await screen.findByTestId("operation-change-row-distinguish_from");
-    expect(within(row).getByText("distinguish from")).toHaveClass("op-change__field");
-
-    const before = row.querySelector(".op-change__before--changed") as HTMLElement;
-    const after = row.querySelector(".op-change__after--changed") as HTMLElement;
-    // The unknown class reads by its id; the sibling by its label once loaded.
-    expect(linesOf(before)).toEqual(["class-gone: it was the old split"]);
+    const row = await screen.findByTestId("review-diff-row-distinguish_from");
+    expect(within(row).getByText("distinguish from")).toHaveClass("review-diff__field");
+    // The sibling reads by its label once loaded; the entry both sides keep isn't repeated.
+    const added = screen.getByTestId("review-diff-added-distinguish_from");
     expect(
-      await within(after).findByText("application_service: it is the behaviour, not the part"),
+      await within(added).findByText("application_service: it is the behaviour, not the part"),
     ).toBeInTheDocument();
-    expect(linesOf(after)).toEqual([
-      "class-gone: it was the old split",
-      "application_service: it is the behaviour, not the part",
-    ]);
+    expect(linesOf(added)).toEqual(["application_service: it is the behaviour, not the part"]);
+    expect(screen.queryByTestId("review-diff-removed-distinguish_from")).not.toBeInTheDocument();
     expect(row).not.toHaveTextContent("class_id");
   });
 
-  it("reads evidence signals as a numbered list and the standard as text", async () => {
+  it("reads evidence signals by what they gain and the standard as was → now", async () => {
     renderPage("op-class");
-    const signals = await screen.findByTestId("operation-change-row-evidence_signals");
-    const after = within(signals)
-      .getAllByTestId("operation-change-lines-evidence_signals")
-      .find((l) => l.closest(".op-change__after--changed"))!;
-    expect(after.tagName).toBe("OL");
-    expect(after).toHaveClass("op-change__lines", "op-change__lines--ordered");
-    expect(linesOf(after)).toEqual(["Is deployed on its own", "Has a repository"]);
+    const added = await screen.findByTestId("review-diff-added-evidence_signals");
+    expect(linesOf(added)).toEqual(["Is deployed on its own"]);
+    expect(screen.queryByTestId("review-diff-removed-evidence_signals")).not.toBeInTheDocument();
 
-    const standard = screen.getByTestId("operation-change-row-standard_reference");
+    const standard = screen.getByTestId("review-diff-row-standard_reference");
     expect(within(standard).getByText("standard reference")).toBeInTheDocument();
-    expect(standard.querySelector(".op-change__before--changed")).toHaveTextContent("—");
-    expect(standard.querySelector(".op-change__after--changed")).toHaveTextContent(
-      "ArchiMate 3.2 §9.2",
-    );
+    expect(standard.querySelector(".review-diff__was")).toHaveTextContent("—");
+    expect(standard.querySelector(".review-diff__now")).toHaveTextContent("ArchiMate 3.2 §9.2");
   });
 
-  it("shows the operation's notes", async () => {
+  it("shows the operation's notes under Why", async () => {
     renderPage("op-class");
-    const notes = await screen.findByTestId("operation-notes");
-    expect(notes).toHaveClass("op-inspector__notes");
+    const notes = await screen.findByTestId("review-why-notes");
+    expect(notes).toHaveClass("review-why");
     expect(notes.textContent).toBe("Checked against the 3.2 spec.\nKeep the old split for now.");
   });
-
   it("shows no notes section for an operation without notes", async () => {
     renderPage("op-rename");
     await screen.findByTestId("operation-rationale");

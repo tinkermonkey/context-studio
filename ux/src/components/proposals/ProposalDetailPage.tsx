@@ -34,6 +34,7 @@ import { RevertProposalDialog } from "./RevertProposalDialog";
 import { TieredOperations } from "./TieredOperations";
 import {
   DEFAULT_THRESHOLD,
+  decidedByLabel,
   DR_TAXONOMY_IDENTIFIER,
   atOrAboveThreshold,
   decisionHeadline,
@@ -649,12 +650,21 @@ export function ProposalDetailPage({
           data={operations}
           selectedId={selectedOperationId}
           renderInspectorContent={(operation) => {
-            if (opensReviewInspector(proposal, operation)) {
+            if (opensReviewInspector(operation)) {
               return (
                 <ReviewInspector
                   key={operation.id}
                   {...inspector.inspectorProps(operation)}
                   keyboard={false}
+                  reverted={reverted}
+                  decidedBy={
+                    reverted
+                      ? undefined
+                      : decidedByLabel(
+                          decisions?.find((d) => d.operation_id === operation.id)?.decided_by,
+                          decisions?.find((d) => d.operation_id === operation.id)?.decided_at,
+                        )
+                  }
                 />
               );
             }

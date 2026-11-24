@@ -198,8 +198,9 @@ describe("deciding one operation in the inspector", () => {
   });
 
   it("offers Edit, then accept only for DR relationship types", async () => {
+    // A class update opens the review inspector (#1660): no triple editor there.
     renderPage("op-class");
-    await screen.findByTestId("operation-decision");
+    await screen.findByTestId("review-decide");
     expect(screen.queryByTestId("operation-edit")).not.toBeInTheDocument();
   });
 });

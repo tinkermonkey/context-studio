@@ -4,7 +4,7 @@ import { useTaxonomyClasses } from "@/api/hooks/ontology/useClasses";
 import { useIndividuals, useIndividualsByIds } from "@/api/hooks/ontology/useIndividuals";
 import type { ChangeProposal, ProposedOperation, RejectionReason } from "@/api/services/proposals";
 import { useToasts } from "@/components/ui/Toast";
-import { takesDecisions } from "../decisionModel";
+import { staleCause, takesDecisions } from "../decisionModel";
 import { useHoverOverlay } from "../HoverOverlay";
 import { isAwaiting } from "../proposalModel";
 import {
@@ -29,6 +29,7 @@ import {
   endsToDecide,
   forgetPick,
   isElement,
+  extractedFromSource,
   isRelationship,
   relationshipsOf,
   rememberPick,
@@ -247,6 +248,12 @@ export function useInspectorModel(
   const pills: ReviewPillsValue = { schema, overlay, link };
 
   const deciding = decidingOption ?? (!!proposal && takesDecisions(proposal));
+  // An extraction from a source: its creates are correct or not an element; anything
+  // else is accepted or rejected.
+  const extraction = extractedFromSource(proposal);
+  const origin = proposal
+    ? [proposal.source, proposal.source_detail].filter(Boolean).join(" · ")
+    : undefined;
 
   // A near match's choice, by operation: an existing individual, or create new.
   const [nearChoices, setNearChoices] = useState<Record<string, NearMatchChoice>>({});
@@ -407,6 +414,16 @@ export function useInspectorModel(
     const goldEntry = gold ? goldElementOf(gold, operation) : undefined;
     return {
       operation,
+      extraction,
+      context,
+      origin,
+      staleCause: operation.stale
+        ? staleCause(
+            operation,
+            context.currentProperty(operation.target_id) as Record<string, unknown> | undefined,
+            context.targetGone(operation),
+          )
+        : undefined,
       operations,
       names,
       schema,

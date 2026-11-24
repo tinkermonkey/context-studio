@@ -1367,4 +1367,141 @@
   .review-card .review-pill--class {
     align-self: flex-start;
   }
+
+  /* ============= The change, Why and captioned evidence (#1660) ============= */
+  .review-diff {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin: 0;
+  }
+
+  .review-diff__row {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+  }
+
+  .review-diff__field {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: rgb(var(--canvas-fg-3));
+  }
+
+  .review-diff__values {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin: 0;
+    min-width: 0;
+    font-size: 13px;
+    overflow-wrap: anywhere;
+  }
+
+  /* Was: struck, rose; now: emerald. A create has only now, a delete only was. */
+  .review-diff__was,
+  .review-diff__now {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+    padding: 4px 8px;
+    border-radius: 6px;
+    border-left: 3px solid transparent;
+  }
+
+  .review-diff__was {
+    border-left-color: rgb(var(--status-rose));
+    background: var(--rv-rose-bg);
+    color: rgb(var(--canvas-fg-2));
+  }
+
+  .review-diff__row[data-op="update"] .review-diff__was {
+    text-decoration: line-through;
+    text-decoration-color: rgb(var(--status-rose) / 0.6);
+  }
+
+  .review-diff__now {
+    border-left-color: rgb(var(--status-emerald));
+    background: rgb(var(--status-emerald) / 0.1);
+    color: rgb(var(--canvas-fg-1));
+  }
+
+  .review-diff__list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .review-diff__sign {
+    font-family: var(--font-mono);
+    font-weight: 600;
+  }
+
+  .review-diff__name {
+    font-weight: 500;
+  }
+
+  .review-diff__name--new {
+    color: var(--rv-cyan-fg);
+  }
+
+  .review-diff__lines {
+    margin: 0;
+    padding-left: 16px;
+  }
+
+  /* Long text: one inline word diff that wraps to the inspector's width. */
+  .review-word-diff {
+    margin: 0;
+    font-size: 13px;
+    line-height: 1.6;
+    color: rgb(var(--canvas-fg-2));
+    overflow-wrap: anywhere;
+  }
+
+  .review-word-diff__removed {
+    padding: 0 2px;
+    border-radius: 3px;
+    background: var(--rv-rose-bg);
+    color: var(--rv-rose-fg);
+    text-decoration: line-through;
+  }
+
+  .review-word-diff__added {
+    padding: 0 2px;
+    border-radius: 3px;
+    background: rgb(var(--status-emerald) / 0.14);
+    color: var(--rv-emerald-fg);
+    text-decoration: none;
+  }
+
+  .review-word-diff__folded {
+    color: rgb(var(--canvas-fg-3));
+  }
+
+  .review-why {
+    margin: 0;
+    font-size: 13px;
+    color: rgb(var(--canvas-fg-2));
+  }
+
+  .review-quote {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    margin: 0;
+  }
+
+  .review-quote__caption {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: rgb(var(--canvas-fg-3));
+    overflow-wrap: anywhere;
+  }
+
+  .review-impact {
+    margin: 4px 0 0;
+    padding-left: 16px;
+  }
 }

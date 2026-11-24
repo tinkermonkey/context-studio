@@ -2,11 +2,23 @@ import { useEffect, useRef, useState, type ReactNode, type RefObject } from "rea
 import { Button, Chip, FormCallout, Panel, TextArea } from "@tinkermonkey/heimdall-ui";
 import type { ProposedOperation, RejectionReason } from "@/api/services/proposals";
 import type { components } from "@/api/types";
+import {
+  datasetImpactText,
+  decidedRecord,
+  decisionState,
+  staleCauseText,
+  type StaleCause,
+} from "../decisionModel";
+import { operationTitle } from "../OperationInspector";
 import { formatProbability, isAwaiting } from "../proposalModel";
+import type { OperationContext } from "../useOperationContext";
+import { CaptionedEvidence, ChangeBlock, ClassRefs, WhyBlock, newInProposal } from "./ReviewChange";
 import { NearMatchChoice } from "../SourcePassage";
 import {
   CREATE_NEW,
   isNearMatch,
+  lacksPassage,
+  plainEvidenceOf,
   sourcePassagesOf,
   type NearMatchChoice as Choice,
 } from "../sourceModel";
@@ -37,6 +49,7 @@ import {
   endRejectedNote,
   endsToDecide,
   isElement,
+  isRelationship,
   proposedClassId,
   reasonLabel,
   relationshipEdited,
@@ -70,6 +83,22 @@ export interface ReviewNames {
 
 export interface ReviewInspectorProps {
   operation: ProposedOperation;
+  /**
+   * The proposal was extracted from a source: its creates are judged as elements
+   * and relationships (Correct / Not an element). Any other proposal's operations
+   * are accepted or rejected (Accept, Apply anyway, Apply again / Reject).
+   */
+  extraction?: boolean;
+  /** Names for what an operation refers to, for its change. */
+  context: OperationContext;
+  /** Who proposed it (the proposal's source and detail), under Why. */
+  origin?: string;
+  /** Why a stale operation is stale, for its callout. */
+  staleCause?: StaleCause;
+  /** Who decided a decided operation, and when ("by you · Nov 19, 3:02 PM"). */
+  decidedBy?: string;
+  /** The proposal was reverted: what it applied reads as reverted. */
+  reverted?: boolean;
   operations: ProposedOperation[];
   names: ReviewNames;
   schema: ReviewSchema;
@@ -300,6 +329,45 @@ function Decided({
   );
 }
 
+/** A decided operation that isn't an element or relationship: its state and what the decision did. */
+function DecidedChange({
+  operation,
+  reverted,
+}: {
+  operation: ProposedOperation;
+  reverted: boolean;
+}) {
+  const state = decisionState(operation, reverted);
+  const record = decidedRecord(operation);
+  return (
+    <div className="review-decided" data-testid="review-decided">
+      <span className="review-chips">
+        <Chip variant={state.variant}>{state.label}</Chip>
+        {operation.status === "rejected" && reasonLabel(operation.reason_code) && (
+          <span>{`Rejected: ${reasonLabel(operation.reason_code)}.`}</span>
+        )}
+      </span>
+      {record && <span>{record}</span>}
+      {operation.status === "rejected" && operation.reason && (
+        <span className="review-muted" data-testid="review-decided-note">
+          {operation.reason}
+        </span>
+      )}
+    </div>
+  );
+}
+
+/** EVIDENCE for an operation with no source passage: quotes with their captions. */
+function CaptionedEvidenceBlock({ operation }: { operation: ProposedOperation }) {
+  if (plainEvidenceOf(operation).length === 0) return null;
+  return (
+    <Block label="Evidence" data-testid="review-evidence">
+      <Eyebrow>EVIDENCE</Eyebrow>
+      <CaptionedEvidence operation={operation} />
+    </Block>
+  );
+}
+
 /**
  * The selected element or relationship, one skeleton for both: what it is,
  * the evidence, what the schema says, decide, change it, gold only.
@@ -313,6 +381,12 @@ function Decided({
  */
 export function ReviewInspector({
   operation,
+  extraction = true,
+  context,
+  origin,
+  staleCause,
+  decidedBy,
+  reverted = false,
   operations,
   names,
   schema,
@@ -355,12 +429,23 @@ export function ReviewInspector({
   const draft = gold?.draft;
   const tier = draft?.tier ?? gold?.goldTier ?? "core";
   const element = isElement(operation);
+  // An individual create reads as an element, a relationship create as the relationship;
+  // any other operation reads as its change.
+  const relationship = !element && isRelationship(operation) && operation.op === "create";
+  const change = !element && !relationship;
   const kind = element ? "an element" : "a relationship";
+  // Only an individual or relationship create can be reopened to decide it again.
+  const reopens = !change;
   const verdict = verdictOf(operation);
   const awaiting = verdict === "awaiting";
   // Key hints show only where the keys work, on an operation awaiting its decision.
   const keyed = keyboard && awaiting;
   const classId = shownClassId(operation);
+  // An individual with more than one class: the rest beside the first.
+  const shownClassIds = shownFields(operation).class_ids;
+  const otherClassIds = Array.isArray(shownClassIds)
+    ? shownClassIds.filter((id): id is string => typeof id === "string").slice(1)
+    : [];
   const cls = names.classOf(classId);
   const quotes = sourcePassagesOf(operation).flatMap((p) => (p.quote ? [p.quote] : []));
   const relationships = element ? relationshipsOf(operation, operations) : [];
@@ -371,12 +456,12 @@ export function ReviewInspector({
       ? ""
       : ` · p ${formatProbability(operation.probability)}`;
   // Decided: the decision can be changed while the review is open.
-  const canDecide = deciding && (awaiting || changing);
+  const canDecide = deciding && (awaiting || (changing && reopens));
   const nearMatch = element && isNearMatch(operation);
   // An existing individual is used as it is: the create's class can't change with it.
   const usingExisting = nearMatch && nearChoice !== CREATE_NEW;
   const ends = endsToDecide(operation, operations);
-  const relationshipEnds = element
+  const relationshipEnds = !relationship
     ? undefined
     : {
         source: endOf(shownFields(operation).source_id),
@@ -390,6 +475,20 @@ export function ReviewInspector({
   const endRejected = ends.rejected.length > 0;
   const rejectForEnd = () =>
     onReject(END_REJECTED_REASON, note.trim() || endRejectedNote(ends.rejected.map((e) => e.seq)));
+  // Verbs follow the origin: an extraction's creates are correct or not an element;
+  // anything else is accepted (anyway, when stale; again, when its apply failed) or rejected.
+  const acceptLabel = extraction
+    ? usingExisting
+      ? "Correct: use existing"
+      : "Correct"
+    : operation.stale
+      ? "Apply anyway"
+      : operation.status === "failed"
+        ? "Apply again"
+        : usingExisting
+          ? "Accept: use existing"
+          : "Accept";
+  const rejectLabel = !extraction || change ? "Reject" : `Not ${kind}`;
   /**
    * Open the reason step (the "Not …" button and key X): highlight the reasons with a
    * prompt, bring them into view and focus the first reason, or, while gold mode still
@@ -455,6 +554,28 @@ export function ReviewInspector({
   const decide = canDecide && (
     <Block label="Decide" data-testid="review-decide">
       <Eyebrow>{awaiting ? "DECIDE" : "DECIDE AGAIN"}</Eyebrow>
+      {operation.stale && (
+        <FormCallout variant="warn" icon="alert" data-testid="review-stale-callout">
+          {staleCause?.gone
+            ? `${staleCauseText(staleCause)} Reject it, unless the target comes back.`
+            : `${staleCause ? staleCauseText(staleCause) : "Its target changed after it was proposed."} Apply anyway keeps the proposed values over those changes.`}
+        </FormCallout>
+      )}
+      {operation.domain_range_mismatch && (
+        <FormCallout variant="warn" icon="alert" data-testid="review-domain-range-callout">
+          {`It doesn't fit its relationship type: ${operation.domain_range_mismatch}. Applying it fails; reject it, or change the type's domain or range first.`}
+        </FormCallout>
+      )}
+      {!!operation.dataset_impact?.length && (
+        <FormCallout variant="info" icon="info" data-testid="review-dataset-impact">
+          Data that yields to the schema follows this change, without blocking it.
+          <ul className="review-impact" aria-label="Data that follows the change">
+            {operation.dataset_impact.map((impact) => (
+              <li key={impact.dataset_id}>{datasetImpactText(impact)}</li>
+            ))}
+          </ul>
+        </FormCallout>
+      )}
       {ends.rejected.length > 0 ? (
         <FormCallout variant="warn" icon="alert" data-testid="review-ends-callout">
           {seqList(ends.rejected)} {ends.rejected.length === 1 ? "was" : "were"} rejected, so this
@@ -500,7 +621,7 @@ export function ReviewInspector({
             aria-keyshortcuts={keyed ? "A" : undefined}
             data-testid="review-correct"
           >
-            {usingExisting ? "Correct: use existing" : "Correct"}
+            {acceptLabel}
           </Button>
         )}
         <Button
@@ -511,7 +632,7 @@ export function ReviewInspector({
           aria-keyshortcuts={keyed && !endRejected ? "X" : undefined}
           data-testid="review-not"
         >
-          {element ? "Not an element" : "Not a relationship"}
+          {rejectLabel}
         </Button>
         {keyed && (
           <span className="review-keys">
@@ -630,12 +751,16 @@ export function ReviewInspector({
 
   const reasons = canDecide && (
     <Block
-      label={`Not ${kind}`}
+      label={rejectLabel === "Reject" ? "Reject" : `Not ${kind}`}
       className={prompting ? "review-block--prompt" : undefined}
       blockRef={reasonsBlockRef}
       data-testid="review-reasons-block"
     >
-      <Eyebrow>{`OR NOT ${kind.toUpperCase()}, BECAUSE`}</Eyebrow>
+      <Eyebrow>
+        {rejectLabel === "Reject"
+          ? "OR REJECT IT, BECAUSE"
+          : `OR NOT ${kind.toUpperCase()}, BECAUSE`}
+      </Eyebrow>
       {/* Always rendered, so a screen reader announces the text when it appears. */}
       <span className="review-prompt" role="status" data-testid="review-reasons-prompt">
         {prompting
@@ -648,7 +773,7 @@ export function ReviewInspector({
         ref={reasonsRef}
         className="review-reasons"
         role="group"
-        aria-label={element ? "Not an element, because" : "Not a relationship, because"}
+        aria-label={rejectLabel === "Reject" ? "Reject it, because" : `Not ${kind}, because`}
         aria-keyshortcuts={keyed && !endRejected ? "X" : undefined}
         data-testid="review-reasons"
       >
@@ -700,8 +825,22 @@ export function ReviewInspector({
   const decided = !awaiting && (
     <Block label="Decision">
       <Eyebrow>DECIDED</Eyebrow>
-      <Decided operation={operation} endOf={endOf} />
-      {deciding && (
+      {change ? (
+        <DecidedChange operation={operation} reverted={reverted} />
+      ) : (
+        <Decided operation={operation} endOf={endOf} />
+      )}
+      {decidedBy && (
+        <span className="review-block__subtitle" data-testid="review-decided-by">
+          {decidedBy}
+        </span>
+      )}
+      {deciding && !reopens && operation.status === "applied" && (
+        <span className="review-block__subtitle" data-testid="review-change-note">
+          Nothing left to decide. Revert the proposal to undo it.
+        </span>
+      )}
+      {deciding && reopens && (
         <>
           <div className="review-chips">
             <Button
@@ -742,21 +881,45 @@ export function ReviewInspector({
       id="review-inspector"
       className="review-pane review-pane--inspector"
       role="region"
-      aria-label={element ? "Selected element" : "Selected relationship"}
+      aria-label={
+        element ? "Selected element" : relationship ? "Selected relationship" : "Selected operation"
+      }
       noPadding
       data-testid="review-inspector"
     >
       <div className="review-inspector__head">
         <div className="review-inspector__top">
           <span className="review-eyebrow" data-testid="review-inspector-eyebrow">
-            {element ? "Individual" : "Relationship"}
+            {change
+              ? `${operation.op} · ${operation.kind} · seq ${operation.seq}`
+              : element
+                ? "Individual"
+                : "Relationship"}
             {probability}
           </span>
-          <Chip variant={VERDICT_CHIP[verdict]} data-testid="review-inspector-status">
-            {verdictLabel(operation)}
-          </Chip>
+          {change ? (
+            <Chip
+              variant={decisionState(operation, reverted).variant}
+              data-testid="review-inspector-status"
+            >
+              {decisionState(operation, reverted).label}
+            </Chip>
+          ) : (
+            <Chip variant={VERDICT_CHIP[verdict]} data-testid="review-inspector-status">
+              {verdictLabel(operation)}
+            </Chip>
+          )}
         </div>
-        {relationshipEnds ? (
+        {change ? (
+          <>
+            <h2 className="review-inspector__title" data-testid="review-inspector-title">
+              {operationTitle(operation, context)}
+            </h2>
+            <span className="review-mono review-muted" data-testid="review-inspector-id">
+              {operation.id}
+            </span>
+          </>
+        ) : relationshipEnds ? (
           <RelationshipTitle
             operation={operation}
             ends={relationshipEnds}
@@ -767,7 +930,31 @@ export function ReviewInspector({
             <h2 className="review-inspector__title" data-testid="review-inspector-title">
               {names.titleOf(operation)}
             </h2>
-            <ClassPill classId={classId} size="lg" data-testid="review-inspector-class" />
+            {!classId || schema.loading || schema.classOf(classId) ? (
+              <ClassPill classId={classId} size="lg" data-testid="review-inspector-class" />
+            ) : (
+              // A class the taxonomy's schema doesn't have: its name, never a bare id.
+              <span
+                className="review-diff__name"
+                title={classId}
+                data-testid="review-inspector-class"
+              >
+                {newInProposal(classId, operations) ??
+                  context.nameOf(classId, operation) ??
+                  classId}
+              </span>
+            )}
+            {otherClassIds.length > 0 && (
+              <span data-testid="review-inspector-other-classes">
+                <ClassRefs
+                  ids={otherClassIds}
+                  operation={operation}
+                  operations={operations}
+                  context={context}
+                  schema={schema}
+                />
+              </span>
+            )}
           </>
         )}
         {gold && gold.aliases.length > 0 && (
@@ -778,7 +965,7 @@ export function ReviewInspector({
       </div>
 
       <div className="review-inspector__body">
-        {operation.status === "failed" && (
+        {operation.status === "failed" && !operation.domain_range_mismatch && (
           <div className="review-block">
             <div className="review-failed" role="alert" data-testid="review-failed">
               The last apply failed: {operation.reason ?? "no reason given"}
@@ -791,6 +978,36 @@ export function ReviewInspector({
         )}
 
         {evidence}
+
+        {lacksPassage(operation) && (
+          <Block label="No passage">
+            <p className="review-muted" role="note" data-testid="review-no-passage">
+              No passage: the extraction couldn&apos;t place this in its source, so nothing shows
+              where it came from. Bulk accept holds it back; check it, then accept it here.
+            </p>
+          </Block>
+        )}
+
+        {change && (
+          <Block label="The change" data-testid="review-the-change">
+            <Eyebrow>THE CHANGE</Eyebrow>
+            <ChangeBlock
+              operation={operation}
+              operations={operations}
+              context={context}
+              schema={schema}
+            />
+          </Block>
+        )}
+
+        {!extraction && (
+          <Block label="Why" data-testid="review-why">
+            <Eyebrow>WHY</Eyebrow>
+            <WhyBlock operation={operation} origin={origin} />
+          </Block>
+        )}
+
+        {!extraction && quotes.length === 0 && <CaptionedEvidenceBlock operation={operation} />}
 
         {element && (
           <Block label="What the class means" data-testid="review-definition">

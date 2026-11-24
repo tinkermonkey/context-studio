@@ -1,5 +1,13 @@
 import { describe, it, expect } from "vitest";
-import { sentences, showsAsTextDiff, textDiffLines, textDiffOf, wrap } from "../textDiff";
+import {
+  WORD_CONTEXT,
+  sentences,
+  showsAsTextDiff,
+  textDiffLines,
+  textDiffOf,
+  wordDiff,
+  wrap,
+} from "../textDiff";
 
 describe("showsAsTextDiff", () => {
   it("diffs long or multi-line text", () => {
@@ -96,5 +104,48 @@ describe("textDiffOf", () => {
       { type: "added", content: "Sentence two hundred." },
     ]);
     expect(lines.filter((l) => l.type === "hunk")).toHaveLength(2);
+  });
+});
+
+describe("wordDiff", () => {
+  it("marks the removed words before the added ones, between the words both keep", () => {
+    expect(wordDiff("A named design decision", "A named visual decision")).toEqual([
+      { type: "same", text: "A named" },
+      { type: "removed", text: "design" },
+      { type: "added", text: "visual" },
+      { type: "same", text: "decision" },
+    ]);
+  });
+
+  it("folds a long unchanged stretch, keeping the words around each change", () => {
+    const middle = Array.from({ length: 30 }, (_, i) => `w${i}`).join(" ");
+    const segments = wordDiff(`one ${middle} two`, `uno ${middle} dos`);
+    expect(segments.map((s) => s.type)).toEqual([
+      "removed",
+      "added",
+      "same",
+      "folded",
+      "same",
+      "removed",
+      "added",
+    ]);
+    const folded = segments.find((s) => s.type === "folded");
+    expect(folded).toEqual({ type: "folded", text: "…", count: 30 - 2 * WORD_CONTEXT });
+    expect(segments[2].text.split(" ")).toHaveLength(WORD_CONTEXT);
+  });
+
+  it("folds unchanged words at the start and end down to nothing but the fold", () => {
+    const lead = Array.from({ length: 20 }, (_, i) => `a${i}`).join(" ");
+    const segments = wordDiff(`${lead} old`, `${lead} new`);
+    expect(segments[0]).toEqual({ type: "folded", text: "…", count: 20 - WORD_CONTEXT });
+    expect(segments.slice(-2)).toEqual([
+      { type: "removed", text: "old" },
+      { type: "added", text: "new" },
+    ]);
+  });
+
+  it("reads an empty side as all added or all removed", () => {
+    expect(wordDiff(null, "fresh text")).toEqual([{ type: "added", text: "fresh text" }]);
+    expect(wordDiff("old text", "")).toEqual([{ type: "removed", text: "old text" }]);
   });
 });

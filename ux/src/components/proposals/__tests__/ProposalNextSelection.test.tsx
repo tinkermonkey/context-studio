@@ -69,7 +69,8 @@ function selected() {
 
 /** The inspector's operation id line. */
 async function inspected(id: string) {
-  const inspector = await screen.findByTestId("operation-inspector");
+  // A relationship type opens OperationInspector, anything else the review inspector (#1660).
+  const inspector = await screen.findByTestId(/^(operation|review)-inspector$/);
   await waitFor(() => expect(within(inspector).getByText(id)).toBeInTheDocument());
 }
 
@@ -100,7 +101,9 @@ describe("after a decision under Needs decision", () => {
 
   it("selects the new last row when the decided row was last", async () => {
     render(<Harness initial="op-class" />);
-    await userEvent.click(await screen.findByTestId("operation-reject"));
+    // The review inspector rejects with a reason (#1660).
+    await userEvent.click(await screen.findByTestId("review-not"));
+    await userEvent.click(screen.getByTestId("review-reason-keep_current"));
 
     await waitFor(() => expect(selected()).toBe("op-delete"));
     await inspected("op-delete");

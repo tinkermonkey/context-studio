@@ -459,10 +459,11 @@ describe("a relationship that doesn't fit its type (#1574)", () => {
     const chip = await screen.findByTestId("operation-domain-range-op-edge");
     expect(chip).toHaveTextContent("doesn't fit type");
     expect(chip).toHaveAttribute("title", "target is Service, not Component");
-    expect(screen.getByTestId("operation-domain-range-callout")).toHaveTextContent(
+    // The review inspector explains it (#1660), and the plain failure isn't repeated.
+    expect(await screen.findByTestId("review-domain-range-callout")).toHaveTextContent(
       "It doesn't fit its relationship type: target is Service, not Component.",
     );
-    expect(screen.queryByTestId("operation-failed-callout")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("review-failed")).not.toBeInTheDocument();
   });
 
   it("shows nothing for a relationship that fits", async () => {
@@ -471,6 +472,6 @@ describe("a relationship that doesn't fit its type (#1574)", () => {
 
     expect(await screen.findByTestId("operation-status-op-edge")).toBeInTheDocument();
     expect(screen.queryByTestId("operation-domain-range-op-edge")).not.toBeInTheDocument();
-    expect(screen.queryByTestId("operation-domain-range-callout")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("review-domain-range-callout")).not.toBeInTheDocument();
   });
 });

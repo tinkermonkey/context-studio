@@ -137,17 +137,17 @@ describe("the no passage marker", () => {
 
   it("explains it in the inspector in place of the passage", async () => {
     renderPage("op-pacemaker");
-    const note = await screen.findByTestId("operation-no-passage");
+    const note = await screen.findByTestId("review-no-passage");
     expect(note).toHaveAttribute("role", "note");
-    expect(note).toHaveClass("entity-note");
+    expect(note).toHaveClass("review-muted");
     expect(note).toHaveTextContent("couldn't place this in its source");
     expect(screen.queryByTestId("operation-source-passage")).not.toBeInTheDocument();
   });
 
   it("is absent from the inspector of an operation with a passage", async () => {
     renderPage("op-wall");
-    expect(await screen.findByTestId("operation-inspector")).toBeInTheDocument();
-    expect(screen.queryByTestId("operation-no-passage")).not.toBeInTheDocument();
+    expect(await screen.findByTestId("review-inspector")).toBeInTheDocument();
+    expect(screen.queryByTestId("review-no-passage")).not.toBeInTheDocument();
   });
 });
 
@@ -203,7 +203,10 @@ describe("accepting one on its own", () => {
   it("applies an operation without a passage from the inspector", async () => {
     const user = userEvent.setup();
     renderPage("op-anchor");
-    await user.click(await screen.findByTestId("operation-accept"));
+    // No operation of this proposal cites a passage: it is accepted, not "Correct" (#1660).
+    const accept = await screen.findByTestId("review-correct");
+    expect(accept).toHaveTextContent(/^Accept$/);
+    await user.click(accept);
 
     await waitFor(() => expect(applies).toHaveLength(1));
     expect(applies[0].operation_ids).toEqual(["op-anchor"]);
