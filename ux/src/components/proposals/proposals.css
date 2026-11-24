@@ -194,9 +194,15 @@
     color: rgb(var(--canvas-fg-1));
   }
 
+  /* A row's flags beside its status: side by side, wrapping. */
   .op-status,
+  .op-replacement-chips {
+    display: flex;
+    gap: 4px;
+    flex-wrap: wrap;
+  }
 
-  /* An operation's change, in a table cell. */
+  /* An operation's change, inline in a review-list row. */
   .op-diff {
     display: flex;
     flex-direction: column;

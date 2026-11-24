@@ -241,7 +241,8 @@ export type DecisionState =
   | "applied"
   | "applied_with_edits"
   | "rejected"
-  | "reverted";
+  | "reverted"
+  | "withdrawn";
 
 export interface DecisionStateView {
   state: DecisionState;
@@ -265,6 +266,8 @@ export function decisionState(operation: ProposedOperation, reverted = false): D
       return { state: "needs_decision", label: "needs decision", variant: "amber" };
     case "failed":
       return { state: "failed", label: "failed", variant: "rose" };
+    case "withdrawn":
+      return { state: "withdrawn", label: "withdrawn", variant: "neutral" };
     case "applied":
       return operation.applied_fields
         ? { state: "applied_with_edits", label: "applied with edits", variant: "emerald" }
@@ -395,7 +398,8 @@ export function decisionProgress(
 ): DecisionProgress {
   const awaiting = operations.filter(isAwaiting);
   const unblocked = awaiting.filter((o) => !isBlocked(o));
-  const total = operations.length;
+  // Withdrawn by its proposer (#1624): not part of the review, so not counted.
+  const total = operations.filter((o) => o.status !== "withdrawn").length;
   const fresh = unblocked.filter((o) => o.status === "pending" && !o.stale);
   const near = fresh.filter(isNearMatch);
   const low = fresh.filter((o) => !isNearMatch(o) && isBelowThreshold(o, threshold));
@@ -500,7 +504,10 @@ export function filterOperations(
   filter: OperationFilter,
 ): ProposedOperation[] {
   if (filter === "all") return operations;
-  return operations.filter((o) => isAwaiting(o) === (filter === "needs"));
+  // A withdrawn operation (#1624) was never decided: it shows under All only.
+  return operations.filter(
+    (o) => o.status !== "withdrawn" && isAwaiting(o) === (filter === "needs"),
+  );
 }
 
 /** The secondary filters: an op and a scope, each "any" when cleared. */

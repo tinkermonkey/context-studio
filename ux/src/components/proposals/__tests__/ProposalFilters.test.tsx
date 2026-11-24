@@ -263,7 +263,8 @@ describe("op and scope filters", () => {
       .map((o) => o.id);
 
     await byOp(/^delete/);
-    const rows = [...list().querySelectorAll("[data-row-id]")].map((r) =>
+    // The list's own rows (a conflict card's members carry data-row-id too, for J / K).
+    const rows = [...list().querySelectorAll("a.review-row[data-row-id]")].map((r) =>
       r.getAttribute("data-row-id"),
     );
     expect(rows.sort()).toEqual([...deletes].sort());

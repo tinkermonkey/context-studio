@@ -167,16 +167,34 @@ describe("the review list", () => {
     expect(screen.queryByTestId("review-row-amended-op-router")).not.toBeInTheDocument();
   });
 
-  it("reads an operation its proposer withdrew as withdrawn, under All only", async () => {
+  it("reads an operation its proposer withdrew as withdrawn, under All only, uncounted", async () => {
     proposal.operations[2].status = "withdrawn";
     const user = await openPage();
     await screen.findByTestId("review-row-op-router");
+    expect(screen.queryByTestId("review-row-op-cache")).not.toBeInTheDocument();
+    // Not part of the review (#1624): not counted, and not listed as decided.
+    expect(screen.getByTestId("proposal-tally")).toHaveTextContent("3 of 3 need a decision");
+    await user.click(screen.getByRole("radio", { name: /^Decided/ }));
     expect(screen.queryByTestId("review-row-op-cache")).not.toBeInTheDocument();
     await user.click(screen.getByRole("radio", { name: /^All/ }));
     const row = await screen.findByTestId("review-row-op-cache");
     expect(row).toHaveAttribute("data-verdict", "withdrawn");
     expect(within(row).getByText("withdrawn")).toBeInTheDocument();
     expect(within(row).queryByRole("checkbox")).not.toBeInTheDocument();
+    // Its inspector says so, with no decision to change: it was never decided.
+    await user.click(row);
+    expect(screen.getByTestId("review-inspector-status")).toHaveTextContent("withdrawn");
+    expect(screen.getByTestId("review-decided")).toHaveTextContent("Withdrawn by its proposer");
+    expect(screen.queryByTestId("review-change-decision")).not.toBeInTheDocument();
+  });
+
+  it("reads a withdrawn change as withdrawn, not rejected", async () => {
+    proposal.operations[3].status = "withdrawn";
+    const user = await openPage();
+    await user.click(screen.getByRole("radio", { name: /^All/ }));
+    const row = await screen.findByTestId("review-row-op-rename-class");
+    expect(row).toHaveAttribute("data-verdict", "withdrawn");
+    expect(within(row).getByText("withdrawn")).toBeInTheDocument();
   });
 
   it("opens the inspector on a row's link, and shows an empty inspector until one is picked", async () => {
@@ -197,10 +215,12 @@ describe("bulk decisions", () => {
   it("are offered on an extraction proposal: Select ▾ checks all ready, the bar accepts them", async () => {
     const user = await openPage();
     const select = await screen.findByTestId("review-bulk-select");
-    expect(select).toHaveAttribute("aria-haspopup", "menu");
+    // A disclosure: its panel is a group of choices, not a menu (it holds a slider).
+    expect(select).toHaveAttribute("aria-expanded", "false");
     await user.click(select);
     expect(select).toHaveAttribute("aria-expanded", "true");
-    expect(screen.getByRole("menu", { name: "Select operations" })).toBeInTheDocument();
+    const panel = screen.getByRole("group", { name: "Select operations" });
+    expect(select).toHaveAttribute("aria-controls", panel.id);
     expect(menuItem("ready")).toHaveTextContent("All ready · 4");
     await user.click(menuItem("ready"));
     // The menu closes; the rows are checked and the bar counts them.
@@ -268,9 +288,12 @@ describe("bulk decisions", () => {
 });
 
 describe("keys", () => {
-  it("J and K move the selection down and up the list", async () => {
+  it("J and K move the selection down and up the list, also after a click on a checkbox", async () => {
     const user = await openPage("op-router");
     await screen.findByTestId("review-inspector");
+    // A checkbox takes no letters: the keys still move the selection.
+    await user.click(screen.getByTestId("operation-check-op-cache"));
+    expect(screen.getByTestId("operation-check-op-cache")).toHaveFocus();
     await user.keyboard("j");
     expect(current).toBe("op-gateway");
     await user.keyboard("j");

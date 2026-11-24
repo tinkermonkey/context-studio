@@ -3167,7 +3167,7 @@ selectors:
     component: src/components/proposals/review/ReviewElementsPane.tsx
     description: 'Elements pane (region "Proposed elements") with the Awaiting / All filter'
   - selector: review-filter
-    component: src/components/proposals/review/ReviewElementsPane.tsx
+    component: src/components/proposals/review/ReviewPage.tsx
     description: "SegmentedControl: Awaiting · N / All · N; Awaiting keeps the selected element"
   - selector: review-element-list
     component: src/components/proposals/review/ReviewElementsPane.tsx
@@ -3207,10 +3207,10 @@ selectors:
     description: "\"amended\" on a row its proposer changed since it was first proposed (amended_at, #1624)"
   - selector: review-bulk-select
     component: src/components/proposals/review/ReviewBulk.tsx
-    description: "Select ▾ (aria-haspopup=menu, aria-expanded): checks rows for the bulk bar; not on gold checks"
+    description: "Select ▾, a disclosure (aria-expanded, aria-controls): checks rows for the bulk bar; not on gold checks"
   - selector: review-bulk-select-menu
     component: src/components/proposals/review/ReviewBulk.tsx
-    description: "Select ▾'s menu (role=menu)"
+    description: "Select ▾'s panel (role=group, \"Select operations\"): its choices as buttons and the threshold slider"
   - selector: review-bulk-select-ready
     component: src/components/proposals/review/ReviewBulk.tsx
     description: "Select ▾: All ready · N (eligible, awaiting, not stale, blocked or held back) among the rows shown"
@@ -3228,7 +3228,7 @@ selectors:
     description: "Select ▾: what All ready leaves out among the rows shown, and why (stale, blocked, judgment and conflict, near matches with counts, no passage); absent when nothing"
   - selector: review-inspector
     component: src/components/proposals/review/ReviewInspector.tsx
-    description: 'Inspector (region "Selected element") for the selected element or relationship, on the Review page and, for an extraction''s creates, on proposal detail (split-2 drawer, no key hints there)'
+    description: 'Inspector (region "Selected element", "Selected relationship" or "Selected operation") for the selected operation, of every kind: on the Review page and on proposal detail, beside the review list, with key hints (A, X, 1-3) on one awaiting a decision'
   - selector: review-inspector-eyebrow
     component: src/components/proposals/review/ReviewInspector.tsx
     description: '"INDIVIDUAL · p 0.97" or "RELATIONSHIP · p 0.90"'
@@ -3689,7 +3689,7 @@ selectors:
     description: "Select ▾: the threshold's value"
   - selector: proposal-group-by
     component: src/components/proposals/ProposalDetailPage.tsx
-    description: "Group by control (Change kind / Sequence), shown when some operation carries a plan kind"
+    description: "Group by control (Layer / Change kind / Sequence: the groupings that apply), shown when more than one does"
   - selector: conflict-card-*
     component: src/components/proposals/review/ConflictCard.tsx
     description: "A conflict cluster card, by its lowest seq's operation id"

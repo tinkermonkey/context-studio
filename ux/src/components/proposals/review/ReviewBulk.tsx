@@ -71,7 +71,6 @@ export function BulkSelect({
         variant="secondary"
         size="sm"
         disabled={disabled}
-        aria-haspopup="menu"
         aria-expanded={open}
         aria-controls={open ? menuId : undefined}
         onClick={() => setOpen((o) => !o)}
@@ -83,13 +82,12 @@ export function BulkSelect({
         <div
           id={menuId}
           className="review-bulk-menu"
-          role="menu"
+          role="group"
           aria-label="Select operations"
           data-testid="review-bulk-select-menu"
         >
           <button
             type="button"
-            role="menuitem"
             className="review-bulk-menu__item"
             disabled={ready === 0}
             onClick={() => pick("ready")}
@@ -101,7 +99,6 @@ export function BulkSelect({
             <div className="review-bulk-menu__threshold">
               <button
                 type="button"
-                role="menuitem"
                 className="review-bulk-menu__item"
                 disabled={atThreshold === 0}
                 onClick={() => pick("threshold")}
@@ -131,7 +128,6 @@ export function BulkSelect({
           )}
           <button
             type="button"
-            role="menuitem"
             className="review-bulk-menu__item"
             disabled={awaiting === 0}
             onClick={() => pick("awaiting")}
@@ -141,7 +137,6 @@ export function BulkSelect({
           </button>
           <button
             type="button"
-            role="menuitem"
             className="review-bulk-menu__item"
             onClick={() => pick("none")}
             data-testid="review-bulk-select-none"

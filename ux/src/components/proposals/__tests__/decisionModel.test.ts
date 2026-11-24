@@ -9,6 +9,9 @@ import {
   blockersOf,
   checkDrTriple,
   decisionPreview,
+  decisionProgress,
+  decisionState,
+  filterOperations,
   drEditFields,
   predicateCatalog,
   predicateDescriptions,
@@ -530,5 +533,31 @@ describe("predicateDescriptions", () => {
   });
   it("is empty until the predicates load", () => {
     expect(predicateDescriptions(undefined).size).toBe(0);
+  });
+});
+
+describe("a withdrawn operation (#1624)", () => {
+  const ops = [
+    op({ id: "a", status: "pending" }),
+    op({ id: "b", status: "applied" }),
+    op({ id: "c", status: "withdrawn" }),
+  ];
+
+  it("reads as withdrawn, not rejected", () => {
+    expect(decisionState(ops[2])).toEqual({
+      state: "withdrawn",
+      label: "withdrawn",
+      variant: "neutral",
+    });
+  });
+
+  it("is neither decided nor counted", () => {
+    const progress = decisionProgress(ops);
+    expect(progress.total).toBe(2);
+    expect(progress.awaiting).toBe(1);
+    expect(progress.percent).toBe(50);
+    expect(filterOperations(ops, "decided").map((o) => o.id)).toEqual(["b"]);
+    expect(filterOperations(ops, "needs").map((o) => o.id)).toEqual(["a"]);
+    expect(filterOperations(ops, "all").map((o) => o.id)).toEqual(["a", "b", "c"]);
   });
 });

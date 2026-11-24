@@ -274,7 +274,9 @@ function Decided({
   const reason = reasonLabel(operation.reason_code);
   const shown = shownClassId(operation);
   let body;
-  if (verdict === "rejected") {
+  if (verdict === "withdrawn") {
+    body = <span>Withdrawn by its proposer: it is no longer part of this review.</span>;
+  } else if (verdict === "rejected") {
     body = (
       <span>{`Not ${element ? "an element" : "a relationship"}${reason ? `: ${reason}` : ""}.`}</span>
     );
@@ -485,8 +487,9 @@ export function ReviewInspector({
       })()
     : undefined;
   const kind = element ? "an element" : "a relationship";
-  // Only an individual or relationship create can be reopened to decide it again.
-  const reopens = !change;
+  // Only an individual or relationship create can be reopened to decide it again,
+  // and never one its proposer withdrew (#1624): it was never decided.
+  const reopens = !change && operation.status !== "withdrawn";
   const verdict = verdictOf(operation);
   const awaiting = verdict === "awaiting";
   // Key hints show only where the keys work, on an operation awaiting its decision.

@@ -171,8 +171,8 @@ export function ProposalDetailPage({
   const predicateDefinitions = useMemo(() => predicateDescriptions(predicates), [predicates]);
   const [threshold, setThreshold] = useState(DEFAULT_THRESHOLD);
   const [checkedIds, setChecked] = useState<string[]>([]);
-  // The operations a confirmed reject covers: all awaiting, or the checked ones.
-  const [rejecting, setRejecting] = useState<{ ids: string[]; checked: boolean } | null>(null);
+  // The checked operations a confirmed reject covers.
+  const [rejecting, setRejecting] = useState<{ ids: string[] } | null>(null);
   const [rejectNote, setRejectNote] = useState("");
   // One code for every operation a reject covers; "other" fits any operation.
   const [rejectCode, setRejectCode] = useState<RejectionReason>("other");
@@ -273,7 +273,7 @@ export function ProposalDetailPage({
     () => listSections(shownOperations, operations, groupBy, inspector.layerOf),
     [shownOperations, operations, groupBy, inspector.layerOf],
   );
-  const shownOrder = useMemo(() => listOrder(sections, shownIds), [sections, shownIds]);
+  const shownOrder = useMemo(() => listOrder(sections), [sections]);
   // When a decision drops the selected operation out of the list, select the
   // one below it, so the reviewer can decide row after row. A filter or
   // grouping change, or a deep link to an operation not shown, moves nothing.
@@ -844,7 +844,7 @@ export function ProposalDetailPage({
                       onReject={() => {
                         setRejectNote("");
                         setRejectCode("other");
-                        setRejecting({ ids: checkedList, checked: true });
+                        setRejecting({ ids: checkedList });
                       }}
                       onAccept={async () => {
                         await actions.acceptFresh(checkedList);
@@ -957,13 +957,9 @@ export function ProposalDetailPage({
           const done = await actions.rejectOperations(rejecting.ids, rejectNote, {
             reasonCode: rejectCode,
           });
-          if (done && rejecting.checked) setChecked([]);
+          if (done) setChecked([]);
         }}
-        title={
-          rejecting?.checked
-            ? `Reject ${rejecting.ids.length} selected?`
-            : `Reject all ${rejecting?.ids.length ?? 0} awaiting?`
-        }
+        title={`Reject ${rejecting?.ids.length ?? 0} selected?`}
         message={
           <div className="stack">
             <p>

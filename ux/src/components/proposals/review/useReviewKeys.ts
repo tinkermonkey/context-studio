@@ -13,12 +13,35 @@ import {
 } from "./reviewModel";
 import type { InspectorModel } from "./useInspectorModel";
 
-/** Keys typed into a field, or pressed in a dialog, are not page commands. */
+/** Input types that take typed text: keys pressed in them are not page commands. */
+const TEXT_INPUTS = new Set([
+  "text",
+  "search",
+  "email",
+  "url",
+  "tel",
+  "password",
+  "number",
+  "date",
+  "datetime-local",
+  "month",
+  "time",
+  "week",
+]);
+
+/**
+ * Keys typed into a field, or pressed in a dialog, are not page commands. A
+ * checkbox, radio, button or slider doesn't take letters, so J / K / A / X keep
+ * working after a click on one.
+ */
 export function ignoresKeys(target: EventTarget | null): boolean {
   if (!(target instanceof HTMLElement)) return false;
+  const textInput =
+    target instanceof HTMLInputElement && TEXT_INPUTS.has((target.type || "text").toLowerCase());
   return (
     target.isContentEditable ||
-    ["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName) ||
+    textInput ||
+    ["TEXTAREA", "SELECT"].includes(target.tagName) ||
     !!target.closest('[role="dialog"]')
   );
 }

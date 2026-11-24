@@ -16,9 +16,13 @@ type ClassResponse = components["schemas"]["ClassResponse"];
 
 // ==================== Verdicts ====================
 
-/** Where an element stands: awaiting a decision, or how it was decided. */
-export type Verdict = "awaiting" | "correct" | "changed" | "rejected" | "added";
+/**
+ * Where an element stands: awaiting a decision, how it was decided, or
+ * withdrawn by its proposer (#1624: not part of the review any more).
+ */
+export type Verdict = "awaiting" | "correct" | "changed" | "rejected" | "added" | "withdrawn";
 
+/** The verdicts the source legend explains (withdrawn ones are rare, and muted). */
 export const VERDICTS: Verdict[] = ["awaiting", "correct", "changed", "rejected", "added"];
 
 export const VERDICT_LABEL: Record<Verdict, string> = {
@@ -27,6 +31,7 @@ export const VERDICT_LABEL: Record<Verdict, string> = {
   changed: "class changed",
   rejected: "not an element",
   added: "added",
+  withdrawn: "withdrawn",
 };
 
 /** The legend's wording, beside each highlight colour. */
@@ -36,6 +41,7 @@ export const VERDICT_LEGEND: Record<Verdict, string> = {
   changed: "Class changed",
   rejected: "Not an element",
   added: "Added by you",
+  withdrawn: "Withdrawn",
 };
 
 export const VERDICT_CHIP: Record<Verdict, ChipVariant> = {
@@ -44,6 +50,7 @@ export const VERDICT_CHIP: Record<Verdict, ChipVariant> = {
   changed: "violet",
   rejected: "rose",
   added: "cyan",
+  withdrawn: "neutral",
 };
 
 /** An individual create: an element the extraction found in the text. */
@@ -104,6 +111,7 @@ export function relationshipEdited(operation: ProposedOperation): boolean {
 }
 
 export function verdictOf(operation: ProposedOperation): Verdict {
+  if (operation.status === "withdrawn") return "withdrawn";
   if (isAwaiting(operation)) return "awaiting";
   if (operation.status === "rejected") return "rejected";
   if (operation.added_by_reviewer) return "added";

@@ -22,7 +22,7 @@ import { ProposalPage } from "../proposals_.$proposalId";
 
 type Search = { selected?: string; diff?: string };
 
-/** Entries of ?op=&diff=, the current one, and who listens. */
+/** Entries of ?selected=&diff=, the current one, and who listens. */
 const history = vi.hoisted(() => {
   const state = {
     entries: [] as Search[],

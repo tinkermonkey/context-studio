@@ -92,20 +92,14 @@ describe("the sections", () => {
       ["relationships", "Relationships"],
       ["kind-class", "Classes"],
     ]);
-    expect(listOrder(sections, new Set(ops.map((o) => o.id)))).toEqual([
-      "a",
-      "c",
-      "b",
-      "rel",
-      "cls",
-    ]);
+    expect(listOrder(sections)).toEqual(["a", "c", "b", "rel", "cls"]);
   });
 
   it("by sequence: one section in seq order", () => {
     const ops = [classUpdate, element("a", 1, "cls-goal"), relationship];
     const sections = listSections(ops, ops, "sequence", layerOf);
     expect(sections).toHaveLength(1);
-    expect(listOrder(sections, new Set(ops.map((o) => o.id)))).toEqual(["a", "cls", "rel"]);
+    expect(listOrder(sections)).toEqual(["a", "cls", "rel"]);
   });
 
   it("by change kind: mechanical, judgment, a card per conflict, then the rest", () => {

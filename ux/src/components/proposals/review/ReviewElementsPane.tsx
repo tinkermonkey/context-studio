@@ -157,7 +157,6 @@ export function ReviewElementsPane({
         className="review-scroll"
         role="listbox"
         aria-label={listLabel}
-        aria-multiselectable={selection ? true : undefined}
         data-testid="review-element-list"
       >
         {sections.length === 0 && (
@@ -167,7 +166,7 @@ export function ReviewElementsPane({
         )}
         {sections.map((section) => {
           const count = section.items.reduce(
-            (n, item) => n + (item.type === "row" ? 1 : item.cluster.operations.length),
+            (n, item) => n + (item.type === "row" ? 1 : item.shown.length),
             0,
           );
           return (

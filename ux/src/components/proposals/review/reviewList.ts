@@ -27,7 +27,8 @@ export const GROUP_BY_LABELS: Record<ListGroupBy, string> = {
 
 export type ListItem =
   | { type: "row"; operation: ProposedOperation }
-  | { type: "conflict"; cluster: ConflictCluster };
+  /** A conflict card: its cluster, and the members the filters show (it lists only those). */
+  | { type: "conflict"; cluster: ConflictCluster; shown: ProposedOperation[] };
 
 export interface ListSection {
   key: string;
@@ -101,6 +102,7 @@ export function listSections(
   }
   if (groupBy === "kind") {
     const { mechanical, judgment, clusters, other } = tieredSections(shown, all);
+    const shownIds = new Set(shown.map((o) => o.id));
     return [
       ...mechanical.map((g) => ({
         key: `kind-${g.kind}`,
@@ -120,7 +122,11 @@ export function listSections(
               key: "conflicts",
               label: "Conflicts",
               note: "Reflections that disagree about the same types: keep one, or decide each.",
-              items: clusters.map((cluster) => ({ type: "conflict" as const, cluster })),
+              items: clusters.map((cluster) => ({
+                type: "conflict" as const,
+                cluster,
+                shown: cluster.operations.filter((o) => shownIds.has(o.id)),
+              })),
             },
           ]
         : []),
@@ -157,12 +163,10 @@ export function listSections(
 }
 
 /** The operation ids top to bottom, conflict members included as their cards list them. */
-export function listOrder(sections: ListSection[], shownIds: ReadonlySet<string>): string[] {
+export function listOrder(sections: ListSection[]): string[] {
   return sections.flatMap((s) =>
     s.items.flatMap((item) =>
-      item.type === "row"
-        ? [item.operation.id]
-        : item.cluster.operations.filter((o) => shownIds.has(o.id)).map((o) => o.id),
+      item.type === "row" ? [item.operation.id] : item.shown.map((o) => o.id),
     ),
   );
 }

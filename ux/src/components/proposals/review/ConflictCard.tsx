@@ -78,6 +78,7 @@ export function ConflictCard({
                 key={o.id}
                 className={selected ? "conflict-op conflict-op--selected" : "conflict-op"}
                 onClick={onItemClick}
+                data-row-id={o.id}
                 data-testid={`conflict-op-${o.id}`}
               >
                 <span className="conflict-op__head">

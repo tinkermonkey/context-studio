@@ -266,6 +266,12 @@
     border-bottom: 2px solid rgb(var(--status-violet));
   }
 
+  /* Withdrawn by its proposer (#1624): muted, struck through. */
+  .review-mark--withdrawn {
+    background: rgb(var(--canvas-fg-3) / 0.12);
+    text-decoration: line-through;
+  }
+
   .review-mark--rejected,
   .review-legend__swatch--rejected {
     background: rgb(var(--status-rose) / 0.12);
