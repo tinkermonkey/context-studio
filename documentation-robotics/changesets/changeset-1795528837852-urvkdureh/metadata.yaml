@@ -1,0 +1,20 @@
+id: changeset-1795528837852-urvkdureh
+name: grounding-wizard-batch-as-built
+description: As-built extraction of the code at 584f3cb, files changed since
+  lane-g/1651-statusbar-placeholders. Staged by codebase_extract.
+created: 2026-11-24T14:00:37.863Z
+modified: 2026-11-24T14:00:43.870Z
+status: staged
+baseSnapshot: v2:sha256:53252d39ed1357a9afdd6132507b497bf81313353af91142ccb6b590b147594c
+origin:
+  kind: extract
+purpose: verification
+verifies: changeset-1795528602524-cm9n5nh9m
+scope:
+  since: lane-g/1651-statusbar-placeholders
+  codeCommit: 584f3cbf3022f4a5756cec0d3a7456e5e4af7401
+stats:
+  additions: 28
+  modifications: 0
+  deletions: 0
+lastSequence: 27

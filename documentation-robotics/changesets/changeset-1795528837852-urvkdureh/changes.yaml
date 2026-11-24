@@ -1,0 +1,701 @@
+- type: add
+  elementId: testing.testcasesketch.test-grounding-adapter-source-coverage-test-all-registered-sources-queried-by-default
+  layerName: testing
+  after:
+    id: 3aabbac8-f4e8-40b8-8c84-e18ad1f0f4d1
+    path: testing.testcasesketch.test-grounding-adapter-source-coverage-test-all-registered-sources-queried-by-default
+    spec_node_id: testing.testcasesketch
+    type: testcasesketch
+    layer_id: testing
+    name: TestGroundingAdapterSourceCoverage.test_all_registered_sources_queried_by_default
+    description: Verify all registered sources are queried when none specified.
+    attributes:
+      status: automated
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/tests/integration/pipelines/schema_node_grounding/test_grounding_adapter_sources.py
+          symbol: TestGroundingAdapterSourceCoverage.test_all_registered_sources_queried_by_default
+    metadata:
+      created_at: 2026-11-24T14:00:37.820Z
+      updated_at: 2026-11-24T14:00:37.820Z
+      version: 1
+  timestamp: 2026-11-24T14:00:37.869Z
+  sequenceNumber: 0
+  origin:
+    by: tier0
+    rule: tier0_test_case_annotation
+- type: add
+  elementId: testing.testcasesketch.test-grounding-adapter-source-coverage-test-conceptnet-source-registered
+  layerName: testing
+  after:
+    id: 0acd76a7-e91d-45e1-a30a-7c3e04c8ee0d
+    path: testing.testcasesketch.test-grounding-adapter-source-coverage-test-conceptnet-source-registered
+    spec_node_id: testing.testcasesketch
+    type: testcasesketch
+    layer_id: testing
+    name: TestGroundingAdapterSourceCoverage.test_conceptnet_source_registered
+    description: Verify ConceptNet source is registered in adapter.
+    attributes:
+      status: automated
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/tests/integration/pipelines/schema_node_grounding/test_grounding_adapter_sources.py
+          symbol: TestGroundingAdapterSourceCoverage.test_conceptnet_source_registered
+    metadata:
+      created_at: 2026-11-24T14:00:37.820Z
+      updated_at: 2026-11-24T14:00:37.820Z
+      version: 1
+  timestamp: 2026-11-24T14:00:37.869Z
+  sequenceNumber: 1
+  origin:
+    by: tier0
+    rule: tier0_test_case_annotation
+- type: add
+  elementId: testing.testcasesketch.test-grounding-adapter-source-coverage-test-dbpedia-source-registered
+  layerName: testing
+  after:
+    id: 40a44842-849b-46a8-85de-b401c2c95052
+    path: testing.testcasesketch.test-grounding-adapter-source-coverage-test-dbpedia-source-registered
+    spec_node_id: testing.testcasesketch
+    type: testcasesketch
+    layer_id: testing
+    name: TestGroundingAdapterSourceCoverage.test_dbpedia_source_registered
+    description: Verify DBpedia source is registered in adapter.
+    attributes:
+      status: automated
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/tests/integration/pipelines/schema_node_grounding/test_grounding_adapter_sources.py
+          symbol: TestGroundingAdapterSourceCoverage.test_dbpedia_source_registered
+    metadata:
+      created_at: 2026-11-24T14:00:37.820Z
+      updated_at: 2026-11-24T14:00:37.820Z
+      version: 1
+  timestamp: 2026-11-24T14:00:37.869Z
+  sequenceNumber: 2
+  origin:
+    by: tier0
+    rule: tier0_test_case_annotation
+- type: add
+  elementId: testing.testcasesketch.test-grounding-adapter-source-coverage-test-mixed-known-and-unknown-sources-raises-error
+  layerName: testing
+  after:
+    id: 532092d2-d51a-46a3-ab4d-55b999289b2a
+    path: testing.testcasesketch.test-grounding-adapter-source-coverage-test-mixed-known-and-unknown-sources-raises-error
+    spec_node_id: testing.testcasesketch
+    type: testcasesketch
+    layer_id: testing
+    name: TestGroundingAdapterSourceCoverage.test_mixed_known_and_unknown_sources_raises_error
+    description: Verify mixing known and unknown sources raises PipelineInputError.
+    attributes:
+      status: automated
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/tests/integration/pipelines/schema_node_grounding/test_grounding_adapter_sources.py
+          symbol: TestGroundingAdapterSourceCoverage.test_mixed_known_and_unknown_sources_raises_error
+    metadata:
+      created_at: 2026-11-24T14:00:37.820Z
+      updated_at: 2026-11-24T14:00:37.820Z
+      version: 1
+  timestamp: 2026-11-24T14:00:37.869Z
+  sequenceNumber: 3
+  origin:
+    by: tier0
+    rule: tier0_test_case_annotation
+- type: add
+  elementId: testing.testcasesketch.test-grounding-adapter-source-coverage-test-multiple-unknown-sources-all-reported
+  layerName: testing
+  after:
+    id: 1eb4cd31-cbfb-4c2c-b78a-6b8a93940572
+    path: testing.testcasesketch.test-grounding-adapter-source-coverage-test-multiple-unknown-sources-all-reported
+    spec_node_id: testing.testcasesketch
+    type: testcasesketch
+    layer_id: testing
+    name: TestGroundingAdapterSourceCoverage.test_multiple_unknown_sources_all_reported
+    description: Verify all unknown sources are listed in the error message.
+    attributes:
+      status: automated
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/tests/integration/pipelines/schema_node_grounding/test_grounding_adapter_sources.py
+          symbol: TestGroundingAdapterSourceCoverage.test_multiple_unknown_sources_all_reported
+    metadata:
+      created_at: 2026-11-24T14:00:37.820Z
+      updated_at: 2026-11-24T14:00:37.820Z
+      version: 1
+  timestamp: 2026-11-24T14:00:37.869Z
+  sequenceNumber: 4
+  origin:
+    by: tier0
+    rule: tier0_test_case_annotation
+- type: add
+  elementId: testing.testcasesketch.test-grounding-adapter-source-coverage-test-registered-names-are-the-names-the-reference-status-229b1d82
+  layerName: testing
+  after:
+    id: f9ddbc55-0fce-4c5f-80c7-967eebe68650
+    path: testing.testcasesketch.test-grounding-adapter-source-coverage-test-registered-names-are-the-names-the-reference-status-229b1d82
+    spec_node_id: testing.testcasesketch
+    type: testcasesketch
+    layer_id: testing
+    name: TestGroundingAdapterSourceCoverage.test_registered_names_are_the_names_the_reference_status_lists
+    description: The grounding wizard offers the names GET /api/reference/status
+      lists (each source's source_name) and the adapter refuses any other, so
+      they must agree.
+    attributes:
+      status: automated
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/tests/integration/pipelines/schema_node_grounding/test_grounding_adapter_sources.py
+          symbol: TestGroundingAdapterSourceCoverage.test_registered_names_are_the_names_the_reference_status_lists
+    metadata:
+      created_at: 2026-11-24T14:00:37.820Z
+      updated_at: 2026-11-24T14:00:37.820Z
+      version: 1
+  timestamp: 2026-11-24T14:00:37.869Z
+  sequenceNumber: 5
+  origin:
+    by: tier0
+    rule: tier0_test_case_name
+- type: add
+  elementId: testing.testcasesketch.test-grounding-adapter-source-coverage-test-schema-org-returns-candidates-with-required-fields
+  layerName: testing
+  after:
+    id: fd21995e-ab20-4211-9d21-93f083e6ce12
+    path: testing.testcasesketch.test-grounding-adapter-source-coverage-test-schema-org-returns-candidates-with-required-fields
+    spec_node_id: testing.testcasesketch
+    type: testcasesketch
+    layer_id: testing
+    name: TestGroundingAdapterSourceCoverage.test_schema_org_returns_candidates_with_required_fields
+    description: Verify schema.org returns results with uri, label, description, source.
+    attributes:
+      status: automated
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/tests/integration/pipelines/schema_node_grounding/test_grounding_adapter_sources.py
+          symbol: TestGroundingAdapterSourceCoverage.test_schema_org_returns_candidates_with_required_fields
+    metadata:
+      created_at: 2026-11-24T14:00:37.820Z
+      updated_at: 2026-11-24T14:00:37.820Z
+      version: 1
+  timestamp: 2026-11-24T14:00:37.869Z
+  sequenceNumber: 6
+  origin:
+    by: tier0
+    rule: tier0_test_case_annotation
+- type: add
+  elementId: testing.testcasesketch.test-grounding-adapter-source-coverage-test-unknown-source-raises-pipeline-input-error
+  layerName: testing
+  after:
+    id: 3dca4aab-b3ae-4d77-9bd7-b8bf5afe82b0
+    path: testing.testcasesketch.test-grounding-adapter-source-coverage-test-unknown-source-raises-pipeline-input-error
+    spec_node_id: testing.testcasesketch
+    type: testcasesketch
+    layer_id: testing
+    name: TestGroundingAdapterSourceCoverage.test_unknown_source_raises_pipeline_input_error
+    description: Verify unknown source names raise a typed PipelineInputError.
+    attributes:
+      status: automated
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/tests/integration/pipelines/schema_node_grounding/test_grounding_adapter_sources.py
+          symbol: TestGroundingAdapterSourceCoverage.test_unknown_source_raises_pipeline_input_error
+    metadata:
+      created_at: 2026-11-24T14:00:37.820Z
+      updated_at: 2026-11-24T14:00:37.820Z
+      version: 1
+  timestamp: 2026-11-24T14:00:37.869Z
+  sequenceNumber: 7
+  origin:
+    by: tier0
+    rule: tier0_test_case_annotation
+- type: add
+  elementId: testing.testcasesketch.test-grounding-adapter-source-coverage-test-wikidata-source-registered
+  layerName: testing
+  after:
+    id: 6b0f5b31-f5a2-4683-9763-b4a5514dcd60
+    path: testing.testcasesketch.test-grounding-adapter-source-coverage-test-wikidata-source-registered
+    spec_node_id: testing.testcasesketch
+    type: testcasesketch
+    layer_id: testing
+    name: TestGroundingAdapterSourceCoverage.test_wikidata_source_registered
+    description: Verify Wikidata source is registered in adapter.
+    attributes:
+      status: automated
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/tests/integration/pipelines/schema_node_grounding/test_grounding_adapter_sources.py
+          symbol: TestGroundingAdapterSourceCoverage.test_wikidata_source_registered
+    metadata:
+      created_at: 2026-11-24T14:00:37.820Z
+      updated_at: 2026-11-24T14:00:37.820Z
+      version: 1
+  timestamp: 2026-11-24T14:00:37.869Z
+  sequenceNumber: 8
+  origin:
+    by: tier0
+    rule: tier0_test_case_annotation
+- type: add
+  elementId: testing.testcasesketch.test-grounding-batch-test-a-batch-of-grounding-specs-with-node-ids-runs-one-run-per-class
+  layerName: testing
+  after:
+    id: 8d4e75c6-488a-42cf-b31d-8c76d5bdcb8d
+    path: testing.testcasesketch.test-grounding-batch-test-a-batch-of-grounding-specs-with-node-ids-runs-one-run-per-class
+    spec_node_id: testing.testcasesketch
+    type: testcasesketch
+    layer_id: testing
+    name: TestGroundingBatch.test_a_batch_of_grounding_specs_with_node_ids_runs_one_run_per_class
+    attributes:
+      status: automated
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/tests/integration/pipelines/test_grounding_batch_runs.py
+          symbol: TestGroundingBatch.test_a_batch_of_grounding_specs_with_node_ids_runs_one_run_per_class
+    metadata:
+      created_at: 2026-11-24T14:00:37.820Z
+      updated_at: 2026-11-24T14:00:37.820Z
+      version: 1
+  timestamp: 2026-11-24T14:00:37.869Z
+  sequenceNumber: 9
+  origin:
+    by: tier0
+    rule: tier0_test_case_name
+- type: add
+  elementId: testing.testcasesketch.test-grounding-batch-test-a-node-id-that-is-no-class-fails-its-run-and-not-the-others
+  layerName: testing
+  after:
+    id: 4f87d792-d735-4b3e-9a6d-fafcba7bf1e2
+    path: testing.testcasesketch.test-grounding-batch-test-a-node-id-that-is-no-class-fails-its-run-and-not-the-others
+    spec_node_id: testing.testcasesketch
+    type: testcasesketch
+    layer_id: testing
+    name: TestGroundingBatch.test_a_node_id_that_is_no_class_fails_its_run_and_not_the_others
+    attributes:
+      status: automated
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/tests/integration/pipelines/test_grounding_batch_runs.py
+          symbol: TestGroundingBatch.test_a_node_id_that_is_no_class_fails_its_run_and_not_the_others
+    metadata:
+      created_at: 2026-11-24T14:00:37.820Z
+      updated_at: 2026-11-24T14:00:37.820Z
+      version: 1
+  timestamp: 2026-11-24T14:00:37.869Z
+  sequenceNumber: 10
+  origin:
+    by: tier0
+    rule: tier0_test_case_name
+- type: add
+  elementId: testing.testcasesketch.test-grounding-batch-test-a-spec-that-names-no-configuration-runs-the-registered-default
+  layerName: testing
+  after:
+    id: 7230f00b-0cc2-46e3-bf2f-54b8701cd039
+    path: testing.testcasesketch.test-grounding-batch-test-a-spec-that-names-no-configuration-runs-the-registered-default
+    spec_node_id: testing.testcasesketch
+    type: testcasesketch
+    layer_id: testing
+    name: TestGroundingBatch.test_a_spec_that_names_no_configuration_runs_the_registered_default
+    attributes:
+      status: automated
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/tests/integration/pipelines/test_grounding_batch_runs.py
+          symbol: TestGroundingBatch.test_a_spec_that_names_no_configuration_runs_the_registered_default
+    metadata:
+      created_at: 2026-11-24T14:00:37.820Z
+      updated_at: 2026-11-24T14:00:37.820Z
+      version: 1
+  timestamp: 2026-11-24T14:00:37.869Z
+  sequenceNumber: 11
+  origin:
+    by: tier0
+    rule: tier0_test_case_name
+- type: add
+  elementId: testing.testcasesketch.run-wizards-s-runs-with-the-implementation-and-configuration-its-picker-shows
+  layerName: testing
+  after:
+    id: e65edf1f-d2a5-4062-a7e4-7f89be2482ac
+    path: testing.testcasesketch.run-wizards-s-runs-with-the-implementation-and-configuration-its-picker-shows
+    spec_node_id: testing.testcasesketch
+    type: testcasesketch
+    layer_id: testing
+    name: run wizards > %s runs with the implementation and configuration its picker
+      shows
+    attributes:
+      status: automated
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: ux/src/components/pipeline/wizards/__tests__/RunWizards.test.tsx
+          symbol: run wizards > %s runs with the implementation and configuration its
+            picker shows
+    metadata:
+      created_at: 2026-11-24T14:00:37.820Z
+      updated_at: 2026-11-24T14:00:37.820Z
+      version: 1
+  timestamp: 2026-11-24T14:00:37.869Z
+  sequenceNumber: 12
+  origin:
+    by: tier0
+    rule: js_test_case_call
+- type: add
+  elementId: testing.testcasesketch.run-wizards-grounding-enqueues-one-run-for-one-class-its-id-type-configuration-and-source-names
+  layerName: testing
+  after:
+    id: 7dd732dc-2efe-4698-b1a8-3c6e5d2aaac6
+    path: testing.testcasesketch.run-wizards-grounding-enqueues-one-run-for-one-class-its-id-type-configuration-and-source-names
+    spec_node_id: testing.testcasesketch
+    type: testcasesketch
+    layer_id: testing
+    name: "run wizards > grounding enqueues one run for one class: its id, type,
+      configuration and source names"
+    attributes:
+      status: automated
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: ux/src/components/pipeline/wizards/__tests__/RunWizards.test.tsx
+          symbol: "run wizards > grounding enqueues one run for one class: its id, type,
+            configuration and source names"
+    metadata:
+      created_at: 2026-11-24T14:00:37.820Z
+      updated_at: 2026-11-24T14:00:37.820Z
+      version: 1
+  timestamp: 2026-11-24T14:00:37.869Z
+  sequenceNumber: 13
+  origin:
+    by: tier0
+    rule: js_test_case_call
+- type: add
+  elementId: testing.testcasesketch.run-wizards-grounding-enqueues-one-run-per-selected-class-in-one-batch-and-opens-the-runs-list
+  layerName: testing
+  after:
+    id: 8d50d1f0-0ded-4082-a460-bab3fbff46b8
+    path: testing.testcasesketch.run-wizards-grounding-enqueues-one-run-per-selected-class-in-one-batch-and-opens-the-runs-list
+    spec_node_id: testing.testcasesketch
+    type: testcasesketch
+    layer_id: testing
+    name: run wizards > grounding enqueues one run per selected class in one batch,
+      and opens the runs list
+    attributes:
+      status: automated
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: ux/src/components/pipeline/wizards/__tests__/RunWizards.test.tsx
+          symbol: run wizards > grounding enqueues one run per selected class in one
+            batch, and opens the runs list
+    metadata:
+      created_at: 2026-11-24T14:00:37.820Z
+      updated_at: 2026-11-24T14:00:37.820Z
+      version: 1
+  timestamp: 2026-11-24T14:00:37.869Z
+  sequenceNumber: 14
+  origin:
+    by: tier0
+    rule: js_test_case_call
+- type: add
+  elementId: testing.testcasesketch.run-wizards-grounding-offers-classes-only-and-says-why-property-definitions-are-not-offered
+  layerName: testing
+  after:
+    id: cf01b191-4307-4548-a835-369e1760e6b8
+    path: testing.testcasesketch.run-wizards-grounding-offers-classes-only-and-says-why-property-definitions-are-not-offered
+    spec_node_id: testing.testcasesketch
+    type: testcasesketch
+    layer_id: testing
+    name: run wizards > grounding offers classes only and says why property
+      definitions are not offered
+    attributes:
+      status: automated
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: ux/src/components/pipeline/wizards/__tests__/RunWizards.test.tsx
+          symbol: run wizards > grounding offers classes only and says why property
+            definitions are not offered
+    metadata:
+      created_at: 2026-11-24T14:00:37.820Z
+      updated_at: 2026-11-24T14:00:37.820Z
+      version: 1
+  timestamp: 2026-11-24T14:00:37.869Z
+  sequenceNumber: 15
+  origin:
+    by: tier0
+    rule: js_test_case_call
+- type: add
+  elementId: testing.testcasesketch.run-wizards-grounding-offers-the-knowledge-sources-the-reference-status-lists-and-no-others
+  layerName: testing
+  after:
+    id: b5b07cd1-5f61-4c56-b4e7-4b48b1be6557
+    path: testing.testcasesketch.run-wizards-grounding-offers-the-knowledge-sources-the-reference-status-lists-and-no-others
+    spec_node_id: testing.testcasesketch
+    type: testcasesketch
+    layer_id: testing
+    name: run wizards > grounding offers the knowledge sources the reference status
+      lists, and no others
+    attributes:
+      status: automated
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: ux/src/components/pipeline/wizards/__tests__/RunWizards.test.tsx
+          symbol: run wizards > grounding offers the knowledge sources the reference
+            status lists, and no others
+    metadata:
+      created_at: 2026-11-24T14:00:37.820Z
+      updated_at: 2026-11-24T14:00:37.820Z
+      version: 1
+  timestamp: 2026-11-24T14:00:37.869Z
+  sequenceNumber: 16
+  origin:
+    by: tier0
+    rule: js_test_case_call
+- type: add
+  elementId: testing.testcasesketch.run-wizards-has-a-wizard-for-each-type-the-tests-fill
+  layerName: testing
+  after:
+    id: 1a1a42ca-41a6-4162-9400-8fe655a4f803
+    path: testing.testcasesketch.run-wizards-has-a-wizard-for-each-type-the-tests-fill
+    spec_node_id: testing.testcasesketch
+    type: testcasesketch
+    layer_id: testing
+    name: run wizards > has a wizard for each type the tests fill
+    attributes:
+      status: automated
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: ux/src/components/pipeline/wizards/__tests__/RunWizards.test.tsx
+          symbol: run wizards > has a wizard for each type the tests fill
+    metadata:
+      created_at: 2026-11-24T14:00:37.820Z
+      updated_at: 2026-11-24T14:00:37.820Z
+      version: 1
+  timestamp: 2026-11-24T14:00:37.869Z
+  sequenceNumber: 17
+  origin:
+    by: tier0
+    rule: js_test_case_call
+- type: add
+  elementId: testing.testcasesketch.run-wizards-individual-extraction-asks-for-the-dataset-when-the-taxonomy-has-several
+  layerName: testing
+  after:
+    id: 61bba40a-57dc-42a7-96c7-ece9bf29e536
+    path: testing.testcasesketch.run-wizards-individual-extraction-asks-for-the-dataset-when-the-taxonomy-has-several
+    spec_node_id: testing.testcasesketch
+    type: testcasesketch
+    layer_id: testing
+    name: run wizards > individual extraction asks for the dataset when the taxonomy
+      has several
+    attributes:
+      status: automated
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: ux/src/components/pipeline/wizards/__tests__/RunWizards.test.tsx
+          symbol: run wizards > individual extraction asks for the dataset when the
+            taxonomy has several
+    metadata:
+      created_at: 2026-11-24T14:00:37.820Z
+      updated_at: 2026-11-24T14:00:37.820Z
+      version: 1
+  timestamp: 2026-11-24T14:00:37.869Z
+  sequenceNumber: 18
+  origin:
+    by: tier0
+    rule: js_test_case_call
+- type: add
+  elementId: testing.testcasesketch.run-wizards-individual-extraction-cannot-start-before-the-taxonomys-datasets-are-read
+  layerName: testing
+  after:
+    id: fb4b8342-8342-4a5a-a395-b63dc38fa42e
+    path: testing.testcasesketch.run-wizards-individual-extraction-cannot-start-before-the-taxonomys-datasets-are-read
+    spec_node_id: testing.testcasesketch
+    type: testcasesketch
+    layer_id: testing
+    name: run wizards > individual extraction cannot start before the taxonomy's
+      datasets are read
+    attributes:
+      status: automated
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: ux/src/components/pipeline/wizards/__tests__/RunWizards.test.tsx
+          symbol: run wizards > individual extraction cannot start before the taxonomy's
+            datasets are read
+    metadata:
+      created_at: 2026-11-24T14:00:37.820Z
+      updated_at: 2026-11-24T14:00:37.820Z
+      version: 1
+  timestamp: 2026-11-24T14:00:37.869Z
+  sequenceNumber: 19
+  origin:
+    by: tier0
+    rule: js_test_case_call
+- type: add
+  elementId: testing.testcasesketch.run-wizards-individual-extraction-cannot-start-when-the-datasets-could-not-be-read
+  layerName: testing
+  after:
+    id: 2eb1382f-a9a6-4460-8520-e6aaaca31680
+    path: testing.testcasesketch.run-wizards-individual-extraction-cannot-start-when-the-datasets-could-not-be-read
+    spec_node_id: testing.testcasesketch
+    type: testcasesketch
+    layer_id: testing
+    name: run wizards > individual extraction cannot start when the datasets could
+      not be read
+    attributes:
+      status: automated
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: ux/src/components/pipeline/wizards/__tests__/RunWizards.test.tsx
+          symbol: run wizards > individual extraction cannot start when the datasets could
+            not be read
+    metadata:
+      created_at: 2026-11-24T14:00:37.820Z
+      updated_at: 2026-11-24T14:00:37.820Z
+      version: 1
+  timestamp: 2026-11-24T14:00:37.869Z
+  sequenceNumber: 20
+  origin:
+    by: tier0
+    rule: js_test_case_call
+- type: add
+  elementId: testing.testcasesketch.run-wizards-individual-extraction-names-no-dataset-while-the-taxonomy-has-one
+  layerName: testing
+  after:
+    id: 6a7c7854-6111-4b5f-86f6-6c82b8225af2
+    path: testing.testcasesketch.run-wizards-individual-extraction-names-no-dataset-while-the-taxonomy-has-one
+    spec_node_id: testing.testcasesketch
+    type: testcasesketch
+    layer_id: testing
+    name: run wizards > individual extraction names no dataset while the taxonomy
+      has one
+    attributes:
+      status: automated
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: ux/src/components/pipeline/wizards/__tests__/RunWizards.test.tsx
+          symbol: run wizards > individual extraction names no dataset while the taxonomy
+            has one
+    metadata:
+      created_at: 2026-11-24T14:00:37.820Z
+      updated_at: 2026-11-24T14:00:37.820Z
+      version: 1
+  timestamp: 2026-11-24T14:00:37.869Z
+  sequenceNumber: 21
+  origin:
+    by: tier0
+    rule: js_test_case_call
+- type: relationship-add
+  elementId: testing.testcasesketch.test-grounding-adapter-source-coverage-test-registered-names-are-the-names-the-reference-status-229b1d82::tests::application.applicationcomponent.concept-net-reference-source
+  layerName: testing
+  after:
+    source: testing.testcasesketch.test-grounding-adapter-source-coverage-test-registered-names-are-the-names-the-reference-status-229b1d82
+    target: application.applicationcomponent.concept-net-reference-source
+    predicate: tests
+    layer: testing
+    targetLayer: application
+    category: structural
+  timestamp: 2026-11-24T14:00:37.869Z
+  sequenceNumber: 22
+  origin:
+    by: tier0
+    rule: tier0_test_case_name
+- type: relationship-add
+  elementId: testing.testcasesketch.test-grounding-adapter-source-coverage-test-registered-names-are-the-names-the-reference-status-229b1d82::tests::application.applicationcomponent.dbpedia-reference-source
+  layerName: testing
+  after:
+    source: testing.testcasesketch.test-grounding-adapter-source-coverage-test-registered-names-are-the-names-the-reference-status-229b1d82
+    target: application.applicationcomponent.dbpedia-reference-source
+    predicate: tests
+    layer: testing
+    targetLayer: application
+    category: structural
+  timestamp: 2026-11-24T14:00:37.869Z
+  sequenceNumber: 23
+  origin:
+    by: tier0
+    rule: tier0_test_case_name
+- type: relationship-add
+  elementId: testing.testcasesketch.test-grounding-adapter-source-coverage-test-registered-names-are-the-names-the-reference-status-229b1d82::tests::application.applicationcomponent.grounding-adapter
+  layerName: testing
+  after:
+    source: testing.testcasesketch.test-grounding-adapter-source-coverage-test-registered-names-are-the-names-the-reference-status-229b1d82
+    target: application.applicationcomponent.grounding-adapter
+    predicate: tests
+    layer: testing
+    targetLayer: application
+    category: structural
+  timestamp: 2026-11-24T14:00:37.869Z
+  sequenceNumber: 24
+  origin:
+    by: tier0
+    rule: tier0_test_case_name
+- type: relationship-add
+  elementId: testing.testcasesketch.test-grounding-adapter-source-coverage-test-registered-names-are-the-names-the-reference-status-229b1d82::tests::application.applicationcomponent.schema-org-reference-source
+  layerName: testing
+  after:
+    source: testing.testcasesketch.test-grounding-adapter-source-coverage-test-registered-names-are-the-names-the-reference-status-229b1d82
+    target: application.applicationcomponent.schema-org-reference-source
+    predicate: tests
+    layer: testing
+    targetLayer: application
+    category: structural
+  timestamp: 2026-11-24T14:00:37.869Z
+  sequenceNumber: 25
+  origin:
+    by: tier0
+    rule: tier0_test_case_name
+- type: relationship-add
+  elementId: testing.testcasesketch.test-grounding-adapter-source-coverage-test-registered-names-are-the-names-the-reference-status-229b1d82::tests::application.applicationcomponent.wikidata-reference-source
+  layerName: testing
+  after:
+    source: testing.testcasesketch.test-grounding-adapter-source-coverage-test-registered-names-are-the-names-the-reference-status-229b1d82
+    target: application.applicationcomponent.wikidata-reference-source
+    predicate: tests
+    layer: testing
+    targetLayer: application
+    category: structural
+  timestamp: 2026-11-24T14:00:37.869Z
+  sequenceNumber: 26
+  origin:
+    by: tier0
+    rule: tier0_test_case_name
+- type: add
+  elementId: ux.dataconfig.use-enqueue-batch-runs
+  layerName: ux
+  after:
+    id: b9e8a74d-5626-4492-a8c0-401b5deee412
+    path: ux.dataconfig.use-enqueue-batch-runs
+    spec_node_id: ux.dataconfig
+    type: dataconfig
+    layer_id: ux
+    name: useEnqueueBatchRuns
+    description: Enqueue one run per spec in one new batch.
+    attributes:
+      source: api
+      target: api.operation.enqueue-batch-runs
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: ux/src/api/hooks/pipeline/usePipelineMutations.ts
+          symbol: useEnqueueBatchRuns
+    metadata:
+      created_at: 2026-11-24T14:00:43.840Z
+      updated_at: 2026-11-24T14:00:43.840Z
+      version: 1
+  timestamp: 2026-11-24T14:00:43.860Z
+  sequenceNumber: 27
