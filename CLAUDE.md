@@ -239,7 +239,7 @@ All imports point inward. `domain/` has **zero imports** from `adapters/`, `data
 - **Testing**: Write domain unit tests first (using fake port implementations), then adapter tests, then route tests
 - **Environment Variables**: Use `.env` files for sensitive configurations and secrets
 - **Virtual Environment**: Always use `local-server/.venv` — activate it before running any Python command
-- **Alembic Migrations**: Run migrations from `local-server/` directory with `--config adapters/persistence/sqlite/alembic.ini` or use the helper script `scripts/run_migrations.py`
+- **Alembic Migrations**: Run migrations from `local-server/` directory with `--config adapters/persistence/sqlite/alembic.ini` or use the helper script `scripts/run_migrations.py`, which migrates the databases the loaded config names (`CONFIG_PATH`, else `local-server/config.json`) from any working directory
 
 ### Extraction experiments
 

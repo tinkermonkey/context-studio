@@ -1,0 +1,40 @@
+- type: update
+  elementId: application.applicationprocess.alembic-migration-runner
+  layerName: application
+  before:
+    id: 3ca6cc17-8220-470b-b5e2-f5aeecc93a10
+    path: application.applicationprocess.alembic-migration-runner
+    spec_node_id: application.applicationprocess
+    type: applicationprocess
+    layer_id: application
+    name: Alembic Migration Runner
+    description: Database schema migration process managed by Alembic, runs on
+      application startup to apply pending migrations to local.db and
+      operations.db
+    source_reference: &a1
+      provenance: extracted
+      locations:
+        - file: local-server/scripts/run_migrations.py
+          symbol: run_migrations
+    metadata: &a2
+      created_at: 2026-05-11T12:03:34.066Z
+      updated_at: 2026-05-11T12:03:34.066Z
+      version: 1
+  after:
+    id: 3ca6cc17-8220-470b-b5e2-f5aeecc93a10
+    path: application.applicationprocess.alembic-migration-runner
+    spec_node_id: application.applicationprocess
+    type: applicationprocess
+    layer_id: application
+    name: Alembic Migration Runner
+    description: "Database schema migration process managed by Alembic, runs on
+      application startup to apply pending migrations to local.db and
+      operations.db. scripts/run_migrations.py runs the same migrations by hand:
+      it resolves both databases from the config the app loads (CONFIG_PATH,
+      else local-server/config.json; relative paths relative to local-server/),
+      from any working directory, unless --local-db-url or --operations-db-url
+      is given."
+    source_reference: *a1
+    metadata: *a2
+  timestamp: 2026-11-24T13:15:38.482Z
+  sequenceNumber: 0

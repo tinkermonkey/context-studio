@@ -1,0 +1,18 @@
+id: changeset-1795526135871-el90pj08p
+name: migrations-follow-the-config
+description: "#1649: run_migrations.py migrates the databases named by the
+  config the app loads (CONFIG_PATH, else local-server/config.json), the same
+  way for both and from any working directory; --local-db-url and
+  --operations-db-url stay as overrides."
+created: 2026-11-24T13:15:35.890Z
+modified: 2026-11-24T13:15:38.484Z
+status: staged
+baseSnapshot: v2:sha256:53252d39ed1357a9afdd6132507b497bf81313353af91142ccb6b590b147594c
+origin:
+  kind: plan
+purpose: plan
+stats:
+  additions: 0
+  modifications: 1
+  deletions: 0
+lastSequence: 0

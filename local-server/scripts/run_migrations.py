@@ -2,6 +2,13 @@
 """
 Utility script to run Alembic migrations for both local.db and operations.db.
 
+Both databases are the ones the app opens: database.local_db_path and
+database.operations_db_path from the config the app loads (the file CONFIG_PATH
+names, else local-server/config.json; the defaults when there is no file, which
+this script never creates). A relative CONFIG_PATH and a relative database path
+are relative to local-server/, where the app runs, so the result does not depend
+on the directory this is started from. --local-db-url and --operations-db-url override one database explicitly.
+
 Usage:
     python scripts/run_migrations.py local upgrade head
     python scripts/run_migrations.py operations downgrade -1
@@ -12,6 +19,7 @@ Usage:
 This script abstracts away the need to specify --config and working directories.
 """
 
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -23,6 +31,37 @@ ALEMBIC = str(_alembic) if _alembic.exists() else "alembic"
 # Get the local-server root directory
 LOCAL_SERVER_ROOT = Path(__file__).parent.parent
 SQLITE_DIR = LOCAL_SERVER_ROOT / "adapters" / "persistence" / "sqlite"
+
+if str(LOCAL_SERVER_ROOT) not in sys.path:
+    sys.path.insert(0, str(LOCAL_SERVER_ROOT))
+
+
+def config_database_urls(
+    config_path: str | None = None, base_dir: Path | None = None
+) -> tuple[str, str]:
+    """
+    The (local.db, operations.db) SQLAlchemy URLs from the config the app loads.
+
+    config_path defaults to CONFIG_PATH, else config.json. A relative config path
+    and a relative database path are both taken relative to base_dir (default:
+    local-server/, where the app runs), whatever directory this is started from.
+    A missing config file means the defaults and is not created. The URLs are
+    absolute.
+    """
+    from config import ConfigurationManager, DatabaseConfig
+
+    base = Path(base_dir) if base_dir is not None else LOCAL_SERVER_ROOT
+    raw_path = config_path or os.getenv("CONFIG_PATH") or "config.json"
+    path = (base / os.path.expanduser(raw_path)).resolve()
+    if path.exists():
+        database = ConfigurationManager(config_file=str(path)).get_settings().database
+    else:
+        database = DatabaseConfig()
+
+    def url(db_path: str) -> str:
+        return f"sqlite:///{(base / db_path).resolve()}"
+
+    return url(database.local_db_path), url(database.operations_db_path)
 
 
 def run_migrations(
@@ -41,20 +80,19 @@ def run_migrations(
 
     if database == "operations":
         # For operations.db, use Python API directly to work around version_locations issues
-        return run_operations_migrations(args, operations_db_url)
+        return run_operations_migrations(args, operations_db_url or config_database_urls()[1])
     else:
-        return run_local_migrations(args, local_db_url)
+        return run_local_migrations(args, local_db_url or config_database_urls()[0])
 
 
 def run_local_migrations(args: list[str], local_db_url: str | None = None) -> int:
-    """Run migrations for local.db using alembic CLI."""
+    """Run migrations for local.db using alembic CLI (the config's database when no URL is given)."""
     config_path = SQLITE_DIR / "alembic.ini"
 
     # Construct the alembic command
     cmd = [ALEMBIC, "--config", str(config_path)]
 
-    if local_db_url:
-        cmd.extend(["-x", f"local_db_url={local_db_url}"])
+    cmd.extend(["-x", f"local_db_url={local_db_url or config_database_urls()[0]}"])
 
     cmd.extend(args)
 
@@ -74,7 +112,7 @@ def run_operations_migrations(args: list[str], operations_db_url: str | None = N
         config = Config(str(SQLITE_DIR / "alembic.ini"))
 
         # Set cmd_opts so env.py can detect this is for operations database
-        db_url = operations_db_url or "sqlite:///./operations.db"
+        db_url = operations_db_url or config_database_urls()[1]
         config.cmd_opts = argparse.Namespace(x=["db=operations", f"operations_db_url={db_url}"])
 
         # Set version locations to operations directory only
@@ -177,6 +215,15 @@ def main():
         else:
             print("Error: --operations-db-url requires a value", file=sys.stderr)
             sys.exit(1)
+
+    if database in ("all", "local", "operations"):
+        config_local_url, config_operations_url = config_database_urls()
+        local_db_url = local_db_url or config_local_url
+        operations_db_url = operations_db_url or config_operations_url
+        if database in ("all", "local"):
+            print(f"local.db: {local_db_url}")
+        if database in ("all", "operations"):
+            print(f"operations.db: {operations_db_url}")
 
     if database == "all":
         print("Running migrations for local.db...")
