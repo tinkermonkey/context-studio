@@ -24,3 +24,27 @@ ux.actioncomponent.not-an-element-button:
     created_at: 2026-11-24T12:33:48.266Z
     updated_at: 2026-11-24T12:33:48.266Z
     version: 1
+ux.actioncomponent.reverse-relationship-button:
+  id: a734b104-2bd4-4b17-b5f1-02dc21239857
+  path: ux.actioncomponent.reverse-relationship-button
+  spec_node_id: ux.actioncomponent
+  type: actioncomponent
+  layer_id: ux
+  name: Reverse Relationship Button
+  description: "Or correct it · Reverse: swaps a relationship's source and target
+    in the draft; when its predicate doesn't allow the reversed direction, opens
+    the predicate row on the ones that do or says none does."
+  attributes:
+    type: button
+    label: Reverse
+    style: ghost
+    channel: web
+  source_reference:
+    provenance: manual
+    locations:
+      - file: ux/src/components/proposals/review/ReviewRelationship.tsx
+        symbol: RelationshipEditor
+  metadata:
+    created_at: 2026-11-24T13:18:56.351Z
+    updated_at: 2026-11-24T13:18:56.351Z
+    version: 1

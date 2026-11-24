@@ -4,10 +4,10 @@
 
 | Metric              | Value                    |
 | ------------------- | ------------------------ |
-| Total Elements      | 1339                     |
-| Total Relationships | 2871                     |
+| Total Elements      | 1342                     |
+| Total Relationships | 2875                     |
 | Populated Layers    | 13                       |
-| Last Updated        | 2026-11-24T17:48:35.837Z |
+| Last Updated        | 2026-11-24T17:51:04.664Z |
 | CLI Version         | 0.7.1                    |
 | Spec Version        | 0.13.0                   |
 
@@ -66,11 +66,11 @@ Each layer is independently managed but interconnected, allowing elements in hig
 | API         | 478      | [07-api-layer-report.md](./reports/07-api-layer-report.md)                 |
 | Data Model  | 52       | [08-data-model-layer-report.md](./reports/08-data-model-layer-report.md)   |
 | Data Store  | 54       | [09-data-store-layer-report.md](./reports/09-data-store-layer-report.md)   |
-| UX          | 233      | [10-ux-layer-report.md](./reports/10-ux-layer-report.md)                   |
+| UX          | 234      | [10-ux-layer-report.md](./reports/10-ux-layer-report.md)                   |
 | Navigation  | 37       | [11-navigation-layer-report.md](./reports/11-navigation-layer-report.md)   |
 | APM         | 17       | [12-apm-layer-report.md](./reports/12-apm-layer-report.md)                 |
-| Testing     | 37       | [13-testing-layer-report.md](./reports/13-testing-layer-report.md)         |
+| Testing     | 39       | [13-testing-layer-report.md](./reports/13-testing-layer-report.md)         |
 
 ---
 
-Generated: 2026-11-24T17:48:35.858Z | Model Version: 0.1.0
+Generated: 2026-11-24T17:51:04.666Z | Model Version: 0.1.0

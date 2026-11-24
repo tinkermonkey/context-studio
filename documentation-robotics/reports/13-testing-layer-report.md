@@ -16,15 +16,15 @@ Test strategies, test cases, test data, and test coverage.
 
 | Metric                    | Count |
 | ------------------------- | ----- |
-| Elements                  | 37    |
+| Elements                  | 39    |
 | Intra-Layer Relationships | 32    |
-| Inter-Layer Relationships | 53    |
+| Inter-Layer Relationships | 56    |
 | Inbound Relationships     | 0     |
-| Outbound Relationships    | 53    |
+| Outbound Relationships    | 56    |
 
 **Cross-Layer References**:
 
-- **Downstream layers**: [Application](./05-application-layer-report.md), [Business](./02-business-layer-report.md), [Data Store](./09-data-store-layer-report.md), [Motivation](./01-motivation-layer-report.md), [Security](./04-security-layer-report.md), [UX](./10-ux-layer-report.md)
+- **Downstream layers**: [API](./07-api-layer-report.md), [Application](./05-application-layer-report.md), [Business](./02-business-layer-report.md), [Data Store](./09-data-store-layer-report.md), [Motivation](./01-motivation-layer-report.md), [Security](./04-security-layer-report.md), [UX](./10-ux-layer-report.md)
 
 ## Intra-Layer Relationships
 
@@ -40,6 +40,8 @@ Test strategies, test cases, test data, and test coverage.
 | `testing.inputspacepartition.entity-node-type-discriminator`                                       | `inputspacepartition` | 1             |
 | `testing.outcomecategory.entity-creation-success`                                                  | `outcomecategory`     | 1             |
 | `testing.outcomecategory.validation-error`                                                         | `outcomecategory`     | 1             |
+| `testing.testcasesketch.an-edited-end-names-an-element-by-its-ref`                                 | `testcasesketch`      | 0             |
+| `testing.testcasesketch.end-search-finds-a-pending-element-and-reverse-swaps-the-ends`             | `testcasesketch`      | 0             |
 | `testing.testcasesketch.not-an-element-opens-the-reason-step`                                      | `testcasesketch`      | 0             |
 | `testing.testcasesketch.pre-review-verdicts-reach-the-proposal-visibly`                            | `testcasesketch`      | 1             |
 | `testing.testcasesketch.seeded-errors-are-built-and-scored-offline`                                | `testcasesketch`      | 1             |
@@ -88,6 +90,7 @@ flowchart TB
   navigation["Navigation"]
   apm["APM"]
   testing["Testing"]
+  testing --> api
   testing --> application
   testing --> business
   testing --> data_store
@@ -101,6 +104,9 @@ flowchart TB
 
 | Relationship ID                                                      | Source Node                                                                                        | Dest Node                                                                    | Dest Layer    | Predicate   | Cardinality  | Strength |
 | -------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- | ------------- | ----------- | ------------ | -------- |
+| `testing.testcasesketch.tests.api.operation`                         | `testing.testcasesketch.an-edited-end-names-an-element-by-its-ref`                                 | `api.operation.apply-proposal`                                               | `api`         | `tests`     | many-to-many | medium   |
+| `testing.testcasesketch.tests.ux.actioncomponent`                    | `testing.testcasesketch.end-search-finds-a-pending-element-and-reverse-swaps-the-ends`             | `ux.actioncomponent.reverse-relationship-button`                             | `ux`          | `tests`     | many-to-many | medium   |
+| `testing.testcasesketch.tests.ux.subview`                            | `testing.testcasesketch.end-search-finds-a-pending-element-and-reverse-swaps-the-ends`             | `ux.subview.review-inspector`                                                | `ux`          | `tests`     | many-to-many | medium   |
 | `testing.testcasesketch.tests.ux.actioncomponent`                    | `testing.testcasesketch.not-an-element-opens-the-reason-step`                                      | `ux.actioncomponent.not-an-element-button`                                   | `ux`          | `tests`     | many-to-many | medium   |
 | `testing.testcasesketch.tests.ux.subview`                            | `testing.testcasesketch.not-an-element-opens-the-reason-step`                                      | `ux.subview.review-inspector`                                                | `ux`          | `tests`     | many-to-many | medium   |
 | `testing.testcasesketch.tests.application.applicationfunction`       | `testing.testcasesketch.pre-review-verdicts-reach-the-proposal-visibly`                            | `application.applicationfunction.individual-pre-review`                      | `application` | `tests`     | many-to-many | medium   |
@@ -328,6 +334,49 @@ Expected outcome for invalid inputs: missing required fields, duplicate titles, 
 | Type        | Related Element                            | Predicate  | Direction |
 | ----------- | ------------------------------------------ | ---------- | --------- |
 | intra-layer | `testing.testcoveragetarget.ontology-crud` | `composes` | inbound   |
+
+### An Edited End Names An Element By Its Ref {#an-edited-end-names-an-element-by-its-ref}
+
+**ID**: `testing.testcasesketch.an-edited-end-names-an-element-by-its-ref`
+
+**Type**: `testcasesketch`
+
+A relationship create accepted with an end changed to another element of the proposal, named by its $ref: it fails unresolved_ref until that element applies, then applies with the end resolved and records the ref in applied_fields.
+
+#### Attributes
+
+| Name                 | Value     |
+| -------------------- | --------- |
+| implementationFormat | automated |
+| status               | automated |
+
+#### Relationships
+
+| Type        | Related Element                | Predicate | Direction |
+| ----------- | ------------------------------ | --------- | --------- |
+| inter-layer | `api.operation.apply-proposal` | `tests`   | outbound  |
+
+### End Search Finds A Pending Element And Reverse Swaps The Ends {#end-search-finds-a-pending-element-and-reverse-swaps-the-ends}
+
+**ID**: `testing.testcasesketch.end-search-finds-a-pending-element-and-reverse-swaps-the-ends`
+
+**Type**: `testcasesketch`
+
+On a fresh extraction (nothing applied, an empty dataset), a relationship's source search lists this proposal's awaiting elements, the pick waits for that element to apply, and Reverse swaps the ends, offering the predicates the reversed direction allows.
+
+#### Attributes
+
+| Name                 | Value     |
+| -------------------- | --------- |
+| implementationFormat | automated |
+| status               | automated |
+
+#### Relationships
+
+| Type        | Related Element                                  | Predicate | Direction |
+| ----------- | ------------------------------------------------ | --------- | --------- |
+| inter-layer | `ux.actioncomponent.reverse-relationship-button` | `tests`   | outbound  |
+| inter-layer | `ux.subview.review-inspector`                    | `tests`   | outbound  |
 
 ### Not An Element Opens The Reason Step {#not-an-element-opens-the-reason-step}
 
@@ -1023,4 +1072,4 @@ Coverage target for change management: change proposals (create, decide, apply, 
 
 ---
 
-Generated: 2026-11-24T15:59:46.538Z | Model Version: 0.1.0
+Generated: 2026-11-24T17:51:04.666Z | Model Version: 0.1.0

@@ -525,6 +525,10 @@ api.requestbody.change-proposal-apply-request:
   type: requestbody
   layer_id: api
   name: ChangeProposalApplyRequest
+  description: Which operations to apply, with optional edits, chosen
+    alternatives, resolutions, review times and annotations. A relationship
+    create's edit may name one of its ends as another element of the proposal by
+    its "$ref", resolved when that element has applied.
   source_reference:
     provenance: extracted
     locations:
