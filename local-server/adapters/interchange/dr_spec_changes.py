@@ -85,8 +85,11 @@ operations export; the rest are listed in `skipped` with why.
 The triple comes from the domain and range classes' DR references (a "$ref"
 to a class the proposal created resolves to that class) and the predicate,
 and must agree with the type's DR relationship id. A relationship type
-between DR spec classes without a DR reference can't land in DR's spec, so
-the export refuses it rather than skip it.
+between DR spec classes without a DR reference can't land in DR's spec: a
+create whose operation gave none takes the reference the type has now (so
+adding it later repairs the export), and one that still has none is listed
+in `skipped` with why, while the rest of the proposal exports (#1623). An
+attribute create on a DR node type is read the same way.
 
 `records` are the proposal's schema change records
 (`domain.versioning.change_records`) keyed by DR relationship id, in the
@@ -249,8 +252,13 @@ def spec_changes_for(
             found_in, change = predicate_changes, found if isinstance(found, dict) else None
             why = found if isinstance(found, str) else None
         elif why is None and operation.kind is OperationKind.PROPERTY:
-            change, found_in = _change(operation, repo, refs, deletes), changes
-            why = None if change else "not a DR relationship type"
+            found = _change(operation, repo, refs, deletes)
+            found_in, change = changes, found if isinstance(found, dict) else None
+            why = (
+                found
+                if isinstance(found, str)
+                else None if change else "not a DR relationship type"
+            )
         elif why is None:
             if operation.kind is OperationKind.CLASS:
                 found = _node_change(operation, repo, refs, class_deletes, layers)
@@ -381,7 +389,7 @@ def _change(
     repo: OntologyRepository,
     refs: dict[str, str | None],
     deletes: dict[str, ProposedOperation],
-) -> dict[str, Any] | None:
+) -> dict[str, Any] | str | None:
     label = f"seq {operation.seq}"
     if operation.op is OperationType.CREATE:
         return _create(operation, repo, label, refs)
@@ -398,14 +406,19 @@ def _create(
     repo: OntologyRepository,
     label: str,
     refs: dict[str, str | None],
-) -> dict | None:
+) -> dict | str | None:
     fields = operation.fields
     domain = _resolve_ref(fields.get("domain_class_id"), refs, label)
     range_ = _resolve_ref(fields.get("range_class_id"), refs, label)
-    relationship_id = dr_relationship_id(fields.get("external_references") or [])
+    references = fields.get("external_references") or []
+    if dr_relationship_id(references) is None:
+        # The create gave none: the type as it is now may have one (#1623)
+        created = repo.get_property_definition(operation.result_entity_id or "")
+        if created is not None:
+            references = [r.to_dict() for r in created.external_references]
+    relationship_id = dr_relationship_id(references)
     if relationship_id is None:
-        _refuse_if_dr_spec(repo, label, "created a relationship type", domain, range_)
-        return None
+        return _unreferenced_on_dr_spec(repo, "created a relationship type", domain, range_)
     triple = _resolved(
         repo, label, relationship_id, fields.get("canonical_predicate"), domain, range_
     )
@@ -413,7 +426,7 @@ def _create(
     if fields.get("description") is not None:
         values["description"] = fields["description"]
     values["cardinality"] = _cardinality(fields, label)
-    values.update(_attributes(fields.get("external_references")))
+    values.update(_attributes(references))
     return _entry(operation, "create", triple, fields.get("identifier"), values)
 
 
@@ -758,6 +771,11 @@ def _attribute_change(
         class_id = _resolve_ref(fields.get("class_id"), refs, label)
         references = fields.get("external_references") or []
         identifier = fields.get("identifier")
+        if dr_relationship_id(references) is None:
+            # The create gave none: the attribute as it is now may have one (#1623)
+            created = repo.get_attribute_definition(operation.result_entity_id or "")
+            if created is not None:
+                references = [r.to_dict() for r in created.external_references]
     elif operation.op is OperationType.UPDATE:
         attribute = repo.get_attribute_definition(operation.target_id or "")
         if attribute is None:
@@ -773,10 +791,10 @@ def _attribute_change(
         return None
     name = dr_relationship_id(references)
     if name is None:
-        raise ValueError(
-            f"{label}: it {operation.op.value}s an attribute of the DR node type {node_id} "
-            f"without a DR reference (source {DR_SOURCE!r}, identifier the DR attribute "
-            "name), so it can't land in DR's spec; give it one"
+        return (
+            f"it {operation.op.value}s an attribute of the DR node type {node_id} without a DR "
+            f"reference (source {DR_SOURCE!r}, identifier the DR attribute name), so it can't "
+            "land in DR's spec: give the attribute one and export again"
         )
     schema: dict[str, Any] = {}
     if operation.op is OperationType.CREATE:
@@ -1264,6 +1282,22 @@ def _refuse_if_dr_spec(repo: OntologyRepository, label: str, what: str, *class_i
                 f"{label}: it {what} on DR spec classes without a DR reference "
                 f"(source {DR_SOURCE!r}), so it can't land in DR's spec; give it one"
             )
+
+
+def _unreferenced_on_dr_spec(repo: OntologyRepository, what: str, *class_ids: Any) -> str | None:
+    """
+    Why a type with no DR reference is skipped when it is on DR spec classes
+    (DR's spec needs the reference to name it), so the rest still exports
+    (#1623); None for a type on other classes, which isn't DR's.
+    """
+    for class_id in class_ids:
+        cls = repo.get_class(class_id) if isinstance(class_id, str) else None
+        if cls is not None and dr_relationship_id(cls.external_references) is not None:
+            return (
+                f"it {what} on DR spec classes without a DR reference (source {DR_SOURCE!r}), "
+                "so it can't land in DR's spec: give the type one and export again"
+            )
+    return None
 
 
 def _cardinality(fields: Mapping[str, Any], label: str) -> str:

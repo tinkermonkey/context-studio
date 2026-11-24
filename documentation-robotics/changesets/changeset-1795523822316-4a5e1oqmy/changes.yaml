@@ -1,0 +1,80 @@
+- type: add
+  elementId: motivation.requirement.one-unexportable-operation-never-blocks-a-dr-spec-export
+  layerName: motivation
+  after:
+    id: adee5eda-9d7a-4ac9-8eaf-6edcf3b52796
+    path: motivation.requirement.one-unexportable-operation-never-blocks-a-dr-spec-export
+    spec_node_id: motivation.requirement
+    type: requirement
+    layer_id: motivation
+    name: One unexportable operation never blocks a DR spec export
+    description: "#1623: a create without a DR reference takes the reference its
+      entity has now; one with none at all is listed under skipped (with why and
+      the fix) and the proposal's other operations still export."
+    attributes:
+      requirementType: functional
+      priority: high
+    metadata:
+      created_at: 2026-11-24T12:37:04.076Z
+      updated_at: 2026-11-24T12:37:04.076Z
+      version: 1
+  timestamp: 2026-11-24T12:37:04.098Z
+  sequenceNumber: 0
+- type: relationship-add
+  elementId: motivation.requirement.one-unexportable-operation-never-blocks-a-dr-spec-export::realizes::motivation.outcome.client-changes-land-without-hand-edited-specs
+  layerName: motivation
+  after:
+    source: motivation.requirement.one-unexportable-operation-never-blocks-a-dr-spec-export
+    target: motivation.outcome.client-changes-land-without-hand-edited-specs
+    predicate: realizes
+    layer: motivation
+    category: structural
+  timestamp: 2026-11-24T12:37:04.098Z
+  sequenceNumber: 1
+- type: add
+  elementId: application.applicationfunction.spec-changes-for-a-proposal
+  layerName: application
+  after:
+    id: a64040b0-1906-4675-be77-3f98e297b1b5
+    path: application.applicationfunction.spec-changes-for-a-proposal
+    spec_node_id: application.applicationfunction
+    type: applicationfunction
+    layer_id: application
+    name: Spec changes for a proposal
+    description: "spec_changes_for: a decided proposal's applied operations as a
+      cs-dr-spec-changes/1 document; what can't export is listed under skipped
+      with why."
+    source_reference:
+      provenance: manual
+      locations:
+        - file: local-server/adapters/interchange/dr_spec_changes.py
+          symbol: spec_changes_for
+    metadata:
+      created_at: 2026-11-24T12:37:15.594Z
+      updated_at: 2026-11-24T12:37:15.594Z
+      version: 1
+  timestamp: 2026-11-24T12:37:15.611Z
+  sequenceNumber: 2
+- type: relationship-add
+  elementId: application.applicationcomponent.dr-spec-changes-exporter::assigned-to::application.applicationfunction.spec-changes-for-a-proposal
+  layerName: application
+  after:
+    source: application.applicationcomponent.dr-spec-changes-exporter
+    target: application.applicationfunction.spec-changes-for-a-proposal
+    predicate: assigned-to
+    layer: application
+    category: structural
+  timestamp: 2026-11-24T12:37:15.611Z
+  sequenceNumber: 3
+- type: relationship-add
+  elementId: application.applicationfunction.spec-changes-for-a-proposal::satisfies::motivation.requirement.one-unexportable-operation-never-blocks-a-dr-spec-export
+  layerName: application
+  after:
+    source: application.applicationfunction.spec-changes-for-a-proposal
+    target: motivation.requirement.one-unexportable-operation-never-blocks-a-dr-spec-export
+    predicate: satisfies
+    layer: application
+    targetLayer: motivation
+    category: structural
+  timestamp: 2026-11-24T12:37:15.611Z
+  sequenceNumber: 4
