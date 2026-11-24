@@ -672,6 +672,10 @@ technology.systemsoftware.heimdall-ui:
     inputs, overlays, data display, graph and chat components for the UX."
   attributes:
     softwareType: middleware
+    documentation: "@tinkermonkey/heimdall-ui 0.14.0 (Heimdall main), installed from
+      github:tinkermonkey/heimdall and pinned by commit in ux/package-lock.json.
+      ESM only, one module per source file; dropdown panels (RowMenu, Select,
+      FilterDropdown, EntityPicker) render in a portal on document.body."
   source_reference:
     provenance: extracted
     locations:

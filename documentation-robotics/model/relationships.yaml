@@ -1,6 +1,6 @@
 # Intra-layer relationships
 # Format: source_id -> predicate -> target_id
-# Last updated: 2026-11-24T12:27:09.896Z
+# Last updated: 2026-11-24T14:28:52.912Z
 
 - source: motivation.meaning.knowledge-as-infrastructure
   target: motivation.value.knowledge-reusability
@@ -15897,6 +15897,40 @@
   category: structural
 - source: testing.testcasesketch.seeded-errors-are-built-and-scored-offline
   target: motivation.requirement.pre-review-is-adopted-only-by-a-rule-set-in-advance
+  predicate: satisfies
+  layer: testing
+  targetLayer: motivation
+  category: structural
+- source: security.countermeasure.vite-dev-server-loopback-binding
+  target: security.threat.lan-exposure-via-the-vite-dev-server
+  predicate: mitigates
+  layer: security
+  category: structural
+- source: security.countermeasure.vite-dev-server-loopback-binding
+  target: security.secureresource.vite-dev-server
+  predicate: protects
+  layer: security
+  category: structural
+- source: security.countermeasure.vite-dev-server-loopback-binding
+  target: motivation.requirement.dev-server-not-reachable-from-the-lan
+  predicate: satisfies
+  layer: security
+  targetLayer: motivation
+  category: structural
+- source: technology.systemsoftware.vite
+  target: security.countermeasure.vite-dev-server-loopback-binding
+  predicate: realizes
+  layer: technology
+  targetLayer: security
+  category: structural
+- source: testing.testcasesketch.vite-config-does-not-open-the-dev-server-or-preview-to-the-network-mode-s
+  target: security.countermeasure.vite-dev-server-loopback-binding
+  predicate: tests
+  layer: testing
+  targetLayer: security
+  category: structural
+- source: testing.testcasesketch.vite-config-does-not-open-the-dev-server-or-preview-to-the-network-mode-s
+  target: motivation.requirement.dev-server-not-reachable-from-the-lan
   predicate: satisfies
   layer: testing
   targetLayer: motivation

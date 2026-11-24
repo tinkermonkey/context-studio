@@ -3,7 +3,7 @@ schema: documentation-robotics-v1
 cli_version: 0.7.1
 spec_version: 0.13.0
 created: 2026-03-23T12:18:08.630Z
-updated: 2026-11-24T12:27:09.951Z
+updated: 2026-11-24T14:28:53.395Z
 project:
   name: Context Studio
   description: Local-first knowledge graph application for RAG and communication
@@ -60,7 +60,7 @@ layers:
     elements:
       actor: 2
       authenticationconfig: 1
-      countermeasure: 8
+      countermeasure: 9
       dataclassification: 2
       role: 2
       secureresource: 5
@@ -172,9 +172,9 @@ layers:
       coveragerequirement: 3
       inputspacepartition: 1
       outcomecategory: 2
+      testcasesketch: 4
       testcoveragemodel: 2
       testcoveragetarget: 21
-      testcasesketch: 3
 changeset_history:
   - name: restore-upgrade-drops
     committed_at: 2026-11-17T18:49:10.641Z
@@ -184,6 +184,12 @@ changeset_history:
     action: committed
   - name: extraction-pre-review-stage
     committed_at: 2026-11-24T12:27:09.951Z
+    action: committed
+  - name: heimdall-upgrade-0-14
+    committed_at: 2026-11-24T14:26:46.065Z
+    action: committed
+  - name: vite-dev-server-loopback-only
+    committed_at: 2026-11-24T14:28:53.395Z
     action: committed
 reconciled:
   changeset: rebuild-model-from-code

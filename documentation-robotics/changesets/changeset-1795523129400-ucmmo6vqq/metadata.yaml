@@ -6,8 +6,8 @@ description: "#1683: move the UX's @tinkermonkey/heimdall-ui from 0.9.5 to
   0.14.0 and visual QA passes in both canvas modes. The layered-graph framework
   is not adopted (#1448)."
 created: 2026-11-24T12:25:29.409Z
-modified: 2026-11-24T12:25:32.842Z
-status: staged
+modified: 2026-11-24T14:26:45.897Z
+status: committed
 baseSnapshot: v2:sha256:53252d39ed1357a9afdd6132507b497bf81313353af91142ccb6b590b147594c
 origin:
   kind: plan

@@ -176,3 +176,26 @@ security.countermeasure.secret-safe-configuration:
     created_at: 2026-11-19T16:18:36.733Z
     updated_at: 2026-11-19T16:18:36.733Z
     version: 1
+security.countermeasure.vite-dev-server-loopback-binding:
+  id: 96138932-a5c4-405f-80e2-b4722ace168d
+  path: security.countermeasure.vite-dev-server-loopback-binding
+  spec_node_id: security.countermeasure
+  type: countermeasure
+  layer_id: security
+  name: Vite Dev Server Loopback Binding
+  description: vite.config.ts sets no server.host, so Vite's default (localhost)
+    applies to npm run dev, vite preview, the QA instances and the E2E stack. A
+    vitest test pins the default.
+  attributes:
+    type: technical
+    effectiveness: high
+    implemented: true
+    description: Dev server listens on loopback only
+  source_reference:
+    provenance: manual
+    locations:
+      - file: ux/vite.config.ts
+  metadata:
+    created_at: 2026-11-24T12:25:42.371Z
+    updated_at: 2026-11-24T12:25:42.371Z
+    version: 1

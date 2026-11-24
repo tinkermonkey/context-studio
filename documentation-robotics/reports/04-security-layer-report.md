@@ -16,116 +16,54 @@ Authentication, authorization, security threats, and controls.
 
 | Metric                    | Count |
 | ------------------------- | ----- |
-| Elements                  | 30    |
-| Intra-Layer Relationships | 62    |
-| Inter-Layer Relationships | 45    |
-| Inbound Relationships     | 20    |
-| Outbound Relationships    | 25    |
+| Elements                  | 31    |
+| Intra-Layer Relationships | 64    |
+| Inter-Layer Relationships | 48    |
+| Inbound Relationships     | 22    |
+| Outbound Relationships    | 26    |
 
 **Cross-Layer References**:
 
-- **Upstream layers**: [API](./07-api-layer-report.md), [Application](./05-application-layer-report.md), [Data Store](./09-data-store-layer-report.md), [Technology](./06-technology-layer-report.md), [UX](./10-ux-layer-report.md)
+- **Upstream layers**: [API](./07-api-layer-report.md), [Application](./05-application-layer-report.md), [Data Store](./09-data-store-layer-report.md), [Technology](./06-technology-layer-report.md), [Testing](./13-testing-layer-report.md), [UX](./10-ux-layer-report.md)
 - **Downstream layers**: [Business](./02-business-layer-report.md), [Motivation](./01-motivation-layer-report.md)
 
 ## Intra-Layer Relationships
 
-```mermaid
-flowchart LR
-  subgraph security
-    security_actor_local_operator["Local Operator"]
-    security_actor_mcp_client_agent["MCP Client Agent"]
-    security_authenticationconfig_mcp_bearer_token_authentication["MCP Bearer Token Authentication"]
-    security_countermeasure_human_review_gate_for_agent_writes["Human Review Gate for Agent Writes"]
-    security_countermeasure_loopback_only_mcp_startup["Loopback-Only MCP Startup"]
-    security_countermeasure_mcp_bearer_token_check["MCP Bearer Token Check"]
-    security_countermeasure_origin_and_host_request_guard["Origin and Host Request Guard"]
-    security_countermeasure_parameterized_queries_via_orm["Parameterized Queries via ORM"]
-    security_countermeasure_secret_safe_configuration["Secret-Safe Configuration"]
-    security_countermeasure_source_path_allowlist["Source Path Allowlist"]
-    security_countermeasure_source_size_limit["Source Size Limit"]
-    security_dataclassification_internal_knowledge_graph_data["Internal Knowledge Graph Data"]
-    security_dataclassification_secrets["Secrets"]
-    security_role_local_operator["Local Operator"]
-    security_role_mcp_agent["MCP Agent"]
-    security_secureresource_configuration_file["Configuration File"]
-    security_secureresource_local_rest_api["Local REST API"]
-    security_secureresource_mcp_endpoint["MCP Endpoint"]
-    security_secureresource_vite_dev_server["Vite Dev Server"]
-    security_secureresource_workspace_databases["Workspace Databases"]
-    security_securitymodel_context_studio_security_model["Context Studio Security Model"]
-    security_threat_arbitrary_file_read_via_mcp_sources["Arbitrary File Read via MCP Sources"]
-    security_threat_cross_site_request_and_dns_rebinding_against_the_local_api["Cross-Site Request and DNS Rebinding against the Local API"]
-    security_threat_information_disclosure_via_error_messages["Information Disclosure via Error Messages"]
-    security_threat_lan_exposure_via_the_vite_dev_server["LAN Exposure via the Vite Dev Server"]
-    security_threat_prompt_injection_via_sources_or_client_plans["Prompt Injection via Sources or Client Plans"]
-    security_threat_server_side_request_forgery_via_url_sources["Server-Side Request Forgery via URL Sources"]
-    security_threat_sql_injection["SQL Injection"]
-    security_threat_unauthorized_mcp_access["Unauthorized MCP Access"]
-    security_threat_workspace_data_sent_to_llm_providers["Workspace Data Sent to LLM Providers"]
-    security_actor_local_operator -->|assigned-to| security_role_local_operator
-    security_actor_mcp_client_agent -->|assigned-to| security_role_mcp_agent
-    security_authenticationconfig_mcp_bearer_token_authentication -->|authenticates| security_actor_mcp_client_agent
-    security_authenticationconfig_mcp_bearer_token_authentication -->|protects| security_secureresource_mcp_endpoint
-    security_countermeasure_human_review_gate_for_agent_writes -->|mitigates| security_threat_prompt_injection_via_sources_or_client_plans
-    security_countermeasure_loopback_only_mcp_startup -->|mitigates| security_threat_cross_site_request_and_dns_rebinding_against_the_local_api
-    security_countermeasure_loopback_only_mcp_startup -->|mitigates| security_threat_unauthorized_mcp_access
-    security_countermeasure_loopback_only_mcp_startup -->|protects| security_secureresource_mcp_endpoint
-    security_countermeasure_mcp_bearer_token_check -->|mitigates| security_threat_unauthorized_mcp_access
-    security_countermeasure_mcp_bearer_token_check -->|protects| security_secureresource_mcp_endpoint
-    security_countermeasure_origin_and_host_request_guard -->|mitigates| security_threat_cross_site_request_and_dns_rebinding_against_the_local_api
-    security_countermeasure_origin_and_host_request_guard -->|protects| security_secureresource_local_rest_api
-    security_countermeasure_parameterized_queries_via_orm -->|mitigates| security_threat_sql_injection
-    security_countermeasure_parameterized_queries_via_orm -->|protects| security_secureresource_workspace_databases
-    security_countermeasure_secret_safe_configuration -->|mitigates| security_threat_information_disclosure_via_error_messages
-    security_countermeasure_secret_safe_configuration -->|protects| security_secureresource_configuration_file
-    security_countermeasure_source_path_allowlist -->|mitigates| security_threat_arbitrary_file_read_via_mcp_sources
-    security_countermeasure_source_path_allowlist -->|protects| security_secureresource_mcp_endpoint
-    security_countermeasure_source_size_limit -->|protects| security_secureresource_local_rest_api
-    security_dataclassification_internal_knowledge_graph_data -->|governs| security_secureresource_workspace_databases
-    security_dataclassification_secrets -->|governs| security_secureresource_configuration_file
-    security_dataclassification_secrets -->|mandates| security_countermeasure_secret_safe_configuration
-    security_securitymodel_context_studio_security_model -->|aggregates| security_actor_local_operator
-    security_securitymodel_context_studio_security_model -->|aggregates| security_actor_mcp_client_agent
-    security_securitymodel_context_studio_security_model -->|aggregates| security_dataclassification_internal_knowledge_graph_data
-    security_securitymodel_context_studio_security_model -->|aggregates| security_dataclassification_secrets
-    security_securitymodel_context_studio_security_model -->|aggregates| security_role_local_operator
-    security_securitymodel_context_studio_security_model -->|aggregates| security_role_mcp_agent
-    security_securitymodel_context_studio_security_model -->|aggregates| security_secureresource_configuration_file
-    security_securitymodel_context_studio_security_model -->|aggregates| security_secureresource_local_rest_api
-    security_securitymodel_context_studio_security_model -->|aggregates| security_secureresource_mcp_endpoint
-    security_securitymodel_context_studio_security_model -->|aggregates| security_secureresource_vite_dev_server
-    security_securitymodel_context_studio_security_model -->|aggregates| security_secureresource_workspace_databases
-    security_securitymodel_context_studio_security_model -->|aggregates| security_threat_arbitrary_file_read_via_mcp_sources
-    security_securitymodel_context_studio_security_model -->|aggregates| security_threat_cross_site_request_and_dns_rebinding_against_the_local_api
-    security_securitymodel_context_studio_security_model -->|aggregates| security_threat_information_disclosure_via_error_messages
-    security_securitymodel_context_studio_security_model -->|aggregates| security_threat_lan_exposure_via_the_vite_dev_server
-    security_securitymodel_context_studio_security_model -->|aggregates| security_threat_prompt_injection_via_sources_or_client_plans
-    security_securitymodel_context_studio_security_model -->|aggregates| security_threat_server_side_request_forgery_via_url_sources
-    security_securitymodel_context_studio_security_model -->|aggregates| security_threat_sql_injection
-    security_securitymodel_context_studio_security_model -->|aggregates| security_threat_unauthorized_mcp_access
-    security_securitymodel_context_studio_security_model -->|aggregates| security_threat_workspace_data_sent_to_llm_providers
-    security_securitymodel_context_studio_security_model -->|composes| security_authenticationconfig_mcp_bearer_token_authentication
-    security_threat_arbitrary_file_read_via_mcp_sources -->|influence| security_dataclassification_secrets
-    security_threat_arbitrary_file_read_via_mcp_sources -->|targets| security_secureresource_mcp_endpoint
-    security_threat_cross_site_request_and_dns_rebinding_against_the_local_api -->|influence| security_dataclassification_internal_knowledge_graph_data
-    security_threat_cross_site_request_and_dns_rebinding_against_the_local_api -->|targets| security_secureresource_local_rest_api
-    security_threat_information_disclosure_via_error_messages -->|influence| security_dataclassification_internal_knowledge_graph_data
-    security_threat_information_disclosure_via_error_messages -->|targets| security_secureresource_local_rest_api
-    security_threat_lan_exposure_via_the_vite_dev_server -->|influence| security_dataclassification_secrets
-    security_threat_lan_exposure_via_the_vite_dev_server -->|targets| security_secureresource_mcp_endpoint
-    security_threat_lan_exposure_via_the_vite_dev_server -->|targets| security_secureresource_vite_dev_server
-    security_threat_prompt_injection_via_sources_or_client_plans -->|influence| security_dataclassification_internal_knowledge_graph_data
-    security_threat_prompt_injection_via_sources_or_client_plans -->|targets| security_secureresource_workspace_databases
-    security_threat_server_side_request_forgery_via_url_sources -->|targets| security_secureresource_local_rest_api
-    security_threat_server_side_request_forgery_via_url_sources -->|targets| security_secureresource_mcp_endpoint
-    security_threat_sql_injection -->|influence| security_dataclassification_internal_knowledge_graph_data
-    security_threat_sql_injection -->|targets| security_secureresource_workspace_databases
-    security_threat_unauthorized_mcp_access -->|influence| security_dataclassification_internal_knowledge_graph_data
-    security_threat_unauthorized_mcp_access -->|targets| security_secureresource_mcp_endpoint
-    security_threat_workspace_data_sent_to_llm_providers -->|influence| security_dataclassification_internal_knowledge_graph_data
-    security_threat_workspace_data_sent_to_llm_providers -->|targets| security_secureresource_workspace_databases
-  end
-```
+*This layer has >30 elements. Summary table shown instead of diagram.*
+
+| Element                                                                      | Type                   | Relationships |
+| ---------------------------------------------------------------------------- | ---------------------- | ------------- |
+| `security.actor.local-operator`                                              | `actor`                | 2             |
+| `security.actor.mcp-client-agent`                                            | `actor`                | 3             |
+| `security.authenticationconfig.mcp-bearer-token-authentication`              | `authenticationconfig` | 3             |
+| `security.countermeasure.human-review-gate-for-agent-writes`                 | `countermeasure`       | 1             |
+| `security.countermeasure.loopback-only-mcp-startup`                          | `countermeasure`       | 3             |
+| `security.countermeasure.mcp-bearer-token-check`                             | `countermeasure`       | 2             |
+| `security.countermeasure.origin-and-host-request-guard`                      | `countermeasure`       | 2             |
+| `security.countermeasure.parameterized-queries-via-orm`                      | `countermeasure`       | 2             |
+| `security.countermeasure.secret-safe-configuration`                          | `countermeasure`       | 3             |
+| `security.countermeasure.source-path-allowlist`                              | `countermeasure`       | 2             |
+| `security.countermeasure.source-size-limit`                                  | `countermeasure`       | 1             |
+| `security.countermeasure.vite-dev-server-loopback-binding`                   | `countermeasure`       | 2             |
+| `security.dataclassification.internal-knowledge-graph-data`                  | `dataclassification`   | 8             |
+| `security.dataclassification.secrets`                                        | `dataclassification`   | 5             |
+| `security.role.local-operator`                                               | `role`                 | 2             |
+| `security.role.mcp-agent`                                                    | `role`                 | 2             |
+| `security.secureresource.configuration-file`                                 | `secureresource`       | 3             |
+| `security.secureresource.local-rest-api`                                     | `secureresource`       | 6             |
+| `security.secureresource.mcp-endpoint`                                       | `secureresource`       | 9             |
+| `security.secureresource.vite-dev-server`                                    | `secureresource`       | 3             |
+| `security.secureresource.workspace-databases`                                | `secureresource`       | 6             |
+| `security.securitymodel.context-studio-security-model`                       | `securitymodel`        | 21            |
+| `security.threat.arbitrary-file-read-via-mcp-sources`                        | `threat`               | 4             |
+| `security.threat.cross-site-request-and-dns-rebinding-against-the-local-api` | `threat`               | 5             |
+| `security.threat.information-disclosure-via-error-messages`                  | `threat`               | 4             |
+| `security.threat.lan-exposure-via-the-vite-dev-server`                       | `threat`               | 5             |
+| `security.threat.prompt-injection-via-sources-or-client-plans`               | `threat`               | 4             |
+| `security.threat.server-side-request-forgery-via-url-sources`                | `threat`               | 3             |
+| `security.threat.sql-injection`                                              | `threat`               | 4             |
+| `security.threat.unauthorized-mcp-access`                                    | `threat`               | 5             |
+| `security.threat.workspace-data-sent-to-llm-providers`                       | `threat`               | 3             |
 
 ## Inter-Layer Dependencies
 
@@ -151,59 +89,63 @@ flowchart TB
   security --> business
   security --> motivation
   technology --> security
+  testing --> security
   ux --> security
   class security current
 ```
 
 ## Inter-Layer Relationships Table
 
-| Relationship ID                                                     | Source Node                                                                  | Dest Node                                                            | Dest Layer   | Predicate    | Cardinality  | Strength |
-| ------------------------------------------------------------------- | ---------------------------------------------------------------------------- | -------------------------------------------------------------------- | ------------ | ------------ | ------------ | -------- |
-| `api.operation.references.security.threat`                          | `api.operation.add-source`                                                   | `security.threat.server-side-request-forgery-via-url-sources`        | `security`   | `references` | many-to-many | medium   |
-| `api.operation.references.security.secureresource`                  | `api.operation.get-mcp-connection-details`                                   | `security.secureresource.mcp-endpoint`                               | `security`   | `references` | many-to-many | medium   |
-| `api.operation.references.security.threat`                          | `api.operation.get-mcp-connection-details`                                   | `security.threat.lan-exposure-via-the-vite-dev-server`               | `security`   | `references` | many-to-many | medium   |
-| `api.operation.references.security.secureresource`                  | `api.operation.mcp-endpoint`                                                 | `security.secureresource.mcp-endpoint`                               | `security`   | `references` | many-to-many | medium   |
-| `api.securityscheme.references.security.secureresource`             | `api.securityscheme.mcp-bearer-token`                                        | `security.secureresource.mcp-endpoint`                               | `security`   | `references` | many-to-many | medium   |
-| `application.applicationcomponent.realizes.security.countermeasure` | `application.applicationcomponent.database-manager`                          | `security.countermeasure.parameterized-queries-via-orm`              | `security`   | `realizes`   | many-to-many | medium   |
-| `application.applicationcomponent.realizes.security.countermeasure` | `application.applicationcomponent.http-page-fetcher`                         | `security.countermeasure.source-size-limit`                          | `security`   | `realizes`   | many-to-many | medium   |
-| `application.applicationcomponent.realizes.security.countermeasure` | `application.applicationcomponent.json-file-config-store`                    | `security.countermeasure.secret-safe-configuration`                  | `security`   | `realizes`   | many-to-many | medium   |
-| `application.applicationcomponent.realizes.security.countermeasure` | `application.applicationcomponent.mcp-server`                                | `security.countermeasure.loopback-only-mcp-startup`                  | `security`   | `realizes`   | many-to-many | medium   |
-| `application.applicationcomponent.realizes.security.countermeasure` | `application.applicationcomponent.mcp-server`                                | `security.countermeasure.mcp-bearer-token-check`                     | `security`   | `realizes`   | many-to-many | medium   |
-| `application.applicationcomponent.realizes.security.countermeasure` | `application.applicationcomponent.request-guard`                             | `security.countermeasure.origin-and-host-request-guard`              | `security`   | `realizes`   | many-to-many | medium   |
-| `application.applicationcomponent.realizes.security.countermeasure` | `application.applicationcomponent.source-chat-tools`                         | `security.countermeasure.source-path-allowlist`                      | `security`   | `realizes`   | many-to-many | medium   |
-| `application.applicationinterface.exposes.security.secureresource`  | `application.applicationinterface.mcp-interface`                             | `security.secureresource.mcp-endpoint`                               | `security`   | `exposes`    | many-to-many | medium   |
-| `application.applicationinterface.exposes.security.secureresource`  | `application.applicationinterface.rest-api-interface`                        | `security.secureresource.local-rest-api`                             | `security`   | `exposes`    | many-to-many | medium   |
-| `data-store.collection.references.security.dataclassification`      | `data-store.collection.chat-messages`                                        | `security.dataclassification.internal-knowledge-graph-data`          | `security`   | `references` | many-to-many | medium   |
-| `data-store.collection.references.security.dataclassification`      | `data-store.collection.ontology-entities`                                    | `security.dataclassification.internal-knowledge-graph-data`          | `security`   | `references` | many-to-many | medium   |
-| `data-store.collection.references.security.dataclassification`      | `data-store.collection.proposals-table`                                      | `security.dataclassification.internal-knowledge-graph-data`          | `security`   | `references` | many-to-many | medium   |
-| `data-store.collection.references.security.dataclassification`      | `data-store.collection.sources`                                              | `security.dataclassification.internal-knowledge-graph-data`          | `security`   | `references` | many-to-many | medium   |
-| `security.countermeasure.protects.business.businessprocess`         | `security.countermeasure.human-review-gate-for-agent-writes`                 | `business.businessprocess.adjudicate-a-proposal`                     | `business`   | `protects`   | many-to-many | medium   |
-| `security.countermeasure.satisfies.motivation.requirement`          | `security.countermeasure.human-review-gate-for-agent-writes`                 | `motivation.requirement.breaking-changes-never-auto-apply`           | `motivation` | `satisfies`  | many-to-many | medium   |
-| `security.countermeasure.satisfies.motivation.requirement`          | `security.countermeasure.loopback-only-mcp-startup`                          | `motivation.requirement.mcp-requires-a-bearer-token-on-loopback`     | `motivation` | `satisfies`  | many-to-many | medium   |
-| `security.countermeasure.satisfies.motivation.requirement`          | `security.countermeasure.mcp-bearer-token-check`                             | `motivation.requirement.mcp-requires-a-bearer-token-on-loopback`     | `motivation` | `satisfies`  | many-to-many | medium   |
-| `security.countermeasure.satisfies.motivation.requirement`          | `security.countermeasure.origin-and-host-request-guard`                      | `motivation.requirement.local-api-refuses-foreign-origins`           | `motivation` | `satisfies`  | many-to-many | medium   |
-| `security.countermeasure.realizes.motivation.goal`                  | `security.countermeasure.parameterized-queries-via-orm`                      | `motivation.goal.safe-local-first-workspace`                         | `motivation` | `realizes`   | many-to-many | medium   |
-| `security.countermeasure.satisfies.motivation.requirement`          | `security.countermeasure.secret-safe-configuration`                          | `motivation.requirement.secrets-stay-in-the-configuration-file`      | `motivation` | `satisfies`  | many-to-many | medium   |
-| `security.countermeasure.satisfies.motivation.requirement`          | `security.countermeasure.source-path-allowlist`                              | `motivation.requirement.agent-file-sources-limited-to-allowed-roots` | `motivation` | `satisfies`  | many-to-many | medium   |
-| `security.countermeasure.realizes.motivation.goal`                  | `security.countermeasure.source-size-limit`                                  | `motivation.goal.safe-local-first-workspace`                         | `motivation` | `realizes`   | many-to-many | medium   |
-| `security.role.references.business.businessrole`                    | `security.role.local-operator`                                               | `business.businessrole.reviewer`                                     | `business`   | `references` | many-to-many | medium   |
-| `security.role.references.business.businessrole`                    | `security.role.mcp-agent`                                                    | `business.businessrole.proposer`                                     | `business`   | `references` | many-to-many | medium   |
-| `security.secureresource.references.business.businessobject`        | `security.secureresource.workspace-databases`                                | `business.businessobject.change-proposal`                            | `business`   | `references` | many-to-many | medium   |
-| `security.secureresource.references.business.businessobject`        | `security.secureresource.workspace-databases`                                | `business.businessobject.claim`                                      | `business`   | `references` | many-to-many | medium   |
-| `security.secureresource.references.business.businessobject`        | `security.secureresource.workspace-databases`                                | `business.businessobject.dataset`                                    | `business`   | `references` | many-to-many | medium   |
-| `security.secureresource.references.business.businessobject`        | `security.secureresource.workspace-databases`                                | `business.businessobject.decision-gold`                              | `business`   | `references` | many-to-many | medium   |
-| `security.secureresource.references.business.businessobject`        | `security.secureresource.workspace-databases`                                | `business.businessobject.source-document`                            | `business`   | `references` | many-to-many | medium   |
-| `security.threat.references.motivation.driver`                      | `security.threat.arbitrary-file-read-via-mcp-sources`                        | `motivation.driver.unauthenticated-local-workspace-api`              | `motivation` | `references` | many-to-many | medium   |
-| `security.threat.references.motivation.driver`                      | `security.threat.cross-site-request-and-dns-rebinding-against-the-local-api` | `motivation.driver.unauthenticated-local-workspace-api`              | `motivation` | `references` | many-to-many | medium   |
-| `security.threat.references.motivation.driver`                      | `security.threat.lan-exposure-via-the-vite-dev-server`                       | `motivation.driver.unauthenticated-local-workspace-api`              | `motivation` | `references` | many-to-many | medium   |
-| `security.threat.references.motivation.driver`                      | `security.threat.prompt-injection-via-sources-or-client-plans`               | `motivation.driver.review-is-the-normal-workflow`                    | `motivation` | `references` | many-to-many | medium   |
-| `security.threat.targets.business.businessprocess`                  | `security.threat.prompt-injection-via-sources-or-client-plans`               | `business.businessprocess.extract-a-source-into-a-dataset`           | `business`   | `targets`    | many-to-many | medium   |
-| `security.threat.targets.business.businessservice`                  | `security.threat.prompt-injection-via-sources-or-client-plans`               | `business.businessservice.proposal-adjudication-service`             | `business`   | `targets`    | many-to-many | medium   |
-| `security.threat.references.motivation.driver`                      | `security.threat.server-side-request-forgery-via-url-sources`                | `motivation.driver.unauthenticated-local-workspace-api`              | `motivation` | `references` | many-to-many | medium   |
-| `security.threat.references.motivation.driver`                      | `security.threat.unauthorized-mcp-access`                                    | `motivation.driver.unauthenticated-local-workspace-api`              | `motivation` | `references` | many-to-many | medium   |
-| `security.threat.targets.business.businessservice`                  | `security.threat.workspace-data-sent-to-llm-providers`                       | `business.businessservice.source-extraction-service`                 | `business`   | `targets`    | many-to-many | medium   |
-| `technology.systemsoftware.realizes.security.countermeasure`        | `technology.systemsoftware.sqlalchemy`                                       | `security.countermeasure.parameterized-queries-via-orm`              | `security`   | `realizes`   | many-to-many | medium   |
-| `ux.view.requires.security.role`                                    | `ux.view.settings-view`                                                      | `security.role.local-operator`                                       | `security`   | `requires`   | many-to-many | medium   |
+| Relationship ID                                                     | Source Node                                                                                        | Dest Node                                                            | Dest Layer   | Predicate    | Cardinality  | Strength |
+| ------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------- | ------------ | ------------ | ------------ | -------- |
+| `api.operation.references.security.threat`                          | `api.operation.add-source`                                                                         | `security.threat.server-side-request-forgery-via-url-sources`        | `security`   | `references` | many-to-many | medium   |
+| `api.operation.references.security.secureresource`                  | `api.operation.get-mcp-connection-details`                                                         | `security.secureresource.mcp-endpoint`                               | `security`   | `references` | many-to-many | medium   |
+| `api.operation.references.security.threat`                          | `api.operation.get-mcp-connection-details`                                                         | `security.threat.lan-exposure-via-the-vite-dev-server`               | `security`   | `references` | many-to-many | medium   |
+| `api.operation.references.security.secureresource`                  | `api.operation.mcp-endpoint`                                                                       | `security.secureresource.mcp-endpoint`                               | `security`   | `references` | many-to-many | medium   |
+| `api.securityscheme.references.security.secureresource`             | `api.securityscheme.mcp-bearer-token`                                                              | `security.secureresource.mcp-endpoint`                               | `security`   | `references` | many-to-many | medium   |
+| `application.applicationcomponent.realizes.security.countermeasure` | `application.applicationcomponent.database-manager`                                                | `security.countermeasure.parameterized-queries-via-orm`              | `security`   | `realizes`   | many-to-many | medium   |
+| `application.applicationcomponent.realizes.security.countermeasure` | `application.applicationcomponent.http-page-fetcher`                                               | `security.countermeasure.source-size-limit`                          | `security`   | `realizes`   | many-to-many | medium   |
+| `application.applicationcomponent.realizes.security.countermeasure` | `application.applicationcomponent.json-file-config-store`                                          | `security.countermeasure.secret-safe-configuration`                  | `security`   | `realizes`   | many-to-many | medium   |
+| `application.applicationcomponent.realizes.security.countermeasure` | `application.applicationcomponent.mcp-server`                                                      | `security.countermeasure.loopback-only-mcp-startup`                  | `security`   | `realizes`   | many-to-many | medium   |
+| `application.applicationcomponent.realizes.security.countermeasure` | `application.applicationcomponent.mcp-server`                                                      | `security.countermeasure.mcp-bearer-token-check`                     | `security`   | `realizes`   | many-to-many | medium   |
+| `application.applicationcomponent.realizes.security.countermeasure` | `application.applicationcomponent.request-guard`                                                   | `security.countermeasure.origin-and-host-request-guard`              | `security`   | `realizes`   | many-to-many | medium   |
+| `application.applicationcomponent.realizes.security.countermeasure` | `application.applicationcomponent.source-chat-tools`                                               | `security.countermeasure.source-path-allowlist`                      | `security`   | `realizes`   | many-to-many | medium   |
+| `application.applicationinterface.exposes.security.secureresource`  | `application.applicationinterface.mcp-interface`                                                   | `security.secureresource.mcp-endpoint`                               | `security`   | `exposes`    | many-to-many | medium   |
+| `application.applicationinterface.exposes.security.secureresource`  | `application.applicationinterface.rest-api-interface`                                              | `security.secureresource.local-rest-api`                             | `security`   | `exposes`    | many-to-many | medium   |
+| `data-store.collection.references.security.dataclassification`      | `data-store.collection.chat-messages`                                                              | `security.dataclassification.internal-knowledge-graph-data`          | `security`   | `references` | many-to-many | medium   |
+| `data-store.collection.references.security.dataclassification`      | `data-store.collection.ontology-entities`                                                          | `security.dataclassification.internal-knowledge-graph-data`          | `security`   | `references` | many-to-many | medium   |
+| `data-store.collection.references.security.dataclassification`      | `data-store.collection.proposals-table`                                                            | `security.dataclassification.internal-knowledge-graph-data`          | `security`   | `references` | many-to-many | medium   |
+| `data-store.collection.references.security.dataclassification`      | `data-store.collection.sources`                                                                    | `security.dataclassification.internal-knowledge-graph-data`          | `security`   | `references` | many-to-many | medium   |
+| `security.countermeasure.protects.business.businessprocess`         | `security.countermeasure.human-review-gate-for-agent-writes`                                       | `business.businessprocess.adjudicate-a-proposal`                     | `business`   | `protects`   | many-to-many | medium   |
+| `security.countermeasure.satisfies.motivation.requirement`          | `security.countermeasure.human-review-gate-for-agent-writes`                                       | `motivation.requirement.breaking-changes-never-auto-apply`           | `motivation` | `satisfies`  | many-to-many | medium   |
+| `security.countermeasure.satisfies.motivation.requirement`          | `security.countermeasure.loopback-only-mcp-startup`                                                | `motivation.requirement.mcp-requires-a-bearer-token-on-loopback`     | `motivation` | `satisfies`  | many-to-many | medium   |
+| `security.countermeasure.satisfies.motivation.requirement`          | `security.countermeasure.mcp-bearer-token-check`                                                   | `motivation.requirement.mcp-requires-a-bearer-token-on-loopback`     | `motivation` | `satisfies`  | many-to-many | medium   |
+| `security.countermeasure.satisfies.motivation.requirement`          | `security.countermeasure.origin-and-host-request-guard`                                            | `motivation.requirement.local-api-refuses-foreign-origins`           | `motivation` | `satisfies`  | many-to-many | medium   |
+| `security.countermeasure.realizes.motivation.goal`                  | `security.countermeasure.parameterized-queries-via-orm`                                            | `motivation.goal.safe-local-first-workspace`                         | `motivation` | `realizes`   | many-to-many | medium   |
+| `security.countermeasure.satisfies.motivation.requirement`          | `security.countermeasure.secret-safe-configuration`                                                | `motivation.requirement.secrets-stay-in-the-configuration-file`      | `motivation` | `satisfies`  | many-to-many | medium   |
+| `security.countermeasure.satisfies.motivation.requirement`          | `security.countermeasure.source-path-allowlist`                                                    | `motivation.requirement.agent-file-sources-limited-to-allowed-roots` | `motivation` | `satisfies`  | many-to-many | medium   |
+| `security.countermeasure.realizes.motivation.goal`                  | `security.countermeasure.source-size-limit`                                                        | `motivation.goal.safe-local-first-workspace`                         | `motivation` | `realizes`   | many-to-many | medium   |
+| `security.countermeasure.satisfies.motivation.requirement`          | `security.countermeasure.vite-dev-server-loopback-binding`                                         | `motivation.requirement.dev-server-not-reachable-from-the-lan`       | `motivation` | `satisfies`  | many-to-many | medium   |
+| `security.role.references.business.businessrole`                    | `security.role.local-operator`                                                                     | `business.businessrole.reviewer`                                     | `business`   | `references` | many-to-many | medium   |
+| `security.role.references.business.businessrole`                    | `security.role.mcp-agent`                                                                          | `business.businessrole.proposer`                                     | `business`   | `references` | many-to-many | medium   |
+| `security.secureresource.references.business.businessobject`        | `security.secureresource.workspace-databases`                                                      | `business.businessobject.change-proposal`                            | `business`   | `references` | many-to-many | medium   |
+| `security.secureresource.references.business.businessobject`        | `security.secureresource.workspace-databases`                                                      | `business.businessobject.claim`                                      | `business`   | `references` | many-to-many | medium   |
+| `security.secureresource.references.business.businessobject`        | `security.secureresource.workspace-databases`                                                      | `business.businessobject.dataset`                                    | `business`   | `references` | many-to-many | medium   |
+| `security.secureresource.references.business.businessobject`        | `security.secureresource.workspace-databases`                                                      | `business.businessobject.decision-gold`                              | `business`   | `references` | many-to-many | medium   |
+| `security.secureresource.references.business.businessobject`        | `security.secureresource.workspace-databases`                                                      | `business.businessobject.source-document`                            | `business`   | `references` | many-to-many | medium   |
+| `security.threat.references.motivation.driver`                      | `security.threat.arbitrary-file-read-via-mcp-sources`                                              | `motivation.driver.unauthenticated-local-workspace-api`              | `motivation` | `references` | many-to-many | medium   |
+| `security.threat.references.motivation.driver`                      | `security.threat.cross-site-request-and-dns-rebinding-against-the-local-api`                       | `motivation.driver.unauthenticated-local-workspace-api`              | `motivation` | `references` | many-to-many | medium   |
+| `security.threat.references.motivation.driver`                      | `security.threat.lan-exposure-via-the-vite-dev-server`                                             | `motivation.driver.unauthenticated-local-workspace-api`              | `motivation` | `references` | many-to-many | medium   |
+| `security.threat.references.motivation.driver`                      | `security.threat.prompt-injection-via-sources-or-client-plans`                                     | `motivation.driver.review-is-the-normal-workflow`                    | `motivation` | `references` | many-to-many | medium   |
+| `security.threat.targets.business.businessprocess`                  | `security.threat.prompt-injection-via-sources-or-client-plans`                                     | `business.businessprocess.extract-a-source-into-a-dataset`           | `business`   | `targets`    | many-to-many | medium   |
+| `security.threat.targets.business.businessservice`                  | `security.threat.prompt-injection-via-sources-or-client-plans`                                     | `business.businessservice.proposal-adjudication-service`             | `business`   | `targets`    | many-to-many | medium   |
+| `security.threat.references.motivation.driver`                      | `security.threat.server-side-request-forgery-via-url-sources`                                      | `motivation.driver.unauthenticated-local-workspace-api`              | `motivation` | `references` | many-to-many | medium   |
+| `security.threat.references.motivation.driver`                      | `security.threat.unauthorized-mcp-access`                                                          | `motivation.driver.unauthenticated-local-workspace-api`              | `motivation` | `references` | many-to-many | medium   |
+| `security.threat.targets.business.businessservice`                  | `security.threat.workspace-data-sent-to-llm-providers`                                             | `business.businessservice.source-extraction-service`                 | `business`   | `targets`    | many-to-many | medium   |
+| `technology.systemsoftware.realizes.security.countermeasure`        | `technology.systemsoftware.sqlalchemy`                                                             | `security.countermeasure.parameterized-queries-via-orm`              | `security`   | `realizes`   | many-to-many | medium   |
+| `technology.systemsoftware.realizes.security.countermeasure`        | `technology.systemsoftware.vite`                                                                   | `security.countermeasure.vite-dev-server-loopback-binding`           | `security`   | `realizes`   | many-to-many | medium   |
+| `testing.testcasesketch.tests.security.countermeasure`              | `testing.testcasesketch.vite-config-does-not-open-the-dev-server-or-preview-to-the-network-mode-s` | `security.countermeasure.vite-dev-server-loopback-binding`           | `security`   | `tests`      | many-to-many | medium   |
+| `ux.view.requires.security.role`                                    | `ux.view.settings-view`                                                                            | `security.role.local-operator`                                       | `security`   | `requires`   | many-to-many | medium   |
 
 ## Element Reference
 
@@ -485,6 +427,33 @@ Uploads and fetched pages are capped at sources.max_bytes (50 MB by default).
 | inter-layer | `motivation.goal.safe-local-first-workspace`         | `realizes` | outbound  |
 | intra-layer | `security.secureresource.local-rest-api`             | `protects` | outbound  |
 
+### Vite Dev Server Loopback Binding {#vite-dev-server-loopback-binding}
+
+**ID**: `security.countermeasure.vite-dev-server-loopback-binding`
+
+**Type**: `countermeasure`
+
+vite.config.ts sets no server.host, so Vite's default (localhost) applies to npm run dev, vite preview, the QA instances and the E2E stack. A vitest test pins the default.
+
+#### Attributes
+
+| Name          | Value                               |
+| ------------- | ----------------------------------- |
+| description   | Dev server listens on loopback only |
+| effectiveness | high                                |
+| implemented   | true                                |
+| type          | technical                           |
+
+#### Relationships
+
+| Type        | Related Element                                                                                    | Predicate   | Direction |
+| ----------- | -------------------------------------------------------------------------------------------------- | ----------- | --------- |
+| inter-layer | `motivation.requirement.dev-server-not-reachable-from-the-lan`                                     | `satisfies` | outbound  |
+| inter-layer | `technology.systemsoftware.vite`                                                                   | `realizes`  | inbound   |
+| inter-layer | `testing.testcasesketch.vite-config-does-not-open-the-dev-server-or-preview-to-the-network-mode-s` | `tests`     | inbound   |
+| intra-layer | `security.threat.lan-exposure-via-the-vite-dev-server`                                             | `mitigates` | outbound  |
+| intra-layer | `security.secureresource.vite-dev-server`                                                          | `protects`  | outbound  |
+
 ### Internal Knowledge Graph Data {#internal-knowledge-graph-data}
 
 **ID**: `security.dataclassification.internal-knowledge-graph-data`
@@ -684,7 +653,7 @@ The /mcp endpoint on the running app: bearer token, loopback only, DNS-rebinding
 
 **Type**: `secureresource`
 
-npm run dev serves the UI and proxies /api to the back end; it listens on all interfaces.
+npm run dev serves the UI and proxies /api to the back end; it listens on loopback only (Vite's default).
 
 #### Attributes
 
@@ -695,10 +664,11 @@ npm run dev serves the UI and proxies /api to the back end; it listens on all in
 
 #### Relationships
 
-| Type        | Related Element                                        | Predicate    | Direction |
-| ----------- | ------------------------------------------------------ | ------------ | --------- |
-| intra-layer | `security.securitymodel.context-studio-security-model` | `aggregates` | inbound   |
-| intra-layer | `security.threat.lan-exposure-via-the-vite-dev-server` | `targets`    | inbound   |
+| Type        | Related Element                                            | Predicate    | Direction |
+| ----------- | ---------------------------------------------------------- | ------------ | --------- |
+| intra-layer | `security.countermeasure.vite-dev-server-loopback-binding` | `protects`   | inbound   |
+| intra-layer | `security.securitymodel.context-studio-security-model`     | `aggregates` | inbound   |
+| intra-layer | `security.threat.lan-exposure-via-the-vite-dev-server`     | `targets`    | inbound   |
 
 ### Workspace Databases {#workspace-databases}
 
@@ -863,7 +833,7 @@ Internal details or secret values leaking through error responses. There is no g
 
 **Type**: `threat`
 
-npm run dev listens on all interfaces and proxies /api, including the endpoint that returns the MCP token, so another machine on the network can read and change the workspace. Not accepted: to fix under #1655.
+Mitigated (#1655). The dev server used to listen on all interfaces (server.host: true) and proxy /api, so another machine on the network could read and change the workspace. It now binds to loopback only; LAN access would need an explicit edit of vite.config.ts or a --host flag.
 
 #### Attributes
 
@@ -877,14 +847,15 @@ npm run dev listens on all interfaces and proxies /api, including the endpoint t
 
 #### Relationships
 
-| Type        | Related Element                                         | Predicate    | Direction |
-| ----------- | ------------------------------------------------------- | ------------ | --------- |
-| inter-layer | `api.operation.get-mcp-connection-details`              | `references` | inbound   |
-| inter-layer | `motivation.driver.unauthenticated-local-workspace-api` | `references` | outbound  |
-| intra-layer | `security.securitymodel.context-studio-security-model`  | `aggregates` | inbound   |
-| intra-layer | `security.dataclassification.secrets`                   | `influence`  | outbound  |
-| intra-layer | `security.secureresource.mcp-endpoint`                  | `targets`    | outbound  |
-| intra-layer | `security.secureresource.vite-dev-server`               | `targets`    | outbound  |
+| Type        | Related Element                                            | Predicate    | Direction |
+| ----------- | ---------------------------------------------------------- | ------------ | --------- |
+| inter-layer | `api.operation.get-mcp-connection-details`                 | `references` | inbound   |
+| inter-layer | `motivation.driver.unauthenticated-local-workspace-api`    | `references` | outbound  |
+| intra-layer | `security.countermeasure.vite-dev-server-loopback-binding` | `mitigates`  | inbound   |
+| intra-layer | `security.securitymodel.context-studio-security-model`     | `aggregates` | inbound   |
+| intra-layer | `security.dataclassification.secrets`                      | `influence`  | outbound  |
+| intra-layer | `security.secureresource.mcp-endpoint`                     | `targets`    | outbound  |
+| intra-layer | `security.secureresource.vite-dev-server`                  | `targets`    | outbound  |
 
 ### Prompt Injection via Sources or Client Plans {#prompt-injection-via-sources-or-client-plans}
 
@@ -1029,4 +1000,4 @@ Source text, ontology content and chat go to Anthropic, OpenAI, OpenRouter or Cl
 
 ---
 
-Generated: 2026-11-19T16:49:39.982Z | Model Version: 0.1.0
+Generated: 2026-11-24T14:28:53.404Z | Model Version: 0.1.0

@@ -18,9 +18,9 @@ Infrastructure, platforms, systems, and technology components.
 | ------------------------- | ----- |
 | Elements                  | 41    |
 | Intra-Layer Relationships | 24    |
-| Inter-Layer Relationships | 58    |
+| Inter-Layer Relationships | 59    |
 | Inbound Relationships     | 19    |
-| Outbound Relationships    | 39    |
+| Outbound Relationships    | 40    |
 
 **Cross-Layer References**:
 
@@ -146,6 +146,7 @@ flowchart TB
 | `technology.systemsoftware.serves.application.applicationcomponent` | `technology.systemsoftware.sqlite`                                    | `application.applicationcomponent.database-manager`                       | `application` | `serves`     | many-to-many | medium   |
 | `technology.systemsoftware.serves.application.applicationcomponent` | `technology.systemsoftware.trafilatura`                               | `application.applicationcomponent.html-reader`                            | `application` | `serves`     | many-to-many | medium   |
 | `technology.systemsoftware.satisfies.motivation.constraint`         | `technology.systemsoftware.uvicorn`                                   | `motivation.constraint.loopback-only-deployment`                          | `motivation`  | `satisfies`  | many-to-many | medium   |
+| `technology.systemsoftware.realizes.security.countermeasure`        | `technology.systemsoftware.vite`                                      | `security.countermeasure.vite-dev-server-loopback-binding`                | `security`    | `realizes`   | many-to-many | medium   |
 | `technology.systemsoftware.satisfies.motivation.constraint`         | `technology.systemsoftware.vite`                                      | `motivation.constraint.python-and-nodejs-runtime-versions`                | `motivation`  | `satisfies`  | many-to-many | medium   |
 | `ux.view.depends-on.technology.systemsoftware`                      | `ux.view.app-shell-view`                                              | `technology.systemsoftware.axios`                                         | `technology`  | `depends-on` | many-to-many | medium   |
 | `ux.view.depends-on.technology.systemsoftware`                      | `ux.view.app-shell-view`                                              | `technology.systemsoftware.heimdall-ui`                                   | `technology`  | `depends-on` | many-to-many | medium   |
@@ -368,9 +369,10 @@ Git CLI, launched by the DR spec reader to read the spec checkout's source revis
 
 #### Attributes
 
-| Name         | Value      |
-| ------------ | ---------- |
-| softwareType | middleware |
+| Name          | Value                                                                                                                                                                                                                                                                                  |
+| ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| documentation | @tinkermonkey/heimdall-ui 0.14.0 (Heimdall main), installed from github:tinkermonkey/heimdall and pinned by commit in ux/package-lock.json. ESM only, one module per source file; dropdown panels (RowMenu, Select, FilterDropdown, EntityPicker) render in a portal on document.body. |
+| softwareType  | middleware                                                                                                                                                                                                                                                                             |
 
 #### Relationships
 
@@ -965,6 +967,7 @@ Frontend build tool (v6.2) for the React UX — handles TypeScript compilation, 
 
 | Type        | Related Element                                            | Predicate    | Direction |
 | ----------- | ---------------------------------------------------------- | ------------ | --------- |
+| inter-layer | `security.countermeasure.vite-dev-server-loopback-binding` | `realizes`   | outbound  |
 | inter-layer | `motivation.constraint.python-and-nodejs-runtime-versions` | `satisfies`  | outbound  |
 | intra-layer | `technology.systemsoftware.tailwind-css`                   | `depends-on` | inbound   |
 | intra-layer | `technology.systemsoftware.react`                          | `depends-on` | outbound  |
@@ -1043,4 +1046,4 @@ Technology interaction in which the sync adapter serializes the local knowledge 
 
 ---
 
-Generated: 2026-11-19T16:49:39.982Z | Model Version: 0.1.0
+Generated: 2026-11-24T14:28:53.404Z | Model Version: 0.1.0

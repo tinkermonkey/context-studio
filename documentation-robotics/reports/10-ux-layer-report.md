@@ -4770,7 +4770,7 @@ React single-page application for knowledge graph management — the shared fron
 | Name        | Value                          |
 | ----------- | ------------------------------ |
 | description | Heimdall design system (React) |
-| version     | package.json                   |
+| version     | 0.14.0                         |
 
 #### Relationships
 
@@ -6293,4 +6293,4 @@ First-run welcome page.
 
 ---
 
-Generated: 2026-11-19T16:49:39.982Z | Model Version: 0.1.0
+Generated: 2026-11-24T14:26:46.086Z | Model Version: 0.1.0
