@@ -1091,7 +1091,7 @@ Domain entity: a reviewer's or policy's decision on a proposal operation, with r
 
 **Type**: `objectschema`
 
-Domain entity: a change proposal to one taxonomy, with its ordered proposed operations, origin, status and landing.
+ChangeProposal: a set of proposed ontology changes on one taxonomy, decided per operation; review_only keeps the approval policy off it (#1628).
 
 #### Attributes
 
@@ -1363,4 +1363,4 @@ String schema for entity identifiers — UUID v4 format, used as primary keys ac
 
 ---
 
-Generated: 2026-11-24T17:47:27.525Z | Model Version: 0.1.0
+Generated: 2026-11-24T18:01:11.522Z | Model Version: 0.1.0

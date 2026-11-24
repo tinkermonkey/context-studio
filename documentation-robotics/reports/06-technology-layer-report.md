@@ -579,7 +579,7 @@ PDF text extraction for PDF sources.
 
 **Type**: `systemsoftware`
 
-Primary backend runtime for local-server — all domain services, adapters, and API routes are implemented in Python 3.x
+Primary backend runtime for local-server — all domain services, adapters, and API routes are implemented in Python 3.14.
 
 #### Attributes
 
@@ -1046,4 +1046,4 @@ Technology interaction in which the sync adapter serializes the local knowledge 
 
 ---
 
-Generated: 2026-11-24T15:59:03.885Z | Model Version: 0.1.0
+Generated: 2026-11-24T18:01:31.681Z | Model Version: 0.1.0

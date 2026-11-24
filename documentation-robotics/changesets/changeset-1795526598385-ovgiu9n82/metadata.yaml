@@ -4,8 +4,8 @@ description: "#1648 (Python half): Python 3.14 is the one version for the venv,
   mypy, black, both CI workflows and Dockerfile.agent, written next to the setup
   steps and in local-server/.python-version. Owner decision 2026-11-20."
 created: 2026-11-24T13:23:18.395Z
-modified: 2026-11-24T13:23:21.061Z
-status: staged
+modified: 2026-11-24T18:01:31.676Z
+status: committed
 baseSnapshot: v2:sha256:53252d39ed1357a9afdd6132507b497bf81313353af91142ccb6b590b147594c
 origin:
   kind: plan
