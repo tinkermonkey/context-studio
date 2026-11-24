@@ -1,0 +1,1325 @@
+- type: add
+  elementId: technology.systemsoftware.tauri
+  layerName: technology
+  after:
+    id: 22237bf0-adad-480e-a910-ded1b197c28d
+    path: technology.systemsoftware.tauri
+    spec_node_id: technology.systemsoftware
+    type: systemsoftware
+    layer_id: technology
+    name: Tauri
+    description: "Tauri v2 desktop framework (Rust): owns the app window and its
+      system webview, the bundle, and code signing of the shell. The shell built
+      on it starts and supervises the local server."
+    attributes:
+      softwareType: middleware
+    metadata:
+      created_at: 2026-11-24T13:56:14.944Z
+      updated_at: 2026-11-24T13:56:14.944Z
+      version: 1
+  timestamp: 2026-11-24T13:56:14.983Z
+  sequenceNumber: 0
+- type: add
+  elementId: technology.systemsoftware.system-web-view
+  layerName: technology
+  after:
+    id: cdffbad5-ecf7-42b2-a37e-55a266304f59
+    path: technology.systemsoftware.system-web-view
+    spec_node_id: technology.systemsoftware
+    type: systemsoftware
+    layer_id: technology
+    name: System WebView
+    description: "The platform webview Tauri renders into: WKWebView on macOS. It
+      loads a bundled splash page, then the UI the local server serves at
+      http://127.0.0.1:<port>/."
+    attributes:
+      softwareType: middleware
+    metadata:
+      created_at: 2026-11-24T13:56:14.948Z
+      updated_at: 2026-11-24T13:56:14.948Z
+      version: 1
+  timestamp: 2026-11-24T13:56:14.983Z
+  sequenceNumber: 1
+- type: add
+  elementId: technology.technologyservice.desktop-application-runtime
+  layerName: technology
+  after:
+    id: 75a645e2-7247-4e92-8cd9-17b0a333660b
+    path: technology.technologyservice.desktop-application-runtime
+    spec_node_id: technology.technologyservice
+    type: technologyservice
+    layer_id: technology
+    name: Desktop Application Runtime
+    description: "What the installed app offers the workstation: one process tree
+      (the Tauri shell and the local server it supervises) that runs Context
+      Studio with no ./dev.sh, no Vite dev server and no system Python."
+    attributes:
+      serviceType: compute
+    metadata:
+      created_at: 2026-11-24T13:56:14.948Z
+      updated_at: 2026-11-24T13:56:14.948Z
+      version: 1
+  timestamp: 2026-11-24T13:56:14.983Z
+  sequenceNumber: 2
+- type: add
+  elementId: technology.technologyinterface.local-server-loopback-port
+  layerName: technology
+  after:
+    id: 576fae10-45fb-42d9-927e-0cc6f31a505a
+    path: technology.technologyinterface.local-server-loopback-port
+    spec_node_id: technology.technologyinterface
+    type: technologyinterface
+    layer_id: technology
+    name: Local Server Loopback Port
+    description: "The back end's HTTP port, bound by the server itself on 127.0.0.1
+      and ::1 (both loopback names reach it, #1692; never a LAN address). A
+      stable preferred port from config.json (distinct from dev's 8000), else a
+      free port the OS picks; the bound port is announced to the shell on stdout
+      and written to the runtime discovery file. Carries the UI, /api and /mcp
+      at one origin."
+    attributes:
+      protocol: http
+    metadata:
+      created_at: 2026-11-24T13:56:14.952Z
+      updated_at: 2026-11-24T13:56:14.952Z
+      version: 1
+  timestamp: 2026-11-24T13:56:14.983Z
+  sequenceNumber: 3
+- type: add
+  elementId: technology.artifact.context-studio-app-bundle
+  layerName: technology
+  after:
+    id: ba567042-c334-45ab-92a1-f0c51d16f8bd
+    path: technology.artifact.context-studio-app-bundle
+    spec_node_id: technology.artifact
+    type: artifact
+    layer_id: technology
+    name: Context Studio App Bundle
+    description: "Context Studio.app in a DMG: the signed, notarized and stapled
+      desktop app. Contents/MacOS holds the shell; Contents/Resources holds the
+      Python runtime, the local server package, the UI build and the embedding
+      model."
+    attributes:
+      artifactType: archive
+      documentation: Built by the desktop release build. Every Mach-O inside it is
+        signed with the Developer ID, hardened runtime and a timestamp,
+        inside-out, before Tauri signs the app.
+    metadata:
+      created_at: 2026-11-24T13:56:14.954Z
+      updated_at: 2026-11-24T13:56:14.954Z
+      version: 1
+  timestamp: 2026-11-24T13:56:14.983Z
+  sequenceNumber: 4
+- type: add
+  elementId: technology.artifact.desktop-shell-binary
+  layerName: technology
+  after:
+    id: 5a96aaf0-2353-4853-b687-63792d7cf0e2
+    path: technology.artifact.desktop-shell-binary
+    spec_node_id: technology.artifact
+    type: artifact
+    layer_id: technology
+    name: Desktop Shell Binary
+    description: The compiled Tauri shell (app/src-tauri) for aarch64-apple-darwin,
+      in Contents/MacOS.
+    attributes:
+      artifactType: file
+    metadata:
+      created_at: 2026-11-24T13:56:14.956Z
+      updated_at: 2026-11-24T13:56:14.956Z
+      version: 1
+  timestamp: 2026-11-24T13:56:14.983Z
+  sequenceNumber: 5
+- type: add
+  elementId: technology.artifact.bundled-python-runtime
+  layerName: technology
+  after:
+    id: 08f957e4-f10e-4e96-a4c1-3ac9e045171b
+    path: technology.artifact.bundled-python-runtime
+    spec_node_id: technology.artifact
+    type: artifact
+    layer_id: technology
+    name: Bundled Python Runtime
+    description: A relocatable standalone CPython 3.14 (python-build-standalone,
+      install_only_stripped, aarch64-apple-darwin) in Contents/Resources, run as
+      python -I so no user environment or site-packages leaks in.
+    attributes:
+      artifactType: archive
+    metadata:
+      created_at: 2026-11-24T13:56:14.956Z
+      updated_at: 2026-11-24T13:56:14.956Z
+      version: 1
+  timestamp: 2026-11-24T13:56:14.983Z
+  sequenceNumber: 6
+- type: add
+  elementId: technology.artifact.runtime-site-packages
+  layerName: technology
+  after:
+    id: 21d70cd3-1688-4711-8b4c-8e24ac63f83c
+    path: technology.artifact.runtime-site-packages
+    spec_node_id: technology.artifact
+    type: artifact
+    layer_id: technology
+    name: Runtime Site Packages
+    description: The back end's runtime dependencies installed into the bundled
+      runtime from a runtime-only requirements set (no mypy, pip, datasets,
+      arxiv or langgraph), with bytecode compiled at build time so nothing is
+      written into the signed bundle. torch is most of its size.
+    attributes:
+      artifactType: library
+    metadata:
+      created_at: 2026-11-24T13:56:14.956Z
+      updated_at: 2026-11-24T13:56:14.956Z
+      version: 1
+  timestamp: 2026-11-24T13:56:14.983Z
+  sequenceNumber: 7
+- type: add
+  elementId: technology.artifact.local-server-package
+  layerName: technology
+  after:
+    id: 63f430fa-4aef-429f-9376-dcb1458ee85d
+    path: technology.artifact.local-server-package
+    spec_node_id: technology.artifact
+    type: artifact
+    layer_id: technology
+    name: Local Server Package
+    description: The local-server application code (domain, adapters, app.py, the
+      desktop entry point) with its Alembic environments and migration scripts,
+      compiled to bytecode, in Contents/Resources.
+    attributes:
+      artifactType: archive
+    metadata:
+      created_at: 2026-11-24T13:56:14.956Z
+      updated_at: 2026-11-24T13:56:14.956Z
+      version: 1
+  timestamp: 2026-11-24T13:56:14.983Z
+  sequenceNumber: 8
+- type: add
+  elementId: technology.artifact.ui-build
+  layerName: technology
+  after:
+    id: 658547b7-a5d9-4f65-85cc-67837322e3d6
+    path: technology.artifact.ui-build
+    spec_node_id: technology.artifact
+    type: artifact
+    layer_id: technology
+    name: UI Build
+    description: The production Vite build of /ux, built with a same-origin API
+      base, served by the local server at /. No Vite dev server ships.
+    attributes:
+      artifactType: archive
+    metadata:
+      created_at: 2026-11-24T13:56:14.956Z
+      updated_at: 2026-11-24T13:56:14.956Z
+      version: 1
+  timestamp: 2026-11-24T13:56:14.983Z
+  sequenceNumber: 9
+- type: add
+  elementId: technology.artifact.embedding-model-files
+  layerName: technology
+  after:
+    id: 7d941efe-528f-4ad6-acf6-3db15274afd5
+    path: technology.artifact.embedding-model-files
+    spec_node_id: technology.artifact
+    type: artifact
+    layer_id: technology
+    name: Embedding Model Files
+    description: "all-MiniLM-L12-v2 (about 130 MB), loaded from a path in the bundle
+      with the Hugging Face hub offline, so embeddings work with no network. The
+      alternative, for the owner: download it to app-data on first run."
+    attributes:
+      artifactType: file
+    metadata:
+      created_at: 2026-11-24T13:56:14.956Z
+      updated_at: 2026-11-24T13:56:14.956Z
+      version: 1
+  timestamp: 2026-11-24T13:56:14.983Z
+  sequenceNumber: 10
+- type: add
+  elementId: technology.artifact.desktop-config-file
+  layerName: technology
+  after:
+    id: 9e4251ac-63d0-4041-95ae-531f61d2b060
+    path: technology.artifact.desktop-config-file
+    spec_node_id: technology.artifact
+    type: artifact
+    layer_id: technology
+    name: Desktop Config File
+    description: "config.json in the app-data folder (~/Library/Application
+      Support/<bundle id>/), written with defaults on first run: absolute paths
+      for local.db, operations.db and reference_api_cache.db in the same folder,
+      the preferred port, a generated MCP token. LLM keys stay here (file mode
+      0600) until a keychain store is built."
+    attributes:
+      artifactType: configuration
+    metadata:
+      created_at: 2026-11-24T13:56:14.956Z
+      updated_at: 2026-11-24T13:56:14.956Z
+      version: 1
+  timestamp: 2026-11-24T13:56:14.983Z
+  sequenceNumber: 11
+- type: add
+  elementId: technology.artifact.runtime-discovery-file
+  layerName: technology
+  after:
+    id: 28aa6567-b113-43f1-9644-d4f6552ad210
+    path: technology.artifact.runtime-discovery-file
+    spec_node_id: technology.artifact
+    type: artifact
+    layer_id: technology
+    name: Runtime Discovery File
+    description: "runtime.json in the app-data folder while the app runs: the MCP
+      URL (http://127.0.0.1:<port>/mcp), the UI URL and the pid; never the
+      token. External agents (Claude Code, DR, House) read it when the preferred
+      port was taken."
+    attributes:
+      artifactType: configuration
+    metadata:
+      created_at: 2026-11-24T13:56:14.957Z
+      updated_at: 2026-11-24T13:56:14.957Z
+      version: 1
+  timestamp: 2026-11-24T13:56:14.983Z
+  sequenceNumber: 12
+- type: add
+  elementId: technology.technologyprocess.desktop-release-build
+  layerName: technology
+  after:
+    id: 03920ab5-d694-4d2a-aad4-d2282842c5df
+    path: technology.technologyprocess.desktop-release-build
+    spec_node_id: technology.technologyprocess
+    type: technologyprocess
+    layer_id: technology
+    name: Desktop Release Build
+    description: "Builds the app on macOS: build /ux; install the runtime-only
+      requirements into the standalone CPython; compile bytecode; place the
+      server package and the embedding model; sign every .so, .dylib and
+      executable in Resources (about 670 today) with the Developer ID, hardened
+      runtime and timestamp; tauri build signs the shell and the app; notarytool
+      submit, staple; sign and notarize the DMG."
+    metadata:
+      created_at: 2026-11-24T13:56:14.957Z
+      updated_at: 2026-11-24T13:56:14.957Z
+      version: 1
+  timestamp: 2026-11-24T13:56:14.983Z
+  sequenceNumber: 13
+- type: add
+  elementId: application.applicationprocess.local-server-lifecycle
+  layerName: application
+  after:
+    id: 4aa94130-bc86-4d04-8805-9ae945a9ddaf
+    path: application.applicationprocess.local-server-lifecycle
+    spec_node_id: application.applicationprocess
+    type: applicationprocess
+    layer_id: application
+    name: Local Server Lifecycle
+    description: "Run by the desktop shell: spawn python -I with the entry module
+      and the app-data config path, stdin and stdout piped; read the ready line
+      with the bound port; poll /api/v1/admin/health; on quit close stdin, wait
+      10 s for a graceful exit, then kill. A pid lock in app-data lets the next
+      launch stop an orphan left by a crash."
+    metadata:
+      created_at: 2026-11-24T13:56:14.962Z
+      updated_at: 2026-11-24T13:56:14.962Z
+      version: 1
+  timestamp: 2026-11-24T13:56:14.983Z
+  sequenceNumber: 14
+- type: add
+  elementId: application.applicationprocess.local-server-start-up
+  layerName: application
+  after:
+    id: 6c687f58-5759-4c92-af31-84671b8ce8e0
+    path: application.applicationprocess.local-server-start-up
+    spec_node_id: application.applicationprocess
+    type: applicationprocess
+    layer_id: application
+    name: Local Server Start-up
+    description: "The desktop entry point before serving: set SSL_CERT_FILE to
+      certifi's bundle (#1509); resolve config.json, databases and the log
+      folder (~/Library/Logs/<bundle id>/) from the app-data path; back up each
+      database and run Alembic upgrade head on local.db and operations.db; bind
+      the loopback sockets (preferred port, else a free one); print the ready
+      line; write the runtime discovery file; exit when stdin closes (the shell
+      is gone)."
+    metadata:
+      created_at: 2026-11-24T13:56:14.964Z
+      updated_at: 2026-11-24T13:56:14.964Z
+      version: 1
+  timestamp: 2026-11-24T13:56:14.983Z
+  sequenceNumber: 15
+- type: relationship-add
+  elementId: technology.systemsoftware.tauri::depends-on::technology.systemsoftware.system-web-view
+  layerName: technology
+  after:
+    source: technology.systemsoftware.tauri
+    target: technology.systemsoftware.system-web-view
+    predicate: depends-on
+    layer: technology
+    category: structural
+  timestamp: 2026-11-24T13:56:14.983Z
+  sequenceNumber: 16
+- type: relationship-add
+  elementId: technology.systemsoftware.tauri::realizes::technology.technologyservice.desktop-application-runtime
+  layerName: technology
+  after:
+    source: technology.systemsoftware.tauri
+    target: technology.technologyservice.desktop-application-runtime
+    predicate: realizes
+    layer: technology
+    category: structural
+  timestamp: 2026-11-24T13:56:14.983Z
+  sequenceNumber: 17
+- type: relationship-add
+  elementId: technology.systemsoftware.python::realizes::technology.technologyservice.desktop-application-runtime
+  layerName: technology
+  after:
+    source: technology.systemsoftware.python
+    target: technology.technologyservice.desktop-application-runtime
+    predicate: realizes
+    layer: technology
+    category: structural
+  timestamp: 2026-11-24T13:56:14.983Z
+  sequenceNumber: 18
+- type: relationship-add
+  elementId: technology.systemsoftware.uvicorn::provides::technology.technologyinterface.local-server-loopback-port
+  layerName: technology
+  after:
+    source: technology.systemsoftware.uvicorn
+    target: technology.technologyinterface.local-server-loopback-port
+    predicate: provides
+    layer: technology
+    category: structural
+  timestamp: 2026-11-24T13:56:14.983Z
+  sequenceNumber: 19
+- type: relationship-add
+  elementId: technology.technologyinterface.local-server-loopback-port::assigned-to::technology.technologyservice.desktop-application-runtime
+  layerName: technology
+  after:
+    source: technology.technologyinterface.local-server-loopback-port
+    target: technology.technologyservice.desktop-application-runtime
+    predicate: assigned-to
+    layer: technology
+    category: structural
+  timestamp: 2026-11-24T13:56:14.983Z
+  sequenceNumber: 20
+- type: relationship-add
+  elementId: technology.systemsoftware.fast-api::accesses::technology.artifact.ui-build
+  layerName: technology
+  after:
+    source: technology.systemsoftware.fast-api
+    target: technology.artifact.ui-build
+    predicate: accesses
+    layer: technology
+    category: structural
+  timestamp: 2026-11-24T13:56:14.983Z
+  sequenceNumber: 21
+- type: relationship-add
+  elementId: technology.systemsoftware.sentence-transformers::accesses::technology.artifact.embedding-model-files
+  layerName: technology
+  after:
+    source: technology.systemsoftware.sentence-transformers
+    target: technology.artifact.embedding-model-files
+    predicate: accesses
+    layer: technology
+    category: structural
+  timestamp: 2026-11-24T13:56:14.983Z
+  sequenceNumber: 22
+- type: relationship-add
+  elementId: technology.technologyservice.desktop-application-runtime::realizes::product.softwarecapability.desktop-application-packaging
+  layerName: technology
+  after:
+    source: technology.technologyservice.desktop-application-runtime
+    target: product.softwarecapability.desktop-application-packaging
+    predicate: realizes
+    layer: technology
+    targetLayer: product
+    category: structural
+  timestamp: 2026-11-24T13:56:14.983Z
+  sequenceNumber: 23
+- type: relationship-add
+  elementId: technology.technologyservice.desktop-application-runtime::realizes::motivation.goal.packaged-desktop-application
+  layerName: technology
+  after:
+    source: technology.technologyservice.desktop-application-runtime
+    target: motivation.goal.packaged-desktop-application
+    predicate: realizes
+    layer: technology
+    targetLayer: motivation
+    category: structural
+  timestamp: 2026-11-24T13:56:14.983Z
+  sequenceNumber: 24
+- type: relationship-add
+  elementId: technology.technologyservice.desktop-application-runtime::serves::technology.node.local-workstation
+  layerName: technology
+  after:
+    source: technology.technologyservice.desktop-application-runtime
+    target: technology.node.local-workstation
+    predicate: serves
+    layer: technology
+    category: structural
+  timestamp: 2026-11-24T13:56:14.983Z
+  sequenceNumber: 25
+- type: relationship-add
+  elementId: technology.node.local-workstation::composes::technology.artifact.context-studio-app-bundle
+  layerName: technology
+  after:
+    source: technology.node.local-workstation
+    target: technology.artifact.context-studio-app-bundle
+    predicate: composes
+    layer: technology
+    category: structural
+  timestamp: 2026-11-24T13:56:14.983Z
+  sequenceNumber: 26
+- type: relationship-add
+  elementId: technology.node.local-workstation::composes::technology.artifact.desktop-config-file
+  layerName: technology
+  after:
+    source: technology.node.local-workstation
+    target: technology.artifact.desktop-config-file
+    predicate: composes
+    layer: technology
+    category: structural
+  timestamp: 2026-11-24T13:56:14.983Z
+  sequenceNumber: 27
+- type: relationship-add
+  elementId: technology.node.local-workstation::composes::technology.artifact.runtime-discovery-file
+  layerName: technology
+  after:
+    source: technology.node.local-workstation
+    target: technology.artifact.runtime-discovery-file
+    predicate: composes
+    layer: technology
+    category: structural
+  timestamp: 2026-11-24T13:56:14.983Z
+  sequenceNumber: 28
+- type: relationship-add
+  elementId: technology.node.local-workstation::composes::technology.systemsoftware.tauri
+  layerName: technology
+  after:
+    source: technology.node.local-workstation
+    target: technology.systemsoftware.tauri
+    predicate: composes
+    layer: technology
+    category: structural
+  timestamp: 2026-11-24T13:56:14.983Z
+  sequenceNumber: 29
+- type: relationship-add
+  elementId: technology.node.local-workstation::composes::technology.systemsoftware.system-web-view
+  layerName: technology
+  after:
+    source: technology.node.local-workstation
+    target: technology.systemsoftware.system-web-view
+    predicate: composes
+    layer: technology
+    category: structural
+  timestamp: 2026-11-24T13:56:14.983Z
+  sequenceNumber: 30
+- type: relationship-add
+  elementId: technology.node.local-workstation::composes::technology.technologyinterface.local-server-loopback-port
+  layerName: technology
+  after:
+    source: technology.node.local-workstation
+    target: technology.technologyinterface.local-server-loopback-port
+    predicate: composes
+    layer: technology
+    category: structural
+  timestamp: 2026-11-24T13:56:14.983Z
+  sequenceNumber: 31
+- type: relationship-add
+  elementId: technology.artifact.context-studio-app-bundle::composes::technology.artifact.desktop-shell-binary
+  layerName: technology
+  after:
+    source: technology.artifact.context-studio-app-bundle
+    target: technology.artifact.desktop-shell-binary
+    predicate: composes
+    layer: technology
+    category: structural
+  timestamp: 2026-11-24T13:56:14.983Z
+  sequenceNumber: 32
+- type: relationship-add
+  elementId: technology.artifact.context-studio-app-bundle::composes::technology.artifact.bundled-python-runtime
+  layerName: technology
+  after:
+    source: technology.artifact.context-studio-app-bundle
+    target: technology.artifact.bundled-python-runtime
+    predicate: composes
+    layer: technology
+    category: structural
+  timestamp: 2026-11-24T13:56:14.983Z
+  sequenceNumber: 33
+- type: relationship-add
+  elementId: technology.artifact.context-studio-app-bundle::composes::technology.artifact.runtime-site-packages
+  layerName: technology
+  after:
+    source: technology.artifact.context-studio-app-bundle
+    target: technology.artifact.runtime-site-packages
+    predicate: composes
+    layer: technology
+    category: structural
+  timestamp: 2026-11-24T13:56:14.983Z
+  sequenceNumber: 34
+- type: relationship-add
+  elementId: technology.artifact.context-studio-app-bundle::composes::technology.artifact.local-server-package
+  layerName: technology
+  after:
+    source: technology.artifact.context-studio-app-bundle
+    target: technology.artifact.local-server-package
+    predicate: composes
+    layer: technology
+    category: structural
+  timestamp: 2026-11-24T13:56:14.983Z
+  sequenceNumber: 35
+- type: relationship-add
+  elementId: technology.artifact.context-studio-app-bundle::composes::technology.artifact.ui-build
+  layerName: technology
+  after:
+    source: technology.artifact.context-studio-app-bundle
+    target: technology.artifact.ui-build
+    predicate: composes
+    layer: technology
+    category: structural
+  timestamp: 2026-11-24T13:56:14.983Z
+  sequenceNumber: 36
+- type: relationship-add
+  elementId: technology.artifact.context-studio-app-bundle::composes::technology.artifact.embedding-model-files
+  layerName: technology
+  after:
+    source: technology.artifact.context-studio-app-bundle
+    target: technology.artifact.embedding-model-files
+    predicate: composes
+    layer: technology
+    category: structural
+  timestamp: 2026-11-24T13:56:14.983Z
+  sequenceNumber: 37
+- type: relationship-add
+  elementId: technology.artifact.bundled-python-runtime::realizes::technology.systemsoftware.python
+  layerName: technology
+  after:
+    source: technology.artifact.bundled-python-runtime
+    target: technology.systemsoftware.python
+    predicate: realizes
+    layer: technology
+    category: structural
+  timestamp: 2026-11-24T13:56:14.983Z
+  sequenceNumber: 38
+- type: relationship-add
+  elementId: technology.artifact.runtime-site-packages::depends-on::technology.artifact.bundled-python-runtime
+  layerName: technology
+  after:
+    source: technology.artifact.runtime-site-packages
+    target: technology.artifact.bundled-python-runtime
+    predicate: depends-on
+    layer: technology
+    category: structural
+  timestamp: 2026-11-24T13:56:14.983Z
+  sequenceNumber: 39
+- type: relationship-add
+  elementId: technology.artifact.runtime-site-packages::realizes::technology.systemsoftware.fast-api
+  layerName: technology
+  after:
+    source: technology.artifact.runtime-site-packages
+    target: technology.systemsoftware.fast-api
+    predicate: realizes
+    layer: technology
+    category: structural
+  timestamp: 2026-11-24T13:56:14.983Z
+  sequenceNumber: 40
+- type: relationship-add
+  elementId: technology.artifact.runtime-site-packages::realizes::technology.systemsoftware.uvicorn
+  layerName: technology
+  after:
+    source: technology.artifact.runtime-site-packages
+    target: technology.systemsoftware.uvicorn
+    predicate: realizes
+    layer: technology
+    category: structural
+  timestamp: 2026-11-24T13:56:14.983Z
+  sequenceNumber: 41
+- type: relationship-add
+  elementId: technology.artifact.runtime-site-packages::realizes::technology.systemsoftware.sentence-transformers
+  layerName: technology
+  after:
+    source: technology.artifact.runtime-site-packages
+    target: technology.systemsoftware.sentence-transformers
+    predicate: realizes
+    layer: technology
+    category: structural
+  timestamp: 2026-11-24T13:56:14.983Z
+  sequenceNumber: 42
+- type: relationship-add
+  elementId: technology.artifact.runtime-site-packages::realizes::technology.systemsoftware.spa-cy
+  layerName: technology
+  after:
+    source: technology.artifact.runtime-site-packages
+    target: technology.systemsoftware.spa-cy
+    predicate: realizes
+    layer: technology
+    category: structural
+  timestamp: 2026-11-24T13:56:14.983Z
+  sequenceNumber: 43
+- type: relationship-add
+  elementId: technology.artifact.runtime-site-packages::realizes::technology.systemsoftware.alembic
+  layerName: technology
+  after:
+    source: technology.artifact.runtime-site-packages
+    target: technology.systemsoftware.alembic
+    predicate: realizes
+    layer: technology
+    category: structural
+  timestamp: 2026-11-24T13:56:14.983Z
+  sequenceNumber: 44
+- type: relationship-add
+  elementId: technology.artifact.runtime-site-packages::realizes::technology.systemsoftware.sqlalchemy
+  layerName: technology
+  after:
+    source: technology.artifact.runtime-site-packages
+    target: technology.systemsoftware.sqlalchemy
+    predicate: realizes
+    layer: technology
+    category: structural
+  timestamp: 2026-11-24T13:56:14.983Z
+  sequenceNumber: 45
+- type: relationship-add
+  elementId: technology.artifact.local-server-package::depends-on::technology.artifact.runtime-site-packages
+  layerName: technology
+  after:
+    source: technology.artifact.local-server-package
+    target: technology.artifact.runtime-site-packages
+    predicate: depends-on
+    layer: technology
+    category: structural
+  timestamp: 2026-11-24T13:56:14.983Z
+  sequenceNumber: 46
+- type: relationship-add
+  elementId: technology.technologyprocess.desktop-release-build::accesses::technology.artifact.context-studio-app-bundle
+  layerName: technology
+  after:
+    source: technology.technologyprocess.desktop-release-build
+    target: technology.artifact.context-studio-app-bundle
+    predicate: accesses
+    layer: technology
+    category: structural
+  timestamp: 2026-11-24T13:56:14.983Z
+  sequenceNumber: 47
+- type: relationship-add
+  elementId: technology.technologyprocess.desktop-release-build::accesses::technology.artifact.desktop-shell-binary
+  layerName: technology
+  after:
+    source: technology.technologyprocess.desktop-release-build
+    target: technology.artifact.desktop-shell-binary
+    predicate: accesses
+    layer: technology
+    category: structural
+  timestamp: 2026-11-24T13:56:14.983Z
+  sequenceNumber: 48
+- type: relationship-add
+  elementId: technology.technologyprocess.desktop-release-build::accesses::technology.artifact.bundled-python-runtime
+  layerName: technology
+  after:
+    source: technology.technologyprocess.desktop-release-build
+    target: technology.artifact.bundled-python-runtime
+    predicate: accesses
+    layer: technology
+    category: structural
+  timestamp: 2026-11-24T13:56:14.983Z
+  sequenceNumber: 49
+- type: relationship-add
+  elementId: technology.technologyprocess.desktop-release-build::accesses::technology.artifact.runtime-site-packages
+  layerName: technology
+  after:
+    source: technology.technologyprocess.desktop-release-build
+    target: technology.artifact.runtime-site-packages
+    predicate: accesses
+    layer: technology
+    category: structural
+  timestamp: 2026-11-24T13:56:14.983Z
+  sequenceNumber: 50
+- type: relationship-add
+  elementId: technology.technologyprocess.desktop-release-build::accesses::technology.artifact.local-server-package
+  layerName: technology
+  after:
+    source: technology.technologyprocess.desktop-release-build
+    target: technology.artifact.local-server-package
+    predicate: accesses
+    layer: technology
+    category: structural
+  timestamp: 2026-11-24T13:56:14.983Z
+  sequenceNumber: 51
+- type: relationship-add
+  elementId: technology.technologyprocess.desktop-release-build::accesses::technology.artifact.ui-build
+  layerName: technology
+  after:
+    source: technology.technologyprocess.desktop-release-build
+    target: technology.artifact.ui-build
+    predicate: accesses
+    layer: technology
+    category: structural
+  timestamp: 2026-11-24T13:56:14.983Z
+  sequenceNumber: 52
+- type: relationship-add
+  elementId: technology.technologyprocess.desktop-release-build::accesses::technology.artifact.embedding-model-files
+  layerName: technology
+  after:
+    source: technology.technologyprocess.desktop-release-build
+    target: technology.artifact.embedding-model-files
+    predicate: accesses
+    layer: technology
+    category: structural
+  timestamp: 2026-11-24T13:56:14.983Z
+  sequenceNumber: 53
+- type: relationship-add
+  elementId: technology.technologyprocess.desktop-release-build::realizes::technology.technologyservice.desktop-application-runtime
+  layerName: technology
+  after:
+    source: technology.technologyprocess.desktop-release-build
+    target: technology.technologyservice.desktop-application-runtime
+    predicate: realizes
+    layer: technology
+    category: structural
+  timestamp: 2026-11-24T13:56:14.983Z
+  sequenceNumber: 54
+- type: relationship-add
+  elementId: application.applicationprocess.local-server-lifecycle::flows-to::application.applicationprocess.local-server-start-up
+  layerName: application
+  after:
+    source: application.applicationprocess.local-server-lifecycle
+    target: application.applicationprocess.local-server-start-up
+    predicate: flows-to
+    layer: application
+    category: structural
+  timestamp: 2026-11-24T13:56:14.983Z
+  sequenceNumber: 55
+- type: add
+  elementId: motivation.requirement.desktop-size-and-start-up-budget
+  layerName: motivation
+  after:
+    id: f175910c-edd8-4d31-a859-a595adbeb246
+    path: motivation.requirement.desktop-size-and-start-up-budget
+    spec_node_id: motivation.requirement
+    type: requirement
+    layer_id: motivation
+    name: Desktop Size and Start-up Budget
+    description: "Proposed on #1671, for the owner to set: the signed DMG at most
+      600 MB and the installed app at most 1.6 GB with torch; a window (splash)
+      within 1 s; the UI usable within 10 s on a warm start and 30 s on the
+      first launch after install (Gatekeeper's first scan, migrations and the
+      first reindex included). A tighter size forces replacing torch with ONNX
+      Runtime for embeddings."
+    attributes:
+      requirementType: non-functional
+      priority: high
+    metadata:
+      created_at: 2026-11-24T13:56:24.128Z
+      updated_at: 2026-11-24T13:56:24.128Z
+      version: 1
+  timestamp: 2026-11-24T13:56:24.148Z
+  sequenceNumber: 56
+- type: add
+  elementId: motivation.constraint.mac-os-on-apple-silicon-first
+  layerName: motivation
+  after:
+    id: 909162a5-6482-4878-9380-88858c245e70
+    path: motivation.constraint.mac-os-on-apple-silicon-first
+    spec_node_id: motivation.constraint
+    type: constraint
+    layer_id: motivation
+    name: macOS on Apple Silicon First
+    description: "Proposed on #1671: the first packaged build targets macOS on Apple
+      Silicon (aarch64-apple-darwin) only. Intel Macs cannot run torch 2.3 or
+      later, which publishes no macOS x86_64 wheels; Windows and Linux are later
+      work with their own CI runners, signing and torch builds."
+    attributes:
+      constraintType: technical
+    metadata:
+      created_at: 2026-11-24T13:56:24.128Z
+      updated_at: 2026-11-24T13:56:24.128Z
+      version: 1
+  timestamp: 2026-11-24T13:56:24.148Z
+  sequenceNumber: 57
+- type: add
+  elementId: application.applicationcomponent.local-server
+  layerName: application
+  after:
+    id: 00c57654-ed0c-49e8-9904-3dc86ce862c5
+    path: application.applicationcomponent.local-server
+    spec_node_id: application.applicationcomponent
+    type: applicationcomponent
+    layer_id: application
+    name: Local Server
+    description: "The FastAPI application as a whole (app.py, the composition root):
+      REST API, MCP endpoint and, in the desktop app, the built UI, all at one
+      origin."
+    attributes:
+      type: internal
+    source_reference:
+      provenance: manual
+      locations:
+        - file: local-server/app.py
+          symbol: app
+    metadata:
+      created_at: 2026-11-24T13:56:24.128Z
+      updated_at: 2026-11-24T13:56:24.128Z
+      version: 1
+  timestamp: 2026-11-24T13:56:24.148Z
+  sequenceNumber: 58
+- type: add
+  elementId: application.applicationcomponent.desktop-shell
+  layerName: application
+  after:
+    id: 4a9aa0f3-a53e-43fe-98cc-2c5689614d0d
+    path: application.applicationcomponent.desktop-shell
+    spec_node_id: application.applicationcomponent
+    type: applicationcomponent
+    layer_id: application
+    name: Desktop Shell
+    description: "The Tauri app in app/src-tauri: shows a bundled splash, starts the
+      local server from the bundled runtime, waits for its health, navigates the
+      webview to it, shows an error page with the log path and a Restart button
+      if it exits, and stops it when the app quits. Single instance, so two
+      launches never open the same databases twice."
+    attributes:
+      type: internal
+    metadata:
+      created_at: 2026-11-24T13:56:24.128Z
+      updated_at: 2026-11-24T13:56:24.128Z
+      version: 1
+  timestamp: 2026-11-24T13:56:24.148Z
+  sequenceNumber: 59
+- type: add
+  elementId: application.applicationcomponent.ui-static-route
+  layerName: application
+  after:
+    id: d16a46d9-051c-434b-bc7e-ea0819e6737a
+    path: application.applicationcomponent.ui-static-route
+    spec_node_id: application.applicationcomponent
+    type: applicationcomponent
+    layer_id: application
+    name: UI Static Route
+    description: Serves the UI build at / with a fallback to index.html for
+      client-side routes; /api and /mcp take precedence. Only registered when a
+      UI build directory is configured.
+    attributes:
+      type: internal
+    metadata:
+      created_at: 2026-11-24T13:56:24.128Z
+      updated_at: 2026-11-24T13:56:24.128Z
+      version: 1
+  timestamp: 2026-11-24T13:56:24.148Z
+  sequenceNumber: 60
+- type: relationship-add
+  elementId: technology.systemsoftware.tauri::serves::application.applicationcomponent.desktop-shell
+  layerName: technology
+  after:
+    source: technology.systemsoftware.tauri
+    target: application.applicationcomponent.desktop-shell
+    predicate: serves
+    layer: technology
+    targetLayer: application
+    category: structural
+  timestamp: 2026-11-24T13:56:24.148Z
+  sequenceNumber: 61
+- type: relationship-add
+  elementId: technology.systemsoftware.tauri::satisfies::motivation.constraint.mac-os-on-apple-silicon-first
+  layerName: technology
+  after:
+    source: technology.systemsoftware.tauri
+    target: motivation.constraint.mac-os-on-apple-silicon-first
+    predicate: satisfies
+    layer: technology
+    targetLayer: motivation
+    category: structural
+  timestamp: 2026-11-24T13:56:24.148Z
+  sequenceNumber: 62
+- type: relationship-add
+  elementId: technology.systemsoftware.python::serves::application.applicationcomponent.local-server
+  layerName: technology
+  after:
+    source: technology.systemsoftware.python
+    target: application.applicationcomponent.local-server
+    predicate: serves
+    layer: technology
+    targetLayer: application
+    category: structural
+  timestamp: 2026-11-24T13:56:24.148Z
+  sequenceNumber: 63
+- type: relationship-add
+  elementId: technology.systemsoftware.uvicorn::serves::application.applicationcomponent.local-server
+  layerName: technology
+  after:
+    source: technology.systemsoftware.uvicorn
+    target: application.applicationcomponent.local-server
+    predicate: serves
+    layer: technology
+    targetLayer: application
+    category: structural
+  timestamp: 2026-11-24T13:56:24.148Z
+  sequenceNumber: 64
+- type: relationship-add
+  elementId: technology.technologyservice.desktop-application-runtime::satisfies::motivation.requirement.desktop-size-and-start-up-budget
+  layerName: technology
+  after:
+    source: technology.technologyservice.desktop-application-runtime
+    target: motivation.requirement.desktop-size-and-start-up-budget
+    predicate: satisfies
+    layer: technology
+    targetLayer: motivation
+    category: structural
+  timestamp: 2026-11-24T13:56:24.148Z
+  sequenceNumber: 65
+- type: relationship-add
+  elementId: technology.technologyservice.desktop-application-runtime::serves::application.applicationcomponent.desktop-shell
+  layerName: technology
+  after:
+    source: technology.technologyservice.desktop-application-runtime
+    target: application.applicationcomponent.desktop-shell
+    predicate: serves
+    layer: technology
+    targetLayer: application
+    category: structural
+  timestamp: 2026-11-24T13:56:24.148Z
+  sequenceNumber: 66
+- type: relationship-add
+  elementId: technology.technologyservice.desktop-application-runtime::serves::application.applicationcomponent.local-server
+  layerName: technology
+  after:
+    source: technology.technologyservice.desktop-application-runtime
+    target: application.applicationcomponent.local-server
+    predicate: serves
+    layer: technology
+    targetLayer: application
+    category: structural
+  timestamp: 2026-11-24T13:56:24.148Z
+  sequenceNumber: 67
+- type: relationship-add
+  elementId: technology.node.local-workstation::satisfies::motivation.constraint.mac-os-on-apple-silicon-first
+  layerName: technology
+  after:
+    source: technology.node.local-workstation
+    target: motivation.constraint.mac-os-on-apple-silicon-first
+    predicate: satisfies
+    layer: technology
+    targetLayer: motivation
+    category: structural
+  timestamp: 2026-11-24T13:56:24.148Z
+  sequenceNumber: 68
+- type: relationship-add
+  elementId: technology.artifact.desktop-shell-binary::realizes::application.applicationcomponent.desktop-shell
+  layerName: technology
+  after:
+    source: technology.artifact.desktop-shell-binary
+    target: application.applicationcomponent.desktop-shell
+    predicate: realizes
+    layer: technology
+    targetLayer: application
+    category: structural
+  timestamp: 2026-11-24T13:56:24.148Z
+  sequenceNumber: 69
+- type: relationship-add
+  elementId: technology.artifact.local-server-package::realizes::application.applicationcomponent.local-server
+  layerName: technology
+  after:
+    source: technology.artifact.local-server-package
+    target: application.applicationcomponent.local-server
+    predicate: realizes
+    layer: technology
+    targetLayer: application
+    category: structural
+  timestamp: 2026-11-24T13:56:24.148Z
+  sequenceNumber: 70
+- type: relationship-add
+  elementId: application.applicationcomponent.desktop-shell::uses::application.applicationcomponent.local-server
+  layerName: application
+  after:
+    source: application.applicationcomponent.desktop-shell
+    target: application.applicationcomponent.local-server
+    predicate: uses
+    layer: application
+    category: structural
+  timestamp: 2026-11-24T13:56:24.148Z
+  sequenceNumber: 71
+- type: relationship-add
+  elementId: application.applicationcomponent.desktop-shell::assigned-to::application.applicationprocess.local-server-lifecycle
+  layerName: application
+  after:
+    source: application.applicationcomponent.desktop-shell
+    target: application.applicationprocess.local-server-lifecycle
+    predicate: assigned-to
+    layer: application
+    category: structural
+  timestamp: 2026-11-24T13:56:24.148Z
+  sequenceNumber: 72
+- type: relationship-add
+  elementId: application.applicationcomponent.local-server::assigned-to::application.applicationprocess.local-server-start-up
+  layerName: application
+  after:
+    source: application.applicationcomponent.local-server
+    target: application.applicationprocess.local-server-start-up
+    predicate: assigned-to
+    layer: application
+    category: structural
+  timestamp: 2026-11-24T13:56:24.148Z
+  sequenceNumber: 73
+- type: relationship-add
+  elementId: application.applicationcomponent.local-server::composes::application.applicationcomponent.ui-static-route
+  layerName: application
+  after:
+    source: application.applicationcomponent.local-server
+    target: application.applicationcomponent.ui-static-route
+    predicate: composes
+    layer: application
+    category: structural
+  timestamp: 2026-11-24T13:56:24.148Z
+  sequenceNumber: 74
+- type: relationship-add
+  elementId: application.applicationcomponent.local-server::composes::application.applicationcomponent.mcp-server
+  layerName: application
+  after:
+    source: application.applicationcomponent.local-server
+    target: application.applicationcomponent.mcp-server
+    predicate: composes
+    layer: application
+    category: structural
+  timestamp: 2026-11-24T13:56:24.148Z
+  sequenceNumber: 75
+- type: relationship-add
+  elementId: application.applicationcomponent.local-server::composes::application.applicationcomponent.request-guard
+  layerName: application
+  after:
+    source: application.applicationcomponent.local-server
+    target: application.applicationcomponent.request-guard
+    predicate: composes
+    layer: application
+    category: structural
+  timestamp: 2026-11-24T13:56:24.148Z
+  sequenceNumber: 76
+- type: relationship-add
+  elementId: application.applicationcomponent.local-server::composes::application.applicationcomponent.database-manager
+  layerName: application
+  after:
+    source: application.applicationcomponent.local-server
+    target: application.applicationcomponent.database-manager
+    predicate: composes
+    layer: application
+    category: structural
+  timestamp: 2026-11-24T13:56:24.148Z
+  sequenceNumber: 77
+- type: relationship-add
+  elementId: application.applicationcomponent.local-server::composes::application.applicationcomponent.cached-reference-source
+  layerName: application
+  after:
+    source: application.applicationcomponent.local-server
+    target: application.applicationcomponent.cached-reference-source
+    predicate: composes
+    layer: application
+    category: structural
+  timestamp: 2026-11-24T13:56:24.148Z
+  sequenceNumber: 78
+- type: update
+  elementId: technology.systemsoftware.sqlite
+  layerName: technology
+  before:
+    id: 9c2027e2-136a-41aa-8e07-30f9f18364fa
+    path: technology.systemsoftware.sqlite
+    spec_node_id: technology.systemsoftware
+    type: systemsoftware
+    layer_id: technology
+    name: SQLite
+    description: Embedded database engine for local.db, operations.db, reference.db
+      and the reference cache, with sqlite-vec for vectors.
+    attributes: &a1
+      softwareType: dbms
+    source_reference: &a2
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/persistence/sqlite/connection.py
+          symbol: DatabaseManager
+    metadata: &a3
+      created_at: 2026-11-19T14:57:00.157Z
+      updated_at: 2026-11-19T14:57:00.157Z
+      version: 1
+  after:
+    id: 9c2027e2-136a-41aa-8e07-30f9f18364fa
+    path: technology.systemsoftware.sqlite
+    spec_node_id: technology.systemsoftware
+    type: systemsoftware
+    layer_id: technology
+    name: SQLite
+    description: "Embedded database engine for local.db, operations.db and the
+      reference proxy's cache (reference.db is configured but nothing opens it).
+      No vector extension: embeddings are BLOB columns searched by brute-force
+      cosine in numpy. In the desktop app, the SQLite built into the bundled
+      CPython."
+    attributes: *a1
+    source_reference: *a2
+    metadata: *a3
+  timestamp: 2026-11-24T13:56:33.572Z
+  sequenceNumber: 79
+- type: update
+  elementId: technology.systemsoftware.python
+  layerName: technology
+  before:
+    id: d3a2f657-63bd-400d-a680-0210c78741d1
+    path: technology.systemsoftware.python
+    spec_node_id: technology.systemsoftware
+    type: systemsoftware
+    layer_id: technology
+    name: Python
+    description: Primary backend runtime for local-server — all domain services,
+      adapters, and API routes are implemented in Python 3.x
+    attributes: &a4
+      softwareType: middleware
+    source_reference: &a5
+      provenance: extracted
+      locations:
+        - file: local-server/requirements.txt
+    metadata: &a6
+      created_at: 2026-05-07T22:14:21.881Z
+      updated_at: 2026-05-07T22:14:21.882Z
+      version: 1
+  after:
+    id: d3a2f657-63bd-400d-a680-0210c78741d1
+    path: technology.systemsoftware.python
+    spec_node_id: technology.systemsoftware
+    type: systemsoftware
+    layer_id: technology
+    name: Python
+    description: "Backend runtime for local-server: Python 3.14 (#1648). In
+      development a Homebrew interpreter with local-server/.venv; in the desktop
+      app a standalone CPython 3.14 bundled in the app, run isolated (python
+      -I)."
+    attributes: *a4
+    source_reference: *a5
+    metadata: *a6
+  timestamp: 2026-11-24T13:56:33.620Z
+  sequenceNumber: 80
+- type: update
+  elementId: technology.node.local-workstation
+  layerName: technology
+  before:
+    id: 32d7664a-6e98-4a04-a5b1-c22b8fdfa494
+    path: technology.node.local-workstation
+    spec_node_id: technology.node
+    type: node
+    layer_id: technology
+    name: Local Workstation
+    description: "The user's own machine as the deployment target: it runs the
+      FastAPI back end, the React SPA (the Vite dev server today, the Tauri
+      desktop app soon) and the local SQLite workspace databases."
+    attributes: &a7
+      nodeType: bare-metal
+    metadata: &a8
+      created_at: 2026-11-19T16:40:33.684Z
+      updated_at: 2026-11-19T16:40:33.684Z
+      version: 1
+  after:
+    id: 32d7664a-6e98-4a04-a5b1-c22b8fdfa494
+    path: technology.node.local-workstation
+    spec_node_id: technology.node
+    type: node
+    layer_id: technology
+    name: Local Workstation
+    description: "The user's own machine as the deployment target: today it runs the
+      FastAPI back end, the Vite dev server and a browser from ./dev.sh; with
+      the desktop app (macOS on Apple Silicon first) it runs the installed
+      Context Studio.app, whose shell starts the back end, and keeps the
+      workspace databases and config.json in the app-data folder."
+    attributes: *a7
+    metadata: *a8
+  timestamp: 2026-11-24T13:56:33.656Z
+  sequenceNumber: 81
+- type: update
+  elementId: technology.communicationnetwork.localhost-lan
+  layerName: technology
+  before:
+    id: 3b6259c5-1e4d-4299-bf74-d0ec47981903
+    path: technology.communicationnetwork.localhost-lan
+    spec_node_id: technology.communicationnetwork
+    type: communicationnetwork
+    layer_id: technology
+    name: Localhost LAN
+    description: The local loopback network over which the React SPA communicates
+      with the FastAPI back-end — standard localhost/127.0.0.1 HTTP
+    attributes: &a9
+      networkType: lan
+      documentation: Localhost communication between UX and local-server
+    source_reference: &a10
+      provenance: extracted
+      locations:
+        - file: local-server/config.py
+    metadata: &a11
+      created_at: 2026-03-24T09:23:09.505Z
+      updated_at: 2026-03-24T09:23:09.505Z
+      version: 1
+  after:
+    id: 3b6259c5-1e4d-4299-bf74-d0ec47981903
+    path: technology.communicationnetwork.localhost-lan
+    spec_node_id: technology.communicationnetwork
+    type: communicationnetwork
+    layer_id: technology
+    name: Localhost LAN
+    description: "The local loopback network the UI and agent clients reach the back
+      end over: http://127.0.0.1:<port>. The desktop app also listens on ::1 so
+      a client that resolves localhost to IPv6 first reaches it (#1692); nothing
+      listens on a LAN address."
+    attributes: *a9
+    source_reference: *a10
+    metadata: *a11
+  timestamp: 2026-11-24T13:56:33.693Z
+  sequenceNumber: 82
+- type: relationship-add
+  elementId: motivation.requirement.desktop-size-and-start-up-budget::realizes::motivation.goal.packaged-desktop-application
+  layerName: motivation
+  after:
+    source: motivation.requirement.desktop-size-and-start-up-budget
+    target: motivation.goal.packaged-desktop-application
+    predicate: realizes
+    layer: motivation
+    category: structural
+  timestamp: 2026-11-24T13:56:45.337Z
+  sequenceNumber: 83
+- type: relationship-add
+  elementId: motivation.constraint.mac-os-on-apple-silicon-first::constrains::motivation.requirement.desktop-size-and-start-up-budget
+  layerName: motivation
+  after:
+    source: motivation.constraint.mac-os-on-apple-silicon-first
+    target: motivation.requirement.desktop-size-and-start-up-budget
+    predicate: constrains
+    layer: motivation
+    category: structural
+  timestamp: 2026-11-24T13:56:45.337Z
+  sequenceNumber: 84
+- type: relationship-add
+  elementId: technology.systemsoftware.fast-api::serves::application.applicationcomponent.ui-static-route
+  layerName: technology
+  after:
+    source: technology.systemsoftware.fast-api
+    target: application.applicationcomponent.ui-static-route
+    predicate: serves
+    layer: technology
+    targetLayer: application
+    category: structural
+  timestamp: 2026-11-24T13:56:45.337Z
+  sequenceNumber: 85
+- type: relationship-add
+  elementId: technology.systemsoftware.system-web-view::serves::application.applicationcomponent.desktop-shell
+  layerName: technology
+  after:
+    source: technology.systemsoftware.system-web-view
+    target: application.applicationcomponent.desktop-shell
+    predicate: serves
+    layer: technology
+    targetLayer: application
+    category: structural
+  timestamp: 2026-11-24T13:56:45.337Z
+  sequenceNumber: 86
+- type: relationship-add
+  elementId: technology.systemsoftware.system-web-view::satisfies::motivation.constraint.mac-os-on-apple-silicon-first
+  layerName: technology
+  after:
+    source: technology.systemsoftware.system-web-view
+    target: motivation.constraint.mac-os-on-apple-silicon-first
+    predicate: satisfies
+    layer: technology
+    targetLayer: motivation
+    category: structural
+  timestamp: 2026-11-24T13:56:45.337Z
+  sequenceNumber: 87

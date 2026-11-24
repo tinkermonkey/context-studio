@@ -1,0 +1,26 @@
+id: changeset-1795528504485-i340zy9em
+name: desktop-packaging
+description: "#1671 scoping, technology layer (proposed, awaiting the owner's
+  decisions on #1671 before the spike): package Context Studio as a Tauri v2
+  desktop app for macOS on Apple Silicon. The Tauri shell starts the back end
+  from a bundled standalone CPython 3.14 (no PyInstaller), waits for health,
+  supervises it and stops it with the app; the back end binds its own loopback
+  sockets (127.0.0.1 and ::1, #1692) on a stable preferred port with fallback,
+  serves the built /ux at the same origin, runs Alembic on start, and keeps
+  config.json, the databases and logs in the platform's app-data and log
+  folders. The bundle carries the runtime, the server package, the UI build and
+  the embedding model; every native library is signed for notarization; certifi
+  supplies TLS roots (#1509). No updater. Done when the plan reflects the
+  owner's answers and the build issues are filed from it."
+created: 2026-11-24T13:55:04.494Z
+modified: 2026-11-24T13:56:45.346Z
+status: staged
+baseSnapshot: v2:sha256:53252d39ed1357a9afdd6132507b497bf81313353af91142ccb6b590b147594c
+origin:
+  kind: plan
+purpose: plan
+stats:
+  additions: 84
+  modifications: 4
+  deletions: 0
+lastSequence: 87
