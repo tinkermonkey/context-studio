@@ -134,6 +134,8 @@ class ProposalStatus(str, Enum):
     OPEN = "open"
     DONE = "done"
     REVERTED = "reverted"
+    # Its proposer withdrew it: anything it applied was rolled back (#1624)
+    WITHDRAWN = "withdrawn"
 
 
 class OperationType(str, Enum):
@@ -224,6 +226,8 @@ class OperationStatus(str, Enum):
     APPLIED = "applied"
     REJECTED = "rejected"
     FAILED = "failed"
+    # Its proposer removed it, or withdrew the proposal: not a decision (#1624)
+    WITHDRAWN = "withdrawn"
 
 
 # Fields whose change is wording or presentation only.
@@ -576,6 +580,11 @@ class ProposedOperation:
             so "$ref" uses of it point there (see `matched`)
         added_by_reviewer: Added to the proposal by its reviewer (an element
             the extraction missed, found in its source), not by the proposer
+        amended_at: When its proposer last amended it while it waited (or
+            added it to the stored proposal); None if it is as first proposed
+        amendments: Its earlier versions, oldest first, each {"fields",
+            "base", "rationale", "probability", "evidence", "amended_at"}: what
+            an amendment replaced (#1624)
         id: Unique id
     """
 
@@ -601,6 +610,8 @@ class ProposedOperation:
     type_change: TypeChange | None = None
     alternatives: list[dict[str, Any]] = field(default_factory=list)
     added_by_reviewer: bool = False
+    amended_at: datetime | None = None
+    amendments: list[dict[str, Any]] = field(default_factory=list)
     id: str = field(default_factory=lambda: str(uuid4()))
 
     def __post_init__(self) -> None:
@@ -649,10 +660,15 @@ class ProposedOperation:
     @property
     def decided(self) -> bool:
         """
-        Whether the operation is settled: applied or rejected. A failed one is
-        not; it can be applied again (e.g. forced past a stale target) or rejected.
+        Whether the operation is settled: applied, rejected or withdrawn by its
+        proposer. A failed one is not; it can be applied again (e.g. forced past
+        a stale target) or rejected.
         """
-        return self.status in (OperationStatus.APPLIED, OperationStatus.REJECTED)
+        return self.status in (
+            OperationStatus.APPLIED,
+            OperationStatus.REJECTED,
+            OperationStatus.WITHDRAWN,
+        )
 
     def alternative(self, entity_id: Any) -> dict[str, Any] | None:
         """The "existing" alternative naming this entity, if the operation has one."""
@@ -756,6 +772,41 @@ class CopyResult:
     outcome: CopyOutcome
     entity_id: str | None = None
     failure_reason: str | None = None
+
+
+class ProposalLinkKind(str, Enum):
+    """How one proposal relates to another (#1624)."""
+
+    # The source replaces the target, which its proposer withdrew
+    SUPERSEDES = "supersedes"
+    # The source undoes the target, a landed proposal (#1667)
+    REVERSES = "reverses"
+
+
+@dataclass(frozen=True)
+class ProposalLink:
+    """
+    A link from one proposal to another: the one model for supersede and
+    reversal (#1624). Read from either end: the target is superseded or
+    reversed by the source.
+
+    Attributes:
+        source_proposal_id: The proposal the link starts from
+        kind: What the source does to the target
+        target_proposal_id: The proposal it points at
+        created_at: When it was recorded
+        note: Why, in the words of whoever recorded it
+    """
+
+    source_proposal_id: str
+    kind: ProposalLinkKind
+    target_proposal_id: str
+    created_at: datetime
+    note: str | None = None
+
+    def __post_init__(self) -> None:
+        if self.source_proposal_id == self.target_proposal_id:
+            raise ValueError("A proposal can't link to itself")
 
 
 @dataclass(frozen=True)
@@ -990,8 +1041,10 @@ class ChangeProposal:
     def settle_status(self) -> ProposalStatus:
         """
         Mark the proposal done once every operation is applied or rejected (a
-        failed one keeps it open; a reverted proposal stays reverted).
+        failed one keeps it open; a reverted proposal stays reverted), or
+        withdrawn when its proposer removed every operation (#1624).
         """
         if self.status is ProposalStatus.OPEN and not self.pending:
-            self.status = ProposalStatus.DONE
+            withdrawn = all(o.status is OperationStatus.WITHDRAWN for o in self.operations)
+            self.status = ProposalStatus.WITHDRAWN if withdrawn else ProposalStatus.DONE
         return self.status

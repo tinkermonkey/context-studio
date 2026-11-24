@@ -11,6 +11,7 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 from typing import Optional, Sequence
+from uuid import uuid4
 
 from sqlalchemy import and_, func, not_, or_
 from sqlalchemy.orm import Session, sessionmaker
@@ -20,6 +21,7 @@ from adapters.persistence.sqlite.models import (
     ChangeEvent,
     ChangeProposalRun,
     ProposalDecisionRecord,
+    ProposalLinkRecord,
     ProposalOperation,
 )
 from domain.ontology.value_objects import SourceRevision
@@ -42,6 +44,8 @@ from domain.versioning.proposals import (
     OperationStatus,
     OperationType,
     ProposalFilter,
+    ProposalLink,
+    ProposalLinkKind,
     ProposalSource,
     ProposalStatus,
     ProposedOperation,
@@ -188,6 +192,77 @@ class SQLiteChangeProposalRepository:
             for operation in operations:
                 session.add(_operation_to_orm(proposal_id, operation))
             session.commit()
+
+    def amend_operations(self, proposal_id: str, operations: Sequence[ProposedOperation]) -> None:
+        with self._session_factory() as session:
+            if session.get(ChangeProposalRun, proposal_id) is None:
+                raise ValueError(f"No proposal {proposal_id}")
+            rows = {
+                row.id: row
+                for row in session.query(ProposalOperation).filter(
+                    ProposalOperation.proposal_id == proposal_id,
+                    ProposalOperation.id.in_([o.id for o in operations]),
+                )
+            }
+            missing = [o.id for o in operations if o.id not in rows]
+            if missing:
+                raise ValueError(f"Proposal {proposal_id} has no operations {missing}")
+            kept = {"id", "proposal_id", "seq"}
+            for operation in operations:
+                amended = _operation_to_orm(proposal_id, operation)
+                row = rows[operation.id]
+                for column in ProposalOperation.__table__.columns:
+                    if column.key not in kept:
+                        setattr(row, column.key, getattr(amended, column.key))
+            session.commit()
+
+    def add_link(self, link: ProposalLink) -> None:
+        with self._session_factory() as session:
+            exists = (
+                session.query(ProposalLinkRecord.id)
+                .filter(
+                    ProposalLinkRecord.source_proposal_id == link.source_proposal_id,
+                    ProposalLinkRecord.kind == link.kind.value,
+                    ProposalLinkRecord.target_proposal_id == link.target_proposal_id,
+                )
+                .first()
+            )
+            if exists is None:
+                session.add(
+                    ProposalLinkRecord(
+                        id=str(uuid4()),
+                        source_proposal_id=link.source_proposal_id,
+                        kind=link.kind.value,
+                        target_proposal_id=link.target_proposal_id,
+                        created_at=link.created_at,
+                        note=link.note,
+                    )
+                )
+                session.commit()
+
+    def links_of(self, proposal_id: str) -> list[ProposalLink]:
+        with self._session_factory() as session:
+            rows = (
+                session.query(ProposalLinkRecord)
+                .filter(
+                    or_(
+                        ProposalLinkRecord.source_proposal_id == proposal_id,
+                        ProposalLinkRecord.target_proposal_id == proposal_id,
+                    )
+                )
+                .order_by(ProposalLinkRecord.created_at, ProposalLinkRecord.id)
+                .all()
+            )
+            return [
+                ProposalLink(
+                    source_proposal_id=row.source_proposal_id,  # type: ignore[arg-type]
+                    kind=ProposalLinkKind(row.kind),
+                    target_proposal_id=row.target_proposal_id,  # type: ignore[arg-type]
+                    created_at=row.created_at,  # type: ignore[arg-type]
+                    note=row.note,  # type: ignore[arg-type]
+                )
+                for row in rows
+            ]
 
     def save_operations(
         self,
@@ -384,6 +459,14 @@ class SQLiteChangeProposalRepository:
             if run is None:
                 raise ValueError(f"No proposal {proposal_id}")
             run.status = status.value  # type: ignore[assignment]
+            session.commit()
+
+    def set_dataset(self, proposal_id: str, dataset_id: Optional[str]) -> None:
+        with self._session_factory() as session:
+            run = session.get(ChangeProposalRun, proposal_id)
+            if run is None:
+                raise ValueError(f"No proposal {proposal_id}")
+            run.dataset_id = dataset_id  # type: ignore[assignment]
             session.commit()
 
 
@@ -592,6 +675,8 @@ def _operation_to_orm(proposal_id: str, operation: ProposedOperation) -> Proposa
         type_change=_type_change_json(operation),
         alternatives=[dict(a) for a in operation.alternatives],
         added_by_reviewer=operation.added_by_reviewer,
+        amended_at=operation.amended_at,
+        amendments=[dict(a) for a in operation.amendments],
     )
 
 
@@ -640,6 +725,8 @@ def _operation_to_domain(row: ProposalOperation) -> ProposedOperation:
         ),
         alternatives=[dict(a) for a in row.alternatives or []],  # type: ignore[union-attr]
         added_by_reviewer=bool(row.added_by_reviewer),
+        amended_at=row.amended_at,  # type: ignore[arg-type]
+        amendments=[dict(a) for a in row.amendments or []],  # type: ignore[union-attr]
     )
 
 

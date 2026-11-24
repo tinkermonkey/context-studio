@@ -3854,6 +3854,51 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/proposals/{proposal_id}/amend": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Amend Proposal
+     * @description Change an open proposal in place, as its proposer: replace pending or failed
+     *     operations by seq, add operations, remove pending ones (#1624). A replaced
+     *     operation goes back to pending and keeps what it replaced in amendments;
+     *     a removed one is withdrawn. The approval policy runs over what changed.
+     */
+    post: operations["amend_proposal_api_proposals__proposal_id__amend_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/proposals/{proposal_id}/withdraw": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Withdraw Proposal
+     * @description Withdraw an open proposal, as its proposer (#1624): what it applied is
+     *     rolled back, its undecided operations are withdrawn, and it ends withdrawn.
+     *     With superseded_by, the proposal that replaces it is linked to it.
+     */
+    post: operations["withdraw_proposal_api_proposals__proposal_id__withdraw_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/proposals/{proposal_id}/operations": {
     parameters: {
       query?: never;
@@ -5418,6 +5463,28 @@ export interface components {
      */
     ChangeOperation: "create" | "update" | "delete";
     /**
+     * ChangeProposalAmendRequest
+     * @description Change an open proposal in place, as its proposer (#1624): replace pending
+     *     or failed operations by seq, add operations, remove pending ones.
+     */
+    ChangeProposalAmendRequest: {
+      /**
+       * Replace
+       * @description Whole operations, each replacing the pending or failed operation with its seq; validated and scoped as on create. The replaced version is kept in the operation's amendments
+       */
+      replace?: components["schemas"]["ProposedOperationRequest"][];
+      /**
+       * Add
+       * @description Operations with seqs the proposal doesn't have
+       */
+      add?: components["schemas"]["ProposedOperationRequest"][];
+      /**
+       * Remove
+       * @description Seqs of pending or failed operations to withdraw (not a decision)
+       */
+      remove?: number[];
+    };
+    /**
      * ChangeProposalApplyRequest
      * @description Operations to apply, in seq order, under the proposal's run.
      */
@@ -5427,6 +5494,13 @@ export interface components {
        * @description Operations to apply
        */
       operation_ids: string[];
+      /**
+       * Amended At
+       * @description Operation id -> the amended_at the reviewer saw (null: as first proposed); an operation its proposer amended since is refused (409), so nobody approves a version they never read
+       */
+      amended_at?: {
+        [key: string]: string | null;
+      };
       /**
        * Force Stale
        * @description Operations to apply even though their target changed since proposed
@@ -5527,6 +5601,11 @@ export interface components {
        * @default false
        */
       review_only: boolean;
+      /**
+       * Supersedes
+       * @description Open proposals on the same taxonomy this one replaces: once it is stored, each is withdrawn (what it applied rolled back) and linked to it
+       */
+      supersedes?: string[];
     };
     /**
      * ChangeProposalLandedRequest
@@ -5639,6 +5718,11 @@ export interface components {
        */
       review_only: boolean;
       /**
+       * Links
+       * @description Its links to other proposals (supersedes, superseded_by, reverses, reversed_by), oldest first; empty in a list's summary form
+       */
+      links?: components["schemas"]["ProposalLinkResponse"][];
+      /**
        * Counts
        * @description Its operations counted by op, kind, status and scope (in the summary form too, where operations is empty)
        */
@@ -5735,6 +5819,22 @@ export interface components {
      */
     ChangeProposalValidationErrorResponse: {
       detail: components["schemas"]["ChangeProposalValidationDetail"];
+    };
+    /**
+     * ChangeProposalWithdrawRequest
+     * @description Withdraw an open proposal, as its proposer (#1624).
+     */
+    ChangeProposalWithdrawRequest: {
+      /**
+       * Superseded By
+       * @description The proposal that replaces it; the two are linked (supersedes)
+       */
+      superseded_by?: string | null;
+      /**
+       * Note
+       * @description Why, kept on the link
+       */
+      note?: string | null;
     };
     /**
      * ChangeScope
@@ -8973,7 +9073,7 @@ export interface components {
      * @description Where an operation stands.
      * @enum {string}
      */
-    OperationStatus: "pending" | "applied" | "rejected" | "failed";
+    OperationStatus: "pending" | "applied" | "rejected" | "failed" | "withdrawn";
     /**
      * OperationType
      * @description What an operation does to its target.
@@ -9873,6 +9973,37 @@ export interface components {
       sample: components["schemas"]["SampleResponse"];
     };
     /**
+     * ProposalLinkResponse
+     * @description A link between this proposal and another, seen from this one (#1624).
+     */
+    ProposalLinkResponse: {
+      /**
+       * Kind
+       * @description supersedes: this proposal replaces the other, which was withdrawn; superseded_by: the reverse. reverses / reversed_by: a reversal and the landed proposal it undoes
+       * @enum {string}
+       */
+      kind: "supersedes" | "superseded_by" | "reverses" | "reversed_by";
+      /**
+       * Proposal Id
+       * @description The other proposal
+       */
+      proposal_id: string;
+      /**
+       * Title
+       * @description The other proposal's title
+       */
+      title?: string | null;
+      /** @description The other proposal's status */
+      status?: components["schemas"]["ProposalStatus"] | null;
+      /**
+       * Created At
+       * Format: date-time
+       */
+      created_at: string;
+      /** Note */
+      note?: string | null;
+    };
+    /**
      * ProposalOriginResponse
      * @description The pipeline and version that produced a proposal.
      */
@@ -9914,7 +10045,7 @@ export interface components {
      * @description A proposal is open while any operation awaits a decision.
      * @enum {string}
      */
-    ProposalStatus: "open" | "done" | "reverted";
+    ProposalStatus: "open" | "done" | "reverted" | "withdrawn";
     /**
      * ProposedOperationRequest
      * @description One operation as proposed.
@@ -10101,6 +10232,18 @@ export interface components {
        * @default false
        */
       added_by_reviewer: boolean;
+      /**
+       * Amended At
+       * @description When its proposer last amended it, or added it to the stored proposal; null if it is as first proposed: a reviewer who read it should read it again
+       */
+      amended_at?: string | null;
+      /**
+       * Amendments
+       * @description Its earlier versions, oldest first, each {fields, base, rationale, probability, evidence, amended_at}: what each amendment replaced
+       */
+      amendments?: {
+        [key: string]: unknown;
+      }[];
       /** @description A schema relationship reflection operation's plan row: kind, p, the ranked answers to its sorting questions and the evidence pack. Null otherwise */
       reflection?: components["schemas"]["ReflectionResponse"] | null;
     };
@@ -16888,6 +17031,105 @@ export interface operations {
       };
     };
   };
+  amend_proposal_api_proposals__proposal_id__amend_post: {
+    parameters: {
+      query?: {
+        /** @description Validate only: return the amended proposal, change nothing */
+        dry_run?: boolean;
+      };
+      header?: never;
+      path: {
+        proposal_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["ChangeProposalAmendRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ChangeProposalResponse"];
+        };
+      };
+      /** @description Change proposal not found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description The proposal is not open */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description The amendment is invalid (an unknown or decided seq, an invalid operation); detail.errors lists every problem by seq, and nothing changed */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  withdraw_proposal_api_proposals__proposal_id__withdraw_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        proposal_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["ChangeProposalWithdrawRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ChangeProposalResponse"];
+        };
+      };
+      /** @description Change proposal not found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description The proposal is not open, or what it applied can't be rolled back (detail.blocking, as for revert) */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
   add_individual_api_proposals__proposal_id__operations_post: {
     parameters: {
       query?: never;
@@ -17015,7 +17257,7 @@ export interface operations {
         };
         content?: never;
       };
-      /** @description An operation is already applied or rejected */
+      /** @description The proposal is reverted or withdrawn, an operation is already applied, rejected or withdrawn, or (apply) it was amended since it was read */
       409: {
         headers: {
           [name: string]: unknown;

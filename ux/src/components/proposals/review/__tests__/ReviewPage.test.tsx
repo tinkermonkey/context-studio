@@ -5,6 +5,7 @@
  * the selected one (Correct, a better class, or not an element with a reason)
  * by button or key, sending the time spent on it.
  */
+import { unamended } from "@/test/proposalFixtures";
 import { describe, it, expect, beforeAll, beforeEach, afterEach, afterAll, vi } from "vitest";
 import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
@@ -506,6 +507,7 @@ describe("the review page", () => {
     await waitFor(() => expect(applies).toHaveLength(1));
     expect(applies[0]).toEqual({
       operation_ids: ["op-edit"],
+      amended_at: unamended(["op-edit"]),
       force_stale: [],
       edits: {},
       review_ms: { "op-edit": expect.any(Number) },
@@ -861,7 +863,11 @@ describe("the review page", () => {
     expect(inspectorTitle()).toHaveTextContent("Edit Check");
     await user.click(screen.getByRole("button", { name: "Apply anyway" }));
     await waitFor(() => expect(applies).toHaveLength(1));
-    expect(applies[0]).toMatchObject({ operation_ids: ["op-edit"], force_stale: ["op-edit"] });
+    expect(applies[0]).toMatchObject({
+      operation_ids: ["op-edit"],
+      amended_at: unamended(["op-edit"]),
+      force_stale: ["op-edit"],
+    });
   });
 
   it("says why an apply failed and stays on the element", async () => {

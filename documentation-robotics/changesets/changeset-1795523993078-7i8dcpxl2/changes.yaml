@@ -1,0 +1,1393 @@
+- type: add
+  elementId: motivation.requirement.proposals-link-to-each-other-through-one-link-model
+  layerName: motivation
+  after:
+    id: e20b127f-0e57-46af-9365-01acaff67475
+    path: motivation.requirement.proposals-link-to-each-other-through-one-link-model
+    spec_node_id: motivation.requirement
+    type: requirement
+    layer_id: motivation
+    name: Proposals link to each other through one link model
+    description: "#1624 decision (2026-11-20): one proposal-to-proposal link model
+      covers supersede (a withdrawn proposal and the one that replaces it) and
+      #1667's reversal (a reversal proposal and the landed proposal it undoes).
+      A link is (source proposal, kind, target proposal); kinds: supersedes,
+      reverses. It replaces the separate change_proposals.reverses_id the
+      one-review-surface plan staged. A proposal shows its links both ways:
+      supersedes / superseded_by, reverses / reversed_by."
+    attributes:
+      requirementType: functional
+      priority: high
+    metadata:
+      created_at: 2026-11-24T12:39:53.756Z
+      updated_at: 2026-11-24T12:39:53.756Z
+      version: 1
+  timestamp: 2026-11-24T12:39:53.784Z
+  sequenceNumber: 0
+- type: add
+  elementId: motivation.requirement.a-proposer-amends-its-open-proposal-in-place
+  layerName: motivation
+  after:
+    id: ba4a58bf-dc45-49ab-a086-64b69bb1f698
+    path: motivation.requirement.a-proposer-amends-its-open-proposal-in-place
+    spec_node_id: motivation.requirement
+    type: requirement
+    layer_id: motivation
+    name: A proposer amends its open proposal in place
+    description: "#1624: on a proposal that is still open, one call replaces a
+      pending operation's fields (by seq), adds operations, or removes pending
+      operations, with the same validation, scope check and dry_run as
+      propose_changes. Applied and rejected operations never change. A
+      one-sentence change to one of nine operations takes one call and leaves
+      one proposal."
+    attributes:
+      requirementType: functional
+      priority: high
+    metadata:
+      created_at: 2026-11-24T12:39:53.756Z
+      updated_at: 2026-11-24T12:39:53.756Z
+      version: 1
+  timestamp: 2026-11-24T12:39:53.784Z
+  sequenceNumber: 1
+- type: add
+  elementId: motivation.requirement.an-amended-operation-shows-what-it-replaced
+  layerName: motivation
+  after:
+    id: 51bfaa78-e5ad-4a1f-bd71-26bf0bb91cc3
+    path: motivation.requirement.an-amended-operation-shows-what-it-replaced
+    spec_node_id: motivation.requirement
+    type: requirement
+    layer_id: motivation
+    name: An amended operation shows what it replaced
+    description: "#1624: an operation amended after it was proposed says when
+      (amended_at) and keeps each earlier version of its fields (amendments), so
+      a reviewer who already read it knows to read it again and can see what
+      changed. get_proposal and the review page show it."
+    attributes:
+      requirementType: functional
+      priority: medium
+    metadata:
+      created_at: 2026-11-24T12:39:53.756Z
+      updated_at: 2026-11-24T12:39:53.756Z
+      version: 1
+  timestamp: 2026-11-24T12:39:53.784Z
+  sequenceNumber: 2
+- type: add
+  elementId: motivation.requirement.a-proposer-withdraws-its-open-proposal
+  layerName: motivation
+  after:
+    id: e61a5b1a-1fba-4134-a55b-9b32556c1d86
+    path: motivation.requirement.a-proposer-withdraws-its-open-proposal
+    spec_node_id: motivation.requirement
+    type: requirement
+    layer_id: motivation
+    name: A proposer withdraws its open proposal
+    description: "#1624: a proposer withdraws an open proposal it no longer stands
+      behind, optionally naming the proposal that supersedes it (a supersedes
+      link). Withdrawing undoes it whole (owner, 2026-11-24): what it applied is
+      rolled back as a revert does, its undecided operations become withdrawn
+      (not a reviewer's decision, so not gold), and the proposal ends withdrawn,
+      never half-applied. If the rollback conflicts with later changes, the
+      withdraw is refused (409) naming what blocks it, as revert is.
+      propose_changes can name the proposals a new one supersedes, which
+      withdraws them in the same call."
+    attributes:
+      requirementType: functional
+      priority: high
+    metadata:
+      created_at: 2026-11-24T12:39:53.756Z
+      updated_at: 2026-11-24T12:39:53.756Z
+      version: 1
+  timestamp: 2026-11-24T14:06:12.731Z
+  sequenceNumber: 3
+- type: add
+  elementId: data-store.collection.proposal-links
+  layerName: data-store
+  after:
+    id: c978a1bb-861f-44d1-81b1-ca518d7d747b
+    path: data-store.collection.proposal-links
+    spec_node_id: data-store.collection
+    type: collection
+    layer_id: data-store
+    name: proposal_links
+    description: "local.db table proposal_links: one row per link between two
+      proposals. Columns: id (VARCHAR 36, PK), source_proposal_id and
+      target_proposal_id (VARCHAR 36, FK change_proposals.id ON DELETE CASCADE),
+      kind (VARCHAR 20: supersedes | reverses), created_at, note (TEXT,
+      nullable). Added by an autogenerated Alembic migration after #1628's."
+    metadata:
+      created_at: 2026-11-24T12:39:53.758Z
+      updated_at: 2026-11-24T12:39:53.758Z
+      version: 1
+    source_reference:
+      provenance: manual
+      locations:
+        - file: local-server/adapters/persistence/sqlite/models.py
+          symbol: ProposalLinkRecord
+  timestamp: 2026-11-24T14:45:40.015Z
+  sequenceNumber: 4
+- type: add
+  elementId: data-store.validationrule.uq-proposal-links-source-kind-target
+  layerName: data-store
+  after:
+    id: ca0b0578-75d2-4d37-a2cb-04e535fe4665
+    path: data-store.validationrule.uq-proposal-links-source-kind-target
+    spec_node_id: data-store.validationrule
+    type: validationrule
+    layer_id: data-store
+    name: uq_proposal_links_source_kind_target
+    description: "A link is recorded once: unique (source_proposal_id, kind,
+      target_proposal_id)."
+    attributes:
+      ruleType: UNIQUE
+    metadata:
+      created_at: 2026-11-24T12:39:53.761Z
+      updated_at: 2026-11-24T12:39:53.761Z
+      version: 1
+  timestamp: 2026-11-24T12:39:53.784Z
+  sequenceNumber: 5
+- type: add
+  elementId: data-store.validationrule.fk-proposal-links-source
+  layerName: data-store
+  after:
+    id: e44543e7-cfb1-42ef-a3d5-93875fe794c4
+    path: data-store.validationrule.fk-proposal-links-source
+    spec_node_id: data-store.validationrule
+    type: validationrule
+    layer_id: data-store
+    name: fk_proposal_links_source
+    description: proposal_links.source_proposal_id references change_proposals.id;
+      deleting the proposal deletes its links.
+    attributes:
+      ruleType: FOREIGN_KEY
+    metadata:
+      created_at: 2026-11-24T12:39:53.762Z
+      updated_at: 2026-11-24T12:39:53.762Z
+      version: 1
+  timestamp: 2026-11-24T12:39:53.784Z
+  sequenceNumber: 6
+- type: add
+  elementId: data-store.validationrule.fk-proposal-links-target
+  layerName: data-store
+  after:
+    id: 5c4a30b8-ab99-419c-90d0-f902c6117d5d
+    path: data-store.validationrule.fk-proposal-links-target
+    spec_node_id: data-store.validationrule
+    type: validationrule
+    layer_id: data-store
+    name: fk_proposal_links_target
+    description: proposal_links.target_proposal_id references change_proposals.id;
+      deleting the proposal deletes its links.
+    attributes:
+      ruleType: FOREIGN_KEY
+    metadata:
+      created_at: 2026-11-24T12:39:53.762Z
+      updated_at: 2026-11-24T12:39:53.762Z
+      version: 1
+  timestamp: 2026-11-24T12:39:53.784Z
+  sequenceNumber: 7
+- type: add
+  elementId: data-store.index.ix-proposal-links-target-proposal-id
+  layerName: data-store
+  after:
+    id: e15edbd6-ff02-46de-bc57-74f9339bb238
+    path: data-store.index.ix-proposal-links-target-proposal-id
+    spec_node_id: data-store.index
+    type: index
+    layer_id: data-store
+    name: ix_proposal_links_target_proposal_id
+    description: "Finds the links into a proposal: what supersedes or reverses it
+      (superseded_by, reversed_by), and the open reversal that blocks a second
+      one."
+    attributes:
+      fields: target_proposal_id
+      method: BTREE
+      unique: false
+    metadata:
+      created_at: 2026-11-24T12:39:53.762Z
+      updated_at: 2026-11-24T12:39:53.762Z
+      version: 1
+  timestamp: 2026-11-24T12:39:53.784Z
+  sequenceNumber: 8
+- type: add
+  elementId: data-store.field.amended-at
+  layerName: data-store
+  after:
+    id: 0f24eda6-563f-46cd-8a68-36c84d9439d0
+    path: data-store.field.amended-at
+    spec_node_id: data-store.field
+    type: field
+    layer_id: data-store
+    name: amended_at
+    description: "proposal_operations.amended_at: when the operation's fields were
+      last amended by its proposer (NULL: never)."
+    attributes:
+      dataType: DATETIME
+      nullable: true
+    metadata:
+      created_at: 2026-11-24T12:39:53.764Z
+      updated_at: 2026-11-24T12:39:53.764Z
+      version: 1
+    source_reference:
+      provenance: manual
+      locations:
+        - file: local-server/adapters/persistence/sqlite/models.py
+          symbol: ProposalOperation.amended_at
+  timestamp: 2026-11-24T14:45:40.015Z
+  sequenceNumber: 9
+- type: add
+  elementId: data-store.field.amendments
+  layerName: data-store
+  after:
+    id: d9275762-70fe-45d7-a77f-3823c09408d6
+    path: data-store.field.amendments
+    spec_node_id: data-store.field
+    type: field
+    layer_id: data-store
+    name: amendments
+    description: "proposal_operations.amendments: the operation's earlier versions,
+      oldest first, each {fields, base, rationale, amended_at}. JSON, default
+      []."
+    attributes:
+      dataType: JSON
+      nullable: false
+    metadata:
+      created_at: 2026-11-24T12:39:53.766Z
+      updated_at: 2026-11-24T12:39:53.766Z
+      version: 1
+    source_reference:
+      provenance: manual
+      locations:
+        - file: local-server/adapters/persistence/sqlite/models.py
+          symbol: ProposalOperation.amendments
+  timestamp: 2026-11-24T14:45:40.015Z
+  sequenceNumber: 10
+- type: add
+  elementId: data-model.objectschema.proposal-link
+  layerName: data-model
+  after:
+    id: 1934138c-8ef7-47d0-85de-f61f20f9c132
+    path: data-model.objectschema.proposal-link
+    spec_node_id: data-model.objectschema
+    type: objectschema
+    layer_id: data-model
+    name: Proposal Link
+    description: "ProposalLink (domain/versioning/proposals.py): source_proposal_id,
+      kind (ProposalLinkKind: supersedes | reverses), target_proposal_id,
+      created_at, note."
+    attributes:
+      type: object
+      required:
+        - source_proposal_id
+        - kind
+        - target_proposal_id
+        - created_at
+    metadata:
+      created_at: 2026-11-24T12:39:53.766Z
+      updated_at: 2026-11-24T12:39:53.766Z
+      version: 1
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/domain/versioning/proposals.py
+          symbol: ProposalLink
+  timestamp: 2026-11-24T14:45:39.938Z
+  sequenceNumber: 11
+- type: add
+  elementId: data-model.objectschema.operation-amendment
+  layerName: data-model
+  after:
+    id: 457f7b22-69b8-4a6d-b634-2e2ed38cab5e
+    path: data-model.objectschema.operation-amendment
+    spec_node_id: data-model.objectschema
+    type: objectschema
+    layer_id: data-model
+    name: Operation Amendment
+    description: "One earlier version of an amended operation: its fields, base and
+      rationale, and when it was replaced."
+    attributes:
+      type: object
+      required:
+        - fields
+        - amended_at
+    metadata:
+      created_at: 2026-11-24T12:39:53.767Z
+      updated_at: 2026-11-24T12:39:53.767Z
+      version: 1
+    source_reference:
+      provenance: manual
+      locations:
+        - file: local-server/domain/versioning/proposals.py
+          symbol: ProposedOperation.amendments
+  timestamp: 2026-11-24T14:45:40.015Z
+  sequenceNumber: 12
+- type: add
+  elementId: application.applicationfunction.proposal-amendment
+  layerName: application
+  after:
+    id: 1cfa18f9-eea8-4d52-b9e6-854d6f0df711
+    path: application.applicationfunction.proposal-amendment
+    spec_node_id: application.applicationfunction
+    type: applicationfunction
+    layer_id: application
+    name: Proposal amendment
+    description: "ProposalService.amend: replaces, adds and removes pending
+      operations of an open proposal by seq in one call, validating and scoping
+      them as propose does (dry_run too), keeping each replaced version in
+      amendments; then the approval policy runs over what changed, as on
+      propose."
+    metadata:
+      created_at: 2026-11-24T12:39:53.767Z
+      updated_at: 2026-11-24T12:39:53.767Z
+      version: 1
+    source_reference:
+      provenance: manual
+      locations:
+        - file: local-server/domain/versioning/proposal_service.py
+          symbol: ProposalService.amend
+  timestamp: 2026-11-24T14:45:40.015Z
+  sequenceNumber: 13
+- type: add
+  elementId: application.applicationfunction.proposal-withdrawal
+  layerName: application
+  after:
+    id: 23d1fed8-d320-4431-bb8f-458ab534e9f4
+    path: application.applicationfunction.proposal-withdrawal
+    spec_node_id: application.applicationfunction
+    type: applicationfunction
+    layer_id: application
+    name: Proposal withdrawal
+    description: "ProposalService.withdraw: on an open proposal, rolls back what it
+      applied (the revert path: RevertService, decisions superseded), marks its
+      undecided operations withdrawn, sets the proposal withdrawn, and records a
+      supersedes link from the proposal named as its replacement, if any.
+      Refused when the rollback conflicts, with the blockers."
+    metadata:
+      created_at: 2026-11-24T12:39:53.767Z
+      updated_at: 2026-11-24T12:39:53.767Z
+      version: 1
+    source_reference:
+      provenance: manual
+      locations:
+        - file: local-server/domain/versioning/proposal_service.py
+          symbol: ProposalService.withdraw
+  timestamp: 2026-11-24T14:45:40.015Z
+  sequenceNumber: 14
+- type: add
+  elementId: application.applicationfunction.proposal-linking
+  layerName: application
+  after:
+    id: 3f70b472-6ba0-44b5-ab8e-45cdca8d4f6e
+    path: application.applicationfunction.proposal-linking
+    spec_node_id: application.applicationfunction
+    type: applicationfunction
+    layer_id: application
+    name: Proposal linking
+    description: "Records and reads proposal links (supersedes, reverses) for a
+      proposal, both directions; #1667's reversal planning records its reverses
+      link here."
+    metadata:
+      created_at: 2026-11-24T12:39:53.767Z
+      updated_at: 2026-11-24T12:39:53.767Z
+      version: 1
+    source_reference:
+      provenance: manual
+      locations:
+        - file: local-server/domain/versioning/proposal_service.py
+          symbol: ProposalService.links_of
+  timestamp: 2026-11-24T14:45:40.015Z
+  sequenceNumber: 15
+- type: add
+  elementId: api.operation.amend-proposal
+  layerName: api
+  after:
+    id: 175ae104-71b8-4f16-ab61-174b7a8afafe
+    path: api.operation.amend-proposal
+    spec_node_id: api.operation
+    type: operation
+    layer_id: api
+    name: Amend Proposal
+    description: Replace, add or remove pending operations of an open proposal
+      (dry_run validates only). 409 when the proposal is not open or a named
+      operation is decided.
+    attributes:
+      operationId: amend_proposal_api_proposals__proposal_id__amend_post
+      summary: Amend Proposal
+      tags: proposals
+      http_method: POST
+      http_path: /api/proposals/{proposal_id}/amend
+    metadata:
+      created_at: 2026-11-24T12:39:53.767Z
+      updated_at: 2026-11-24T12:39:53.767Z
+      version: 1
+    source_reference:
+      provenance: manual
+      locations:
+        - file: local-server/adapters/web/proposals_routes.py
+          symbol: amend_proposal
+  timestamp: 2026-11-24T14:45:40.015Z
+  sequenceNumber: 16
+- type: add
+  elementId: api.operation.withdraw-proposal
+  layerName: api
+  after:
+    id: 1b58500c-579f-4e99-a0c8-9f331735b6ae
+    path: api.operation.withdraw-proposal
+    spec_node_id: api.operation
+    type: operation
+    layer_id: api
+    name: Withdraw Proposal
+    description: "Withdraw an open proposal: roll back what it applied, mark the
+      rest withdrawn, optionally naming the proposal that supersedes it. 409
+      when it is not open, or when the rollback conflicts with later changes
+      (the blockers, as revert gives them)."
+    attributes:
+      operationId: withdraw_proposal_api_proposals__proposal_id__withdraw_post
+      summary: Withdraw Proposal
+      tags: proposals
+      http_method: POST
+      http_path: /api/proposals/{proposal_id}/withdraw
+    metadata:
+      created_at: 2026-11-24T12:39:53.769Z
+      updated_at: 2026-11-24T12:39:53.769Z
+      version: 1
+    source_reference:
+      provenance: manual
+      locations:
+        - file: local-server/adapters/web/proposals_routes.py
+          symbol: withdraw_proposal
+  timestamp: 2026-11-24T14:45:40.015Z
+  sequenceNumber: 17
+- type: add
+  elementId: api.requestbody.proposal-amend-request
+  layerName: api
+  after:
+    id: fd15fb42-71b1-4fae-a7d1-07f2ff724ef0
+    path: api.requestbody.proposal-amend-request
+    spec_node_id: api.requestbody
+    type: requestbody
+    layer_id: api
+    name: Proposal Amend Request
+    description: "{replace: [{seq, fields, rationale?, probability?, evidence?}],
+      add: [operation drafts as in propose], remove: [seq], rationale?}: at
+      least one of replace, add, remove."
+    metadata:
+      created_at: 2026-11-24T12:39:53.769Z
+      updated_at: 2026-11-24T12:39:53.769Z
+      version: 1
+    source_reference:
+      provenance: manual
+      locations:
+        - file: local-server/adapters/web/schemas/proposals.py
+          symbol: ChangeProposalAmendRequest
+  timestamp: 2026-11-24T14:45:40.015Z
+  sequenceNumber: 18
+- type: add
+  elementId: api.requestbody.proposal-withdraw-request
+  layerName: api
+  after:
+    id: 2dc0c1e8-dca1-4e39-b81e-dfc4cca04877
+    path: api.requestbody.proposal-withdraw-request
+    spec_node_id: api.requestbody
+    type: requestbody
+    layer_id: api
+    name: Proposal Withdraw Request
+    description: "{superseded_by?: proposal id, note?}."
+    metadata:
+      created_at: 2026-11-24T12:39:53.770Z
+      updated_at: 2026-11-24T12:39:53.770Z
+      version: 1
+    source_reference:
+      provenance: manual
+      locations:
+        - file: local-server/adapters/web/schemas/proposals.py
+          symbol: ChangeProposalWithdrawRequest
+  timestamp: 2026-11-24T14:45:40.015Z
+  sequenceNumber: 19
+- type: add
+  elementId: api.response.proposal-link-response
+  layerName: api
+  after:
+    id: f4c90361-b256-4ebc-bb3f-98b3949be90e
+    path: api.response.proposal-link-response
+    spec_node_id: api.response
+    type: response
+    layer_id: api
+    name: Proposal Link Response
+    description: "One link on ChangeProposalResponse.links, seen from the proposal:
+      kind supersedes | superseded_by | reverses | reversed_by, the other
+      proposal's id, title and status, created_at."
+    attributes:
+      description: A link between this proposal and another.
+    metadata:
+      created_at: 2026-11-24T12:39:53.770Z
+      updated_at: 2026-11-24T12:39:53.770Z
+      version: 1
+    source_reference:
+      provenance: manual
+      locations:
+        - file: local-server/adapters/web/schemas/proposals.py
+          symbol: ProposalLinkResponse
+  timestamp: 2026-11-24T14:45:40.015Z
+  sequenceNumber: 20
+- type: relationship-add
+  elementId: motivation.requirement.proposals-link-to-each-other-through-one-link-model::realizes::motivation.principle.agents-propose-and-people-decide
+  layerName: motivation
+  after:
+    source: motivation.requirement.proposals-link-to-each-other-through-one-link-model
+    target: motivation.principle.agents-propose-and-people-decide
+    predicate: realizes
+    layer: motivation
+    category: structural
+  timestamp: 2026-11-24T12:39:53.784Z
+  sequenceNumber: 21
+- type: relationship-add
+  elementId: motivation.requirement.a-proposer-amends-its-open-proposal-in-place::realizes::motivation.principle.agents-propose-and-people-decide
+  layerName: motivation
+  after:
+    source: motivation.requirement.a-proposer-amends-its-open-proposal-in-place
+    target: motivation.principle.agents-propose-and-people-decide
+    predicate: realizes
+    layer: motivation
+    category: structural
+  timestamp: 2026-11-24T12:39:53.784Z
+  sequenceNumber: 22
+- type: relationship-add
+  elementId: motivation.requirement.a-proposer-withdraws-its-open-proposal::realizes::motivation.principle.agents-propose-and-people-decide
+  layerName: motivation
+  after:
+    source: motivation.requirement.a-proposer-withdraws-its-open-proposal
+    target: motivation.principle.agents-propose-and-people-decide
+    predicate: realizes
+    layer: motivation
+    category: structural
+  timestamp: 2026-11-24T12:39:53.784Z
+  sequenceNumber: 23
+- type: relationship-add
+  elementId: motivation.requirement.a-proposer-amends-its-open-proposal-in-place::aggregates::motivation.requirement.an-amended-operation-shows-what-it-replaced
+  layerName: motivation
+  after:
+    source: motivation.requirement.a-proposer-amends-its-open-proposal-in-place
+    target: motivation.requirement.an-amended-operation-shows-what-it-replaced
+    predicate: aggregates
+    layer: motivation
+    category: structural
+  timestamp: 2026-11-24T12:39:53.784Z
+  sequenceNumber: 24
+- type: relationship-add
+  elementId: motivation.requirement.proposals-link-to-each-other-through-one-link-model::aggregates::motivation.requirement.a-proposer-withdraws-its-open-proposal
+  layerName: motivation
+  after:
+    source: motivation.requirement.proposals-link-to-each-other-through-one-link-model
+    target: motivation.requirement.a-proposer-withdraws-its-open-proposal
+    predicate: aggregates
+    layer: motivation
+    category: structural
+  timestamp: 2026-11-24T12:39:53.784Z
+  sequenceNumber: 25
+- type: relationship-add
+  elementId: data-store.collection.proposal-links::composes::data-store.validationrule.uq-proposal-links-source-kind-target
+  layerName: data-store
+  after:
+    source: data-store.collection.proposal-links
+    target: data-store.validationrule.uq-proposal-links-source-kind-target
+    predicate: composes
+    layer: data-store
+    category: structural
+  timestamp: 2026-11-24T12:39:53.784Z
+  sequenceNumber: 26
+- type: relationship-add
+  elementId: data-store.collection.proposal-links::composes::data-store.validationrule.fk-proposal-links-source
+  layerName: data-store
+  after:
+    source: data-store.collection.proposal-links
+    target: data-store.validationrule.fk-proposal-links-source
+    predicate: composes
+    layer: data-store
+    category: structural
+  timestamp: 2026-11-24T12:39:53.784Z
+  sequenceNumber: 27
+- type: relationship-add
+  elementId: data-store.collection.proposal-links::composes::data-store.validationrule.fk-proposal-links-target
+  layerName: data-store
+  after:
+    source: data-store.collection.proposal-links
+    target: data-store.validationrule.fk-proposal-links-target
+    predicate: composes
+    layer: data-store
+    category: structural
+  timestamp: 2026-11-24T12:39:53.784Z
+  sequenceNumber: 28
+- type: relationship-add
+  elementId: data-store.collection.proposal-links::composes::data-store.index.ix-proposal-links-target-proposal-id
+  layerName: data-store
+  after:
+    source: data-store.collection.proposal-links
+    target: data-store.index.ix-proposal-links-target-proposal-id
+    predicate: composes
+    layer: data-store
+    category: structural
+  timestamp: 2026-11-24T12:39:53.784Z
+  sequenceNumber: 29
+- type: relationship-add
+  elementId: data-store.validationrule.fk-proposal-links-source::cascades-to::data-store.collection.proposals-table
+  layerName: data-store
+  after:
+    source: data-store.validationrule.fk-proposal-links-source
+    target: data-store.collection.proposals-table
+    predicate: cascades-to
+    layer: data-store
+    category: structural
+  timestamp: 2026-11-24T12:39:53.784Z
+  sequenceNumber: 30
+- type: relationship-add
+  elementId: data-store.validationrule.fk-proposal-links-target::cascades-to::data-store.collection.proposals-table
+  layerName: data-store
+  after:
+    source: data-store.validationrule.fk-proposal-links-target
+    target: data-store.collection.proposals-table
+    predicate: cascades-to
+    layer: data-store
+    category: structural
+  timestamp: 2026-11-24T12:39:53.784Z
+  sequenceNumber: 31
+- type: relationship-add
+  elementId: data-store.collection.proposal-operations::composes::data-store.field.amended-at
+  layerName: data-store
+  after:
+    source: data-store.collection.proposal-operations
+    target: data-store.field.amended-at
+    predicate: composes
+    layer: data-store
+    category: structural
+  timestamp: 2026-11-24T12:39:53.784Z
+  sequenceNumber: 32
+- type: relationship-add
+  elementId: data-store.collection.proposal-operations::composes::data-store.field.amendments
+  layerName: data-store
+  after:
+    source: data-store.collection.proposal-operations
+    target: data-store.field.amendments
+    predicate: composes
+    layer: data-store
+    category: structural
+  timestamp: 2026-11-24T12:39:53.784Z
+  sequenceNumber: 33
+- type: relationship-add
+  elementId: data-model.objectschema.proposal-link::maps-to::data-store.collection.proposal-links
+  layerName: data-model
+  after:
+    source: data-model.objectschema.proposal-link
+    target: data-store.collection.proposal-links
+    predicate: maps-to
+    layer: data-model
+    targetLayer: data-store
+    category: structural
+  timestamp: 2026-11-24T12:39:53.784Z
+  sequenceNumber: 34
+- type: relationship-add
+  elementId: data-model.objectschema.proposal-link::maps-to::api.response.proposal-link-response
+  layerName: data-model
+  after:
+    source: data-model.objectschema.proposal-link
+    target: api.response.proposal-link-response
+    predicate: maps-to
+    layer: data-model
+    targetLayer: api
+    category: structural
+  timestamp: 2026-11-24T12:39:53.784Z
+  sequenceNumber: 35
+- type: relationship-add
+  elementId: data-model.objectschema.proposal-link::satisfies::motivation.requirement.proposals-link-to-each-other-through-one-link-model
+  layerName: data-model
+  after:
+    source: data-model.objectschema.proposal-link
+    target: motivation.requirement.proposals-link-to-each-other-through-one-link-model
+    predicate: satisfies
+    layer: data-model
+    targetLayer: motivation
+    category: structural
+  timestamp: 2026-11-24T12:39:53.784Z
+  sequenceNumber: 36
+- type: relationship-add
+  elementId: data-model.objectschema.operation-amendment::maps-to::data-store.collection.proposal-operations
+  layerName: data-model
+  after:
+    source: data-model.objectschema.operation-amendment
+    target: data-store.collection.proposal-operations
+    predicate: maps-to
+    layer: data-model
+    targetLayer: data-store
+    category: structural
+  timestamp: 2026-11-24T12:39:53.784Z
+  sequenceNumber: 37
+- type: relationship-add
+  elementId: data-model.objectschema.operation-amendment::satisfies::motivation.requirement.an-amended-operation-shows-what-it-replaced
+  layerName: data-model
+  after:
+    source: data-model.objectschema.operation-amendment
+    target: motivation.requirement.an-amended-operation-shows-what-it-replaced
+    predicate: satisfies
+    layer: data-model
+    targetLayer: motivation
+    category: structural
+  timestamp: 2026-11-24T12:39:53.784Z
+  sequenceNumber: 38
+- type: relationship-add
+  elementId: application.applicationfunction.proposal-amendment::realizes::application.applicationservice.proposal-service
+  layerName: application
+  after:
+    source: application.applicationfunction.proposal-amendment
+    target: application.applicationservice.proposal-service
+    predicate: realizes
+    layer: application
+    category: structural
+  timestamp: 2026-11-24T12:39:53.784Z
+  sequenceNumber: 39
+- type: relationship-add
+  elementId: application.applicationfunction.proposal-withdrawal::realizes::application.applicationservice.proposal-service
+  layerName: application
+  after:
+    source: application.applicationfunction.proposal-withdrawal
+    target: application.applicationservice.proposal-service
+    predicate: realizes
+    layer: application
+    category: structural
+  timestamp: 2026-11-24T12:39:53.784Z
+  sequenceNumber: 40
+- type: relationship-add
+  elementId: application.applicationfunction.proposal-linking::realizes::application.applicationservice.proposal-service
+  layerName: application
+  after:
+    source: application.applicationfunction.proposal-linking
+    target: application.applicationservice.proposal-service
+    predicate: realizes
+    layer: application
+    category: structural
+  timestamp: 2026-11-24T12:39:53.784Z
+  sequenceNumber: 41
+- type: relationship-add
+  elementId: application.applicationfunction.proposal-amendment::satisfies::motivation.requirement.a-proposer-amends-its-open-proposal-in-place
+  layerName: application
+  after:
+    source: application.applicationfunction.proposal-amendment
+    target: motivation.requirement.a-proposer-amends-its-open-proposal-in-place
+    predicate: satisfies
+    layer: application
+    targetLayer: motivation
+    category: structural
+  timestamp: 2026-11-24T12:39:53.784Z
+  sequenceNumber: 42
+- type: relationship-add
+  elementId: application.applicationfunction.proposal-amendment::satisfies::motivation.requirement.an-amended-operation-shows-what-it-replaced
+  layerName: application
+  after:
+    source: application.applicationfunction.proposal-amendment
+    target: motivation.requirement.an-amended-operation-shows-what-it-replaced
+    predicate: satisfies
+    layer: application
+    targetLayer: motivation
+    category: structural
+  timestamp: 2026-11-24T12:39:53.784Z
+  sequenceNumber: 43
+- type: relationship-add
+  elementId: application.applicationfunction.proposal-withdrawal::satisfies::motivation.requirement.a-proposer-withdraws-its-open-proposal
+  layerName: application
+  after:
+    source: application.applicationfunction.proposal-withdrawal
+    target: motivation.requirement.a-proposer-withdraws-its-open-proposal
+    predicate: satisfies
+    layer: application
+    targetLayer: motivation
+    category: structural
+  timestamp: 2026-11-24T12:39:53.784Z
+  sequenceNumber: 44
+- type: relationship-add
+  elementId: application.applicationfunction.proposal-linking::satisfies::motivation.requirement.proposals-link-to-each-other-through-one-link-model
+  layerName: application
+  after:
+    source: application.applicationfunction.proposal-linking
+    target: motivation.requirement.proposals-link-to-each-other-through-one-link-model
+    predicate: satisfies
+    layer: application
+    targetLayer: motivation
+    category: structural
+  timestamp: 2026-11-24T12:39:53.784Z
+  sequenceNumber: 45
+- type: relationship-add
+  elementId: application.applicationfunction.proposal-amendment::accesses::data-model.objectschema.operation-amendment
+  layerName: application
+  after:
+    source: application.applicationfunction.proposal-amendment
+    target: data-model.objectschema.operation-amendment
+    predicate: accesses
+    layer: application
+    targetLayer: data-model
+    category: structural
+  timestamp: 2026-11-24T12:39:53.784Z
+  sequenceNumber: 46
+- type: relationship-add
+  elementId: application.applicationfunction.proposal-linking::accesses::data-model.objectschema.proposal-link
+  layerName: application
+  after:
+    source: application.applicationfunction.proposal-linking
+    target: data-model.objectschema.proposal-link
+    predicate: accesses
+    layer: application
+    targetLayer: data-model
+    category: structural
+  timestamp: 2026-11-24T12:39:53.784Z
+  sequenceNumber: 47
+- type: relationship-add
+  elementId: application.applicationfunction.proposal-withdrawal::depends-on::application.applicationfunction.proposal-linking
+  layerName: application
+  after:
+    source: application.applicationfunction.proposal-withdrawal
+    target: application.applicationfunction.proposal-linking
+    predicate: depends-on
+    layer: application
+    category: structural
+  timestamp: 2026-11-24T12:39:53.784Z
+  sequenceNumber: 48
+- type: relationship-add
+  elementId: api.operation.amend-proposal::references::application.applicationservice.proposal-service
+  layerName: api
+  after:
+    source: api.operation.amend-proposal
+    target: application.applicationservice.proposal-service
+    predicate: references
+    layer: api
+    targetLayer: application
+    category: structural
+  timestamp: 2026-11-24T12:39:53.784Z
+  sequenceNumber: 49
+- type: relationship-add
+  elementId: api.operation.withdraw-proposal::references::application.applicationservice.proposal-service
+  layerName: api
+  after:
+    source: api.operation.withdraw-proposal
+    target: application.applicationservice.proposal-service
+    predicate: references
+    layer: api
+    targetLayer: application
+    category: structural
+  timestamp: 2026-11-24T12:39:53.784Z
+  sequenceNumber: 50
+- type: relationship-add
+  elementId: api.operation.amend-proposal::composes::api.requestbody.proposal-amend-request
+  layerName: api
+  after:
+    source: api.operation.amend-proposal
+    target: api.requestbody.proposal-amend-request
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-24T12:39:53.784Z
+  sequenceNumber: 51
+- type: relationship-add
+  elementId: api.operation.withdraw-proposal::composes::api.requestbody.proposal-withdraw-request
+  layerName: api
+  after:
+    source: api.operation.withdraw-proposal
+    target: api.requestbody.proposal-withdraw-request
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-24T12:39:53.784Z
+  sequenceNumber: 52
+- type: relationship-add
+  elementId: api.operation.amend-proposal::satisfies::motivation.requirement.a-proposer-amends-its-open-proposal-in-place
+  layerName: api
+  after:
+    source: api.operation.amend-proposal
+    target: motivation.requirement.a-proposer-amends-its-open-proposal-in-place
+    predicate: satisfies
+    layer: api
+    targetLayer: motivation
+    category: structural
+  timestamp: 2026-11-24T12:39:53.784Z
+  sequenceNumber: 53
+- type: relationship-add
+  elementId: api.operation.withdraw-proposal::satisfies::motivation.requirement.a-proposer-withdraws-its-open-proposal
+  layerName: api
+  after:
+    source: api.operation.withdraw-proposal
+    target: motivation.requirement.a-proposer-withdraws-its-open-proposal
+    predicate: satisfies
+    layer: api
+    targetLayer: motivation
+    category: structural
+  timestamp: 2026-11-24T12:39:53.784Z
+  sequenceNumber: 54
+- type: relationship-add
+  elementId: api.operation.amend-proposal::exposes::product.feature.proposal-queue-and-detail
+  layerName: api
+  after:
+    source: api.operation.amend-proposal
+    target: product.feature.proposal-queue-and-detail
+    predicate: exposes
+    layer: api
+    targetLayer: product
+    category: structural
+  timestamp: 2026-11-24T12:39:53.784Z
+  sequenceNumber: 55
+- type: relationship-add
+  elementId: api.operation.withdraw-proposal::exposes::product.feature.proposal-queue-and-detail
+  layerName: api
+  after:
+    source: api.operation.withdraw-proposal
+    target: product.feature.proposal-queue-and-detail
+    predicate: exposes
+    layer: api
+    targetLayer: product
+    category: structural
+  timestamp: 2026-11-24T12:39:53.784Z
+  sequenceNumber: 56
+- type: add
+  elementId: business.businessevent.proposal-withdrawn
+  layerName: business
+  after:
+    id: 083598a9-9fb8-44c5-923e-4ecd2dbca2fe
+    path: business.businessevent.proposal-withdrawn
+    spec_node_id: business.businessevent
+    type: businessevent
+    layer_id: business
+    name: Proposal Withdrawn
+    description: The proposer withdrew an open proposal, possibly naming the
+      proposal that supersedes it.
+    attributes:
+      type: external
+    metadata:
+      created_at: 2026-11-24T12:40:02.838Z
+      updated_at: 2026-11-24T12:40:02.838Z
+      version: 1
+  timestamp: 2026-11-24T12:40:02.851Z
+  sequenceNumber: 57
+- type: add
+  elementId: business.businessevent.proposal-amended
+  layerName: business
+  after:
+    id: b0221a5f-4731-41d7-8b25-5949edfa8927
+    path: business.businessevent.proposal-amended
+    spec_node_id: business.businessevent
+    type: businessevent
+    layer_id: business
+    name: Proposal Amended
+    description: The proposer changed, added or removed pending operations of its
+      open proposal.
+    attributes:
+      type: external
+    metadata:
+      created_at: 2026-11-24T12:40:02.838Z
+      updated_at: 2026-11-24T12:40:02.838Z
+      version: 1
+  timestamp: 2026-11-24T12:40:02.851Z
+  sequenceNumber: 58
+- type: add
+  elementId: testing.testcoveragetarget.proposal-amend-withdraw-and-links
+  layerName: testing
+  after:
+    id: 42be87dc-1192-4817-82ea-849ebcbc1f46
+    path: testing.testcoveragetarget.proposal-amend-withdraw-and-links
+    spec_node_id: testing.testcoveragetarget
+    type: testcoveragetarget
+    layer_id: testing
+    name: Proposal amend withdraw and links
+    description: Amend (replace, add, remove; dry run; decided operations refused;
+      amendments kept), withdraw (nothing applied; partly applied rolls back and
+      ends withdrawn; a conflicting rollback is refused with blockers; with and
+      without superseded_by), propose with supersedes, link reads both ways, MCP
+      tools amend_proposal and withdraw_proposal and their REST parity.
+    attributes:
+      targetType: api-endpoint
+    metadata:
+      created_at: 2026-11-24T12:40:02.838Z
+      updated_at: 2026-11-24T12:40:02.838Z
+      version: 1
+    source_reference:
+      provenance: manual
+      locations:
+        - file: local-server/tests/integration/routes/test_proposal_amend_withdraw_routes.py
+  timestamp: 2026-11-24T14:45:40.015Z
+  sequenceNumber: 59
+- type: relationship-add
+  elementId: testing.testcoveragetarget.proposal-amend-withdraw-and-links::covers::api.operation.amend-proposal
+  layerName: testing
+  after:
+    source: testing.testcoveragetarget.proposal-amend-withdraw-and-links
+    target: api.operation.amend-proposal
+    predicate: covers
+    layer: testing
+    targetLayer: api
+    category: structural
+  timestamp: 2026-11-24T12:40:02.851Z
+  sequenceNumber: 60
+- type: relationship-add
+  elementId: testing.testcoveragetarget.proposal-amend-withdraw-and-links::covers::api.operation.withdraw-proposal
+  layerName: testing
+  after:
+    source: testing.testcoveragetarget.proposal-amend-withdraw-and-links
+    target: api.operation.withdraw-proposal
+    predicate: covers
+    layer: testing
+    targetLayer: api
+    category: structural
+  timestamp: 2026-11-24T12:40:02.851Z
+  sequenceNumber: 61
+- type: update
+  elementId: data-model.objectschema.proposal-entity
+  layerName: data-model
+  before:
+    id: 2ff8aa70-673e-4390-97c0-5ebca5cea559
+    path: data-model.objectschema.proposal-entity
+    spec_node_id: data-model.objectschema
+    type: objectschema
+    layer_id: data-model
+    name: Proposal Entity
+    description: "Domain entity: a change proposal to one taxonomy, with its ordered
+      proposed operations, origin, status and landing."
+    attributes: &a1
+      type: object
+    source_reference: &a2
+      provenance: extracted
+      locations:
+        - file: local-server/domain/versioning/proposals.py
+          symbol: ChangeProposal
+    metadata: &a3
+      created_at: 2026-05-09T10:25:00.196Z
+      updated_at: 2026-05-09T10:25:00.196Z
+      version: 1
+  after:
+    id: 2ff8aa70-673e-4390-97c0-5ebca5cea559
+    path: data-model.objectschema.proposal-entity
+    spec_node_id: data-model.objectschema
+    type: objectschema
+    layer_id: data-model
+    name: Proposal Entity
+    description: "ChangeProposal: a set of proposed ontology changes on one
+      taxonomy, decided per operation. Status open, done, reverted, or withdrawn
+      (the proposer withdrew it with nothing applied). Its links to other
+      proposals (supersedes / superseded_by, reverses / reversed_by) come from
+      proposal_links."
+    attributes: *a1
+    source_reference: *a2
+    metadata: *a3
+  timestamp: 2026-11-24T12:40:03.162Z
+  sequenceNumber: 62
+- type: update
+  elementId: data-model.objectschema.proposed-operation
+  layerName: data-model
+  before:
+    id: 066a86b3-e78a-438c-a0ad-5e94092bb955
+    path: data-model.objectschema.proposed-operation
+    spec_node_id: data-model.objectschema
+    type: objectschema
+    layer_id: data-model
+    name: Proposed Operation
+    description: "Domain value: one operation in a change proposal
+      (create/update/delete of an entity), with its status and decision."
+    attributes: &a4
+      type: object
+    source_reference: &a5
+      provenance: extracted
+      locations:
+        - file: local-server/domain/versioning/proposals.py
+          symbol: ProposedOperation
+    metadata: &a6
+      created_at: 2026-11-19T14:54:15.821Z
+      updated_at: 2026-11-19T14:54:15.821Z
+      version: 1
+  after:
+    id: 066a86b3-e78a-438c-a0ad-5e94092bb955
+    path: data-model.objectschema.proposed-operation
+    spec_node_id: data-model.objectschema
+    type: objectschema
+    layer_id: data-model
+    name: Proposed Operation
+    description: "ProposedOperation: one proposed change. Status pending, applied,
+      rejected, failed, or withdrawn (removed by its proposer, or its proposal
+      withdrawn: not a decision). amended_at and amendments record changes its
+      proposer made while it was pending."
+    attributes: *a4
+    source_reference: *a5
+    metadata: *a6
+  timestamp: 2026-11-24T12:40:03.200Z
+  sequenceNumber: 63
+- type: update
+  elementId: api.response.change-proposal-response
+  layerName: api
+  before:
+    id: 2f4dc526-a1c7-40c9-8173-5cc609b51427
+    path: api.response.change-proposal-response
+    spec_node_id: api.response
+    type: response
+    layer_id: api
+    name: ChangeProposalResponse
+    attributes: &a7
+      description: ChangeProposalResponse
+    source_reference: &a8
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/schemas/proposals.py
+          symbol: ChangeProposalResponse
+    metadata: &a9
+      created_at: 2026-11-19T15:15:02.501Z
+      updated_at: 2026-11-19T15:15:02.501Z
+      version: 1
+  after:
+    id: 2f4dc526-a1c7-40c9-8173-5cc609b51427
+    path: api.response.change-proposal-response
+    spec_node_id: api.response
+    type: response
+    layer_id: api
+    name: ChangeProposalResponse
+    attributes: *a7
+    source_reference: *a8
+    metadata: *a9
+    description: "A change proposal with its operations in seq order, and links: its
+      links to other proposals seen from it (supersedes, superseded_by,
+      reverses, reversed_by). Each operation carries amended_at and amendments."
+  timestamp: 2026-11-24T12:40:03.236Z
+  sequenceNumber: 64
+- type: relationship-add
+  elementId: business.businessprocess.adjudicate-a-proposal::triggers::business.businessevent.proposal-withdrawn
+  layerName: business
+  after:
+    source: business.businessprocess.adjudicate-a-proposal
+    target: business.businessevent.proposal-withdrawn
+    predicate: triggers
+    layer: business
+    category: structural
+  timestamp: 2026-11-24T12:40:07.014Z
+  sequenceNumber: 65
+- type: add
+  elementId: api.responses.amend-proposal-responses
+  layerName: api
+  after:
+    id: af56d383-7f3a-4c63-8e7b-f0ae3bd8a941
+    path: api.responses.amend-proposal-responses
+    spec_node_id: api.responses
+    type: responses
+    layer_id: api
+    name: Amend Proposal Responses
+    description: "200 the amended proposal (a dry run: validated only); 404 unknown
+      proposal; 409 not open, or a named operation is decided; 422 an invalid
+      operation."
+    metadata:
+      created_at: 2026-11-24T12:40:18.623Z
+      updated_at: 2026-11-24T12:40:18.623Z
+      version: 1
+  timestamp: 2026-11-24T12:40:18.668Z
+  sequenceNumber: 66
+- type: add
+  elementId: api.responses.withdraw-proposal-responses
+  layerName: api
+  after:
+    id: 1e00917f-6e3b-4d2b-a12b-820467ec3cdc
+    path: api.responses.withdraw-proposal-responses
+    spec_node_id: api.responses
+    type: responses
+    layer_id: api
+    name: Withdraw Proposal Responses
+    description: 200 the withdrawn proposal; 404 unknown proposal or superseded_by;
+      409 not open, or the rollback conflicts
+      (ChangeProposalRevertConflictResponse blockers).
+    metadata:
+      created_at: 2026-11-24T12:40:18.625Z
+      updated_at: 2026-11-24T12:40:18.625Z
+      version: 1
+  timestamp: 2026-11-24T14:06:12.961Z
+  sequenceNumber: 67
+- type: relationship-add
+  elementId: api.operation.amend-proposal::composes::api.responses.amend-proposal-responses
+  layerName: api
+  after:
+    source: api.operation.amend-proposal
+    target: api.responses.amend-proposal-responses
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-24T12:40:18.668Z
+  sequenceNumber: 68
+- type: relationship-add
+  elementId: api.operation.withdraw-proposal::composes::api.responses.withdraw-proposal-responses
+  layerName: api
+  after:
+    source: api.operation.withdraw-proposal
+    target: api.responses.withdraw-proposal-responses
+    predicate: composes
+    layer: api
+    category: structural
+  timestamp: 2026-11-24T12:40:18.668Z
+  sequenceNumber: 69
+- type: relationship-add
+  elementId: application.applicationservice.proposal-service::serves::application.applicationfunction.proposal-amendment
+  layerName: application
+  after:
+    source: application.applicationservice.proposal-service
+    target: application.applicationfunction.proposal-amendment
+    predicate: serves
+    layer: application
+    category: structural
+  timestamp: 2026-11-24T12:40:18.668Z
+  sequenceNumber: 70
+- type: relationship-add
+  elementId: application.applicationservice.proposal-service::serves::application.applicationfunction.proposal-withdrawal
+  layerName: application
+  after:
+    source: application.applicationservice.proposal-service
+    target: application.applicationfunction.proposal-withdrawal
+    predicate: serves
+    layer: application
+    category: structural
+  timestamp: 2026-11-24T12:40:18.668Z
+  sequenceNumber: 71
+- type: relationship-add
+  elementId: application.applicationservice.proposal-service::serves::application.applicationfunction.proposal-linking
+  layerName: application
+  after:
+    source: application.applicationservice.proposal-service
+    target: application.applicationfunction.proposal-linking
+    predicate: serves
+    layer: application
+    category: structural
+  timestamp: 2026-11-24T12:40:18.668Z
+  sequenceNumber: 72
+- type: relationship-add
+  elementId: application.applicationservice.proposal-service::satisfies::motivation.requirement.a-proposer-amends-its-open-proposal-in-place
+  layerName: application
+  after:
+    source: application.applicationservice.proposal-service
+    target: motivation.requirement.a-proposer-amends-its-open-proposal-in-place
+    predicate: satisfies
+    layer: application
+    targetLayer: motivation
+    category: structural
+  timestamp: 2026-11-24T12:40:18.668Z
+  sequenceNumber: 73
+- type: relationship-add
+  elementId: application.applicationservice.proposal-service::satisfies::motivation.requirement.a-proposer-withdraws-its-open-proposal
+  layerName: application
+  after:
+    source: application.applicationservice.proposal-service
+    target: motivation.requirement.a-proposer-withdraws-its-open-proposal
+    predicate: satisfies
+    layer: application
+    targetLayer: motivation
+    category: structural
+  timestamp: 2026-11-24T12:40:18.668Z
+  sequenceNumber: 74
+- type: relationship-add
+  elementId: application.applicationservice.proposal-service::satisfies::motivation.requirement.proposals-link-to-each-other-through-one-link-model
+  layerName: application
+  after:
+    source: application.applicationservice.proposal-service
+    target: motivation.requirement.proposals-link-to-each-other-through-one-link-model
+    predicate: satisfies
+    layer: application
+    targetLayer: motivation
+    category: structural
+  timestamp: 2026-11-24T12:40:18.668Z
+  sequenceNumber: 75
+- type: relationship-add
+  elementId: product.feature.proposal-queue-and-detail::satisfies::motivation.requirement.a-proposer-amends-its-open-proposal-in-place
+  layerName: product
+  after:
+    source: product.feature.proposal-queue-and-detail
+    target: motivation.requirement.a-proposer-amends-its-open-proposal-in-place
+    predicate: satisfies
+    layer: product
+    targetLayer: motivation
+    category: structural
+  timestamp: 2026-11-24T12:40:18.668Z
+  sequenceNumber: 76
+- type: relationship-add
+  elementId: product.feature.proposal-queue-and-detail::satisfies::motivation.requirement.a-proposer-withdraws-its-open-proposal
+  layerName: product
+  after:
+    source: product.feature.proposal-queue-and-detail
+    target: motivation.requirement.a-proposer-withdraws-its-open-proposal
+    predicate: satisfies
+    layer: product
+    targetLayer: motivation
+    category: structural
+  timestamp: 2026-11-24T12:40:18.668Z
+  sequenceNumber: 77
+- type: relationship-add
+  elementId: product.feature.proposal-queue-and-detail::satisfies::motivation.requirement.proposals-link-to-each-other-through-one-link-model
+  layerName: product
+  after:
+    source: product.feature.proposal-queue-and-detail
+    target: motivation.requirement.proposals-link-to-each-other-through-one-link-model
+    predicate: satisfies
+    layer: product
+    targetLayer: motivation
+    category: structural
+  timestamp: 2026-11-24T12:40:18.668Z
+  sequenceNumber: 78
+- type: relationship-add
+  elementId: data-store.collection.proposal-links::satisfies::motivation.requirement.proposals-link-to-each-other-through-one-link-model
+  layerName: data-store
+  after:
+    source: data-store.collection.proposal-links
+    target: motivation.requirement.proposals-link-to-each-other-through-one-link-model
+    predicate: satisfies
+    layer: data-store
+    targetLayer: motivation
+    category: structural
+  timestamp: 2026-11-24T12:40:18.668Z
+  sequenceNumber: 79
+- type: relationship-add
+  elementId: business.businessprocess.adjudicate-a-proposal::triggers::business.businessevent.proposal-amended
+  layerName: business
+  after:
+    source: business.businessprocess.adjudicate-a-proposal
+    target: business.businessevent.proposal-amended
+    predicate: triggers
+    layer: business
+    category: structural
+  timestamp: 2026-11-24T12:40:18.668Z
+  sequenceNumber: 80
+- type: update
+  elementId: data-model.objectschema.proposal-entity
+  layerName: data-model
+  before:
+    id: 2ff8aa70-673e-4390-97c0-5ebca5cea559
+    path: data-model.objectschema.proposal-entity
+    spec_node_id: data-model.objectschema
+    type: objectschema
+    layer_id: data-model
+    name: Proposal Entity
+    description: "ChangeProposal: a set of proposed ontology changes on one
+      taxonomy, decided per operation. Status open, done, reverted, or withdrawn
+      (the proposer withdrew it with nothing applied). Its links to other
+      proposals (supersedes / superseded_by, reverses / reversed_by) come from
+      proposal_links."
+    attributes: &a10
+      type: object
+    source_reference: &a11
+      provenance: extracted
+      locations:
+        - file: local-server/domain/versioning/proposals.py
+          symbol: ChangeProposal
+    metadata: &a12
+      created_at: 2026-05-09T10:25:00.196Z
+      updated_at: 2026-05-09T10:25:00.196Z
+      version: 1
+  after:
+    id: 2ff8aa70-673e-4390-97c0-5ebca5cea559
+    path: data-model.objectschema.proposal-entity
+    spec_node_id: data-model.objectschema
+    type: objectschema
+    layer_id: data-model
+    name: Proposal Entity
+    description: "ChangeProposal: a set of proposed ontology changes on one
+      taxonomy, decided per operation. Status open, done, reverted, or withdrawn
+      (its proposer withdrew it; anything it had applied is rolled back). Its
+      links to other proposals (supersedes / superseded_by, reverses /
+      reversed_by) come from proposal_links."
+    attributes: *a10
+    source_reference: *a11
+    metadata: *a12
+  timestamp: 2026-11-24T14:06:13.155Z
+  sequenceNumber: 85

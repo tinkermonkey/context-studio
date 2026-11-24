@@ -42,6 +42,7 @@ describe("tally, pending and scope", () => {
       applied: 1,
       rejected: 0,
       failed: 0,
+      withdrawn: 0,
       awaiting: 3,
     });
     expect(pendingLabel(tally)).toBe("3 of 4 · 1 applied");
@@ -57,6 +58,13 @@ describe("tally, pending and scope", () => {
     expect(decidedPercent(tally)).toBe(50);
     expect(isAwaiting(failed)).toBe(true);
     expect(isAwaiting(rejected)).toBe(false);
+  });
+
+  it("leaves withdrawn operations out of the review's total (#1624)", () => {
+    const withdrawn = createProposedOperation({ id: "op-w", status: "withdrawn" });
+    const tally = tallyOperations([renameOperation, withdrawn]);
+    expect(tally).toMatchObject({ total: 1, withdrawn: 1, awaiting: 1 });
+    expect(isAwaiting(withdrawn)).toBe(false);
   });
 
   it("reads 'N of N' with nothing applied, and 100% decided when empty", () => {

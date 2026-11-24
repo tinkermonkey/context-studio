@@ -14,6 +14,7 @@ from domain.versioning.proposals import (
     Landing,
     OperationCount,
     ProposalFilter,
+    ProposalLink,
     ProposalStatus,
     ProposedOperation,
 )
@@ -157,6 +158,25 @@ class ChangeProposalRepository(Protocol):
         """
         ...
 
+    def amend_operations(self, proposal_id: str, operations: Sequence[ProposedOperation]) -> None:
+        """
+        Rewrite stored operations of a proposal, matched by id, with everything
+        an amendment can change: op, kind, target, ref, fields, base, rationale,
+        notes, evidence, probability, scope, status, reason, alternatives,
+        replacement, amended_at and amendments (#1624).
+
+        Raises ValueError for an unknown proposal or operation.
+        """
+        ...
+
+    def add_link(self, link: ProposalLink) -> None:
+        """Record a link between two proposals; the same link again changes nothing."""
+        ...
+
+    def links_of(self, proposal_id: str) -> list[ProposalLink]:
+        """Every link from or to the proposal, oldest first."""
+        ...
+
     def save_operations(
         self,
         proposal_id: str,
@@ -211,6 +231,10 @@ class ChangeProposalRepository(Protocol):
 
     def set_status(self, proposal_id: str, status: ProposalStatus) -> None:
         """Persist the proposal's status."""
+        ...
+
+    def set_dataset(self, proposal_id: str, dataset_id: Optional[str]) -> None:
+        """Persist the dataset its data operations are in (an amendment's first one, #1624)."""
         ...
 
 

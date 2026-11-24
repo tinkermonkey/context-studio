@@ -7695,6 +7695,129 @@
         }
       }
     },
+    "/api/proposals/{proposal_id}/amend": {
+      "post": {
+        "tags": [
+          "proposals"
+        ],
+        "summary": "Amend Proposal",
+        "description": "Change an open proposal in place, as its proposer: replace pending or failed\noperations by seq, add operations, remove pending ones (#1624). A replaced\noperation goes back to pending and keeps what it replaced in amendments;\na removed one is withdrawn. The approval policy runs over what changed.",
+        "operationId": "amend_proposal_api_proposals__proposal_id__amend_post",
+        "parameters": [
+          {
+            "name": "proposal_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Proposal Id"
+            }
+          },
+          {
+            "name": "dry_run",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "description": "Validate only: return the amended proposal, change nothing",
+              "default": false,
+              "title": "Dry Run"
+            },
+            "description": "Validate only: return the amended proposal, change nothing"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChangeProposalAmendRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChangeProposalResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Change proposal not found"
+          },
+          "409": {
+            "description": "The proposal is not open"
+          },
+          "422": {
+            "description": "The amendment is invalid (an unknown or decided seq, an invalid operation); detail.errors lists every problem by seq, and nothing changed"
+          }
+        }
+      }
+    },
+    "/api/proposals/{proposal_id}/withdraw": {
+      "post": {
+        "tags": [
+          "proposals"
+        ],
+        "summary": "Withdraw Proposal",
+        "description": "Withdraw an open proposal, as its proposer (#1624): what it applied is\nrolled back, its undecided operations are withdrawn, and it ends withdrawn.\nWith superseded_by, the proposal that replaces it is linked to it.",
+        "operationId": "withdraw_proposal_api_proposals__proposal_id__withdraw_post",
+        "parameters": [
+          {
+            "name": "proposal_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Proposal Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChangeProposalWithdrawRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChangeProposalResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Change proposal not found"
+          },
+          "409": {
+            "description": "The proposal is not open, or what it applied can't be rolled back (detail.blocking, as for revert)"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/proposals/{proposal_id}/operations": {
       "post": {
         "tags": [
@@ -7850,7 +7973,7 @@
             "description": "Change proposal not found"
           },
           "409": {
-            "description": "An operation is already applied or rejected"
+            "description": "The proposal is reverted or withdrawn, an operation is already applied, rejected or withdrawn, or (apply) it was amended since it was read"
           },
           "422": {
             "description": "An operation id is not in the proposal, the reason_code is unknown, or review_ms names an operation not being rejected"
@@ -11402,6 +11525,37 @@
         "title": "ChangeOperation",
         "description": "Types of operations on entities."
       },
+      "ChangeProposalAmendRequest": {
+        "properties": {
+          "replace": {
+            "items": {
+              "$ref": "#/components/schemas/ProposedOperationRequest"
+            },
+            "type": "array",
+            "title": "Replace",
+            "description": "Whole operations, each replacing the pending or failed operation with its seq; validated and scoped as on create. The replaced version is kept in the operation's amendments"
+          },
+          "add": {
+            "items": {
+              "$ref": "#/components/schemas/ProposedOperationRequest"
+            },
+            "type": "array",
+            "title": "Add",
+            "description": "Operations with seqs the proposal doesn't have"
+          },
+          "remove": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "title": "Remove",
+            "description": "Seqs of pending or failed operations to withdraw (not a decision)"
+          }
+        },
+        "type": "object",
+        "title": "ChangeProposalAmendRequest",
+        "description": "Change an open proposal in place, as its proposer (#1624): replace pending\nor failed operations by seq, add operations, remove pending ones."
+      },
       "ChangeProposalApplyRequest": {
         "properties": {
           "operation_ids": {
@@ -11412,6 +11566,22 @@
             "minItems": 1,
             "title": "Operation Ids",
             "description": "Operations to apply"
+          },
+          "amended_at": {
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "type": "object",
+            "title": "Amended At",
+            "description": "Operation id -> the amended_at the reviewer saw (null: as first proposed); an operation its proposer amended since is refused (409), so nobody approves a version they never read"
           },
           "force_stale": {
             "items": {
@@ -11564,6 +11734,14 @@
             "title": "Review Only",
             "description": "Keep the taxonomy's approval policy off it: a person decides every operation, none auto-applies (e.g. a benchmark gold check)",
             "default": false
+          },
+          "supersedes": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Supersedes",
+            "description": "Open proposals on the same taxonomy this one replaces: once it is stored, each is withdrawn (what it applied rolled back) and linked to it"
           }
         },
         "type": "object",
@@ -11790,6 +11968,14 @@
             "description": "Set at create time: the approval policy never applies any of it",
             "default": false
           },
+          "links": {
+            "items": {
+              "$ref": "#/components/schemas/ProposalLinkResponse"
+            },
+            "type": "array",
+            "title": "Links",
+            "description": "Its links to other proposals (supersedes, superseded_by, reverses, reversed_by), oldest first; empty in a list's summary form"
+          },
           "counts": {
             "items": {
               "$ref": "#/components/schemas/OperationCountResponse"
@@ -11963,6 +12149,37 @@
         ],
         "title": "ChangeProposalValidationErrorResponse",
         "description": "422 body of POST /api/proposals."
+      },
+      "ChangeProposalWithdrawRequest": {
+        "properties": {
+          "superseded_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Superseded By",
+            "description": "The proposal that replaces it; the two are linked (supersedes)"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note",
+            "description": "Why, kept on the link"
+          }
+        },
+        "type": "object",
+        "title": "ChangeProposalWithdrawRequest",
+        "description": "Withdraw an open proposal, as its proposer (#1624)."
       },
       "ChangeScope": {
         "type": "string",
@@ -17705,7 +17922,8 @@
           "pending",
           "applied",
           "rejected",
-          "failed"
+          "failed",
+          "withdrawn"
         ],
         "title": "OperationStatus",
         "description": "Where an operation stands."
@@ -19389,6 +19607,73 @@
         "title": "ProposalComparisonResponse",
         "description": "Two individual extractions of one source, their individual creates paired."
       },
+      "ProposalLinkResponse": {
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": [
+              "supersedes",
+              "superseded_by",
+              "reverses",
+              "reversed_by"
+            ],
+            "title": "Kind",
+            "description": "supersedes: this proposal replaces the other, which was withdrawn; superseded_by: the reverse. reverses / reversed_by: a reversal and the landed proposal it undoes"
+          },
+          "proposal_id": {
+            "type": "string",
+            "title": "Proposal Id",
+            "description": "The other proposal"
+          },
+          "title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title",
+            "description": "The other proposal's title"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ProposalStatus"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The other proposal's status"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          }
+        },
+        "type": "object",
+        "required": [
+          "kind",
+          "proposal_id",
+          "created_at"
+        ],
+        "title": "ProposalLinkResponse",
+        "description": "A link between this proposal and another, seen from this one (#1624)."
+      },
       "ProposalOriginResponse": {
         "properties": {
           "pipeline_type": {
@@ -19445,7 +19730,8 @@
         "enum": [
           "open",
           "done",
-          "reverted"
+          "reverted",
+          "withdrawn"
         ],
         "title": "ProposalStatus",
         "description": "A proposal is open while any operation awaits a decision."
@@ -19848,6 +20134,28 @@
             "title": "Added By Reviewer",
             "description": "Added to the proposal by its reviewer (an element the extraction missed, found in its source), not proposed",
             "default": false
+          },
+          "amended_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Amended At",
+            "description": "When its proposer last amended it, or added it to the stored proposal; null if it is as first proposed: a reviewer who read it should read it again"
+          },
+          "amendments": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Amendments",
+            "description": "Its earlier versions, oldest first, each {fields, base, rationale, probability, evidence, amended_at}: what each amendment replaced"
           },
           "reflection": {
             "anyOf": [

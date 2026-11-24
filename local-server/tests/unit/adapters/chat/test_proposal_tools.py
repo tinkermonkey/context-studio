@@ -113,6 +113,7 @@ class FakeProposalService:
         source_revision=None,
         dataset_id=None,
         review_only=False,
+        supersedes=(),
     ):
         self.calls.append(("propose", taxonomy_id, title, list(operations), source, rationale))
         self.review_only = review_only
@@ -151,6 +152,9 @@ class FakeProposalService:
 
     def auto_apply_operation_ids(self, proposal):
         return self.auto
+
+    def links_of(self, proposal_id):
+        return []
 
     def list_proposals(
         self, taxonomy_id=None, status=None, source=None, limit=50, offset=0, landed=None

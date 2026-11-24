@@ -11,7 +11,7 @@ import { http, HttpResponse } from "msw";
 import { setupServer } from "msw/node";
 import { render } from "@/test/test-utils";
 import { component, entityPageHandlers, serviceClass, taxonomy } from "@/test/entityPageHandlers";
-import { openProposal, proposalHandlers } from "@/test/proposalFixtures";
+import { openProposal, proposalHandlers, unamended } from "@/test/proposalFixtures";
 import type { ChangeProposal } from "@/api/services/proposals";
 import { createPredicate } from "@/api/services/__tests__/fixtures/ontology.fixtures";
 import { downloadJson } from "@/lib/download";
@@ -135,7 +135,12 @@ describe("deciding one operation in the inspector", () => {
     await user.click(within(decision).getByTestId("operation-accept"));
 
     await waitFor(() => expect(applied).toHaveLength(1));
-    expect(applied[0]).toEqual({ operation_ids: ["op-rename"], force_stale: [], edits: {} });
+    expect(applied[0]).toEqual({
+      operation_ids: ["op-rename"],
+      amended_at: unamended(["op-rename"]),
+      force_stale: [],
+      edits: {},
+    });
     const results = await screen.findByTestId("proposal-apply-results");
     expect(within(results).getByTestId("apply-results-ok")).toHaveTextContent("Applied 1 of 1.");
     expect(within(screen.getByTestId("apply-outcome-op-rename")).getByText("applied")).toHaveClass(
@@ -195,6 +200,7 @@ describe("deciding one operation in the inspector", () => {
     await waitFor(() => expect(applied).toHaveLength(1));
     expect(applied[0]).toEqual({
       operation_ids: ["op-rename"],
+      amended_at: unamended(["op-rename"]),
       force_stale: [],
       edits: {
         "op-rename": {
@@ -257,6 +263,7 @@ describe("a failed edit", () => {
     await waitFor(() => expect(applied).toHaveLength(1));
     expect(applied[0]).toEqual({
       operation_ids: ["op-delete"],
+      amended_at: unamended(["op-delete"]),
       force_stale: [],
       edits: { "op-delete": replacement },
     });
@@ -269,9 +276,15 @@ describe("a failed edit", () => {
     failures = {};
     await user.click(screen.getByTestId("apply-retry-op-delete"));
     await waitFor(() => expect(applied).toHaveLength(2));
-    expect(applied[1]).not.toEqual({ operation_ids: ["op-delete"], force_stale: [], edits: {} });
+    expect(applied[1]).not.toEqual({
+      operation_ids: ["op-delete"],
+      amended_at: unamended(["op-delete"]),
+      force_stale: [],
+      edits: {},
+    });
     expect(applied[1]).toEqual({
       operation_ids: ["op-delete"],
+      amended_at: unamended(["op-delete"]),
       force_stale: [],
       edits: { "op-delete": replacement },
     });
@@ -344,6 +357,7 @@ describe("a failed edit", () => {
     await waitFor(() => expect(applied).toHaveLength(1));
     expect(applied[0]).toEqual({
       operation_ids: ["op-delete"],
+      amended_at: unamended(["op-delete"]),
       force_stale: ["op-delete"],
       edits: { "op-delete": replacement },
     });
@@ -381,6 +395,7 @@ describe("stale operations", () => {
     await waitFor(() => expect(applied).toHaveLength(1));
     expect(applied[0]).toEqual({
       operation_ids: ["op-delete"],
+      amended_at: unamended(["op-delete"]),
       force_stale: ["op-delete"],
       edits: {},
     });
@@ -464,7 +479,12 @@ describe("selection and the bulk bar", () => {
 
     await user.click(within(bar).getByTestId("proposal-selection-accept"));
     await waitFor(() => expect(applied).toHaveLength(1));
-    expect(applied[0]).toEqual({ operation_ids: ["op-rename"], force_stale: [], edits: {} });
+    expect(applied[0]).toEqual({
+      operation_ids: ["op-rename"],
+      amended_at: unamended(["op-rename"]),
+      force_stale: [],
+      edits: {},
+    });
     await waitFor(() =>
       expect(screen.queryByTestId("proposal-selection-bar")).not.toBeInTheDocument(),
     );
@@ -536,6 +556,7 @@ describe("accept all and the results", () => {
     await waitFor(() => expect(applied).toHaveLength(1));
     expect(applied[0]).toEqual({
       operation_ids: ["op-rename", "op-class"],
+      amended_at: unamended(["op-rename", "op-class"]),
       force_stale: [],
       edits: {},
     });
@@ -561,7 +582,12 @@ describe("accept all and the results", () => {
     failures = {};
     await user.click(screen.getByTestId("apply-retry-op-class"));
     await waitFor(() => expect(applied).toHaveLength(2));
-    expect(applied[1]).toEqual({ operation_ids: ["op-class"], force_stale: [], edits: {} });
+    expect(applied[1]).toEqual({
+      operation_ids: ["op-class"],
+      amended_at: unamended(["op-class"]),
+      force_stale: [],
+      edits: {},
+    });
     // The retry joins the batch's outcomes instead of replacing them.
     expect(await screen.findByTestId("apply-results-ok")).toHaveTextContent("Applied 2 of 2.");
     expect(screen.getByTestId("apply-result-op-rename")).toHaveTextContent(
