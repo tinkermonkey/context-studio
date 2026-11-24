@@ -196,7 +196,7 @@ const right: StatusbarItem[] = [
 - Slot type detection checks only the first array element: if it has a `kind` property the whole array renders as items, otherwise the array renders as React nodes. Do not mix items and elements in one array. An empty array still renders an empty slot.
 - The root is `role="status"`, so screen readers announce every content change. For content that updates constantly (cursor position, clocks), pass a different `role`.
 - Mobile mode applies when the viewport is at or below `mobileBreakpoint`: the center slot clips its overflow and item labels become single-line with ellipsis. Slots are not hidden or stacked, and `left`/`right` never shrink, so keep them short.
-- `mobileBreakpoint={false}` keeps desktop styling at every width; the root's `data-mobile` attribute overrides the built-in 768px media query.
+- `mobileBreakpoint={false}` keeps desktop styling at every width; the root's `data-mobile` attribute overrides the built-in 768px media query. `data-mobile` is absent in server-rendered HTML and until hydration, so the built-in 768px media query applies until then.
 - Inside `ShellLayout` the statusbar inherits ShellLayout's `mobileBreakpoint` unless the `statusbar` config sets its own.
 
 ---
@@ -318,9 +318,10 @@ import { ShellLayout } from '@tinkermonkey/heimdall-ui'
 - At or below `mobileBreakpoint` (viewport `max-width`):
   - The sidebar column is removed. A menu button (`aria-label="Open sidebar menu"`) is prepended to the topbar's `leadingContent`, or shown in a 56px header row when there is no topbar.
   - The button opens a 280px left `Drawer` holding the sidebar with `collapsed` forced to `false` and `showCollapseToggle` forced to `false`. Focus is trapped, Escape and backdrop clicks close it, and body scroll is locked. The drawer stays mounted, so expansion state survives.
-  - Selecting a leaf item calls `onSelectItem` and then closes the drawer; toggling a parent does not.
+  - Selecting a leaf item calls `onSelectItem` and then closes the drawer; toggling a parent does not. Clicking a link in the drawer (a sidebar item with `href`, or an `<a href>` in the sidebar `footer`) closes it too, unless it opens elsewhere: a modifier or middle click, or a link with `target="_blank"`. A click your router `preventDefault`s still closes it.
   - Widening past the breakpoint closes the drawer. The consumer's `collapsed` value is ignored while mobile and applies again on desktop.
   - The breakpoint is forwarded to `Topbar` (search box hides, breadcrumbs truncate) and `Statusbar` (labels truncate) unless their configs set their own `mobileBreakpoint`.
 - With `appTitle` set, the drawer's AppTitle still shows the collapse caret (Sidebar ignores `showCollapseToggle` when it hosts an AppTitle). Clicking it calls `onCollapse(true)` but the drawer stays expanded.
 - `mobileBreakpoint={false}` disables drawer mode; the sidebar stays inline at every width.
-- The root carries `data-mobile="true" | "false"` for styling. Without `window` (SSR) the first render is desktop.
+- The root carries `data-mobile="true" | "false"` for styling once the viewport is known on the client. Server rendering (SSR, static generation) and hydration render the desktop layout with no `data-mobile`, so the HTML hydrates without a mismatch; ShellLayout's CSS `@media (max-width: 768px)` hides the sidebar column (and Topbar's the search box) until hydration swaps in the drawer layout. With a custom `mobileBreakpoint`, those pre-hydration rules still use 768px. A client-only render (`createRoot`) gets the right layout on its first render.
+- For a static site, give sidebar items `href` so navigation works before (and without) hydration; see Sidebar in heimdall-navigation.

@@ -1,0 +1,19 @@
+id: changeset-1795523129400-ucmmo6vqq
+name: heimdall-upgrade-0-14
+description: "#1683: move the UX's @tinkermonkey/heimdall-ui from 0.9.5 to
+  Heimdall main (0.14.0), refresh the agent skills, fix what breaks, keep the
+  CSS layer order. Done when the UX builds, typechecks and passes vitest on
+  0.14.0 and visual QA passes in both canvas modes. The layered-graph framework
+  is not adopted (#1448)."
+created: 2026-11-24T12:25:29.409Z
+modified: 2026-11-24T12:25:32.842Z
+status: staged
+baseSnapshot: v2:sha256:53252d39ed1357a9afdd6132507b497bf81313353af91142ccb6b590b147594c
+origin:
+  kind: plan
+purpose: plan
+stats:
+  additions: 0
+  modifications: 2
+  deletions: 0
+lastSequence: 1

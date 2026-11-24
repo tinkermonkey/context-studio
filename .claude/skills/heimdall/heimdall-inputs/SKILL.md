@@ -159,6 +159,7 @@ Single mode is the default. `value` / `defaultValue` / `onChange` apply only to 
 | `children` | `ReactNode` | required | `Select.Item`, `Select.CheckboxItem`, etc. |
 | `data-testid` | `string` | — | Test id on the root `<div>` |
 | `placement` | `DropdownPlacement` | `'bottom-start'` | Panel side and edge alignment |
+| `portal` | `boolean` | `true` | Render the panel in a portal on `document.body` (`position: fixed`); `false` renders it in place |
 
 `DropdownPlacement` is `'bottom-start' | 'bottom-end' | 'top-start' | 'top-end'`: `top`/`bottom` is the side the panel opens to, `start`/`end` is the trigger edge it aligns with.
 
@@ -264,7 +265,8 @@ Monospace uppercase eyebrow heading inside the panel.
 - `name` renders one `<input type="hidden">` per selected value, and nothing when the selection is empty.
 - The `ref` is forwarded to the trigger `<button>`.
 - Keyboard: ArrowUp/ArrowDown/Enter/Space on the trigger opens the panel; arrows, Home, End and Tab move between items; Escape or an outside click closes and returns focus to the trigger.
-- The panel is absolutely positioned inside the root (not portaled), max 320px tall, `z-index: 1000`. An ancestor with `overflow: hidden` clips it; near the bottom of a scroll container use `placement="top-start"`. There is no automatic flip.
+- By default the panel renders in a portal on `document.body` with `position: fixed` (`z-index: 1000`, above Modal and Drawer), so scroll containers and `overflow: hidden` ancestors don't clip it. It flips above or to the other edge when `placement` doesn't fit the viewport, and follows the trigger when any ancestor scrolls. The panel is always mounted (hidden while closed), so it sits in `document.body`, not inside the Select root: style it through `.select__panel`, not a descendant selector like `.my-form .dropdown-panel`. The trigger's `aria-controls` holds the panel's `id`; use it to find the panel in tests.
+- `portal={false}` keeps the panel absolutely positioned inside the root, with no flip; an `overflow: hidden` ancestor clips it.
 
 ---
 
@@ -390,6 +392,7 @@ import type { DropdownPlacement } from '@tinkermonkey/heimdall-ui'
 | `onChange` | `(selectedValues: string[]) => void` | — | Called with the full selection |
 | `className` | `string` | `''` | Extra class on the root `<div>` |
 | `placement` | `DropdownPlacement` | `'bottom-start'` | Panel side and edge alignment |
+| `portal` | `boolean` | `true` | Render the panel in a portal on `document.body` (`position: fixed`); `false` renders it in place |
 | `children` | `ReactNode` | required | `FilterDropdown.Trigger` and `FilterDropdown.Panel` |
 
 ### Usage
@@ -493,7 +496,8 @@ Single-choice option row for `mode="radio"`.
 - Controlled mode (`value` defined) ignores internal state; update it in `onChange`.
 - There is no `disabled` prop on the root; pass `disabled` to `FilterDropdown.Trigger`.
 - Keyboard: arrows, Home, End and Tab move between rows once open; Escape closes and returns focus to the trigger. Opening is by click (or Enter/Space on the focused trigger button).
-- The panel is absolutely positioned, not portaled, with `z-index: 1000` and a 320px max height. An `overflow: hidden` ancestor clips it; use `placement` to open upward or right-aligned. There is no automatic flip.
+- By default `FilterDropdown.Panel` renders in a portal on `document.body` with `position: fixed` (`z-index: 1000`, 320px max height), so scroll containers and `overflow: hidden` ancestors don't clip it. It flips when `placement` doesn't fit the viewport and follows the trigger on scroll. Target it with `.filter-dropdown__panel` or a `className`, not a selector through the FilterDropdown root.
+- `portal={false}` renders the panel absolutely positioned inside the root, with no flip.
 
 ---
 
@@ -519,6 +523,7 @@ import type { EntityPickerResult, DropdownPlacement } from '@tinkermonkey/heimda
 | `disabled` | `boolean` | `false` | Disable input and clear button |
 | `inputId` | `string` | — | `id` on the `<input>` (pair with a label) |
 | `placement` | `DropdownPlacement` | `'bottom-start'` | Results panel side and edge alignment |
+| `portal` | `boolean` | `true` | Render the panel in a portal on `document.body` (`position: fixed`); `false` renders it in place |
 | `...divProps` | | | Remaining props spread onto the root `<div>` |
 
 ### Data types
@@ -571,7 +576,7 @@ const [query, setQuery] = useState('')
 - Keyboard: ArrowUp/ArrowDown/Home/End move the active result (the first result is active by default); Enter picks it.
 - A result's domain chip renders only when both `domain` and `domainColor` are set.
 - The `ref` points to the root `<div>`, not the input.
-- The panel is absolutely positioned, not portaled; an `overflow: hidden` ancestor clips it.
+- By default the results panel renders in a portal on `document.body` (`position: fixed`), flips when `placement` doesn't fit and follows the input on scroll. `portal={false}` renders it in place, where an `overflow: hidden` ancestor clips it.
 
 ---
 

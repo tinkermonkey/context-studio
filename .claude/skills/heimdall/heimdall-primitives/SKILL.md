@@ -354,6 +354,7 @@ import { SegmentedControl } from '@tinkermonkey/heimdall-ui'
 | `onChange` | `(value: string \| number) => void` | required | Called with the newly selected value |
 | `options` | `SegmentedControlOption[]` | required | Segments to render |
 | `disabled` | `boolean` | `false` | Disable every segment |
+| `surface` | `ChromeSurface` | `'canvas'` | The surface the control sits on. `'canvas'` follows `body.dark-canvas`; `'shell'` reads the `--shell-*` tokens (shell-bg-2 track, shell-surface active segment, shell-fg-2 / fg-1 text) and is dark in both canvas themes. Hover, focus ring and disabled states match the canvas variant |
 | `...divProps` | | | Remaining props spread onto the root `<div role="radiogroup">` |
 
 ### Data types
@@ -364,6 +365,8 @@ interface SegmentedControlOption {
   label: React.ReactNode
   disabled?: boolean
 }
+
+type ChromeSurface = 'canvas' | 'shell'
 ```
 
 ### Usage
@@ -382,6 +385,11 @@ const [view, setView] = useState<string | number>('all')
     { value: 'archived', label: 'Archived' },
   ]}
 />
+```
+
+```tsx
+// On the shell surface (a Topbar, a dark chrome strip): never remap --canvas-* tokens to fake it
+<SegmentedControl surface="shell" value={view} onChange={setView} aria-label="Scope" options={options} />
 ```
 
 ```tsx

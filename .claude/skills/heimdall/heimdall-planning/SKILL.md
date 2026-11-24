@@ -32,6 +32,7 @@ import { Calendar, type CalendarEvent, type CalendarView } from '@tinkermonkey/h
 | `onSelectDate` | `(date: Date) => void` | — | Day cell (month) or day column (week) clicked |
 | `onSelectEvent` | `(eventId: string) => void` | — | Event clicked or activated with Enter/Space |
 | `renderEvent` | `(event: CalendarEvent, calendarColor?: string) => ReactNode` | — | Replaces the default event title |
+| `today` | `Date \| string \| number` | clock at render | Day highlighted as today. A fixed value is a date: `YYYY-MM-DD` (preferred), or an instant read as its UTC day, so server and browser agree in any timezone; pass one for server-rendered or static HTML |
 | `...divProps` | | | Remaining props spread onto the root `<div>` (`onChange` omitted) |
 
 ### Data types
@@ -122,7 +123,7 @@ function OpsCalendar() {
 - Events are placed only on the calendar day of `startDate`. `endDate` is ignored, so a multi-day event appears on its first day only. No view renders times or a time-slot grid; every event is shown as a title bar, like an all-day item.
 - Per view: **month** shows up to 3 events per cell then a non-clickable `+N more`; **week** shows 7 day columns listing every event for each day; **day** lists the events on `focusedDate`, or `No events scheduled`; **agenda** lists every event with `startDate >= focusedDate`, sorted ascending, or `No upcoming events`. Month, week and day keep `events` array order.
 - Agenda compares full timestamps. If `focusedDate` is `new Date()` (current time), events earlier today are excluded. Pass a midnight date to include the whole day.
-- Prev/next step by one month (month), 7 days (week) or 1 day (day and agenda). Today calls `onNavigate(new Date())`.
+- Prev/next step by one month (month), 7 days (week) or 1 day (day and agenda). Today calls `onNavigate(new Date())`, the clock at click time even when `today` is set.
 - `onSelectDate` fires from month cells and week columns only; the day and agenda views never call it. Out-of-month cells in month view ignore clicks.
 - `selectedDate` is only highlighted in month view; week, day and agenda do not show it. Today gets an amber date chip in month view only.
 - Keyboard navigation exists in month view only, on the focusable grid: arrows move `focusedDate` by ±1 / ±7 days, PageUp/PageDown by one month, Home/End to the first/last day of the focused week (not today). Each key calls `onNavigate`; the focused cell is outlined. Enter/Space on the grid do not select a date, because the cells themselves are not focusable. Event bars, week columns and day/agenda items are focusable and respond to Enter/Space.
@@ -148,6 +149,7 @@ import { MiniCalendar } from '@tinkermonkey/heimdall-ui'
 | `markers` | `Date[]` | `[]` | Days that show a marker dot |
 | `weekStartsOn` | `0 \| 1` | `0` | `0` Sunday, `1` Monday |
 | `onSelect` | `(date: Date) => void` | — | In-month day clicked |
+| `today` | `Date \| string \| number` | clock at render | Day highlighted as today. A fixed value is a date: `YYYY-MM-DD` (preferred), or an instant read as its UTC day, so server and browser agree in any timezone; pass one for server-rendered or static HTML |
 | `className` | `string` | `''` | Extra class on the root `<div>` |
 
 ### Usage

@@ -160,6 +160,8 @@ import { ActivityTimeline } from '@tinkermonkey/heimdall-ui'
 | ---- | ---- | ------- | ----------- |
 | `events` | `ActivityEvent[]` | `[]` | Events to render, in the given order |
 | `emptyState` | `string` | `'No activity recorded'` | Message when `events` is empty |
+| `now` | `Date \| string \| number` | clock at render | Time the relative labels (`5m ago`) are measured from; pass a fixed value for server-rendered or static HTML: labels then depend only on `now`, and dates older than a week print `en-US` in UTC, so server and browser match |
+| `formatTimestamp` | `(timestamp: Date \| string) => ReactNode` | — | Replaces the built-in relative label, e.g. an absolute date or a `<time>` element |
 | `...divProps` | | | Remaining props spread onto the root `<div>` |
 
 ### Data types
@@ -218,6 +220,7 @@ Type → dot color: `create`=emerald, `update`=cyan, `delete`=rose, `run`=amber.
 ### Gotchas
 
 - Timestamps render as relative labels: "just now" (<1 min), "5m ago", "2h ago", "3d ago", then `toLocaleDateString()` from 7 days on. An unparseable string renders an empty label. Labels are computed at render time and do not tick.
+- Server-rendered or static HTML: the server's clock and locale differ from the browser's, so a hydrated timeline would print different labels and React reports a hydration mismatch. Pass `now` (e.g. the build time) for stable relative labels, or `formatTimestamp` for absolute dates that read correctly on a page that is never re-rendered.
 - `subject` is plain text: backticks are not parsed (unlike `FormCallout`). For inline code or emphasis pass `headline`, which replaces `subject` in the row; `subject` is still required.
 - `kindLabel` is ignored unless `kind` is set. `kind` is also written to the row as `data-kind`.
 - An event with `onClick` gets `role="button"`, `tabIndex={0}`, and fires on Enter or Space. Rows without it are not focusable.
@@ -284,7 +287,7 @@ const [alerts, setAlerts] = useState<Alert[]>([
 
 ## QuickAccessGrid
 
-Grid of `QuickAccessTile` buttons driven by a data array, for landing-page shortcuts.
+Grid of `QuickAccessTile` buttons (or links, with `href`) driven by a data array, for landing-page shortcuts.
 
 ```tsx
 import { QuickAccessGrid } from '@tinkermonkey/heimdall-ui'
@@ -295,7 +298,7 @@ import { QuickAccessGrid } from '@tinkermonkey/heimdall-ui'
 | Prop | Type | Default | Description |
 | ---- | ---- | ------- | ----------- |
 | `tiles` | `QuickAccessGridItem[]` | required | Tile definitions |
-| `onAction` | `(tileId: string) => void` | — | Called with the clicked tile's `id` |
+| `onAction` | `(tileId: string, event: React.MouseEvent) => void` | — | Called with the clicked tile's `id` and the click. For a tile with `href`, plain clicks only (a modifier or middle click opens a new tab instead); call `event.preventDefault()` to route client-side |
 | `columns` | `number` | `4` | Fixed grid column count |
 | `...divProps` | | | Remaining props spread onto the root `<div>` |
 
@@ -307,6 +310,7 @@ interface QuickAccessGridItem {
   icon: IconName
   title: string
   description: string
+  href?: string    // renders the tile as <a href>; onAction fires on plain clicks
 }
 ```
 
@@ -348,7 +352,7 @@ const isNarrow = useMediaQuery('(max-width: 1024px)')
 
 ## QuickAccessTile
 
-Single shortcut button with an icon tile, title, optional description, and trailing chevron.
+Single shortcut button (or link, with `href`) with an icon tile, title, optional description, and trailing chevron.
 
 ```tsx
 import { QuickAccessTile } from '@tinkermonkey/heimdall-ui'
@@ -361,7 +365,8 @@ import { QuickAccessTile } from '@tinkermonkey/heimdall-ui'
 | `icon` | `IconName` | required | Icon shown in the leading tile |
 | `title` | `string` | required | Primary label |
 | `description` | `string` | — | Secondary line below title |
-| `...buttonProps` | | | Remaining props (`onClick`, `disabled`, …) spread onto the root `<button>` |
+| `href` | `string` | — | Renders an `<a href>` with the same classes instead of a `<button>`; the remaining props are anchor props |
+| `...buttonProps` | | | Remaining props (`onClick`, `disabled`, …) spread onto the root `<button>`, or `<a>` with `href` (ref forwarded) |
 
 ### Usage
 
@@ -377,9 +382,15 @@ import { QuickAccessTile } from '@tinkermonkey/heimdall-ui'
 </div>
 ```
 
+```tsx
+// A link: works without JavaScript on a static page
+<QuickAccessTile icon="schema" title="View schema" description="Browse the full schema graph" href="/schema" />
+```
+
 ### Gotchas
 
-- Renders a native `<button type="button">`; do not wrap it in another button or link. For navigation, call the router in `onClick`.
+- Renders a native `<button type="button">`, or an `<a>` with `href`; do not wrap it in another button or link. For navigation, pass `href` (or call the router in `onClick`).
+- `disabled` is a button prop; a link tile has no disabled state.
 - The trailing chevron is always rendered and cannot be removed.
 
 ---
@@ -628,6 +639,7 @@ import { RowMenu } from '@tinkermonkey/heimdall-ui'
 | `triggerIcon` | `IconName` | `'moreVertical'` | Icon for the default trigger |
 | `triggerLabel` | `string` | `'Menu'` | `aria-label` for trigger and menu |
 | `placement` | `DropdownPlacement` | `'bottom-start'` | Panel side and edge alignment |
+| `portal` | `boolean` | `true` | Render the panel in a portal on `document.body` (`position: fixed`); `false` renders it in place |
 | `...divProps` | | | Remaining props (except `onChange`) spread onto the root `<div>` |
 
 ### Data types
@@ -671,8 +683,10 @@ type DropdownPlacement = 'bottom-start' | 'bottom-end' | 'top-start' | 'top-end'
 
 ### Gotchas
 
-- Use `placement="bottom-end"` for a kebab in the last table column so the panel opens leftward into the table instead of past the right edge.
-- The panel is absolutely positioned inside the RowMenu root (`z-index: 1000`, max height 320px, scrolls beyond). Ancestors with `overflow: hidden` or a scroll container clip it; use `top-*` placements near the bottom of a scroll area.
+- By default the panel renders in a portal on `document.body` with `position: fixed` (`z-index: 1000`, max height 320px, scrolls beyond), so a scrolling table frame or `overflow: hidden` ancestor doesn't clip it. It flips above the trigger, or to the other edge, when `placement` doesn't fit the viewport, and follows the trigger when any ancestor scrolls.
+- Because the panel is not inside `.row-menu`, CSS like `.row-menu .dropdown-panel` doesn't match it. Target `.row-menu__dropdown`, or pass `portal={false}` to render it in place (absolutely positioned inside the root, clipped by `overflow: hidden` ancestors, no flip).
+- Use `placement="bottom-end"` for a kebab in the last table column so the panel opens leftward into the table.
+- React events from the panel still bubble through the portal to React ancestors. Your own document-level outside-click handlers see the panel as outside: test with `containsAcrossPortals(container, target)` instead of `container.contains(target)`.
 - `trigger` is rendered inside the component's own `<button>`; pass an icon or text, never a `Button` (nested buttons are invalid). `triggerLabel` stays the accessible name even with a custom trigger.
 - The menu closes after any selection, on outside mousedown, and on Escape; focus returns to the trigger on close.
 - Opening focuses the first enabled item. ArrowUp/ArrowDown wrap, Tab/Shift+Tab cycle items, Home/End jump; Enter/Space activates the focused item. Disabled items are skipped by keys and hover, and cannot be clicked.

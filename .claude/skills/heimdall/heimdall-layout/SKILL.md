@@ -165,10 +165,10 @@ const [split, setSplit] = useState(65)
 ### useMediaQuery
 
 ```ts
-function useMediaQuery(query: string): boolean
+function useMediaQuery(query: string, serverValue?: boolean): boolean
 ```
 
-Returns whether `window.matchMedia(query)` currently matches, and re-renders when the match changes. Re-subscribes when `query` changes.
+Returns whether `window.matchMedia(query)` currently matches, and re-renders when the match changes. Re-subscribes when `query` changes. Server rendering and hydration see `serverValue` (default `false`).
 
 ```tsx
 import { useMediaQuery } from '@tinkermonkey/heimdall-ui'
@@ -191,5 +191,6 @@ function ClassBrowser() {
 ```
 
 - Pass a full media query string including parentheses: `'(max-width: 768px)'`, `'(prefers-color-scheme: dark)'`.
-- Without `window` (server rendering) it returns `false`, then corrects after mount. On the client the first render already reflects the real match.
+- Server rendering and hydration return `serverValue` (default `false`); the client then re-renders with the real match, so server HTML hydrates without a mismatch (it uses `useSyncExternalStore` with a server snapshot). A client-only render (`createRoot`) already reflects the real match on its first render.
+- For a layout switch that server HTML should get right before hydration, prefer a CSS `@media` rule; the hook can only correct the layout after hydration.
 - `ShellLayout`, `Topbar` and `Statusbar` use it internally for their `mobileBreakpoint` behavior.
