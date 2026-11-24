@@ -1,9 +1,9 @@
 version: 0.1.0
 schema: documentation-robotics-v1
-cli_version: 0.7.1
-spec_version: 0.13.0
+cli_version: 0.8.0
+spec_version: 0.15.0
 created: 2026-03-23T12:18:08.630Z
-updated: 2026-11-24T21:17:13.771Z
+updated: 2026-11-24T21:43:16.425Z
 project:
   name: Context Studio
   description: Local-first knowledge graph application for RAG and communication
@@ -135,6 +135,7 @@ layers:
     enabled: true
     elements:
       actioncomponent: 6
+      componentinstance: 3
       dataconfig: 145
       experiencestate: 1
       librarycomponent: 10
@@ -144,7 +145,6 @@ layers:
       uxlibrary: 1
       uxspec: 1
       view: 52
-      componentinstance: 3
   navigation:
     order: 11
     name: Navigation
@@ -245,6 +245,9 @@ changeset_history:
     action: committed
   - name: one-review-surface
     committed_at: 2026-11-24T21:17:13.771Z
+    action: committed
+  - name: restore-spec-0-14-relationships
+    committed_at: 2026-11-24T21:43:16.425Z
     action: committed
 reconciled:
   changeset: rebuild-model-from-code

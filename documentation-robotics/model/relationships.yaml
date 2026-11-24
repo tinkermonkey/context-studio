@@ -1,6 +1,6 @@
 # Intra-layer relationships
 # Format: source_id -> predicate -> target_id
-# Last updated: 2026-11-24T21:17:13.710Z
+# Last updated: 2026-11-24T21:43:16.385Z
 
 - source: motivation.meaning.knowledge-as-infrastructure
   target: motivation.value.knowledge-reusability
@@ -17537,4 +17537,16 @@
   target: ux.actioncomponent.reverse-relationship-button
   predicate: composes
   layer: ux
+  category: structural
+- source: application.applicationservice.proposal-service
+  target: data-model.objectschema.operation-draft
+  predicate: accesses
+  layer: application
+  targetLayer: data-model
+  category: structural
+- source: application.applicationservice.change-proposal-repository
+  target: data-model.objectschema.operation-count
+  predicate: accesses
+  layer: application
+  targetLayer: data-model
   category: structural

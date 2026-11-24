@@ -24,7 +24,7 @@ from pathlib import Path
 
 PINNED_DR_SPEC_VERSION = "0.8.4"
 # The spec version documentation-robotics/model/ is written for.
-MODEL_DR_SPEC_VERSION = "0.13.0"
+MODEL_DR_SPEC_VERSION = "0.15.0"
 # The spec version the DR golden fixtures were made against.
 GOLDEN_DR_SPEC_VERSION = "0.10.0"
 DR_SPEC_FIXTURE_DIR = Path(__file__).resolve().parents[2] / "fixtures" / "dr_spec"

@@ -1,0 +1,15 @@
+id: changeset-1795556560289-8jjsjrxj0
+name: restore-spec-0-14-relationships
+description: "Re-add the two relationships #1738 removed (drop-spec-0-14-only-relationships) because the model's spec 0.13.0 didn't allow an application service to access an object schema: proposal-service accesses operation-draft, and change-proposal-repository accesses operation-count. The model is now on spec 0.15.0, which allows them. Done when both are in the base model and test_dr_model_import passes against the 0.15.0 snapshot."
+created: 2026-11-24T21:42:40.306Z
+modified: 2026-11-24T21:43:16.424Z
+status: committed
+baseSnapshot: v2:sha256:3eac940f010fd31edea63a62c0ceba5a125e3a9562dd320f539c33fbfad9af0f
+origin:
+  kind: plan
+purpose: plan
+stats:
+  additions: 2
+  modifications: 0
+  deletions: 0
+lastSequence: 1
