@@ -1,2 +1,5 @@
 # Git hooks run from the repo root (context-studio); the npm package lives in ux/.
-cd ux && npx lint-staged
+# --no-stash: the only task (validate-selectors) rewrites nothing, so there is nothing to
+# back up, and lint-staged's default backup goes through the git stash, which every
+# worktree and session shares.
+cd ux && npx lint-staged --no-stash
