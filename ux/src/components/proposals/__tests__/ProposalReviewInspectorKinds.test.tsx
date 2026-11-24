@@ -97,6 +97,25 @@ const applied = createProposedOperation({
   fields: { title: "Part" },
   status: "applied",
 });
+const reorder = createProposedOperation({
+  id: "op-reorder",
+  seq: 7,
+  op: "update",
+  kind: "individual",
+  target_id: "ind-1",
+  base: { title: "LLM Provider Router", class_ids: ["class-1", "class-2"] },
+  fields: { class_ids: ["class-2", "class-1"] },
+});
+const move = createProposedOperation({
+  id: "op-move",
+  seq: 8,
+  op: "move",
+  kind: "class",
+  target_id: "class-2",
+  base: { parent_class_id: null },
+  fields: { parent_class_id: "class-1" },
+  rationale: "A service sits under the component that exposes it.",
+});
 
 let proposal: ChangeProposal;
 let applies: ChangeProposalApplyRequest[];
@@ -111,7 +130,7 @@ beforeEach(() => {
     source: "mcp",
     source_detail: "dr-cli",
     status: "open",
-    operations: structuredClone([update, retype, stale, failed, removal, applied]),
+    operations: structuredClone([update, retype, stale, failed, removal, applied, reorder, move]),
   });
   applies = [];
   rejects = [];
@@ -200,6 +219,18 @@ describe("an update in the review inspector", () => {
     );
   });
 
+  it("reads a list whose items only moved as was → now, labelled Reordered", async () => {
+    renderPage("op-reorder");
+    const row = await screen.findByTestId("review-diff-row-class_ids");
+    expect(within(row).getByTestId("review-diff-reordered-class_ids")).toHaveTextContent(
+      "Reordered",
+    );
+    expect(within(row).queryByTestId("review-diff-added-class_ids")).not.toBeInTheDocument();
+    expect(within(row).queryByTestId("review-diff-removed-class_ids")).not.toBeInTheDocument();
+    expect(row.querySelector(".review-diff__was")).not.toBeEmptyDOMElement();
+    expect(row.querySelector(".review-diff__now")).not.toBeEmptyDOMElement();
+  });
+
   it("is accepted with Accept, and rejected with the reasons that fit an update", async () => {
     const user = userEvent.setup();
     renderPage("op-update");
@@ -239,12 +270,53 @@ describe("stale and failed operations", () => {
     expect(screen.getByTestId("review-reason-outdated")).toHaveFocus();
   });
 
+  it("applies a stale one with force_stale once Apply anyway is confirmed", async () => {
+    const user = userEvent.setup();
+    renderPage("op-stale");
+    await user.click(await screen.findByTestId("review-correct"));
+    const dialog = await screen.findByRole("dialog");
+    expect(within(dialog).getByTestId("proposal-force-message")).toHaveTextContent(
+      "description changed since it was proposed.",
+    );
+    // Nothing is sent before the confirmation.
+    expect(applies).toHaveLength(0);
+    await user.click(within(dialog).getByRole("button", { name: "Apply anyway" }));
+    await waitFor(() => expect(applies).toHaveLength(1));
+    expect(applies[0]).toMatchObject({ operation_ids: ["op-stale"], force_stale: ["op-stale"] });
+  });
+
   it("offers Apply again for a failed one, with the failure", async () => {
     renderPage("op-failed");
     expect(await screen.findByTestId("review-failed")).toHaveTextContent(
       "The last apply failed: conflict: the identifier is taken",
     );
     expect(screen.getByTestId("review-correct")).toHaveTextContent("Apply again");
+  });
+
+  it("applies a failed one again on Apply again, with no force", async () => {
+    const user = userEvent.setup();
+    renderPage("op-failed");
+    await user.click(await screen.findByTestId("review-correct"));
+    await waitFor(() => expect(applies).toHaveLength(1));
+    expect(applies[0]).toMatchObject({ operation_ids: ["op-failed"], force_stale: [] });
+  });
+});
+
+describe("a class move", () => {
+  it("reads as the parent it had and the one it moves under, and is accepted", async () => {
+    const user = userEvent.setup();
+    renderPage("op-move");
+    const row = await screen.findByTestId("review-diff-row-parent_class_id");
+    await waitFor(() =>
+      expect(row.querySelector(".review-diff__now")).toHaveTextContent("application.component"),
+    );
+    expect(screen.getByTestId("review-why-rationale")).toHaveTextContent(
+      "A service sits under the component that exposes it.",
+    );
+    expect(screen.getByTestId("review-correct")).toHaveTextContent(/^Accept$/);
+    await user.click(screen.getByTestId("review-correct"));
+    await waitFor(() => expect(applies).toHaveLength(1));
+    expect(applies[0]).toMatchObject({ operation_ids: ["op-move"], force_stale: [] });
   });
 });
 

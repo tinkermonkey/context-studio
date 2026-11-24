@@ -47,6 +47,13 @@ function itemKey(item: unknown): string {
   return typeof item === "string" ? item : JSON.stringify(item);
 }
 
+/** Whether a list change gains or loses an item; false when its items were only reordered. */
+function listGainsOrLoses(before: unknown[] | undefined, after: unknown[] | undefined): boolean {
+  const was = new Set((before ?? []).map(itemKey));
+  const now = new Set((after ?? []).map(itemKey));
+  return [...now].some((key) => !was.has(key)) || [...was].some((key) => !now.has(key));
+}
+
 interface ValueProps {
   field: string;
   value: unknown;
@@ -225,7 +232,7 @@ function ChangeRowView({
     body = <div className="review-diff__was">{value(row.before)}</div>;
   } else if (words && marksWords) {
     body = <WordDiff segments={words} label={label} field={row.field} />;
-  } else if (before || after) {
+  } else if ((before || after) && listGainsOrLoses(before, after)) {
     // A list: what it gains and what it loses, by item.
     const kept = new Set((before ?? []).map(itemKey));
     const now = new Set((after ?? []).map(itemKey));
@@ -248,8 +255,14 @@ function ChangeRowView({
       </div>
     );
   } else {
+    // A single value, or a list whose items only moved: was → now.
     body = (
       <>
+        {(before || after) && (before?.length ?? 0) === (after?.length ?? 0) && (
+          <span className="review-muted" data-testid={`review-diff-reordered-${row.field}`}>
+            Reordered
+          </span>
+        )}
         <div className="review-diff__was">{value(row.before)}</div>
         <div className="review-diff__now">{value(row.after)}</div>
       </>

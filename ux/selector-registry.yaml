@@ -3339,7 +3339,7 @@ selectors:
     description: 'The change rows (dl.review-diff); "No field changes recorded." when there are none'
   - selector: review-diff-*
     component: src/components/proposals/review/ReviewChange.tsx
-    description: "review-diff-row-{field}: one field (data-op), its was (.review-diff__was, struck on an update) and now (.review-diff__now); review-diff-text-{field}: a long text change as one inline word diff (p.review-word-diff, del/ins, a folded run .review-word-diff__folded); review-diff-added-{field} / review-diff-removed-{field}: what a list gains and loses; review-diff-unchanged: how many other fields stay as they are"
+    description: "review-diff-row-{field}: one field (data-op), its was (.review-diff__was, struck on an update) and now (.review-diff__now); review-diff-text-{field}: a long text change as one inline word diff (p.review-word-diff, del/ins, a folded run .review-word-diff__folded); review-diff-added-{field} / review-diff-removed-{field}: what a list gains and loses; review-diff-reordered-{field}: \"Reordered\" over a was → now, for a list whose items only moved; review-diff-unchanged: how many other fields stay as they are"
   - selector: review-quote-*
     component: src/components/proposals/review/ReviewChange.tsx
     description: "A sourceless operation's evidence (1-based): a figure with the quote (a plain blockquote) and its caption (claim, entity, url)"
