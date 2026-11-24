@@ -8,7 +8,7 @@ A local-first workbench for designing and curating an ontology: the taxonomies, 
 
 ## Quick start
 
-You need Python 3.11 or later, Node.js 24, and an API key for Anthropic, OpenAI or OpenRouter.
+You need Python 3.14, Node.js 24, and an API key for Anthropic, OpenAI or OpenRouter.
 
 1. **Install the back end.**
 
@@ -18,6 +18,8 @@ You need Python 3.11 or later, Node.js 24, and an API key for Anthropic, OpenAI 
    .venv/bin/pip install -r requirements.txt
    cp config.example.json config.json
    ```
+
+   The back end runs on Python 3.14 everywhere: the venv, CI (`unit-and-frontend-checks.yml`, `pipeline-quality-tests.yml`), `Dockerfile.agent`, and the mypy and black settings. `local-server/.python-version` says so for pyenv and uv, so `python -m venv` needs a 3.14 interpreter (or `uv venv`, which reads that file). The packaged app will ship its own interpreter, so end users never choose one.
 
    Put your key in `config.json` under `llm`: `anthropic_api_key`, `openai_api_key` or `openrouter_api_key`. The file holds secrets, so git ignores it.
 

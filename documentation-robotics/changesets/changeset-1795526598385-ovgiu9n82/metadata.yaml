@@ -1,0 +1,17 @@
+id: changeset-1795526598385-ovgiu9n82
+name: python-314-everywhere
+description: "#1648 (Python half): Python 3.14 is the one version for the venv,
+  mypy, black, both CI workflows and Dockerfile.agent, written next to the setup
+  steps and in local-server/.python-version. Owner decision 2026-11-20."
+created: 2026-11-24T13:23:18.395Z
+modified: 2026-11-24T13:23:21.061Z
+status: staged
+baseSnapshot: v2:sha256:53252d39ed1357a9afdd6132507b497bf81313353af91142ccb6b590b147594c
+origin:
+  kind: plan
+purpose: plan
+stats:
+  additions: 0
+  modifications: 2
+  deletions: 0
+lastSequence: 1

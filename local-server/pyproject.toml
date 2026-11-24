@@ -13,4 +13,4 @@ include = ["domain*", "adapters*", "utils*"]
 [tool.black]
 line-length = 100
 preview = true
-target-version = ['py311']
+target-version = ['py313']

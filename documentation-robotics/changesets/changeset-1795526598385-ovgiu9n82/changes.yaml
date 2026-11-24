@@ -1,0 +1,74 @@
+- type: update
+  elementId: motivation.constraint.python-and-nodejs-runtime-versions
+  layerName: motivation
+  before:
+    id: 64ebaa6e-4fd0-4aab-a712-01fdee16601f
+    path: motivation.constraint.python-and-nodejs-runtime-versions
+    spec_node_id: motivation.constraint
+    type: constraint
+    layer_id: motivation
+    name: Python and Node.js Runtime Versions
+    description: The back end runs on Python 3.11 or later; the front-end toolchain
+      needs Node.js 24.
+    attributes: &a1
+      constraintType: technical
+    source_reference: &a2
+      provenance: manual
+      locations:
+        - file: README.md
+    metadata: &a3
+      created_at: 2026-11-19T16:14:23.186Z
+      updated_at: 2026-11-19T16:14:23.186Z
+      version: 1
+  after:
+    id: 64ebaa6e-4fd0-4aab-a712-01fdee16601f
+    path: motivation.constraint.python-and-nodejs-runtime-versions
+    spec_node_id: motivation.constraint
+    type: constraint
+    layer_id: motivation
+    name: Python and Node.js Runtime Versions
+    description: The back end runs on Python 3.14 everywhere (venv, mypy, black, CI,
+      Dockerfile.agent; local-server/.python-version); the front-end toolchain
+      needs Node.js 24. The packaged desktop app ships its own interpreter, so
+      users never choose a Python.
+    attributes: *a1
+    source_reference: *a2
+    metadata: *a3
+  timestamp: 2026-11-24T13:23:21.051Z
+  sequenceNumber: 0
+- type: update
+  elementId: technology.systemsoftware.python
+  layerName: technology
+  before:
+    id: d3a2f657-63bd-400d-a680-0210c78741d1
+    path: technology.systemsoftware.python
+    spec_node_id: technology.systemsoftware
+    type: systemsoftware
+    layer_id: technology
+    name: Python
+    description: Primary backend runtime for local-server — all domain services,
+      adapters, and API routes are implemented in Python 3.x
+    attributes: &a4
+      softwareType: middleware
+    source_reference: &a5
+      provenance: extracted
+      locations:
+        - file: local-server/requirements.txt
+    metadata: &a6
+      created_at: 2026-05-07T22:14:21.881Z
+      updated_at: 2026-05-07T22:14:21.882Z
+      version: 1
+  after:
+    id: d3a2f657-63bd-400d-a680-0210c78741d1
+    path: technology.systemsoftware.python
+    spec_node_id: technology.systemsoftware
+    type: systemsoftware
+    layer_id: technology
+    name: Python
+    description: Primary backend runtime for local-server — all domain services,
+      adapters, and API routes are implemented in Python 3.14.
+    attributes: *a4
+    source_reference: *a5
+    metadata: *a6
+  timestamp: 2026-11-24T13:23:21.060Z
+  sequenceNumber: 1

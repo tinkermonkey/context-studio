@@ -29,7 +29,7 @@ FROM switchyard-orchestrator:latest
 # - Claude CLI (REQUIRED - must be present)
 # - Git CLI (REQUIRED - must be present)
 # - GitHub CLI (REQUIRED - must be present)
-# - Python 3.11
+# - Python 3.11 (not used: stage 2 puts Python 3.14 first on PATH)
 # - Essential build tools
 # - procps package (provides 'ps' command needed by Claude CLI)
 
@@ -47,6 +47,18 @@ RUN apt-get update && \
     apt-get install -y nodejs && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
+
+# Python 3.14, the version the project runs on (local-server/.python-version, mypy, black, CI).
+# The base image's Python is 3.11, so uv installs 3.14 into a virtualenv that comes first
+# on PATH: python, python3 and pip below, and in the container, are the 3.14 ones.
+# The interpreter lives under UV_PYTHON_INSTALL_DIR, not in root's home (uv's default), so the
+# orchestrator user can run it; the venv's python is a symlink into that directory.
+ENV UV_PYTHON_INSTALL_DIR=/opt/uv-python
+COPY --from=ghcr.io/astral-sh/uv:0.13.7 /uv /usr/local/bin/uv
+RUN uv venv --seed --managed-python --python 3.14 /opt/python314 && \
+    chmod -R a+rX /opt/uv-python /opt/python314
+ENV PATH=/opt/python314/bin:$PATH
+ENV VIRTUAL_ENV=/opt/python314
 
 # Install system dependencies for SQLite extensions, Python packages, and Tauri
 RUN apt-get update && apt-get install -y \
@@ -82,7 +94,7 @@ RUN groupadd -g 1000 orchestrator || true && \
 WORKDIR /workspace/context-studio
 
 # --- Python Dependencies (local-server/) ---
-# pip installs system-wide as root
+# pip installs into the Python 3.14 virtualenv at /opt/python314, as root
 COPY local-server/requirements.txt ./local-server/requirements.txt
 COPY local-server/requirements-dev.txt ./local-server/requirements-dev.txt
 
@@ -155,7 +167,7 @@ RUN claude --version && \
 # Verify project-specific tools
 RUN node --version && \
     npm --version && \
-    python3 --version && \
+    python3 --version | grep -q "Python 3.14" && \
     pip --version && \
     ruff --version
 
