@@ -27,6 +27,7 @@ from domain.versioning.proposals import (
     OperationKind,
     OperationStatus,
     OperationType,
+    ProposalFilter,
     ProposalSource,
     ProposalStatus,
 )
@@ -301,7 +302,7 @@ class TestPropose:
             8: "invalid",
             9: "invalid",
         }
-        assert proposals.count_proposals() == 0
+        assert proposals.count_proposals(ProposalFilter()) == 0
 
     def test_refs_point_backwards_at_creates_of_the_right_kind(self, service, graph):
         proposal = propose(
