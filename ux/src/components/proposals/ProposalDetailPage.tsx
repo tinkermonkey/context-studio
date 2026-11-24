@@ -25,7 +25,8 @@ import { ApplyResults } from "./ApplyResults";
 import { OperationDiff, operationTitle } from "./OperationDiff";
 import { RejectReasonPicker } from "./RejectReasonPicker";
 import { RevertConflict } from "./RevertConflict";
-import { RevertProposalDialog } from "./RevertProposalDialog";
+import { RevertControl } from "./RevertControl";
+import { reversalChips } from "./reversalModel";
 import {
   DEFAULT_THRESHOLD,
   decidedByLabel,
@@ -43,13 +44,11 @@ import {
   hasProbabilities,
   isBlocked,
   progressPills,
-  revertSummary,
   staleCause,
   staleCauseText,
   takesDecisions,
   type Facets,
   type OperationFilter,
-  type RevertSummary,
 } from "./decisionModel";
 import {
   PROPOSAL_STATUS_VARIANT,
@@ -124,25 +123,6 @@ function scopeMixLabel(operations: ProposedOperation[]): string {
     .filter(([, count]) => count > 0)
     .map(([scope, count]) => `${count} ${scope}`)
     .join(" · ");
-}
-
-function revertMessage(summary: RevertSummary): string {
-  const parts = [
-    summary.created > 0 && `${summary.created} created removed`,
-    summary.updated > 0 &&
-      `${summary.updated} updated changed back${summary.edited > 0 ? ` (${summary.edited} edited)` : ""}`,
-    summary.deleted > 0 && `${summary.deleted} deleted restored`,
-    summary.relationships > 0 &&
-      `the ${summary.relationships} relationship${summary.relationships === 1 ? "" : "s"} moved or deleted with a type restored on it`,
-  ].filter(Boolean);
-  const open =
-    summary.open > 0
-      ? ` The ${summary.open} operation${summary.open === 1 ? "" : "s"} still awaiting a decision ${summary.open === 1 ? "is" : "are"} rejected.`
-      : "";
-  return (
-    `Undoes the ${summary.applied} operation${summary.applied === 1 ? "" : "s"} this proposal applied, in one transaction: ${parts.join(", ")}.` +
-    `${open} The proposal becomes reverted and read-only, and its decisions can no longer be exported.`
-  );
 }
 
 /** Where focus goes after a fold (the rail's expand button) and an unfold (the pane's ‹). */
@@ -813,6 +793,23 @@ export function ProposalDetailPage({
                 </ProposalLink>
               </span>
             ))}
+          {reversalChips(proposal).map(({ link, label, variant, count }) => (
+            <span
+              key={`${link.kind}-${link.proposal_id}`}
+              className="proposal-summary__link"
+              data-testid={`proposal-reversal-${link.kind}`}
+            >
+              <Chip variant={variant}>{label}</Chip>
+              <ProposalLink proposalId={link.proposal_id}>
+                {link.title || link.proposal_id.slice(0, 8)}
+              </ProposalLink>
+              {count && (
+                <span className="proposal-summary__count" data-testid="proposal-reversal-count">
+                  {count}
+                </span>
+              )}
+            </span>
+          ))}
           <div className="proposal-summary__progress">
             <span className="proposal-summary__tally" data-testid="proposal-tally">
               {decisionHeadline(progress)}
@@ -845,17 +842,13 @@ export function ProposalDetailPage({
                   <Icon name="download" size={13} /> Export decisions
                 </Button>
               )}
-              {progress.applied > 0 && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  disabled={actions.busy}
-                  onClick={() => setConfirmRevert(true)}
-                  data-testid="proposal-revert"
-                >
-                  <Icon name="reload" size={13} /> Revert proposal
-                </Button>
-              )}
+              <RevertControl
+                proposal={proposal}
+                busy={actions.busy}
+                confirming={confirmRevert}
+                onConfirmingChange={setConfirmRevert}
+                onRevert={() => void actions.revertProposal()}
+              />
             </span>
           )}
         </div>
@@ -1276,17 +1269,6 @@ export function ProposalDetailPage({
           </div>
         }
         confirmLabel={`Reject ${rejecting?.ids.length ?? 0}`}
-      />
-
-      <RevertProposalDialog
-        proposalId={proposal.id}
-        isOpen={confirmRevert}
-        summary={revertMessage(revertSummary(proposal))}
-        onClose={() => setConfirmRevert(false)}
-        onConfirm={() => {
-          setConfirmRevert(false);
-          void actions.revertProposal();
-        }}
       />
     </div>
   );

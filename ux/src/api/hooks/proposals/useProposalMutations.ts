@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient, type QueryClient } from "@tanstack/react-query";
-import { isTimeout } from "@/api/client/interceptors";
+import { ApiError, isTimeout } from "@/api/client/interceptors";
 import { QUERY_KEYS } from "@/api/config";
 import {
   proposalsService,
@@ -132,7 +132,9 @@ export function useRevertChangeProposal() {
 /**
  * Propose the reversal of a landed proposal (#1667). It makes a proposal and
  * links it to the original, so the proposals refresh; the ontology changes only
- * when the reversal is applied. The page explains a refused (409) one itself.
+ * when the reversal is applied. The page explains a refused (409) one itself;
+ * a refusal means the proposal changed elsewhere (a reversal opened, say), so it
+ * is fetched again and the page shows why.
  */
 export function useProposeReversal() {
   const queryClient = useQueryClient();
@@ -142,6 +144,11 @@ export function useProposeReversal() {
     onSuccess: (reversal) => {
       queryClient.setQueryData(QUERY_KEYS.changeProposal(reversal.id), reversal);
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.changeProposalsRoot });
+    },
+    onError: (error, id) => {
+      if (error instanceof ApiError && error.status === 409) {
+        queryClient.invalidateQueries({ queryKey: QUERY_KEYS.changeProposal(id) });
+      }
     },
   });
 }

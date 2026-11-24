@@ -16,7 +16,7 @@ from fastapi.responses import JSONResponse, StreamingResponse
 
 from adapters.interchange.dr_decisions import decisions_for
 from adapters.persistence.sqlite.transaction import TransactionAbortedError
-from adapters.serialization.views import proposal_response
+from adapters.serialization.views import proposal_links, proposal_response
 from adapters.web.dependencies import get_approval_policy_service, get_proposal_service
 from adapters.web.schemas.ontology import ListResponse
 from adapters.web.schemas.proposals import (
@@ -209,7 +209,11 @@ async def list_proposals(
         )
         if summary:
             tallies = service.operation_tallies([p.id for p in proposals])
-            items = [proposal_summary(p, tallies.get(p.id, [])) for p in proposals]
+            # With their links, so the list can say "reversal open" (#1668)
+            items = [
+                proposal_summary(p, tallies.get(p.id, []), proposal_links(service, p.id))
+                for p in proposals
+            ]
         else:
             # A list needs no type usage: only the review page's picks read it.
             items = [proposal_response(service, p, with_usage=False) for p in proposals]

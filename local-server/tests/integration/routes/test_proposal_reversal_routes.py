@@ -270,6 +270,18 @@ class TestOneOpenReversal:
         assert (to_reversal["kind"], to_reversal["proposal_id"]) == ("reversed_by", reversal["id"])
         assert to_reversal["status"] == "open"
 
+    def test_the_lists_summary_form_carries_the_links(self, client, graph):
+        original = _landed(client, graph, _describe(graph["room"], "Where people sit"))
+        reversal = _reverse(client, original["id"]).json()
+
+        items = client.get("/api/proposals", params={"fields": "summary"}).json()["items"]
+
+        links = {p["id"]: [(link["kind"], link["status"]) for link in p["links"]] for p in items}
+        assert links == {
+            original["id"]: [("reversed_by", "open")],
+            reversal["id"]: [("reverses", "done")],
+        }
+
 
 class TestMarkingTheOriginalReversed:
     def test_a_partial_reversal_marks_it_reversed_and_counts_what_was_undone(

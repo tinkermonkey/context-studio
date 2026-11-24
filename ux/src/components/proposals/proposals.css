@@ -149,6 +149,11 @@
     font-size: 13px;
   }
 
+  .proposal-summary__count {
+    color: rgb(var(--canvas-fg-3));
+    white-space: nowrap;
+  }
+
   .proposal-group-by {
     display: inline-flex;
     gap: 8px;

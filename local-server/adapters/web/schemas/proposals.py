@@ -887,7 +887,8 @@ class ChangeProposalResponse(BaseModel):
     links: list[ProposalLinkResponse] = Field(
         default_factory=list,
         description="Its links to other proposals (supersedes, superseded_by, reverses, "
-        "reversed_by), oldest first; empty in a list's summary form",
+        "reversed_by), oldest first; in a list's summary form too, so the list can say a "
+        "reversal is open",
     )
     counts: list[OperationCountResponse] = Field(
         ...,
@@ -987,9 +988,14 @@ class ChangeProposalResponse(BaseModel):
 
 
 def proposal_summary(
-    proposal: ChangeProposal, counts: list[OperationCount]
+    proposal: ChangeProposal,
+    counts: list[OperationCount],
+    links: Collection[ProposalLinkResponse] = (),
 ) -> ChangeProposalResponse:
-    """A list's summary form of a proposal: everything but its operations, and their counts."""
+    """
+    A list's summary form of a proposal: everything but its operations, with their
+    counts and its links to other proposals.
+    """
     return ChangeProposalResponse(
         id=proposal.id,
         taxonomy_id=proposal.taxonomy_id,
@@ -1007,6 +1013,7 @@ def proposal_summary(
         review_only=proposal.review_only,
         operations=[],
         counts=[OperationCountResponse.from_domain(c) for c in counts],
+        links=list(links),
     )
 
 

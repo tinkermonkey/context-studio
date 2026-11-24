@@ -13,6 +13,7 @@ import { useTaxonomies } from "@/api/hooks/ontology/useTaxonomies";
 import { SMALL_SET_LIMIT } from "@/api/config";
 import type { ChangeProposal } from "@/api/services/proposals";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
+import { pendingReversal, reversalChips, type ReversalChip } from "./reversalModel";
 import { ProposalLink } from "./ProposalLink";
 import { ProposalOriginChip, type ProposalOrigin } from "./ProposalOrigin";
 import {
@@ -56,6 +57,8 @@ interface ProposalRow {
   source: ChangeProposal["source"];
   status: ChangeProposal["status"];
   landed: boolean;
+  /** Its reversal under way: "reversal open", or decided and "reversal not landed". */
+  reversal?: ReversalChip;
   tally: OperationTally;
   scope?: ChangeScope;
   age: string;
@@ -109,6 +112,11 @@ const columns: Column<ProposalRow>[] = [
         {row.landed && (
           <Chip variant="cyan" data-testid={`proposal-landed-${row.id}`}>
             landed
+          </Chip>
+        )}
+        {row.reversal && (
+          <Chip variant={row.reversal.variant} data-testid={`proposals-list-reversal-${row.id}`}>
+            {row.reversal.label}
           </Chip>
         )}
       </div>
@@ -194,6 +202,7 @@ export function ProposalsListPage({ status, taxonomyId, onFiltersChange }: Propo
       source: p.source,
       status: p.status,
       landed: !!p.landed,
+      reversal: reversalChips(p).find((chip) => chip.link === pendingReversal(p)),
       tally: tallyOperations(p.counts),
       scope: strictestScope(p.counts),
       age: formatAge(p.created_at, now),
