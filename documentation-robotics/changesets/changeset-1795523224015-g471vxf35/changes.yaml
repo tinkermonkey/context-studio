@@ -1,0 +1,227 @@
+- type: add
+  elementId: motivation.requirement.contexts-depend-on-each-other-only-through-public-contracts
+  layerName: motivation
+  after:
+    id: f8d11f62-4047-47ae-aaeb-62dcec284c7a
+    path: motivation.requirement.contexts-depend-on-each-other-only-through-public-contracts
+    spec_node_id: motivation.requirement
+    type: requirement
+    layer_id: motivation
+    name: Contexts depend on each other only through public contracts
+    description: A bounded context may depend on another context's ports, entities,
+      value objects, exceptions, public functions and the public methods of its
+      application service, which is injected at the composition root and never
+      constructed. It never touches another context's adapters or private (_)
+      members, and never shares state through ambient globals.
+      scripts/check_domain_imports.py checks it (#1633).
+    attributes:
+      requirementType: non-functional
+      priority: high
+    metadata:
+      created_at: 2026-11-24T12:27:23.116Z
+      updated_at: 2026-11-24T12:27:23.116Z
+      version: 1
+  timestamp: 2026-11-24T12:27:23.164Z
+  sequenceNumber: 0
+- type: add
+  elementId: application.applicationfunction.domain-import-check
+  layerName: application
+  after:
+    id: 606dd263-18a3-481f-bafe-263edcad6526
+    path: application.applicationfunction.domain-import-check
+    spec_node_id: application.applicationfunction
+    type: applicationfunction
+    layer_id: application
+    name: Domain import check
+    description: "scripts/check_domain_imports.py: fails when domain/ imports
+      infrastructure, imports another context's private names or modules, or
+      constructs another context's application service."
+    metadata:
+      created_at: 2026-11-24T12:27:23.131Z
+      updated_at: 2026-11-24T12:27:23.131Z
+      version: 1
+    source_reference:
+      provenance: manual
+      locations:
+        - file: local-server/scripts/check_domain_imports.py
+          symbol: check_domain_imports
+  timestamp: 2026-11-24T12:33:54.905Z
+  sequenceNumber: 1
+- type: add
+  elementId: data-model.objectschema.operation-draft
+  layerName: data-model
+  after:
+    id: 8674784b-2f54-4820-81ee-5b233117eb4e
+    path: data-model.objectschema.operation-draft
+    spec_node_id: data-model.objectschema
+    type: objectschema
+    layer_id: data-model
+    name: Operation Draft
+    description: One operation a pipeline or client drafts for a change proposal,
+      before ProposalService validates and stores it. A value object of the
+      versioning context (domain/versioning/proposals.py), so other contexts
+      import it without the service module.
+    attributes:
+      type: object
+    metadata:
+      created_at: 2026-11-24T12:27:23.133Z
+      updated_at: 2026-11-24T12:27:23.133Z
+      version: 1
+    source_reference:
+      provenance: manual
+      locations:
+        - file: local-server/domain/versioning/proposals.py
+          symbol: OperationDraft
+  timestamp: 2026-11-24T12:33:54.905Z
+  sequenceNumber: 2
+- type: relationship-add
+  elementId: application.applicationfunction.domain-import-check::satisfies::motivation.requirement.contexts-depend-on-each-other-only-through-public-contracts
+  layerName: application
+  after:
+    source: application.applicationfunction.domain-import-check
+    target: motivation.requirement.contexts-depend-on-each-other-only-through-public-contracts
+    predicate: satisfies
+    layer: application
+    targetLayer: motivation
+    category: structural
+  timestamp: 2026-11-24T12:27:23.164Z
+  sequenceNumber: 3
+- type: relationship-add
+  elementId: application.applicationservice.extraction-service::satisfies::motivation.requirement.contexts-depend-on-each-other-only-through-public-contracts
+  layerName: application
+  after:
+    source: application.applicationservice.extraction-service
+    target: motivation.requirement.contexts-depend-on-each-other-only-through-public-contracts
+    predicate: satisfies
+    layer: application
+    targetLayer: motivation
+    category: structural
+  timestamp: 2026-11-24T12:27:23.164Z
+  sequenceNumber: 4
+- type: relationship-add
+  elementId: application.applicationservice.proposal-service::accesses::data-model.objectschema.operation-draft
+  layerName: application
+  after:
+    source: application.applicationservice.proposal-service
+    target: data-model.objectschema.operation-draft
+    predicate: accesses
+    layer: application
+    targetLayer: data-model
+    category: structural
+  timestamp: 2026-11-24T12:27:23.164Z
+  sequenceNumber: 5
+- type: relationship-add
+  elementId: data-model.objectschema.operation-draft::satisfies::motivation.requirement.contexts-depend-on-each-other-only-through-public-contracts
+  layerName: data-model
+  after:
+    source: data-model.objectschema.operation-draft
+    target: motivation.requirement.contexts-depend-on-each-other-only-through-public-contracts
+    predicate: satisfies
+    layer: data-model
+    targetLayer: motivation
+    category: structural
+  timestamp: 2026-11-24T12:27:23.164Z
+  sequenceNumber: 6
+- type: update
+  elementId: application.applicationevent.extraction-completed-event
+  layerName: application
+  before:
+    id: edaeeb0e-55a9-4edb-a60e-a9bc0e659074
+    path: application.applicationevent.extraction-completed-event
+    spec_node_id: application.applicationevent
+    type: applicationevent
+    layer_id: application
+    name: Extraction Completed Event
+    description: Domain event fired when an entity extraction pipeline run completes
+      successfully
+    attributes: &a1
+      eventType: domain
+    source_reference: &a2
+      provenance: extracted
+      locations:
+        - file: local-server/domain/extraction/events.py
+          symbol: ExtractionCompleted
+    metadata: &a3
+      created_at: 2026-05-11T12:03:20.400Z
+      updated_at: 2026-05-11T12:03:20.400Z
+      version: 1
+  after:
+    id: edaeeb0e-55a9-4edb-a60e-a9bc0e659074
+    path: application.applicationevent.extraction-completed-event
+    spec_node_id: application.applicationevent
+    type: applicationevent
+    layer_id: application
+    name: Extraction Completed Event
+    description: Domain event fired when an entity extraction pipeline run completes
+      successfully. Carries the run's batch_run_id explicitly, so the change
+      event recorder tags the change with it without an ambient context.
+    attributes: *a1
+    source_reference: *a2
+    metadata: *a3
+  timestamp: 2026-11-24T12:27:35.171Z
+  sequenceNumber: 7
+- type: update
+  elementId: application.applicationservice.import-run-service
+  layerName: application
+  before:
+    id: 19cdad5a-54a8-4359-bf8a-0ce209cfddc5
+    path: application.applicationservice.import-run-service
+    spec_node_id: application.applicationservice
+    type: applicationservice
+    layer_id: application
+    name: Import Run Service
+    description: Domain service managing import run lifecycle for SKOS/OWL/GraphML
+      interchange — creates runs in PENDING state, transitions them to
+      COMMITTED/FAILED/ROLLED_BACK, and manages correlation context for change
+      event linkage
+    attributes: &a4
+      serviceType: synchronous
+    source_reference: &a5
+      provenance: extracted
+      locations:
+        - file: local-server/domain/interchange/services.py
+          symbol: ImportRunService
+    metadata: &a6
+      created_at: 2026-05-07T22:15:19.737Z
+      updated_at: 2026-05-07T22:15:19.737Z
+      version: 1
+  after:
+    id: 19cdad5a-54a8-4359-bf8a-0ce209cfddc5
+    path: application.applicationservice.import-run-service
+    spec_node_id: application.applicationservice
+    type: applicationservice
+    layer_id: application
+    name: Import Run Service
+    description: Domain service managing import run lifecycle for SKOS/OWL/GraphML
+      interchange — creates runs in PENDING state and transitions them to
+      COMMITTED/FAILED/ROLLED_BACK. The batch-run correlation context it owns is
+      set with set_batch_run_context (the backward-compatible
+      set_import_run_context is gone).
+    attributes: *a4
+    source_reference: *a5
+    metadata: *a6
+  timestamp: 2026-11-24T12:27:35.184Z
+  sequenceNumber: 8
+- type: relationship-add
+  elementId: motivation.requirement.contexts-depend-on-each-other-only-through-public-contracts::realizes::motivation.principle.hexagonal-domain-purity
+  layerName: motivation
+  after:
+    source: motivation.requirement.contexts-depend-on-each-other-only-through-public-contracts
+    target: motivation.principle.hexagonal-domain-purity
+    predicate: realizes
+    layer: motivation
+    category: structural
+  timestamp: 2026-11-24T12:27:41.558Z
+  sequenceNumber: 9
+- type: relationship-add
+  elementId: application.applicationservice.import-run-service::satisfies::motivation.requirement.contexts-depend-on-each-other-only-through-public-contracts
+  layerName: application
+  after:
+    source: application.applicationservice.import-run-service
+    target: motivation.requirement.contexts-depend-on-each-other-only-through-public-contracts
+    predicate: satisfies
+    layer: application
+    targetLayer: motivation
+    category: structural
+  timestamp: 2026-11-24T12:27:47.431Z
+  sequenceNumber: 10

@@ -24,8 +24,7 @@ from typing import Any
 
 from domain.decision.value_objects import NONE_OPTION
 from domain.ontology.entities import PropertyDefinition
-from domain.versioning.proposal_service import OperationDraft
-from domain.versioning.proposals import ChangeScope, OperationKind, OperationType
+from domain.versioning.proposals import ChangeScope, OperationDraft, OperationKind, OperationType
 
 from .plan import BREAKING_KINDS, CONFLICT, PlannedChange
 from .questions import (

@@ -80,6 +80,7 @@ from .ports import (
 from .relationship_fit import RelationshipFit
 from .snapshots import entity_snapshot
 from .value_objects import (
+    STRUCTURE_FIELDS,
     ClassCounts,
     DataPropertyValue,
     DatasetDeletion,
@@ -133,10 +134,6 @@ def _property_event_values(prop_def: PropertyDefinition) -> dict[str, object]:
         **{name: getattr(prop_def, name) for name in STRUCTURE_FIELDS},
         "external_references": _serialize_external_references(prop_def.external_references),
     }
-
-
-# A relationship type's structure (see PropertyDefinition): cardinality, hierarchy, symmetric
-STRUCTURE_FIELDS = ("min_per_source", "max_per_source", "max_per_target", "hierarchy", "symmetric")
 
 
 def _check_structure(prop_def: PropertyDefinition) -> None:
@@ -4360,4 +4357,3 @@ class OntologyService:
             Total count of attribute definitions
         """
         return self._repository.count_attribute_definitions(class_id=class_id)
-

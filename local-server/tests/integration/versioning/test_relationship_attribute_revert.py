@@ -9,8 +9,7 @@ import sys
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
-from domain.versioning.proposal_service import OperationDraft
-from domain.versioning.proposals import OperationKind as K
+from domain.versioning.proposals import OperationDraft, OperationKind as K
 from domain.versioning.proposals import OperationStatus, ProposalSource
 from domain.versioning.proposals import OperationType as T
 from tests.integration.versioning.test_proposal_service import parts, session_factory  # noqa: F401

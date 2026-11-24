@@ -69,7 +69,8 @@ from domain.ontology.exceptions import (
     IdentifierConflictError,
     OntologyError,
 )
-from domain.ontology.services import STRUCTURE_FIELDS, OntologyService
+from domain.ontology.services import OntologyService
+from domain.ontology.value_objects import STRUCTURE_FIELDS
 from domain.versioning.proposal_service import ProposalService
 from utils.async_executor import run_sync_in_executor
 from utils.logger import get_logger

@@ -9,8 +9,9 @@ import pytest
 
 from domain.versioning.exceptions import ChangeProposalStateError
 from domain.versioning.gold import DecisionFilter, DecisionKind
-from domain.versioning.proposal_service import OperationDraft, ProposalService
+from domain.versioning.proposal_service import ProposalService
 from domain.versioning.proposals import (
+    OperationDraft,
     OperationStatus,
     ProposalSource,
     ProposalStatus,
@@ -254,9 +255,7 @@ class TestEditedRelationshipCreate:
         assert applied.status is OperationStatus.APPLIED, applied.reason
         assert repo.get_relationship(applied.result_entity_id).property_definition_id == beside.id
 
-    def test_an_end_outside_the_types_domain_fails_that_operation(
-        self, service, graph, ontology
-    ):
+    def test_an_end_outside_the_types_domain_fails_that_operation(self, service, graph, ontology):
         elsewhere = ontology.create_individual(graph["place"], "Garden")
         study = ontology.create_individual(graph["room"], "Study")
         proposal = propose(service, graph, create_study(graph), near_den(graph))

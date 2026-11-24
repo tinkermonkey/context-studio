@@ -11,7 +11,7 @@ from dataclasses import dataclass, field
 from typing import Any
 
 from domain.extraction.chunking import page_of
-from domain.versioning.proposal_service import OperationDraft
+from domain.versioning.proposals import OperationDraft
 from domain.versioning.provenance import SOURCE_ID
 
 

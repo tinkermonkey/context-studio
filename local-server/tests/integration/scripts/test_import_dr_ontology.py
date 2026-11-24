@@ -35,9 +35,10 @@ from adapters.persistence.sqlite.proposal_repo import SQLiteChangeProposalReposi
 from adapters.persistence.sqlite.schema_vector_index import SqliteSchemaVectorIndex
 from domain.ontology.services import OntologyService
 from domain.ontology.value_objects import ExternalReference
-from domain.versioning.proposal_service import OperationDraft, ProposalService
+from domain.versioning.proposal_service import ProposalService
 from domain.versioning.proposals import (
     ChangeProposal,
+    OperationDraft,
     OperationKind,
     OperationType,
     ProposalSource,

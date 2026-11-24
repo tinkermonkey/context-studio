@@ -9,9 +9,9 @@ from datetime import datetime, timezone
 import pytest
 
 from domain.versioning.approval_policy import ApprovalPolicy, AutoApplyRule
-from domain.versioning.proposal_service import OperationDraft
 from domain.versioning.proposals import (
     ChangeProposal,
+    OperationDraft,
     OperationStatus,
     ProposalSource,
     ProposedOperation,
@@ -157,9 +157,7 @@ class TestAutoApply:
         first, _, _, last = stored.operations
         assert service.auto_apply_operation_ids(stored) == [first.id, last.id]
 
-    def test_a_schema_extraction_class_without_a_passage_applies(
-        self, service, policies, house
-    ):
+    def test_a_schema_extraction_class_without_a_passage_applies(self, service, policies, house):
         policies.save(ApprovalPolicy(house["taxonomy"], (AutoApplyRule(op=T.CREATE),)))
         draft = OperationDraft(
             1,

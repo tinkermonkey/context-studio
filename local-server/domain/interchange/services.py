@@ -31,15 +31,6 @@ def get_current_batch_run_id() -> Optional[str]:
     return _batch_run_context.get()
 
 
-def get_current_import_run_id() -> Optional[str]:
-    """
-    Backward-compatible convenience method to get the current batch run ID.
-
-    Returns None if no batch operation (import or extraction) is in progress.
-    """
-    return _batch_run_context.get()
-
-
 def set_batch_run_context(batch_run_id: Optional[str]) -> None:
     """
     Set the current batch run ID in context.
@@ -48,16 +39,6 @@ def set_batch_run_context(batch_run_id: Optional[str]) -> None:
         batch_run_id: The batch run ID (import or extraction), or None to clear context
     """
     _batch_run_context.set(batch_run_id)
-
-
-def set_import_run_context(import_run_id: Optional[str]) -> None:
-    """
-    Backward-compatible convenience method to set the current import run ID in context.
-
-    Args:
-        import_run_id: The import run ID, or None to clear context
-    """
-    _batch_run_context.set(import_run_id)
 
 
 class ImportRunService:
@@ -165,27 +146,6 @@ class ImportRunService:
         """
         import_run.mark_rolled_back()
         return import_run
-
-    def get_context_import_run_id(self) -> Optional[str]:
-        """
-        Get the current import run ID from the correlation context.
-
-        Returns:
-            The import run ID if inside an import operation, None otherwise
-        """
-        return get_current_import_run_id()
-
-    def set_context_import_run_id(self, import_run_id: Optional[str]) -> None:
-        """
-        Set the current import run ID in the correlation context.
-
-        This is called by the ChangeEventRecorder to establish the link
-        between change events and the import operation that caused them.
-
-        Args:
-            import_run_id: The import run ID, or None to clear context
-        """
-        set_import_run_context(import_run_id)
 
     def create_with_resolutions_and_persist(
         self,

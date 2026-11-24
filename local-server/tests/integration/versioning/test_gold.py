@@ -30,8 +30,8 @@ from domain.ontology.services import OntologyService
 from domain.versioning.approval_policy import ApprovalPolicy, AutoApplyRule
 from domain.versioning.bundle_import import SUPERSEDED_REASON
 from domain.versioning.gold import DecisionFilter, DecisionKind
-from domain.versioning.proposal_service import OperationDraft, ProposalService
-from domain.versioning.proposals import OperationKind as K
+from domain.versioning.proposal_service import ProposalService
+from domain.versioning.proposals import OperationDraft, OperationKind as K
 from domain.versioning.proposals import OperationStatus, ProposalSource, RejectionReason
 from domain.versioning.proposals import OperationType as T
 from domain.versioning.revert_service import RevertService

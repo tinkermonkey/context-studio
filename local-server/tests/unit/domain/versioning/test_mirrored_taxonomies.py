@@ -8,9 +8,10 @@ from domain.ontology.services import OntologyService
 from domain.ontology.value_objects import SourceRevision
 from domain.versioning.approval_policy import ApprovalPolicy
 from domain.versioning.exceptions import ChangeProposalStateError
-from domain.versioning.proposal_service import OperationDraft, ProposalService
+from domain.versioning.proposal_service import ProposalService
 from domain.versioning.proposals import (
     Landing,
+    OperationDraft,
     OperationKind,
     OperationStatus,
     OperationType,

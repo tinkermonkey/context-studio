@@ -24,7 +24,7 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING
 
-from domain.extraction.services import is_below_confidence
+from domain.extraction.triples import is_below_confidence
 from domain.ontology.datasets import resolve_dataset_id
 from domain.ontology.exceptions import (
     DatasetMismatchError,

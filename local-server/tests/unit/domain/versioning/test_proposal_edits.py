@@ -3,9 +3,10 @@
 import pytest
 
 from domain.ontology.services import OntologyService
-from domain.versioning.proposal_service import OperationDraft, ProposalService
+from domain.versioning.proposal_service import ProposalService
 from domain.versioning.proposals import (
     ChangeScope,
+    OperationDraft,
     OperationKind,
     OperationStatus,
     OperationType,
@@ -260,7 +261,10 @@ def test_an_edited_stale_target_fails_unless_forced(service, graph, ontology):
             "class_update",
             "only a property update or delete, or an individual or relationship create, can be edited",
         ),
-        ("create", "only a property update or delete, or an individual or relationship create, can be edited"),
+        (
+            "create",
+            "only a property update or delete, or an individual or relationship create, can be edited",
+        ),
         ("empty", "an edit needs at least one field"),
         ("ref", "can't point at a $ref"),
     ],

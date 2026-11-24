@@ -15,9 +15,8 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(
 import pytest
 
 from adapters.interchange.dr_spec_changes import spec_changes_for
-from domain.versioning.proposal_service import OperationDraft
 from domain.versioning.exceptions import ProposalValidationError
-from domain.versioning.proposals import OperationStatus, ProposalSource
+from domain.versioning.proposals import OperationDraft, OperationStatus, ProposalSource
 from scripts.dr_ontology_loader import DR_SOURCE, DR_TAXONOMY_IDENTIFIER
 from tests.integration.scripts import test_dr_reflection_plan as plan_tests
 from tests.integration.scripts.test_dr_reflection_plan import class_by_dr_id

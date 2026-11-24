@@ -23,9 +23,10 @@ from domain.pipelines.proposal_comparison import (
 from domain.pipelines.source_proposals import SUPERSEDED_REASON
 from domain.versioning.exceptions import ChangeProposalStateError
 from domain.versioning.gold import DecisionKind
-from domain.versioning.proposal_service import OperationDraft, ProposalService
+from domain.versioning.proposal_service import ProposalService
 from domain.versioning.proposals import (
     CopyOutcome,
+    OperationDraft,
     OperationStatus,
     ProposalSource,
     RejectionReason,

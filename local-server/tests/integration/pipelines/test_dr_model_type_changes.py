@@ -37,9 +37,10 @@ from adapters.persistence.sqlite.transaction import SharedSessionFactory, Sqlite
 from domain.interchange.services import get_current_batch_run_id, set_batch_run_context
 from domain.ontology.entities import Relationship
 from domain.ontology.services import OntologyService
-from domain.versioning.proposal_service import OperationDraft, ProposalService
+from domain.versioning.proposal_service import ProposalService
 from domain.versioning.proposals import (
     InUseResolution,
+    OperationDraft,
     OperationStatus,
     ProposalSource,
     ProposalStatus,

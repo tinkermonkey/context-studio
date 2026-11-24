@@ -760,25 +760,36 @@ class MergeResult:
 
 ## 11. Cross-Context Dependency Map
 
-Bounded contexts communicate only through their ports. Here is the dependency graph:
+Each bounded context is a package under `local-server/domain/`. The arrows are the dependencies the code has (`A ──► B`: A imports from B); `scripts/check_domain_imports.py` checks the rule below.
 
 ```
-  Ontology Management ◄──── Graph Analysis
-        ▲                        (reads ontology data to build graphs)
-        │
-        ├──── Knowledge Extraction
-        │     (reads KG context for RAG layer 0)
-        │
-        ├──── Version Control
-        │     (reads current entity state for diff computation)
-        │
-        └──── LLM Pipeline Management
-              (no direct dependency on ontology, but extraction uses LLM)
+  Graph Analysis, Chat, Admin, Decision   (no imports from another context)
 
-  Shared ports:
-  ─ OntologyRepository is consumed by Ontology, Graph, and Extraction contexts
-  ─ LLMProvider is consumed by Extraction and Pipeline contexts
-  ─ EventPublisher is consumed by Ontology and produces events for Version Control
+  Knowledge Extraction ──► Ontology       (entities, ports: reads ontology data)
+          │
+          └────────────► Pipelines        (ports, stage prompts, exceptions)
+
+  Pipelines ───────────► Ontology         (entities, ports; OntologyService in the
+          │                                apply services, injected)
+          ├────────────► Extraction       (extractors, value objects, ports)
+          ├────────────► Versioning       (ProposalService: proposals and claims;
+          │                                OperationDraft and other value objects)
+          └────────────► Decision         (ports, value objects)
+
+  Versioning ──────────► Ontology         (OntologyService to apply, entities,
+          │                                events, snapshots)
+          ├────────────► Interchange      (bundles; the batch-run correlation context)
+          └────────────► Extraction       (SourceRepository port, to read passages)
+
+  Interchange ─────────► Ontology, Versioning (proposal value objects)
+
+  Shared kernel (domain/ports.py, domain/events.py): EventPublisher, DomainEvent,
+  ChangeRecordPort. OntologyRepository is read by Extraction, Pipelines,
+  Versioning and Interchange; LLMProvider by Extraction and Pipelines.
 ```
 
-The key rule: contexts never import each other's services directly. They share data through ports (primarily `OntologyRepository` for read access).
+**The rule.** A context may depend on another context's ports, entities, value objects, exceptions, public functions, and its application service's public methods. The application service is always injected at the composition root, never constructed. **Reading another context's repository ports is allowed** (Graph, Extraction, Pipelines, Versioning and Interchange read ontology data through `OntologyRepository`); a context changes another context's data only through that context's application service (pipelines propose through `ProposalService` and apply through `OntologyService`, so validation and the approval policy stay in one place). **Forbidden, and checked:** touching another context's repository implementations or adapters, or its private (`_`) names or modules. A context never shares state through ambient globals (one known exception, below).
+
+`scripts/check_domain_imports.py` enforces what an import can show: inside `domain/`, no import of infrastructure (adapters, so no repository implementation), no import of another context's private names or modules, nothing but the service class from another context's application service module (`services.py` or `*_service.py`; value objects, constants and pure functions come from their own module, as `OperationDraft` comes from `versioning/proposals.py` and `is_typing_triple` from `extraction/triples.py`), and no call that constructs another context's `*Service`, by name, through an aliased module or by its dotted path. The known exception below is the check's one allowed service-module import (`KNOWN_EXCEPTIONS`).
+
+**Known exception.** The change-event correlation context (`domain/interchange/services.py`: `set_batch_run_context` / `get_current_batch_run_id`) is still an ambient `ContextVar`. Proposal apply (versioning), the interchange import and the pipelines run route set it around their writes, and only the change event recorder adapter reads it, to tag change events with their run. Extraction no longer uses it: `ExtractionCompleted` carries its `batch_run_id` (#1633). Making the rest explicit means every ontology write and event carries the run id.

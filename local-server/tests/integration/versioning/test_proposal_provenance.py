@@ -26,8 +26,8 @@ from adapters.persistence.sqlite.proposal_repo import SQLiteChangeProposalReposi
 from adapters.persistence.sqlite.transaction import SharedSessionFactory, SqliteTransactionScope
 from domain.ontology.services import OntologyService
 from domain.versioning.exceptions import ProposalValidationError
-from domain.versioning.proposal_service import OperationDraft, ProposalService
-from domain.versioning.proposals import OperationKind as K
+from domain.versioning.proposal_service import ProposalService
+from domain.versioning.proposals import OperationDraft, OperationKind as K
 from domain.versioning.proposals import OperationStatus, ProposalSource, ProposalStatus
 from domain.versioning.proposals import OperationType as T
 from domain.versioning.revert_service import RevertService

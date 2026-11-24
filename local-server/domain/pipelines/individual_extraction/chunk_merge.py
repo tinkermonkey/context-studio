@@ -21,7 +21,7 @@ import copy
 from typing import Any, Sequence
 
 from domain.extraction.chunking import Chunk, page_of
-from domain.extraction.services import is_typing_triple
+from domain.extraction.triples import is_typing_triple
 from domain.pipelines.candidate_ids import mention_key
 from domain.pipelines.individual_extraction.labels import LabelKeys
 

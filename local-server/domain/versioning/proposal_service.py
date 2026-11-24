@@ -51,9 +51,9 @@ from domain.ontology.exceptions import (
     OntologyError,
 )
 from domain.ontology.relationship_fit import RelationshipFit
-from domain.ontology.services import STRUCTURE_FIELDS
 from domain.ontology.snapshots import decode_field, entity_snapshot
 from domain.ontology.value_objects import (
+    STRUCTURE_FIELDS,
     DataPropertyValue,
     DataType,
     SourceRevision,

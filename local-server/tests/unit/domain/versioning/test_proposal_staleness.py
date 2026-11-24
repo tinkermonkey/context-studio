@@ -3,8 +3,8 @@
 import pytest
 
 from domain.ontology.services import OntologyService
-from domain.versioning.proposal_service import OperationDraft, ProposalService
-from domain.versioning.proposals import OperationKind as K
+from domain.versioning.proposal_service import ProposalService
+from domain.versioning.proposals import OperationDraft, OperationKind as K
 from domain.versioning.proposals import OperationType as T
 from domain.versioning.proposals import ProposalSource, ProposalStatus
 from domain.versioning.revert_service import RevertResult

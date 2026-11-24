@@ -10,10 +10,14 @@ from domain.versioning.gold import DecisionKind
 from domain.versioning.proposal_service import (
     MAX_REVIEW_MS,
     REVERTED_REASON,
-    OperationDraft,
     ProposalService,
 )
-from domain.versioning.proposals import OperationStatus, ProposalSource, RejectionReason
+from domain.versioning.proposals import (
+    OperationDraft,
+    OperationStatus,
+    ProposalSource,
+    RejectionReason,
+)
 from tests.fakes.fake_entity_source_repository import FakeEntitySourceRepository
 from tests.unit.domain.versioning.test_proposal_service import (  # noqa: F401 - fixtures
     K,

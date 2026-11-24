@@ -65,9 +65,10 @@ from adapters.interchange.dr_relationships import (
 from domain.ontology.entities import PropertyDefinition
 from domain.ontology.ports import OntologyRepository
 from domain.ontology.value_objects import ExternalReference, SourceRevision
-from domain.versioning.proposal_service import OperationDraft, ProposalService
+from domain.versioning.proposal_service import ProposalService
 from domain.versioning.proposals import (
     ChangeProposal,
+    OperationDraft,
     OperationKind,
     OperationType,
     ProposalSource,

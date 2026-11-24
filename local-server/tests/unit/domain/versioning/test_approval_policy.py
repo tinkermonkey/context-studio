@@ -15,9 +15,10 @@ from domain.versioning.approval_policy import (
     AutoApplyRule,
     auto_apply_ids,
 )
-from domain.versioning.proposal_service import ID_FIELDS, OperationDraft, ProposalService
+from domain.versioning.proposal_service import ID_FIELDS, ProposalService
 from domain.versioning.proposals import (
     ChangeScope,
+    OperationDraft,
     OperationKind,
     OperationStatus,
     OperationType,
