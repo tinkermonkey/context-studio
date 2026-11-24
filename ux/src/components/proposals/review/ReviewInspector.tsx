@@ -68,7 +68,7 @@ export interface ReviewNames {
   };
 }
 
-interface ReviewInspectorProps {
+export interface ReviewInspectorProps {
   operation: ProposedOperation;
   operations: ProposedOperation[];
   names: ReviewNames;
@@ -100,6 +100,11 @@ interface ReviewInspectorProps {
    * "Not an element" button does. The value the inspector mounts with opens nothing.
    */
   rejectPrompt?: number;
+  /**
+   * The page decides by key (A, X, 1-3, J / K): the inspector shows the key hints
+   * and aria-keyshortcuts. Off where the page has no keys yet (proposal detail).
+   */
+  keyboard?: boolean;
   onCorrect: () => void;
   onPickClass: (classId: string) => void;
   /** Accept a relationship with another predicate, source or target. */
@@ -108,7 +113,8 @@ interface ReviewInspectorProps {
   /** A rejected element: reject the relationships still awaiting a decision that use it. */
   onRejectRelationships?: () => void;
   /** Show one of the operation's passages in the source. */
-  onShowPassage: (quote: string) => void;
+  /** Show one of the operation's passages in the source; without a source pane, quotes are plain. */
+  onShowPassage?: (quote: string) => void;
   /** Gold mode: the operation's gold tier and aliases, and what the reviewer has noted. */
   gold?: GoldInspector;
 }
@@ -258,7 +264,16 @@ function Decided({
       <span>Accepted.</span>
     );
   } else if (operation.matched && verdict !== "added") {
-    body = <span>Accepted as the existing individual it matched.</span>;
+    const used = operation.alternatives?.find(
+      (a) => a.entity_id && a.entity_id === operation.result_entity_id,
+    )?.title;
+    body = (
+      <span>
+        {used
+          ? `Accepted as the existing individual ${used}, instead of creating one.`
+          : "Accepted as the existing individual it matched."}
+      </span>
+    );
   } else {
     body = (
       <span className="review-chips">
@@ -314,6 +329,7 @@ export function ReviewInspector({
   deciding,
   busy,
   rejectPrompt = 0,
+  keyboard = true,
   onCorrect,
   onPickClass,
   onAcceptEdited,
@@ -342,6 +358,8 @@ export function ReviewInspector({
   const kind = element ? "an element" : "a relationship";
   const verdict = verdictOf(operation);
   const awaiting = verdict === "awaiting";
+  // Key hints show only where the keys work, on an operation awaiting its decision.
+  const keyed = keyboard && awaiting;
   const classId = shownClassId(operation);
   const cls = names.classOf(classId);
   const quotes = sourcePassagesOf(operation).flatMap((p) => (p.quote ? [p.quote] : []));
@@ -395,7 +413,7 @@ export function ReviewInspector({
     <Block label="Evidence" data-testid="review-evidence">
       <div className="review-block__head">
         <Eyebrow>{element ? `EVIDENCE · ${quotes.length}` : "EVIDENCE"}</Eyebrow>
-        {!element && (
+        {!element && onShowPassage && (
           <button
             type="button"
             className="review-link review-link--accent"
@@ -406,20 +424,31 @@ export function ReviewInspector({
           </button>
         )}
       </div>
-      {quotes.map((quote, i) => (
-        <button
-          key={i}
-          type="button"
-          className={["review-evidence", i > 0 && "review-evidence--more"]
-            .filter(Boolean)
-            .join(" ")}
-          aria-label={`Show in the source: ${quote}`}
-          onClick={() => onShowPassage(quote)}
-          data-testid={`review-evidence-${i + 1}`}
-        >
-          {quote}
-        </button>
-      ))}
+      {quotes.map((quote, i) => {
+        const className = ["review-evidence", i > 0 && "review-evidence--more"]
+          .filter(Boolean)
+          .join(" ");
+        return onShowPassage ? (
+          <button
+            key={i}
+            type="button"
+            className={className}
+            aria-label={`Show in the source: ${quote}`}
+            onClick={() => onShowPassage(quote)}
+            data-testid={`review-evidence-${i + 1}`}
+          >
+            {quote}
+          </button>
+        ) : (
+          <blockquote
+            key={i}
+            className={`${className} review-evidence--plain`}
+            data-testid={`review-evidence-${i + 1}`}
+          >
+            {quote}
+          </blockquote>
+        );
+      })}
     </Block>
   );
 
@@ -456,7 +485,7 @@ export function ReviewInspector({
             size="sm"
             disabled={busy}
             onClick={rejectForEnd}
-            aria-keyshortcuts={awaiting ? "X" : undefined}
+            aria-keyshortcuts={keyed ? "X" : undefined}
             data-testid="review-reject-end"
           >
             Reject: an end was rejected
@@ -468,7 +497,7 @@ export function ReviewInspector({
             size="sm"
             disabled={busy || ends.undecided.length > 0 || alreadyCorrect || misfit}
             onClick={onCorrect}
-            aria-keyshortcuts={awaiting ? "A" : undefined}
+            aria-keyshortcuts={keyed ? "A" : undefined}
             data-testid="review-correct"
           >
             {usingExisting ? "Correct: use existing" : "Correct"}
@@ -479,12 +508,12 @@ export function ReviewInspector({
           size="sm"
           disabled={busy}
           onClick={openReasons}
-          aria-keyshortcuts={awaiting && !endRejected ? "X" : undefined}
+          aria-keyshortcuts={keyed && !endRejected ? "X" : undefined}
           data-testid="review-not"
         >
           {element ? "Not an element" : "Not a relationship"}
         </Button>
-        {awaiting && (
+        {keyed && (
           <span className="review-keys">
             {element
               ? "A · 1-3 · X · J / K next"
@@ -510,7 +539,7 @@ export function ReviewInspector({
         <div className="review-suggestions">
           {suggestions.map((suggestion, i) => {
             // Keys 1-3 pick the first three.
-            const keyed = i < 3 && awaiting;
+            const numbered = i < 3 && keyed;
             const acceptable = !!gold?.acceptableIds.includes(suggestion.id);
             const defensible = acceptable || !!draft?.alsoDefensible.includes(suggestion.id);
             const recent = recentIds.includes(suggestion.id) && !acceptable;
@@ -520,13 +549,13 @@ export function ReviewInspector({
                   type="button"
                   className="review-suggestion__pick"
                   disabled={busy || usingExisting}
-                  aria-keyshortcuts={keyed ? String(i + 1) : undefined}
+                  aria-keyshortcuts={numbered ? String(i + 1) : undefined}
                   aria-label={`Accept as ${names.classLabel(suggestion.id)}`}
                   title={suggestion.description ?? undefined}
                   onClick={() => onPickClass(suggestion.id)}
                   data-testid={`review-suggestion-${i + 1}`}
                 >
-                  {keyed && <span className="review-suggestion__key">{i + 1} </span>}
+                  {numbered && <span className="review-suggestion__key">{i + 1} </span>}
                   {names.classLabel(suggestion.id)}
                 </button>
                 {gold && draft && (
@@ -620,7 +649,7 @@ export function ReviewInspector({
         className="review-reasons"
         role="group"
         aria-label={element ? "Not an element, because" : "Not a relationship, because"}
-        aria-keyshortcuts={awaiting && !endRejected ? "X" : undefined}
+        aria-keyshortcuts={keyed && !endRejected ? "X" : undefined}
         data-testid="review-reasons"
       >
         {reasonsFor([operation]).map((reason) => (

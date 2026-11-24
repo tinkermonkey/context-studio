@@ -1,10 +1,9 @@
 /**
- * Reviewing an extraction proposal beside its passages (#1555): the source
- * passage with its quote highlighted in the page's text (or alone when it
- * can't be placed), a near match's "Already in dataset …?" choice sent as
- * chosen_alternatives, which ends of a relationship are new, the banner's
- * near-match and low-confidence pills, and bulk accepts that leave near
- * matches (and what names them) for the reviewer.
+ * An extraction proposal on its own page (#1555, #1658): its creates open the
+ * review inspector, with the quotes as evidence, a near match's "Already in
+ * dataset …?" choice sent as chosen_alternatives, and a relationship that waits
+ * on the creates it names; the banner's near-match and low-confidence pills;
+ * and bulk accepts that leave near matches (and what names them) for the reviewer.
  */
 import { describe, it, expect, beforeAll, beforeEach, afterEach, afterAll, vi } from "vitest";
 import { screen, waitFor, within } from "@testing-library/react";
@@ -190,78 +189,28 @@ function renderPage(selectedOperationId?: string) {
   );
 }
 
-describe("the source passage", () => {
-  it("highlights the quote in its page's text, with the page, section and source", async () => {
-    renderPage("op-fridge");
-    const mark = await screen.findByTestId("operation-source-passage-mark", {}, { timeout: 10000 });
-    expect(mark.tagName).toBe("MARK");
-    expect(mark).toHaveClass("op-passage__mark");
-    expect(mark).toHaveTextContent("French door fridge");
-    const text = screen.getByTestId("operation-source-passage-text");
-    expect(text).toHaveClass("op-passage__text");
-    expect(text).toHaveAttribute("data-placed", "true");
-    expect(text).toHaveTextContent("Thank you French door fridge comes with parts.");
-    await waitFor(() =>
-      expect(screen.getByTestId("operation-source-passage-location")).toHaveTextContent(
-        "p. 2 · Parts and features",
-      ),
-    );
-    // Sources have no page of their own: the title links to its taxonomy's Sources
-    // page, in a new tab so an unsent decision and reason here aren't lost.
-    const title = screen.getByTestId("operation-source-title");
-    expect(title).toHaveTextContent("Whirlpool use and care guide");
-    expect(title).toHaveClass("op-passage__source");
-    expect(title).toHaveClass("entity-link");
-    const link = within(screen.getByTestId("operation-source-passage")).getByRole("link", {
-      name: "Whirlpool use and care guide (opens in a new tab)",
-    });
-    expect(link).toBe(title);
-    expect(link).toHaveAttribute("href", "/app/data/sources?taxonomy=tax-1");
-    expect(link).toHaveAttribute("target", "_blank");
-    expect(link).toHaveAttribute("rel", "noopener noreferrer");
-    expect(within(link).getByText("(opens in a new tab)")).toHaveClass("sr-only");
-    expect(screen.getByTestId("operation-source-passage-more")).toHaveTextContent("Also on p. 3");
-    // The passages aren't repeated as plain evidence.
-    expect(screen.queryByTestId("operation-evidence")).not.toBeInTheDocument();
-  });
-
-  it("shows a quote it can't place alone, without a highlight", async () => {
-    renderPage("op-filter");
-    const text = await screen.findByTestId("operation-source-passage-text");
-    await waitFor(() =>
-      expect(screen.getByTestId("operation-source-passage-location")).toHaveTextContent(
-        "Parts and features",
-      ),
-    );
-    expect(text).toHaveAttribute("data-placed", "false");
-    expect(text).toHaveTextContent("EveryDrop");
-    expect(screen.queryByTestId("operation-source-passage-mark")).not.toBeInTheDocument();
-  });
-
-  it("shows the quote alone when the source is removed", async () => {
-    server.use(
-      http.get("*/api/sources/:id", () =>
-        HttpResponse.json({ ...source, removed_at: "2026-11-11T00:00:00Z" }),
-      ),
-    );
-    renderPage("op-fridge");
-    await waitFor(
-      () =>
-        expect(screen.getByTestId("operation-source-passage-more")).toHaveTextContent(
-          "The source was removed.",
-        ),
-      { timeout: 10000 },
-    );
-    expect(screen.getByTestId("operation-source-passage-text")).toHaveAttribute(
-      "data-placed",
-      "false",
-    );
-    expect(screen.queryByTestId("operation-source-passage-mark")).not.toBeInTheDocument();
-    // A removed source isn't on the Sources page, so its title stays text.
-    expect(screen.getByTestId("operation-source-title").tagName).toBe("SPAN");
-    expect(
-      within(screen.getByTestId("operation-source-passage")).queryByRole("link"),
-    ).not.toBeInTheDocument();
+describe("an extraction create opens the review inspector (#1658)", () => {
+  it("opens beside the table, with its class pill and its quotes as plain evidence", async () => {
+    const { container } = renderPage("op-fridge");
+    const inspector = await screen.findByTestId("review-inspector", {}, { timeout: 10000 });
+    expect(container.querySelector('[data-testid="schema-page-layout"]')).toHaveClass("split-2");
+    expect(screen.getByTestId("schema-inspector-container")).toContainElement(inspector);
+    expect(screen.getByTestId("review-inspector-title")).toHaveTextContent("Whirlpool WRF555SDFZ");
+    expect(screen.getByTestId("review-inspector-class")).toBeInTheDocument();
+    // No source pane here: the quotes are read, not buttons that show nothing.
+    const first = screen.getByTestId("review-evidence-1");
+    expect(first.tagName).toBe("BLOCKQUOTE");
+    expect(first).toHaveClass("review-evidence", "review-evidence--plain");
+    expect(first).toHaveTextContent("French door fridge");
+    expect(screen.getByTestId("review-evidence-2")).toHaveTextContent("WRF555SDFZ");
+    expect(screen.queryByRole("button", { name: /Show in the source/ })).not.toBeInTheDocument();
+    // The older inspector's sections are gone for it.
+    expect(screen.queryByTestId("operation-source-passage")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("operation-decision")).not.toBeInTheDocument();
+    // This page has no review keys yet: no key hints, no aria-keyshortcuts.
+    expect(screen.getByTestId("review-correct")).not.toHaveAttribute("aria-keyshortcuts");
+    expect(screen.getByTestId("review-not")).not.toHaveAttribute("aria-keyshortcuts");
+    expect(inspector.querySelector(".review-keys")).toBeNull();
   });
 });
 
@@ -270,24 +219,19 @@ describe("a near match", () => {
     renderPage("op-fridge");
     const group = await screen.findByRole("group", { name: "Already in dataset default?" });
     expect(group).toHaveClass("op-near-match");
-    expect(group).toHaveAttribute("data-testid", "operation-near-match");
-    const radios = within(group).getAllByRole("radio");
-    expect(radios).toHaveLength(2);
+    expect(within(group).getAllByRole("radio")).toHaveLength(2);
     expect(within(group).getByRole("radio", { name: "LLM Provider Router" })).toBeChecked();
     expect(
       within(group).getByRole("radio", { name: "Create new: Whirlpool WRF555SDFZ" }),
     ).not.toBeChecked();
     expect(within(group).getByText("similarity 0.93")).toHaveClass("op-near-match__detail");
-    expect(screen.getByTestId("operation-near-match-option-ind-1")).toHaveClass(
-      "op-near-match__option--chosen",
-    );
-    expect(screen.getByTestId("operation-accept")).toHaveTextContent("Use existing");
+    expect(screen.getByTestId("review-correct")).toHaveTextContent("Correct: use existing");
   });
 
   it("applies Use existing with the chosen alternative", async () => {
     const user = userEvent.setup();
     renderPage("op-fridge");
-    await user.click(await screen.findByRole("button", { name: "Use existing" }));
+    await user.click(await screen.findByRole("button", { name: "Correct: use existing" }));
     await waitFor(() => expect(applies).toHaveLength(1));
     expect(applies[0].operation_ids).toEqual(["op-fridge"]);
     expect(applies[0].chosen_alternatives).toEqual({
@@ -295,15 +239,15 @@ describe("a near match", () => {
     });
   });
 
-  it("applies Accept new without a chosen alternative", async () => {
+  it("applies Create new without a chosen alternative", async () => {
     const user = userEvent.setup();
     renderPage("op-fridge");
     await user.click(
       await screen.findByRole("radio", { name: "Create new: Whirlpool WRF555SDFZ" }),
     );
-    const accept = screen.getByTestId("operation-accept");
-    expect(accept).toHaveTextContent("Accept new");
-    await user.click(accept);
+    const correct = screen.getByTestId("review-correct");
+    expect(correct).toHaveTextContent(/^Correct$/);
+    await user.click(correct);
     await waitFor(() => expect(applies).toHaveLength(1));
     expect(applies[0].operation_ids).toEqual(["op-fridge"]);
     expect(applies[0].chosen_alternatives).toBeUndefined();
@@ -317,40 +261,38 @@ describe("a near match", () => {
     expect(screen.getByTestId("operation-near-match-chip-op-used")).toHaveTextContent(
       "used existing",
     );
-    expect(await screen.findByTestId("operation-decided-record")).toHaveTextContent(
-      "Used the existing individual LLM Provider Router instead of creating one.",
+    expect(await screen.findByTestId("review-decided")).toHaveTextContent(
+      "Accepted as the existing individual LLM Provider Router, instead of creating one.",
     );
   });
 });
 
 describe("a relationship create's ends", () => {
-  it("says which end follows a near match and which is new in the proposal", async () => {
+  it("names both ends, which are this proposal's creates", async () => {
     renderPage("op-uses");
-    expect(await screen.findByTestId("operation-relationship-ends-note")).toHaveTextContent(
-      "Source is #1, a near match: it follows the choice made there; target is new in this proposal (#2).",
+    expect(await screen.findByTestId("review-end-source")).toHaveTextContent(
+      "Whirlpool WRF555SDFZ",
     );
-    expect(screen.getByTestId("operation-relationship-end-source")).toHaveAttribute(
-      "data-kind",
-      "near",
-    );
-    expect(screen.getByTestId("operation-relationship-end-target")).toHaveAttribute(
-      "data-kind",
-      "new",
-    );
+    expect(screen.getByTestId("review-end-target")).toHaveTextContent("EveryDrop Filter 1");
   });
 
-  it("can't be accepted until the creates it names are decided; Reject still works", async () => {
+  it("can't be accepted until the creates it names are decided; a reason still rejects it", async () => {
     const user = userEvent.setup();
+    const rejects: unknown[] = [];
+    server.use(
+      http.post("*/api/proposals/:id/reject", async ({ request }) => {
+        rejects.push(await request.json());
+        return HttpResponse.json(proposal);
+      }),
+    );
     renderPage("op-uses");
-    const callout = await screen.findByTestId("operation-ends-callout");
-    expect(callout).toHaveTextContent(
+    expect(await screen.findByTestId("review-ends-callout")).toHaveTextContent(
       "Decide #1 and #2 first: this relationship follows their choices.",
     );
-    expect(screen.getByTestId("operation-accept")).toBeDisabled();
-    const reject = screen.getByTestId("operation-reject");
-    expect(reject).toBeEnabled();
-    server.use(http.post("*/api/proposals/:id/reject", () => HttpResponse.json(proposal)));
-    await user.click(reject);
+    expect(screen.getByTestId("review-correct")).toBeDisabled();
+    await user.click(screen.getByTestId("review-reason-not_in_text"));
+    await waitFor(() => expect(rejects).toHaveLength(1));
+    expect(rejects[0]).toMatchObject({ operation_ids: ["op-uses"], reason_code: "not_in_text" });
     expect(applies).toHaveLength(0);
   });
 
@@ -359,8 +301,8 @@ describe("a relationship create's ends", () => {
       if (op.id === "op-fridge" || op.id === "op-filter") Object.assign(op, { status: "applied" });
     }
     renderPage("op-uses");
-    await waitFor(() => expect(screen.getByTestId("operation-accept")).toBeEnabled());
-    expect(screen.queryByTestId("operation-ends-callout")).not.toBeInTheDocument();
+    await waitFor(() => expect(screen.getByTestId("review-correct")).toBeEnabled());
+    expect(screen.queryByTestId("review-ends-callout")).not.toBeInTheDocument();
   });
 
   it("says to reject it when a create it names was rejected", async () => {
@@ -369,11 +311,11 @@ describe("a relationship create's ends", () => {
       if (op.id === "op-filter") Object.assign(op, { status: "rejected" });
     }
     renderPage("op-uses");
-    expect(await screen.findByTestId("operation-ends-callout")).toHaveTextContent(
-      "#2 was rejected, so this relationship can't apply. Reject it.",
+    expect(await screen.findByTestId("review-ends-callout")).toHaveTextContent(
+      "#2 was rejected, so this relationship can't apply as proposed.",
     );
-    expect(screen.getByTestId("operation-accept")).toBeDisabled();
-    expect(screen.getByTestId("operation-reject")).toBeEnabled();
+    expect(screen.queryByTestId("review-correct")).not.toBeInTheDocument();
+    expect(screen.getByTestId("review-reject-end")).toBeEnabled();
   });
 });
 

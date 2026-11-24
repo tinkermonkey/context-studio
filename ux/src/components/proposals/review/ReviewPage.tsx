@@ -6,7 +6,6 @@ import {
   useRef,
   useState,
   type CSSProperties,
-  type MouseEvent,
 } from "react";
 import { Button, Chip, ConfirmDialog, PageHeader, ProgressBar } from "@tinkermonkey/heimdall-ui";
 import { SMALL_SET_LIMIT } from "@/api/config";
@@ -14,33 +13,21 @@ import { ApiError } from "@/api/client/interceptors";
 import { useAddProposalIndividual, useChangeProposal } from "@/api/hooks/proposals";
 import { useTaxonomyClasses } from "@/api/hooks/ontology/useClasses";
 import { useDatasets } from "@/api/hooks/ontology/useDatasets";
-import { useIndividuals, useIndividualsByIds } from "@/api/hooks/ontology/useIndividuals";
 import { useSchemes } from "@/api/hooks/ontology/useSchemes";
 import { useSource, useSourceText } from "@/api/hooks/sources/useSource";
-import type { ProposedOperation, RejectionReason } from "@/api/services/proposals";
+import type { ProposedOperation } from "@/api/services/proposals";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
 import { useToasts } from "@/components/ui/Toast";
 import { usePageBreadcrumbs } from "@/hooks/usePageBreadcrumbs";
 import { linkPath } from "@/lib/entityPaths";
-import { takesDecisions } from "../decisionModel";
 import { formatProbability, isAwaiting, refsByOperation } from "../proposalModel";
 import { ProposalOriginChip } from "../ProposalOrigin";
-import {
-  chosenAlternative,
-  defaultNearMatchChoice,
-  isNearMatch,
-  sourcePassagesOf,
-  type NearMatchChoice,
-} from "../sourceModel";
 import { useOperationContext } from "../useOperationContext";
-import { useProposalActions, type ApplyOutcome } from "../useProposalActions";
-import { useHoverOverlay } from "../HoverOverlay";
+import { useProposalActions } from "../useProposalActions";
 import { ReviewElementsPane, type ElementRow } from "./ReviewElementsPane";
-import { ReviewInspector, type ReviewNames } from "./ReviewInspector";
-import { ReviewPillsProvider, type OperationLink, type ReviewPillsValue } from "./ReviewPills";
-import type { EndCandidate, EndInfo } from "./ReviewRelationship";
-import { useReviewSchema } from "./useReviewSchema";
+import { ReviewInspector } from "./ReviewInspector";
+import { ReviewPillsProvider, plainClick, type OperationLink } from "./ReviewPills";
 import { CompareEntry } from "../compare/CompareEntry";
 import { ReviewSourcePane, type PopoverAnchor } from "./ReviewSourcePane";
 import { AddElementPopover } from "./AddElementPopover";
@@ -54,12 +41,9 @@ import {
 } from "./addFromText";
 import {
   END_REJECTED_REASON,
-  awaitingRelationshipsOf,
-  endOperation,
   endRejectedNote,
   endsToDecide,
   filterGroups,
-  forgetPick,
   formatDuration,
   groupForReview,
   isElement,
@@ -67,35 +51,20 @@ import {
   nextAwaiting,
   orderOf,
   proposedClassId,
-  relationshipsOf,
-  rememberPick,
   reviewProgress,
   reviewSourceId,
   reviewSpans,
   seqList,
   shownClassId,
-  shownFields,
-  shownTitle,
   step,
-  suggestedClasses,
   verdictLabel,
   verdictOf,
   type ElementFilter,
   type Layer,
 } from "./reviewModel";
 import { useReviewClock } from "./useReviewClock";
-import {
-  EMPTY_DRAFT,
-  HOLDOUT_NOTE,
-  SPLIT_CHIP,
-  annotationOf,
-  classesByRef,
-  goldCheckOf,
-  goldElementOf,
-  goldTierOf,
-  type GoldDraft,
-  type Tier,
-} from "./goldModel";
+import { useInspectorModel } from "./useInspectorModel";
+import { HOLDOUT_NOTE, SPLIT_CHIP, type Tier } from "./goldModel";
 import "../proposals.css";
 import "./review.css";
 
@@ -174,12 +143,6 @@ function usePanesHeight(ready: boolean) {
   return { ref, height };
 }
 
-type Decision =
-  | { kind: "correct" }
-  | { kind: "class"; classId: string }
-  | { kind: "edit"; edit: Record<string, string> }
-  | { kind: "reject"; reasonCode: RejectionReason; note: string };
-
 interface ReviewPageProps {
   id: string;
   /** Back to the proposal's page. */
@@ -195,11 +158,6 @@ interface ReviewPageProps {
   hrefOf?: (operationId: string) => string;
   /** Open the comparison with another open proposal for the same source. */
   onCompare?: (otherId: string) => void;
-}
-
-/** A plain left click selects in place; a modified one is left to the browser (new tab). */
-function plainClick(event: MouseEvent): boolean {
-  return !(event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || event.button !== 0);
 }
 
 /**
@@ -223,9 +181,6 @@ export function ReviewPage({
   const { data: proposal, error, refetch } = useChangeProposal(id);
   const taxonomyId = proposal?.taxonomy_id ?? "";
   const operations = useMemo(() => proposal?.operations ?? [], [proposal]);
-  // The operations as they stand now, for a toast's action clicked after later renders.
-  const operationsRef = useRef(operations);
-  operationsRef.current = operations;
   const refs = useMemo(() => (proposal ? refsByOperation([proposal]) : undefined), [proposal]);
   const context = useOperationContext(operations, refs);
   const actions = useProposalActions(proposal);
@@ -263,7 +218,6 @@ export function ReviewPage({
 
   // Classes and their layers (concept schemes).
   const classById = useMemo(() => new Map((classes ?? []).map((c) => [c.id, c])), [classes]);
-  const pickable = useMemo(() => (classes ?? []).filter((c) => !c.derived), [classes]);
   const schemeById = useMemo(
     () => new Map((schemes?.items ?? []).map((s) => [s.id, s])),
     [schemes],
@@ -281,96 +235,6 @@ export function ReviewPage({
     },
     [classById, schemeById, layersLoading],
   );
-
-  // The schema: every relationship type, with the taxonomy's predicate catalog.
-  const schema = useReviewSchema(taxonomyId);
-
-  // Individuals a relationship names by id (an existing end, or an edit's): titles and classes.
-  const endIds = useMemo(
-    () =>
-      relationships.flatMap((o) =>
-        [shownFields(o).source_id, shownFields(o).target_id].filter(
-          (v): v is string => typeof v === "string" && !v.startsWith("$"),
-        ),
-      ),
-    [relationships],
-  );
-  const { data: endIndividuals } = useIndividualsByIds(endIds);
-
-  const names: ReviewNames = useMemo(() => {
-    const labelOf = (classId: string | undefined) => {
-      if (classesLoading) return classId ? "…" : "no class";
-      return schema.classLabel(classId);
-    };
-    const created = (value: unknown) => endOperation(value, operations);
-    const endTitle = (value: unknown, operation: ProposedOperation) => {
-      const create = created(value);
-      if (create) return shownTitle(create);
-      const found = endIndividuals?.items.find((i) => i.id === value);
-      if (found) return found.title;
-      return typeof value === "string" ? (context.nameOf(value, operation) ?? value) : "?";
-    };
-    const relationshipParts = (operation: ProposedOperation) => {
-      const fields = shownFields(operation);
-      const propertyId = fields.property_definition_id as string | undefined;
-      return {
-        from: endTitle(fields.source_id, operation),
-        predicate: schema.property(propertyId)
-          ? schema.predicateLabel(propertyId)
-          : (context.predicateOf(propertyId) ?? "…"),
-        to: endTitle(fields.target_id, operation),
-      };
-    };
-    return {
-      classLabel: labelOf,
-      classOf: (classId) => (classId ? classById.get(classId) : undefined),
-      relationshipParts,
-      titleOf: (operation) => {
-        if (isRelationship(operation)) {
-          const { from, predicate, to } = relationshipParts(operation);
-          return `${from} ${predicate} ${to}`;
-        }
-        return shownTitle(operation);
-      },
-    };
-  }, [classById, context, classesLoading, schema, operations, endIndividuals]);
-
-  /** A relationship's end as the inspector shows it: an element of the proposal, or an individual. */
-  const endOf = (value: unknown): EndInfo => {
-    const create = endOperation(value, operations);
-    if (create) {
-      return {
-        title: shownTitle(create),
-        classId: shownClassId(create),
-        verdict: verdictOf(create),
-        status: verdictLabel(create),
-        operationId: create.id,
-        quote: sourcePassagesOf(create).find((p) => p.quote)?.quote ?? undefined,
-        relationships: relationshipsOf(create, operations).length,
-      };
-    }
-    const found = endIndividuals?.items.find((i) => i.id === value);
-    return {
-      title: found?.title ?? (typeof value === "string" ? value : "?"),
-      classId: found?.class_ids?.[0],
-      status: found ? "in the workspace" : "not found",
-    };
-  };
-
-  const rowOf = (operation: ProposedOperation): ElementRow => ({
-    title: isRelationship(operation)
-      ? `${names.relationshipParts(operation).from} → ${names.relationshipParts(operation).to}`
-      : names.titleOf(operation),
-    detail: isRelationship(operation)
-      ? names.relationshipParts(operation).predicate
-      : names.classLabel(shownClassId(operation)),
-    probability:
-      operation.probability === null || operation.probability === undefined
-        ? ""
-        : formatProbability(operation.probability),
-    verdict: verdictOf(operation),
-    verdictLabel: verdictLabel(operation),
-  });
 
   // Groups, filter and selection. The selection follows the route when it has one
   // (?selected=..., each selection a history entry), else the page keeps it.
@@ -423,68 +287,37 @@ export function ReviewPage({
   );
   useEffect(() => clock.startElement(selectedId), [clock, selectedId]);
 
-  // Gold mode: a benchmark gold file loaded for a person to check.
-  const gold = useMemo(() => goldCheckOf(proposal), [proposal]);
-  // What the reviewer has noted for gold, by operation (tier, also defensible, keep old class).
-  const [goldDrafts, setGoldDrafts] = useState<Record<string, GoldDraft>>({});
-  const draftOf = (operation: ProposedOperation) => goldDrafts[operation.id] ?? EMPTY_DRAFT;
-  /** The gold annotation a decision on `operation` sends, if anything was noted. */
-  const goldAnnotations = (operation: ProposedOperation, newClassId?: string) => {
-    if (!gold) return undefined;
-    const annotation = annotationOf(draftOf(operation), {
-      goldTier: goldTierOf(gold, operation),
-      oldClassId: shownClassId(operation),
-      newClassId,
-    });
-    return annotation ? { [operation.id]: annotation } : undefined;
-  };
+  // The inspector's data: classes, schema, names, ends, gold, and the decision itself.
+  const model = useInspectorModel(proposal, {
+    actions,
+    context,
+    selected,
+    link,
+    clock,
+    onDecided: (decidedId, after) => {
+      // After deciding, select the next element still awaiting a decision.
+      const awaiting = new Set(after.filter(isAwaiting).map((o) => o.id));
+      awaiting.delete(decidedId);
+      const next = nextAwaiting(order, awaiting, decidedId);
+      if (next) setSelectedId(next);
+    },
+  });
+  const { pickable, names, gold, recentClasses, rememberClass, suggestions, existingOf } = model;
 
-  // Classes picked earlier in this review, most recent first; in gold mode the
-  // element's acceptable classes come first.
-  const [recentClasses, setRecentClasses] = useState<string[]>([]);
-  const suggestions = useMemo(() => {
-    if (!selected || !isElement(selected)) return [];
-    const current = shownClassId(selected);
-    const goldEntry = gold ? goldElementOf(gold, selected) : undefined;
-    const acceptable = goldEntry
-      ? classesByRef(goldEntry.acceptableClasses, classes ?? []).filter((c) => c.id !== current)
-      : [];
-    const recent = suggestedClasses(recentClasses, current).flatMap(
-      (classId) => classById.get(classId) ?? [],
-    );
-    const all = [...acceptable, ...recent].filter(
-      (c, i, list) => list.findIndex((x) => x.id === c.id) === i,
-    );
-    return all.slice(0, Math.max(3, acceptable.length));
-  }, [recentClasses, selected, classById, classes, gold]);
-
-  // The individuals a relationship's ends can be changed to: this proposal's accepted
-  // elements, and the dataset's individuals (loaded once a relationship is open).
-  const relationshipOpen = !!selected && isRelationship(selected);
-  const { data: datasetIndividuals } = useIndividuals(
-    { dataset_id: proposal?.dataset_id ?? undefined, limit: SMALL_SET_LIMIT, sort_by: "title" },
-    { enabled: relationshipOpen && !!proposal?.dataset_id },
-  );
-  const endCandidates = useMemo((): EndCandidate[] => {
-    if (!relationshipOpen) return [];
-    const accepted = elements
-      .filter((o) => o.status === "applied" && o.result_entity_id)
-      .map((o) => ({
-        entityId: o.result_entity_id!,
-        title: shownTitle(o),
-        classId: shownClassId(o),
-        operationId: o.id,
-      }));
-    const known = new Set(accepted.map((c) => c.entityId));
-    const others = (datasetIndividuals?.items ?? [])
-      .filter((i) => !known.has(i.id))
-      .map((i) => ({ entityId: i.id, title: i.title, classId: i.class_ids?.[0] }));
-    return [...accepted, ...others];
-  }, [relationshipOpen, elements, datasetIndividuals]);
-
-  // The hover overlay the pills share, beside the inspector.
-  const overlay = useHoverOverlay("#review-inspector", { lingerMs: 150, width: 320 });
-  const pills: ReviewPillsValue = { schema, overlay, link };
+  const rowOf = (operation: ProposedOperation): ElementRow => ({
+    title: isRelationship(operation)
+      ? `${names.relationshipParts(operation).from} → ${names.relationshipParts(operation).to}`
+      : names.titleOf(operation),
+    detail: isRelationship(operation)
+      ? names.relationshipParts(operation).predicate
+      : names.classLabel(shownClassId(operation)),
+    probability:
+      operation.probability === null || operation.probability === undefined
+        ? ""
+        : formatProbability(operation.probability),
+    verdict: verdictOf(operation),
+    verdictLabel: verdictLabel(operation),
+  });
 
   // A passage asked for from the inspector's evidence: shown and flashed in the source.
   const [focus, setFocus] = useState<{ start: number; nonce: number }>();
@@ -493,7 +326,7 @@ export function ReviewPage({
     if (span?.start != null) setFocus({ start: span.start, nonce: Date.now() });
   };
 
-  const deciding = !!proposal && takesDecisions(proposal);
+  const deciding = model.deciding;
 
   // Adding an element the extraction missed, from text selected in the source.
   const addIndividual = useAddProposalIndividual();
@@ -536,7 +369,7 @@ export function ReviewPage({
       });
       closeAdding();
       window.getSelection()?.removeAllRanges();
-      setRecentClasses((recent) => rememberPick(recent, classId));
+      rememberClass(classId);
       const added = addedOperation(before, after);
       if (added) setSelectedId(added.id);
       if (added?.status === "failed") {
@@ -550,168 +383,6 @@ export function ReviewPage({
   };
   // Key X opens the selected operation's reason step: each press bumps this.
   const [rejectPrompt, setRejectPrompt] = useState(0);
-
-  // A near match's choice, by operation: an existing individual, or create new.
-  const [nearChoices, setNearChoices] = useState<Record<string, NearMatchChoice>>({});
-  const nearChoiceOf = (operation: ProposedOperation) =>
-    nearChoices[operation.id] ?? defaultNearMatchChoice(operation);
-  /** The existing individual a near match is accepted as; undefined to create it. */
-  const existingOf = (operation: ProposedOperation) =>
-    isElement(operation) && isNearMatch(operation)
-      ? chosenAlternative(nearChoiceOf(operation))
-      : undefined;
-  /**
-   * A relationship can't be accepted before its new ends are, nor after one is
-   * rejected; an end the edit replaces doesn't count.
-   */
-  const acceptBlocked = (
-    operation: ProposedOperation,
-    all: ProposedOperation[],
-    edit?: Record<string, string>,
-  ) => {
-    const ends = endsToDecide(operation, all);
-    const kept = (end: { role: "source" | "target" }) => !edit?.[`${end.role}_id`];
-    return ends.undecided.some(kept) || ends.rejected.some(kept);
-  };
-
-  /**
-   * Reopen a decided operation so it can be decided again: the operation as
-   * reopened and the proposal's operations then, or undefined when refused.
-   * Accepted relationships that use it reopen with it; the toast says so.
-   */
-  const reopen = async (operation: ProposedOperation) => {
-    const after = await actions.reopenOperations([operation.id]);
-    if (!after) return undefined;
-    const reopened = after.operations.find((o) => o.id === operation.id);
-    if (!reopened) return undefined;
-    const withIt = after.operations.filter(
-      (o) =>
-        o.id !== operation.id &&
-        isAwaiting(o) &&
-        operations.some((before) => before.id === o.id && !isAwaiting(before)),
-    );
-    if (withIt.length > 0) {
-      toast(
-        "info",
-        `${withIt.length} relationship${withIt.length === 1 ? " awaits" : "s await"} a decision again`,
-        `They used ${shownTitle(operation)}: ${withIt.map((o) => `#${o.seq}`).join(", ")}`,
-      );
-    }
-    return { operation: reopened, operations: after.operations };
-  };
-
-  /** After deciding `decidedId`, select the next element still awaiting a decision. */
-  const advance = (decidedId: string, after: ProposedOperation[]) => {
-    const awaiting = new Set(after.filter(isAwaiting).map((o) => o.id));
-    awaiting.delete(decidedId);
-    const next = nextAwaiting(order, awaiting, decidedId);
-    if (next) setSelectedId(next);
-  };
-
-  /**
-   * Reject the relationships still awaiting a decision that use a rejected element,
-   * noting that an end was rejected (the counterpart of a reopen reopening them).
-   */
-  const rejectRelationshipsOf = async (element: ProposedOperation) => {
-    const using = awaitingRelationshipsOf(element, operationsRef.current);
-    if (using.length === 0) return;
-    await actions.rejectOperations(
-      using.map((o) => o.id),
-      endRejectedNote([element.seq]),
-      { reasonCode: END_REJECTED_REASON },
-    );
-  };
-
-  /** After rejecting an element: offer to reject the awaiting relationships that use it. */
-  const offerToRejectRelationships = (element: ProposedOperation, after: ProposedOperation[]) => {
-    const using = awaitingRelationshipsOf(element, after);
-    if (using.length === 0) return;
-    const one = using.length === 1;
-    toast(
-      "info",
-      `${using.length} relationship${one ? " uses" : "s use"} ${shownTitle(element)}: reject ${one ? "it" : "them"} too?`,
-      `${using.map((o) => `#${o.seq}`).join(", ")} would be rejected as "an end was rejected".`,
-      {
-        action: {
-          label: one ? "Reject it too" : "Reject them too",
-          onAction: () => void rejectRelationshipsOf(element),
-        },
-        autoDismissMs: 15000,
-      },
-    );
-  };
-
-  /** The applied outcome of one operation, or why it didn't apply (the toast says so). */
-  const appliedOutcome = (operation: ProposedOperation, outcome: ApplyOutcome) => {
-    if (outcome.error || outcome.cancelled || !outcome.proposal) return undefined;
-    const after = outcome.proposal.operations.find((o) => o.id === operation.id);
-    if (after?.status === "failed") {
-      toast("error", "Apply failed", after.reason ?? "The server gave no reason.");
-      return undefined;
-    }
-    return outcome.proposal.operations;
-  };
-
-  const decide = async (decided: ProposedOperation, decision: Decision) => {
-    if (!deciding || actions.busy) return;
-    const edit = decision.kind === "edit" ? decision.edit : undefined;
-    const existing = existingOf(decided);
-    // The server takes an existing individual or a class edit, never both.
-    if (decision.kind === "class" && existing) return;
-    // A decided one is decided again: checked first, so a refusal reopens nothing.
-    const redeciding = !isAwaiting(decided);
-    if (decision.kind !== "reject") {
-      const blocked = redeciding
-        ? isRelationship(decided) &&
-          acceptBlocked({ ...decided, status: "pending" }, operations, edit)
-        : acceptBlocked(decided, operations, edit);
-      if (blocked) return;
-    }
-    let operation = decided;
-    let current = operations;
-    if (redeciding) {
-      const reopened = await reopen(decided);
-      if (!reopened) return;
-      ({ operation, operations: current } = reopened);
-    }
-    const reviewMs = { [operation.id]: clock.spentOn(operation.id) };
-    // A first decision moves on to the next awaiting one; a changed one stays to show it.
-    const moveOn = (after: ProposedOperation[]) => {
-      if (!redeciding) advance(operation.id, after);
-    };
-    if (decision.kind === "reject") {
-      const rejected = await actions.rejectOperations([operation.id], decision.note, {
-        reasonCode: decision.reasonCode,
-        reviewMs,
-        annotations: goldAnnotations(operation),
-      });
-      if (!rejected) return;
-      if (isElement(operation)) offerToRejectRelationships(operation, current);
-      moveOn(current);
-      return;
-    }
-    const outcome = await actions.accept([operation.id], {
-      current,
-      reviewMs,
-      edits:
-        decision.kind === "class"
-          ? { [operation.id]: { class_ids: [decision.classId] } }
-          : edit
-            ? { [operation.id]: edit }
-            : undefined,
-      chosenAlternatives: existing ? { [operation.id]: existing } : undefined,
-      annotations: goldAnnotations(
-        operation,
-        decision.kind === "class" ? decision.classId : undefined,
-      ),
-    });
-    const after = appliedOutcome(operation, outcome);
-    if (!after) return;
-    if (decision.kind === "class") {
-      setRecentClasses((recent) => rememberPick(recent, decision.classId));
-    }
-    moveOn(after);
-  };
 
   // Keys: A correct, 1-3 a suggested class, X the reasons, J / K next and previous.
   const onKey = useRef<(event: KeyboardEvent) => void>(() => {});
@@ -743,10 +414,10 @@ export function ReviewPage({
       );
     } else if (key === "a") {
       event.preventDefault();
-      void decide(selected, { kind: "correct" });
+      void model.decide(selected, { kind: "correct" });
     } else if (key === "x" && endRejected.length > 0) {
       event.preventDefault();
-      void decide(selected, {
+      void model.decide(selected, {
         kind: "reject",
         reasonCode: END_REJECTED_REASON,
         note: endRejectedNote(endRejected.map((e) => e.seq)),
@@ -759,7 +430,7 @@ export function ReviewPage({
       const suggestion = suggestions[Number(key) - 1];
       if (!suggestion) return;
       event.preventDefault();
-      void decide(selected, { kind: "class", classId: suggestion.id });
+      void model.decide(selected, { kind: "class", classId: suggestion.id });
     }
   };
   useEffect(() => {
@@ -891,7 +562,7 @@ export function ReviewPage({
         <ReviewElapsed pageMs={clock.pageMs} />
       </section>
 
-      <ReviewPillsProvider value={pills}>
+      <ReviewPillsProvider value={model.pills}>
         <div
           ref={panes.ref}
           className="review-panes"
@@ -957,49 +628,9 @@ export function ReviewPage({
           {selected ? (
             <ReviewInspector
               key={selected.id}
-              operation={selected}
-              operations={operations}
-              names={names}
-              schema={schema}
-              endOf={endOf}
-              endCandidates={endCandidates}
-              taxonomyId={proposal.taxonomy_id}
-              datasetId={proposal.dataset_id}
-              nearChoice={nearChoiceOf(selected)}
-              onNearChoice={(choice) =>
-                setNearChoices((all) => ({ ...all, [selected.id]: choice }))
-              }
-              pickable={pickable}
-              classesLoading={classesLoading}
-              suggestions={suggestions}
-              recentIds={recentClasses}
-              onForgetClass={(classId) => setRecentClasses((recent) => forgetPick(recent, classId))}
-              deciding={deciding}
-              busy={actions.busy}
+              {...model.inspectorProps(selected)}
               rejectPrompt={rejectPrompt}
-              onCorrect={() => void decide(selected, { kind: "correct" })}
-              onPickClass={(classId) => void decide(selected, { kind: "class", classId })}
-              onReject={(reasonCode, note) =>
-                void decide(selected, { kind: "reject", reasonCode, note })
-              }
-              onAcceptEdited={(edit) => void decide(selected, { kind: "edit", edit })}
-              onRejectRelationships={() => void rejectRelationshipsOf(selected)}
               onShowPassage={(quote) => showPassage(selected.id, quote)}
-              gold={
-                gold
-                  ? {
-                      goldTier: goldTierOf(gold, selected),
-                      aliases: goldElementOf(gold, selected)?.aliases ?? [],
-                      acceptableIds: classesByRef(
-                        goldElementOf(gold, selected)?.acceptableClasses ?? [],
-                        classes ?? [],
-                      ).map((c) => c.id),
-                      draft: draftOf(selected),
-                      onDraft: (draft) =>
-                        setGoldDrafts((all) => ({ ...all, [selected.id]: draft })),
-                    }
-                  : undefined
-              }
             />
           ) : (
             <p className="review-pane review-pane--inspector review-muted">
@@ -1007,7 +638,7 @@ export function ReviewPage({
             </p>
           )}
         </div>
-        {overlay.overlay}
+        {model.overlay.overlay}
       </ReviewPillsProvider>
 
       <ConfirmDialog

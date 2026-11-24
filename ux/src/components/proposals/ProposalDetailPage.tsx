@@ -79,12 +79,16 @@ import {
 } from "./tieredModel";
 import { nearMatchHeldIds, nearMatchHeldNote, noPassageHeldIds } from "./sourceModel";
 import { ProposalOriginChip } from "./ProposalOrigin";
-import { extractedFromSource } from "./review/reviewModel";
+import { extractedFromSource, opensReviewInspector } from "./review/reviewModel";
 import { goldCheckOf } from "./review/goldModel";
+import { ReviewInspector } from "./review/ReviewInspector";
+import { ReviewPillsProvider, plainClick, type OperationLink } from "./review/ReviewPills";
+import { useInspectorModel } from "./review/useInspectorModel";
 import { CompareEntry } from "./compare/CompareEntry";
 import { useOperationContext } from "./useOperationContext";
 import { pendingLabel, useProposalActions } from "./useProposalActions";
 import "./proposals.css";
+import "./review/review.css";
 
 function scopeMixLabel(operations: ProposedOperation[]): string {
   const scopes = [...new Set(operations.map((o) => o.scope))];
@@ -296,6 +300,24 @@ export function ProposalDetailPage({
       }),
     [context, showPlanKind, showThreshold, threshold, selectable, checked, reverted, conflicted],
   );
+
+  // The review inspector's data, for the operations it opens (extraction creates):
+  // the same inspector, pills and hovers as the Review page.
+  const inspectorLink = (operationId: string): OperationLink => ({
+    href: `${linkPath("proposal", id)}?op=${encodeURIComponent(operationId)}`,
+    onClick: (event) => {
+      if (!plainClick(event)) return;
+      event.preventDefault();
+      onSelectOperation(operationId);
+    },
+  });
+  const inspector = useInspectorModel(proposal, {
+    actions,
+    context,
+    selected: operations.find((o) => o.id === selectedOperationId),
+    link: inspectorLink,
+    deciding: decidesHere,
+  });
 
   // A deep link (?op=) scrolls its row into view once the operations load.
   const tableRef = useRef<HTMLDivElement>(null);
@@ -622,156 +644,168 @@ export function ProposalDetailPage({
         />
       )}
 
-      <SchemaPageLayout
-        data={operations}
-        selectedId={selectedOperationId}
-        renderInspectorContent={(operation) => {
-          const picks = picksByOperation[operation.id] ?? {};
-          const picking = decidesHere && takesPicks(operation);
-          return (
-            <OperationInspector
-              key={operation.id}
-              operation={operation}
-              operations={operations}
-              context={context}
-              picks={picks}
-              definitionOf={definitionOf(operation)}
-              onPick={
-                picking
-                  ? (question, option) =>
-                      setPicksByOperation((all) => ({
-                        ...all,
-                        [operation.id]: { ...all[operation.id], [question]: option },
-                      }))
-                  : undefined
-              }
-              decision={
-                decidesHere && isAwaiting(operation) ? (
-                  <OperationDecision
-                    operation={operation}
-                    proposal={proposal}
-                    taxonomy={taxonomy}
-                    current={context.currentProperty(operation.target_id)}
-                    staleCause={operation.stale ? causeOf(operation) : undefined}
-                    actions={actions}
-                    picks={
-                      operation.reflection ? pickOutcome(operation.reflection, picks) : undefined
-                    }
-                  />
-                ) : !isAwaiting(operation) ? (
-                  <OperationDecided
-                    operation={operation}
-                    decision={decisions?.find((d) => d.operation_id === operation.id)}
-                    reverted={reverted}
-                  />
-                ) : undefined
-              }
-              reverted={reverted}
-            />
-          );
-        }}
-      >
-        <div className="proposal-table-filter" data-testid="proposal-operation-filter">
-          {offersGroupBy(operations) && (
-            <span className="proposal-group-by" data-testid="proposal-group-by">
-              <span className="proposal-bar__label">Group by</span>
-              <SegmentedControl
-                value={groupBy}
-                onChange={(value) => setGroupBy(value as GroupBy)}
-                aria-label="Group operations by"
-                options={[
-                  { value: "kind", label: "Change kind" },
-                  { value: "sequence", label: "Sequence" },
-                ]}
+      <ReviewPillsProvider value={inspector.pills}>
+        <SchemaPageLayout
+          data={operations}
+          selectedId={selectedOperationId}
+          renderInspectorContent={(operation) => {
+            if (opensReviewInspector(proposal, operation)) {
+              return (
+                <ReviewInspector
+                  key={operation.id}
+                  {...inspector.inspectorProps(operation)}
+                  keyboard={false}
+                />
+              );
+            }
+            const picks = picksByOperation[operation.id] ?? {};
+            const picking = decidesHere && takesPicks(operation);
+            return (
+              <OperationInspector
+                key={operation.id}
+                operation={operation}
+                operations={operations}
+                context={context}
+                picks={picks}
+                definitionOf={definitionOf(operation)}
+                onPick={
+                  picking
+                    ? (question, option) =>
+                        setPicksByOperation((all) => ({
+                          ...all,
+                          [operation.id]: { ...all[operation.id], [question]: option },
+                        }))
+                    : undefined
+                }
+                decision={
+                  decidesHere && isAwaiting(operation) ? (
+                    <OperationDecision
+                      operation={operation}
+                      proposal={proposal}
+                      taxonomy={taxonomy}
+                      current={context.currentProperty(operation.target_id)}
+                      staleCause={operation.stale ? causeOf(operation) : undefined}
+                      actions={actions}
+                      picks={
+                        operation.reflection ? pickOutcome(operation.reflection, picks) : undefined
+                      }
+                    />
+                  ) : !isAwaiting(operation) ? (
+                    <OperationDecided
+                      operation={operation}
+                      decision={decisions?.find((d) => d.operation_id === operation.id)}
+                      reverted={reverted}
+                    />
+                  ) : undefined
+                }
+                reverted={reverted}
               />
-            </span>
-          )}
-          <SegmentedControl
-            value={filter}
-            onChange={(value) => chooseFilter(value as OperationFilter)}
-            aria-label="Show operations"
-            options={[
-              { value: "needs", label: `Needs decision · ${progress.awaiting}` },
-              { value: "decided", label: `Decided · ${progress.total - progress.awaiting}` },
-              { value: "all", label: `All · ${progress.total}` },
-            ]}
-          />
-          {counts.ops.length > 1 && (
-            <div data-testid="proposal-op-filter">
-              <SegmentedControl
-                value={facets.op}
-                onChange={(value) => chooseFacets({ ...facets, op: value as Facets["op"] })}
-                aria-label="Show operations by op"
-                options={[
-                  { value: "any", label: "Any op" },
-                  ...counts.ops.map(({ value, count }) => ({
-                    value,
-                    label: `${value} · ${count}`,
-                  })),
-                ]}
-              />
-            </div>
-          )}
-          {counts.scopes.length > 1 && (
-            <div data-testid="proposal-scope-filter">
-              <SegmentedControl
-                value={facets.scope}
-                onChange={(value) => chooseFacets({ ...facets, scope: value as Facets["scope"] })}
-                aria-label="Show operations by scope"
-                options={[
-                  { value: "any", label: "Any scope" },
-                  ...counts.scopes.map(({ value, count }) => ({
-                    value,
-                    label: `${value} · ${count}`,
-                  })),
-                ]}
-              />
-            </div>
-          )}
-        </div>
-        {/* Above the table, so the table frame is the last thing in the list
-            column and its sticky header never scrolls under the topbar. */}
-        <p className="proposals-footnote">
-          {proposal.status === "reverted"
-            ? "This proposal was reverted: what it applied is undone, and it takes no more decisions."
-            : `Amber marks the part of a triple or the field an update changes.${showThreshold || byKind ? " Probabilities below the threshold are muted." : ""} Select an operation to see its change, rationale and evidence.`}
-        </p>
-        <div
-          ref={tableRef}
-          id="proposal-operations"
-          className="schema-table-wrap"
-          data-testid="proposal-operations-table"
-          data-filter={filter}
-          data-group-by={groupBy}
+            );
+          }}
         >
-          {byKind ? (
-            <TieredOperations
-              operations={shownOperations}
-              allOperations={operations}
-              context={context}
-              deciding={decidesHere}
-              reverted={reverted}
-              threshold={threshold}
-              onThresholdChange={setThreshold}
-              actions={actions}
-              selectedOperationId={selectedOperationId}
-              onSelectOperation={onSelectOperation}
-              emptyMessage={emptyMessage}
+          <div className="proposal-table-filter" data-testid="proposal-operation-filter">
+            {offersGroupBy(operations) && (
+              <span className="proposal-group-by" data-testid="proposal-group-by">
+                <span className="proposal-bar__label">Group by</span>
+                <SegmentedControl
+                  value={groupBy}
+                  onChange={(value) => setGroupBy(value as GroupBy)}
+                  aria-label="Group operations by"
+                  options={[
+                    { value: "kind", label: "Change kind" },
+                    { value: "sequence", label: "Sequence" },
+                  ]}
+                />
+              </span>
+            )}
+            <SegmentedControl
+              value={filter}
+              onChange={(value) => chooseFilter(value as OperationFilter)}
+              aria-label="Show operations"
+              options={[
+                { value: "needs", label: `Needs decision · ${progress.awaiting}` },
+                { value: "decided", label: `Decided · ${progress.total - progress.awaiting}` },
+                { value: "all", label: `All · ${progress.total}` },
+              ]}
             />
-          ) : (
-            <Table<ProposedOperation>
-              rowKey="id"
-              columns={columns}
-              data={shownOperations}
-              selectedRows={selectedOperationId ? [selectedOperationId] : []}
-              onRowClick={(row) =>
-                onSelectOperation(row.id === selectedOperationId ? undefined : row.id)
-              }
-              emptyState={<span className="entity-note">{emptyMessage}</span>}
-            />
-          )}
-        </div>
-      </SchemaPageLayout>
+            {counts.ops.length > 1 && (
+              <div data-testid="proposal-op-filter">
+                <SegmentedControl
+                  value={facets.op}
+                  onChange={(value) => chooseFacets({ ...facets, op: value as Facets["op"] })}
+                  aria-label="Show operations by op"
+                  options={[
+                    { value: "any", label: "Any op" },
+                    ...counts.ops.map(({ value, count }) => ({
+                      value,
+                      label: `${value} · ${count}`,
+                    })),
+                  ]}
+                />
+              </div>
+            )}
+            {counts.scopes.length > 1 && (
+              <div data-testid="proposal-scope-filter">
+                <SegmentedControl
+                  value={facets.scope}
+                  onChange={(value) => chooseFacets({ ...facets, scope: value as Facets["scope"] })}
+                  aria-label="Show operations by scope"
+                  options={[
+                    { value: "any", label: "Any scope" },
+                    ...counts.scopes.map(({ value, count }) => ({
+                      value,
+                      label: `${value} · ${count}`,
+                    })),
+                  ]}
+                />
+              </div>
+            )}
+          </div>
+          {/* Above the table, so the table frame is the last thing in the list
+            column and its sticky header never scrolls under the topbar. */}
+          <p className="proposals-footnote">
+            {proposal.status === "reverted"
+              ? "This proposal was reverted: what it applied is undone, and it takes no more decisions."
+              : `Amber marks the part of a triple or the field an update changes.${showThreshold || byKind ? " Probabilities below the threshold are muted." : ""} Select an operation to see its change, rationale and evidence.`}
+          </p>
+          <div
+            ref={tableRef}
+            id="proposal-operations"
+            className="schema-table-wrap"
+            data-testid="proposal-operations-table"
+            data-filter={filter}
+            data-group-by={groupBy}
+          >
+            {byKind ? (
+              <TieredOperations
+                operations={shownOperations}
+                allOperations={operations}
+                context={context}
+                deciding={decidesHere}
+                reverted={reverted}
+                threshold={threshold}
+                onThresholdChange={setThreshold}
+                actions={actions}
+                selectedOperationId={selectedOperationId}
+                onSelectOperation={onSelectOperation}
+                emptyMessage={emptyMessage}
+              />
+            ) : (
+              <Table<ProposedOperation>
+                rowKey="id"
+                columns={columns}
+                data={shownOperations}
+                selectedRows={selectedOperationId ? [selectedOperationId] : []}
+                onRowClick={(row) =>
+                  onSelectOperation(row.id === selectedOperationId ? undefined : row.id)
+                }
+                emptyState={<span className="entity-note">{emptyMessage}</span>}
+              />
+            )}
+          </div>
+        </SchemaPageLayout>
+        {inspector.overlay.overlay}
+      </ReviewPillsProvider>
 
       <ConfirmDialog
         isOpen={!!force}

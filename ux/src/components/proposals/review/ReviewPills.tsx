@@ -27,6 +27,11 @@ import type { ReviewSchema } from "./reviewSchema";
  */
 
 /** How to open an operation of the proposal: a real href, and a plain click selecting it. */
+/** A plain left click selects in place; a modified one is left to the browser (new tab). */
+export function plainClick(event: MouseEvent): boolean {
+  return !(event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || event.button !== 0);
+}
+
 export interface OperationLink {
   href: string;
   onClick: (event: MouseEvent<HTMLAnchorElement>) => void;
