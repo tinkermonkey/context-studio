@@ -68,7 +68,12 @@
       created_at: 2026-11-24T12:34:33.368Z
       updated_at: 2026-11-24T12:34:33.368Z
       version: 1
-  timestamp: 2026-11-24T12:34:33.388Z
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/domain/versioning/proposals.py
+          symbol: OperationCount
+  timestamp: 2026-11-24T13:00:07.906Z
   sequenceNumber: 2
 - type: relationship-add
   elementId: api.operation.list-proposals::satisfies::motivation.requirement.unlanded-lists-only-proposals-with-something-to-land
@@ -159,7 +164,12 @@
       created_at: 2026-11-24T12:34:43.018Z
       updated_at: 2026-11-24T12:34:43.018Z
       version: 1
-  timestamp: 2026-11-24T12:34:43.046Z
+    source_reference:
+      provenance: manual
+      locations:
+        - file: local-server/adapters/web/schemas/proposals.py
+          symbol: OperationCountResponse
+  timestamp: 2026-11-24T13:00:07.922Z
   sequenceNumber: 9
 - type: relationship-add
   elementId: data-model.objectschema.operation-count::maps-to::api.response.operation-count-response

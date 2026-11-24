@@ -10,7 +10,7 @@ description: "#1634 + #1626: the proposals list (REST GET /api/proposals and MCP
   operations. The Proposals list and the Benchmark gold page use the summary
   form."
 created: 2026-11-24T12:34:22.409Z
-modified: 2026-11-24T12:34:43.811Z
+modified: 2026-11-24T13:00:07.925Z
 status: staged
 baseSnapshot: v2:sha256:53252d39ed1357a9afdd6132507b497bf81313353af91142ccb6b590b147594c
 origin:
@@ -20,4 +20,57 @@ stats:
   additions: 11
   modifications: 5
   deletions: 0
-lastSequence: 15
+lastSequence: 17
+unstaged:
+  - sequence: 2
+    removedAt: 16
+    change:
+      type: add
+      elementId: data-model.objectschema.operation-count
+      layerName: data-model
+      after:
+        id: 524e7554-0b34-41ec-b859-6fad055f73f3
+        path: data-model.objectschema.operation-count
+        spec_node_id: data-model.objectschema
+        type: objectschema
+        layer_id: data-model
+        name: Operation Count
+        description: How many of a proposal's operations share one op, kind, status and
+          scope; a list summary carries these instead of the operations.
+        attributes:
+          type: object
+          required:
+            - op
+            - kind
+            - status
+            - scope
+            - count
+        metadata:
+          created_at: 2026-11-24T12:34:33.368Z
+          updated_at: 2026-11-24T12:34:33.368Z
+          version: 1
+      timestamp: 2026-11-24T12:34:33.388Z
+    rewritten: true
+  - sequence: 9
+    removedAt: 17
+    change:
+      type: add
+      elementId: api.response.operation-count-response
+      layerName: api
+      after:
+        id: 20d94c65-2473-47c0-ac59-4c8321d910e7
+        path: api.response.operation-count-response
+        spec_node_id: api.response
+        type: response
+        layer_id: api
+        name: Operation Count Response
+        description: One OperationCount in ChangeProposalResponse.counts.
+        attributes:
+          description: How many of the proposal's operations share this op, kind, status
+            and scope.
+        metadata:
+          created_at: 2026-11-24T12:34:43.018Z
+          updated_at: 2026-11-24T12:34:43.018Z
+          version: 1
+      timestamp: 2026-11-24T12:34:43.046Z
+    rewritten: true
