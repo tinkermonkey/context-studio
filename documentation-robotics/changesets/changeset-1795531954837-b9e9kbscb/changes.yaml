@@ -1,0 +1,79 @@
+- type: update
+  elementId: technology.systemsoftware.reference-api-buddy
+  layerName: technology
+  before:
+    id: 8f8bc68b-4ef5-4ab8-bb05-20093ce51358
+    path: technology.systemsoftware.reference-api-buddy
+    spec_node_id: technology.systemsoftware
+    type: systemsoftware
+    layer_id: technology
+    name: reference-api-buddy
+    description: Caching HTTP proxy library behind the in-process reference proxy.
+    attributes: &a1
+      softwareType: cache
+    source_reference: &a2
+      provenance: extracted
+      locations:
+        - file: local-server/requirements.txt
+          symbol: reference-api-buddy
+    metadata: &a3
+      created_at: 2026-11-19T14:57:00.157Z
+      updated_at: 2026-11-19T14:57:00.157Z
+      version: 1
+  after:
+    id: 8f8bc68b-4ef5-4ab8-bb05-20093ce51358
+    path: technology.systemsoftware.reference-api-buddy
+    spec_node_id: technology.systemsoftware
+    type: systemsoftware
+    layer_id: technology
+    name: reference-api-buddy
+    description: Caching HTTP proxy library behind the in-process reference proxy,
+      pinned at 0.5.2. Does not cache upstream errors, passes upstream statuses
+      through, completes a throttled request's in-flight entry, and takes its
+      cache-entry cap from cache.max_cache_entries; the proxy adapter carries no
+      workarounds for these.
+    attributes: *a1
+    source_reference: *a2
+    metadata: *a3
+  timestamp: 2026-11-24T14:52:43.571Z
+  sequenceNumber: 0
+- type: update
+  elementId: application.applicationcomponent.cached-reference-source
+  layerName: application
+  before:
+    id: 0cd5b507-1e3d-449c-b734-4ae383985b02
+    path: application.applicationcomponent.cached-reference-source
+    spec_node_id: application.applicationcomponent
+    type: applicationcomponent
+    layer_id: application
+    name: Cached Reference Source
+    description: In-process caching HTTP proxy in front of the external reference
+      sources (ConceptNet, DBpedia, Wikidata, schema.org); caches successful
+      upstream responses only.
+    attributes: &a4
+      type: service-component
+    source_reference: &a5
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/reference/proxy.py
+          symbol: ReferenceProxy
+    metadata: &a6
+      created_at: 2026-05-08T12:19:55.023Z
+      updated_at: 2026-05-08T12:19:55.023Z
+      version: 1
+  after:
+    id: 0cd5b507-1e3d-449c-b734-4ae383985b02
+    path: application.applicationcomponent.cached-reference-source
+    spec_node_id: application.applicationcomponent
+    type: applicationcomponent
+    layer_id: application
+    name: Cached Reference Source
+    description: In-process caching HTTP proxy in front of the external reference
+      sources (ConceptNet, DBpedia, Wikidata, schema.org); caches successful
+      upstream responses only (the library does not cache errors) with the cache
+      cap set in the proxy config.
+    attributes: *a4
+    source_reference: *a5
+    metadata: *a6
+  timestamp: 2026-11-24T14:52:43.599Z
+  sequenceNumber: 1
