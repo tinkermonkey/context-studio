@@ -5,9 +5,9 @@ Utility script to run Alembic migrations for both local.db and operations.db.
 Both databases are the ones the app opens: database.local_db_path and
 database.operations_db_path from the config the app loads (the file CONFIG_PATH
 names, else local-server/config.json; the defaults when there is no file, which
-this script never creates). A relative path is relative to local-server/, where
-the app runs, so the result does not depend on the directory this is started
-from. --local-db-url and --operations-db-url override one database explicitly.
+this script never creates). A relative CONFIG_PATH and a relative database path
+are relative to local-server/, where the app runs, so the result does not depend
+on the directory this is started from. --local-db-url and --operations-db-url override one database explicitly.
 
 Usage:
     python scripts/run_migrations.py local upgrade head
@@ -37,26 +37,29 @@ if str(LOCAL_SERVER_ROOT) not in sys.path:
 
 
 def config_database_urls(
-    config_path: str | None = None, base_dir: Path = LOCAL_SERVER_ROOT
+    config_path: str | None = None, base_dir: Path | None = None
 ) -> tuple[str, str]:
     """
     The (local.db, operations.db) SQLAlchemy URLs from the config the app loads.
 
-    config_path defaults to CONFIG_PATH, else local-server/config.json. A missing
-    file means the defaults and is not created. A relative database path is
-    taken relative to base_dir (local-server/, where the app runs); the URLs are
+    config_path defaults to CONFIG_PATH, else config.json. A relative config path
+    and a relative database path are both taken relative to base_dir (default:
+    local-server/, where the app runs), whatever directory this is started from.
+    A missing config file means the defaults and is not created. The URLs are
     absolute.
     """
     from config import ConfigurationManager, DatabaseConfig
 
-    path = config_path or os.getenv("CONFIG_PATH") or str(LOCAL_SERVER_ROOT / "config.json")
-    if os.path.exists(path):
-        database = ConfigurationManager(config_file=path).get_settings().database
+    base = Path(base_dir) if base_dir is not None else LOCAL_SERVER_ROOT
+    raw_path = config_path or os.getenv("CONFIG_PATH") or "config.json"
+    path = (base / os.path.expanduser(raw_path)).resolve()
+    if path.exists():
+        database = ConfigurationManager(config_file=str(path)).get_settings().database
     else:
         database = DatabaseConfig()
 
     def url(db_path: str) -> str:
-        return f"sqlite:///{(base_dir / os.path.expanduser(db_path)).resolve()}"
+        return f"sqlite:///{(base / db_path).resolve()}"
 
     return url(database.local_db_path), url(database.operations_db_path)
 

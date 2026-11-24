@@ -121,3 +121,26 @@ class TestConfigDatabaseUrls:
         assert local_url == f"sqlite:///{LOCAL_SERVER_ROOT / 'local.db'}"
         assert operations_url == f"sqlite:///{LOCAL_SERVER_ROOT / 'operations.db'}"
         assert not missing.exists()
+
+    def test_a_relative_config_path_is_relative_to_local_server(self, tmp_path, monkeypatch):
+        server = tmp_path / "server"
+        (server / "conf").mkdir(parents=True)
+        elsewhere = tmp_path / "elsewhere"
+        elsewhere.mkdir()
+        write_config(server / "conf" / "mine.json", "data/local.db", "data/operations.db")
+        monkeypatch.setattr(run_migrations, "LOCAL_SERVER_ROOT", server)
+        monkeypatch.setenv("CONFIG_PATH", "conf/mine.json")
+        monkeypatch.chdir(elsewhere)
+
+        local_url, operations_url = run_migrations.config_database_urls()
+
+        assert local_url == f"sqlite:///{server / 'data' / 'local.db'}"
+        assert operations_url == f"sqlite:///{server / 'data' / 'operations.db'}"
+
+    def test_a_database_path_is_not_expanded_for_a_home_directory(self, tmp_path):
+        """The app opens the path as written, so a leading ~ is a directory called ~."""
+        config = write_config(tmp_path / "config.json", "~/local.db", "~/operations.db")
+
+        local_url, _ = run_migrations.config_database_urls(str(config), base_dir=tmp_path)
+
+        assert local_url == f"sqlite:///{tmp_path / '~' / 'local.db'}"
