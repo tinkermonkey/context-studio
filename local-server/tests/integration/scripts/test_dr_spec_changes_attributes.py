@@ -21,6 +21,7 @@ import pytest
 from adapters.chat.proposal_tools import build_proposal_tools
 from adapters.interchange.dr_spec import _attribute_records
 from adapters.interchange.dr_spec_changes import spec_changes_for
+from domain.ontology.value_objects import ExternalReference
 from domain.versioning.proposals import OperationDraft, OperationStatus, ProposalSource
 from scripts.dr_ontology_loader import DR_SOURCE, DR_TAXONOMY_IDENTIFIER
 from tests.integration.scripts import test_dr_reflection_plan as plan_tests
@@ -186,7 +187,7 @@ def test_a_create_exports_its_whole_schema_with_the_reference_extras(parts):
     assert change["schema"] == {"minimum": 0}
 
 
-def test_a_create_without_a_dr_reference_on_a_dr_node_type_is_refused(parts):
+def test_a_create_without_a_dr_reference_on_a_dr_node_type_is_skipped(parts):
     _, repo, proposals = parts
     operation_class = class_by_dr_id(repo, "api.operation")
     proposal = apply_all(
@@ -208,8 +209,21 @@ def test_a_create_without_a_dr_reference_on_a_dr_node_type_is_refused(parts):
         ),
     )
 
-    with pytest.raises(ValueError, match="without a DR reference"):
-        spec_changes_for(proposal, repo)
+    # #1623: listed under skipped, not a refusal of the whole export
+    document = spec_changes_for(proposal, repo)
+
+    assert document["attribute_changes"] == []
+    (skipped,) = document["skipped"]
+    assert skipped["seq"] == 1 and "without a DR reference" in skipped["why"]
+    assert skipped["blocks_landing"] is True
+
+    # Giving the attribute its reference afterwards repairs the export
+    created = repo.get_attribute_definition(proposal.operations[0].result_entity_id)
+    created.external_references = [ExternalReference(source=DR_SOURCE, identifier="nameless")]
+    repo.save_attribute_definition(created)
+
+    (change,) = spec_changes_for(proposal, repo)["attribute_changes"]
+    assert (change["spec_node_id"], change["attribute"]) == ("api.operation", "nameless")
 
 
 def test_a_delete_exports_the_attribute_it_removed(parts):

@@ -18,7 +18,7 @@ import pytest
 from adapters.interchange.dr_relationships import dr_cardinality
 from adapters.interchange.dr_spec import iter_relationship_schemas
 from adapters.interchange.dr_spec_changes import spec_changes_for
-from domain.ontology.value_objects import SourceRevision
+from domain.ontology.value_objects import ExternalReference, SourceRevision
 from domain.versioning.proposals import (
     InUseResolution,
     OperationDraft,
@@ -507,15 +507,62 @@ def test_a_create_naming_a_class_the_proposal_created_resolves_its_ref(parts):
     assert [(c["seq"], c["spec_node_id"]) for c in document["node_changes"]] == [(1, "api.widget")]
 
 
-def test_a_type_on_dr_spec_classes_without_a_dr_reference_is_refused(parts):
-    _, repo, proposals = parts
-    create = create_new(repo)
-    create.fields["external_references"] = []
-    proposal = apply_all(proposals, propose(repo, proposals, create))
-    assert proposal.operations[0].status is OperationStatus.APPLIED, proposal.operations[0].reason
+def _unreferenced_create_and_another(repo, proposals):
+    """A type created on DR spec classes without a DR reference (seq 1), and one with (seq 2)."""
+    nameless = create_new(repo)
+    nameless.fields["external_references"] = []
+    named = create_new(repo)
+    named.seq = 2
+    named.fields.update(
+        identifier="response_uses_operation",
+        title="api.response uses api.operation",
+        canonical_predicate="uses",
+        external_references=[dr_ref("api.response.uses.api.operation")],
+    )
+    proposal = apply_all(proposals, propose(repo, proposals, nameless, named))
+    assert all(o.status is OperationStatus.APPLIED for o in proposal.operations), [
+        o.reason for o in proposal.operations
+    ]
+    return proposal
 
-    with pytest.raises(ValueError, match="seq 1: it created a relationship type on DR spec"):
-        spec_changes_for(proposal, repo)
+
+def test_a_type_on_dr_spec_classes_without_a_dr_reference_is_skipped(parts):
+    """#1623: it can't land in DR's spec, but the rest of the proposal still exports."""
+    _, repo, proposals = parts
+    proposal = _unreferenced_create_and_another(repo, proposals)
+
+    document = spec_changes_for(proposal, repo)
+
+    assert [c["seq"] for c in document["changes"]] == [2]
+    (skipped,) = document["skipped"]
+    assert skipped["seq"] == 1
+    assert "created a relationship type on DR spec classes without a DR reference" in (
+        skipped["why"]
+    )
+    assert "give the type one and export again" in skipped["why"]
+    assert skipped["blocks_landing"] is True  # the proposal isn't fully landable yet
+
+
+def test_a_reference_added_after_the_create_repairs_the_export(parts):
+    """#1623: a create without a reference reads the type's reference as it is now."""
+    _, repo, proposals = parts
+    proposal = _unreferenced_create_and_another(repo, proposals)
+    created = repo.get_property_definition(proposal.operations[0].result_entity_id)
+    created.external_references = [ExternalReference.from_dict(dr_ref(NEW))]
+    repo.save_property_definition(created)
+
+    document = spec_changes_for(proposal, repo)
+
+    assert [c["relationship_id"] for c in document["changes"]] == [
+        NEW,
+        "api.response.uses.api.operation",
+    ]
+    assert document["skipped"] == []
+    # records key the repaired create by the same resolved reference as changes
+    assert [(r["action"], r["from"], r["to"]) for r in document["records"]] == [
+        ("create", NEW, NEW),
+        ("create", "api.response.uses.api.operation", "api.response.uses.api.operation"),
+    ]
 
 
 def test_an_update_stripping_the_dr_reference_is_refused(parts):
