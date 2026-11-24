@@ -30,6 +30,18 @@ class TestGroundingAdapterSourceCoverage:
             schema_org=SchemaOrgSource(),
         )
 
+    def test_registered_names_are_the_names_the_reference_status_lists(self):
+        """
+        The grounding wizard offers the names GET /api/reference/status lists (each
+        source's source_name) and the adapter refuses any other, so they must agree.
+        """
+        sources = [DBpediaSource(), ConceptNetSource(), WikidataSource(), SchemaOrgSource()]
+        adapter = GroundingAdapter(
+            dbpedia=sources[0], conceptnet=sources[1], wikidata=sources[2], schema_org=sources[3]
+        )
+
+        assert set(adapter._sources) == {source.source_name for source in sources}
+
     @pytest.mark.asyncio
     async def test_dbpedia_source_registered(self, adapter):
         """Verify DBpedia source is registered in adapter."""

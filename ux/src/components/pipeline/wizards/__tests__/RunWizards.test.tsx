@@ -5,6 +5,7 @@ import userEvent from "@testing-library/user-event";
 import { render } from "@/test/test-utils";
 import { pipelineService, type PipelineConfiguration } from "@/api/services/pipeline";
 import { ontologyService } from "@/api/services/ontology";
+import { referenceService } from "@/api/services/reference";
 import { createDataset } from "@/api/services/__tests__/fixtures/ontology.fixtures";
 import type { components } from "@/api/types";
 import { RUN_WIZARDS } from "../index";
@@ -15,21 +16,40 @@ vi.mock("@tanstack/react-router", async () => ({
   useNavigate: () => navigate,
 }));
 
-// Picking an entity is the picker's own concern: here one click picks a fixed one.
+// Picking an entity is the picker's own concern: here one click picks a fixed one
+// (a multi-select picker adds the next one each click).
 vi.mock("../../EntitySearchPicker", () => ({
   EntitySearchPicker: ({
     entityType,
     onSelect,
+    onSelectMultiple,
+    selectedIds = [],
+    multiSelect,
     "data-testid": testId,
   }: {
     entityType: string;
     onSelect?: (entity: { id: string; label: string }) => void;
+    onSelectMultiple?: (entities: { id: string; label: string }[]) => void;
+    selectedIds?: string[];
+    multiSelect?: boolean;
     "data-testid"?: string;
   }) => (
     <button
       type="button"
       data-testid={testId}
-      onClick={() => onSelect?.({ id: `${entityType}-1`, label: `${entityType} one` })}
+      onClick={() => {
+        if (multiSelect) {
+          const next = selectedIds.length + 1;
+          onSelectMultiple?.(
+            Array.from({ length: next }, (_, i) => ({
+              id: `${entityType}-${i + 1}`,
+              label: `${entityType} ${i + 1}`,
+            })),
+          );
+        } else {
+          onSelect?.({ id: `${entityType}-1`, label: `${entityType} one` });
+        }
+      }}
     >
       pick {entityType}
     </button>
@@ -60,6 +80,11 @@ const configuration = (
   }) as PipelineConfiguration;
 
 let runPipeline: ReturnType<typeof vi.spyOn>;
+let createBatch: ReturnType<typeof vi.spyOn>;
+let enqueueBatchRuns: ReturnType<typeof vi.spyOn>;
+
+// The sources the grounding adapter registers, as the reference status lists them.
+const REFERENCE_SOURCES = ["DBpedia", "ConceptNet", "Wikidata", "schema.org"];
 
 beforeEach(() => {
   navigate.mockReset();
@@ -76,6 +101,19 @@ beforeEach(() => {
   runPipeline = vi
     .spyOn(pipelineService, "runPipeline")
     .mockResolvedValue({ id: "run-1" } as PipelineRun);
+  createBatch = vi
+    .spyOn(pipelineService, "createBatch")
+    .mockResolvedValue({ id: "batch-1" } as Awaited<
+      ReturnType<typeof pipelineService.createBatch>
+    >);
+  enqueueBatchRuns = vi
+    .spyOn(pipelineService, "enqueueBatchRuns")
+    .mockResolvedValue({ batch_id: "batch-1", run_ids: ["run-1"], run_count: 1 });
+  vi.spyOn(referenceService, "getStatus").mockResolvedValue({
+    sources: REFERENCE_SOURCES.map((name) => ({ name, available: true })),
+    sources_available: REFERENCE_SOURCES.length,
+    timestamp: "2026-11-24T00:00:00Z",
+  });
 });
 afterEach(() => vi.restoreAllMocks());
 
@@ -103,7 +141,7 @@ const FILL: Record<string, { prefix: string; fill: () => Promise<void> }> = {
     prefix: "schema-grounding",
     fill: async () => {
       await userEvent.click(screen.getByTestId("schema-grounding-nodes"));
-      await userEvent.click(screen.getByTestId("schema-grounding-source-dbpedia"));
+      await userEvent.click(await screen.findByTestId("schema-grounding-source-dbpedia"));
       await userEvent.click(screen.getByTestId("schema-grounding-source-schema_org"));
     },
   },
@@ -144,9 +182,20 @@ describe("run wizards", () => {
       await fill();
       await userEvent.click(screen.getByTestId(`${prefix}-submit`));
 
-      await waitFor(() => expect(runPipeline).toHaveBeenCalledTimes(1));
-      const [runType, body] = runPipeline.mock.calls[0];
-      expect(runType).toBe(type);
+      // Grounding enqueues its runs in a batch; every other wizard starts one run
+      let body: Record<string, unknown>;
+      if (type === "schema_node_grounding") {
+        await waitFor(() => expect(enqueueBatchRuns).toHaveBeenCalledTimes(1));
+        expect(runPipeline).not.toHaveBeenCalled();
+        const spec = enqueueBatchRuns.mock.calls[0][1].runs[0];
+        expect(spec.pipeline_type).toBe(type);
+        body = spec;
+      } else {
+        await waitFor(() => expect(runPipeline).toHaveBeenCalledTimes(1));
+        const [runType, request] = runPipeline.mock.calls[0];
+        expect(runType).toBe(type);
+        body = request;
+      }
       expect(body).toMatchObject({
         implementation_id: "second",
         configuration_ref: "second-alt",
@@ -163,27 +212,95 @@ describe("run wizards", () => {
     },
   );
 
-  it("grounding sends what the server reads: one node, its label and type, and source names", async () => {
+  it("grounding enqueues one run for one class: its id, type, configuration and source names", async () => {
     renderWizard("schema_node_grounding");
     await waitFor(() =>
       expect(screen.getByTestId("schema-grounding-configuration")).toHaveValue("base-main"),
     );
-    await userEvent.click(screen.getByRole("radio", { name: "Property Definition" }));
     await FILL.schema_node_grounding.fill();
     await userEvent.click(screen.getByTestId("schema-grounding-submit"));
 
-    await waitFor(() => expect(runPipeline).toHaveBeenCalledTimes(1));
-    expect(runPipeline.mock.calls[0][1]).toEqual({
+    await waitFor(() => expect(enqueueBatchRuns).toHaveBeenCalledTimes(1));
+    expect(createBatch).toHaveBeenCalledTimes(1);
+    expect(enqueueBatchRuns).toHaveBeenCalledWith("batch-1", {
+      runs: [
+        {
+          pipeline_type: "schema_node_grounding",
+          implementation_id: "base",
+          configuration_ref: "base-main",
+          // Read by the background worker; the server grounds the title of the class
+          input_data: {
+            node_id: "Class-1",
+            node_type: "Class",
+            // The adapter's own, case-sensitive source names.
+            sources: ["DBpedia", "schema.org"],
+          },
+        },
+      ],
+    });
+    expect(runPipeline).not.toHaveBeenCalled();
+    await waitFor(() =>
+      expect(navigate).toHaveBeenCalledWith({
+        to: "/app/pipelines/runs",
+        search: { selected: "run-1" },
+      }),
+    );
+  });
+
+  it("grounding enqueues one run per selected class in one batch, and opens the runs list", async () => {
+    enqueueBatchRuns.mockResolvedValue({
+      batch_id: "batch-1",
+      run_ids: ["run-1", "run-2", "run-3"],
+      run_count: 3,
+    });
+    renderWizard("schema_node_grounding");
+    await waitFor(() =>
+      expect(screen.getByTestId("schema-grounding-configuration")).toHaveValue("base-main"),
+    );
+    // Each click on the picker adds the next class
+    await userEvent.click(screen.getByTestId("schema-grounding-nodes"));
+    await userEvent.click(screen.getByTestId("schema-grounding-nodes"));
+    await userEvent.click(screen.getByTestId("schema-grounding-nodes"));
+    await userEvent.click(await screen.findByTestId("schema-grounding-source-conceptnet"));
+    expect(screen.getByTestId("schema-grounding-submit")).toHaveTextContent("Run 3 Pipelines");
+    await userEvent.click(screen.getByTestId("schema-grounding-submit"));
+
+    await waitFor(() => expect(enqueueBatchRuns).toHaveBeenCalledTimes(1));
+    expect(createBatch).toHaveBeenCalledTimes(1);
+    const spec = (nodeId: string) => ({
+      pipeline_type: "schema_node_grounding",
       implementation_id: "base",
       configuration_ref: "base-main",
-      // Started in the background: the run drawer follows it.
-      async: true,
-      node_id: "PropertyDefinition-1",
-      node_label: "PropertyDefinition one",
-      node_type: "PropertyDefinition",
-      // The adapter's own, case-sensitive source names.
-      sources: ["DBpedia", "schema.org"],
+      input_data: { node_id: nodeId, node_type: "Class", sources: ["ConceptNet"] },
     });
+    expect(enqueueBatchRuns).toHaveBeenCalledWith("batch-1", {
+      runs: [spec("Class-1"), spec("Class-2"), spec("Class-3")],
+    });
+    await waitFor(() =>
+      expect(navigate).toHaveBeenCalledWith({ to: "/app/pipelines/runs", search: {} }),
+    );
+  });
+
+  it("grounding offers classes only and says why property definitions are not offered", async () => {
+    renderWizard("schema_node_grounding");
+
+    expect(screen.queryByRole("radio", { name: "Property Definition" })).not.toBeInTheDocument();
+    expect(screen.queryByTestId("schema-grounding-node-type")).not.toBeInTheDocument();
+    expect(screen.getByTestId("schema-grounding-classes-only")).toHaveTextContent(
+      "property definitions can't be grounded here",
+    );
+    expect(screen.getByTestId("schema-grounding-nodes")).toHaveTextContent("pick Class");
+  });
+
+  it("grounding offers the knowledge sources the reference status lists, and no others", async () => {
+    renderWizard("schema_node_grounding");
+
+    const group = await screen.findByTestId("schema-grounding-sources");
+    await waitFor(() =>
+      expect(Array.from(group.querySelectorAll("label")).map((label) => label.textContent)).toEqual(
+        REFERENCE_SOURCES,
+      ),
+    );
   });
 
   it("individual extraction names no dataset while the taxonomy has one", async () => {

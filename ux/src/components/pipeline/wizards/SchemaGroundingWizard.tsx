@@ -1,41 +1,42 @@
 import { useState } from "react";
-import { Button, Field, FormCallout, SegmentedControl } from "@tinkermonkey/heimdall-ui";
+import { Button, Field, FormCallout } from "@tinkermonkey/heimdall-ui";
 import { useToasts } from "@/components/ui/Toast";
 import { useRunWizard } from "@/api/hooks/pipeline/useRunWizard";
+import { useReferenceStatus } from "@/api/hooks/reference";
+import type { BatchRunSpec } from "@/api/hooks/pipeline/usePipelineMutations";
 import { selectionRequestFields, usePipelineSelection } from "@/hooks/usePipelineSelection";
 import { ImplementationConfigPicker } from "../ImplementationConfigPicker";
 import { EntitySearchPicker, type Entity } from "../EntitySearchPicker";
-import type { components } from "@/api/types";
 import "./Wizards.css";
 
-type PipelineRunRequest = components["schemas"]["PipelineRunRequest"];
-
-// The names the server's grounding adapter registers its sources under
-// (case-sensitive; an unknown name is refused).
-const KNOWLEDGE_SOURCES = [
-  { id: "dbpedia", name: "DBpedia" },
-  { id: "conceptnet", name: "ConceptNet" },
-  { id: "wikidata", name: "Wikidata" },
-  { id: "schema_org", name: "schema.org" },
-];
+/** The test id of a source's checkbox: its name without punctuation ("schema.org" → "schema_org"). */
+const sourceTestId = (name: string) =>
+  `schema-grounding-source-${name.toLowerCase().replace(/[^a-z0-9]+/g, "_")}`;
 
 export function SchemaGroundingWizard() {
   const { toast } = useToasts();
-  const { isSubmitting, errors, setErrors, handleSubmit } = useRunWizard({
+  const { isSubmitting, errors, setErrors, handleSubmitBatch } = useRunWizard({
     type: "schema_node_grounding",
   });
   const selection = usePipelineSelection("schema_node_grounding");
+  // The names the grounding adapter registers its sources under (case-sensitive; it refuses
+  // any other): the reference status lists the same sources.
+  const {
+    data: referenceStatus,
+    isLoading: sourcesLoading,
+    isError: sourcesFailed,
+  } = useReferenceStatus();
+  const knowledgeSources = referenceStatus?.sources ?? [];
 
-  // One node per run: the pipeline grounds one label.
-  const [selectedNode, setSelectedNode] = useState<Entity | null>(null);
+  // One run per class: each grounds one label.
+  const [selectedNodes, setSelectedNodes] = useState<Entity[]>([]);
   const [selectedSources, setSelectedSources] = useState<string[]>([]);
-  const [nodeType, setNodeType] = useState<"Class" | "PropertyDefinition">("Class");
 
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
 
-    if (!selectedNode) {
-      newErrors.nodes = "A target node is required";
+    if (selectedNodes.length === 0) {
+      newErrors.nodes = "At least one target class is required";
     }
 
     if (selectedSources.length === 0) {
@@ -59,16 +60,14 @@ export function SchemaGroundingWizard() {
     }
 
     try {
-      const request: PipelineRunRequest = {
+      // The server grounds the title of the class each node_id names.
+      const specs: BatchRunSpec[] = selectedNodes.map((node) => ({
+        pipeline_type: "schema_node_grounding",
         ...selectionRequestFields(selection),
-        // The label is what is grounded; the id says which node the result is for.
-        node_id: selectedNode!.id,
-        node_label: selectedNode!.label,
-        node_type: nodeType,
-        sources: selectedSources,
-      };
+        input_data: { node_id: node.id, node_type: "Class", sources: selectedSources },
+      }));
 
-      await handleSubmit(request);
+      await handleSubmitBatch(specs);
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "Failed to run pipeline";
       toast("error", errorMessage);
@@ -84,36 +83,26 @@ export function SchemaGroundingWizard() {
 
   return (
     <form onSubmit={onSubmit} data-testid="schema-grounding-wizard" className="wizard-form">
-      <Field label="Node Type" data-testid="schema-grounding-node-type">
-        <SegmentedControl
-          value={nodeType}
-          onChange={(value) => {
-            setNodeType(value as "Class" | "PropertyDefinition");
-            setSelectedNode(null);
-            setErrors((prev) => ({ ...prev, nodes: undefined }));
-          }}
-          options={[
-            { value: "Class", label: "Class" },
-            { value: "PropertyDefinition", label: "Property Definition" },
-          ]}
-          disabled={isSubmitting}
-        />
-      </Field>
-
-      <Field label="Target Node" required error={errors.nodes} errorId="nodes-error">
+      <Field label="Target Classes" required error={errors.nodes} errorId="nodes-error">
         <EntitySearchPicker
-          entityType={nodeType}
-          selectedId={selectedNode?.id}
-          onSelect={(entity) => {
-            setSelectedNode(entity);
+          entityType="Class"
+          multiSelect
+          selectedIds={selectedNodes.map((node) => node.id)}
+          onSelectMultiple={(entities) => {
+            setSelectedNodes(entities);
             setErrors((prev) => ({ ...prev, nodes: undefined }));
           }}
-          placeholder={`Search ${nodeType === "Class" ? "classes" : "property definitions"} to ground…`}
+          placeholder="Search classes to ground…"
+          disabled={isSubmitting}
           aria-invalid={!!errors.nodes}
           aria-describedby={errors.nodes ? "nodes-error" : undefined}
           data-testid="schema-grounding-nodes"
         />
       </Field>
+      <FormCallout variant="info" data-testid="schema-grounding-classes-only">
+        Grounding applies to classes only, so property definitions can&apos;t be grounded here. Each
+        selected class is its own run, started together.
+      </FormCallout>
 
       <Field label="Knowledge Sources" required error={errors.sources} errorId="sources-error">
         <div
@@ -124,18 +113,26 @@ export function SchemaGroundingWizard() {
           aria-describedby={errors.sources ? "sources-error" : undefined}
           data-testid="schema-grounding-sources"
         >
-          {KNOWLEDGE_SOURCES.map((source) => (
-            <label key={source.id} className="sources-label">
+          {knowledgeSources.map((source) => (
+            <label key={source.name} className="sources-label">
               <input
                 type="checkbox"
                 checked={selectedSources.includes(source.name)}
                 onChange={() => toggleSource(source.name)}
                 disabled={isSubmitting}
-                data-testid={`schema-grounding-source-${source.id}`}
+                data-testid={sourceTestId(source.name)}
               />
               {source.name}
             </label>
           ))}
+          {sourcesLoading && (
+            <span data-testid="schema-grounding-sources-loading">Loading knowledge sources…</span>
+          )}
+          {sourcesFailed && (
+            <span role="alert" data-testid="schema-grounding-sources-error">
+              Could not load the knowledge sources
+            </span>
+          )}
         </div>
       </Field>
 
@@ -154,11 +151,15 @@ export function SchemaGroundingWizard() {
       <Button
         type="submit"
         variant="primary"
-        disabled={isSubmitting || !selectedNode || selectedSources.length === 0}
+        disabled={isSubmitting || selectedNodes.length === 0 || selectedSources.length === 0}
         aria-busy={isSubmitting}
         data-testid="schema-grounding-submit"
       >
-        {isSubmitting ? "Starting…" : "Run Pipeline"}
+        {isSubmitting
+          ? "Starting…"
+          : selectedNodes.length > 1
+            ? `Run ${selectedNodes.length} Pipelines`
+            : "Run Pipeline"}
       </Button>
     </form>
   );
