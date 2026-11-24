@@ -15,6 +15,7 @@ import { getWorkspacePath } from "@/lib/workspaceStorage";
 import { useCommandPaletteStore } from "@/stores/commandPalette";
 import { handTopbarSearchToPalette } from "@/components/shell/topbarSearch";
 import { TopbarActions } from "@/components/shell/TopbarActions";
+import { StatusBarSync } from "@/components/shell/StatusBarSync";
 import { useCanvasStore } from "@/stores/canvas";
 import { useBreadcrumbStore } from "@/stores/breadcrumbs";
 import { useNavigatorStore } from "@/stores/navigator";
@@ -52,16 +53,6 @@ export const Route = createFileRoute("/app")({
   },
   component: AppShell,
 });
-
-function formatRelativeMinutes(uptimeSeconds: number): string {
-  if (uptimeSeconds < 60) return "just now";
-  const minutes = Math.floor(uptimeSeconds / 60);
-  if (minutes < 60) return `${minutes}m ago`;
-  const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `${hours}h ago`;
-  const days = Math.floor(hours / 24);
-  return `${days}d ago`;
-}
 
 interface SidebarUserFooterProps {
   workspaceName: string;
@@ -189,9 +180,6 @@ function AppShell() {
   const isHealthy = !isError && health?.status === "healthy";
   const isDegraded = !isError && health?.status === "degraded";
   const apiPulseTone = isError ? "rose" : isDegraded ? "amber" : isHealthy ? "emerald" : "amber";
-  const syncedLabel = health
-    ? `synced ${formatRelativeMinutes(health.uptime_seconds)}`
-    : "syncing…";
 
   const statusbarLeft = (
     <>
@@ -210,19 +198,6 @@ function AppShell() {
           </div>
         </>
       )}
-    </>
-  );
-
-  const statusbarRight = (
-    <>
-      <div className="statusbar__item">
-        <span className="statusbar__label--mono">UTF-8 · LF</span>
-      </div>
-      <div className="statusbar__divider" />
-      <div className="statusbar__item">
-        <Icon name="check" size={12} />
-        <span className="statusbar__label--mono">{syncedLabel}</span>
-      </div>
     </>
   );
 
@@ -314,7 +289,7 @@ function AppShell() {
       }}
       statusbar={{
         left: statusbarLeft,
-        right: statusbarRight,
+        right: <StatusBarSync />,
       }}
     >
       <div

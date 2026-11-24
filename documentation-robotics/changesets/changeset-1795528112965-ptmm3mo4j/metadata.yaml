@@ -1,0 +1,18 @@
+id: changeset-1795528112965-ptmm3mo4j
+name: statusbar-real-sync-state
+description: '#1651: the status bar shows only what the app knows. Remove the
+  fixed "UTF-8 · LF" and the uptime mislabelled "synced". Add a sync item that
+  reads the sync status API (useSyncStatus): off, N unsynced changes, last
+  synced, degraded or never synced; absent while loading or on error.'
+created: 2026-11-24T13:48:32.976Z
+modified: 2026-11-24T13:48:38.050Z
+status: staged
+baseSnapshot: v2:sha256:53252d39ed1357a9afdd6132507b497bf81313353af91142ccb6b590b147594c
+origin:
+  kind: plan
+purpose: plan
+stats:
+  additions: 3
+  modifications: 1
+  deletions: 0
+lastSequence: 3
