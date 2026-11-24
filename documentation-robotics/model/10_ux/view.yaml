@@ -142,7 +142,8 @@ ux.view.app-shell-view:
   layer_id: ux
   name: App Shell View
   description: "Application shell: titlebar, sidebar navigation, command palette,
-    chat panel and the outlet for /app pages."
+    chat panel, status bar (daemon health and counts, sync state) and the outlet
+    for /app pages."
   attributes:
     type: full-screen
     routable: true

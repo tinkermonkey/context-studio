@@ -3,7 +3,7 @@ schema: documentation-robotics-v1
 cli_version: 0.7.1
 spec_version: 0.13.0
 created: 2026-03-23T12:18:08.630Z
-updated: 2026-11-24T14:28:53.395Z
+updated: 2026-11-24T14:52:48.167Z
 project:
   name: Context Studio
   description: Local-first knowledge graph application for RAG and communication
@@ -136,7 +136,7 @@ layers:
       experiencestate: 1
       librarycomponent: 8
       statepattern: 1
-      subview: 27
+      subview: 28
       uxapplication: 1
       uxlibrary: 1
       uxspec: 1
@@ -190,6 +190,12 @@ changeset_history:
     action: committed
   - name: vite-dev-server-loopback-only
     committed_at: 2026-11-24T14:28:53.395Z
+    action: committed
+  - name: statusbar-real-sync-state
+    committed_at: 2026-11-24T14:52:26.929Z
+    action: committed
+  - name: api-spec-check-flag
+    committed_at: 2026-11-24T14:52:48.167Z
     action: committed
 reconciled:
   changeset: rebuild-model-from-code

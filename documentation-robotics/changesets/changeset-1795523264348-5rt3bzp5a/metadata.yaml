@@ -5,8 +5,8 @@ description: "#1647: update_api_specs.py gets a real --check (writes nothing,
   freshness. Model change: the OpenAPI document element says it is verified by
   --check. Tooling docs (commands, skills) are not modelled."
 created: 2026-11-24T12:27:44.377Z
-modified: 2026-11-24T12:27:50.442Z
-status: staged
+modified: 2026-11-24T14:52:48.165Z
+status: committed
 baseSnapshot: v2:sha256:53252d39ed1357a9afdd6132507b497bf81313353af91142ccb6b590b147594c
 origin:
   kind: plan

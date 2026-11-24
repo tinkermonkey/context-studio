@@ -507,3 +507,22 @@ ux.subview.connection-refinement-review:
     created_at: 2026-11-19T15:02:28.474Z
     updated_at: 2026-11-19T15:02:28.474Z
     version: 1
+ux.subview.status-bar-sync:
+  id: 00747120-7917-4fdd-b9ae-bc064a65dc94
+  path: ux.subview.status-bar-sync
+  spec_node_id: ux.subview
+  type: subview
+  layer_id: ux
+  name: Status Bar Sync
+  description: "Status bar item showing the real sync state from the sync status
+    API: off, unsynced change count, last sync time, degraded or never synced.
+    Absent while loading or on error."
+  source_reference:
+    provenance: manual
+    locations:
+      - file: ux/src/components/shell/StatusBarSync.tsx
+        symbol: StatusBarSync
+  metadata:
+    created_at: 2026-11-24T13:48:37.772Z
+    updated_at: 2026-11-24T13:48:37.772Z
+    version: 1
