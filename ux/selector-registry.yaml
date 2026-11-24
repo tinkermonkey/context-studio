@@ -3112,39 +3112,9 @@ selectors:
     description: "Warn callout when the operation is stale: in the Decision section (what changed, Apply anyway), or under Change when it takes no decision"
 
   # Review an extraction against its source (/app/proposals/$proposalId/review, #1611)
-  - selector: proposal-review-against-source
-    component: src/components/proposals/ProposalDetailPage.tsx
-    description: '"Review against source" button beside the status; opens /app/proposals/$proposalId/review. Shown only for a proposal whose operations cite passages in a source'
-  - selector: review-page
-    component: src/components/proposals/review/ReviewPage.tsx
-    description: "Root of the Review page: an extraction proposal reviewed against its whole source"
-  - selector: review-header
-    component: src/components/proposals/review/ReviewPage.tsx
-    description: 'PageHeader: eyebrow "PROPOSAL · SOURCE <title> · DATASET <identifier>", title "Review extraction: <source title>", Finish review action'
-  - selector: review-finish
-    component: src/components/proposals/review/ReviewPage.tsx
-    description: '"Finish review" button; back to the proposal page'
-  - selector: review-origin-line
-    component: src/components/proposals/review/ReviewPage.tsx
-    description: '"Proposed by" line with the origin chip (proposal-origin), else the proposal source'
-  - selector: review-progress
-    component: src/components/proposals/review/ReviewPage.tsx
-    description: 'Progress strip (region "Decision progress"): decided / total, ProgressBar, counts by verdict, review time'
-  - selector: review-progress-decided
-    component: src/components/proposals/review/ReviewPage.tsx
-    description: '"<decided> / <total>" over individual and relationship operations'
-  - selector: review-progress-bar
-    component: src/components/proposals/review/ReviewPage.tsx
-    description: "Decided ProgressBar; amber while anything awaits, emerald once all decided"
-  - selector: review-progress-counts
-    component: src/components/proposals/review/ReviewPage.tsx
-    description: '"N correct · N class changed · N not elements · N added" (added = added_by_reviewer)'
   - selector: review-time
-    component: src/components/proposals/review/ReviewPage.tsx
-    description: '"m:ss on this review": active time on the page (idle gaps over 2 minutes left out), ticking each second'
-  - selector: review-panes
-    component: src/components/proposals/review/ReviewPage.tsx
-    description: "The three panes, Source | Elements | Inspector; they wrap to a stack at narrow widths"
+    component: src/components/proposals/review/ReviewElapsed.tsx
+    description: "The review timer in the proposal's status strip (active time on this review), while it takes decisions and something awaits one"
   - selector: review-force-message
     component: src/components/proposals/review/ReviewPage.tsx
     description: "Apply anyway ConfirmDialog message for a stale operation"
@@ -3166,9 +3136,6 @@ selectors:
   - selector: review-elements
     component: src/components/proposals/review/ReviewElementsPane.tsx
     description: 'Elements pane (region "Proposed elements") with the Awaiting / All filter'
-  - selector: review-filter
-    component: src/components/proposals/review/ReviewPage.tsx
-    description: "SegmentedControl: Awaiting · N / All · N; Awaiting keeps the selected element"
   - selector: review-element-list
     component: src/components/proposals/review/ReviewElementsPane.tsx
     description: "Listbox of the elements, grouped by layer then Relationships"
@@ -3196,6 +3163,9 @@ selectors:
   - selector: proposal-inspector-empty
     component: src/components/proposals/ProposalDetailPage.tsx
     description: "In place of the inspector while no operation is selected"
+  - selector: proposal-landed
+    component: src/components/proposals/ProposalDetailPage.tsx
+    description: "\"landed\" chip in the status strip once the client has landed the proposal in the taxonomy's source"
   - selector: proposal-supersede-*
     component: src/components/proposals/ProposalDetailPage.tsx
     description: "proposal-supersede-supersedes / proposal-supersede-superseded_by: the proposal this one replaces or is replaced by (#1624), a chip and a link"
@@ -3474,10 +3444,10 @@ selectors:
 
   # Gold check: gold mode on the Review page and the Benchmark gold page (#1614)
   - selector: review-gold-split
-    component: src/components/proposals/review/ReviewPage.tsx
-    description: "Gold mode: the check's split chip beside \"Proposed by\" (dev cyan, holdout violet); the title reads \"Gold check: <document>\""
+    component: src/components/proposals/ProposalDetailPage.tsx
+    description: "A gold check's split (dev / holdout) chip in the status strip"
   - selector: review-gold-holdout
-    component: src/components/proposals/review/ReviewPage.tsx
+    component: src/components/proposals/ProposalDetailPage.tsx
     description: "Gold mode, holdout only: \"Holdout: check it like the others; its element-level errors are never shown where pipelines are tuned.\""
   - selector: review-gold-aliases
     component: src/components/proposals/review/ReviewInspector.tsx
@@ -3503,12 +3473,6 @@ selectors:
   - selector: gold-row-*
     component: src/components/proposals/gold/BenchmarkGoldPage.tsx
     description: "A gold check's document id in its table row, by proposal id"
-  - selector: proposal-gold-callout
-    component: src/components/proposals/ProposalDetailPage.tsx
-    description: "On a gold-check proposal: \"Gold checks are decided on the Review page, …\"; its decision controls (per operation, bulk, threshold, selection) are off"
-  - selector: proposal-gold-review
-    component: src/components/proposals/ProposalDetailPage.tsx
-    description: "Link in the gold callout: opens the Review page"
   - selector: review-definition-loading
     component: src/components/proposals/review/ReviewInspector.tsx
     description: "\"Loading…\" in place of the class definition until the taxonomy's classes load (class labels show \"…\", the picker reads \"Loading classes…\" and is disabled, rows group under review-group-loading)"
@@ -3562,9 +3526,6 @@ selectors:
   - selector: proposal-compare
     component: src/components/proposals/compare/CompareEntry.tsx
     description: "\"Compare with another pipeline\" on the proposal page (CompareEntry): shown when another open extraction of the same source and dataset by another implementation exists"
-  - selector: review-compare
-    component: src/components/proposals/compare/CompareEntry.tsx
-    description: "\"Compare with another pipeline\" in the Review page header (CompareEntry)"
   - selector: compare-entry
     component: src/components/proposals/compare/CompareEntry.tsx
     description: "CompareEntry default root: the button, or with several candidates the wrapper of its menu"

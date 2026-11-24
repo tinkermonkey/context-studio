@@ -1,5 +1,4 @@
-import { createFileRoute, useNavigate, useRouter } from "@tanstack/react-router";
-import { ReviewPage } from "@/components/proposals/review/ReviewPage";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 
 interface ReviewSearch {
   /** The operation open in the inspector: an element or a relationship. */
@@ -7,46 +6,20 @@ interface ReviewSearch {
 }
 
 /**
- * An extraction proposal reviewed against its whole source; Finish goes back to
- * the proposal. The selection lives in the URL (?selected=<operation id>): each
- * selection pushes a history entry, so Back and Forward move between them, and
- * a link to one opens it (in a new tab, or after a reload).
+ * The review against the source is the proposal's own page now (#1664): an old
+ * /review link lands there with the same selection, in place of the entry it
+ * came in on.
  */
-function ProposalReviewRoute() {
-  const { proposalId } = Route.useParams();
-  const { selected } = Route.useSearch();
-  const navigate = useNavigate();
-  const router = useRouter();
-  const to = "/app/proposals/$proposalId/review" as const;
-  return (
-    <ReviewPage
-      key={proposalId}
-      id={proposalId}
-      selectedId={selected}
-      onSelect={(operationId) =>
-        navigate({
-          to,
-          params: { proposalId },
-          search: (prev: Record<string, unknown>) => ({ ...prev, selected: operationId }),
-        })
-      }
-      hrefOf={(operationId) =>
-        router.buildLocation({ to, params: { proposalId }, search: { selected: operationId } }).href
-      }
-      onFinish={() => navigate({ to: "/app/proposals/$proposalId", params: { proposalId } })}
-      onCompare={(otherId) =>
-        navigate({
-          to: "/app/proposals/$proposalId/compare/$otherId",
-          params: { proposalId, otherId },
-        })
-      }
-    />
-  );
-}
-
 export const Route = createFileRoute("/app/proposals_/$proposalId_/review")({
-  component: ProposalReviewRoute,
   validateSearch: (search: Record<string, unknown>): ReviewSearch => ({
     selected: typeof search.selected === "string" ? search.selected : undefined,
   }),
+  beforeLoad: ({ params, search }) => {
+    throw redirect({
+      to: "/app/proposals/$proposalId",
+      params: { proposalId: params.proposalId },
+      search: search.selected ? { selected: search.selected } : {},
+      replace: true,
+    });
+  },
 });

@@ -77,9 +77,6 @@ export function ProposalPage({
           params: { proposalId, otherId },
         })
       }
-      onReviewAgainstSource={() =>
-        navigate({ to: "/app/proposals/$proposalId/review", params: { proposalId } })
-      }
       onSelectOperation={(operationId) => {
         diffOpenedOn.current = undefined;
         navigate({

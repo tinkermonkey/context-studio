@@ -1,13 +1,13 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { BenchmarkGoldPage } from "@/components/proposals/gold/BenchmarkGoldPage";
 
-/** The benchmark gold checks; Check gold opens a check's Review page. */
+/** The benchmark gold checks; Check gold opens a check on its proposal page. */
 function BenchmarkGoldRoute() {
   const navigate = useNavigate();
   return (
     <BenchmarkGoldPage
       onOpenReview={(proposalId) =>
-        navigate({ to: "/app/proposals/$proposalId/review", params: { proposalId } })
+        navigate({ to: "/app/proposals/$proposalId", params: { proposalId } })
       }
     />
   );

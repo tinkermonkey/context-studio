@@ -23,6 +23,7 @@ import type {
   ChangeProposalApplyRequest,
   ProposedOperation,
 } from "@/api/services/proposals";
+import type { Source, SourceText } from "@/api/services/sources";
 import { ProposalDetailPage } from "../ProposalDetailPage";
 
 const server = setupServer(...proposalHandlers, ...entityPageHandlers);
@@ -68,6 +69,24 @@ const rename = createProposedOperation({
   probability: 0.7,
 });
 
+const source = {
+  id: "src-1",
+  taxonomy_id: "tax-1",
+  dataset_id: "ds-1",
+  kind: "text",
+  title: "Architecture note",
+  origin: "note.md",
+  content_type: "text/plain",
+  bytes: TEXT.length,
+  pages: null,
+  chars: TEXT.length,
+  page_starts: [],
+  headings: [],
+  status: "ready",
+  failure: null,
+  failure_detail: null,
+} as unknown as Source;
+
 let proposal: ChangeProposal;
 let applies: ChangeProposalApplyRequest[];
 
@@ -99,6 +118,17 @@ beforeEach(() => {
   server.use(
     http.get("*/api/proposals/:id", () => HttpResponse.json(proposal)),
     http.get("*/api/taxonomies/:id/gold", () => HttpResponse.json(goldPage(proposal.operations))),
+    http.get("*/api/sources/:id/text", () =>
+      HttpResponse.json({
+        source_id: "src-1",
+        page: null,
+        pages: null,
+        start: 0,
+        end: TEXT.length,
+        text: TEXT,
+      } as unknown as SourceText),
+    ),
+    http.get("*/api/sources/:id", () => HttpResponse.json(source)),
     http.post("*/api/proposals/:id/apply", async ({ request }) => {
       const body = (await request.json()) as ChangeProposalApplyRequest;
       applies.push(body);
@@ -197,9 +227,14 @@ describe("the review list", () => {
     expect(within(row).getByText("withdrawn")).toBeInTheDocument();
   });
 
-  it("opens the inspector on a row's link, and shows an empty inspector until one is picked", async () => {
+  it("opens on the first row awaiting a decision, and another on its row's link", async () => {
     const user = await openPage();
-    expect(screen.getByTestId("proposal-inspector-empty")).toBeInTheDocument();
+    // Nothing in the URL: the first awaiting row is open, without a history entry (#1664).
+    await waitFor(() =>
+      expect(screen.getByTestId("review-row-op-router")).toHaveAttribute("aria-selected", "true"),
+    );
+    expect(current).toBeUndefined();
+    expect(screen.queryByTestId("proposal-inspector-empty")).not.toBeInTheDocument();
     const row = await screen.findByTestId("review-row-op-gateway");
     expect(row).toHaveAttribute("href", "/app/proposals/proposal-1?selected=op-gateway");
     await user.click(row);
@@ -282,7 +317,7 @@ describe("bulk decisions", () => {
     await openPage();
     await screen.findByTestId("review-row-op-router");
     expect(screen.queryByTestId("review-bulk-select")).not.toBeInTheDocument();
-    expect(screen.queryByRole("checkbox")).not.toBeInTheDocument();
+    expect(screen.queryByTestId(/^operation-check-/)).not.toBeInTheDocument();
     expect(screen.queryByTestId("proposal-selection-bar")).not.toBeInTheDocument();
   });
 });

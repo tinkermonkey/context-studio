@@ -210,7 +210,7 @@ describe("selection that stays put", () => {
     await inspected("op-rename");
   });
 
-  it("doesn't move after a decision under All", async () => {
+  it("moves on to the next row awaiting a decision after one under All (#1664)", async () => {
     render(<Harness initial="op-rename" />);
     await userEvent.click(
       within(await screen.findByRole("group", { name: "Show operations" })).getByText(/^All/),
@@ -218,7 +218,8 @@ describe("selection that stays put", () => {
     await userEvent.click(screen.getByTestId("review-not"));
     await userEvent.click(screen.getByTestId("review-reason-other"));
 
-    await waitFor(() => expect(screen.queryByTestId("operation-decision")).not.toBeInTheDocument());
-    expect(selected()).toBe("op-rename");
+    // The decided row stays listed; the selection moves on, as the review against the source did.
+    await waitFor(() => expect(selected()).toBe("op-delete"));
+    expect(screen.getByTestId("review-row-op-rename")).toBeInTheDocument();
   });
 });

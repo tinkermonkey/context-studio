@@ -140,7 +140,17 @@ export function ReviewSourcePane({
       // The path as dispatched: a press that removes its own target (picking from the
       // class list) still counts as inside.
       const path = event.composedPath();
-      const inside = [anchorRef.current, textRef.current].some((el) => !!el && path.includes(el));
+      // A list the form's controls open in a portal (the class picker's options, on the
+      // document body since Heimdall 0.14) is part of the form: its id is in their aria-controls.
+      const controlledByForm = (target: EventTarget) =>
+        target instanceof Element &&
+        !!target.id &&
+        !!anchorRef.current?.querySelector(
+          `[aria-controls~="${CSS.escape(target.id)}"], [aria-owns~="${CSS.escape(target.id)}"]`,
+        );
+      const inside =
+        [anchorRef.current, textRef.current].some((el) => !!el && path.includes(el)) ||
+        path.some(controlledByForm);
       if (!inside) dismissRef.current?.();
     };
     document.addEventListener("mousedown", onMouseDown);
