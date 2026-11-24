@@ -2820,7 +2820,12 @@
       created_at: 2026-11-19T17:00:51.603Z
       updated_at: 2026-11-19T17:00:51.603Z
       version: 1
-  timestamp: 2026-11-19T17:00:51.633Z
+    source_reference:
+      provenance: manual
+      locations:
+        - file: ux/src/components/proposals/ProposalDetailPage.tsx
+          symbol: ProposalDetailPage
+  timestamp: 2026-11-24T20:23:31.581Z
   sequenceNumber: 171
 - type: add
   elementId: ux.componentinstance.list-rail
@@ -2840,7 +2845,12 @@
       created_at: 2026-11-19T17:00:51.604Z
       updated_at: 2026-11-19T17:00:51.604Z
       version: 1
-  timestamp: 2026-11-19T17:00:51.633Z
+    source_reference:
+      provenance: manual
+      locations:
+        - file: ux/src/components/proposals/ProposalDetailPage.tsx
+          symbol: ProposalDetailPage
+  timestamp: 2026-11-24T20:23:26.427Z
   sequenceNumber: 172
 - type: add
   elementId: ux.componentinstance.wide-field-diff
@@ -2985,7 +2995,12 @@
         decided_by: agent
         decided_at: 2026-11-19T17:02:37.569Z
         changeset: changeset-1795107225483-xwgktrnaj
-  timestamp: 2026-11-19T17:02:37.596Z
+    source_reference:
+      provenance: manual
+      locations:
+        - file: ux/src/components/proposals/review/paneFold.ts
+          symbol: usePaneFold
+  timestamp: 2026-11-24T20:23:26.427Z
   sequenceNumber: 177
 - type: relationship-add
   elementId: ux.uxlibrary.heimdall-ui-library::aggregates::ux.librarycomponent.pane-rail
@@ -4110,7 +4125,11 @@
       created_at: 2026-11-19T17:01:49.996Z
       updated_at: 2026-11-19T17:01:49.996Z
       version: 1
-  timestamp: 2026-11-19T17:01:50.028Z
+    source_reference:
+      provenance: manual
+      locations:
+        - file: ux/src/components/proposals/__tests__/ProposalPaneRails.test.tsx
+  timestamp: 2026-11-24T20:23:26.427Z
   sequenceNumber: 261
 - type: add
   elementId: testing.testcoveragetarget.wide-diff-overlay
@@ -4368,7 +4387,12 @@
       created_at: 2026-11-19T17:01:49.996Z
       updated_at: 2026-11-19T17:01:49.996Z
       version: 1
-  timestamp: 2026-11-19T17:01:50.028Z
+    source_reference:
+      provenance: manual
+      locations:
+        - file: ux/src/components/proposals/__tests__/ProposalPaneRails.test.tsx
+          symbol: keeps J / K and A / X working while the list is folded
+  timestamp: 2026-11-24T20:23:26.427Z
   sequenceNumber: 271
 - type: add
   elementId: testing.testcasesketch.esc-closes-the-wide-diff-and-returns-focus

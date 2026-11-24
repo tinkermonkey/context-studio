@@ -6,7 +6,7 @@ description: "Merge proposal detail and the Review page into one review surface
   a revert preview, and reversal proposals for landed changes (restore by id, a
   new reversed status)."
 created: 2026-11-19T16:53:45.487Z
-modified: 2026-11-24T20:22:34.178Z
+modified: 2026-11-24T20:23:31.662Z
 status: staged
 baseSnapshot: sha256:47cbf69a029fe1c405c7234a6260ff5326c53c044a37424fe686965c3c0497d6
 origin:
@@ -15,7 +15,7 @@ stats:
   additions: 289
   modifications: 26
   deletions: 44
-lastSequence: 434
+lastSequence: 440
 unstaged:
   - sequence: 255
     removedAt: 256
@@ -1958,4 +1958,166 @@ unstaged:
           updated_at: 2026-11-19T17:01:49.996Z
           version: 1
       timestamp: 2026-11-19T17:01:50.028Z
+    rewritten: true
+  - sequence: 177
+    removedAt: 435
+    change:
+      type: add
+      elementId: ux.dataconfig.pane-rail-preference
+      layerName: ux
+      after:
+        id: 99cabef0-ea7b-4aa5-99ab-58ffe9813012
+        path: ux.dataconfig.pane-rail-preference
+        spec_node_id: ux.dataconfig
+        type: dataconfig
+        layer_id: ux
+        name: Pane Rail Preference
+        description: Which left pane is folded, remembered per viewer in local storage.
+        attributes:
+          source: local-storage
+          target: ux.librarycomponent.pane-rail
+        metadata:
+          created_at: 2026-11-19T17:00:51.604Z
+          updated_at: 2026-11-19T17:00:51.604Z
+          version: 1
+        accepted_gaps:
+          - direction: outgoing
+            predicate: maps-to
+            other_spec_node_id: api.response
+            reason: A per-viewer UI preference kept in local storage; no API behind it.
+            decided_by: agent
+            decided_at: 2026-11-19T17:02:36.894Z
+            changeset: changeset-1795107225483-xwgktrnaj
+          - direction: incoming
+            predicate: binds-to
+            other_spec_node_id: ux.subview
+            reason: Bound by the proposal detail view and its two rail instances, which own
+              the fold state; no subview reads it.
+            decided_by: agent
+            decided_at: 2026-11-19T17:02:37.569Z
+            changeset: changeset-1795107225483-xwgktrnaj
+      timestamp: 2026-11-19T17:02:37.596Z
+    rewritten: true
+  - sequence: 172
+    removedAt: 436
+    change:
+      type: add
+      elementId: ux.componentinstance.list-rail
+      layerName: ux
+      after:
+        id: 6b2f4954-8525-4a9b-ab63-852ca3e86b92
+        path: ux.componentinstance.list-rail
+        spec_node_id: ux.componentinstance
+        type: componentinstance
+        layer_id: ux
+        name: List Rail
+        description: "The list folded (]): rows in list order with the position (5 /
+          37). Only when the proposal has source text."
+        attributes:
+          ref: ux.librarycomponent.pane-rail
+        metadata:
+          created_at: 2026-11-19T17:00:51.604Z
+          updated_at: 2026-11-19T17:00:51.604Z
+          version: 1
+      timestamp: 2026-11-19T17:00:51.633Z
+    rewritten: true
+  - sequence: 171
+    removedAt: 437
+    change:
+      type: add
+      elementId: ux.componentinstance.source-rail
+      layerName: ux
+      after:
+        id: d23d65de-b4ee-4220-ace9-cb78315b8c51
+        path: ux.componentinstance.source-rail
+        spec_node_id: ux.componentinstance
+        type: componentinstance
+        layer_id: ux
+        name: Source Rail
+        description: "The source pane folded ([): highlights at their positions in the
+          text in verdict colours."
+        attributes:
+          ref: ux.librarycomponent.pane-rail
+        metadata:
+          created_at: 2026-11-19T17:00:51.603Z
+          updated_at: 2026-11-19T17:00:51.603Z
+          version: 1
+      timestamp: 2026-11-19T17:00:51.633Z
+    rewritten: true
+  - sequence: 261
+    removedAt: 438
+    change:
+      type: add
+      elementId: testing.testcoveragetarget.pane-rails
+      layerName: testing
+      after:
+        id: 2b23489f-c273-4236-b17c-1fbbb865e902
+        path: testing.testcoveragetarget.pane-rails
+        spec_node_id: testing.testcoveragetarget
+        type: testcoveragetarget
+        layer_id: testing
+        name: Pane Rails
+        description: "Folding the source or list pane to a rail: the map, notch and
+          position, [ and ] keys, one rail at a time, the list never folds
+          without source text, J/K and A/X while folded, the choice remembered."
+        attributes:
+          targetType: library
+          priority: medium
+        metadata:
+          created_at: 2026-11-19T17:01:49.996Z
+          updated_at: 2026-11-19T17:01:49.996Z
+          version: 1
+      timestamp: 2026-11-19T17:01:50.028Z
+    rewritten: true
+  - sequence: 271
+    removedAt: 439
+    change:
+      type: add
+      elementId: testing.testcasesketch.folded-list-keeps-jk-and-ax-working
+      layerName: testing
+      after:
+        id: 812db6ab-aa73-4ad3-8ac1-7f7e8680516d
+        path: testing.testcasesketch.folded-list-keeps-jk-and-ax-working
+        spec_node_id: testing.testcasesketch
+        type: testcasesketch
+        layer_id: testing
+        name: Folded List Keeps J/K and A/X Working
+        description: With the list folded to a rail, J/K move the selection (the notch
+          follows) and A/X decide the selected operation.
+        attributes:
+          status: draft
+          implementationFormat: automated
+        metadata:
+          created_at: 2026-11-19T17:01:49.996Z
+          updated_at: 2026-11-19T17:01:49.996Z
+          version: 1
+      timestamp: 2026-11-19T17:01:50.028Z
+    rewritten: true
+  - sequence: 171
+    removedAt: 440
+    change:
+      type: add
+      elementId: ux.componentinstance.source-rail
+      layerName: ux
+      after:
+        id: d23d65de-b4ee-4220-ace9-cb78315b8c51
+        path: ux.componentinstance.source-rail
+        spec_node_id: ux.componentinstance
+        type: componentinstance
+        layer_id: ux
+        name: Source Rail
+        description: "The source pane folded ([): highlights at their positions in the
+          text in verdict colours."
+        attributes:
+          ref: ux.librarycomponent.pane-rail
+        metadata:
+          created_at: 2026-11-19T17:00:51.603Z
+          updated_at: 2026-11-19T17:00:51.603Z
+          version: 1
+        source_reference:
+          provenance: manual
+          locations:
+            - file: ux/src/components/proposals/review/useSourcePane.tsx
+              symbol: useSourcePane
+      timestamp: 2026-11-24T20:23:26.427Z
     rewritten: true
