@@ -69,10 +69,19 @@ export function WideDiffOverlay({
     tabRefs.current.get(field)?.focus({ preventScroll: true });
   }, [field]);
 
-  // Keys while it is open: arrows step fields, J / K operations, Esc closes.
+  // Keys while it is open: arrows step fields, J / K operations, Esc closes. Only while
+  // focus is in the overlay or on nothing: the inspector's arrow keys and a hover
+  // overlay's Esc stay theirs.
   const onKey = useRef<(event: KeyboardEvent) => void>(() => {});
   onKey.current = (event) => {
     if (event.defaultPrevented || typing(event.target)) return;
+    const target = event.target;
+    const ours =
+      !(target instanceof Node) ||
+      target === document.body ||
+      target === document.documentElement ||
+      !!rootRef.current?.contains(target);
+    if (!ours) return;
     if (event.metaKey || event.ctrlKey || event.altKey) return;
     const key = event.key;
     if (key === "Escape") {

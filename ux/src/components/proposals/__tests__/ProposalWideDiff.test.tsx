@@ -6,7 +6,7 @@
  */
 import { useState } from "react";
 import { describe, it, expect, beforeAll, beforeEach, afterEach, afterAll } from "vitest";
-import { screen, waitFor, within } from "@testing-library/react";
+import { act, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { http, HttpResponse } from "msw";
 import { setupServer } from "msw/node";
@@ -177,6 +177,20 @@ describe("the wide diff", () => {
     expect(screen.getByTestId("review-wide-diff")).toBeInTheDocument();
     await user.keyboard("k");
     expect(current).toEqual({ op: "op-a", diff: "description" });
+  });
+
+  it("leaves keys alone while focus is outside it, in the inspector or a hover overlay", async () => {
+    const user = await openPage("op-a");
+    await user.click(screen.getByTestId("review-wide-description"));
+    // The inspector keeps its own keys: the arrows and Esc don't reach the wide diff.
+    act(() => screen.getByTestId("review-correct").focus());
+    await user.keyboard("{ArrowDown}{ArrowRight}{Escape}j");
+    expect(current).toEqual({ op: "op-a", diff: "description" });
+    expect(screen.getByTestId("review-wide-diff")).toBeInTheDocument();
+    // Back in the overlay, they work again.
+    act(() => selectedTab().focus());
+    await user.keyboard("{ArrowDown}");
+    expect(current.diff).toBe("vision");
   });
 
   it("offers no Wide for a short change, and W does nothing there", async () => {

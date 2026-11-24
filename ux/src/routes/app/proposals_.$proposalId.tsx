@@ -14,6 +14,9 @@ interface ProposalSearch {
  * results and a revert conflict reset when moving to another one. The wide
  * diff lives in the URL (&diff=<field>): opening it adds a history entry, so
  * Back closes it; stepping fields or operations in it replaces that entry.
+ * Closing it goes back over that entry while it still shows the operation it
+ * opened on; after J / K moved to another, closing replaces the entry with that
+ * operation instead, so the reviewer stays on it.
  */
 export function ProposalPage({
   proposalId,
@@ -26,8 +29,9 @@ export function ProposalPage({
 }) {
   const navigate = useNavigate();
   const router = useRouter();
-  // The wide diff was opened here (its entry pushed): closing it goes back over that entry.
-  const diffPushed = useRef(false);
+  // The operation the wide diff was opened on here (its entry pushed); undefined when
+  // it wasn't opened here (a deep link) or was left another way.
+  const diffOpenedOn = useRef<string | undefined>(undefined);
   return (
     <ProposalDetailPage
       key={proposalId}
@@ -36,8 +40,9 @@ export function ProposalPage({
       diffField={diff}
       onDiff={(field, operationId) => {
         if (field === undefined) {
-          if (diffPushed.current) {
-            diffPushed.current = false;
+          const openedOn = diffOpenedOn.current;
+          diffOpenedOn.current = undefined;
+          if (openedOn !== undefined && openedOn === op) {
             router.history.back();
           } else {
             navigate({
@@ -50,7 +55,7 @@ export function ProposalPage({
           return;
         }
         const opening = !diff;
-        if (opening) diffPushed.current = true;
+        if (opening) diffOpenedOn.current = operationId ?? op ?? "";
         navigate({
           to: "/app/proposals/$proposalId",
           params: { proposalId },
@@ -68,7 +73,7 @@ export function ProposalPage({
         navigate({ to: "/app/proposals/$proposalId/review", params: { proposalId } })
       }
       onSelectOperation={(operationId) => {
-        diffPushed.current = false;
+        diffOpenedOn.current = undefined;
         navigate({
           to: "/app/proposals/$proposalId",
           params: { proposalId },
