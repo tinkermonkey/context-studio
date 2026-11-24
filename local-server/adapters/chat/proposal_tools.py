@@ -985,7 +985,8 @@ class GetProposalTool(_ProposalTool):
     name = "get_proposal"
     description = (
         "Get one change proposal by id: its status (open while any operation awaits a"
-        " decision, done, or reverted) and each operation's seq, op, kind, target,"
+        " decision, done, reverted, or reversed by a landed reversal proposal) and each"
+        " operation's seq, op, kind, target,"
         " fields, status (pending, applied, rejected or failed), scope and stale flag."
         " A stale operation's target changed or is gone since it was proposed: a"
         " reviewer may still apply it, or you can propose the change again against the"
@@ -1096,7 +1097,8 @@ class ListProposalsTool(_ProposalTool):
     description = (
         "List change proposals, newest first, optionally for one taxonomy and with one"
         " status (open: awaiting decisions; done: every operation applied or rejected;"
-        " reverted) and source (pipeline: from extract_source and other runs; mcp, chat,"
+        " reverted; reversed: undone by a landed reversal proposal) and source (pipeline:"
+        " from extract_source and other runs; mcp, chat,"
         " bundle, user). Each has its id, title, source, operation counts by status and,"
         " once its client landed it in the taxonomy's source, landed (repo, commit,"
         " spec_version, landed_at). landed false with status done lists what is still"
@@ -1178,8 +1180,8 @@ class MarkProposalLandedTool(_ProposalTool):
         " repository, the commit that holds the change, and the spec version. Call it"
         " from your landing step after writing the proposal's changes into your source;"
         " it changes nothing in the taxonomy. The same revision again changes nothing;"
-        " another revision replaces the landing. An open or reverted proposal can't be"
-        " marked landed. list_proposals with status done and landed false lists what is"
+        " another revision replaces the landing. An open, reverted, withdrawn or reversed"
+        " proposal can't be marked landed. list_proposals with status done and landed false lists what is"
         " still to land."
     )
     input_schema = {

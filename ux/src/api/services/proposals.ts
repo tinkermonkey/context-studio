@@ -169,6 +169,15 @@ class ProposalsService extends BaseService {
     return this.post<ChangeProposalRevertResponse>(`/api/proposals/${id}/revert`);
   }
 
+  /**
+   * The reversal of a landed proposal, as a new open proposal linked to it. 409
+   * when it hasn't landed (revert it in place), is reversed, has an open
+   * reversal, or has nothing left to undo.
+   */
+  async proposeReversal(id: string): Promise<ChangeProposal> {
+    return this.post<ChangeProposal>(`/api/proposals/${id}/reversal`);
+  }
+
   /** The fields edited since the apply that an in-place revert would overwrite. */
   async getRevertPreview(id: string): Promise<RevertPreview> {
     return this.get<RevertPreview>(`/api/proposals/${id}/revert/preview`);

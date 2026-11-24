@@ -129,6 +129,23 @@ export function useRevertChangeProposal() {
   });
 }
 
+/**
+ * Propose the reversal of a landed proposal (#1667). It makes a proposal and
+ * links it to the original, so the proposals refresh; the ontology changes only
+ * when the reversal is applied. The page explains a refused (409) one itself.
+ */
+export function useProposeReversal() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => proposalsService.proposeReversal(id),
+    meta: { skipGlobalErrorToast: true },
+    onSuccess: (reversal) => {
+      queryClient.setQueryData(QUERY_KEYS.changeProposal(reversal.id), reversal);
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.changeProposalsRoot });
+    },
+  });
+}
+
 /** Fetch a DR reflection-plan proposal's decisions file, to download it. */
 export function useExportProposalDecisions() {
   return useMutation({

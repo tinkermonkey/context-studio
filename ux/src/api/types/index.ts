@@ -4085,6 +4085,32 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/proposals/{proposal_id}/reversal": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Propose Reversal
+     * @description Propose the reversal of a landed proposal: a new proposal, built from its
+     *     run's change events, that undoes them (a create is deleted, an update set
+     *     back, a move moved back, a delete restored with the entity's old id).
+     *
+     *     A landed proposal can't be reverted in place, because its client's source
+     *     would bring the change back. The reversal is decided like any proposal; the
+     *     approval policy never applies it. Once it lands, the original is reversed.
+     */
+    post: operations["propose_reversal_api_proposals__proposal_id__reversal_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/proposals/{proposal_id}/revert/preview": {
     parameters: {
       query?: never;
@@ -10002,6 +10028,16 @@ export interface components {
       created_at: string;
       /** Note */
       note?: string | null;
+      /**
+       * Operations Applied
+       * @description On a reversed_by link: how many of the reversal's operations were applied, that is how many changes it undid
+       */
+      operations_applied?: number | null;
+      /**
+       * Operations Total
+       * @description On a reversed_by link: how many operations the reversal has
+       */
+      operations_total?: number | null;
     };
     /**
      * ProposalOriginResponse
@@ -10045,7 +10081,7 @@ export interface components {
      * @description A proposal is open while any operation awaits a decision.
      * @enum {string}
      */
-    ProposalStatus: "open" | "done" | "reverted" | "withdrawn";
+    ProposalStatus: "open" | "done" | "reverted" | "withdrawn" | "reversed";
     /**
      * ProposedOperationRequest
      * @description One operation as proposed.
@@ -17357,6 +17393,51 @@ export interface operations {
         content: {
           "application/json": components["schemas"]["ChangeProposalRevertConflictResponse"];
         };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  propose_reversal_api_proposals__proposal_id__reversal_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        proposal_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ChangeProposalResponse"];
+        };
+      };
+      /** @description Change proposal not found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description It has not landed (revert it in place instead), is already reversed, has an open reversal, has changes a proposal can't undo, or has nothing left to undo */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
       };
       /** @description Validation Error */
       422: {

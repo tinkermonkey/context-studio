@@ -8096,6 +8096,55 @@
         }
       }
     },
+    "/api/proposals/{proposal_id}/reversal": {
+      "post": {
+        "tags": [
+          "proposals"
+        ],
+        "summary": "Propose Reversal",
+        "description": "Propose the reversal of a landed proposal: a new proposal, built from its\nrun's change events, that undoes them (a create is deleted, an update set\nback, a move moved back, a delete restored with the entity's old id).\n\nA landed proposal can't be reverted in place, because its client's source\nwould bring the change back. The reversal is decided like any proposal; the\napproval policy never applies it. Once it lands, the original is reversed.",
+        "operationId": "propose_reversal_api_proposals__proposal_id__reversal_post",
+        "parameters": [
+          {
+            "name": "proposal_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Proposal Id"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChangeProposalResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Change proposal not found"
+          },
+          "409": {
+            "description": "It has not landed (revert it in place instead), is already reversed, has an open reversal, has changes a proposal can't undo, or has nothing left to undo"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/proposals/{proposal_id}/revert/preview": {
       "get": {
         "tags": [
@@ -19663,6 +19712,30 @@
               }
             ],
             "title": "Note"
+          },
+          "operations_applied": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Operations Applied",
+            "description": "On a reversed_by link: how many of the reversal's operations were applied, that is how many changes it undid"
+          },
+          "operations_total": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Operations Total",
+            "description": "On a reversed_by link: how many operations the reversal has"
           }
         },
         "type": "object",
@@ -19731,7 +19804,8 @@
           "open",
           "done",
           "reverted",
-          "withdrawn"
+          "withdrawn",
+          "reversed"
         ],
         "title": "ProposalStatus",
         "description": "A proposal is open while any operation awaits a decision."

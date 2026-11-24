@@ -122,6 +122,7 @@ from domain.versioning.proposals import (
     TypeChange,
     classify_scope,
 )
+from domain.versioning.reversal import plan_reversal
 from domain.versioning.provenance import (
     SOURCE_ID,
     EntitySource,
@@ -156,6 +157,7 @@ _logger = logging.getLogger(__name__)
 # Reason codes an applied operation can fail with; stored as "<code>: <detail>".
 TARGET_CHANGED = "target_changed"
 TARGET_MISSING = "target_missing"
+TARGET_EXISTS = "target_exists"
 UNRESOLVED_REF = "unresolved_ref"
 APPLY_ERROR = "error"
 INVALID_EDIT = "invalid_edit"
@@ -190,6 +192,18 @@ MAX_SEQ = 1_000_000
 _VOLATILE_FIELDS = frozenset({"last_modified", "version"})
 
 K = OperationKind
+
+# The entity type a change event (and the revert service) names a kind by
+_ENTITY_TYPES: dict[OperationKind, str] = {
+    K.TAXONOMY: "taxonomy",
+    K.SCHEME: "concept_scheme",
+    K.CLASS: "class",
+    K.PROPERTY: "property_definition",
+    K.ATTRIBUTE: "attribute_definition",
+    K.PREDICATE: "predicate",
+    K.INDIVIDUAL: "individual",
+    K.RELATIONSHIP: "relationship",
+}
 
 # Fields that follow another entity rather than being set on this one: a class's
 # taxonomy_id follows its scheme's. Staleness ignores them.
@@ -436,10 +450,14 @@ def _is_ref(value: Any) -> bool:
 
 def _refuse_closed(proposal: ChangeProposal) -> None:
     """
-    A reverted or withdrawn proposal takes no more decisions: nothing is
-    applied, rejected, added or reopened in it (#1624).
+    A reverted, withdrawn or reversed proposal takes no more decisions: nothing
+    is applied, rejected, added or reopened in it (#1624, #1667).
     """
-    if proposal.status in (ProposalStatus.REVERTED, ProposalStatus.WITHDRAWN):
+    if proposal.status in (
+        ProposalStatus.REVERTED,
+        ProposalStatus.WITHDRAWN,
+        ProposalStatus.REVERSED,
+    ):
         raise ChangeProposalStateError(f"Change proposal {proposal.id} is {proposal.status.value}")
 
 
@@ -1288,6 +1306,9 @@ class ProposalService:
             raise _Invalid("invalid", f"probability must be a number, not {probability!r}")
         if draft.target_id is not None and not isinstance(draft.target_id, str):
             raise _Invalid("invalid", f"target_id must be a string, not {draft.target_id!r}")
+        if draft.target_id is not None and str(getattr(draft.op, "value", draft.op)) == "create":
+            # Only a reversal restores an entity under its old id (propose_reversal).
+            raise _Invalid("invalid", "A create has no target_id; name it with ref instead")
         if draft.notes is not None and not isinstance(draft.notes, str):
             raise _Invalid("invalid", f"notes must be text, not {draft.notes!r}")
         try:
@@ -2369,6 +2390,11 @@ class ProposalService:
         for operation_id, fields in edits.items():
             operation = by_id[operation_id]
             label = f"seq {operation.seq}"
+            if operation.restore:
+                raise ValueError(
+                    f"{label} restores a deleted entity as it was and can't be edited: apply it"
+                    " as it is, or reject it"
+                )
             individual_create = (
                 operation.kind is K.INDIVIDUAL and operation.op is OperationType.CREATE
             )
@@ -3132,6 +3158,8 @@ class ProposalService:
                 name: self._resolved(value, refs) if name in ID_FIELDS else value
                 for name, value in operation.fields.items()
             }
+            if operation.restore:
+                return self._restore(operation, fields, run_id)
             if operation.op is not OperationType.CREATE:
                 self._check_fresh(operation, forced)
             if operation.kind in (K.PROPERTY, K.PREDICATE) and operation.op in (
@@ -3188,6 +3216,21 @@ class ProposalService:
             return result
 
         self._record_outcome(operation, run_id, run)
+
+    def _restore(self, operation: ProposedOperation, fields: dict[str, Any], run_id: str) -> str:
+        """
+        Apply a reversal's restore create: recreate the deleted entity with its
+        old id from the snapshot in `fields`, recorded under the proposal's run.
+        """
+        entity_id: str = operation.target_id  # type: ignore[assignment]
+        if self._load(operation.kind, entity_id) is not None:
+            raise _ApplyFailed(
+                TARGET_EXISTS, f"{operation.kind.value} {entity_id} exists; its id is not free"
+            )
+        try:
+            return self._revert.restore(_ENTITY_TYPES[operation.kind], entity_id, fields, run_id)
+        except ValueError as exc:
+            raise _ApplyFailed(APPLY_ERROR, str(exc)) from exc
 
     def _record_outcome(
         self, operation: ProposedOperation, run_id: str, run: Callable[[], str]
@@ -3686,6 +3729,104 @@ class ProposalService:
                     close(None)
             return self._get(proposal_id)
 
+    def propose_reversal(self, proposal_id: str) -> ChangeProposal:
+        """
+        Propose the reversal of a landed proposal (#1667): a new proposal, built
+        from the run's change events, that does the opposite (see
+        `domain.versioning.reversal`). A person decides it like any other, one
+        operation at a time or all at once; the approval policy never applies it.
+        It is linked to the original (a `reverses` link), and once it lands the
+        original is marked reversed (`mark_landed`).
+
+        Raises:
+            ChangeProposalNotFoundError: If the proposal does not exist
+            ChangeProposalStateError: If it has not landed (revert it in place),
+                is already reversed, has an open reversal, has events a proposal
+                can't undo, or has nothing left to undo
+        """
+        with self._lock(proposal_id):
+            original = self._get(proposal_id)
+            if original.status is ProposalStatus.REVERSED:
+                raise ChangeProposalStateError(f"Change proposal {proposal_id} is already reversed")
+            if original.status in (ProposalStatus.REVERTED, ProposalStatus.WITHDRAWN):
+                raise ChangeProposalStateError(
+                    f"Change proposal {proposal_id} is {original.status.value}: what it applied"
+                    " is already undone"
+                )
+            if original.landed is None or original.status is not ProposalStatus.DONE:
+                raise ChangeProposalStateError(
+                    f"Change proposal {proposal_id} has not landed in its source; revert it in"
+                    " place instead"
+                )
+            links = self._proposals.links_of(proposal_id)
+            if any(
+                link.kind is ProposalLinkKind.REVERSES and link.source_proposal_id == proposal_id
+                for link in links
+            ):
+                raise ChangeProposalStateError(
+                    f"Change proposal {proposal_id} is itself a reversal; propose the changes"
+                    " again instead of reversing it"
+                )
+            for link in links:
+                if (
+                    link.kind is ProposalLinkKind.REVERSES
+                    and link.target_proposal_id == proposal_id
+                ):
+                    reversal = self._get(link.source_proposal_id)
+                    if reversal.status is ProposalStatus.OPEN:
+                        raise ChangeProposalStateError(
+                            f"Change proposal {proposal_id} already has an open reversal,"
+                            f" {reversal.id}; decide it first"
+                        )
+
+            def current(kind: OperationKind, entity_id: str) -> dict[str, Any] | None:
+                found = self._load(kind, entity_id)
+                return entity_snapshot(found) if found is not None else None
+
+            plan = plan_reversal(
+                self._revert.reversible_events(proposal_id),
+                current,
+                DATA_FIELD,
+                lambda kind: OPERATION_FIELDS[kind].update,
+            )
+            if plan.unplanned:
+                raise ChangeProposalStateError(
+                    "Its reversal can't be planned: " + "; ".join(plan.unplanned)
+                )
+            if not plan.operations:
+                raise ChangeProposalStateError(
+                    f"Nothing is left to undo of change proposal {proposal_id}"
+                )
+            taxonomy = self._repo.get_taxonomy(original.taxonomy_id)
+            left_out = (
+                f" {plan.skipped} changes need no undoing (already undone, or made and removed"
+                " again by the proposal)."
+                if plan.skipped
+                else ""
+            )
+            reversal = ChangeProposal(
+                id=str(uuid4()),
+                taxonomy_id=original.taxonomy_id,
+                title=f"Reversal of: {original.title}"[:MAX_TITLE_CHARS],
+                rationale=f"Undoes change proposal {original.id}.{left_out}",
+                source=ProposalSource.USER,
+                source_detail="reversal",
+                created_at=datetime.now(timezone.utc),
+                operations=plan.operations,
+                source_revision=taxonomy.source_revision if taxonomy else None,
+                client_metadata={**self._recorded_metadata, "reverses": original.id},
+                dataset_id=original.dataset_id,
+                review_only=True,
+            )
+            with self._atomic():
+                stored = self._proposals.create(reversal)
+                self._proposals.add_link(
+                    ProposalLink(
+                        stored.id, ProposalLinkKind.REVERSES, original.id, reversal.created_at
+                    )
+                )
+            return self._get(stored.id)
+
     def preview_revert(self, proposal_id: str) -> list[OverwrittenEdit]:
         """
         The edits made since the proposal applied that an in-place revert would overwrite.
@@ -3733,6 +3874,10 @@ class ProposalService:
                 raise ChangeProposalStateError(
                     f"Change proposal {proposal_id} is withdrawn; what it applied is"
                     " already rolled back"
+                )
+            if proposal.status is ProposalStatus.REVERSED:
+                raise ChangeProposalStateError(
+                    f"Change proposal {proposal_id} is reversed: its reversal undid it"
                 )
             if proposal.landed is not None and self._mirrored(proposal.taxonomy_id):
                 raise ChangeProposalStateError(
@@ -4158,7 +4303,20 @@ class ProposalService:
             self._proposals.set_landed(
                 proposal_id, Landing(revision=revision, landed_at=datetime.now(timezone.utc))
             )
+            self._mark_reversed_by(proposal_id)
             return self._get(proposal_id)
+
+    def _mark_reversed_by(self, reversal_id: str) -> None:
+        """
+        The reversal just landed: the proposal it reverses becomes reversed,
+        whether the reversal applied all of its changes or only some (#1667).
+        """
+        for link in self._proposals.links_of(reversal_id):
+            if link.kind is not ProposalLinkKind.REVERSES or link.source_proposal_id != reversal_id:
+                continue
+            original = self._proposals.get(link.target_proposal_id)
+            if original is not None and original.status is ProposalStatus.DONE:
+                self._proposals.set_status(original.id, ProposalStatus.REVERSED)
 
     def clear_landing(self, proposal_id: str) -> ChangeProposal:
         """
@@ -4172,7 +4330,20 @@ class ProposalService:
             if proposal.landed is None:
                 return proposal
             self._proposals.set_landed(proposal_id, None)
+            self._unmark_reversed_by(proposal_id)
             return self._get(proposal_id)
+
+    def _unmark_reversed_by(self, reversal_id: str) -> None:
+        """
+        A reversal's landing was cleared: the proposal it reversed is done
+        again, as it was before the reversal landed (#1667).
+        """
+        for link in self._proposals.links_of(reversal_id):
+            if link.kind is not ProposalLinkKind.REVERSES or link.source_proposal_id != reversal_id:
+                continue
+            original = self._proposals.get(link.target_proposal_id)
+            if original is not None and original.status is ProposalStatus.REVERSED:
+                self._proposals.set_status(original.id, ProposalStatus.DONE)
 
     def _mirrored(self, taxonomy_id: str) -> bool:
         taxonomy = self._repo.get_taxonomy(taxonomy_id)

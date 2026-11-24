@@ -136,6 +136,9 @@ class ProposalStatus(str, Enum):
     REVERTED = "reverted"
     # Its proposer withdrew it: anything it applied was rolled back (#1624)
     WITHDRAWN = "withdrawn"
+    # It landed in its client's source, and a reversal proposal that undoes it has
+    # landed too, in whole or in part (#1667)
+    REVERSED = "reversed"
 
 
 class OperationType(str, Enum):
@@ -535,7 +538,8 @@ class ProposedOperation:
         seq: Position in the proposal; operations apply in this order
         op: Create, update, move or delete
         kind: The kind of entity targeted
-        target_id: The existing entity (update, move, delete)
+        target_id: The existing entity (update, move, delete); for a restore create,
+            the free id the recreated entity keeps (see `restore`)
         ref: A name a create gives its new entity, so later operations in the
             same proposal can point at it with "$<ref>"
         fields: For a create, every field; for an update, only the changed ones;
@@ -620,8 +624,8 @@ class ProposedOperation:
         ):
             raise ValueError("Only an individual create can carry alternatives")
         if self.op is OperationType.CREATE:
-            if self.target_id is not None:
-                raise ValueError("A create has no target_id; name it with ref instead")
+            if self.target_id is not None and self.ref is not None:
+                raise ValueError("A restore keeps its id in target_id and takes no ref")
         elif not self.target_id:
             raise ValueError(f"An {self.op.value} needs a target_id")
         if self.op is OperationType.UPDATE:
@@ -656,6 +660,15 @@ class ProposedOperation:
                 "Only a property (relationship type), class or predicate delete can name a"
                 " replacement"
             )
+
+    @property
+    def restore(self) -> bool:
+        """
+        A create that names the id the entity gets: a reversal's recreation of
+        what the original deleted, with `fields` the deleted entity's snapshot
+        (#1667). Only a reversal makes one; a proposer's create is named by ref.
+        """
+        return self.op is OperationType.CREATE and self.target_id is not None
 
     @property
     def decided(self) -> bool:

@@ -176,14 +176,22 @@ class TestClassifyScope:
 
 
 class TestProposedOperation:
-    def test_create_takes_a_ref_not_a_target(self):
+    def test_create_takes_a_ref_and_only_a_restore_a_target(self):
         op = ProposedOperation(
             seq=0, op=OperationType.CREATE, kind=OperationKind.CLASS, ref="furniture"
         )
-        assert op.status is OperationStatus.PENDING and not op.decided
-        with pytest.raises(ValueError, match="no target_id"):
+        assert op.status is OperationStatus.PENDING and not op.decided and not op.restore
+        restore = ProposedOperation(
+            seq=0, op=OperationType.CREATE, kind=OperationKind.CLASS, target_id="c1"
+        )
+        assert restore.restore
+        with pytest.raises(ValueError, match="takes no ref"):
             ProposedOperation(
-                seq=0, op=OperationType.CREATE, kind=OperationKind.CLASS, target_id="c1"
+                seq=0,
+                op=OperationType.CREATE,
+                kind=OperationKind.CLASS,
+                target_id="c1",
+                ref="furniture",
             )
 
     @pytest.mark.parametrize("op", [OperationType.UPDATE, OperationType.MOVE, OperationType.DELETE])

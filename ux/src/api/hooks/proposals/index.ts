@@ -11,6 +11,7 @@ export {
   useRejectChangeProposal,
   useReopenProposalOperations,
   useRevertChangeProposal,
+  useProposeReversal,
   useAddProposalIndividual,
   useExportProposalDecisions,
 } from "./useProposalMutations";

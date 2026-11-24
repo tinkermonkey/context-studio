@@ -47,10 +47,14 @@ export function datasetImpactText(impact: DatasetImpact): string {
 
 // ==================== Who can decide ====================
 
-/** A proposal takes decisions until it is reverted. */
+/** A proposal takes decisions until it is reverted, or reversed by a landed reversal. */
 export function takesDecisions(proposal: ChangeProposal): boolean {
   // A withdrawn proposal (#1624), superseded or taken back by its proposer, takes none either.
-  return proposal.status !== "reverted" && proposal.status !== "withdrawn";
+  return (
+    proposal.status !== "reverted" &&
+    proposal.status !== "withdrawn" &&
+    proposal.status !== "reversed"
+  );
 }
 
 /** Awaiting operations among `ids`, split into those that apply and those needing Apply anyway. */
