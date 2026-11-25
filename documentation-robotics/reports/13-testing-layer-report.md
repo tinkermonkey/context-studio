@@ -16,11 +16,11 @@ Test strategies, test cases, test data, and test coverage.
 
 | Metric                    | Count |
 | ------------------------- | ----- |
-| Elements                  | 57    |
+| Elements                  | 58    |
 | Intra-Layer Relationships | 49    |
-| Inter-Layer Relationships | 98    |
+| Inter-Layer Relationships | 102   |
 | Inbound Relationships     | 0     |
-| Outbound Relationships    | 98    |
+| Outbound Relationships    | 102   |
 
 **Cross-Layer References**:
 
@@ -63,6 +63,7 @@ Test strategies, test cases, test data, and test coverage.
 | `testing.testcoveragetarget.adapter-integration-tests`                                             | `testcoveragetarget`  | 1             |
 | `testing.testcoveragetarget.adapter-unit-tests`                                                    | `testcoveragetarget`  | 1             |
 | `testing.testcoveragetarget.admin-health`                                                          | `testcoveragetarget`  | 1             |
+| `testing.testcoveragetarget.anchored-text-edits`                                                   | `testcoveragetarget`  | 0             |
 | `testing.testcoveragetarget.chat-and-mcp-integration-tests`                                        | `testcoveragetarget`  | 1             |
 | `testing.testcoveragetarget.domain-unit-tests`                                                     | `testcoveragetarget`  | 2             |
 | `testing.testcoveragetarget.e2e-test-suite`                                                        | `testcoveragetarget`  | 2             |
@@ -166,6 +167,10 @@ flowchart TB
 | `testing.testcoveragetarget.covers.application.applicationcomponent` | `testing.testcoveragetarget.adapter-integration-tests`                                             | `application.applicationcomponent.sqlite-pipeline-repository`                | `application` | `covers`    | many-to-many | medium   |
 | `testing.testcoveragetarget.covers.application.applicationcomponent` | `testing.testcoveragetarget.adapter-unit-tests`                                                    | `application.applicationcomponent.spa-cy-nlp-processor`                      | `application` | `covers`    | many-to-many | medium   |
 | `testing.testcoveragetarget.covers.ux.view`                          | `testing.testcoveragetarget.admin-health`                                                          | `ux.view.settings-view`                                                      | `ux`          | `covers`    | many-to-many | medium   |
+| `testing.testcoveragetarget.covers.api.operation`                    | `testing.testcoveragetarget.anchored-text-edits`                                                   | `api.operation.amend-proposal`                                               | `api`         | `covers`    | many-to-many | medium   |
+| `testing.testcoveragetarget.covers.api.operation`                    | `testing.testcoveragetarget.anchored-text-edits`                                                   | `api.operation.apply-proposal`                                               | `api`         | `covers`    | many-to-many | medium   |
+| `testing.testcoveragetarget.covers.api.operation`                    | `testing.testcoveragetarget.anchored-text-edits`                                                   | `api.operation.create-proposal`                                              | `api`         | `covers`    | many-to-many | medium   |
+| `testing.testcoveragetarget.covers.ux.subview`                       | `testing.testcoveragetarget.anchored-text-edits`                                                   | `ux.subview.review-inspector`                                                | `ux`          | `covers`    | many-to-many | medium   |
 | `testing.testcoveragetarget.covers.application.applicationcomponent` | `testing.testcoveragetarget.chat-and-mcp-integration-tests`                                        | `application.applicationcomponent.mcp-server`                                | `application` | `covers`    | many-to-many | medium   |
 | `testing.testcoveragetarget.covers.application.applicationservice`   | `testing.testcoveragetarget.chat-and-mcp-integration-tests`                                        | `application.applicationservice.chat-service`                                | `application` | `covers`    | many-to-many | medium   |
 | `testing.testcoveragetarget.covers.application.applicationcomponent` | `testing.testcoveragetarget.domain-unit-tests`                                                     | `application.applicationcomponent.sqlite-ontology-repository`                | `application` | `covers`    | many-to-many | medium   |
@@ -942,6 +947,29 @@ Coverage target for health checks, background task management, and configuration
 | inter-layer | `ux.view.settings-view`                                                | `covers`   | outbound  |
 | intra-layer | `testing.testcoveragemodel.context-studio-backend-test-coverage-model` | `composes` | inbound   |
 
+### Anchored text edits {#anchored-text-edits}
+
+**ID**: `testing.testcoveragetarget.anchored-text-edits`
+
+**Type**: `testcoveragetarget`
+
+apply_text_edits (insert, replace, delete; missing and ambiguous anchors; order); propose and amend resolve edits and refuse bad anchors; apply reapplies edits to text changed since the proposal, keeps that change and records what it applied to; an anchor that no longer matches makes the operation stale and apply fails as target_changed naming it; propose_changes over MCP and POST /proposals take edits; the review inspector notes an edited field and the stale cause.
+
+#### Attributes
+
+| Name       | Value        |
+| ---------- | ------------ |
+| targetType | api-endpoint |
+
+#### Relationships
+
+| Type        | Related Element                 | Predicate | Direction |
+| ----------- | ------------------------------- | --------- | --------- |
+| inter-layer | `api.operation.amend-proposal`  | `covers`  | outbound  |
+| inter-layer | `api.operation.apply-proposal`  | `covers`  | outbound  |
+| inter-layer | `api.operation.create-proposal` | `covers`  | outbound  |
+| inter-layer | `ux.subview.review-inspector`   | `covers`  | outbound  |
+
 ### Chat And MCP Integration Tests {#chat-and-mcp-integration-tests}
 
 **ID**: `testing.testcoveragetarget.chat-and-mcp-integration-tests`
@@ -1570,4 +1598,4 @@ The wide side-by-side diff: opening from the row or W, field tabs and arrows, J/
 
 ---
 
-Generated: 2026-11-24T21:17:13.774Z | Model Version: 0.1.0
+Generated: 2026-11-25T10:04:41.933Z | Model Version: 0.1.0

@@ -5,11 +5,7 @@ data-model.objectschema.ontology-entity:
   type: objectschema
   layer_id: data-model
   name: Ontology Entity
-  description: Single-table inheritance ORM schema for all ontology entities
-    (taxonomy, concept_scheme, class, individual, property_definition) — stores
-    title, description, hierarchy FKs, JSON value objects (external_references,
-    lexical_senses, data_properties), binary embedding, and optimistic-locking
-    version
+  description: Single-table inheritance ORM schema for all ontology entities (taxonomy, concept_scheme, class, individual, property_definition) — stores title, description, hierarchy FKs, JSON value objects (external_references, lexical_senses, data_properties), binary embedding, and optimistic-locking version
   attributes:
     type: object
   source_reference:
@@ -28,10 +24,7 @@ data-model.objectschema.relationship:
   type: objectschema
   layer_id: data-model
   name: Relationship
-  description: ORM schema for typed directed edges between ontology entities —
-    stores source_id, target_id, optional property_definition_id FK, float
-    weight (0–1), and JSON metadata; used by GraphAnalysisService for graph
-    construction
+  description: ORM schema for typed directed edges between ontology entities — stores source_id, target_id, optional property_definition_id FK, float weight (0–1), and JSON metadata; used by GraphAnalysisService for graph construction
   attributes:
     type: object
   source_reference:
@@ -50,10 +43,7 @@ data-model.objectschema.change-event:
   type: objectschema
   layer_id: data-model
   name: Change Event
-  description: ORM schema for the audit trail of all entity mutations — stores
-    entity_id, entity_type, operation (CREATE/UPDATE/DELETE), new_state and
-    previous_state JSON snapshots, user_id, change_reason, and optional
-    import_run_id correlation
+  description: ORM schema for the audit trail of all entity mutations — stores entity_id, entity_type, operation (CREATE/UPDATE/DELETE), new_state and previous_state JSON snapshots, user_id, change_reason, and optional import_run_id correlation
   attributes:
     type: object
   source_reference:
@@ -72,8 +62,7 @@ data-model.objectschema.pipeline-configuration:
   type: objectschema
   layer_id: data-model
   name: Pipeline Configuration
-  description: "ORM model for user-created pipeline configurations (operations.db
-    pipeline_configurations): type, implementation, versioned settings."
+  description: "ORM model for user-created pipeline configurations (operations.db pipeline_configurations): type, implementation, versioned settings."
   attributes:
     type: object
   source_reference:
@@ -92,10 +81,7 @@ data-model.objectschema.import-run:
   type: objectschema
   layer_id: data-model
   name: Import Run
-  description: ORM schema tracking interchange import operations
-    (SKOS/OWL/GraphML) — stores format, source_hash, source_uri, scope, status
-    (PENDING/COMMITTED/FAILED/ROLLED_BACK), resolution records, and created_by
-    for auditability
+  description: ORM schema tracking interchange import operations (SKOS/OWL/GraphML) — stores format, source_hash, source_uri, scope, status (PENDING/COMMITTED/FAILED/ROLLED_BACK), resolution records, and created_by for auditability
   attributes:
     type: object
   source_reference:
@@ -114,9 +100,7 @@ data-model.objectschema.individual-class:
   type: objectschema
   layer_id: data-model
   name: Individual Class
-  description: Association table ORM schema linking individual instances to their
-    parent classes — stores individual_id, class_id FK pair with ordering index
-    for class priority
+  description: Association table ORM schema linking individual instances to their parent classes — stores individual_id, class_id FK pair with ordering index for class priority
   attributes:
     type: object
   source_reference:
@@ -135,9 +119,7 @@ data-model.objectschema.property-definition:
   type: objectschema
   layer_id: data-model
   name: Property Definition
-  description: ORM schema for property definitions (relationship types/object
-    properties) — stores name, description, domain_id and range_id class FKs,
-    and optional inverse property ID
+  description: ORM schema for property definitions (relationship types/object properties) — stores name, description, domain_id and range_id class FKs, and optional inverse property ID
   attributes:
     type: object
   source_reference:
@@ -156,9 +138,7 @@ data-model.objectschema.extraction-result:
   type: objectschema
   layer_id: data-model
   name: Extraction Result
-  description: ORM schema for persisted extraction results — stores source text,
-    NLP/LLM pipeline output (JSON), extracted entity IDs, processing metrics,
-    and run timestamps
+  description: ORM schema for persisted extraction results — stores source text, NLP/LLM pipeline output (JSON), extracted entity IDs, processing metrics, and run timestamps
   attributes:
     type: object
   source_reference:
@@ -177,11 +157,7 @@ data-model.objectschema.proposal:
   type: objectschema
   layer_id: data-model
   name: Proposal
-  description: "ORM model for change proposals (change_proposals, a batch_runs
-    subtype): taxonomy, origin, status (open, done, reverted, reversed in
-    batch_runs.status) and landing. A reversal's link to the proposal it
-    reverses is a proposal_links row of kind reverses (#1624), not a column
-    here."
+  description: "ORM model for change proposals (change_proposals, a batch_runs subtype): taxonomy, origin, status (open, done, reverted, reversed in batch_runs.status) and landing. A reversal's link to the proposal it reverses is a proposal_links row of kind reverses (#1624), not a column here."
   attributes:
     type: object
   source_reference:
@@ -200,9 +176,7 @@ data-model.objectschema.system-health:
   type: objectschema
   layer_id: data-model
   name: System Health
-  description: Domain entity representing overall system health status; includes
-    database connectivity, NLP pipeline readiness, embedding model load status,
-    available LLM providers, uptime, and any identified issues
+  description: Domain entity representing overall system health status; includes database connectivity, NLP pipeline readiness, embedding model load status, available LLM providers, uptime, and any identified issues
   attributes:
     type: object
   source_reference:
@@ -221,9 +195,7 @@ data-model.objectschema.background-task:
   type: objectschema
   layer_id: data-model
   name: Background Task
-  description: Domain entity representing a long-running background task with id,
-    name, status (pending/running/completed/failed), timestamps, and optional
-    error/result; enforces valid state transitions via transition_to()
+  description: Domain entity representing a long-running background task with id, name, status (pending/running/completed/failed), timestamps, and optional error/result; enforces valid state transitions via transition_to()
   attributes:
     type: object
   source_reference:
@@ -242,9 +214,7 @@ data-model.objectschema.app-configuration:
   type: objectschema
   layer_id: data-model
   name: App Configuration
-  description: "Domain entity representing application configuration organized
-    into sections: server, database, llm, nlp, embedding, reference_sources,
-    logging, and optional sync; API key values are unmasked at domain layer"
+  description: "Domain entity representing application configuration organized into sections: server, database, llm, nlp, embedding, reference_sources, logging, and optional sync; API key values are unmasked at domain layer"
   attributes:
     type: object
   source_reference:
@@ -263,9 +233,7 @@ data-model.objectschema.extracted-entity:
   type: objectschema
   layer_id: data-model
   name: Extracted Entity
-  description: Domain entity for an entity extracted from text through one or more
-    extraction layers; carries label, entity_type, source_layer (0=KG, 1=LLM,
-    2=NLP, 3=reference), confidence, optional class match and URI
+  description: Domain entity for an entity extracted from text through one or more extraction layers; carries label, entity_type, source_layer (0=KG, 1=LLM, 2=NLP, 3=reference), confidence, optional class match and URI
   attributes:
     type: object
   source_reference:
@@ -284,9 +252,7 @@ data-model.objectschema.processing-metrics:
   type: objectschema
   layer_id: data-model
   name: Processing Metrics
-  description: "Frozen dataclass capturing metrics for a single extraction layer
-    run: layer_name, duration_ms, tokens_processed, entities_found,
-    relationships_found, error_count, and skipped_count"
+  description: "Frozen dataclass capturing metrics for a single extraction layer run: layer_name, duration_ms, tokens_processed, entities_found, relationships_found, error_count, and skipped_count"
   attributes:
     type: object
   source_reference:
@@ -305,10 +271,7 @@ data-model.objectschema.extraction-run:
   type: objectschema
   layer_id: data-model
   name: Extraction Run
-  description: First-class domain entity (audit record) tracking an extraction
-    operation; records pipeline config ref, LLM model, temperature, tokens used,
-    duration, triples extracted vs committed, and status; immutable once
-    constructed
+  description: First-class domain entity (audit record) tracking an extraction operation; records pipeline config ref, LLM model, temperature, tokens used, duration, triples extracted vs committed, and status; immutable once constructed
   attributes:
     type: object
   source_reference:
@@ -327,9 +290,7 @@ data-model.objectschema.triple-extraction-result:
   type: objectschema
   layer_id: data-model
   name: Triple Extraction Result
-  description: Result of triple extraction from text; contains the list of
-    extracted triple dicts, warnings, and metadata (model, tokens_used,
-    duration_ms)
+  description: Result of triple extraction from text; contains the list of extracted triple dicts, warnings, and metadata (model, tokens_used, duration_ms)
   attributes:
     type: object
   source_reference:
@@ -348,9 +309,7 @@ data-model.objectschema.knowledge-graph:
   type: objectschema
   layer_id: data-model
   name: Knowledge Graph
-  description: Lightweight snapshot descriptor of the in-memory knowledge graph
-    state; carries node_count, edge_count, is_directed, and last_built
-    timestamp; not a persistent entity
+  description: Lightweight snapshot descriptor of the in-memory knowledge graph state; carries node_count, edge_count, is_directed, and last_built timestamp; not a persistent entity
   attributes:
     type: object
   source_reference:
@@ -369,9 +328,7 @@ data-model.objectschema.graph-metrics:
   type: objectschema
   layer_id: data-model
   name: Graph Metrics
-  description: "Computed structural metrics for a knowledge graph: density,
-    average_degree, connected_components, degree_distribution, centrality
-    scores, community sets, algorithm name, and computed_at timestamp"
+  description: "Computed structural metrics for a knowledge graph: density, average_degree, connected_components, degree_distribution, centrality scores, community sets, algorithm name, and computed_at timestamp"
   attributes:
     type: object
   source_reference:
@@ -390,9 +347,7 @@ data-model.objectschema.path-result:
   type: objectschema
   layer_id: data-model
   name: Path Result
-  description: An ordered path traversal between two nodes in the knowledge graph;
-    contains source_id, target_id, ordered path node list, edge count (length),
-    and relationship labels traversed
+  description: An ordered path traversal between two nodes in the knowledge graph; contains source_id, target_id, ordered path node list, edge count (length), and relationship labels traversed
   attributes:
     type: object
   source_reference:
@@ -411,8 +366,7 @@ data-model.objectschema.subgraph:
   type: objectschema
   layer_id: data-model
   name: Subgraph
-  description: A subgraph containing a specified set of nodes and edges; carries
-    node_ids, edge_ids (source/target tuples), node_count, and edge_count
+  description: A subgraph containing a specified set of nodes and edges; carries node_ids, edge_ids (source/target tuples), node_count, and edge_count
   attributes:
     type: object
   source_reference:
@@ -431,9 +385,7 @@ data-model.objectschema.subgraph-result:
   type: objectschema
   layer_id: data-model
   name: Subgraph Result
-  description: Result of depth-based subgraph extraction around a center node;
-    contains center_node_id, node_ids, edge_ids, node_count, edge_count, depth,
-    and extracted_at timestamp
+  description: Result of depth-based subgraph extraction around a center node; contains center_node_id, node_ids, edge_ids, node_count, edge_count, depth, and extracted_at timestamp
   attributes:
     type: object
   source_reference:
@@ -452,8 +404,7 @@ data-model.objectschema.resolution-record:
   type: objectschema
   layer_id: data-model
   name: Resolution Record
-  description: A recorded resolution for a specific conflict in an import run;
-    captures match_kind, entity_id, and the resolution_chosen strategy applied
+  description: A recorded resolution for a specific conflict in an import run; captures match_kind, entity_id, and the resolution_chosen strategy applied
   attributes:
     type: object
   source_reference:
@@ -472,10 +423,7 @@ data-model.objectschema.import-run-entity:
   type: objectschema
   layer_id: data-model
   name: Import Run Entity
-  description: Domain entity tracking an import operation from inception through
-    completion; records format, source URI/hash, scope, applied conflict
-    resolutions, affected entity IDs, and status
-    (pending/committed/failed/rolled_back)
+  description: Domain entity tracking an import operation from inception through completion; records format, source URI/hash, scope, applied conflict resolutions, affected entity IDs, and status (pending/committed/failed/rolled_back)
   attributes:
     type: object
   source_reference:
@@ -494,9 +442,7 @@ data-model.objectschema.taxonomy-entity:
   type: objectschema
   layer_id: data-model
   name: Taxonomy Entity
-  description: Domain entity for a taxonomy that organizes concepts at the top
-    level; has id, title, optional description, timestamps, and version for
-    optimistic concurrency control
+  description: Domain entity for a taxonomy that organizes concepts at the top level; has id, title, optional description, timestamps, and version for optimistic concurrency control
   attributes:
     type: object
   source_reference:
@@ -515,9 +461,7 @@ data-model.objectschema.concept-scheme-entity:
   type: objectschema
   layer_id: data-model
   name: Concept Scheme Entity
-  description: Domain entity for a concept scheme that groups classes within a
-    taxonomy; has id, taxonomy_id, title, optional description, timestamps, and
-    version
+  description: Domain entity for a concept scheme that groups classes within a taxonomy; has id, taxonomy_id, title, optional description, timestamps, and version
   attributes:
     type: object
   source_reference:
@@ -536,10 +480,7 @@ data-model.objectschema.ontology-class-entity:
   type: objectschema
   layer_id: data-model
   name: Ontology Class Entity
-  description: Domain entity representing a concept (OntologyClass) in the
-    ontology hierarchy; has concept_scheme_id, taxonomy_id, title, optional
-    parent_class_id, structural property, external references, lexical senses,
-    data properties, and embedding
+  description: Domain entity representing a concept (OntologyClass) in the ontology hierarchy; has concept_scheme_id, taxonomy_id, title, optional parent_class_id, structural property, external references, lexical senses, data properties, and embedding
   attributes:
     type: object
   source_reference:
@@ -558,9 +499,7 @@ data-model.objectschema.individual-entity:
   type: objectschema
   layer_id: data-model
   name: Individual Entity
-  description: Domain entity representing an instance of one or more classes;
-    maintains an ordered class_ids list where order determines property
-    inheritance priority; holds data properties and external references
+  description: Domain entity representing an instance of one or more classes; maintains an ordered class_ids list where order determines property inheritance priority; holds data properties and external references
   attributes:
     type: object
   source_reference:
@@ -579,9 +518,7 @@ data-model.objectschema.relationship-entity:
   type: objectschema
   layer_id: data-model
   name: Relationship Entity
-  description: Domain entity for a typed relationship between two ontology
-    entities; carries source_id, target_id, and property_definition_id;
-    validates source != target
+  description: Domain entity for a typed relationship between two ontology entities; carries source_id, target_id, and property_definition_id; validates source != target
   attributes:
     type: object
   source_reference:
@@ -600,9 +537,7 @@ data-model.objectschema.property-definition-entity:
   type: objectschema
   layer_id: data-model
   name: Property Definition Entity
-  description: Domain entity defining a property (relationship type) with
-    identifier, title, optional description, ontology_mapping, relevance flag,
-    timestamps, and version
+  description: Domain entity defining a property (relationship type) with identifier, title, optional description, ontology_mapping, relevance flag, timestamps, and version
   attributes:
     type: object
   source_reference:
@@ -621,8 +556,7 @@ data-model.objectschema.pipeline-configuration-entity:
   type: objectschema
   layer_id: data-model
   name: Pipeline Configuration Entity
-  description: "Domain value: one version of a pipeline implementation's
-    configuration (built-in or user), as the registry resolves it."
+  description: "Domain value: one version of a pipeline implementation's configuration (built-in or user), as the registry resolves it."
   attributes:
     type: object
   source_reference:
@@ -641,10 +575,7 @@ data-model.objectschema.change-event-entity:
   type: objectschema
   layer_id: data-model
   name: Change Event Entity
-  description: Domain entity recording a single change to an entity; carries
-    entity_id, entity_type, operation, new_state snapshot, timestamp, optional
-    previous_state, user_id, change_reason, changeset_id, batch_run_id, and
-    processed flag
+  description: Domain entity recording a single change to an entity; carries entity_id, entity_type, operation, new_state snapshot, timestamp, optional previous_state, user_id, change_reason, changeset_id, batch_run_id, and processed flag
   attributes:
     type: object
   source_reference:
@@ -663,15 +594,7 @@ data-model.objectschema.proposal-entity:
   type: objectschema
   layer_id: data-model
   name: Proposal Entity
-  description: "ChangeProposal: a set of proposed ontology changes on one
-    taxonomy, decided per operation, with its ordered proposed operations,
-    origin and landing; review_only keeps the approval policy off it (#1628).
-    Status open, done, reverted, withdrawn (its proposer withdrew it; anything
-    it had applied is rolled back) or reversed. Its links to other proposals
-    (supersedes / superseded_by, reverses / reversed_by) come from
-    proposal_links (#1624): a reversal is linked to the proposal it reverses by
-    a link of kind reverses, so the original knows its reversal (reversed_by)
-    and how many of the reversal's changes were applied."
+  description: "ChangeProposal: a set of proposed ontology changes on one taxonomy, decided per operation, with its ordered proposed operations, origin and landing; review_only keeps the approval policy off it (#1628). Status open, done, reverted, withdrawn (its proposer withdrew it; anything it had applied is rolled back) or reversed. Its links to other proposals (supersedes / superseded_by, reverses / reversed_by) come from proposal_links (#1624): a reversal is linked to the proposal it reverses by a link of kind reverses, so the original knows its reversal (reversed_by) and how many of the reversal's changes were applied."
   attributes:
     type: object
   source_reference:
@@ -690,8 +613,7 @@ data-model.objectschema.attribute-definition-entity:
   type: objectschema
   layer_id: data-model
   name: Attribute Definition Entity
-  description: "Domain entity: an attribute a class's individuals may carry (name,
-    data type, cardinality)."
+  description: "Domain entity: an attribute a class's individuals may carry (name, data type, cardinality)."
   attributes:
     type: object
   source_reference:
@@ -710,8 +632,7 @@ data-model.objectschema.dataset-entity:
   type: objectschema
   layer_id: data-model
   name: Dataset Entity
-  description: "Domain entity: a named body of data (individuals and their
-    relationships) over a taxonomy's schema."
+  description: "Domain entity: a named body of data (individuals and their relationships) over a taxonomy's schema."
   attributes:
     type: object
   source_reference:
@@ -730,8 +651,7 @@ data-model.objectschema.predicate-entity:
   type: objectschema
   layer_id: data-model
   name: Predicate Entity
-  description: "Domain entity: a relation verb in a taxonomy's predicate catalog,
-    used by relationship types."
+  description: "Domain entity: a relation verb in a taxonomy's predicate catalog, used by relationship types."
   attributes:
     type: object
   source_reference:
@@ -750,14 +670,7 @@ data-model.objectschema.proposed-operation:
   type: objectschema
   layer_id: data-model
   name: Proposed Operation
-  description: "ProposedOperation: one proposed change (create, update or delete
-    of an entity), with its status and decision. Status pending, applied,
-    rejected, failed, or withdrawn (removed by its proposer, or its proposal
-    withdrawn: not a decision). amended_at and amendments record changes its
-    proposer made while it was pending. A restore create names a free target id
-    (the deleted entity's snapshot id), so a reversal recreates it with its old
-    id; a rejection carries a RejectionReason code (incorrect, keep_current and
-    outdated added)."
+  description: "ProposedOperation: one proposed change (create, update or delete of an entity), with its status and decision. Status pending, applied, rejected, failed, or withdrawn (removed by its proposer, or its proposal withdrawn: not a decision). amended_at and amendments record changes its proposer made while it was pending. A restore create names a free target id (the deleted entity's snapshot id), so a reversal recreates it with its old id; a rejection carries a RejectionReason code (incorrect, keep_current and outdated added). An update may carry text_edits (anchored edits of description or vision, by field): fields then holds the text they resolved to and base the text they were resolved against, both rewritten to what was applied when accepted."
   attributes:
     type: object
   source_reference:
@@ -776,10 +689,7 @@ data-model.objectschema.proposal-decision-entity:
   type: objectschema
   layer_id: data-model
   name: Proposal Decision Entity
-  description: "Domain entity: a reviewer's or policy's decision on a proposal
-    operation, with reason code (one set for every operation kind: not_in_text,
-    mentioned_only, too_generic, duplicate, out_of_scope, incorrect,
-    keep_current, outdated, other) and timing (the gold record)."
+  description: "Domain entity: a reviewer's or policy's decision on a proposal operation, with reason code (one set for every operation kind: not_in_text, mentioned_only, too_generic, duplicate, out_of_scope, incorrect, keep_current, outdated, other) and timing (the gold record)."
   attributes:
     type: object
   source_reference:
@@ -798,8 +708,7 @@ data-model.objectschema.claim-entity:
   type: objectschema
   layer_id: data-model
   name: Claim Entity
-  description: "Domain entity: a claim about a taxonomy (from notes or a client),
-    with its triage and verdict."
+  description: "Domain entity: a claim about a taxonomy (from notes or a client), with its triage and verdict."
   attributes:
     type: object
   source_reference:
@@ -818,8 +727,7 @@ data-model.objectschema.approval-policy-entity:
   type: objectschema
   layer_id: data-model
   name: Approval Policy Entity
-  description: "Domain entity: a taxonomy's approval policy, the rules for which
-    proposal operations auto-apply."
+  description: "Domain entity: a taxonomy's approval policy, the rules for which proposal operations auto-apply."
   attributes:
     type: object
   source_reference:
@@ -838,8 +746,7 @@ data-model.objectschema.entity-source-entity:
   type: objectschema
   layer_id: data-model
   name: Entity Source Entity
-  description: "Domain entity: provenance linking an ontology entity to the source
-    passage it was extracted from."
+  description: "Domain entity: provenance linking an ontology entity to the source passage it was extracted from."
   attributes:
     type: object
   source_reference:
@@ -858,8 +765,7 @@ data-model.objectschema.source-entity:
   type: objectschema
   layer_id: data-model
   name: Source Entity
-  description: "Domain entity: a source document (file, web page or text) of a
-    taxonomy's dataset, with status and pages."
+  description: "Domain entity: a source document (file, web page or text) of a taxonomy's dataset, with status and pages."
   attributes:
     type: object
   source_reference:
@@ -878,9 +784,7 @@ data-model.objectschema.pipeline-run-entity:
   type: objectschema
   layer_id: data-model
   name: Pipeline Run Entity
-  description: "Domain entity: one run of a pipeline (type, implementation,
-    configuration version, status, stage progress), specialized per pipeline
-    type."
+  description: "Domain entity: one run of a pipeline (type, implementation, configuration version, status, stage progress), specialized per pipeline type."
   attributes:
     type: object
   source_reference:
@@ -937,8 +841,7 @@ data-model.objectschema.chat-message-entity:
   type: objectschema
   layer_id: data-model
   name: Chat Message Entity
-  description: "Domain entity: one chat message (role and content blocks: text,
-    tool use, tool result, reasoning)."
+  description: "Domain entity: one chat message (role and content blocks: text, tool use, tool result, reasoning)."
   attributes:
     type: object
   source_reference:
@@ -957,8 +860,7 @@ data-model.objectschema.graph-view:
   type: objectschema
   layer_id: data-model
   name: Graph View
-  description: "Domain read model: labelled nodes, edges, layers and taxonomies of
-    the ontology graph for visualization."
+  description: "Domain read model: labelled nodes, edges, layers and taxonomies of the ontology graph for visualization."
   attributes:
     type: object
   source_reference:
@@ -977,11 +879,7 @@ data-model.objectschema.pre-review-verdict:
   type: objectschema
   layer_id: data-model
   name: Pre-Review Verdict
-  description: "Domain value (dataclass, domain/extraction/entities.py): the
-    pre-review stage's answer for one extracted individual. answer (keep, split,
-    retype, unsure), question, reasoning, original title and class, the retype's
-    class, the classes compared, a split's parts (each with title, class and
-    passage), model."
+  description: "Domain value (dataclass, domain/extraction/entities.py): the pre-review stage's answer for one extracted individual. answer (keep, split, retype, unsure), question, reasoning, original title and class, the retype's class, the classes compared, a split's parts (each with title, class and passage), model."
   attributes:
     type: object
     required:
@@ -1006,10 +904,7 @@ data-model.objectschema.operation-draft:
   type: objectschema
   layer_id: data-model
   name: Operation Draft
-  description: One operation a pipeline or client drafts for a change proposal,
-    before ProposalService validates and stores it. A value object of the
-    versioning context (domain/versioning/proposals.py), so other contexts
-    import it without the service module.
+  description: One operation a pipeline or client drafts for a change proposal, before ProposalService validates and stores it. A value object of the versioning context (domain/versioning/proposals.py), so other contexts import it without the service module.
   attributes:
     type: object
   source_reference:
@@ -1028,8 +923,7 @@ data-model.objectschema.operation-count:
   type: objectschema
   layer_id: data-model
   name: Operation Count
-  description: How many of a proposal's operations share one op, kind, status and
-    scope; a list summary carries these instead of the operations.
+  description: How many of a proposal's operations share one op, kind, status and scope; a list summary carries these instead of the operations.
   attributes:
     type: object
     required:
@@ -1054,9 +948,7 @@ data-model.objectschema.proposal-link:
   type: objectschema
   layer_id: data-model
   name: Proposal Link
-  description: "ProposalLink (domain/versioning/proposals.py): source_proposal_id,
-    kind (ProposalLinkKind: supersedes | reverses), target_proposal_id,
-    created_at, note."
+  description: "ProposalLink (domain/versioning/proposals.py): source_proposal_id, kind (ProposalLinkKind: supersedes | reverses), target_proposal_id, created_at, note."
   attributes:
     type: object
     required:
@@ -1080,8 +972,7 @@ data-model.objectschema.operation-amendment:
   type: objectschema
   layer_id: data-model
   name: Operation Amendment
-  description: "One earlier version of an amended operation: its fields, base and
-    rationale, and when it was replaced."
+  description: "One earlier version of an amended operation: its fields, base and rationale, and when it was replaced."
   attributes:
     type: object
     required:
@@ -1103,8 +994,7 @@ data-model.objectschema.revert-preview-result:
   type: objectschema
   layer_id: data-model
   name: Revert Preview Result
-  description: "Domain value: the later edits an in-place revert would overwrite,
-    per entity and field, with the applied value and the current value."
+  description: "Domain value: the later edits an in-place revert would overwrite, per entity and field, with the applied value and the current value."
   attributes:
     type: object
   source_reference:
@@ -1115,4 +1005,23 @@ data-model.objectschema.revert-preview-result:
   metadata:
     created_at: 2026-11-19T16:59:46.681Z
     updated_at: 2026-11-19T16:59:46.681Z
+    version: 1
+data-model.objectschema.text-edit:
+  id: 6bf39544-fc62-4c88-8a47-4694143bfb63
+  path: data-model.objectschema.text-edit
+  spec_node_id: data-model.objectschema
+  type: objectschema
+  layer_id: data-model
+  name: Text Edit
+  description: "One anchored edit of a long text field: {after, insert} inserts text right after the anchor, {replace, with} replaces the anchor, {delete} removes the anchor. The anchor must appear exactly once in the text the edit is applied to."
+  attributes:
+    type: object
+  source_reference:
+    provenance: manual
+    locations:
+      - file: local-server/domain/versioning/text_edits.py
+        symbol: parse_text_edits
+  metadata:
+    created_at: 2026-11-25T02:12:36.073Z
+    updated_at: 2026-11-25T02:12:36.073Z
     version: 1

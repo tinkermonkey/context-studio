@@ -16,11 +16,11 @@ Databases, data stores, and persistence mechanisms.
 
 | Metric                    | Count |
 | ------------------------- | ----- |
-| Elements                  | 62    |
-| Intra-Layer Relationships | 91    |
-| Inter-Layer Relationships | 102   |
-| Inbound Relationships     | 77    |
-| Outbound Relationships    | 25    |
+| Elements                  | 63    |
+| Intra-Layer Relationships | 92    |
+| Inter-Layer Relationships | 104   |
+| Inbound Relationships     | 78    |
+| Outbound Relationships    | 26    |
 
 **Cross-Layer References**:
 
@@ -61,7 +61,7 @@ Databases, data stores, and persistence mechanisms.
 | `data-store.collection.property-definitions-table`               | `collection`      | 2             |
 | `data-store.collection.proposal-decisions`                       | `collection`      | 3             |
 | `data-store.collection.proposal-links`                           | `collection`      | 4             |
-| `data-store.collection.proposal-operations`                      | `collection`      | 6             |
+| `data-store.collection.proposal-operations`                      | `collection`      | 7             |
 | `data-store.collection.proposals-table`                          | `collection`      | 8             |
 | `data-store.collection.reference-relations`                      | `collection`      | 1             |
 | `data-store.collection.references`                               | `collection`      | 1             |
@@ -80,6 +80,7 @@ Databases, data stores, and persistence mechanisms.
 | `data-store.field.amended-at`                                    | `field`           | 1             |
 | `data-store.field.amendments`                                    | `field`           | 1             |
 | `data-store.field.review-only`                                   | `field`           | 1             |
+| `data-store.field.text-edits`                                    | `field`           | 1             |
 | `data-store.index.ix-proposal-links-target-proposal-id`          | `index`           | 1             |
 | `data-store.retentionpolicy.reference-api-cache-cleanup`         | `retentionpolicy` | 0             |
 | `data-store.validationrule.entity-cascade-delete`                | `validationrule`  | 1             |
@@ -202,6 +203,7 @@ flowchart TB
 | `data-model.objectschema.maps-to.data-store.collection`           | `data-model.objectschema.relationship`                                      | `data-store.collection.relationships`                                        | `data-store`  | `maps-to`    | many-to-many | medium   |
 | `data-model.objectschema.maps-to.data-store.collection`           | `data-model.objectschema.source-entity`                                     | `data-store.collection.sources`                                              | `data-store`  | `maps-to`    | many-to-many | medium   |
 | `data-model.objectschema.maps-to.data-store.collection`           | `data-model.objectschema.taxonomy-entity`                                   | `data-store.collection.ontology-entities`                                    | `data-store`  | `maps-to`    | many-to-many | medium   |
+| `data-model.objectschema.maps-to.data-store.collection`           | `data-model.objectschema.text-edit`                                         | `data-store.collection.proposal-operations`                                  | `data-store`  | `maps-to`    | many-to-many | medium   |
 | `data-store.accesspattern.serves.application.applicationfunction` | `data-store.accesspattern.entity-by-parent-range-scan`                      | `application.applicationfunction.sparql-query-function`                      | `application` | `serves`     | many-to-many | medium   |
 | `data-store.accesspattern.serves.application.applicationfunction` | `data-store.accesspattern.vector-similarity-search`                         | `application.applicationfunction.embedding-generation`                       | `application` | `serves`     | many-to-many | medium   |
 | `data-store.collection.satisfies.motivation.requirement`          | `data-store.collection.approval-policies`                                   | `motivation.requirement.breaking-changes-never-auto-apply`                   | `motivation`  | `satisfies`  | many-to-many | medium   |
@@ -214,6 +216,7 @@ flowchart TB
 | `data-store.collection.satisfies.motivation.requirement`          | `data-store.collection.predicates`                                          | `motivation.requirement.relationships-limited-to-allowed-types`              | `motivation`  | `satisfies`  | many-to-many | medium   |
 | `data-store.collection.satisfies.motivation.requirement`          | `data-store.collection.proposal-decisions`                                  | `motivation.requirement.reason-codes-for-every-reject`                       | `motivation`  | `satisfies`  | many-to-many | medium   |
 | `data-store.collection.satisfies.motivation.requirement`          | `data-store.collection.proposal-links`                                      | `motivation.requirement.proposals-link-to-each-other-through-one-link-model` | `motivation`  | `satisfies`  | many-to-many | medium   |
+| `data-store.collection.satisfies.motivation.requirement`          | `data-store.collection.proposal-operations`                                 | `motivation.requirement.a-long-text-field-is-proposed-as-anchored-edits`     | `motivation`  | `satisfies`  | many-to-many | medium   |
 | `data-store.collection.references.security.dataclassification`    | `data-store.collection.proposals-table`                                     | `security.dataclassification.internal-knowledge-graph-data`                  | `security`    | `references` | many-to-many | medium   |
 | `data-store.collection.satisfies.motivation.requirement`          | `data-store.collection.proposals-table`                                     | `motivation.requirement.landed-proposals-are-undone-by-a-reversal-proposal`  | `motivation`  | `satisfies`  | many-to-many | medium   |
 | `data-store.collection.satisfies.motivation.requirement`          | `data-store.collection.proposals-table`                                     | `motivation.requirement.proposals-record-their-pipeline-and-version`         | `motivation`  | `satisfies`  | many-to-many | medium   |
@@ -934,17 +937,20 @@ The ordered operations of each change proposal, with status and payload (local.d
 
 #### Relationships
 
-| Type        | Related Element                                                      | Predicate    | Direction |
-| ----------- | -------------------------------------------------------------------- | ------------ | --------- |
-| inter-layer | `application.applicationcomponent.sqlite-change-proposal-repository` | `accesses`   | inbound   |
-| inter-layer | `data-model.objectschema.operation-amendment`                        | `maps-to`    | inbound   |
-| inter-layer | `data-model.objectschema.proposed-operation`                         | `maps-to`    | inbound   |
-| intra-layer | `data-store.collection.proposal-decisions`                           | `references` | inbound   |
-| intra-layer | `data-store.field.amended-at`                                        | `composes`   | outbound  |
-| intra-layer | `data-store.field.amendments`                                        | `composes`   | outbound  |
-| intra-layer | `data-store.validationrule.uq-proposal-operation-seq`                | `composes`   | outbound  |
-| intra-layer | `data-store.collection.proposals-table`                              | `references` | outbound  |
-| intra-layer | `data-store.database.localdb`                                        | `composes`   | inbound   |
+| Type        | Related Element                                                          | Predicate    | Direction |
+| ----------- | ------------------------------------------------------------------------ | ------------ | --------- |
+| inter-layer | `application.applicationcomponent.sqlite-change-proposal-repository`     | `accesses`   | inbound   |
+| inter-layer | `data-model.objectschema.operation-amendment`                            | `maps-to`    | inbound   |
+| inter-layer | `data-model.objectschema.proposed-operation`                             | `maps-to`    | inbound   |
+| inter-layer | `data-model.objectschema.text-edit`                                      | `maps-to`    | inbound   |
+| inter-layer | `motivation.requirement.a-long-text-field-is-proposed-as-anchored-edits` | `satisfies`  | outbound  |
+| intra-layer | `data-store.collection.proposal-decisions`                               | `references` | inbound   |
+| intra-layer | `data-store.field.amended-at`                                            | `composes`   | outbound  |
+| intra-layer | `data-store.field.amendments`                                            | `composes`   | outbound  |
+| intra-layer | `data-store.field.text-edits`                                            | `composes`   | outbound  |
+| intra-layer | `data-store.validationrule.uq-proposal-operation-seq`                    | `composes`   | outbound  |
+| intra-layer | `data-store.collection.proposals-table`                                  | `references` | outbound  |
+| intra-layer | `data-store.database.localdb`                                            | `composes`   | inbound   |
 
 ### change_proposals {#change-proposals}
 
@@ -1388,6 +1394,27 @@ change_proposals.review_only: set at create time; true keeps the approval policy
 | ----------- | --------------------------------------- | ---------- | --------- |
 | intra-layer | `data-store.collection.proposals-table` | `composes` | inbound   |
 
+### text_edits {#text-edits}
+
+**ID**: `data-store.field.text-edits`
+
+**Type**: `field`
+
+proposal_operations.text_edits: the anchored edits an update operation was proposed with, by field name (\{field: \[edit, ...\]\}). Fields named here also hold their resolved text in fields. JSON, default \{\}.
+
+#### Attributes
+
+| Name     | Value |
+| -------- | ----- |
+| dataType | JSON  |
+| nullable | false |
+
+#### Relationships
+
+| Type        | Related Element                             | Predicate  | Direction |
+| ----------- | ------------------------------------------- | ---------- | --------- |
+| intra-layer | `data-store.collection.proposal-operations` | `composes` | inbound   |
+
 ### ix_proposal_links_target_proposal_id {#ix-proposal-links-target-proposal-id}
 
 **ID**: `data-store.index.ix-proposal-links-target-proposal-id`
@@ -1723,4 +1750,4 @@ A proposal's operations have distinct sequence numbers.
 
 ---
 
-Generated: 2026-11-24T21:17:13.774Z | Model Version: 0.1.0
+Generated: 2026-11-25T10:04:41.933Z | Model Version: 0.1.0

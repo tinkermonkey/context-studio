@@ -16,11 +16,11 @@ Data entities, relationships, and data structure definitions.
 
 | Metric                    | Count |
 | ------------------------- | ----- |
-| Elements                  | 55    |
+| Elements                  | 56    |
 | Intra-Layer Relationships | 10    |
-| Inter-Layer Relationships | 129   |
-| Inbound Relationships     | 59    |
-| Outbound Relationships    | 70    |
+| Inter-Layer Relationships | 132   |
+| Inbound Relationships     | 60    |
+| Outbound Relationships    | 72    |
 
 **Cross-Layer References**:
 
@@ -85,6 +85,7 @@ Data entities, relationships, and data structure definitions.
 | `data-model.objectschema.subgraph-result`               | `objectschema` | 0             |
 | `data-model.objectschema.system-health`                 | `objectschema` | 0             |
 | `data-model.objectschema.taxonomy-entity`               | `objectschema` | 0             |
+| `data-model.objectschema.text-edit`                     | `objectschema` | 0             |
 | `data-model.objectschema.triple-extraction-result`      | `objectschema` | 0             |
 | `data-model.stringschema.iso-8601-datetime`             | `stringschema` | 1             |
 | `data-model.stringschema.uuid-string`                   | `stringschema` | 1             |
@@ -167,6 +168,7 @@ flowchart TB
 | `application.applicationcomponent.accesses.data-model.objectschema` | `application.applicationcomponent.sqlite-pipeline-configuration-repository` | `data-model.objectschema.pipeline-configuration-entity`                              | `data-model` | `accesses`  | many-to-many | medium   |
 | `application.applicationcomponent.accesses.data-model.objectschema` | `application.applicationcomponent.sqlite-pipeline-repository`               | `data-model.objectschema.pipeline-run-entity`                                        | `data-model` | `accesses`  | many-to-many | medium   |
 | `application.applicationcomponent.accesses.data-model.objectschema` | `application.applicationcomponent.sqlite-source-repository`                 | `data-model.objectschema.source-entity`                                              | `data-model` | `accesses`  | many-to-many | medium   |
+| `application.applicationfunction.accesses.data-model.objectschema`  | `application.applicationfunction.anchored-text-edits`                       | `data-model.objectschema.text-edit`                                                  | `data-model` | `accesses`  | many-to-many | medium   |
 | `application.applicationfunction.accesses.data-model.objectschema`  | `application.applicationfunction.individual-pre-review`                     | `data-model.objectschema.pipeline-configuration-entity`                              | `data-model` | `accesses`  | many-to-many | medium   |
 | `application.applicationfunction.accesses.data-model.objectschema`  | `application.applicationfunction.individual-pre-review`                     | `data-model.objectschema.pre-review-verdict`                                         | `data-model` | `accesses`  | many-to-many | medium   |
 | `application.applicationfunction.accesses.data-model.objectschema`  | `application.applicationfunction.proposal-amendment`                        | `data-model.objectschema.operation-amendment`                                        | `data-model` | `accesses`  | many-to-many | medium   |
@@ -247,6 +249,8 @@ flowchart TB
 | `data-model.objectschema.maps-to.api.response`                      | `data-model.objectschema.system-health`                                     | `api.response.database-health-response`                                              | `api`        | `maps-to`   | many-to-many | medium   |
 | `data-model.objectschema.maps-to.api.response`                      | `data-model.objectschema.taxonomy-entity`                                   | `api.response.taxonomy-response`                                                     | `api`        | `maps-to`   | many-to-many | medium   |
 | `data-model.objectschema.maps-to.data-store.collection`             | `data-model.objectschema.taxonomy-entity`                                   | `data-store.collection.ontology-entities`                                            | `data-store` | `maps-to`   | many-to-many | medium   |
+| `data-model.objectschema.maps-to.data-store.collection`             | `data-model.objectschema.text-edit`                                         | `data-store.collection.proposal-operations`                                          | `data-store` | `maps-to`   | many-to-many | medium   |
+| `data-model.objectschema.satisfies.motivation.requirement`          | `data-model.objectschema.text-edit`                                         | `motivation.requirement.a-long-text-field-is-proposed-as-anchored-edits`             | `motivation` | `satisfies` | many-to-many | medium   |
 | `data-model.objectschema.maps-to.api.response`                      | `data-model.objectschema.triple-extraction-result`                          | `api.response.triples-response`                                                      | `api`        | `maps-to`   | many-to-many | medium   |
 | `testing.testcoveragetarget.covers.data-model.objectschema`         | `testing.testcoveragetarget.reject-reason-codes`                            | `data-model.objectschema.proposal-decision-entity`                                   | `data-model` | `covers`    | many-to-many | medium   |
 
@@ -1186,7 +1190,7 @@ ProposalLink (domain/versioning/proposals.py): source_proposal_id, kind (Proposa
 
 **Type**: `objectschema`
 
-ProposedOperation: one proposed change (create, update or delete of an entity), with its status and decision. Status pending, applied, rejected, failed, or withdrawn (removed by its proposer, or its proposal withdrawn: not a decision). amended_at and amendments record changes its proposer made while it was pending. A restore create names a free target id (the deleted entity's snapshot id), so a reversal recreates it with its old id; a rejection carries a RejectionReason code (incorrect, keep_current and outdated added).
+ProposedOperation: one proposed change (create, update or delete of an entity), with its status and decision. Status pending, applied, rejected, failed, or withdrawn (removed by its proposer, or its proposal withdrawn: not a decision). amended_at and amendments record changes its proposer made while it was pending. A restore create names a free target id (the deleted entity's snapshot id), so a reversal recreates it with its old id; a rejection carries a RejectionReason code (incorrect, keep_current and outdated added). An update may carry text_edits (anchored edits of description or vision, by field): fields then holds the text they resolved to and base the text they were resolved against, both rewritten to what was applied when accepted.
 
 #### Attributes
 
@@ -1392,6 +1396,28 @@ Domain entity for a taxonomy that organizes concepts at the top level; has id, t
 | inter-layer | `api.response.taxonomy-response`                               | `maps-to`  | outbound  |
 | inter-layer | `data-store.collection.ontology-entities`                      | `maps-to`  | outbound  |
 
+### Text Edit {#text-edit}
+
+**ID**: `data-model.objectschema.text-edit`
+
+**Type**: `objectschema`
+
+One anchored edit of a long text field: \{after, insert\} inserts text right after the anchor, \{replace, with\} replaces the anchor, \{delete\} removes the anchor. The anchor must appear exactly once in the text the edit is applied to.
+
+#### Attributes
+
+| Name | Value  |
+| ---- | ------ |
+| type | object |
+
+#### Relationships
+
+| Type        | Related Element                                                          | Predicate   | Direction |
+| ----------- | ------------------------------------------------------------------------ | ----------- | --------- |
+| inter-layer | `application.applicationfunction.anchored-text-edits`                    | `accesses`  | inbound   |
+| inter-layer | `data-store.collection.proposal-operations`                              | `maps-to`   | outbound  |
+| inter-layer | `motivation.requirement.a-long-text-field-is-proposed-as-anchored-edits` | `satisfies` | outbound  |
+
 ### Triple Extraction Result {#triple-extraction-result}
 
 **ID**: `data-model.objectschema.triple-extraction-result`
@@ -1458,4 +1484,4 @@ String schema for entity identifiers — UUID v4 format, used as primary keys ac
 
 ---
 
-Generated: 2026-11-24T21:43:16.427Z | Model Version: 0.1.0
+Generated: 2026-11-25T10:04:41.933Z | Model Version: 0.1.0

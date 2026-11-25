@@ -5,8 +5,7 @@ ux.subview.chat-panel:
   type: subview
   layer_id: ux
   name: Chat Panel
-  description: "Chat with the workspace assistant: streamed turns, tool calls and
-    page context."
+  description: "Chat with the workspace assistant: streamed turns, tool calls and page context."
   source_reference:
     provenance: extracted
     locations:
@@ -101,15 +100,7 @@ ux.subview.review-inspector:
   type: subview
   layer_id: ux
   name: Review Inspector
-  description: "Inspector for one operation of any kind (the #1631 inspector,
-    extended): pills and evidence (quotes with captions when sourceless), 'The
-    change' as was/now rows with a word diff for long text, Why, the decided
-    record, stale and failed verbs with callouts, DR relationship types
-    (class-ended triple, reflection quick picks, 'Or correct it'), replacement
-    and in-use blocks, and reason-code buttons filtered by operation kind.
-    Replaces OperationInspector, OperationDecision, OperationDecided,
-    DecisionBars, the ReflectionAnswers and DrTripleEditor UIs, and the source
-    passage sections."
+  description: "Inspector for one operation of any kind (the #1631 inspector, extended): pills and evidence (quotes with captions when sourceless), 'The change' as was/now rows with a word diff for long text, Why, the decided record, stale and failed verbs with callouts, DR relationship types (class-ended triple, reflection quick picks, 'Or correct it'), replacement and in-use blocks, and reason-code buttons filtered by operation kind. A field proposed as anchored edits (#1630) is marked as applied to the text as it is at accept, and a stale one says which anchor no longer matches. Replaces OperationInspector, OperationDecision, OperationDecided, DecisionBars, the ReflectionAnswers and DrTripleEditor UIs, and the source passage sections."
   source_reference:
     provenance: extracted
     locations:
@@ -335,9 +326,7 @@ ux.subview.schema-grounding-wizard:
   type: subview
   layer_id: ux
   name: Schema Grounding Wizard
-  description: "Run wizard for schema-node grounding: pick classes (one or
-    several) and knowledge sources; one grounding run per class, enqueued as one
-    batch. Classes only: grounding's node_id resolves classes."
+  description: "Run wizard for schema-node grounding: pick classes (one or several) and knowledge sources; one grounding run per class, enqueued as one batch. Classes only: grounding's node_id resolves classes."
   source_reference:
     provenance: extracted
     locations:
@@ -504,9 +493,7 @@ ux.subview.status-bar-sync:
   type: subview
   layer_id: ux
   name: Status Bar Sync
-  description: "Status bar item showing the real sync state from the sync status
-    API: off, unsynced change count, last sync time, degraded or never synced.
-    Absent while loading or on error."
+  description: "Status bar item showing the real sync state from the sync status API: off, unsynced change count, last sync time, degraded or never synced. Absent while loading or on error."
   source_reference:
     provenance: manual
     locations:
@@ -523,12 +510,7 @@ ux.subview.review-elements-pane:
   type: subview
   layer_id: ux
   name: Review Elements Pane
-  description: "The one operation list of the review surface (ReviewElementsPane,
-    rebuilt): groupings by change kind, layer or sequence, inline conflict
-    cards, op and scope filters, inline update diffs, Select ▾ and the bulk bar
-    (hidden on gold checks), J/K and ?selected= selection. Replaces
-    OperationColumns, the Heimdall Table and TieredOperations on proposal
-    detail."
+  description: "The one operation list of the review surface (ReviewElementsPane, rebuilt): groupings by change kind, layer or sequence, inline conflict cards, op and scope filters, inline update diffs, Select ▾ and the bulk bar (hidden on gold checks), J/K and ?selected= selection. Replaces OperationColumns, the Heimdall Table and TieredOperations on proposal detail."
   attributes:
     title: Operations
   source_reference:

@@ -16,10 +16,10 @@ Goals, requirements, drivers, and strategic outcomes of the architecture.
 
 | Metric                    | Count |
 | ------------------------- | ----- |
-| Elements                  | 79    |
-| Intra-Layer Relationships | 107   |
-| Inter-Layer Relationships | 230   |
-| Inbound Relationships     | 230   |
+| Elements                  | 81    |
+| Intra-Layer Relationships | 109   |
+| Inter-Layer Relationships | 241   |
+| Inbound Relationships     | 241   |
 | Outbound Relationships    | 0     |
 
 **Cross-Layer References**:
@@ -59,7 +59,7 @@ Goals, requirements, drivers, and strategic outcomes of the architecture.
 | `motivation.outcome.client-changes-land-without-hand-edited-specs`                           | `outcome`     | 5             |
 | `motivation.outcome.curated-domain-ontology`                                                 | `outcome`     | 3             |
 | `motivation.outcome.extraction-proposals-worth-a-reviewers-time`                             | `outcome`     | 6             |
-| `motivation.principle.agents-propose-and-people-decide`                                      | `principle`   | 12            |
+| `motivation.principle.agents-propose-and-people-decide`                                      | `principle`   | 13            |
 | `motivation.principle.clients-drive-proposals`                                               | `principle`   | 2             |
 | `motivation.principle.hexagonal-domain-purity`                                               | `principle`   | 3             |
 | `motivation.principle.intent-travels-with-every-call`                                        | `principle`   | 1             |
@@ -67,11 +67,13 @@ Goals, requirements, drivers, and strategic outcomes of the architecture.
 | `motivation.principle.one-tool-registry-for-every-face`                                      | `principle`   | 1             |
 | `motivation.principle.reliability-and-simplicity-first-in-review`                            | `principle`   | 3             |
 | `motivation.principle.the-repo-releases-and-context-studio-refines`                          | `principle`   | 1             |
+| `motivation.requirement.a-long-text-field-is-proposed-as-anchored-edits`                     | `requirement` | 2             |
 | `motivation.requirement.a-proposer-amends-its-open-proposal-in-place`                        | `requirement` | 2             |
 | `motivation.requirement.a-proposer-withdraws-its-open-proposal`                              | `requirement` | 2             |
 | `motivation.requirement.a-review-only-proposal-is-never-auto-applied`                        | `requirement` | 1             |
 | `motivation.requirement.agent-file-sources-limited-to-allowed-roots`                         | `requirement` | 1             |
 | `motivation.requirement.an-amended-operation-shows-what-it-replaced`                         | `requirement` | 1             |
+| `motivation.requirement.an-anchored-edit-applies-to-the-current-text-or-goes-stale`          | `requirement` | 1             |
 | `motivation.requirement.an-operation-without-a-probability-never-meets-the-probability-rule` | `requirement` | 1             |
 | `motivation.requirement.breaking-changes-never-auto-apply`                                   | `requirement` | 1             |
 | `motivation.requirement.bulk-decisions-on-every-proposal-except-gold-checks`                 | `requirement` | 1             |
@@ -148,8 +150,11 @@ flowchart TB
 
 | Relationship ID                                                    | Source Node                                                                                        | Dest Node                                                                                    | Dest Layer   | Predicate    | Cardinality  | Strength |
 | ------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- | ------------ | ------------ | ------------ | -------- |
+| `api.operation.satisfies.motivation.requirement`                   | `api.operation.amend-proposal`                                                                     | `motivation.requirement.a-long-text-field-is-proposed-as-anchored-edits`                     | `motivation` | `satisfies`  | many-to-many | medium   |
 | `api.operation.satisfies.motivation.requirement`                   | `api.operation.amend-proposal`                                                                     | `motivation.requirement.a-proposer-amends-its-open-proposal-in-place`                        | `motivation` | `satisfies`  | many-to-many | medium   |
+| `api.operation.satisfies.motivation.requirement`                   | `api.operation.apply-proposal`                                                                     | `motivation.requirement.an-anchored-edit-applies-to-the-current-text-or-goes-stale`          | `motivation` | `satisfies`  | many-to-many | medium   |
 | `api.operation.satisfies.motivation.requirement`                   | `api.operation.apply-proposal`                                                                     | `motivation.requirement.reversal-is-decided-like-any-proposal`                               | `motivation` | `satisfies`  | many-to-many | medium   |
+| `api.operation.satisfies.motivation.requirement`                   | `api.operation.create-proposal`                                                                    | `motivation.requirement.a-long-text-field-is-proposed-as-anchored-edits`                     | `motivation` | `satisfies`  | many-to-many | medium   |
 | `api.operation.satisfies.motivation.requirement`                   | `api.operation.get-individual-sources`                                                             | `motivation.requirement.extracted-facts-cite-their-source`                                   | `motivation` | `satisfies`  | many-to-many | medium   |
 | `api.operation.satisfies.motivation.requirement`                   | `api.operation.list-proposals`                                                                     | `motivation.requirement.reversed-proposal-status`                                            | `motivation` | `satisfies`  | many-to-many | medium   |
 | `api.operation.satisfies.motivation.requirement`                   | `api.operation.list-proposals`                                                                     | `motivation.requirement.the-proposals-list-filters-in-the-query-and-has-a-summary-form`      | `motivation` | `satisfies`  | many-to-many | medium   |
@@ -162,6 +167,8 @@ flowchart TB
 | `api.operation.satisfies.motivation.requirement`                   | `api.operation.withdraw-proposal`                                                                  | `motivation.requirement.a-proposer-withdraws-its-open-proposal`                              | `motivation` | `satisfies`  | many-to-many | medium   |
 | `api.ratelimit.satisfies.motivation.constraint`                    | `api.ratelimit.external-reference-api-rate-limit`                                                  | `motivation.constraint.external-reference-source-rate-limits`                                | `motivation` | `satisfies`  | many-to-many | medium   |
 | `api.securityscheme.satisfies.motivation.requirement`              | `api.securityscheme.mcp-bearer-token`                                                              | `motivation.requirement.mcp-requires-a-bearer-token-on-loopback`                             | `motivation` | `satisfies`  | many-to-many | medium   |
+| `application.applicationfunction.satisfies.motivation.requirement` | `application.applicationfunction.anchored-text-edits`                                              | `motivation.requirement.a-long-text-field-is-proposed-as-anchored-edits`                     | `motivation` | `satisfies`  | many-to-many | medium   |
+| `application.applicationfunction.satisfies.motivation.requirement` | `application.applicationfunction.anchored-text-edits`                                              | `motivation.requirement.an-anchored-edit-applies-to-the-current-text-or-goes-stale`          | `motivation` | `satisfies`  | many-to-many | medium   |
 | `application.applicationfunction.satisfies.motivation.requirement` | `application.applicationfunction.domain-import-check`                                              | `motivation.requirement.contexts-depend-on-each-other-only-through-public-contracts`         | `motivation` | `satisfies`  | many-to-many | medium   |
 | `application.applicationfunction.satisfies.motivation.requirement` | `application.applicationfunction.in-use-inspection`                                                | `motivation.requirement.breaking-changes-never-auto-apply`                                   | `motivation` | `satisfies`  | many-to-many | medium   |
 | `application.applicationfunction.satisfies.motivation.requirement` | `application.applicationfunction.individual-extraction-apply`                                      | `motivation.requirement.individuals-belong-to-one-dataset`                                   | `motivation` | `satisfies`  | many-to-many | medium   |
@@ -186,9 +193,11 @@ flowchart TB
 | `application.applicationservice.satisfies.motivation.requirement`  | `application.applicationservice.pipeline-selection-service`                                        | `motivation.requirement.one-way-to-select-a-pipeline`                                        | `motivation` | `satisfies`  | many-to-many | medium   |
 | `application.applicationservice.satisfies.motivation.requirement`  | `application.applicationservice.proposal-apply-rules`                                              | `motivation.requirement.mirrored-taxonomies-accept-schema-changes-only-from-their-client`    | `motivation` | `satisfies`  | many-to-many | medium   |
 | `application.applicationservice.satisfies.motivation.requirement`  | `application.applicationservice.proposal-apply-rules`                                              | `motivation.requirement.relationships-limited-to-allowed-types`                              | `motivation` | `satisfies`  | many-to-many | medium   |
+| `application.applicationservice.satisfies.motivation.requirement`  | `application.applicationservice.proposal-service`                                                  | `motivation.requirement.a-long-text-field-is-proposed-as-anchored-edits`                     | `motivation` | `satisfies`  | many-to-many | medium   |
 | `application.applicationservice.satisfies.motivation.requirement`  | `application.applicationservice.proposal-service`                                                  | `motivation.requirement.a-proposer-amends-its-open-proposal-in-place`                        | `motivation` | `satisfies`  | many-to-many | medium   |
 | `application.applicationservice.satisfies.motivation.requirement`  | `application.applicationservice.proposal-service`                                                  | `motivation.requirement.a-proposer-withdraws-its-open-proposal`                              | `motivation` | `satisfies`  | many-to-many | medium   |
 | `application.applicationservice.satisfies.motivation.requirement`  | `application.applicationservice.proposal-service`                                                  | `motivation.requirement.a-review-only-proposal-is-never-auto-applied`                        | `motivation` | `satisfies`  | many-to-many | medium   |
+| `application.applicationservice.satisfies.motivation.requirement`  | `application.applicationservice.proposal-service`                                                  | `motivation.requirement.an-anchored-edit-applies-to-the-current-text-or-goes-stale`          | `motivation` | `satisfies`  | many-to-many | medium   |
 | `application.applicationservice.satisfies.motivation.requirement`  | `application.applicationservice.proposal-service`                                                  | `motivation.requirement.landed-proposals-are-undone-by-a-reversal-proposal`                  | `motivation` | `satisfies`  | many-to-many | medium   |
 | `application.applicationservice.satisfies.motivation.requirement`  | `application.applicationservice.proposal-service`                                                  | `motivation.requirement.mirrored-taxonomies-accept-schema-changes-only-from-their-client`    | `motivation` | `satisfies`  | many-to-many | medium   |
 | `application.applicationservice.satisfies.motivation.requirement`  | `application.applicationservice.proposal-service`                                                  | `motivation.requirement.proposals-link-to-each-other-through-one-link-model`                 | `motivation` | `satisfies`  | many-to-many | medium   |
@@ -235,6 +244,7 @@ flowchart TB
 | `data-model.objectschema.satisfies.motivation.requirement`         | `data-model.objectschema.proposal-decision-entity`                                                 | `motivation.requirement.reason-codes-for-every-reject`                                       | `motivation` | `satisfies`  | many-to-many | medium   |
 | `data-model.objectschema.satisfies.motivation.requirement`         | `data-model.objectschema.proposal-entity`                                                          | `motivation.requirement.reversed-proposal-status`                                            | `motivation` | `satisfies`  | many-to-many | medium   |
 | `data-model.objectschema.satisfies.motivation.requirement`         | `data-model.objectschema.proposal-link`                                                            | `motivation.requirement.proposals-link-to-each-other-through-one-link-model`                 | `motivation` | `satisfies`  | many-to-many | medium   |
+| `data-model.objectschema.satisfies.motivation.requirement`         | `data-model.objectschema.text-edit`                                                                | `motivation.requirement.a-long-text-field-is-proposed-as-anchored-edits`                     | `motivation` | `satisfies`  | many-to-many | medium   |
 | `data-store.collection.satisfies.motivation.requirement`           | `data-store.collection.approval-policies`                                                          | `motivation.requirement.breaking-changes-never-auto-apply`                                   | `motivation` | `satisfies`  | many-to-many | medium   |
 | `data-store.collection.satisfies.motivation.requirement`           | `data-store.collection.change-events`                                                              | `motivation.requirement.every-applied-proposal-is-revertible`                                | `motivation` | `satisfies`  | many-to-many | medium   |
 | `data-store.collection.satisfies.motivation.requirement`           | `data-store.collection.datasets`                                                                   | `motivation.requirement.individuals-belong-to-one-dataset`                                   | `motivation` | `satisfies`  | many-to-many | medium   |
@@ -242,6 +252,7 @@ flowchart TB
 | `data-store.collection.satisfies.motivation.requirement`           | `data-store.collection.predicates`                                                                 | `motivation.requirement.relationships-limited-to-allowed-types`                              | `motivation` | `satisfies`  | many-to-many | medium   |
 | `data-store.collection.satisfies.motivation.requirement`           | `data-store.collection.proposal-decisions`                                                         | `motivation.requirement.reason-codes-for-every-reject`                                       | `motivation` | `satisfies`  | many-to-many | medium   |
 | `data-store.collection.satisfies.motivation.requirement`           | `data-store.collection.proposal-links`                                                             | `motivation.requirement.proposals-link-to-each-other-through-one-link-model`                 | `motivation` | `satisfies`  | many-to-many | medium   |
+| `data-store.collection.satisfies.motivation.requirement`           | `data-store.collection.proposal-operations`                                                        | `motivation.requirement.a-long-text-field-is-proposed-as-anchored-edits`                     | `motivation` | `satisfies`  | many-to-many | medium   |
 | `data-store.collection.satisfies.motivation.requirement`           | `data-store.collection.proposals-table`                                                            | `motivation.requirement.landed-proposals-are-undone-by-a-reversal-proposal`                  | `motivation` | `satisfies`  | many-to-many | medium   |
 | `data-store.collection.satisfies.motivation.requirement`           | `data-store.collection.proposals-table`                                                            | `motivation.requirement.proposals-record-their-pipeline-and-version`                         | `motivation` | `satisfies`  | many-to-many | medium   |
 | `data-store.collection.satisfies.motivation.requirement`           | `data-store.collection.proposals-table`                                                            | `motivation.requirement.reversal-is-decided-like-any-proposal`                               | `motivation` | `satisfies`  | many-to-many | medium   |
@@ -267,6 +278,7 @@ flowchart TB
 | `product.feature.satisfies.motivation.requirement`                 | `product.feature.mcp-integration-settings`                                                         | `motivation.requirement.mcp-requires-a-bearer-token-on-loopback`                             | `motivation` | `satisfies`  | many-to-many | medium   |
 | `product.feature.delivers.motivation.value`                        | `product.feature.owl-skos-and-graph-ml-import-and-export`                                          | `motivation.value.knowledge-reusability`                                                     | `motivation` | `delivers`   | many-to-many | medium   |
 | `product.feature.satisfies.motivation.requirement`                 | `product.feature.pipeline-run-wizard`                                                              | `motivation.requirement.one-way-to-select-a-pipeline`                                        | `motivation` | `satisfies`  | many-to-many | medium   |
+| `product.feature.satisfies.motivation.requirement`                 | `product.feature.proposal-queue-and-detail`                                                        | `motivation.requirement.a-long-text-field-is-proposed-as-anchored-edits`                     | `motivation` | `satisfies`  | many-to-many | medium   |
 | `product.feature.satisfies.motivation.requirement`                 | `product.feature.proposal-queue-and-detail`                                                        | `motivation.requirement.a-proposer-amends-its-open-proposal-in-place`                        | `motivation` | `satisfies`  | many-to-many | medium   |
 | `product.feature.satisfies.motivation.requirement`                 | `product.feature.proposal-queue-and-detail`                                                        | `motivation.requirement.a-proposer-withdraws-its-open-proposal`                              | `motivation` | `satisfies`  | many-to-many | medium   |
 | `product.feature.satisfies.motivation.requirement`                 | `product.feature.proposal-queue-and-detail`                                                        | `motivation.requirement.every-applied-proposal-is-revertible`                                | `motivation` | `satisfies`  | many-to-many | medium   |
@@ -274,6 +286,7 @@ flowchart TB
 | `product.feature.satisfies.motivation.requirement`                 | `product.feature.proposal-queue-and-detail`                                                        | `motivation.requirement.proposals-link-to-each-other-through-one-link-model`                 | `motivation` | `satisfies`  | many-to-many | medium   |
 | `product.feature.satisfies.motivation.requirement`                 | `product.feature.proposal-queue-and-detail`                                                        | `motivation.requirement.reversed-proposal-status`                                            | `motivation` | `satisfies`  | many-to-many | medium   |
 | `product.feature.delivers.motivation.value`                        | `product.feature.proposal-review-page`                                                             | `motivation.value.reviewer-time-goes-to-judgment-calls`                                      | `motivation` | `delivers`   | many-to-many | medium   |
+| `product.feature.satisfies.motivation.requirement`                 | `product.feature.proposal-review-page`                                                             | `motivation.requirement.an-anchored-edit-applies-to-the-current-text-or-goes-stale`          | `motivation` | `satisfies`  | many-to-many | medium   |
 | `product.feature.satisfies.motivation.requirement`                 | `product.feature.proposal-review-page`                                                             | `motivation.requirement.bulk-decisions-on-every-proposal-except-gold-checks`                 | `motivation` | `satisfies`  | many-to-many | medium   |
 | `product.feature.satisfies.motivation.requirement`                 | `product.feature.proposal-review-page`                                                             | `motivation.requirement.focus-by-folding-panes-to-rails`                                     | `motivation` | `satisfies`  | many-to-many | medium   |
 | `product.feature.satisfies.motivation.requirement`                 | `product.feature.proposal-review-page`                                                             | `motivation.requirement.reason-codes-for-every-reject`                                       | `motivation` | `satisfies`  | many-to-many | medium   |
@@ -1068,6 +1081,7 @@ Every agent, chat or pipeline write lands as a proposal with source, rationale, 
 | intra-layer | `motivation.meaning.knowledge-as-infrastructure`                                             | `associated-with` | inbound   |
 | intra-layer | `motivation.goal.one-review-surface`                                                         | `influence`       | outbound  |
 | intra-layer | `motivation.goal.ontology-workbench-for-client-projects`                                     | `influence`       | outbound  |
+| intra-layer | `motivation.requirement.a-long-text-field-is-proposed-as-anchored-edits`                     | `realizes`        | inbound   |
 | intra-layer | `motivation.requirement.a-proposer-amends-its-open-proposal-in-place`                        | `realizes`        | inbound   |
 | intra-layer | `motivation.requirement.a-proposer-withdraws-its-open-proposal`                              | `realizes`        | inbound   |
 | intra-layer | `motivation.requirement.a-review-only-proposal-is-never-auto-applied`                        | `realizes`        | inbound   |
@@ -1226,6 +1240,35 @@ Client specs ship from their own repos, gated by their own evals; CS keeps claim
 | ----------- | -------------------------------------------------------- | ----------- | --------- |
 | intra-layer | `motivation.goal.ontology-workbench-for-client-projects` | `influence` | outbound  |
 
+### A long text field is proposed as anchored edits {#a-long-text-field-is-proposed-as-anchored-edits}
+
+**ID**: `motivation.requirement.a-long-text-field-is-proposed-as-anchored-edits`
+
+**Type**: `requirement`
+
+#1630: a client changes part of a description or a taxonomy vision by edits anchored on the existing text (insert after an anchor, replace an anchor, delete an anchor), applied in order, instead of resending the whole value. The proposal is refused if an anchor is missing or appears more than once. Adding one bullet to a 7,000-character vision takes one short edit.
+
+#### Attributes
+
+| Name            | Value      |
+| --------------- | ---------- |
+| priority        | high       |
+| requirementType | functional |
+
+#### Relationships
+
+| Type        | Related Element                                                                     | Predicate    | Direction |
+| ----------- | ----------------------------------------------------------------------------------- | ------------ | --------- |
+| inter-layer | `api.operation.amend-proposal`                                                      | `satisfies`  | inbound   |
+| inter-layer | `api.operation.create-proposal`                                                     | `satisfies`  | inbound   |
+| inter-layer | `application.applicationfunction.anchored-text-edits`                               | `satisfies`  | inbound   |
+| inter-layer | `application.applicationservice.proposal-service`                                   | `satisfies`  | inbound   |
+| inter-layer | `data-model.objectschema.text-edit`                                                 | `satisfies`  | inbound   |
+| inter-layer | `data-store.collection.proposal-operations`                                         | `satisfies`  | inbound   |
+| inter-layer | `product.feature.proposal-queue-and-detail`                                         | `satisfies`  | inbound   |
+| intra-layer | `motivation.requirement.an-anchored-edit-applies-to-the-current-text-or-goes-stale` | `aggregates` | outbound  |
+| intra-layer | `motivation.principle.agents-propose-and-people-decide`                             | `realizes`   | outbound  |
+
 ### A proposer amends its open proposal in place {#a-proposer-amends-its-open-proposal-in-place}
 
 **ID**: `motivation.requirement.a-proposer-amends-its-open-proposal-in-place`
@@ -1345,6 +1388,31 @@ An agent may add a local file as a source only from under the configured absolut
 | inter-layer | `application.applicationfunction.proposal-amendment`                  | `satisfies`  | inbound   |
 | inter-layer | `data-model.objectschema.operation-amendment`                         | `satisfies`  | inbound   |
 | intra-layer | `motivation.requirement.a-proposer-amends-its-open-proposal-in-place` | `aggregates` | inbound   |
+
+### An anchored edit applies to the current text or goes stale {#an-anchored-edit-applies-to-the-current-text-or-goes-stale}
+
+**ID**: `motivation.requirement.an-anchored-edit-applies-to-the-current-text-or-goes-stale`
+
+**Type**: `requirement`
+
+#1630: at accept, an operation's edits are applied again to the field's text as it is then, so another change made since the proposal is kept. If an anchor no longer matches, the operation is stale (with the anchor named) instead of overwriting the text. No lost update.
+
+#### Attributes
+
+| Name            | Value      |
+| --------------- | ---------- |
+| priority        | high       |
+| requirementType | functional |
+
+#### Relationships
+
+| Type        | Related Element                                                          | Predicate    | Direction |
+| ----------- | ------------------------------------------------------------------------ | ------------ | --------- |
+| inter-layer | `api.operation.apply-proposal`                                           | `satisfies`  | inbound   |
+| inter-layer | `application.applicationfunction.anchored-text-edits`                    | `satisfies`  | inbound   |
+| inter-layer | `application.applicationservice.proposal-service`                        | `satisfies`  | inbound   |
+| inter-layer | `product.feature.proposal-review-page`                                   | `satisfies`  | inbound   |
+| intra-layer | `motivation.requirement.a-long-text-field-is-proposed-as-anchored-edits` | `aggregates` | inbound   |
 
 ### An operation without a probability never meets the probability rule {#an-operation-without-a-probability-never-meets-the-probability-rule}
 
@@ -2370,4 +2438,4 @@ Mechanical changes clear in bulk by threshold, so the reviewer's time goes to th
 
 ---
 
-Generated: 2026-11-24T21:17:13.774Z | Model Version: 0.1.0
+Generated: 2026-11-25T10:04:41.933Z | Model Version: 0.1.0

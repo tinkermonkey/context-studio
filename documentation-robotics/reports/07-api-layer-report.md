@@ -18,9 +18,9 @@ REST APIs, operations, endpoints, and API integrations.
 | ------------------------- | ----- |
 | Elements                  | 490   |
 | Intra-Layer Relationships | 382   |
-| Inter-Layer Relationships | 576   |
-| Inbound Relationships     | 227   |
-| Outbound Relationships    | 349   |
+| Inter-Layer Relationships | 582   |
+| Inbound Relationships     | 230   |
+| Outbound Relationships    | 352   |
 
 **Cross-Layer References**:
 
@@ -568,11 +568,13 @@ flowchart TB
 | `api.operation.references.security.threat`                | `api.operation.add-source`                                         | `security.threat.server-side-request-forgery-via-url-sources`                           | `security`    | `references` | many-to-many | medium   |
 | `api.operation.exposes.product.feature`                   | `api.operation.amend-proposal`                                     | `product.feature.proposal-queue-and-detail`                                             | `product`     | `exposes`    | many-to-many | medium   |
 | `api.operation.references.application.applicationservice` | `api.operation.amend-proposal`                                     | `application.applicationservice.proposal-service`                                       | `application` | `references` | many-to-many | medium   |
+| `api.operation.satisfies.motivation.requirement`          | `api.operation.amend-proposal`                                     | `motivation.requirement.a-long-text-field-is-proposed-as-anchored-edits`                | `motivation`  | `satisfies`  | many-to-many | medium   |
 | `api.operation.satisfies.motivation.requirement`          | `api.operation.amend-proposal`                                     | `motivation.requirement.a-proposer-amends-its-open-proposal-in-place`                   | `motivation`  | `satisfies`  | many-to-many | medium   |
 | `api.operation.references.application.applicationservice` | `api.operation.analyze-text`                                       | `application.applicationservice.extraction-service`                                     | `application` | `references` | many-to-many | medium   |
 | `api.operation.references.application.applicationservice` | `api.operation.apply-pipeline-run`                                 | `application.applicationservice.proposal-service`                                       | `application` | `references` | many-to-many | medium   |
 | `api.operation.exposes.product.feature`                   | `api.operation.apply-proposal`                                     | `product.feature.proposal-queue-and-detail`                                             | `product`     | `exposes`    | many-to-many | medium   |
 | `api.operation.references.application.applicationservice` | `api.operation.apply-proposal`                                     | `application.applicationservice.proposal-service`                                       | `application` | `references` | many-to-many | medium   |
+| `api.operation.satisfies.motivation.requirement`          | `api.operation.apply-proposal`                                     | `motivation.requirement.an-anchored-edit-applies-to-the-current-text-or-goes-stale`     | `motivation`  | `satisfies`  | many-to-many | medium   |
 | `api.operation.satisfies.motivation.requirement`          | `api.operation.apply-proposal`                                     | `motivation.requirement.reversal-is-decided-like-any-proposal`                          | `motivation`  | `satisfies`  | many-to-many | medium   |
 | `api.operation.exposes.product.feature`                   | `api.operation.build-graph`                                        | `product.feature.graph-view`                                                            | `product`     | `exposes`    | many-to-many | medium   |
 | `api.operation.references.application.applicationservice` | `api.operation.build-graph`                                        | `application.applicationservice.graph-analysis-service`                                 | `application` | `references` | many-to-many | medium   |
@@ -607,6 +609,7 @@ flowchart TB
 | `api.operation.references.application.applicationservice` | `api.operation.create-property-definition`                         | `application.applicationservice.ontology-service`                                       | `application` | `references` | many-to-many | medium   |
 | `api.operation.exposes.product.feature`                   | `api.operation.create-proposal`                                    | `product.feature.proposal-queue-and-detail`                                             | `product`     | `exposes`    | many-to-many | medium   |
 | `api.operation.references.application.applicationservice` | `api.operation.create-proposal`                                    | `application.applicationservice.proposal-service`                                       | `application` | `references` | many-to-many | medium   |
+| `api.operation.satisfies.motivation.requirement`          | `api.operation.create-proposal`                                    | `motivation.requirement.a-long-text-field-is-proposed-as-anchored-edits`                | `motivation`  | `satisfies`  | many-to-many | medium   |
 | `api.operation.references.application.applicationservice` | `api.operation.create-relationship`                                | `application.applicationservice.ontology-service`                                       | `application` | `references` | many-to-many | medium   |
 | `api.operation.references.application.applicationservice` | `api.operation.create-taxonomy`                                    | `application.applicationservice.ontology-service`                                       | `application` | `references` | many-to-many | medium   |
 | `api.operation.exposes.product.feature`                   | `api.operation.decide-comparison-pair`                             | `product.feature.compare-two-pipelines`                                                 | `product`     | `exposes`    | many-to-many | medium   |
@@ -938,6 +941,9 @@ flowchart TB
 | `testing.testcasesketch.tests.api.operation`              | `testing.testcasesketch.an-edited-end-names-an-element-by-its-ref` | `api.operation.apply-proposal`                                                          | `api`         | `tests`      | many-to-many | medium   |
 | `testing.testcasesketch.tests.api.operation`              | `testing.testcasesketch.keep-current-rejects-an-update`            | `api.operation.reject-proposal`                                                         | `api`         | `tests`      | many-to-many | medium   |
 | `testing.testcasesketch.tests.api.operation`              | `testing.testcasesketch.revert-preview-lists-a-later-edit`         | `api.operation.preview-revert`                                                          | `api`         | `tests`      | many-to-many | medium   |
+| `testing.testcoveragetarget.covers.api.operation`         | `testing.testcoveragetarget.anchored-text-edits`                   | `api.operation.amend-proposal`                                                          | `api`         | `covers`     | many-to-many | medium   |
+| `testing.testcoveragetarget.covers.api.operation`         | `testing.testcoveragetarget.anchored-text-edits`                   | `api.operation.apply-proposal`                                                          | `api`         | `covers`     | many-to-many | medium   |
+| `testing.testcoveragetarget.covers.api.operation`         | `testing.testcoveragetarget.anchored-text-edits`                   | `api.operation.create-proposal`                                                         | `api`         | `covers`     | many-to-many | medium   |
 | `testing.testcoveragetarget.covers.api.operation`         | `testing.testcoveragetarget.proposal-amend-withdraw-and-links`     | `api.operation.amend-proposal`                                                          | `api`         | `covers`     | many-to-many | medium   |
 | `testing.testcoveragetarget.covers.api.operation`         | `testing.testcoveragetarget.proposal-amend-withdraw-and-links`     | `api.operation.withdraw-proposal`                                                       | `api`         | `covers`     | many-to-many | medium   |
 | `testing.testcoveragetarget.covers.api.operation`         | `testing.testcoveragetarget.proposal-reversal`                     | `api.operation.propose-reversal`                                                        | `api`         | `covers`     | many-to-many | medium   |
@@ -1309,14 +1315,16 @@ Replace, add or remove pending operations of an open proposal (dry_run validates
 
 #### Relationships
 
-| Type        | Related Element                                                       | Predicate    | Direction |
-| ----------- | --------------------------------------------------------------------- | ------------ | --------- |
-| inter-layer | `product.feature.proposal-queue-and-detail`                           | `exposes`    | outbound  |
-| inter-layer | `application.applicationservice.proposal-service`                     | `references` | outbound  |
-| inter-layer | `motivation.requirement.a-proposer-amends-its-open-proposal-in-place` | `satisfies`  | outbound  |
-| inter-layer | `testing.testcoveragetarget.proposal-amend-withdraw-and-links`        | `covers`     | inbound   |
-| intra-layer | `api.requestbody.proposal-amend-request`                              | `composes`   | outbound  |
-| intra-layer | `api.responses.amend-proposal-responses`                              | `composes`   | outbound  |
+| Type        | Related Element                                                          | Predicate    | Direction |
+| ----------- | ------------------------------------------------------------------------ | ------------ | --------- |
+| inter-layer | `product.feature.proposal-queue-and-detail`                              | `exposes`    | outbound  |
+| inter-layer | `application.applicationservice.proposal-service`                        | `references` | outbound  |
+| inter-layer | `motivation.requirement.a-long-text-field-is-proposed-as-anchored-edits` | `satisfies`  | outbound  |
+| inter-layer | `motivation.requirement.a-proposer-amends-its-open-proposal-in-place`    | `satisfies`  | outbound  |
+| inter-layer | `testing.testcoveragetarget.anchored-text-edits`                         | `covers`     | inbound   |
+| inter-layer | `testing.testcoveragetarget.proposal-amend-withdraw-and-links`           | `covers`     | inbound   |
+| intra-layer | `api.requestbody.proposal-amend-request`                                 | `composes`   | outbound  |
+| intra-layer | `api.responses.amend-proposal-responses`                                 | `composes`   | outbound  |
 
 ### Analyze Text {#analyze-text}
 
@@ -1390,15 +1398,17 @@ Apply the chosen operations in seq order under the proposal's run.
 
 #### Relationships
 
-| Type        | Related Element                                                    | Predicate    | Direction |
-| ----------- | ------------------------------------------------------------------ | ------------ | --------- |
-| inter-layer | `product.feature.proposal-queue-and-detail`                        | `exposes`    | outbound  |
-| inter-layer | `application.applicationservice.proposal-service`                  | `references` | outbound  |
-| inter-layer | `motivation.requirement.reversal-is-decided-like-any-proposal`     | `satisfies`  | outbound  |
-| inter-layer | `testing.testcasesketch.an-edited-end-names-an-element-by-its-ref` | `tests`      | inbound   |
-| inter-layer | `ux.actioncomponent.bulk-select`                                   | `triggers`   | inbound   |
-| intra-layer | `api.requestbody.change-proposal-apply-request`                    | `composes`   | outbound  |
-| intra-layer | `api.responses.apply-proposal-responses`                           | `composes`   | outbound  |
+| Type        | Related Element                                                                     | Predicate    | Direction |
+| ----------- | ----------------------------------------------------------------------------------- | ------------ | --------- |
+| inter-layer | `product.feature.proposal-queue-and-detail`                                         | `exposes`    | outbound  |
+| inter-layer | `application.applicationservice.proposal-service`                                   | `references` | outbound  |
+| inter-layer | `motivation.requirement.an-anchored-edit-applies-to-the-current-text-or-goes-stale` | `satisfies`  | outbound  |
+| inter-layer | `motivation.requirement.reversal-is-decided-like-any-proposal`                      | `satisfies`  | outbound  |
+| inter-layer | `testing.testcasesketch.an-edited-end-names-an-element-by-its-ref`                  | `tests`      | inbound   |
+| inter-layer | `testing.testcoveragetarget.anchored-text-edits`                                    | `covers`     | inbound   |
+| inter-layer | `ux.actioncomponent.bulk-select`                                                    | `triggers`   | inbound   |
+| intra-layer | `api.requestbody.change-proposal-apply-request`                                     | `composes`   | outbound  |
+| intra-layer | `api.responses.apply-proposal-responses`                                            | `composes`   | outbound  |
 
 ### Build Graph {#build-graph}
 
@@ -1860,12 +1870,14 @@ Propose changes to a taxonomy; every operation starts pending.
 
 #### Relationships
 
-| Type        | Related Element                                   | Predicate    | Direction |
-| ----------- | ------------------------------------------------- | ------------ | --------- |
-| inter-layer | `product.feature.proposal-queue-and-detail`       | `exposes`    | outbound  |
-| inter-layer | `application.applicationservice.proposal-service` | `references` | outbound  |
-| intra-layer | `api.requestbody.change-proposal-create-request`  | `composes`   | outbound  |
-| intra-layer | `api.responses.create-proposal-responses`         | `composes`   | outbound  |
+| Type        | Related Element                                                          | Predicate    | Direction |
+| ----------- | ------------------------------------------------------------------------ | ------------ | --------- |
+| inter-layer | `product.feature.proposal-queue-and-detail`                              | `exposes`    | outbound  |
+| inter-layer | `application.applicationservice.proposal-service`                        | `references` | outbound  |
+| inter-layer | `motivation.requirement.a-long-text-field-is-proposed-as-anchored-edits` | `satisfies`  | outbound  |
+| inter-layer | `testing.testcoveragetarget.anchored-text-edits`                         | `covers`     | inbound   |
+| intra-layer | `api.requestbody.change-proposal-create-request`                         | `composes`   | outbound  |
+| intra-layer | `api.responses.create-proposal-responses`                                | `composes`   | outbound  |
 
 ### Create Relationship {#create-relationship}
 
@@ -10910,4 +10922,4 @@ Bearer token required on the /mcp endpoint (Authorization: Bearer &lt;auth_token
 
 ---
 
-Generated: 2026-11-24T21:17:13.774Z | Model Version: 0.1.0
+Generated: 2026-11-25T10:04:41.933Z | Model Version: 0.1.0
