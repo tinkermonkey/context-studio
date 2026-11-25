@@ -1,0 +1,103 @@
+id: changeset-1795572740080-rg9zm6p03
+name: anchored-text-edits
+description: "#1630: A client proposes a change to a long text field (description, vision) as anchored edits instead of a whole new value; the edits are applied to the field's current text at accept, and an operation whose anchor no longer matches is stale instead of overwriting. Done when propose_changes, amend and the REST API take edits, apply rebases them, and review shows the change and why it went stale."
+created: 2026-11-25T02:12:20.096Z
+modified: 2026-11-25T02:22:32.329Z
+status: staged
+baseSnapshot: v2:sha256:986090d038c8937a081d71d8be60cc40d19c5e4d6a12ddeefc7b4af5a76bd844
+origin:
+  kind: plan
+purpose: plan
+stats:
+  additions: 28
+  modifications: 2
+  deletions: 0
+lastSequence: 33
+unstaged:
+  - sequence: 2
+    removedAt: 30
+    change:
+      type: add
+      elementId: application.applicationfunction.anchored-text-edits
+      layerName: application
+      after:
+        id: 14637868-2c83-4c7a-88e4-6271802fb97d
+        path: application.applicationfunction.anchored-text-edits
+        spec_node_id: application.applicationfunction
+        type: applicationfunction
+        layer_id: application
+        name: Anchored text edits
+        description: "apply_text_edits (domain/versioning/text_edits.py) applies an ordered list of anchored edits to a text and names the edit whose anchor is missing or not unique. ProposalService uses it three ways: at propose and amend it resolves an update's edits against the current text into the operation's fields and base (and keeps the edits); at apply it applies them again to the current text and records the text it applied to; and staleness asks whether the anchors still match instead of comparing the field with base."
+        metadata:
+          created_at: 2026-11-25T02:12:36.073Z
+          updated_at: 2026-11-25T02:12:36.073Z
+          version: 1
+      timestamp: 2026-11-25T02:12:36.085Z
+    rewritten: true
+  - sequence: 3
+    removedAt: 31
+    change:
+      type: add
+      elementId: data-model.objectschema.text-edit
+      layerName: data-model
+      after:
+        id: 6bf39544-fc62-4c88-8a47-4694143bfb63
+        path: data-model.objectschema.text-edit
+        spec_node_id: data-model.objectschema
+        type: objectschema
+        layer_id: data-model
+        name: Text Edit
+        description: "One anchored edit of a long text field: {after, insert} inserts text right after the anchor, {replace, with} replaces the anchor, {delete} removes the anchor. The anchor must appear exactly once in the text the edit is applied to."
+        attributes:
+          type: object
+        metadata:
+          created_at: 2026-11-25T02:12:36.073Z
+          updated_at: 2026-11-25T02:12:36.073Z
+          version: 1
+      timestamp: 2026-11-25T02:12:36.085Z
+    rewritten: true
+  - sequence: 4
+    removedAt: 32
+    change:
+      type: add
+      elementId: data-store.field.text-edits
+      layerName: data-store
+      after:
+        id: 9da84a88-d2af-4134-9bc4-156bfe42ed85
+        path: data-store.field.text-edits
+        spec_node_id: data-store.field
+        type: field
+        layer_id: data-store
+        name: text_edits
+        description: "proposal_operations.text_edits: the anchored edits an update operation was proposed with, by field name ({field: [edit, ...]}). Fields named here also hold their resolved text in fields. JSON, default {}."
+        attributes:
+          dataType: JSON
+          nullable: false
+        metadata:
+          created_at: 2026-11-25T02:12:36.073Z
+          updated_at: 2026-11-25T02:12:36.073Z
+          version: 1
+      timestamp: 2026-11-25T02:12:36.085Z
+    rewritten: true
+  - sequence: 5
+    removedAt: 33
+    change:
+      type: add
+      elementId: testing.testcoveragetarget.anchored-text-edits
+      layerName: testing
+      after:
+        id: 3874b539-24aa-4db6-8d74-20d4c681c498
+        path: testing.testcoveragetarget.anchored-text-edits
+        spec_node_id: testing.testcoveragetarget
+        type: testcoveragetarget
+        layer_id: testing
+        name: Anchored text edits
+        description: apply_text_edits (insert, replace, delete; missing and ambiguous anchors; order); propose and amend resolve edits and refuse bad anchors; apply reapplies edits to text changed since the proposal, keeps that change and records what it applied to; an anchor that no longer matches makes the operation stale and apply fails as target_changed naming it; propose_changes over MCP and POST /proposals take edits; the review inspector notes an edited field and the stale cause.
+        attributes:
+          targetType: api-endpoint
+        metadata:
+          created_at: 2026-11-25T02:12:36.073Z
+          updated_at: 2026-11-25T02:12:36.073Z
+          version: 1
+      timestamp: 2026-11-25T02:12:36.085Z
+    rewritten: true
