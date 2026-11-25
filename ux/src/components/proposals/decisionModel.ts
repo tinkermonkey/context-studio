@@ -113,6 +113,32 @@ export interface StaleCause {
   gone: boolean;
   /** Fields that changed since proposed; empty when unknown. */
   fields: string[];
+  /** Anchored edits (#1630) that no longer fit their field's text, e.g. "vision edit 1: anchor 'x' is not in the text". */
+  anchors: string[];
+}
+
+/** An operation's anchored edits of one field, as the API sends them. */
+type TextEdit = Record<string, string>;
+
+/**
+ * Why `edits` can't be applied to `text`, in the server's words (see
+ * domain/versioning/text_edits.py), or undefined when they all apply.
+ */
+export function textEditsProblem(text: unknown, edits: TextEdit[]): string | undefined {
+  let result = typeof text === "string" ? text : "";
+  for (const [index, edit] of edits.entries()) {
+    const anchor = edit.after ?? edit.replace ?? edit.delete ?? "";
+    const count = anchor ? result.split(anchor).length - 1 : 0;
+    if (count !== 1) {
+      const where = count === 0 ? "is not in the text" : `appears ${count} times`;
+      return `edit ${index + 1}: anchor '${anchor}' ${where}`;
+    }
+    const start = result.indexOf(anchor);
+    const replacement =
+      "after" in edit ? anchor + (edit.insert ?? "") : "replace" in edit ? (edit.with ?? "") : "";
+    result = result.slice(0, start) + replacement + result.slice(start + anchor.length);
+  }
+  return undefined;
 }
 
 /** Bookkeeping that changes on every write; the server ignores it for staleness. */
@@ -134,23 +160,37 @@ export function staleCause(
   targetGone = false,
 ): StaleCause {
   const reason = operation.reason ?? "";
-  if (reason.startsWith("target_missing")) return { gone: true, fields: [] };
-  const changed = /^target_changed: (.+) changed since proposed/.exec(reason);
-  if (changed) return { gone: false, fields: changed[1].split(", ") };
+  if (reason.startsWith("target_missing")) return { gone: true, fields: [], anchors: [] };
+  const changed = /^target_changed: (.+?) changed since proposed(?:; (.+))?$/.exec(reason);
+  if (changed) {
+    return { gone: false, fields: changed[1].split(", "), anchors: changed[2]?.split("; ") ?? [] };
+  }
   if (current) {
     const base = operation.base ?? {};
+    const edited = operation.text_edits ?? {};
+    const anchors: string[] = [];
     const fields = Object.keys(base)
       .filter((name) => !VOLATILE.has(name) && name in current)
       .filter((name) => !sameJson(current[name], base[name]))
+      .filter((name) => {
+        // A field proposed as anchored edits changed harmlessly while they still fit.
+        if (!edited[name]) return true;
+        const problem = textEditsProblem(current[name], edited[name]);
+        if (problem) anchors.push(`${name} ${problem}`);
+        return !!problem;
+      })
       .sort();
-    return { gone: false, fields };
+    return { gone: false, fields, anchors };
   }
-  return { gone: targetGone, fields: [] };
+  return { gone: targetGone, fields: [], anchors: [] };
 }
 
 /** "description changed since it was proposed." / "Its target is gone, …" */
 export function staleCauseText(cause: StaleCause): string {
   if (cause.gone) return "Its target is gone, so applying it fails even with Apply anyway.";
+  if (cause.anchors.length > 0) {
+    return `${cause.fields.join(", ")} changed since it was proposed, and its edits no longer fit: ${cause.anchors.join("; ")}.`;
+  }
   if (cause.fields.length > 0) return `${cause.fields.join(", ")} changed since it was proposed.`;
   return "Its target changed after it was proposed.";
 }

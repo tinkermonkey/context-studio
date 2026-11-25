@@ -28,6 +28,7 @@ import {
   resolutionResult,
   revertConflictOf,
   revertSummary,
+  textEditsProblem,
   splitBlocked,
   splitStale,
   staleCause,
@@ -96,7 +97,11 @@ describe("who decides", () => {
 describe("staleCause", () => {
   it("reads the fields from a target_changed failure", () => {
     const failed = op({ reason: "target_changed: description, title changed since proposed" });
-    expect(staleCause(failed)).toEqual({ gone: false, fields: ["description", "title"] });
+    expect(staleCause(failed)).toEqual({
+      gone: false,
+      fields: ["description", "title"],
+      anchors: [],
+    });
   });
 
   it("says the target is gone from a target_missing failure", () => {
@@ -108,13 +113,61 @@ describe("staleCause", () => {
       base: { description: "old", title: "Same", version: 2, last_modified: "x" },
     });
     const current = { description: "new", title: "Same", version: 5, last_modified: "y" };
-    expect(staleCause(stale, current)).toEqual({ gone: false, fields: ["description"] });
+    expect(staleCause(stale, current)).toEqual({
+      gone: false,
+      fields: ["description"],
+      anchors: [],
+    });
+  });
+
+  it("reads the lost anchors from a target_changed failure of anchored edits (#1630)", () => {
+    const failed = op({
+      reason:
+        "target_changed: vision changed since proposed; vision edit 1: anchor 'contacts.' is not in the text",
+    });
+    const cause = staleCause(failed);
+    expect(cause).toEqual({
+      gone: false,
+      fields: ["vision"],
+      anchors: ["vision edit 1: anchor 'contacts.' is not in the text"],
+    });
+    expect(staleCauseText(cause)).toBe(
+      "vision changed since it was proposed, and its edits no longer fit: vision edit 1: anchor 'contacts.' is not in the text.",
+    );
+  });
+
+  it("counts an edited field as changed only when its edits no longer fit", () => {
+    const edited = op({
+      base: { description: "A room. Has walls.", title: "Room" },
+      text_edits: { description: [{ replace: "Has walls.", with: "Has a door." }] },
+    });
+    const fits = { description: "A big room. Has walls.", title: "Room" };
+    expect(staleCause(edited, fits)).toEqual({ gone: false, fields: [], anchors: [] });
+    const lost = { description: "A room. Walled.", title: "Den" };
+    expect(staleCause(edited, lost)).toEqual({
+      gone: false,
+      fields: ["description", "title"],
+      anchors: ["description edit 1: anchor 'Has walls.' is not in the text"],
+    });
+  });
+
+  it("applies anchored edits in order, as the server does", () => {
+    const text = "One. Two. Two.";
+    expect(textEditsProblem(text, [{ after: "One.", insert: " Half." }])).toBeUndefined();
+    expect(textEditsProblem(text, [{ delete: "Two." }])).toBe(
+      "edit 1: anchor 'Two.' appears 2 times",
+    );
+    // The second edit sees what the first left.
+    expect(
+      textEditsProblem(text, [{ replace: "Two. Two.", with: "Three." }, { delete: "Three." }]),
+    ).toBeUndefined();
+    expect(textEditsProblem(null, [{ delete: "x" }])).toBe("edit 1: anchor 'x' is not in the text");
   });
 
   it("falls back to gone or unknown", () => {
-    expect(staleCause(op({}), undefined, true)).toEqual({ gone: true, fields: [] });
+    expect(staleCause(op({}), undefined, true)).toEqual({ gone: true, fields: [], anchors: [] });
     expect(staleCauseText(staleCause(op({})))).toBe("Its target changed after it was proposed.");
-    expect(staleCauseText({ gone: false, fields: ["description"] })).toBe(
+    expect(staleCauseText({ gone: false, fields: ["description"], anchors: [] })).toBe(
       "description changed since it was proposed.",
     );
   });
