@@ -18,8 +18,8 @@ User interface components, screens, and user experience elements.
 | ------------------------- | ----- |
 | Elements                  | 249   |
 | Intra-Layer Relationships | 482   |
-| Inter-Layer Relationships | 373   |
-| Inbound Relationships     | 70    |
+| Inter-Layer Relationships | 374   |
+| Inbound Relationships     | 71    |
 | Outbound Relationships    | 303   |
 
 **Cross-Layer References**:
@@ -365,6 +365,7 @@ flowchart TB
 | `testing.testcasesketch.tests.ux.subview`               | `testing.testcasesketch.not-an-element-opens-the-reason-step`                          | `ux.subview.review-inspector`                                                | `ux`         | `tests`      | many-to-many | medium   |
 | `testing.testcoveragemodel.covers.ux.uxapplication`     | `testing.testcoveragemodel.context-studio-ux-test-coverage-model`                      | `ux.uxapplication.context-studio-spa`                                        | `ux`         | `covers`     | many-to-many | medium   |
 | `testing.testcoveragetarget.covers.ux.view`             | `testing.testcoveragetarget.admin-health`                                              | `ux.view.settings-view`                                                      | `ux`         | `covers`     | many-to-many | medium   |
+| `testing.testcoveragetarget.covers.ux.subview`          | `testing.testcoveragetarget.anchored-text-edits`                                       | `ux.subview.review-inspector`                                                | `ux`         | `covers`     | many-to-many | medium   |
 | `testing.testcoveragetarget.covers.ux.view`             | `testing.testcoveragetarget.extraction-pipeline`                                       | `ux.view.pipelines-view`                                                     | `ux`         | `covers`     | many-to-many | medium   |
 | `testing.testcoveragetarget.covers.ux.view`             | `testing.testcoveragetarget.graph-analysis`                                            | `ux.view.graph-view`                                                         | `ux`         | `covers`     | many-to-many | medium   |
 | `testing.testcoveragetarget.covers.ux.view`             | `testing.testcoveragetarget.llm-pipeline-execution`                                    | `ux.view.pipeline-runs-view`                                                 | `ux`         | `covers`     | many-to-many | medium   |
@@ -5060,7 +5061,7 @@ The one operation list of the review surface (ReviewElementsPane, rebuilt): grou
 
 **Type**: `subview`
 
-Inspector for one operation of any kind (the #1631 inspector, extended): pills and evidence (quotes with captions when sourceless), 'The change' as was/now rows with a word diff for long text, Why, the decided record, stale and failed verbs with callouts, DR relationship types (class-ended triple, reflection quick picks, 'Or correct it'), replacement and in-use blocks, and reason-code buttons filtered by operation kind. Replaces OperationInspector, OperationDecision, OperationDecided, DecisionBars, the ReflectionAnswers and DrTripleEditor UIs, and the source passage sections.
+Inspector for one operation of any kind (the #1631 inspector, extended): pills and evidence (quotes with captions when sourceless), 'The change' as was/now rows with a word diff for long text, Why, the decided record, stale and failed verbs with callouts, DR relationship types (class-ended triple, reflection quick picks, 'Or correct it'), replacement and in-use blocks, and reason-code buttons filtered by operation kind. A field proposed as anchored edits (#1630) is marked as applied to the text as it is at accept, and a stale one says which anchor no longer matches. Replaces OperationInspector, OperationDecision, OperationDecided, DecisionBars, the ReflectionAnswers and DrTripleEditor UIs, and the source passage sections.
 
 #### Relationships
 
@@ -5068,6 +5069,7 @@ Inspector for one operation of any kind (the #1631 inspector, extended): pills a
 | ----------- | -------------------------------------------------------------------------------------- | ---------- | --------- |
 | inter-layer | `testing.testcasesketch.end-search-finds-a-pending-element-and-reverse-swaps-the-ends` | `tests`    | inbound   |
 | inter-layer | `testing.testcasesketch.not-an-element-opens-the-reason-step`                          | `tests`    | inbound   |
+| inter-layer | `testing.testcoveragetarget.anchored-text-edits`                                       | `covers`   | inbound   |
 | inter-layer | `testing.testcoveragetarget.one-review-page`                                           | `covers`   | inbound   |
 | intra-layer | `ux.dataconfig.use-attribute-definitions-by-ids`                                       | `binds-to` | outbound  |
 | intra-layer | `ux.dataconfig.use-classes-by-ids`                                                     | `binds-to` | outbound  |
@@ -6824,4 +6826,4 @@ Wide side-by-side diff over the source and list panes (the inspector stays besid
 
 ---
 
-Generated: 2026-11-24T21:17:13.774Z | Model Version: 0.1.0
+Generated: 2026-11-25T10:04:41.933Z | Model Version: 0.1.0

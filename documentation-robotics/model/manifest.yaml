@@ -3,7 +3,7 @@ schema: documentation-robotics-v1
 cli_version: 0.8.0
 spec_version: 0.15.0
 created: 2026-03-23T12:18:08.630Z
-updated: 2026-11-24T21:43:16.425Z
+updated: 2026-11-25T10:04:41.930Z
 project:
   name: Context Studio
   description: Local-first knowledge graph application for RAG and communication
@@ -23,7 +23,7 @@ layers:
       meaning: 1
       outcome: 4
       principle: 8
-      requirement: 34
+      requirement: 36
       stakeholder: 6
       value: 4
   business:
@@ -75,7 +75,7 @@ layers:
       applicationcollaboration: 1
       applicationcomponent: 78
       applicationevent: 4
-      applicationfunction: 23
+      applicationfunction: 24
       applicationinteraction: 3
       applicationinterface: 2
       applicationprocess: 16
@@ -113,7 +113,7 @@ layers:
     enabled: true
     elements:
       arrayschema: 1
-      objectschema: 52
+      objectschema: 53
       stringschema: 2
   data-store:
     order: 9
@@ -124,7 +124,7 @@ layers:
       accesspattern: 2
       collection: 38
       database: 4
-      field: 3
+      field: 4
       index: 1
       retentionpolicy: 1
       validationrule: 13
@@ -178,7 +178,7 @@ layers:
       outcomecategory: 2
       testcasesketch: 18
       testcoveragemodel: 2
-      testcoveragetarget: 29
+      testcoveragetarget: 30
 changeset_history:
   - name: restore-upgrade-drops
     committed_at: 2026-11-17T18:49:10.641Z
@@ -248,6 +248,9 @@ changeset_history:
     action: committed
   - name: restore-spec-0-14-relationships
     committed_at: 2026-11-24T21:43:16.425Z
+    action: committed
+  - name: anchored-text-edits
+    committed_at: 2026-11-25T10:04:41.930Z
     action: committed
 reconciled:
   changeset: rebuild-model-from-code

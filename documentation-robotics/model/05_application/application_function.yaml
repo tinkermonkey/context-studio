@@ -5,9 +5,7 @@ application.applicationfunction.embedding-generation:
   type: applicationfunction
   layer_id: application
   name: Embedding Generation
-  description: Application function that generates vector embeddings for ontology
-    entities using the SentenceTransformer adapter — stored in local.db via
-    SQLiteVector
+  description: Application function that generates vector embeddings for ontology entities using the SentenceTransformer adapter — stored in local.db via SQLiteVector
   source_reference:
     provenance: extracted
     locations:
@@ -23,8 +21,7 @@ application.applicationfunction.sparql-query-function:
   type: applicationfunction
   layer_id: application
   name: SPARQL Query Function
-  description: Application function that executes SPARQL queries over the
-    in-memory graph constructed by RDFLib in the Graph Analysis bounded context
+  description: Application function that executes SPARQL queries over the in-memory graph constructed by RDFLib in the Graph Analysis bounded context
   source_reference:
     provenance: extracted
     locations:
@@ -40,9 +37,7 @@ application.applicationfunction.network-metrics-function:
   type: applicationfunction
   layer_id: application
   name: Network Metrics Function
-  description: Application function that computes graph network metrics
-    (centrality, density, clustering) using NetworkX within the Graph Analysis
-    bounded context
+  description: Application function that computes graph network metrics (centrality, density, clustering) using NetworkX within the Graph Analysis bounded context
   source_reference:
     provenance: extracted
     locations:
@@ -58,8 +53,7 @@ application.applicationfunction.llm-provider-routing:
   type: applicationfunction
   layer_id: application
   name: LLM Provider Routing
-  description: Application function that routes LLM requests to the appropriate
-    provider (OpenAI, Anthropic) via the LLMProviderRouter in the llm adapter
+  description: Application function that routes LLM requests to the appropriate provider (OpenAI, Anthropic) via the LLMProviderRouter in the llm adapter
   source_reference:
     provenance: extracted
     locations:
@@ -75,8 +69,7 @@ application.applicationfunction.individual-extraction-apply:
   type: applicationfunction
   layer_id: application
   name: Individual Extraction Apply
-  description: Turns an individual-extraction run's candidates into a change
-    proposal (individuals, classes, relationships, provenance).
+  description: Turns an individual-extraction run's candidates into a change proposal (individuals, classes, relationships, provenance).
   source_reference:
     provenance: extracted
     locations:
@@ -161,8 +154,7 @@ application.applicationfunction.in-use-inspection:
   type: applicationfunction
   layer_id: application
   name: In-Use Inspection
-  description: Finds what blocks deleting or retyping a schema entity (edges,
-    individuals) and checks replacements.
+  description: Finds what blocks deleting or retyping a schema entity (edges, individuals) and checks replacements.
   source_reference:
     provenance: extracted
     locations:
@@ -179,8 +171,7 @@ application.applicationfunction.evidence-pack-building:
   type: applicationfunction
   layer_id: application
   name: Evidence Pack Building
-  description: Assembles the evidence (definitions, peers, edges, intent) a
-    decision model sees for a schema question.
+  description: Assembles the evidence (definitions, peers, edges, intent) a decision model sees for a schema question.
   source_reference:
     provenance: extracted
     locations:
@@ -231,8 +222,7 @@ application.applicationfunction.schema-neighborhood-traversal:
   type: applicationfunction
   layer_id: application
   name: Schema Neighborhood Traversal
-  description: Collects a class's or property's neighborhood and extraction usage
-    for refinement prompts.
+  description: Collects a class's or property's neighborhood and extraction usage for refinement prompts.
   source_reference:
     provenance: extracted
     locations:
@@ -249,22 +239,9 @@ application.applicationfunction.individual-pre-review:
   type: applicationfunction
   layer_id: application
   name: Individual Pre-Review
-  description: The pre_review stage (domain/extraction/pre_review.py
-    review_individuals; ExtractionService.review_individuals), called by
-    SingleCallOrchestrator between find_individuals and derive_relationships
-    when the configuration has a pre_review setting {model, effort, max_tokens}.
-    One LLM call per section, against the same class catalog in a cached system
-    prompt, given the section's text and its numbered individuals. It asks the
-    split question where the split witness fires and the retype question of
-    every individual, and answers split, retype or unsure per individual. The
-    orchestrator replaces a split individual by its parts and gives a retyped
-    one its new class before relating. An unusable answer keeps its individual
-    as extracted; a failed call keeps the section's individuals and counts them
-    as not reviewed in the run's metadata, never failing the run.
+  description: The pre_review stage (domain/extraction/pre_review.py review_individuals; ExtractionService.review_individuals), called by SingleCallOrchestrator between find_individuals and derive_relationships when the configuration has a pre_review setting {model, effort, max_tokens}. One LLM call per section, against the same class catalog in a cached system prompt, given the section's text and its numbered individuals. It asks the split question where the split witness fires and the retype question of every individual, and answers split, retype or unsure per individual. The orchestrator replaces a split individual by its parts and gives a retyped one its new class before relating. An unusable answer keeps its individual as extracted; a failed call keeps the section's individuals and counts them as not reviewed in the run's metadata, never failing the run.
   attributes:
-    documentation: "Input: section text, catalog, individuals. Output:
-      per-individual PreReviewVerdict; the orchestrator replaces a split
-      individual by its parts and a retyped one's class before relating."
+    documentation: "Input: section text, catalog, individuals. Output: per-individual PreReviewVerdict; the orchestrator replaces a split individual by its parts and a retyped one's class before relating."
   source_reference:
     provenance: manual
     locations:
@@ -281,12 +258,7 @@ application.applicationfunction.split-witness:
   type: applicationfunction
   layer_id: application
   name: Split Witness
-  description: "Deterministic and free: marks the extracted titles the split
-    question applies to (a list separator such as a comma, 'and', '&' or '/'
-    between noun phrases, or several part or model numbers). It catches all 4 of
-    Gate D's splits and fires on 10-20% of single_call's recorded benchmark
-    titles, most of them legitimately compound goals and outcomes, so it is a
-    precondition for asking, never a verdict."
+  description: "Deterministic and free: marks the extracted titles the split question applies to (a list separator such as a comma, 'and', '&' or '/' between noun phrases, or several part or model numbers). It catches all 4 of Gate D's splits and fires on 10-20% of single_call's recorded benchmark titles, most of them legitimately compound goals and outcomes, so it is a precondition for asking, never a verdict."
   source_reference:
     provenance: extracted
     locations:
@@ -303,9 +275,7 @@ application.applicationfunction.domain-import-check:
   type: applicationfunction
   layer_id: application
   name: Domain import check
-  description: "scripts/check_domain_imports.py: fails when domain/ imports
-    infrastructure, imports another context's private names or modules, or
-    constructs another context's application service."
+  description: "scripts/check_domain_imports.py: fails when domain/ imports infrastructure, imports another context's private names or modules, or constructs another context's application service."
   source_reference:
     provenance: manual
     locations:
@@ -322,9 +292,7 @@ application.applicationfunction.spec-changes-for-a-proposal:
   type: applicationfunction
   layer_id: application
   name: Spec changes for a proposal
-  description: "spec_changes_for: a decided proposal's applied operations as a
-    cs-dr-spec-changes/1 document; what can't export is listed under skipped
-    with why."
+  description: "spec_changes_for: a decided proposal's applied operations as a cs-dr-spec-changes/1 document; what can't export is listed under skipped with why."
   source_reference:
     provenance: manual
     locations:
@@ -341,10 +309,7 @@ application.applicationfunction.proposal-amendment:
   type: applicationfunction
   layer_id: application
   name: Proposal amendment
-  description: "ProposalService.amend: replaces, adds and removes pending
-    operations of an open proposal by seq in one call, validating and scoping
-    them as propose does (dry_run too), keeping each replaced version in
-    amendments; then the approval policy runs over what changed, as on propose."
+  description: "ProposalService.amend: replaces, adds and removes pending operations of an open proposal by seq in one call, validating and scoping them as propose does (dry_run too), keeping each replaced version in amendments; then the approval policy runs over what changed, as on propose."
   source_reference:
     provenance: manual
     locations:
@@ -361,11 +326,7 @@ application.applicationfunction.proposal-withdrawal:
   type: applicationfunction
   layer_id: application
   name: Proposal withdrawal
-  description: "ProposalService.withdraw: on an open proposal, rolls back what it
-    applied (the revert path: RevertService, decisions superseded), marks its
-    undecided operations withdrawn, sets the proposal withdrawn, and records a
-    supersedes link from the proposal named as its replacement, if any. Refused
-    when the rollback conflicts, with the blockers."
+  description: "ProposalService.withdraw: on an open proposal, rolls back what it applied (the revert path: RevertService, decisions superseded), marks its undecided operations withdrawn, sets the proposal withdrawn, and records a supersedes link from the proposal named as its replacement, if any. Refused when the rollback conflicts, with the blockers."
   source_reference:
     provenance: manual
     locations:
@@ -382,9 +343,7 @@ application.applicationfunction.proposal-linking:
   type: applicationfunction
   layer_id: application
   name: Proposal linking
-  description: "Records and reads proposal links (supersedes, reverses) for a
-    proposal, both directions; #1667's reversal planning records its reverses
-    link here."
+  description: "Records and reads proposal links (supersedes, reverses) for a proposal, both directions; #1667's reversal planning records its reverses link here."
   source_reference:
     provenance: manual
     locations:
@@ -401,15 +360,9 @@ application.applicationfunction.reversal-planning:
   type: applicationfunction
   layer_id: application
   name: Reversal Planning
-  description: "Plans the reversal of a landed proposal from its run's change
-    events, newest first: create to delete, update to update with fields =
-    previous_state (base = current values, so staleness is detected), move
-    fields to move, delete to a restore create that keeps the snapshot's id,
-    relationship side effects to delete plus create; wires $refs between the
-    planned operations (domain/versioning/reversal.py)."
+  description: "Plans the reversal of a landed proposal from its run's change events, newest first: create to delete, update to update with fields = previous_state (base = current values, so staleness is detected), move fields to move, delete to a restore create that keeps the snapshot's id, relationship side effects to delete plus create; wires $refs between the planned operations (domain/versioning/reversal.py)."
   attributes:
-    documentation: PR 10. Owned by ProposalService.propose_reversal; refuses while
-      an open reversal of the same proposal exists.
+    documentation: PR 10. Owned by ProposalService.propose_reversal; refuses while an open reversal of the same proposal exists.
   source_reference:
     provenance: manual
     locations:
@@ -419,9 +372,7 @@ application.applicationfunction.reversal-planning:
     - direction: outgoing
       predicate: realizes
       other_spec_node_id: business.businessfunction
-      reason: Adjudication is modelled as a business process and service, not a
-        business function; the planner reaches the business through
-        ProposalService.
+      reason: Adjudication is modelled as a business process and service, not a business function; the planner reaches the business through ProposalService.
       decided_by: agent
       decided_at: 2026-11-19T17:02:32.491Z
       changeset: changeset-1795107225483-xwgktrnaj
@@ -436,9 +387,7 @@ application.applicationfunction.revert-preview:
   type: applicationfunction
   layer_id: application
   name: Revert Preview
-  description: "Lists the fields an in-place revert would overwrite: for each
-    update event of the run, the fields whose current value differs from the
-    event's new_state (edited since the apply). Read-only; no transaction."
+  description: "Lists the fields an in-place revert would overwrite: for each update event of the run, the fields whose current value differs from the event's new_state (edited since the apply). Read-only; no transaction."
   attributes:
     documentation: PR 9. Lives on RevertService.
   source_reference:
@@ -450,13 +399,28 @@ application.applicationfunction.revert-preview:
     - direction: outgoing
       predicate: realizes
       other_spec_node_id: business.businessfunction
-      reason: Adjudication is modelled as a business process and service, not a
-        business function; the preview reaches the business through
-        RevertService.
+      reason: Adjudication is modelled as a business process and service, not a business function; the preview reaches the business through RevertService.
       decided_by: agent
       decided_at: 2026-11-19T17:02:51.889Z
       changeset: changeset-1795107225483-xwgktrnaj
   metadata:
     created_at: 2026-11-19T16:59:46.681Z
     updated_at: 2026-11-19T16:59:46.681Z
+    version: 1
+application.applicationfunction.anchored-text-edits:
+  id: 14637868-2c83-4c7a-88e4-6271802fb97d
+  path: application.applicationfunction.anchored-text-edits
+  spec_node_id: application.applicationfunction
+  type: applicationfunction
+  layer_id: application
+  name: Anchored text edits
+  description: "apply_text_edits (domain/versioning/text_edits.py) applies an ordered list of anchored edits to a text and names the edit whose anchor is missing or not unique. ProposalService uses it three ways: at propose and amend it resolves an update's edits against the current text into the operation's fields and base (and keeps the edits); at apply it applies them again to the current text and records the text it applied to; and staleness asks whether the anchors still match instead of comparing the field with base."
+  source_reference:
+    provenance: manual
+    locations:
+      - file: local-server/domain/versioning/text_edits.py
+        symbol: apply_text_edits
+  metadata:
+    created_at: 2026-11-25T02:12:36.073Z
+    updated_at: 2026-11-25T02:12:36.073Z
     version: 1

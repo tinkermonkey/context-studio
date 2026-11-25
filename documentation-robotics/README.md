@@ -4,10 +4,10 @@
 
 | Metric              | Value                    |
 | ------------------- | ------------------------ |
-| Total Elements      | 1424                     |
-| Total Relationships | 3126                     |
+| Total Elements      | 1430                     |
+| Total Relationships | 3148                     |
 | Populated Layers    | 13                       |
-| Last Updated        | 2026-11-24T21:43:16.425Z |
+| Last Updated        | 2026-11-25T10:04:41.930Z |
 | CLI Version         | 0.8.0                    |
 | Spec Version        | 0.15.0                   |
 
@@ -57,20 +57,20 @@ Each layer is independently managed but interconnected, allowing elements in hig
 
 | Layer       | Elements | Report                                                                     |
 | ----------- | -------- | -------------------------------------------------------------------------- |
-| Motivation  | 79       | [01-motivation-layer-report.md](./reports/01-motivation-layer-report.md)   |
+| Motivation  | 81       | [01-motivation-layer-report.md](./reports/01-motivation-layer-report.md)   |
 | Business    | 37       | [02-business-layer-report.md](./reports/02-business-layer-report.md)       |
 | Product     | 69       | [03-product-layer-report.md](./reports/03-product-layer-report.md)         |
 | Security    | 32       | [04-security-layer-report.md](./reports/04-security-layer-report.md)       |
-| Application | 199      | [05-application-layer-report.md](./reports/05-application-layer-report.md) |
+| Application | 200      | [05-application-layer-report.md](./reports/05-application-layer-report.md) |
 | Technology  | 41       | [06-technology-layer-report.md](./reports/06-technology-layer-report.md)   |
 | API         | 490      | [07-api-layer-report.md](./reports/07-api-layer-report.md)                 |
-| Data Model  | 55       | [08-data-model-layer-report.md](./reports/08-data-model-layer-report.md)   |
-| Data Store  | 62       | [09-data-store-layer-report.md](./reports/09-data-store-layer-report.md)   |
+| Data Model  | 56       | [08-data-model-layer-report.md](./reports/08-data-model-layer-report.md)   |
+| Data Store  | 63       | [09-data-store-layer-report.md](./reports/09-data-store-layer-report.md)   |
 | UX          | 249      | [10-ux-layer-report.md](./reports/10-ux-layer-report.md)                   |
 | Navigation  | 37       | [11-navigation-layer-report.md](./reports/11-navigation-layer-report.md)   |
 | APM         | 17       | [12-apm-layer-report.md](./reports/12-apm-layer-report.md)                 |
-| Testing     | 57       | [13-testing-layer-report.md](./reports/13-testing-layer-report.md)         |
+| Testing     | 58       | [13-testing-layer-report.md](./reports/13-testing-layer-report.md)         |
 
 ---
 
-Generated: 2026-11-24T21:43:16.427Z | Model Version: 0.1.0
+Generated: 2026-11-25T10:04:41.933Z | Model Version: 0.1.0

@@ -18,9 +18,9 @@ Product features, capabilities, personas, and milestones.
 | ------------------------- | ----- |
 | Elements                  | 69    |
 | Intra-Layer Relationships | 123   |
-| Inter-Layer Relationships | 351   |
+| Inter-Layer Relationships | 353   |
 | Inbound Relationships     | 270   |
-| Outbound Relationships    | 81    |
+| Outbound Relationships    | 83    |
 
 **Cross-Layer References**:
 
@@ -340,6 +340,7 @@ flowchart TB
 | `product.feature.satisfies.motivation.requirement`                   | `product.feature.mcp-integration-settings`                          | `motivation.requirement.mcp-requires-a-bearer-token-on-loopback`                             | `motivation` | `satisfies`  | many-to-many | medium   |
 | `product.feature.delivers.motivation.value`                          | `product.feature.owl-skos-and-graph-ml-import-and-export`           | `motivation.value.knowledge-reusability`                                                     | `motivation` | `delivers`   | many-to-many | medium   |
 | `product.feature.satisfies.motivation.requirement`                   | `product.feature.pipeline-run-wizard`                               | `motivation.requirement.one-way-to-select-a-pipeline`                                        | `motivation` | `satisfies`  | many-to-many | medium   |
+| `product.feature.satisfies.motivation.requirement`                   | `product.feature.proposal-queue-and-detail`                         | `motivation.requirement.a-long-text-field-is-proposed-as-anchored-edits`                     | `motivation` | `satisfies`  | many-to-many | medium   |
 | `product.feature.satisfies.motivation.requirement`                   | `product.feature.proposal-queue-and-detail`                         | `motivation.requirement.a-proposer-amends-its-open-proposal-in-place`                        | `motivation` | `satisfies`  | many-to-many | medium   |
 | `product.feature.satisfies.motivation.requirement`                   | `product.feature.proposal-queue-and-detail`                         | `motivation.requirement.a-proposer-withdraws-its-open-proposal`                              | `motivation` | `satisfies`  | many-to-many | medium   |
 | `product.feature.satisfies.motivation.requirement`                   | `product.feature.proposal-queue-and-detail`                         | `motivation.requirement.every-applied-proposal-is-revertible`                                | `motivation` | `satisfies`  | many-to-many | medium   |
@@ -347,6 +348,7 @@ flowchart TB
 | `product.feature.satisfies.motivation.requirement`                   | `product.feature.proposal-queue-and-detail`                         | `motivation.requirement.proposals-link-to-each-other-through-one-link-model`                 | `motivation` | `satisfies`  | many-to-many | medium   |
 | `product.feature.satisfies.motivation.requirement`                   | `product.feature.proposal-queue-and-detail`                         | `motivation.requirement.reversed-proposal-status`                                            | `motivation` | `satisfies`  | many-to-many | medium   |
 | `product.feature.delivers.motivation.value`                          | `product.feature.proposal-review-page`                              | `motivation.value.reviewer-time-goes-to-judgment-calls`                                      | `motivation` | `delivers`   | many-to-many | medium   |
+| `product.feature.satisfies.motivation.requirement`                   | `product.feature.proposal-review-page`                              | `motivation.requirement.an-anchored-edit-applies-to-the-current-text-or-goes-stale`          | `motivation` | `satisfies`  | many-to-many | medium   |
 | `product.feature.satisfies.motivation.requirement`                   | `product.feature.proposal-review-page`                              | `motivation.requirement.bulk-decisions-on-every-proposal-except-gold-checks`                 | `motivation` | `satisfies`  | many-to-many | medium   |
 | `product.feature.satisfies.motivation.requirement`                   | `product.feature.proposal-review-page`                              | `motivation.requirement.focus-by-folding-panes-to-rails`                                     | `motivation` | `satisfies`  | many-to-many | medium   |
 | `product.feature.satisfies.motivation.requirement`                   | `product.feature.proposal-review-page`                              | `motivation.requirement.reason-codes-for-every-reject`                                       | `motivation` | `satisfies`  | many-to-many | medium   |
@@ -1079,6 +1081,7 @@ Proposal list with the needs-decision banner and status filters (reversed includ
 | inter-layer | `api.operation.reopen-operations`                                            | `exposes`   | inbound   |
 | inter-layer | `api.operation.revert-proposal`                                              | `exposes`   | inbound   |
 | inter-layer | `api.operation.withdraw-proposal`                                            | `exposes`   | inbound   |
+| inter-layer | `motivation.requirement.a-long-text-field-is-proposed-as-anchored-edits`     | `satisfies` | outbound  |
 | inter-layer | `motivation.requirement.a-proposer-amends-its-open-proposal-in-place`        | `satisfies` | outbound  |
 | inter-layer | `motivation.requirement.a-proposer-withdraws-its-open-proposal`              | `satisfies` | outbound  |
 | inter-layer | `motivation.requirement.every-applied-proposal-is-revertible`                | `satisfies` | outbound  |
@@ -1113,26 +1116,27 @@ Proposal list with the needs-decision banner and status filters (reversed includ
 
 #### Relationships
 
-| Type        | Related Element                                                              | Predicate    | Direction |
-| ----------- | ---------------------------------------------------------------------------- | ------------ | --------- |
-| inter-layer | `api.operation.add-proposal-operations`                                      | `exposes`    | inbound   |
-| inter-layer | `api.operation.get-source-text`                                              | `exposes`    | inbound   |
-| inter-layer | `motivation.value.reviewer-time-goes-to-judgment-calls`                      | `delivers`   | outbound  |
-| inter-layer | `motivation.requirement.bulk-decisions-on-every-proposal-except-gold-checks` | `satisfies`  | outbound  |
-| inter-layer | `motivation.requirement.focus-by-folding-panes-to-rails`                     | `satisfies`  | outbound  |
-| inter-layer | `motivation.requirement.reason-codes-for-every-reject`                       | `satisfies`  | outbound  |
-| inter-layer | `motivation.requirement.wide-side-by-side-diff`                              | `satisfies`  | outbound  |
-| inter-layer | `testing.testcoveragetarget.one-review-page`                                 | `covers`     | inbound   |
-| inter-layer | `ux.view.proposal-detail-view`                                               | `realizes`   | inbound   |
-| inter-layer | `ux.view.wide-diff-overlay`                                                  | `realizes`   | inbound   |
-| intra-layer | `product.softwarecapability.proposal-review-and-apply`                       | `realizes`   | outbound  |
-| intra-layer | `product.persona.ontology-curator`                                           | `serves`     | outbound  |
-| intra-layer | `product.feature.reversal-proposals`                                         | `depends-on` | inbound   |
-| intra-layer | `product.workflowstep.clear-mechanical-operations-by-threshold`              | `uses`       | inbound   |
-| intra-layer | `product.workflowstep.judge-the-gold-candidates`                             | `uses`       | inbound   |
-| intra-layer | `product.workflowstep.judge-the-remaining-operations`                        | `uses`       | inbound   |
-| intra-layer | `product.workflowstep.review-the-client-plan`                                | `uses`       | inbound   |
-| intra-layer | `product.workflowstep.review-the-extraction-proposal`                        | `uses`       | inbound   |
+| Type        | Related Element                                                                     | Predicate    | Direction |
+| ----------- | ----------------------------------------------------------------------------------- | ------------ | --------- |
+| inter-layer | `api.operation.add-proposal-operations`                                             | `exposes`    | inbound   |
+| inter-layer | `api.operation.get-source-text`                                                     | `exposes`    | inbound   |
+| inter-layer | `motivation.value.reviewer-time-goes-to-judgment-calls`                             | `delivers`   | outbound  |
+| inter-layer | `motivation.requirement.an-anchored-edit-applies-to-the-current-text-or-goes-stale` | `satisfies`  | outbound  |
+| inter-layer | `motivation.requirement.bulk-decisions-on-every-proposal-except-gold-checks`        | `satisfies`  | outbound  |
+| inter-layer | `motivation.requirement.focus-by-folding-panes-to-rails`                            | `satisfies`  | outbound  |
+| inter-layer | `motivation.requirement.reason-codes-for-every-reject`                              | `satisfies`  | outbound  |
+| inter-layer | `motivation.requirement.wide-side-by-side-diff`                                     | `satisfies`  | outbound  |
+| inter-layer | `testing.testcoveragetarget.one-review-page`                                        | `covers`     | inbound   |
+| inter-layer | `ux.view.proposal-detail-view`                                                      | `realizes`   | inbound   |
+| inter-layer | `ux.view.wide-diff-overlay`                                                         | `realizes`   | inbound   |
+| intra-layer | `product.softwarecapability.proposal-review-and-apply`                              | `realizes`   | outbound  |
+| intra-layer | `product.persona.ontology-curator`                                                  | `serves`     | outbound  |
+| intra-layer | `product.feature.reversal-proposals`                                                | `depends-on` | inbound   |
+| intra-layer | `product.workflowstep.clear-mechanical-operations-by-threshold`                     | `uses`       | inbound   |
+| intra-layer | `product.workflowstep.judge-the-gold-candidates`                                    | `uses`       | inbound   |
+| intra-layer | `product.workflowstep.judge-the-remaining-operations`                               | `uses`       | inbound   |
+| intra-layer | `product.workflowstep.review-the-client-plan`                                       | `uses`       | inbound   |
+| intra-layer | `product.workflowstep.review-the-extraction-proposal`                               | `uses`       | inbound   |
 
 ### Reference Sources and Grounding Workflows {#reference-sources-and-grounding-workflows}
 
@@ -2434,4 +2438,4 @@ Open a proposal, clear the mechanical tier by threshold, judge the rest, apply, 
 
 ---
 
-Generated: 2026-11-24T21:17:13.774Z | Model Version: 0.1.0
+Generated: 2026-11-25T10:04:41.933Z | Model Version: 0.1.0

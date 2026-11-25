@@ -5,9 +5,7 @@ motivation.requirement.breaking-changes-never-auto-apply:
   type: requirement
   layer_id: motivation
   name: Breaking Changes Never Auto-Apply
-  description: Breaking operations (deletes included), taxonomy creates, vision
-    edits and extraction operations without a source passage are never applied
-    by an approval policy.
+  description: Breaking operations (deletes included), taxonomy creates, vision edits and extraction operations without a source passage are never applied by an approval policy.
   attributes:
     requirementType: functional
     priority: critical
@@ -26,10 +24,7 @@ motivation.requirement.every-applied-proposal-is-revertible:
   type: requirement
   layer_id: motivation
   name: Every Applied Proposal Is Revertible
-  description: An applied proposal can be undone. While unlanded it reverts in
-    place in one transaction, with conflicts and any later edits it would
-    overwrite shown before anything is undone; once landed it is undone by a
-    reversal proposal that is reviewed, applied and landed like any other.
+  description: An applied proposal can be undone. While unlanded it reverts in place in one transaction, with conflicts and any later edits it would overwrite shown before anything is undone; once landed it is undone by a reversal proposal that is reviewed, applied and landed like any other.
   attributes:
     requirementType: functional
     priority: high
@@ -48,8 +43,7 @@ motivation.requirement.extracted-facts-cite-their-source:
   type: requirement
   layer_id: motivation
   name: Extracted Facts Cite Their Source
-  description: Each extracted individual and relationship keeps source, page and
-    quote; citations survive source removal.
+  description: Each extracted individual and relationship keeps source, page and quote; citations survive source removal.
   attributes:
     requirementType: functional
     priority: high
@@ -68,8 +62,7 @@ motivation.requirement.proposals-record-their-pipeline-and-version:
   type: requirement
   layer_id: motivation
   name: Proposals Record Their Pipeline and Version
-  description: Every proposal records the pipeline implementation and version that
-    produced it; supersession is per implementation.
+  description: Every proposal records the pipeline implementation and version that produced it; supersession is per implementation.
   attributes:
     requirementType: functional
     priority: high
@@ -88,9 +81,7 @@ motivation.requirement.relationships-limited-to-allowed-types:
   type: requirement
   layer_id: motivation
   name: Relationships Limited to Allowed Types
-  description: Extraction proposes only relationships whose (source class,
-    predicate, target class) is an allowed relationship type; domain and range
-    are enforced on write.
+  description: Extraction proposes only relationships whose (source class, predicate, target class) is an allowed relationship type; domain and range are enforced on write.
   attributes:
     requirementType: functional
     priority: high
@@ -109,8 +100,7 @@ motivation.requirement.individuals-belong-to-one-dataset:
   type: requirement
   layer_id: motivation
   name: Individuals Belong to One Dataset
-  description: Every individual belongs to one dataset of one taxonomy;
-    cross-dataset edges are refused.
+  description: Every individual belongs to one dataset of one taxonomy; cross-dataset edges are refused.
   attributes:
     requirementType: functional
     priority: high
@@ -129,9 +119,7 @@ motivation.requirement.mirrored-taxonomies-accept-schema-changes-only-from-their
   type: requirement
   layer_id: motivation
   name: Mirrored Taxonomies Accept Schema Changes Only from Their Client
-  description: A mirrored taxonomy (dr_spec) takes schema proposals and refinement
-    runs only from its client (DR over MCP); landed proposals there cannot be
-    reverted.
+  description: A mirrored taxonomy (dr_spec) takes schema proposals and refinement runs only from its client (DR over MCP); landed proposals there cannot be reverted.
   attributes:
     requirementType: functional
     priority: medium
@@ -150,9 +138,7 @@ motivation.requirement.one-way-to-select-a-pipeline:
   type: requirement
   layer_id: motivation
   name: One Way to Select a Pipeline
-  description: Every entry point selects a pipeline by (type, implementation,
-    configuration) through one resolver; the registry owns defaults; the
-    configuration owns the model.
+  description: Every entry point selects a pipeline by (type, implementation, configuration) through one resolver; the registry owns defaults; the configuration owns the model.
   attributes:
     requirementType: functional
     priority: medium
@@ -171,14 +157,11 @@ motivation.requirement.dev-server-not-reachable-from-the-lan:
   type: requirement
   layer_id: motivation
   name: Dev Server Not Reachable from the LAN
-  description: The Vite dev server must not expose /api (including the endpoint
-    that returns the MCP token) to other machines on the network. Met by binding
-    to loopback (#1655).
+  description: The Vite dev server must not expose /api (including the endpoint that returns the MCP token) to other machines on the network. Met by binding to loopback (#1655).
   attributes:
     requirementType: non-functional
     priority: high
-    documentation: "To fix: tinkermonkey/context-studio#1655 (LAN exposure via the
-      Vite dev server)."
+    documentation: "To fix: tinkermonkey/context-studio#1655 (LAN exposure via the Vite dev server)."
   source_reference:
     provenance: manual
     locations:
@@ -194,10 +177,7 @@ motivation.requirement.url-sources-refuse-private-network-addresses:
   type: requirement
   layer_id: motivation
   name: URL Sources Refuse Private Network Addresses
-  description: Adding a URL source must refuse private, loopback and link-local
-    addresses, including after redirects, so the server cannot be used to reach
-    internal services (SSRF). Met by the connect-time address check (#1656);
-    sources.allow_private_urls is the explicit exception.
+  description: Adding a URL source must refuse private, loopback and link-local addresses, including after redirects, so the server cannot be used to reach internal services (SSRF). Met by the connect-time address check (#1656); sources.allow_private_urls is the explicit exception.
   attributes:
     requirementType: non-functional
     priority: high
@@ -217,8 +197,7 @@ motivation.requirement.mcp-requires-a-bearer-token-on-loopback:
   type: requirement
   layer_id: motivation
   name: MCP Requires a Bearer Token on Loopback
-  description: The MCP endpoint starts only on a loopback host and every request
-    must carry the configured bearer token.
+  description: The MCP endpoint starts only on a loopback host and every request must carry the configured bearer token.
   attributes:
     requirementType: non-functional
     priority: high
@@ -237,9 +216,7 @@ motivation.requirement.local-api-refuses-foreign-origins:
   type: requirement
   layer_id: motivation
   name: Local API Refuses Foreign Origins
-  description: The unauthenticated REST API refuses requests with a foreign Origin
-    and, on loopback, a non-loopback Host header (cross-site requests and DNS
-    rebinding).
+  description: The unauthenticated REST API refuses requests with a foreign Origin and, on loopback, a non-loopback Host header (cross-site requests and DNS rebinding).
   attributes:
     requirementType: non-functional
     priority: high
@@ -258,8 +235,7 @@ motivation.requirement.agent-file-sources-limited-to-allowed-roots:
   type: requirement
   layer_id: motivation
   name: Agent File Sources Limited to Allowed Roots
-  description: An agent may add a local file as a source only from under the
-    configured absolute sources.allowed_roots (empty by default).
+  description: An agent may add a local file as a source only from under the configured absolute sources.allowed_roots (empty by default).
   attributes:
     requirementType: non-functional
     priority: high
@@ -278,9 +254,7 @@ motivation.requirement.secrets-stay-in-the-configuration-file:
   type: requirement
   layer_id: motivation
   name: Secrets Stay in the Configuration File
-  description: API keys and tokens live only in the untracked config.json; keys
-    read from the environment are never written back, and validation errors
-    never echo secret values.
+  description: API keys and tokens live only in the untracked config.json; keys read from the environment are never written back, and validation errors never echo secret values.
   attributes:
     requirementType: non-functional
     priority: high
@@ -299,11 +273,7 @@ motivation.requirement.pre-review-is-adopted-only-by-a-rule-set-in-advance:
   type: requirement
   layer_id: motivation
   name: Pre-Review Is Adopted Only by a Rule Set in Advance
-  description: "The pre-review stage stays off by default until a decision rule
-    written on its experiment page before the first paid run adopts it: it must
-    cut the reviewer's split and retype changes without losing typed F1,
-    measured over three paired takes on human-checked gold, with its own
-    changes' precision and its false-change rate on correct elements bounded."
+  description: "The pre-review stage stays off by default until a decision rule written on its experiment page before the first paid run adopts it: it must cut the reviewer's split and retype changes without losing typed F1, measured over three paired takes on human-checked gold, with its own changes' precision and its false-change rate on correct elements bounded."
   attributes:
     requirementType: quality
     priority: high
@@ -318,12 +288,7 @@ motivation.requirement.contexts-depend-on-each-other-only-through-public-contrac
   type: requirement
   layer_id: motivation
   name: Contexts depend on each other only through public contracts
-  description: A bounded context may depend on another context's ports, entities,
-    value objects, exceptions, public functions and the public methods of its
-    application service, which is injected at the composition root and never
-    constructed. It never touches another context's adapters or private (_)
-    members, and never shares state through ambient globals.
-    scripts/check_domain_imports.py checks it (#1633).
+  description: A bounded context may depend on another context's ports, entities, value objects, exceptions, public functions and the public methods of its application service, which is injected at the composition root and never constructed. It never touches another context's adapters or private (_) members, and never shares state through ambient globals. scripts/check_domain_imports.py checks it (#1633).
   attributes:
     requirementType: non-functional
     priority: high
@@ -338,10 +303,7 @@ motivation.requirement.unlanded-lists-only-proposals-with-something-to-land:
   type: requirement
   layer_id: motivation
   name: Unlanded lists only proposals with something to land
-  description: "#1634: landed=false (REST and MCP alike) lists only proposals that
-    have applied operations a client can land in its source: never one whose
-    operations were all rejected or reverted, never a re-import (source bundle),
-    never one about a dataset (dataset_id set)."
+  description: "#1634: landed=false (REST and MCP alike) lists only proposals that have applied operations a client can land in its source: never one whose operations were all rejected or reverted, never a re-import (source bundle), never one about a dataset (dataset_id set)."
   attributes:
     requirementType: functional
     priority: high
@@ -356,10 +318,7 @@ motivation.requirement.the-proposals-list-filters-in-the-query-and-has-a-summary
   type: requirement
   layer_id: motivation
   name: The proposals list filters in the query and has a summary form
-  description: "#1626: GET /api/proposals filters by dataset_id, source_id and
-    pipeline_type in the query, with a correct total, and fields=summary returns
-    operation counts (by op, kind, status and scope) instead of operations, so
-    pages that show counts download no operations."
+  description: "#1626: GET /api/proposals filters by dataset_id, source_id and pipeline_type in the query, with a correct total, and fields=summary returns operation counts (by op, kind, status and scope) instead of operations, so pages that show counts download no operations."
   attributes:
     requirementType: non-functional
     priority: medium
@@ -374,9 +333,7 @@ motivation.requirement.one-unexportable-operation-never-blocks-a-dr-spec-export:
   type: requirement
   layer_id: motivation
   name: One unexportable operation never blocks a DR spec export
-  description: "#1623: a create without a DR reference takes the reference its
-    entity has now; one with none at all is listed under skipped (with why and
-    the fix) and the proposal's other operations still export."
+  description: "#1623: a create without a DR reference takes the reference its entity has now; one with none at all is listed under skipped (with why and the fix) and the proposal's other operations still export."
   attributes:
     requirementType: functional
     priority: high
@@ -391,9 +348,7 @@ motivation.requirement.a-review-only-proposal-is-never-auto-applied:
   type: requirement
   layer_id: motivation
   name: A review-only proposal is never auto-applied
-  description: "#1628: a proposal created with review_only is left whole for a
-    person to decide, whatever the taxonomy's approval policy says. Benchmark
-    gold checks set it."
+  description: "#1628: a proposal created with review_only is left whole for a person to decide, whatever the taxonomy's approval policy says. Benchmark gold checks set it."
   attributes:
     requirementType: functional
     priority: high
@@ -408,10 +363,7 @@ motivation.requirement.an-operation-without-a-probability-never-meets-the-probab
   type: requirement
   layer_id: motivation
   name: An operation without a probability never meets the probability rule
-  description: "#1628: an operation that states no probability never satisfies a
-    policy's min_probability (0 included), so it never auto-applies under a
-    policy; a bundle import's operations stay exempt (the project's own released
-    source)."
+  description: "#1628: an operation that states no probability never satisfies a policy's min_probability (0 included), so it never auto-applies under a policy; a bundle import's operations stay exempt (the project's own released source)."
   attributes:
     requirementType: functional
     priority: high
@@ -426,13 +378,7 @@ motivation.requirement.proposals-link-to-each-other-through-one-link-model:
   type: requirement
   layer_id: motivation
   name: Proposals link to each other through one link model
-  description: "#1624 decision (2026-11-20): one proposal-to-proposal link model
-    covers supersede (a withdrawn proposal and the one that replaces it) and
-    #1667's reversal (a reversal proposal and the landed proposal it undoes). A
-    link is (source proposal, kind, target proposal); kinds: supersedes,
-    reverses. It replaces the separate change_proposals.reverses_id the
-    one-review-surface plan staged. A proposal shows its links both ways:
-    supersedes / superseded_by, reverses / reversed_by."
+  description: "#1624 decision (2026-11-20): one proposal-to-proposal link model covers supersede (a withdrawn proposal and the one that replaces it) and #1667's reversal (a reversal proposal and the landed proposal it undoes). A link is (source proposal, kind, target proposal); kinds: supersedes, reverses. It replaces the separate change_proposals.reverses_id the one-review-surface plan staged. A proposal shows its links both ways: supersedes / superseded_by, reverses / reversed_by."
   attributes:
     requirementType: functional
     priority: high
@@ -447,12 +393,7 @@ motivation.requirement.a-proposer-amends-its-open-proposal-in-place:
   type: requirement
   layer_id: motivation
   name: A proposer amends its open proposal in place
-  description: "#1624: on a proposal that is still open, one call replaces a
-    pending operation's fields (by seq), adds operations, or removes pending
-    operations, with the same validation, scope check and dry_run as
-    propose_changes. Applied and rejected operations never change. A
-    one-sentence change to one of nine operations takes one call and leaves one
-    proposal."
+  description: "#1624: on a proposal that is still open, one call replaces a pending operation's fields (by seq), adds operations, or removes pending operations, with the same validation, scope check and dry_run as propose_changes. Applied and rejected operations never change. A one-sentence change to one of nine operations takes one call and leaves one proposal."
   attributes:
     requirementType: functional
     priority: high
@@ -467,10 +408,7 @@ motivation.requirement.an-amended-operation-shows-what-it-replaced:
   type: requirement
   layer_id: motivation
   name: An amended operation shows what it replaced
-  description: "#1624: an operation amended after it was proposed says when
-    (amended_at) and keeps each earlier version of its fields (amendments), so a
-    reviewer who already read it knows to read it again and can see what
-    changed. get_proposal and the review page show it."
+  description: "#1624: an operation amended after it was proposed says when (amended_at) and keeps each earlier version of its fields (amendments), so a reviewer who already read it knows to read it again and can see what changed. get_proposal and the review page show it."
   attributes:
     requirementType: functional
     priority: medium
@@ -485,14 +423,7 @@ motivation.requirement.a-proposer-withdraws-its-open-proposal:
   type: requirement
   layer_id: motivation
   name: A proposer withdraws its open proposal
-  description: "#1624: a proposer withdraws an open proposal it no longer stands
-    behind, optionally naming the proposal that supersedes it (a supersedes
-    link). Withdrawing undoes it whole (owner, 2026-11-24): what it applied is
-    rolled back as a revert does, its undecided operations become withdrawn (not
-    a reviewer's decision, so not gold), and the proposal ends withdrawn, never
-    half-applied. If the rollback conflicts with later changes, the withdraw is
-    refused (409) naming what blocks it, as revert is. propose_changes can name
-    the proposals a new one supersedes, which withdraws them in the same call."
+  description: "#1624: a proposer withdraws an open proposal it no longer stands behind, optionally naming the proposal that supersedes it (a supersedes link). Withdrawing undoes it whole (owner, 2026-11-24): what it applied is rolled back as a revert does, its undecided operations become withdrawn (not a reviewer's decision, so not gold), and the proposal ends withdrawn, never half-applied. If the rollback conflicts with later changes, the withdraw is refused (409) naming what blocks it, as revert is. propose_changes can name the proposals a new one supersedes, which withdraws them in the same call."
   attributes:
     requirementType: functional
     priority: high
@@ -507,17 +438,11 @@ motivation.requirement.reason-codes-for-every-reject:
   type: requirement
   layer_id: motivation
   name: Reason Codes for Every Reject
-  description: Every reject, of any operation kind and in bulk, takes one reason
-    code from a single set (not_in_text, mentioned_only, too_generic, duplicate,
-    out_of_scope, incorrect, keep_current, outdated, other) plus an optional
-    note (required only for a gold element). Buttons are filtered by operation
-    kind; outdated leads when the operation is stale. System rejections keep
-    their text and no code.
+  description: Every reject, of any operation kind and in bulk, takes one reason code from a single set (not_in_text, mentioned_only, too_generic, duplicate, out_of_scope, incorrect, keep_current, outdated, other) plus an optional note (required only for a gold element). Buttons are filtered by operation kind; outdated leads when the operation is stale. System rejections keep their text and no code.
   attributes:
     requirementType: functional
     priority: high
-    documentation: "Owner decision 1. Three new codes: incorrect, keep_current,
-      outdated. No migration: reason_code is String(20)."
+    documentation: "Owner decision 1. Three new codes: incorrect, keep_current, outdated. No migration: reason_code is String(20)."
   source_reference:
     provenance: manual
     locations:
@@ -527,8 +452,7 @@ motivation.requirement.reason-codes-for-every-reject:
     - direction: outgoing
       predicate: realizes
       other_spec_node_id: motivation.principle
-      reason: It serves the goal Every Decision Becomes Data (realized directly), not
-        a standing principle.
+      reason: It serves the goal Every Decision Becomes Data (realized directly), not a standing principle.
       decided_by: agent
       decided_at: 2026-11-19T17:02:51.359Z
       changeset: changeset-1795107225483-xwgktrnaj
@@ -543,15 +467,11 @@ motivation.requirement.in-place-revert-warns-of-overwritten-edits:
   type: requirement
   layer_id: motivation
   name: In-Place Revert Warns of Overwritten Edits
-  description: Reverting an unlanded proposal in place first lists every field
-    edited since the apply that the revert would overwrite (current value
-    differs from the change event's new_state) and shows them in the confirm
-    dialog.
+  description: Reverting an unlanded proposal in place first lists every field edited since the apply that the revert would overwrite (current value differs from the change event's new_state) and shows them in the confirm dialog.
   attributes:
     requirementType: functional
     priority: high
-    documentation: Owner decision 2; closes the silent-overwrite gap in
-      RevertService._inverse_update.
+    documentation: Owner decision 2; closes the silent-overwrite gap in RevertService._inverse_update.
   source_reference:
     provenance: manual
     locations:
@@ -568,11 +488,7 @@ motivation.requirement.landed-proposals-are-undone-by-a-reversal-proposal:
   type: requirement
   layer_id: motivation
   name: Landed Proposals Are Undone by a Reversal Proposal
-  description: "A landed proposal cannot be reverted in place; the Revert control
-    offers 'Propose the reversal…', which explains why and creates a new
-    proposal from the run's change events. Only one open reversal per proposal;
-    the two proposals link each other (reverses / reversed_by) through #1624's
-    proposal-link model."
+  description: "A landed proposal cannot be reverted in place; the Revert control offers 'Propose the reversal…', which explains why and creates a new proposal from the run's change events. Only one open reversal per proposal; the two proposals link each other (reverses / reversed_by) through #1624's proposal-link model."
   attributes:
     requirementType: functional
     priority: high
@@ -593,8 +509,7 @@ motivation.requirement.reversal-restores-deleted-entities-with-their-ids:
   type: requirement
   layer_id: motivation
   name: Reversal Restores Deleted Entities with Their Ids
-  description: A reversal recreates an entity the original deleted with its old
-    id, via a restore create that names the snapshot's id and checks it is free.
+  description: A reversal recreates an entity the original deleted with its old id, via a restore create that names the snapshot's id and checks it is free.
   attributes:
     requirementType: functional
     priority: high
@@ -615,9 +530,7 @@ motivation.requirement.reversal-is-decided-like-any-proposal:
   type: requirement
   layer_id: motivation
   name: Reversal Is Decided Like Any Proposal
-  description: "A reversal proposal is reviewed, applied and landed like any other
-    proposal: operation by operation or all at once, with reason codes and
-    timing."
+  description: "A reversal proposal is reviewed, applied and landed like any other proposal: operation by operation or all at once, with reason codes and timing."
   attributes:
     requirementType: functional
     priority: medium
@@ -638,10 +551,7 @@ motivation.requirement.reversed-proposal-status:
   type: requirement
   layer_id: motivation
   name: Reversed Proposal Status
-  description: A proposal moves from done to reversed once its reversal lands,
-    including a partial reversal; its status strip says how much was reversed
-    ('38 of 41 changes reversed'). The status appears in the backend enum, list
-    filters and chips.
+  description: A proposal moves from done to reversed once its reversal lands, including a partial reversal; its status strip says how much was reversed ('38 of 41 changes reversed'). The status appears in the backend enum, list filters and chips.
   attributes:
     requirementType: functional
     priority: medium
@@ -655,8 +565,7 @@ motivation.requirement.reversed-proposal-status:
     - direction: outgoing
       predicate: realizes
       other_spec_node_id: motivation.principle
-      reason: A status value is bookkeeping for the reversal requirement it is
-        aggregated under; no principle is realized by it directly.
+      reason: A status value is bookkeeping for the reversal requirement it is aggregated under; no principle is realized by it directly.
       decided_by: agent
       decided_at: 2026-11-19T17:02:31.984Z
       changeset: changeset-1795107225483-xwgktrnaj
@@ -671,9 +580,7 @@ motivation.requirement.bulk-decisions-on-every-proposal-except-gold-checks:
   type: requirement
   layer_id: motivation
   name: Bulk Decisions on Every Proposal Except Gold Checks
-  description: Select ▾ (all ready · at threshold · all awaiting) and the bulk bar
-    (Accept N ready, Reject all with one reason code) are available on every
-    proposal, extractions included; only gold checks hide them.
+  description: Select ▾ (all ready · at threshold · all awaiting) and the bulk bar (Accept N ready, Reject all with one reason code) are available on every proposal, extractions included; only gold checks hide them.
   attributes:
     requirementType: functional
     priority: medium
@@ -689,11 +596,7 @@ motivation.requirement.focus-by-folding-panes-to-rails:
   type: requirement
   layer_id: motivation
   name: Focus by Folding Panes to Rails
-  description: Either left pane (source or list) folds to a 40 px rail showing a
-    map of its items, the selection notch, its name and key; [ and ] fold and
-    expand; J/K, A/X and Show in source keep working while folded; one rail at a
-    time; the list never folds without source text; the choice is remembered per
-    viewer.
+  description: Either left pane (source or list) folds to a 40 px rail showing a map of its items, the selection notch, its name and key; [ and ] fold and expand; J/K, A/X and Show in source keep working while folded; one rail at a time; the list never folds without source text; the choice is remembered per viewer.
   attributes:
     requirementType: functional
     priority: medium
@@ -709,10 +612,7 @@ motivation.requirement.wide-side-by-side-diff:
   type: requirement
   layer_id: motivation
   name: Wide Side-by-Side Diff
-  description: "Any long-text change opens in a wide side-by-side overlay over the
-    source and list panes (the inspector stays visible): changed fields as tabs,
-    ↑↓/‹› between fields, J/K to the next long change, Esc/✕/Back return focus
-    to the row; &diff=<field> in the URL."
+  description: "Any long-text change opens in a wide side-by-side overlay over the source and list panes (the inspector stays visible): changed fields as tabs, ↑↓/‹› between fields, J/K to the next long change, Esc/✕/Back return focus to the row; &diff=<field> in the URL."
   attributes:
     requirementType: functional
     priority: medium
@@ -720,4 +620,34 @@ motivation.requirement.wide-side-by-side-diff:
   metadata:
     created_at: 2026-11-19T16:59:05.121Z
     updated_at: 2026-11-19T16:59:05.121Z
+    version: 1
+motivation.requirement.a-long-text-field-is-proposed-as-anchored-edits:
+  id: db319609-d4b0-4b80-bc58-25ddd8df3732
+  path: motivation.requirement.a-long-text-field-is-proposed-as-anchored-edits
+  spec_node_id: motivation.requirement
+  type: requirement
+  layer_id: motivation
+  name: A long text field is proposed as anchored edits
+  description: "#1630: a client changes part of a description or a taxonomy vision by edits anchored on the existing text (insert after an anchor, replace an anchor, delete an anchor), applied in order, instead of resending the whole value. The proposal is refused if an anchor is missing or appears more than once. Adding one bullet to a 7,000-character vision takes one short edit."
+  attributes:
+    requirementType: functional
+    priority: high
+  metadata:
+    created_at: 2026-11-25T02:12:36.072Z
+    updated_at: 2026-11-25T02:12:36.072Z
+    version: 1
+motivation.requirement.an-anchored-edit-applies-to-the-current-text-or-goes-stale:
+  id: dff4108c-8b71-4253-ab99-9b18b2998787
+  path: motivation.requirement.an-anchored-edit-applies-to-the-current-text-or-goes-stale
+  spec_node_id: motivation.requirement
+  type: requirement
+  layer_id: motivation
+  name: An anchored edit applies to the current text or goes stale
+  description: "#1630: at accept, an operation's edits are applied again to the field's text as it is then, so another change made since the proposal is kept. If an anchor no longer matches, the operation is stale (with the anchor named) instead of overwriting the text. No lost update."
+  attributes:
+    requirementType: functional
+    priority: high
+  metadata:
+    created_at: 2026-11-25T02:12:36.073Z
+    updated_at: 2026-11-25T02:12:36.073Z
     version: 1

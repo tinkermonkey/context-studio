@@ -16,11 +16,11 @@ Application components, services, and interactions.
 
 | Metric                    | Count |
 | ------------------------- | ----- |
-| Elements                  | 199   |
-| Intra-Layer Relationships | 434   |
-| Inter-Layer Relationships | 462   |
+| Elements                  | 200   |
+| Intra-Layer Relationships | 436   |
+| Inter-Layer Relationships | 467   |
 | Inbound Relationships     | 243   |
-| Outbound Relationships    | 219   |
+| Outbound Relationships    | 224   |
 
 **Cross-Layer References**:
 
@@ -116,6 +116,7 @@ Application components, services, and interactions.
 | `application.applicationevent.graph-invalidated-event`                      | `applicationevent`         | 1             |
 | `application.applicationevent.ontology-changed-event`                       | `applicationevent`         | 1             |
 | `application.applicationevent.sync-completed-event`                         | `applicationevent`         | 1             |
+| `application.applicationfunction.anchored-text-edits`                       | `applicationfunction`      | 2             |
 | `application.applicationfunction.definition-enrichment`                     | `applicationfunction`      | 4             |
 | `application.applicationfunction.domain-import-check`                       | `applicationfunction`      | 0             |
 | `application.applicationfunction.embedding-generation`                      | `applicationfunction`      | 2             |
@@ -216,7 +217,7 @@ Application components, services, and interactions.
 | `application.applicationservice.pipeline-selection-service`                 | `applicationservice`       | 23            |
 | `application.applicationservice.proposal-apply-rules`                       | `applicationservice`       | 3             |
 | `application.applicationservice.proposal-comparison-service`                | `applicationservice`       | 2             |
-| `application.applicationservice.proposal-service`                           | `applicationservice`       | 33            |
+| `application.applicationservice.proposal-service`                           | `applicationservice`       | 35            |
 | `application.applicationservice.reference-source`                           | `applicationservice`       | 6             |
 | `application.applicationservice.revert-service`                             | `applicationservice`       | 6             |
 | `application.applicationservice.schema-recognition-preview-service`         | `applicationservice`       | 3             |
@@ -544,6 +545,9 @@ flowchart TB
 | `application.applicationcomponent.accesses.data-store.collection`    | `application.applicationcomponent.sqlite-schema-vector-index`               | `data-store.collection.ontology-entities`                                                    | `data-store`  | `accesses`   | many-to-many | medium   |
 | `application.applicationcomponent.accesses.data-model.objectschema`  | `application.applicationcomponent.sqlite-source-repository`                 | `data-model.objectschema.source-entity`                                                      | `data-model`  | `accesses`   | many-to-many | medium   |
 | `application.applicationcomponent.accesses.data-store.collection`    | `application.applicationcomponent.sqlite-source-repository`                 | `data-store.collection.sources`                                                              | `data-store`  | `accesses`   | many-to-many | medium   |
+| `application.applicationfunction.accesses.data-model.objectschema`   | `application.applicationfunction.anchored-text-edits`                       | `data-model.objectschema.text-edit`                                                          | `data-model`  | `accesses`   | many-to-many | medium   |
+| `application.applicationfunction.satisfies.motivation.requirement`   | `application.applicationfunction.anchored-text-edits`                       | `motivation.requirement.a-long-text-field-is-proposed-as-anchored-edits`                     | `motivation`  | `satisfies`  | many-to-many | medium   |
+| `application.applicationfunction.satisfies.motivation.requirement`   | `application.applicationfunction.anchored-text-edits`                       | `motivation.requirement.an-anchored-edit-applies-to-the-current-text-or-goes-stale`          | `motivation`  | `satisfies`  | many-to-many | medium   |
 | `application.applicationfunction.realizes.business.businessfunction` | `application.applicationfunction.definition-enrichment`                     | `business.businessfunction.schema-refinement`                                                | `business`    | `realizes`   | many-to-many | medium   |
 | `application.applicationfunction.satisfies.motivation.requirement`   | `application.applicationfunction.domain-import-check`                       | `motivation.requirement.contexts-depend-on-each-other-only-through-public-contracts`         | `motivation`  | `satisfies`  | many-to-many | medium   |
 | `application.applicationfunction.realizes.business.businessfunction` | `application.applicationfunction.embedding-generation`                      | `business.businessfunction.semantic-search`                                                  | `business`    | `realizes`   | many-to-many | medium   |
@@ -641,9 +645,11 @@ flowchart TB
 | `application.applicationservice.realizes.business.businessservice`   | `application.applicationservice.proposal-service`                           | `business.businessservice.proposal-adjudication-service`                                     | `business`    | `realizes`   | many-to-many | medium   |
 | `application.applicationservice.realizes.product.feature`            | `application.applicationservice.proposal-service`                           | `product.feature.reversal-proposals`                                                         | `product`     | `realizes`   | many-to-many | medium   |
 | `application.applicationservice.realizes.product.softwarecapability` | `application.applicationservice.proposal-service`                           | `product.softwarecapability.proposal-review-and-apply`                                       | `product`     | `realizes`   | many-to-many | medium   |
+| `application.applicationservice.satisfies.motivation.requirement`    | `application.applicationservice.proposal-service`                           | `motivation.requirement.a-long-text-field-is-proposed-as-anchored-edits`                     | `motivation`  | `satisfies`  | many-to-many | medium   |
 | `application.applicationservice.satisfies.motivation.requirement`    | `application.applicationservice.proposal-service`                           | `motivation.requirement.a-proposer-amends-its-open-proposal-in-place`                        | `motivation`  | `satisfies`  | many-to-many | medium   |
 | `application.applicationservice.satisfies.motivation.requirement`    | `application.applicationservice.proposal-service`                           | `motivation.requirement.a-proposer-withdraws-its-open-proposal`                              | `motivation`  | `satisfies`  | many-to-many | medium   |
 | `application.applicationservice.satisfies.motivation.requirement`    | `application.applicationservice.proposal-service`                           | `motivation.requirement.a-review-only-proposal-is-never-auto-applied`                        | `motivation`  | `satisfies`  | many-to-many | medium   |
+| `application.applicationservice.satisfies.motivation.requirement`    | `application.applicationservice.proposal-service`                           | `motivation.requirement.an-anchored-edit-applies-to-the-current-text-or-goes-stale`          | `motivation`  | `satisfies`  | many-to-many | medium   |
 | `application.applicationservice.satisfies.motivation.requirement`    | `application.applicationservice.proposal-service`                           | `motivation.requirement.landed-proposals-are-undone-by-a-reversal-proposal`                  | `motivation`  | `satisfies`  | many-to-many | medium   |
 | `application.applicationservice.satisfies.motivation.requirement`    | `application.applicationservice.proposal-service`                           | `motivation.requirement.mirrored-taxonomies-accept-schema-changes-only-from-their-client`    | `motivation`  | `satisfies`  | many-to-many | medium   |
 | `application.applicationservice.satisfies.motivation.requirement`    | `application.applicationservice.proposal-service`                           | `motivation.requirement.proposals-link-to-each-other-through-one-link-model`                 | `motivation`  | `satisfies`  | many-to-many | medium   |
@@ -2715,6 +2721,24 @@ Domain event fired when a remote sync push or pull operation completes
 | Type        | Related Element                                           | Predicate  | Direction |
 | ----------- | --------------------------------------------------------- | ---------- | --------- |
 | intra-layer | `application.applicationprocess.background-task-executor` | `triggers` | outbound  |
+
+### Anchored text edits {#anchored-text-edits}
+
+**ID**: `application.applicationfunction.anchored-text-edits`
+
+**Type**: `applicationfunction`
+
+apply_text_edits (domain/versioning/text_edits.py) applies an ordered list of anchored edits to a text and names the edit whose anchor is missing or not unique. ProposalService uses it three ways: at propose and amend it resolves an update's edits against the current text into the operation's fields and base (and keeps the edits); at apply it applies them again to the current text and records the text it applied to; and staleness asks whether the anchors still match instead of comparing the field with base.
+
+#### Relationships
+
+| Type        | Related Element                                                                     | Predicate   | Direction |
+| ----------- | ----------------------------------------------------------------------------------- | ----------- | --------- |
+| inter-layer | `data-model.objectschema.text-edit`                                                 | `accesses`  | outbound  |
+| inter-layer | `motivation.requirement.a-long-text-field-is-proposed-as-anchored-edits`            | `satisfies` | outbound  |
+| inter-layer | `motivation.requirement.an-anchored-edit-applies-to-the-current-text-or-goes-stale` | `satisfies` | outbound  |
+| intra-layer | `application.applicationservice.proposal-service`                                   | `realizes`  | outbound  |
+| intra-layer | `application.applicationservice.proposal-service`                                   | `serves`    | inbound   |
 
 ### Definition Enrichment {#definition-enrichment}
 
@@ -5168,9 +5192,11 @@ Change proposals: create, decide, apply, reject (always with a reason code), reo
 | inter-layer | `business.businessservice.proposal-adjudication-service`                                  | `realizes`   | outbound  |
 | inter-layer | `product.feature.reversal-proposals`                                                      | `realizes`   | outbound  |
 | inter-layer | `product.softwarecapability.proposal-review-and-apply`                                    | `realizes`   | outbound  |
+| inter-layer | `motivation.requirement.a-long-text-field-is-proposed-as-anchored-edits`                  | `satisfies`  | outbound  |
 | inter-layer | `motivation.requirement.a-proposer-amends-its-open-proposal-in-place`                     | `satisfies`  | outbound  |
 | inter-layer | `motivation.requirement.a-proposer-withdraws-its-open-proposal`                           | `satisfies`  | outbound  |
 | inter-layer | `motivation.requirement.a-review-only-proposal-is-never-auto-applied`                     | `satisfies`  | outbound  |
+| inter-layer | `motivation.requirement.an-anchored-edit-applies-to-the-current-text-or-goes-stale`       | `satisfies`  | outbound  |
 | inter-layer | `motivation.requirement.landed-proposals-are-undone-by-a-reversal-proposal`               | `satisfies`  | outbound  |
 | inter-layer | `motivation.requirement.mirrored-taxonomies-accept-schema-changes-only-from-their-client` | `satisfies`  | outbound  |
 | inter-layer | `motivation.requirement.proposals-link-to-each-other-through-one-link-model`              | `satisfies`  | outbound  |
@@ -5187,6 +5213,7 @@ Change proposals: create, decide, apply, reject (always with a reason code), reo
 | intra-layer | `application.applicationcomponent.dr-relationship-rules`                                  | `realizes`   | inbound   |
 | intra-layer | `application.applicationcomponent.dr-spec-changes-exporter`                               | `realizes`   | inbound   |
 | intra-layer | `application.applicationcomponent.sqlite-change-proposal-repository`                      | `realizes`   | inbound   |
+| intra-layer | `application.applicationfunction.anchored-text-edits`                                     | `realizes`   | inbound   |
 | intra-layer | `application.applicationfunction.in-use-inspection`                                       | `realizes`   | inbound   |
 | intra-layer | `application.applicationfunction.individual-extraction-apply`                             | `realizes`   | inbound   |
 | intra-layer | `application.applicationfunction.proposal-amendment`                                      | `realizes`   | inbound   |
@@ -5207,6 +5234,7 @@ Change proposals: create, decide, apply, reject (always with a reason code), reo
 | intra-layer | `application.applicationservice.source-repository`                                        | `depends-on` | outbound  |
 | intra-layer | `application.applicationservice.transaction-scope`                                        | `depends-on` | outbound  |
 | intra-layer | `application.applicationcomponent.dr-reflection-plan-importer`                            | `serves`     | outbound  |
+| intra-layer | `application.applicationfunction.anchored-text-edits`                                     | `serves`     | outbound  |
 | intra-layer | `application.applicationfunction.definition-enrichment`                                   | `serves`     | outbound  |
 | intra-layer | `application.applicationfunction.proposal-amendment`                                      | `serves`     | outbound  |
 | intra-layer | `application.applicationfunction.proposal-linking`                                        | `serves`     | outbound  |
@@ -5625,4 +5653,4 @@ Hexagonal port: describes the workspace and the viewed page to the chat model.
 
 ---
 
-Generated: 2026-11-24T21:43:16.427Z | Model Version: 0.1.0
+Generated: 2026-11-25T10:04:41.933Z | Model Version: 0.1.0

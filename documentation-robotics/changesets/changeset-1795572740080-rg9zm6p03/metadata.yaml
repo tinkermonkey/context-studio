@@ -2,8 +2,8 @@ id: changeset-1795572740080-rg9zm6p03
 name: anchored-text-edits
 description: "#1630: A client proposes a change to a long text field (description, vision) as anchored edits instead of a whole new value; the edits are applied to the field's current text at accept, and an operation whose anchor no longer matches is stale instead of overwriting. Done when propose_changes, amend and the REST API take edits, apply rebases them, and review shows the change and why it went stale."
 created: 2026-11-25T02:12:20.096Z
-modified: 2026-11-25T02:22:32.329Z
-status: staged
+modified: 2026-11-25T10:04:41.928Z
+status: committed
 baseSnapshot: v2:sha256:986090d038c8937a081d71d8be60cc40d19c5e4d6a12ddeefc7b4af5a76bd844
 origin:
   kind: plan
