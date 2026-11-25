@@ -128,9 +128,18 @@ export function textEditsProblem(text: unknown, edits: TextEdit[]): string | und
   let result = typeof text === "string" ? text : "";
   for (const [index, edit] of edits.entries()) {
     const anchor = edit.after ?? edit.replace ?? edit.delete ?? "";
-    const count = anchor ? result.split(anchor).length - 1 : 0;
+    // Every place it starts, overlapping ones included.
+    let count = 0;
+    for (
+      let at = anchor ? result.indexOf(anchor) : -1;
+      at !== -1;
+      at = result.indexOf(anchor, at + 1)
+    ) {
+      count += 1;
+    }
     if (count !== 1) {
-      const where = count === 0 ? "is not in the text" : `appears ${count} times`;
+      const where =
+        count === 0 ? "is not in the text" : `appears ${count} times: extend it until it is unique`;
       return `edit ${index + 1}: anchor '${anchor}' ${where}`;
     }
     const start = result.indexOf(anchor);

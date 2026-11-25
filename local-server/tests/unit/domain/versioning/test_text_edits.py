@@ -76,3 +76,11 @@ def test_malformed_edits_are_refused(value):
 def test_parse_returns_the_edits():
     edits = [{"after": "a", "insert": "b"}, {"replace": "c", "with": ""}, {"delete": "d"}]
     assert parse_text_edits({"edits": edits}) == edits
+
+
+def test_overlapping_occurrences_count_as_more_than_one():
+    # "ab ab" starts at 0 and at 3 in "ab ab ab", though str.count finds it once.
+    with pytest.raises(TextEditError) as raised:
+        apply_text_edits("ab ab ab", [{"delete": "ab ab"}])
+    assert raised.value.code == ANCHOR_NOT_UNIQUE
+    assert "appears 2 times: extend it" in str(raised.value)

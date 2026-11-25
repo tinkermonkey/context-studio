@@ -322,7 +322,7 @@ function ChangeRowView({
         )}
       </dt>
       <dd className="review-diff__values">
-        {anchored && (
+        {anchored > 0 && (
           <span className="review-muted" data-testid={`review-diff-anchored-${row.field}`}>
             {anchored === 1 ? "An anchored edit" : `${anchored} anchored edits`}: accepting applies{" "}
             {anchored === 1 ? "it" : "them"} to the text as it is then.

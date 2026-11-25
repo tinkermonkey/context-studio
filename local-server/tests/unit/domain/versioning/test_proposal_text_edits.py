@@ -167,3 +167,28 @@ def test_amending_reapplies_the_edits_to_the_current_text(service, ontology, tax
     assert amended.base == {"vision": VISION.replace("repairs.", "repairs and upkeep.")}
     assert amended.fields["vision"].endswith("repairs and upkeep. Weekly.\n")
     assert amended.amendments[0]["text_edits"] == {"vision": INSERT_BUYING["edits"]}
+
+
+def test_a_field_the_kind_cannot_update_is_an_unknown_field(service, ontology, taxonomy):
+    scheme = ontology.create_scheme(taxonomy_id=taxonomy, title="Vocabulary").id
+    room = ontology.create_class(scheme, "Room", description="A room.").id
+    with pytest.raises(ProposalValidationError) as raised:
+        _propose(service, taxonomy, {"vision": INSERT_BUYING}, kind=K.CLASS, target=room)
+    assert _errors(raised)[0][0] == "unknown_field"
+
+
+def test_an_apply_that_fails_after_the_rebase_keeps_the_proposed_text(
+    service, ontology, taxonomy, monkeypatch
+):
+    proposal = _propose(service, taxonomy, {"vision": INSERT_BUYING})
+    proposed = proposal.operations[0]
+    ontology.update_taxonomy(taxonomy, vision=VISION.replace("repairs.", "repairs and upkeep."))
+
+    def refuse(*args, **kwargs):
+        raise ValueError("refused")
+
+    monkeypatch.setattr(service, "_dispatch", refuse)
+    failed = service.apply(proposal.id, [proposed.id]).operations[0]
+    assert failed.status is OperationStatus.FAILED
+    stored = service.get(proposal.id).operations[0]
+    assert (stored.base, stored.fields) == (proposed.base, proposed.fields)

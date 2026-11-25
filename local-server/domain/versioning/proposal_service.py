@@ -1404,6 +1404,14 @@ class ProposalService:
             return
         if operation.op is not OperationType.UPDATE:
             raise _Invalid("invalid", "Only an update can give a field as anchored edits")
+        # A field the kind can't update is left for _check_field_names to name.
+        edited = {
+            name: value
+            for name, value in edited.items()
+            if name in OPERATION_FIELDS[operation.kind].update
+        }
+        if not edited:
+            return
         target = self._load(operation.kind, operation.target_id)  # type: ignore[arg-type]
         if target is None:
             raise _Invalid("target_not_found", f"No {operation.kind.value} {operation.target_id}")
@@ -1879,7 +1887,8 @@ class ProposalService:
     ) -> None:
         """
         No two operations touch the same field of one target, and a deleted target
-        appears in no other operation: the later one would always be stale.
+        appears in no other operation: the later one would always be stale (or,
+        for anchored edits of one text, belongs in the same list of edits).
         """
         found = ProposalService._conflict(operation, touched, deleted)
         if found is not None:
@@ -3179,7 +3188,8 @@ class ProposalService:
 
     def _checked_edit_predicate(self, operation: ProposedOperation, fields: dict[str, Any]) -> None:
         """An edit's predicate (or new domain or range) must fit a catalog, as on propose."""
-        as_update = replace(operation, op=OperationType.UPDATE, fields=dict(fields))
+        # A reviewer's fields replace the proposed ones, anchored edits included.
+        as_update = replace(operation, op=OperationType.UPDATE, fields=dict(fields), text_edits={})
         try:
             self._check_predicate(as_update, None)
         except _Invalid as exc:
@@ -3261,7 +3271,17 @@ class ProposalService:
                 )
             return result
 
-        self._record_outcome(operation, run_id, run)
+        def run_rebased() -> str:
+            # A rebase that doesn't end in an applied change leaves the
+            # operation as it was proposed (#1630).
+            proposed_base, proposed_fields = dict(operation.base), dict(operation.fields)
+            try:
+                return run()
+            except Exception:
+                operation.base, operation.fields = proposed_base, proposed_fields
+                raise
+
+        self._record_outcome(operation, run_id, run_rebased if operation.text_edits else run)
 
     def _restore(self, operation: ProposedOperation, fields: dict[str, Any], run_id: str) -> str:
         """

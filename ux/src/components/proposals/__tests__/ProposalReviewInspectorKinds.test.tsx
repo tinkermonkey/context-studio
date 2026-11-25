@@ -229,6 +229,9 @@ describe("an update in the review inspector", () => {
       "An anchored edit: accepting applies it to the text as it is then.",
     );
     expect(screen.queryByTestId("review-diff-anchored-title")).not.toBeInTheDocument();
+    // A row with no anchored edits renders no stray count.
+    const title = screen.getByTestId("review-diff-row-title").querySelector("dd");
+    expect(title?.textContent).not.toMatch(/^0/);
   });
 
   it("reads a list whose items only moved as was → now, labelled Reordered", async () => {

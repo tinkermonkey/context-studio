@@ -81,13 +81,13 @@ def apply_text_edits(text: str | None, edits: list[dict[str, str]]) -> str:
     for index, edit in enumerate(edits):
         anchor = edit.get("after", edit.get("replace", edit.get("delete")))
         assert anchor is not None  # parse_text_edits guarantees one
-        count = result.count(anchor)
+        count = _occurrences(result, anchor)
         if count == 0:
             raise TextEditError(index, f"anchor {_quoted(anchor)} is not in the text", ANCHOR_NOT_FOUND)
         if count > 1:
             raise TextEditError(
                 index,
-                f"anchor {_quoted(anchor)} appears {count} times; extend it until it is unique",
+                f"anchor {_quoted(anchor)} appears {count} times: extend it until it is unique",
                 ANCHOR_NOT_UNIQUE,
             )
         start = result.index(anchor)
@@ -100,6 +100,15 @@ def apply_text_edits(text: str | None, edits: list[dict[str, str]]) -> str:
             replacement = ""
         result = result[:start] + replacement + result[end:]
     return result
+
+
+def _occurrences(text: str, anchor: str) -> int:
+    """How many places `anchor` starts in `text`, overlapping ones included."""
+    count, start = 0, text.find(anchor)
+    while start != -1:
+        count += 1
+        start = text.find(anchor, start + 1)
+    return count
 
 
 def _quoted(anchor: str, limit: int = 60) -> str:

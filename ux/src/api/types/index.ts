@@ -10108,7 +10108,7 @@ export interface components {
       ref?: string | null;
       /**
        * Fields
-       * @description For a create, every field; for an update, only the changed ones; for a move, the new parent, scheme or taxonomy. An update may give description or vision as anchored edits instead of a whole value: {"edits": [{"after": anchor, "insert": text} | {"replace": anchor, "with": text} | {"delete": anchor}, ...]}, applied in order; each anchor must appear exactly once in the current text
+       * @description For a create, every field; for an update, only the changed ones; for a move, the new parent, scheme or taxonomy. An update may give description or vision as anchored edits instead of a whole value: {"edits": [{"after": anchor, "insert": text} | {"replace": anchor, "with": text} | {"delete": anchor}, ...]}, applied in order; each anchor must appear exactly once in the current text. An operation read back has the text they made in fields and the edits in text_edits: to keep them as edits on amend, send them here again
        */
       fields?: {
         [key: string]: unknown;

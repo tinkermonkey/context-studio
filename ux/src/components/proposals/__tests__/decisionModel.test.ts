@@ -155,13 +155,17 @@ describe("staleCause", () => {
     const text = "One. Two. Two.";
     expect(textEditsProblem(text, [{ after: "One.", insert: " Half." }])).toBeUndefined();
     expect(textEditsProblem(text, [{ delete: "Two." }])).toBe(
-      "edit 1: anchor 'Two.' appears 2 times",
+      "edit 1: anchor 'Two.' appears 2 times: extend it until it is unique",
     );
     // The second edit sees what the first left.
     expect(
       textEditsProblem(text, [{ replace: "Two. Two.", with: "Three." }, { delete: "Three." }]),
     ).toBeUndefined();
     expect(textEditsProblem(null, [{ delete: "x" }])).toBe("edit 1: anchor 'x' is not in the text");
+    // Overlapping places count: "ab ab" starts at 0 and 3 in "ab ab ab".
+    expect(textEditsProblem("ab ab ab", [{ delete: "ab ab" }])).toBe(
+      "edit 1: anchor 'ab ab' appears 2 times: extend it until it is unique",
+    );
   });
 
   it("falls back to gone or unknown", () => {

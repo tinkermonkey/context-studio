@@ -88,6 +88,14 @@ def test_apply_keeps_a_change_made_since_and_stale_names_a_lost_anchor(client, o
     )
     stored = client.get(f"/api/proposals/{keeps.json()['id']}").json()["operations"][0]
     assert stored["base"] == {"description": "Below the roof. Dusty in summer."}
+    assert stored["fields"] == {"description": "Below the roof. Dusty in summer. Has a hatch."}
+
+    # Reverting the applied edit restores the text it was applied to.
+    reverted = client.post(f"/api/proposals/{keeps.json()['id']}/revert")
+    assert reverted.status_code == 200, reverted.text
+    assert ontology.get_individual(house["attic"]).description == (
+        "Below the roof. Dusty in summer."
+    )
 
 
 def test_mcp_propose_and_amend_take_edits(client, ontology, house):
