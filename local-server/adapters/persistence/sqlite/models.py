@@ -1762,6 +1762,14 @@ class ProposalOperation(Base):  # type: ignore[valid-type,misc]
         doc="Its earlier versions, oldest first: {fields, base, rationale, probability,"
         " evidence, amended_at} (#1624)",
     )
+    text_edits = Column(
+        JSON,
+        nullable=False,
+        default=dict,
+        server_default="{}",
+        doc="An update's anchored edits by field ({field: [edit, ...]}); fields holds the"
+        " text they resolved to (#1630)",
+    )
 
     __table_args__ = (UniqueConstraint("proposal_id", "seq", name="uq_proposal_operation_seq"),)
 

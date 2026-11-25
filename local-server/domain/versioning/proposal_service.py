@@ -123,6 +123,12 @@ from domain.versioning.proposals import (
     classify_scope,
 )
 from domain.versioning.reversal import plan_reversal
+from domain.versioning.text_edits import (
+    TEXT_EDIT_FIELDS,
+    TextEditError,
+    apply_text_edits,
+    parse_text_edits,
+)
 from domain.versioning.provenance import (
     SOURCE_ID,
     EntitySource,
@@ -475,6 +481,11 @@ def _refuse_amended_since(
         )
 
 
+def _text(value: Any) -> str | None:
+    """A field value as the text anchored edits apply to (None when it isn't text)."""
+    return value if isinstance(value, str) else None
+
+
 def _version_of(operation: ProposedOperation, replaced_at: datetime) -> dict[str, Any]:
     """An operation's proposer-set fields, as an amendment keeps the version it replaced."""
     return {
@@ -491,6 +502,7 @@ def _version_of(operation: ProposedOperation, replaced_at: datetime) -> dict[str
         "scope": operation.scope.value,
         "replacement": operation.proposed_replacement_id,
         "alternatives": operation.alternatives,
+        "text_edits": operation.text_edits,
         "amended_at": replaced_at.isoformat(),
     }
 
@@ -1342,6 +1354,7 @@ class ProposalService:
 
         if op is OperationType.CREATE and operation.ref and operation.ref in refs:
             raise _Invalid("duplicate_ref", f"ref '{operation.ref}' is already used")
+        self._resolve_text_edits(operation)
         self._check_field_names(operation)
         self._check_values(operation)
         self._check_id_fields(operation, refs)
@@ -1374,6 +1387,36 @@ class ProposalService:
             if data_scope.rank > operation.scope.rank:
                 operation.scope = data_scope
         return operation
+
+    def _resolve_text_edits(self, operation: ProposedOperation) -> None:
+        """
+        Turn an update's anchored edits of description or vision (#1630) into
+        the text they make of the target's current value, kept in `fields`,
+        with the edits kept in `text_edits`. The usual checks then see a plain
+        update; `base` is captured from the same text later in _validated.
+        """
+        edited = {
+            name: value
+            for name, value in operation.fields.items()
+            if name in TEXT_EDIT_FIELDS and isinstance(value, dict)
+        }
+        if not edited:
+            return
+        if operation.op is not OperationType.UPDATE:
+            raise _Invalid("invalid", "Only an update can give a field as anchored edits")
+        target = self._load(operation.kind, operation.target_id)  # type: ignore[arg-type]
+        if target is None:
+            raise _Invalid("target_not_found", f"No {operation.kind.value} {operation.target_id}")
+        snapshot = entity_snapshot(target)
+        text_edits: dict[str, list[dict[str, str]]] = {}
+        for name, value in edited.items():
+            try:
+                edits = parse_text_edits(value)
+                operation.fields[name] = apply_text_edits(_text(snapshot.get(name)), edits)
+            except TextEditError as exc:
+                raise _Invalid(exc.code or "invalid", f"{name}: {exc}") from exc
+            text_edits[name] = edits
+        operation.text_edits = text_edits
 
     def _check_data_proposed(
         self, operation: ProposedOperation, target: Any
@@ -3162,6 +3205,9 @@ class ProposalService:
                 return self._restore(operation, fields, run_id)
             if operation.op is not OperationType.CREATE:
                 self._check_fresh(operation, forced)
+            if operation.text_edits:
+                self._rebase_text_edits(operation)
+                fields.update({name: operation.fields[name] for name in operation.text_edits})
             if operation.kind in (K.PROPERTY, K.PREDICATE) and operation.op in (
                 OperationType.CREATE,
                 OperationType.UPDATE,
@@ -3360,10 +3406,43 @@ class ProposalService:
         changed = sorted(
             name
             for name, value in operation.base.items()
-            if name not in ignored and snapshot.get(name) != value
+            if name not in ignored
+            and snapshot.get(name) != value
+            and name not in operation.text_edits
         )
+        # A field given as anchored edits is fresh while its edits still apply
+        # to the current text (#1630): applying keeps the change made since.
+        unanchored = []
+        for name, edits in sorted(operation.text_edits.items()):
+            if snapshot.get(name) == operation.base.get(name):
+                continue
+            try:
+                apply_text_edits(_text(snapshot.get(name)), edits)
+            except TextEditError as exc:
+                changed.append(name)
+                unanchored.append(f"{name} {exc}")
         if changed:
-            raise _ApplyFailed(TARGET_CHANGED, f"{', '.join(changed)} changed since proposed")
+            detail = f"{', '.join(sorted(changed))} changed since proposed"
+            if unanchored:
+                detail += f"; {'; '.join(unanchored)}"
+            raise _ApplyFailed(TARGET_CHANGED, detail)
+
+    def _rebase_text_edits(self, operation: ProposedOperation) -> None:
+        """
+        Apply an update's anchored edits to the target's text as it is now, and
+        record that text in `base` and the result in `fields`, so the operation
+        says what applying it did. An edit whose anchor is gone (only when
+        forced past staleness) leaves the proposed text to overwrite the field.
+        """
+        current = self._load(operation.kind, operation.target_id)  # type: ignore[arg-type]
+        snapshot = entity_snapshot(current) if current is not None else {}
+        for name, edits in operation.text_edits.items():
+            text = _text(snapshot.get(name))
+            try:
+                operation.fields[name] = apply_text_edits(text, edits)
+            except TextEditError:
+                continue
+            operation.base[name] = snapshot.get(name)
 
     # ----------------------------------------------------------- reject / revert
 
