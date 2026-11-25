@@ -32,6 +32,7 @@ from uuid import uuid4
 from domain.ontology.entities import same_attribute_value
 from domain.ontology.value_objects import SourceRevision
 from domain.versioning.provenance import SOURCE_ID, source_passages
+from domain.versioning.text_edits import TEXT_EDIT_FIELDS
 
 # The pipeline an individual extraction's proposal names in its client_metadata
 # (domain.pipelines.source_proposals writes PipelineType.INDIVIDUAL_EXTRACTION).
@@ -589,6 +590,12 @@ class ProposedOperation:
         amendments: Its earlier versions, oldest first, each {"fields",
             "base", "rationale", "probability", "evidence", "amended_at"}: what
             an amendment replaced (#1624)
+        text_edits: An update only: the anchored edits (see
+            `domain.versioning.text_edits`) it was proposed with, by field
+            (description or vision). `fields` holds the text they resolved to
+            and `base` the text they were resolved against; applying it applies
+            the edits again to the field's text as it is then, and records that
+            text and the result in `base` and `fields` (#1630)
         id: Unique id
     """
 
@@ -616,9 +623,17 @@ class ProposedOperation:
     added_by_reviewer: bool = False
     amended_at: datetime | None = None
     amendments: list[dict[str, Any]] = field(default_factory=list)
+    text_edits: dict[str, list[dict[str, str]]] = field(default_factory=dict)
     id: str = field(default_factory=lambda: str(uuid4()))
 
     def __post_init__(self) -> None:
+        if self.text_edits:
+            if self.op is not OperationType.UPDATE:
+                raise ValueError("Only an update can carry text edits")
+            if not set(self.text_edits) <= TEXT_EDIT_FIELDS & set(self.fields):
+                raise ValueError(
+                    "Text edits apply only to an update's description or vision"
+                )
         if self.alternatives and (
             self.op is not OperationType.CREATE or self.kind is not OperationKind.INDIVIDUAL
         ):

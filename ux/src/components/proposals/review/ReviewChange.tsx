@@ -253,6 +253,8 @@ function ChangeRowView({
       ? wordDiff(row.before, row.after)
       : undefined;
   const marksWords = !!words?.some((w) => w.type === "removed" || w.type === "added");
+  // Proposed as anchored edits (#1630): how many, for the note over the change.
+  const anchored = operation.op === "update" ? (operation.text_edits?.[row.field]?.length ?? 0) : 0;
   const before = listOf(row.before);
   const after = listOf(row.after);
   let body: ReactNode;
@@ -319,7 +321,15 @@ function ChangeRowView({
           </button>
         )}
       </dt>
-      <dd className="review-diff__values">{body}</dd>
+      <dd className="review-diff__values">
+        {anchored > 0 && (
+          <span className="review-muted" data-testid={`review-diff-anchored-${row.field}`}>
+            {anchored === 1 ? "An anchored edit" : `${anchored} anchored edits`}: accepting applies{" "}
+            {anchored === 1 ? "it" : "them"} to the text as it is then.
+          </span>
+        )}
+        {body}
+      </dd>
     </div>
   );
 }

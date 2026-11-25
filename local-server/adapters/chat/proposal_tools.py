@@ -301,7 +301,10 @@ OPERATION_SCHEMA: dict[str, Any] = {
             "type": "object",
             "description": (
                 "Create: every field (* required); update: only the changed ones; move: the"
-                " new parent or scheme; delete: none"
+                " new parent or scheme; delete: none. An update may give description or"
+                ' vision as anchored edits instead of the whole text: {"edits": [{"after":'
+                ' anchor, "insert": text}, {"replace": anchor, "with": text}, {"delete":'
+                " anchor}]}, applied in order, each anchor appearing exactly once"
             ),
         },
         "rationale": {"type": "string", "description": "Why this change"},
@@ -417,6 +420,13 @@ class ProposeChangesTool(_ProposalTool):
         " clears each. Id fields"
         f' ({", ".join(sorted(ID_FIELDS))}) take an existing id or "$<ref>" of an'
         " earlier create in the same proposal.\n"
+        "To change part of a long description or vision, send anchored edits instead of"
+        ' the whole text: "vision": {"edits": [{"after": anchor, "insert": text},'
+        ' {"replace": anchor, "with": text}, {"delete": anchor}]}. They apply in order;'
+        " each anchor must appear exactly once in the text it is applied to, or the"
+        " operation is refused (anchor_not_found, anchor_not_unique). Accepting applies"
+        " them to the text as it is then, keeping changes made since; the operation is"
+        " stale only if an anchor no longer matches.\n"
         f"At most {MAX_OPERATIONS} operations per proposal. For a larger pass, export"
         " the taxonomy's bundle (GET /api/v1/interchange/bundles/{taxonomy_id}), edit"
         " it and import it (POST /api/v1/interchange/bundles): the import proposes"
@@ -661,12 +671,18 @@ def _merged(item: dict[str, Any], operation: Any) -> dict[str, Any]:
     """
     if operation is None:
         return item
+    # A field proposed as anchored edits is kept as its edits, so they are
+    # applied again to the current text, not frozen as the text they made.
+    proposed = {
+        **operation.fields,
+        **{name: {"edits": edits} for name, edits in operation.text_edits.items()},
+    }
     kept = {
         "op": operation.op.value,
         "kind": operation.kind.value,
         "target_id": operation.target_id,
         "ref": operation.ref,
-        "fields": operation.fields,
+        "fields": proposed,
         "rationale": operation.rationale,
         "notes": operation.notes,
         "evidence": operation.evidence,
@@ -676,7 +692,7 @@ def _merged(item: dict[str, Any], operation: Any) -> dict[str, Any]:
     }
     merged = {**kept, **item}
     if isinstance(item.get("fields"), dict):
-        merged["fields"] = {**operation.fields, **item["fields"]}
+        merged["fields"] = {**proposed, **item["fields"]}
     return merged
 
 

@@ -83,7 +83,12 @@ class ProposedOperationRequest(BaseModel):
     fields: dict[str, Any] = Field(
         default_factory=dict,
         description="For a create, every field; for an update, only the changed ones; "
-        "for a move, the new parent, scheme or taxonomy",
+        "for a move, the new parent, scheme or taxonomy. An update may give description or "
+        'vision as anchored edits instead of a whole value: {"edits": [{"after": anchor, '
+        '"insert": text} | {"replace": anchor, "with": text} | {"delete": anchor}, ...]}, '
+        "applied in order; each anchor must appear exactly once in the current text. An "
+        "operation read back has the text they made in fields and the edits in text_edits: "
+        "to keep them as edits on amend, send them here again",
     )
     rationale: Optional[str] = Field(None, description="Why this change")
     notes: Optional[str] = Field(
@@ -773,6 +778,13 @@ class ProposedOperationResponse(BaseModel):
         default_factory=list,
         description="Its earlier versions, oldest first, each {fields, base, rationale, "
         "probability, evidence, amended_at}: what each amendment replaced",
+    )
+    text_edits: dict[str, list[dict[str, str]]] = Field(
+        default_factory=dict,
+        description="An update only: the anchored edits it was proposed with, by field "
+        "(description or vision). fields holds the text they make and base the text they "
+        "were applied to; applying it applies them again to the text as it is then, and "
+        "it is stale only when an anchor no longer matches. Empty otherwise",
     )
     reflection: Optional[ReflectionResponse] = Field(
         None,

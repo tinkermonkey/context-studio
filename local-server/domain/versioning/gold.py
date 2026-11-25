@@ -145,6 +145,7 @@ def proposed_snapshot(operation: ProposedOperation) -> dict[str, Any]:
         "scope": operation.scope.value,
         "proposed_replacement_id": operation.proposed_replacement_id,
         "alternatives": [dict(a) for a in operation.alternatives],
+        "text_edits": {name: list(edits) for name, edits in operation.text_edits.items()},
     }
 
 

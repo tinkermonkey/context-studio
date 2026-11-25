@@ -294,6 +294,9 @@ class SQLiteChangeProposalRepository:
                 row.resolution = _resolution_json(operation)  # type: ignore[assignment]
                 row.type_change = _type_change_json(operation)  # type: ignore[assignment]
                 row.base = dict(operation.base)  # type: ignore[assignment]
+                if operation.text_edits:
+                    # Applying anchored edits records the text they made (#1630).
+                    row.fields = dict(operation.fields)  # type: ignore[assignment]
             session.flush()
             for decision in decisions:
                 session.add(_decision_to_orm(decision))
@@ -677,6 +680,7 @@ def _operation_to_orm(proposal_id: str, operation: ProposedOperation) -> Proposa
         added_by_reviewer=operation.added_by_reviewer,
         amended_at=operation.amended_at,
         amendments=[dict(a) for a in operation.amendments],
+        text_edits={name: list(edits) for name, edits in operation.text_edits.items()},
     )
 
 
@@ -727,6 +731,7 @@ def _operation_to_domain(row: ProposalOperation) -> ProposedOperation:
         added_by_reviewer=bool(row.added_by_reviewer),
         amended_at=row.amended_at,  # type: ignore[arg-type]
         amendments=[dict(a) for a in row.amendments or []],  # type: ignore[union-attr]
+        text_edits=dict(row.text_edits or {}),  # type: ignore[arg-type]
     )
 
 

@@ -136,6 +136,8 @@ class FakeChangeProposalRepository:
             target.resolution = copy.deepcopy(operation.resolution)
             target.type_change = copy.deepcopy(operation.type_change)
             target.base = copy.deepcopy(operation.base)
+            if operation.text_edits:
+                target.fields = copy.deepcopy(operation.fields)
         self.decisions += [copy.deepcopy(d) for d in decisions]
 
     def set_decision_comparison(self, operation_id: str, comparison: dict) -> None:

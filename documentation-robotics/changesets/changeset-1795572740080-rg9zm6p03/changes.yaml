@@ -1,0 +1,462 @@
+- type: add
+  elementId: motivation.requirement.a-long-text-field-is-proposed-as-anchored-edits
+  layerName: motivation
+  after:
+    id: db319609-d4b0-4b80-bc58-25ddd8df3732
+    path: motivation.requirement.a-long-text-field-is-proposed-as-anchored-edits
+    spec_node_id: motivation.requirement
+    type: requirement
+    layer_id: motivation
+    name: A long text field is proposed as anchored edits
+    description: "#1630: a client changes part of a description or a taxonomy vision by edits anchored on the existing text (insert after an anchor, replace an anchor, delete an anchor), applied in order, instead of resending the whole value. The proposal is refused if an anchor is missing or appears more than once. Adding one bullet to a 7,000-character vision takes one short edit."
+    attributes:
+      requirementType: functional
+      priority: high
+    metadata:
+      created_at: 2026-11-25T02:12:36.072Z
+      updated_at: 2026-11-25T02:12:36.072Z
+      version: 1
+  timestamp: 2026-11-25T02:12:36.085Z
+  sequenceNumber: 0
+- type: add
+  elementId: motivation.requirement.an-anchored-edit-applies-to-the-current-text-or-goes-stale
+  layerName: motivation
+  after:
+    id: dff4108c-8b71-4253-ab99-9b18b2998787
+    path: motivation.requirement.an-anchored-edit-applies-to-the-current-text-or-goes-stale
+    spec_node_id: motivation.requirement
+    type: requirement
+    layer_id: motivation
+    name: An anchored edit applies to the current text or goes stale
+    description: "#1630: at accept, an operation's edits are applied again to the field's text as it is then, so another change made since the proposal is kept. If an anchor no longer matches, the operation is stale (with the anchor named) instead of overwriting the text. No lost update."
+    attributes:
+      requirementType: functional
+      priority: high
+    metadata:
+      created_at: 2026-11-25T02:12:36.073Z
+      updated_at: 2026-11-25T02:12:36.073Z
+      version: 1
+  timestamp: 2026-11-25T02:12:36.085Z
+  sequenceNumber: 1
+- type: add
+  elementId: application.applicationfunction.anchored-text-edits
+  layerName: application
+  after:
+    id: 14637868-2c83-4c7a-88e4-6271802fb97d
+    path: application.applicationfunction.anchored-text-edits
+    spec_node_id: application.applicationfunction
+    type: applicationfunction
+    layer_id: application
+    name: Anchored text edits
+    description: "apply_text_edits (domain/versioning/text_edits.py) applies an ordered list of anchored edits to a text and names the edit whose anchor is missing or not unique. ProposalService uses it three ways: at propose and amend it resolves an update's edits against the current text into the operation's fields and base (and keeps the edits); at apply it applies them again to the current text and records the text it applied to; and staleness asks whether the anchors still match instead of comparing the field with base."
+    metadata:
+      created_at: 2026-11-25T02:12:36.073Z
+      updated_at: 2026-11-25T02:12:36.073Z
+      version: 1
+    source_reference:
+      provenance: manual
+      locations:
+        - file: local-server/domain/versioning/text_edits.py
+          symbol: apply_text_edits
+  timestamp: 2026-11-25T02:22:32.326Z
+  sequenceNumber: 2
+- type: add
+  elementId: data-model.objectschema.text-edit
+  layerName: data-model
+  after:
+    id: 6bf39544-fc62-4c88-8a47-4694143bfb63
+    path: data-model.objectschema.text-edit
+    spec_node_id: data-model.objectschema
+    type: objectschema
+    layer_id: data-model
+    name: Text Edit
+    description: "One anchored edit of a long text field: {after, insert} inserts text right after the anchor, {replace, with} replaces the anchor, {delete} removes the anchor. The anchor must appear exactly once in the text the edit is applied to."
+    attributes:
+      type: object
+    metadata:
+      created_at: 2026-11-25T02:12:36.073Z
+      updated_at: 2026-11-25T02:12:36.073Z
+      version: 1
+    source_reference:
+      provenance: manual
+      locations:
+        - file: local-server/domain/versioning/text_edits.py
+          symbol: parse_text_edits
+  timestamp: 2026-11-25T02:22:32.326Z
+  sequenceNumber: 3
+- type: add
+  elementId: data-store.field.text-edits
+  layerName: data-store
+  after:
+    id: 9da84a88-d2af-4134-9bc4-156bfe42ed85
+    path: data-store.field.text-edits
+    spec_node_id: data-store.field
+    type: field
+    layer_id: data-store
+    name: text_edits
+    description: "proposal_operations.text_edits: the anchored edits an update operation was proposed with, by field name ({field: [edit, ...]}). Fields named here also hold their resolved text in fields. JSON, default {}."
+    attributes:
+      dataType: JSON
+      nullable: false
+    metadata:
+      created_at: 2026-11-25T02:12:36.073Z
+      updated_at: 2026-11-25T02:12:36.073Z
+      version: 1
+    source_reference:
+      provenance: manual
+      locations:
+        - file: local-server/adapters/persistence/sqlite/models.py
+          symbol: ProposalOperation.text_edits
+  timestamp: 2026-11-25T02:22:32.326Z
+  sequenceNumber: 4
+- type: add
+  elementId: testing.testcoveragetarget.anchored-text-edits
+  layerName: testing
+  after:
+    id: 3874b539-24aa-4db6-8d74-20d4c681c498
+    path: testing.testcoveragetarget.anchored-text-edits
+    spec_node_id: testing.testcoveragetarget
+    type: testcoveragetarget
+    layer_id: testing
+    name: Anchored text edits
+    description: apply_text_edits (insert, replace, delete; missing and ambiguous anchors; order); propose and amend resolve edits and refuse bad anchors; apply reapplies edits to text changed since the proposal, keeps that change and records what it applied to; an anchor that no longer matches makes the operation stale and apply fails as target_changed naming it; propose_changes over MCP and POST /proposals take edits; the review inspector notes an edited field and the stale cause.
+    attributes:
+      targetType: api-endpoint
+    metadata:
+      created_at: 2026-11-25T02:12:36.073Z
+      updated_at: 2026-11-25T02:12:36.073Z
+      version: 1
+    source_reference:
+      provenance: manual
+      locations:
+        - file: local-server/tests/unit/domain/versioning/test_proposal_text_edits.py
+  timestamp: 2026-11-25T02:22:32.326Z
+  sequenceNumber: 5
+- type: relationship-add
+  elementId: motivation.requirement.a-long-text-field-is-proposed-as-anchored-edits::realizes::motivation.principle.agents-propose-and-people-decide
+  layerName: motivation
+  after:
+    source: motivation.requirement.a-long-text-field-is-proposed-as-anchored-edits
+    target: motivation.principle.agents-propose-and-people-decide
+    predicate: realizes
+    layer: motivation
+    category: structural
+  timestamp: 2026-11-25T02:12:36.085Z
+  sequenceNumber: 6
+- type: relationship-add
+  elementId: motivation.requirement.a-long-text-field-is-proposed-as-anchored-edits::aggregates::motivation.requirement.an-anchored-edit-applies-to-the-current-text-or-goes-stale
+  layerName: motivation
+  after:
+    source: motivation.requirement.a-long-text-field-is-proposed-as-anchored-edits
+    target: motivation.requirement.an-anchored-edit-applies-to-the-current-text-or-goes-stale
+    predicate: aggregates
+    layer: motivation
+    category: structural
+  timestamp: 2026-11-25T02:12:36.085Z
+  sequenceNumber: 7
+- type: relationship-add
+  elementId: application.applicationfunction.anchored-text-edits::realizes::application.applicationservice.proposal-service
+  layerName: application
+  after:
+    source: application.applicationfunction.anchored-text-edits
+    target: application.applicationservice.proposal-service
+    predicate: realizes
+    layer: application
+    category: structural
+  timestamp: 2026-11-25T02:12:36.085Z
+  sequenceNumber: 8
+- type: relationship-add
+  elementId: application.applicationservice.proposal-service::serves::application.applicationfunction.anchored-text-edits
+  layerName: application
+  after:
+    source: application.applicationservice.proposal-service
+    target: application.applicationfunction.anchored-text-edits
+    predicate: serves
+    layer: application
+    category: structural
+  timestamp: 2026-11-25T02:12:36.085Z
+  sequenceNumber: 9
+- type: relationship-add
+  elementId: application.applicationfunction.anchored-text-edits::satisfies::motivation.requirement.a-long-text-field-is-proposed-as-anchored-edits
+  layerName: application
+  after:
+    source: application.applicationfunction.anchored-text-edits
+    target: motivation.requirement.a-long-text-field-is-proposed-as-anchored-edits
+    predicate: satisfies
+    layer: application
+    targetLayer: motivation
+    category: structural
+  timestamp: 2026-11-25T02:12:36.085Z
+  sequenceNumber: 10
+- type: relationship-add
+  elementId: application.applicationfunction.anchored-text-edits::satisfies::motivation.requirement.an-anchored-edit-applies-to-the-current-text-or-goes-stale
+  layerName: application
+  after:
+    source: application.applicationfunction.anchored-text-edits
+    target: motivation.requirement.an-anchored-edit-applies-to-the-current-text-or-goes-stale
+    predicate: satisfies
+    layer: application
+    targetLayer: motivation
+    category: structural
+  timestamp: 2026-11-25T02:12:36.085Z
+  sequenceNumber: 11
+- type: relationship-add
+  elementId: application.applicationfunction.anchored-text-edits::accesses::data-model.objectschema.text-edit
+  layerName: application
+  after:
+    source: application.applicationfunction.anchored-text-edits
+    target: data-model.objectschema.text-edit
+    predicate: accesses
+    layer: application
+    targetLayer: data-model
+    category: structural
+  timestamp: 2026-11-25T02:12:36.085Z
+  sequenceNumber: 12
+- type: relationship-add
+  elementId: data-model.objectschema.text-edit::maps-to::data-store.collection.proposal-operations
+  layerName: data-model
+  after:
+    source: data-model.objectschema.text-edit
+    target: data-store.collection.proposal-operations
+    predicate: maps-to
+    layer: data-model
+    targetLayer: data-store
+    category: structural
+  timestamp: 2026-11-25T02:12:36.085Z
+  sequenceNumber: 13
+- type: relationship-add
+  elementId: data-model.objectschema.text-edit::satisfies::motivation.requirement.a-long-text-field-is-proposed-as-anchored-edits
+  layerName: data-model
+  after:
+    source: data-model.objectschema.text-edit
+    target: motivation.requirement.a-long-text-field-is-proposed-as-anchored-edits
+    predicate: satisfies
+    layer: data-model
+    targetLayer: motivation
+    category: structural
+  timestamp: 2026-11-25T02:12:36.085Z
+  sequenceNumber: 14
+- type: relationship-add
+  elementId: data-store.collection.proposal-operations::composes::data-store.field.text-edits
+  layerName: data-store
+  after:
+    source: data-store.collection.proposal-operations
+    target: data-store.field.text-edits
+    predicate: composes
+    layer: data-store
+    category: structural
+  timestamp: 2026-11-25T02:12:36.085Z
+  sequenceNumber: 15
+- type: relationship-add
+  elementId: api.operation.create-proposal::satisfies::motivation.requirement.a-long-text-field-is-proposed-as-anchored-edits
+  layerName: api
+  after:
+    source: api.operation.create-proposal
+    target: motivation.requirement.a-long-text-field-is-proposed-as-anchored-edits
+    predicate: satisfies
+    layer: api
+    targetLayer: motivation
+    category: structural
+  timestamp: 2026-11-25T02:12:36.085Z
+  sequenceNumber: 16
+- type: relationship-add
+  elementId: api.operation.amend-proposal::satisfies::motivation.requirement.a-long-text-field-is-proposed-as-anchored-edits
+  layerName: api
+  after:
+    source: api.operation.amend-proposal
+    target: motivation.requirement.a-long-text-field-is-proposed-as-anchored-edits
+    predicate: satisfies
+    layer: api
+    targetLayer: motivation
+    category: structural
+  timestamp: 2026-11-25T02:12:36.085Z
+  sequenceNumber: 17
+- type: relationship-add
+  elementId: api.operation.apply-proposal::satisfies::motivation.requirement.an-anchored-edit-applies-to-the-current-text-or-goes-stale
+  layerName: api
+  after:
+    source: api.operation.apply-proposal
+    target: motivation.requirement.an-anchored-edit-applies-to-the-current-text-or-goes-stale
+    predicate: satisfies
+    layer: api
+    targetLayer: motivation
+    category: structural
+  timestamp: 2026-11-25T02:12:36.085Z
+  sequenceNumber: 18
+- type: relationship-add
+  elementId: testing.testcoveragetarget.anchored-text-edits::covers::api.operation.create-proposal
+  layerName: testing
+  after:
+    source: testing.testcoveragetarget.anchored-text-edits
+    target: api.operation.create-proposal
+    predicate: covers
+    layer: testing
+    targetLayer: api
+    category: structural
+  timestamp: 2026-11-25T02:12:36.085Z
+  sequenceNumber: 19
+- type: relationship-add
+  elementId: testing.testcoveragetarget.anchored-text-edits::covers::api.operation.amend-proposal
+  layerName: testing
+  after:
+    source: testing.testcoveragetarget.anchored-text-edits
+    target: api.operation.amend-proposal
+    predicate: covers
+    layer: testing
+    targetLayer: api
+    category: structural
+  timestamp: 2026-11-25T02:12:36.085Z
+  sequenceNumber: 20
+- type: relationship-add
+  elementId: testing.testcoveragetarget.anchored-text-edits::covers::api.operation.apply-proposal
+  layerName: testing
+  after:
+    source: testing.testcoveragetarget.anchored-text-edits
+    target: api.operation.apply-proposal
+    predicate: covers
+    layer: testing
+    targetLayer: api
+    category: structural
+  timestamp: 2026-11-25T02:12:36.085Z
+  sequenceNumber: 21
+- type: relationship-add
+  elementId: testing.testcoveragetarget.anchored-text-edits::covers::ux.subview.review-inspector
+  layerName: testing
+  after:
+    source: testing.testcoveragetarget.anchored-text-edits
+    target: ux.subview.review-inspector
+    predicate: covers
+    layer: testing
+    targetLayer: ux
+    category: structural
+  timestamp: 2026-11-25T02:12:36.085Z
+  sequenceNumber: 22
+- type: update
+  elementId: data-model.objectschema.proposed-operation
+  layerName: data-model
+  before:
+    id: 066a86b3-e78a-438c-a0ad-5e94092bb955
+    path: data-model.objectschema.proposed-operation
+    spec_node_id: data-model.objectschema
+    type: objectschema
+    layer_id: data-model
+    name: Proposed Operation
+    description: "ProposedOperation: one proposed change (create, update or delete of an entity), with its status and decision. Status pending, applied, rejected, failed, or withdrawn (removed by its proposer, or its proposal withdrawn: not a decision). amended_at and amendments record changes its proposer made while it was pending. A restore create names a free target id (the deleted entity's snapshot id), so a reversal recreates it with its old id; a rejection carries a RejectionReason code (incorrect, keep_current and outdated added)."
+    attributes: &a1
+      type: object
+    source_reference: &a2
+      provenance: extracted
+      locations:
+        - file: local-server/domain/versioning/proposals.py
+          symbol: ProposedOperation
+    metadata: &a3
+      created_at: 2026-11-19T14:54:15.821Z
+      updated_at: 2026-11-19T14:54:15.821Z
+      version: 1
+  after:
+    id: 066a86b3-e78a-438c-a0ad-5e94092bb955
+    path: data-model.objectschema.proposed-operation
+    spec_node_id: data-model.objectschema
+    type: objectschema
+    layer_id: data-model
+    name: Proposed Operation
+    description: "ProposedOperation: one proposed change (create, update or delete of an entity), with its status and decision. Status pending, applied, rejected, failed, or withdrawn (removed by its proposer, or its proposal withdrawn: not a decision). amended_at and amendments record changes its proposer made while it was pending. A restore create names a free target id (the deleted entity's snapshot id), so a reversal recreates it with its old id; a rejection carries a RejectionReason code (incorrect, keep_current and outdated added). An update may carry text_edits (anchored edits of description or vision, by field): fields then holds the text they resolved to and base the text they were resolved against, both rewritten to what was applied when accepted."
+    attributes: *a1
+    source_reference: *a2
+    metadata: *a3
+  timestamp: 2026-11-25T02:12:46.088Z
+  sequenceNumber: 23
+- type: update
+  elementId: ux.subview.review-inspector
+  layerName: ux
+  before:
+    id: 25b893eb-3207-4db1-8dc7-69b518c028c3
+    path: ux.subview.review-inspector
+    spec_node_id: ux.subview
+    type: subview
+    layer_id: ux
+    name: Review Inspector
+    description: "Inspector for one operation of any kind (the #1631 inspector, extended): pills and evidence (quotes with captions when sourceless), 'The change' as was/now rows with a word diff for long text, Why, the decided record, stale and failed verbs with callouts, DR relationship types (class-ended triple, reflection quick picks, 'Or correct it'), replacement and in-use blocks, and reason-code buttons filtered by operation kind. Replaces OperationInspector, OperationDecision, OperationDecided, DecisionBars, the ReflectionAnswers and DrTripleEditor UIs, and the source passage sections."
+    source_reference: &a4
+      provenance: extracted
+      locations:
+        - file: ux/src/components/proposals/review/ReviewInspector.tsx
+          symbol: ReviewInspector
+        - file: ux/src/components/proposals/review/ReviewInspector.tsx
+          symbol: ux.src.components.proposals.review.ReviewInspector
+    metadata: &a5
+      created_at: 2026-11-19T15:02:28.473Z
+      updated_at: 2026-11-19T15:02:28.473Z
+      version: 1
+  after:
+    id: 25b893eb-3207-4db1-8dc7-69b518c028c3
+    path: ux.subview.review-inspector
+    spec_node_id: ux.subview
+    type: subview
+    layer_id: ux
+    name: Review Inspector
+    description: "Inspector for one operation of any kind (the #1631 inspector, extended): pills and evidence (quotes with captions when sourceless), 'The change' as was/now rows with a word diff for long text, Why, the decided record, stale and failed verbs with callouts, DR relationship types (class-ended triple, reflection quick picks, 'Or correct it'), replacement and in-use blocks, and reason-code buttons filtered by operation kind. A field proposed as anchored edits (#1630) is marked as applied to the text as it is at accept, and a stale one says which anchor no longer matches. Replaces OperationInspector, OperationDecision, OperationDecided, DecisionBars, the ReflectionAnswers and DrTripleEditor UIs, and the source passage sections."
+    source_reference: *a4
+    metadata: *a5
+  timestamp: 2026-11-25T02:12:46.116Z
+  sequenceNumber: 24
+- type: relationship-add
+  elementId: product.feature.proposal-review-page::satisfies::motivation.requirement.an-anchored-edit-applies-to-the-current-text-or-goes-stale
+  layerName: product
+  after:
+    source: product.feature.proposal-review-page
+    target: motivation.requirement.an-anchored-edit-applies-to-the-current-text-or-goes-stale
+    predicate: satisfies
+    layer: product
+    targetLayer: motivation
+    category: structural
+  timestamp: 2026-11-25T02:12:51.798Z
+  sequenceNumber: 25
+- type: relationship-add
+  elementId: product.feature.proposal-queue-and-detail::satisfies::motivation.requirement.a-long-text-field-is-proposed-as-anchored-edits
+  layerName: product
+  after:
+    source: product.feature.proposal-queue-and-detail
+    target: motivation.requirement.a-long-text-field-is-proposed-as-anchored-edits
+    predicate: satisfies
+    layer: product
+    targetLayer: motivation
+    category: structural
+  timestamp: 2026-11-25T02:12:51.798Z
+  sequenceNumber: 26
+- type: relationship-add
+  elementId: application.applicationservice.proposal-service::satisfies::motivation.requirement.a-long-text-field-is-proposed-as-anchored-edits
+  layerName: application
+  after:
+    source: application.applicationservice.proposal-service
+    target: motivation.requirement.a-long-text-field-is-proposed-as-anchored-edits
+    predicate: satisfies
+    layer: application
+    targetLayer: motivation
+    category: structural
+  timestamp: 2026-11-25T02:12:51.798Z
+  sequenceNumber: 27
+- type: relationship-add
+  elementId: application.applicationservice.proposal-service::satisfies::motivation.requirement.an-anchored-edit-applies-to-the-current-text-or-goes-stale
+  layerName: application
+  after:
+    source: application.applicationservice.proposal-service
+    target: motivation.requirement.an-anchored-edit-applies-to-the-current-text-or-goes-stale
+    predicate: satisfies
+    layer: application
+    targetLayer: motivation
+    category: structural
+  timestamp: 2026-11-25T02:12:51.798Z
+  sequenceNumber: 28
+- type: relationship-add
+  elementId: data-store.collection.proposal-operations::satisfies::motivation.requirement.a-long-text-field-is-proposed-as-anchored-edits
+  layerName: data-store
+  after:
+    source: data-store.collection.proposal-operations
+    target: motivation.requirement.a-long-text-field-is-proposed-as-anchored-edits
+    predicate: satisfies
+    layer: data-store
+    targetLayer: motivation
+    category: structural
+  timestamp: 2026-11-25T02:12:51.798Z
+  sequenceNumber: 29

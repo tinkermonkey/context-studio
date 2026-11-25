@@ -219,6 +219,21 @@ describe("an update in the review inspector", () => {
     );
   });
 
+  it("notes a field proposed as anchored edits, and only on that field (#1630)", async () => {
+    proposal.operations[0].text_edits = {
+      description: [{ replace: "its interfaces", with: "its services" }],
+    };
+    renderPage("op-update");
+    const row = await screen.findByTestId("review-diff-row-description");
+    expect(within(row).getByTestId("review-diff-anchored-description")).toHaveTextContent(
+      "An anchored edit: accepting applies it to the text as it is then.",
+    );
+    expect(screen.queryByTestId("review-diff-anchored-title")).not.toBeInTheDocument();
+    // A row with no anchored edits renders no stray count.
+    const title = screen.getByTestId("review-diff-row-title").querySelector("dd");
+    expect(title?.textContent).not.toMatch(/^0/);
+  });
+
   it("reads a list whose items only moved as was → now, labelled Reordered", async () => {
     renderPage("op-reorder");
     const row = await screen.findByTestId("review-diff-row-class_ids");
